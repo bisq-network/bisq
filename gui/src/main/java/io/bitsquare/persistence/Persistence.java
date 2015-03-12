@@ -53,9 +53,11 @@ public class Persistence {
 
     public static final String DIR_KEY = "persistence.dir";
     public static final String PREFIX_KEY = "persistence.prefix";
+    private static final long MIN_INTERVAL_BETWEEN_WRITE_OPERATIONS = 1000;
 
     @GuardedBy("lock")
     private Map<String, Serializable> rootMap = new HashMap<>();
+    private Map<String, Long> timestampMap = new HashMap<>();
 
     private final File dir;
     private final String prefix;
@@ -133,7 +135,9 @@ public class Persistence {
     }
 
     public void write(String key, Serializable value) {
-        // log.trace("Write object with key = " + key + " / value = " + value);
+        //log.trace("Write object with key = " + key + " / value = " + value);
+        // TODO add throttle to limit write operations
+
         try {
             lock.lock();
             rootMap.put(key, value);
@@ -142,7 +146,6 @@ public class Persistence {
             lock.unlock();
         }
     }
-
 
     public Serializable read(Object classInstance) {
         return read(classInstance.getClass().getName());

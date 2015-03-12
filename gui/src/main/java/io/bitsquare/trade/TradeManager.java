@@ -60,10 +60,6 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-/**
- * The domain for the trading
- * TODO: Too messy, need to be improved a lot....
- */
 public class TradeManager {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
@@ -76,7 +72,6 @@ public class TradeManager {
     private final SignatureService signatureService;
     private final OfferBookService offerBookService;
 
-    //TODO store TakerAsSellerProtocol in trade
     private final Map<String, SellerAsTakerProtocol> takerAsSellerProtocolMap = new HashMap<>();
     private final Map<String, BuyerAsOffererProtocol> offererAsBuyerProtocolMap = new HashMap<>();
     private final Map<String, CheckOfferAvailabilityProtocol> checkOfferAvailabilityProtocolMap = new HashMap<>();
@@ -85,7 +80,6 @@ public class TradeManager {
     private final ObservableMap<String, Trade> pendingTrades = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> closedTrades = FXCollections.observableHashMap();
 
-    // the latest pending trade
     private Trade currentPendingTrade;
 
 
@@ -130,32 +124,35 @@ public class TradeManager {
     // Called from UI
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onCheckOfferAvailability(Offer offer) {
+    public void checkOfferAvailability(Offer offer) {
         if (!checkOfferAvailabilityProtocolMap.containsKey(offer.getId())) {
 
-            CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(offer, tradeMessageService, () -> {
-            });
+            CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(
+                    offer,
+                    tradeMessageService,
+                    () -> disposeCheckOfferAvailabilityRequest(offer));
+
             CheckOfferAvailabilityProtocol protocol = new CheckOfferAvailabilityProtocol(model);
             checkOfferAvailabilityProtocolMap.put(offer.getId(), protocol);
-            protocol.onCheckOfferAvailability();
+            protocol.checkOfferAvailability();
         }
         else {
-            log.error("onGetOfferAvailableStateRequested already called for offer with ID:" + offer.getId());
+            log.error("That should never happen: onCheckOfferAvailability already called for offer with ID:" + offer.getId());
         }
     }
 
-    // When closing take offer view, we are not interested in the requestIsOfferAvailable result anymore, so remove from the map
-    public void onGetOfferAvailableStateRequestCanceled(Offer offer) {
-        cleanupCheckOfferAvailabilityProtocolMap(offer);
+    // When closing take offer view, we are not interested in the onCheckOfferAvailability result anymore, so remove from the map
+    public void cancelGetOfferAvailableStateRequest(Offer offer) {
+        disposeCheckOfferAvailabilityRequest(offer);
     }
 
-    public void onPlaceOfferRequested(String id,
-                                      Direction direction,
-                                      Fiat price,
-                                      Coin amount,
-                                      Coin minAmount,
-                                      TransactionResultHandler resultHandler,
-                                      ErrorMessageHandler errorMessageHandler) {
+    public void placeOffer(String id,
+                           Direction direction,
+                           Fiat price,
+                           Coin amount,
+                           Coin minAmount,
+                           TransactionResultHandler resultHandler,
+                           ErrorMessageHandler errorMessageHandler) {
 
         BankAccount currentBankAccount = user.getCurrentBankAccount().get();
         Offer offer = new Offer(id,
@@ -186,14 +183,14 @@ public class TradeManager {
                 (message, throwable) -> errorMessageHandler.handleErrorMessage(message)
         );
 
-        placeOfferProtocol.onPlaceOfferRequested();
+        placeOfferProtocol.placeOffer();
     }
 
-    public void onRemoveOpenOfferRequested(String offerId, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void removeOpenOffer(String offerId, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         removeOpenOffer(offerId, resultHandler, errorMessageHandler, true);
     }
 
-    public Trade onTakeOfferRequested(Coin amount, Offer offer) {
+    public Trade takeOffer(Coin amount, Offer offer) {
         Trade trade = createTrade(offer);
         trade.setTradeAmount(amount);
 
@@ -232,7 +229,7 @@ public class TradeManager {
         SellerAsTakerProtocol sellerTakesOfferProtocol = new SellerAsTakerProtocol(model);
         takerAsSellerProtocolMap.put(trade.getId(), sellerTakesOfferProtocol);
 
-        sellerTakesOfferProtocol.onTakeOfferRequested();
+        sellerTakesOfferProtocol.takeOffer();
 
         return trade;
     }
@@ -250,7 +247,7 @@ public class TradeManager {
     }
 
 
-    public void onCloseTradeRequested(Trade trade) {
+    public void closeTrade(Trade trade) {
         closeTrade(trade, false);
     }
 
@@ -260,7 +257,7 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onOfferRemovedFromRemoteOfferBook(Offer offer) {
-        cleanupCheckOfferAvailabilityProtocolMap(offer);
+        disposeCheckOfferAvailabilityRequest(offer);
     }
 
 
@@ -289,7 +286,7 @@ public class TradeManager {
         }
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -309,7 +306,7 @@ public class TradeManager {
                 () -> {
                     if (openOffers.containsKey(offerId)) {
                         OpenOffer openOffer = openOffers.remove(offerId);
-                        cleanupCheckOfferAvailabilityProtocolMap(openOffer.getOffer());
+                        disposeCheckOfferAvailabilityRequest(openOffer.getOffer());
                         persistOpenOffers();
                         if (removeFromOffererAsBuyerProtocolMap && offererAsBuyerProtocolMap.containsKey(offerId)) {
                             offererAsBuyerProtocolMap.get(offerId).cleanup();
@@ -328,7 +325,7 @@ public class TradeManager {
 
     private Trade createTrade(Offer offer) {
         if (pendingTrades.containsKey(offer.getId()))
-            log.error("trades contains already an trade with the ID " + offer.getId());
+            log.error("That must never happen: Trades contains already an trade with the ID " + offer.getId());
 
         Trade trade = new Trade(offer);
         pendingTrades.put(offer.getId(), trade);
@@ -349,7 +346,7 @@ public class TradeManager {
                 user);
 
         openOffer.stateProperty().addListener((ov, oldValue, newValue) -> {
-            log.debug("trade state = " + newValue);
+            log.debug("openOffer state = " + newValue);
             switch (newValue) {
                 case OPEN:
                     break;
@@ -390,7 +387,7 @@ public class TradeManager {
                     });
                     break;
                 default:
-                    log.error("Unhandled trade state: " + newValue);
+                    log.error("Unhandled openOffer state: " + newValue);
                     break;
             }
         });
@@ -405,7 +402,7 @@ public class TradeManager {
 
     private void closeTrade(Trade trade, boolean failed) {
         if (!pendingTrades.containsKey(trade.getId()))
-            log.error("trades does not contain the trade with the ID " + trade.getId());
+            log.error("That must never happen: trades does not contain the trade with the ID " + trade.getId());
 
         pendingTrades.remove(trade.getId());
         persistPendingTrades();
@@ -428,7 +425,7 @@ public class TradeManager {
         }
     }
 
-    private void cleanupCheckOfferAvailabilityProtocolMap(Offer offer) {
+    private void disposeCheckOfferAvailabilityRequest(Offer offer) {
         if (checkOfferAvailabilityProtocolMap.containsKey(offer.getId())) {
             CheckOfferAvailabilityProtocol protocol = checkOfferAvailabilityProtocolMap.get(offer.getId());
             protocol.cancel();

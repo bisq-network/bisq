@@ -172,7 +172,7 @@ class CreateOfferDataModel implements Activatable, DataModel {
 
     void placeOffer() {
         // data validation is done in the trade domain
-        tradeManager.onPlaceOfferRequested(offerId,
+        tradeManager.placeOffer(offerId,
                 direction,
                 priceAsFiat.get(),
                 amountAsCoin.get(),

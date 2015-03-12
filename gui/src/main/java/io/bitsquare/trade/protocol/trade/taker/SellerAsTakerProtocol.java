@@ -66,7 +66,7 @@ public class SellerAsTakerProtocol {
     // Called from UI
     ///////////////////////////////////////////////////////////////////////////////////////////
     
-    public void onTakeOfferRequested() {
+    public void takeOffer() {
         model.getTradeMessageService().addMessageHandler(this::handleMessage);
 
         SellerAsTakerTaskRunner<SellerAsTakerModel> sequence = new SellerAsTakerTaskRunner<>(model,

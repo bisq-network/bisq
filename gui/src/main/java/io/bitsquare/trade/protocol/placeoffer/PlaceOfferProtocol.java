@@ -55,7 +55,7 @@ public class PlaceOfferProtocol {
         this.offerBookService = offerBookService;
     }
 
-    public void onPlaceOfferRequested() {
+    public void placeOffer() {
         try {
             validateOffer();
             Transaction transaction = createOfferFeeTx();

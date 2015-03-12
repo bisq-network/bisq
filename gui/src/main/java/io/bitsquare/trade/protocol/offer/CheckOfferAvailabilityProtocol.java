@@ -55,7 +55,7 @@ public class CheckOfferAvailabilityProtocol {
     // Called from UI
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onCheckOfferAvailability() {
+    public void checkOfferAvailability() {
         model.getTradeMessageService().addMessageHandler(this::handleMessage);
 
         sequence = new TaskRunner<>(model,

@@ -103,7 +103,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
     @Override
     public void deactivate() {
         btcCode.unbind();
-        tradeManager.onGetOfferAvailableStateRequestCanceled(offer);
+        tradeManager.cancelGetOfferAvailableStateRequest(offer);
     }
 
     void initWithData(Coin amount, Offer offer) {
@@ -134,11 +134,11 @@ class TakeOfferDataModel implements Activatable, DataModel {
         offer.getStateProperty().addListener((observable, oldValue, newValue) -> {
             offerIsAvailable.set(newValue);
         });
-        tradeManager.onCheckOfferAvailability(offer);
+        tradeManager.checkOfferAvailability(offer);
     }
 
     void takeOffer() {
-        final Trade trade = tradeManager.onTakeOfferRequested(amountAsCoin.get(), offer);
+        final Trade trade = tradeManager.takeOffer(amountAsCoin.get(), offer);
         trade.stateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("trade state = " + newValue);
             switch (newValue) {

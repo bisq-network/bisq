@@ -79,7 +79,7 @@ class OffersDataModel implements Activatable, DataModel {
     }
 
     void removeOpenOffer(String offerId, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        tradeManager.onRemoveOpenOfferRequested(offerId, resultHandler, errorMessageHandler);
+        tradeManager.removeOpenOffer(offerId, resultHandler, errorMessageHandler);
     }
 
 

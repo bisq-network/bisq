@@ -19,6 +19,8 @@ package io.bitsquare.trade;
 
 import io.bitsquare.BitsquareModule;
 
+import com.google.inject.Singleton;
+
 import org.springframework.core.env.Environment;
 
 public abstract class TradeMessageModule extends BitsquareModule {
@@ -30,6 +32,8 @@ public abstract class TradeMessageModule extends BitsquareModule {
     @Override
     protected final void configure() {
         doConfigure();
+
+        bind(TradeManager.class).in(Singleton.class);
     }
 
     protected void doConfigure() {

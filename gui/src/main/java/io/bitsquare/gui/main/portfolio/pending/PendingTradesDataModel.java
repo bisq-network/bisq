@@ -200,7 +200,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
             log.error(e.getMessage());
         }
 
-        tradeManager.onCloseTradeRequested(getTrade());
+        tradeManager.closeTrade(getTrade());
 
 /*
         Action response = Popups.openConfirmPopup(
