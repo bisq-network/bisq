@@ -17,51 +17,44 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.bank.BankAccount;
-import io.bitsquare.crypto.SignatureService;
-import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Contract;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
 import io.bitsquare.util.Utilities;
-import io.bitsquare.util.handlers.ExceptionHandler;
-
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
-
-import java.security.PublicKey;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VerifyAndSignContract {
+public class VerifyAndSignContract extends Task<BuyerAsOffererModel> {
     private static final Logger log = LoggerFactory.getLogger(VerifyAndSignContract.class);
 
-    public static void run(ResultHandler resultHandler,
-                           ExceptionHandler exceptionHandler,
-                           SignatureService signatureService,
-                           String accountId,
-                           Coin tradeAmount,
-                           String takeOfferFeeTxId,
-                           PublicKey messagePublicKey,
-                           Offer offer,
-                           String peersAccountId,
-                           BankAccount bankAccount,
-                           BankAccount peersBankAccount,
-                           PublicKey takerMessagePublicKey,
-                           String peersContractAsJson,
-                           ECKey registrationKey) {
-        log.trace("Run task");
-        Contract contract = new Contract(offer, tradeAmount, takeOfferFeeTxId, accountId, peersAccountId,
-                bankAccount, peersBankAccount, messagePublicKey, takerMessagePublicKey);
-
-        String contractAsJson = Utilities.objectToJson(contract);
-
-        log.trace("The 2 contracts as json does match");
-        String signature = signatureService.signMessage(registrationKey, contractAsJson);
-        //log.trace("signature: " + signature);
-        resultHandler.onResult(contract, contractAsJson, signature);
+    public VerifyAndSignContract(TaskRunner taskHandler, BuyerAsOffererModel model) {
+        super(taskHandler, model);
     }
 
-    public interface ResultHandler {
-        void onResult(Contract contract, String contractAsJson, String signature);
+    @Override
+    protected void run() {
+        Trade trade = model.getTrade();
+
+        Contract contract = new Contract(
+                model.getOffer(),
+                trade.getTradeAmount(),
+                model.getTakeOfferFeeTxId(),
+                model.getAccountId(),
+                model.getPeersAccountId(),
+                model.getBankAccount(),
+                model.getPeersBankAccount(),
+                model.getMessagePublicKey(),
+                model.getPeersMessagePublicKey());
+        String contractAsJson = Utilities.objectToJson(contract);
+        String signature = model.getSignatureService().signMessage(model.getAccountKey(), contractAsJson);
+
+        trade.setContract(contract);
+        trade.setContractAsJson(contractAsJson);
+        trade.setTakerContractSignature(signature);
+
+        complete();
     }
 }

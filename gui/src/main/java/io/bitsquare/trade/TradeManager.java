@@ -30,31 +30,21 @@ import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.offer.OpenOffer;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
-import io.bitsquare.trade.listeners.BuyerAcceptsOfferProtocolListener;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
 import io.bitsquare.trade.protocol.trade.OfferMessage;
-import io.bitsquare.trade.protocol.trade.TradeMessage;
-import io.bitsquare.trade.protocol.trade.offerer.BuyerAcceptsOfferProtocol;
-import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferInitedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
+import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererProtocol;
 import io.bitsquare.trade.protocol.trade.offerer.messages.IsOfferAvailableResponseMessage;
-import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToTakeOfferRequestMessage;
-import io.bitsquare.trade.protocol.trade.offerer.messages.TakerDepositPaymentRequestMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.IsOfferAvailableResponse;
 import io.bitsquare.trade.protocol.trade.taker.RequestIsOfferAvailableProtocol;
-import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
-import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferProtocol;
-import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
+import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerProtocol;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestIsOfferAvailableMessage;
-import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.taker.messages.RequestTakeOfferMessage;
-import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
 import io.bitsquare.user.User;
 import io.bitsquare.util.handlers.ErrorMessageHandler;
 import io.bitsquare.util.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.Fiat;
 
 import java.util.HashMap;
@@ -91,8 +81,8 @@ public class TradeManager {
     private final OfferBookService offerBookService;
 
     //TODO store TakerAsSellerProtocol in trade
-    private final Map<String, SellerTakesOfferProtocol> takerAsSellerProtocolMap = new HashMap<>();
-    private final Map<String, BuyerAcceptsOfferProtocol> offererAsBuyerProtocolMap = new HashMap<>();
+    private final Map<String, SellerAsTakerProtocol> takerAsSellerProtocolMap = new HashMap<>();
+    private final Map<String, BuyerAsOffererProtocol> offererAsBuyerProtocolMap = new HashMap<>();
     private final Map<String, RequestIsOfferAvailableProtocol> requestIsOfferAvailableProtocolMap = new HashMap<>();
 
     private final ObservableMap<String, OpenOffer> openOffers = FXCollections.observableHashMap();
@@ -184,7 +174,7 @@ public class TradeManager {
                 walletService,
                 offerBookService,
                 (transaction) -> {
-                    saveOpenOffer(new OpenOffer(offer));
+                    createOpenOffer(offer);
                     resultHandler.handleResult(transaction);
                 },
                 (message, throwable) -> errorMessageHandler.handleErrorMessage(message)
@@ -193,9 +183,12 @@ public class TradeManager {
         placeOfferProtocol.placeOffer();
     }
 
-    private void saveOpenOffer(OpenOffer openOffer) {
+    private void createOpenOffer(Offer offer) {
+        OpenOffer openOffer = new OpenOffer(offer);
         openOffers.put(openOffer.getId(), openOffer);
         persistOpenOffers();
+
+        createOffererAsBuyerProtocol(openOffer);
     }
 
     public void requestRemoveOpenOffer(String offerId, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
@@ -261,137 +254,53 @@ public class TradeManager {
     // Trading protocols
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createOffererAsBuyerProtocol(String offerId, Peer sender) {
-        log.trace("createOffererAsBuyerProtocol offerId = " + offerId);
-        if (openOffers.containsKey(offerId)) {
-            Offer offer = openOffers.get(offerId).getOffer();
-            Trade trade = createTrade(offer);
+    private void createOffererAsBuyerProtocol(OpenOffer openOffer) {
+        BuyerAsOffererModel model = new BuyerAsOffererModel(
+                openOffer,
+                tradeMessageService,
+                walletService,
+                blockChainService,
+                signatureService,
+                user);
 
-            BuyerAcceptsOfferProtocol buyerAcceptsOfferProtocol = new BuyerAcceptsOfferProtocol(trade,
-                    sender,
-                    tradeMessageService,
-                    walletService,
-                    blockChainService,
-                    signatureService,
-                    user,
-                    new BuyerAcceptsOfferProtocolListener() {
-                        @Override
-                        public void onOfferAccepted(Offer offer) {
-                            persistPendingTrades();
-                            //TODO do that later
-                            /*requestRemoveOpenOffer(offer.getId(),
-                                    () -> log.debug("remove offer was successful"),
-                                    (message) -> log.error(message));*/
-                        }
-
-                        @Override
-                        public void onDepositTxPublished(Transaction depositTx) {
-                            persistPendingTrades();
-                        }
-
-                        // TODO should be removed
-                        @Override
-                        public void onDepositTxConfirmedInBlockchain() {
-                            log.trace("trading onDepositTxConfirmedInBlockchain");
-                            trade.setState(Trade.State.DEPOSIT_CONFIRMED);
-                            persistPendingTrades();
-                        }
-
-                        @Override
-                        public void onPayoutTxPublished(Transaction payoutTx) {
-                            trade.setPayoutTx(payoutTx);
-                            trade.setState(Trade.State.PAYOUT_PUBLISHED);
-                            // We close the trade when the user has withdrawn his trade funds (see #283)
-                            //closeTrade(trade);
-
-                            log.debug("trading onPayoutTxPublishedMessage");
-                        }
-
-                        @Override
-                        public void onFault(Throwable throwable, BuyerAcceptsOfferProtocol.State state) {
-                            log.error("Error while executing trade process at state: " + state + " / " + throwable);
-                            switch (state) {
-                                case RespondToTakeOfferRequest:
-                                    removeFailedTrade(trade);
-                                    break;
-                                case ValidateTakeOfferFeePayedMessage:
-                                    removeFailedTrade(trade);
-                                    break;
-                                case CreateDepositTx:
-                                    removeFailedTrade(trade);
-                                    break;
-                                case SendTakerDepositPaymentRequest:
-                                    removeFailedTrade(trade);
-                                    break;
-                                case ValidateRequestOffererPublishDepositTxMessage:
-                                    removeFailedTrade(trade);
-                                    break;
-                                case VerifyTakerAccount:
-                                    removeFailedTrade(trade);
-                                    break;
-                                case VerifyAndSignContract:
-                                    removeFailedTrade(trade);
-                                    break;
-                                case SignAndPublishDepositTx:
-                                    removeFailedTrade(trade);
-                                    break;
-                                case SignAndPublishDepositTxResulted:
-                                    removeFailedTrade(trade);
-                                    break;
-                                case SendSignedPayoutTx:
-                                    removeFailedTrade(trade);
-                                    break;
-                                default:
-                                    log.error("Unhandled state: " + state);
-                                    break;
-                            }
-                        }
-                    });
-
-            if (!offererAsBuyerProtocolMap.containsKey(trade.getId())) {
-                offererAsBuyerProtocolMap.put(trade.getId(), buyerAcceptsOfferProtocol);
-            }
-            else {
-                // We don't store the protocol in case we have already an open offer. The protocol is only
-                // temporary used to reply with a reject message.
-                log.trace("offererAsBuyerProtocol not stored as offer is already pending.");
-            }
-
-            buyerAcceptsOfferProtocol.start();
-        }
-        else {
-            log.warn("Incoming offer take request does not match with any saved offer. We ignore that request.");
-        }
-    }
-
-    public Trade takeOffer(Coin amount, Offer offer) {
-        Trade trade = createTrade(offer);
-        trade.setTradeAmount(amount);
-
-        trade.stateProperty().addListener((ov, oldValue, newValue) -> {
+        openOffer.stateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("trade state = " + newValue);
             switch (newValue) {
                 case OPEN:
                     break;
-                case OFFERER_ACCEPTED:
+                case OFFER_ACCEPTED:
+                    requestRemoveOpenOffer(openOffer.getId(),
+                            () -> log.debug("remove offer was successful"),
+                            (message) -> log.error(message));
+
+                    Trade trade = model.getTrade();
+                    pendingTrades.put(trade.getId(), trade);
                     persistPendingTrades();
-                    break;
-                case OFFERER_REJECTED:
-                    removeFailedTrade(trade);
-                    break;
-                case DEPOSIT_PUBLISHED:
-                    persistPendingTrades();
-                    break;
-                case DEPOSIT_CONFIRMED:
-                    break;
-                case FIAT_PAYMENT_STARTED:
-                    persistPendingTrades();
-                    break;
-                case FAILED:
-                    removeFailedTrade(trade);
-                    break;
-                case PAYOUT_PUBLISHED:
-                    persistPendingTrades();
+                    currentPendingTrade = trade;
+
+                    // TODO check, remove listener
+                    trade.stateProperty().addListener((ov2, oldValue2, newValue2) -> {
+                        log.debug("trade state = " + newValue);
+                        switch (newValue2) {
+                            case OPEN:
+                                break;
+                            case OFFERER_ACCEPTED: // only taker side
+                            case DEPOSIT_PUBLISHED:
+                            case DEPOSIT_CONFIRMED:
+                            case FIAT_PAYMENT_STARTED:
+                            case FIAT_PAYMENT_RECEIVED:
+                            case PAYOUT_PUBLISHED:
+                                persistPendingTrades();
+                                break;
+                            case OFFERER_REJECTED:
+                            case FAILED:
+                                removeFailedTrade(trade);
+                                break;
+                            default:
+                                log.error("Unhandled trade state: " + newValue);
+                                break;
+                        }
+                    });
                     break;
                 default:
                     log.error("Unhandled trade state: " + newValue);
@@ -399,7 +308,41 @@ public class TradeManager {
             }
         });
 
-        SellerTakesOfferModel model = new SellerTakesOfferModel(
+        BuyerAsOffererProtocol buyerAcceptsOfferProtocol = new BuyerAsOffererProtocol(model);
+        offererAsBuyerProtocolMap.put(openOffer.getId(), buyerAcceptsOfferProtocol);
+        buyerAcceptsOfferProtocol.start();
+    }
+
+
+    public Trade requestTakeOffer(Coin amount, Offer offer) {
+        Trade trade = createTrade(offer);
+        trade.setTradeAmount(amount);
+
+        // TODO check
+        trade.stateProperty().addListener((ov, oldValue, newValue) -> {
+            log.debug("trade state = " + newValue);
+            switch (newValue) {
+                case OPEN:
+                    break;
+                case OFFERER_ACCEPTED:
+                case DEPOSIT_PUBLISHED:
+                case DEPOSIT_CONFIRMED:
+                case FIAT_PAYMENT_STARTED:
+                case FIAT_PAYMENT_RECEIVED:
+                case PAYOUT_PUBLISHED:
+                    persistPendingTrades();
+                    break;
+                case OFFERER_REJECTED:
+                case FAILED:
+                    removeFailedTrade(trade);
+                    break;
+                default:
+                    log.error("Unhandled trade state: " + newValue);
+                    break;
+            }
+        });
+
+        SellerAsTakerModel model = new SellerAsTakerModel(
                 trade,
                 tradeMessageService,
                 walletService,
@@ -407,10 +350,10 @@ public class TradeManager {
                 signatureService,
                 user);
 
-        SellerTakesOfferProtocol sellerTakesOfferProtocol = new SellerTakesOfferProtocol(model);
+        SellerAsTakerProtocol sellerTakesOfferProtocol = new SellerAsTakerProtocol(model);
         takerAsSellerProtocolMap.put(trade.getId(), sellerTakesOfferProtocol);
 
-        sellerTakesOfferProtocol.start();
+        sellerTakesOfferProtocol.handleRequestTakeOfferUIEvent();
 
         return trade;
     }
@@ -420,8 +363,7 @@ public class TradeManager {
     // Also we don't support yet offline messaging (mail box)
     public void fiatPaymentStarted(String tradeId) {
         if (offererAsBuyerProtocolMap.get(tradeId) != null) {
-            offererAsBuyerProtocolMap.get(tradeId).handleUIEventBankTransferStarted();
-            pendingTrades.get(tradeId).setState(Trade.State.FIAT_PAYMENT_STARTED);
+            offererAsBuyerProtocolMap.get(tradeId).handleBankTransferStartedUIEvent();
             persistPendingTrades();
         }
         else {
@@ -464,6 +406,7 @@ public class TradeManager {
         log.trace("handleNewMessage: message = " + message.getClass().getSimpleName());
         log.trace("handleNewMessage: sender = " + sender);
 
+        // TODO remove
         if (message instanceof OfferMessage) {
             OfferMessage offerMessage = (OfferMessage) message;
             // Before starting any take offer activity we check if the offer is still available.
@@ -490,40 +433,6 @@ public class TradeManager {
             else {
                 log.error("Incoming offerMessage not supported. " + offerMessage);
             }
-        }
-        else if (message instanceof TradeMessage) {
-            TradeMessage tradeMessage = (TradeMessage) message;
-            String tradeId = tradeMessage.getTradeId();
-            checkNotNull(tradeId);
-
-            if (tradeMessage instanceof RequestTakeOfferMessage) {
-                // Step 3. in trade protocol
-                createOffererAsBuyerProtocol(tradeId, sender);
-            }
-            else if (tradeMessage instanceof RespondToTakeOfferRequestMessage) {
-            }
-            else if (tradeMessage instanceof TakeOfferFeePayedMessage) {
-                offererAsBuyerProtocolMap.get(tradeId).handleTakeOfferFeePayedMessage((TakeOfferFeePayedMessage) tradeMessage);
-            }
-            else if (tradeMessage instanceof TakerDepositPaymentRequestMessage) {
-            }
-            else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage) {
-                offererAsBuyerProtocolMap.get(tradeId).handleRequestOffererPublishDepositTxMessage((RequestOffererPublishDepositTxMessage) tradeMessage);
-            }
-            else if (tradeMessage instanceof DepositTxPublishedMessage) {
-                // persistPendingTrades();
-            }
-            else if (tradeMessage instanceof BankTransferInitedMessage) {
-            }
-            else if (tradeMessage instanceof PayoutTxPublishedMessage) {
-                offererAsBuyerProtocolMap.get(tradeId).handlePayoutTxPublishedMessage((PayoutTxPublishedMessage) tradeMessage);
-            }
-            else {
-                log.error("Incoming tradeMessage not supported. " + tradeMessage);
-            }
-        }
-        else {
-            log.error("Incoming message not supported. " + message);
         }
     }
 

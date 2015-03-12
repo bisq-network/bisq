@@ -17,22 +17,137 @@
 
 package io.bitsquare.trade.protocol.trade;
 
-import io.bitsquare.trade.Trade;
+import io.bitsquare.bank.BankAccount;
+import io.bitsquare.btc.BlockChainService;
+import io.bitsquare.btc.WalletService;
+import io.bitsquare.crypto.SignatureService;
+import io.bitsquare.offer.Offer;
+import io.bitsquare.trade.TradeMessageService;
+import io.bitsquare.user.User;
 import io.bitsquare.util.tasks.SharedModel;
+
+import org.bitcoinj.core.ECKey;
+
+import java.security.PublicKey;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TradeSharedModel extends SharedModel {
-    private static final Logger log = LoggerFactory.getLogger(TradeSharedModel.class);
+    protected static final Logger log = LoggerFactory.getLogger(TradeSharedModel.class);
 
-    public Trade getTrade() {
-        return trade;
+    // provided
+    protected final Offer offer;
+    protected final TradeMessageService tradeMessageService;
+    protected final WalletService walletService;
+    protected final BlockChainService blockChainService;
+    protected final SignatureService signatureService;
+
+    // derived
+    protected final String arbitratorPubKey;
+    protected final BankAccount bankAccount;
+    protected final String accountId;
+    protected final PublicKey messagePublicKey;
+    protected final ECKey accountKey;
+
+    // data written/read by tasks
+    private TradeMessage tradeMessage;
+    protected String tradePubKeyAsHex;
+    protected String peersAccountId;
+    protected BankAccount peersBankAccount;
+
+    public TradeSharedModel(Offer offer,
+                            TradeMessageService tradeMessageService,
+                            WalletService walletService,
+                            BlockChainService blockChainService,
+                            SignatureService signatureService,
+                            User user) {
+        this.offer = offer;
+        this.tradeMessageService = tradeMessageService;
+        this.walletService = walletService;
+        this.blockChainService = blockChainService;
+        this.signatureService = signatureService;
+
+        //TODO use default arbitrator for now
+        arbitratorPubKey = offer.getArbitrators().get(0).getPubKeyAsHex();
+        bankAccount = user.getBankAccount(offer.getBankAccountId());
+        accountId = user.getAccountId();
+        messagePublicKey = user.getMessagePublicKey();
+        accountKey = walletService.getRegistrationAddressEntry().getKey();
     }
 
-    protected final Trade trade;
+    // getter/setter
 
-    public TradeSharedModel(Trade trade) {
-        this.trade = trade;
+    public TradeMessageService getTradeMessageService() {
+        return tradeMessageService;
     }
+
+    public WalletService getWalletService() {
+        return walletService;
+    }
+
+    public BlockChainService getBlockChainService() {
+        return blockChainService;
+    }
+
+    public SignatureService getSignatureService() {
+        return signatureService;
+    }
+
+    public Offer getOffer() {
+        return offer;
+    }
+
+    public String getArbitratorPubKey() {
+        return arbitratorPubKey;
+    }
+
+    public BankAccount getBankAccount() {
+        return bankAccount;
+    }
+
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public PublicKey getMessagePublicKey() {
+        return messagePublicKey;
+    }
+
+    public ECKey getAccountKey() {
+        return accountKey;
+    }
+
+    public String getTradePubKeyAsHex() {
+        return tradePubKeyAsHex;
+    }
+
+    public void setTradePubKeyAsHex(String tradePubKeyAsHex) {
+        this.tradePubKeyAsHex = tradePubKeyAsHex;
+    }
+
+    public String getPeersAccountId() {
+        return peersAccountId;
+    }
+
+    public void setPeersAccountId(String peersAccountId) {
+        this.peersAccountId = peersAccountId;
+    }
+
+    public BankAccount getPeersBankAccount() {
+        return peersBankAccount;
+    }
+
+    public void setPeersBankAccount(BankAccount peersBankAccount) {
+        this.peersBankAccount = peersBankAccount;
+    }
+
+    public TradeMessage getTradeMessage() {
+        return tradeMessage;
+    }
+
+    public void setTradeMessage(TradeMessage tradeMessage) {
+        this.tradeMessage = tradeMessage;
+    }
+
 }

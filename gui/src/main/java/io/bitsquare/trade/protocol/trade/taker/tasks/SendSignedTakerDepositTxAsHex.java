@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.trade.listeners.SendMessageListener;
-import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
+import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
 import io.bitsquare.util.tasks.Task;
 import io.bitsquare.util.tasks.TaskRunner;
@@ -29,10 +29,10 @@ import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendSignedTakerDepositTxAsHex extends Task<SellerTakesOfferModel> {
+public class SendSignedTakerDepositTxAsHex extends Task<SellerAsTakerModel> {
     private static final Logger log = LoggerFactory.getLogger(SendSignedTakerDepositTxAsHex.class);
 
-    public SendSignedTakerDepositTxAsHex(TaskRunner taskHandler, SellerTakesOfferModel model) {
+    public SendSignedTakerDepositTxAsHex(TaskRunner taskHandler, SellerAsTakerModel model) {
         super(taskHandler, model);
     }
 
@@ -42,7 +42,7 @@ public class SendSignedTakerDepositTxAsHex extends Task<SellerTakesOfferModel> {
         long takerTxOutIndex = model.getSignedTakerDepositTx().getInput(1).getOutpoint().getIndex();
 
         RequestOffererPublishDepositTxMessage tradeMessage = new RequestOffererPublishDepositTxMessage(
-                model.getTradeId(),
+                model.getTrade().getId(),
                 model.getBankAccount(),
                 model.getAccountId(),
                 model.getMessagePublicKey(),
@@ -51,7 +51,7 @@ public class SendSignedTakerDepositTxAsHex extends Task<SellerTakesOfferModel> {
                 Utils.HEX.encode(signedTakerDepositTx.getInput(1).getConnectedOutput().getParentTransaction().bitcoinSerialize()),
                 model.getTrade().getContractAsJson(),
                 model.getTrade().getTakerContractSignature(),
-                model.getWalletService().getAddressInfoByTradeID(model.getTradeId()).getAddressString(),
+                model.getWalletService().getAddressInfoByTradeID(model.getTrade().getId()).getAddressString(),
                 takerTxOutIndex,
                 model.getPeersTxOutIndex());
 

@@ -17,8 +17,10 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.btc.WalletService;
-import io.bitsquare.util.handlers.ExceptionHandler;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
@@ -28,45 +30,37 @@ import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SignPayoutTx {
+public class SignPayoutTx extends Task<BuyerAsOffererModel> {
     private static final Logger log = LoggerFactory.getLogger(SignPayoutTx.class);
 
-    public static void run(ResultHandler resultHandler,
-                           ExceptionHandler exceptionHandler,
-                           WalletService walletService,
-                           String tradeId,
-                           String takerPayoutAddress,
-                           String offererPayoutAddress,
-                           String depositTransactionId,
-                           Coin securityDeposit,
-                           Coin tradeAmount) {
-        log.trace("Run SignPayoutTx task");
+    public SignPayoutTx(TaskRunner taskHandler, BuyerAsOffererModel model) {
+        super(taskHandler, model);
+    }
+
+    @Override
+    protected void run() {
         try {
-            Coin offererPaybackAmount = tradeAmount.add(securityDeposit);
+            Trade trade = model.getTrade();
+            Coin securityDeposit = trade.getSecurityDeposit();
+            Coin offererPaybackAmount = trade.getTradeAmount().add(securityDeposit);
             @SuppressWarnings("UnnecessaryLocalVariable") Coin takerPaybackAmount = securityDeposit;
 
-            Pair<ECKey.ECDSASignature, String> result = walletService.offererCreatesAndSignsPayoutTx(
-                    depositTransactionId, offererPaybackAmount, takerPaybackAmount, takerPayoutAddress, tradeId);
+            Pair<ECKey.ECDSASignature, String> result = model.getWalletService().offererCreatesAndSignsPayoutTx(
+                    trade.getDepositTx().getHashAsString(), offererPaybackAmount, takerPaybackAmount, model.getTakerPayoutAddress(), model.getTrade().getId());
 
             ECKey.ECDSASignature offererSignature = result.getKey();
-            String offererSignatureR = offererSignature.r.toString();
-            String offererSignatureS = offererSignature.s.toString();
             String depositTxAsHex = result.getValue();
 
-            resultHandler.handleResult(depositTxAsHex, offererSignatureR, offererSignatureS, offererPaybackAmount, takerPaybackAmount, offererPayoutAddress);
+            model.setDepositTxAsHex(depositTxAsHex);
+            model.setOffererSignatureR(offererSignature.r.toString());
+            model.setOffererSignatureS(offererSignature.s.toString());
+            model.setOffererPaybackAmount(offererPaybackAmount);
+            model.setTakerPaybackAmount(takerPaybackAmount);
+
+            complete();
         } catch (Exception e) {
-            exceptionHandler.handleException(e);
+            failed(e);
         }
     }
-
-    public interface ResultHandler {
-        void handleResult(String depositTxAsHex,
-                          String offererSignatureR,
-                          String offererSignatureS,
-                          Coin offererPaybackAmount,
-                          Coin takerPaybackAmount,
-                          String offererPayoutAddress);
-    }
-
 }
 

@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.trade.listeners.SendMessageListener;
-import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
+import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage;
 import io.bitsquare.util.tasks.Task;
 import io.bitsquare.util.tasks.TaskRunner;
@@ -26,16 +26,16 @@ import io.bitsquare.util.tasks.TaskRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendPayoutTxToOfferer extends Task<SellerTakesOfferModel> {
+public class SendPayoutTxToOfferer extends Task<SellerAsTakerModel> {
     private static final Logger log = LoggerFactory.getLogger(SendPayoutTxToOfferer.class);
 
-    public SendPayoutTxToOfferer(TaskRunner taskHandler, SellerTakesOfferModel model) {
+    public SendPayoutTxToOfferer(TaskRunner taskHandler, SellerAsTakerModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void run() {
-        PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(model.getTradeId(), model.getPayoutTxAsHex());
+        PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(model.getTrade().getId(), model.getPayoutTxAsHex());
         model.getTradeMessageService().sendMessage(model.getPeer(), tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {

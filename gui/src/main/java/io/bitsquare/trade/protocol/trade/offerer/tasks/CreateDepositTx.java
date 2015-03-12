@@ -18,9 +18,9 @@
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.btc.WalletService;
-import io.bitsquare.trade.Trade;
-import io.bitsquare.util.handlers.ExceptionHandler;
+import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -30,34 +30,35 @@ import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CreateDepositTx {
+public class CreateDepositTx extends Task<BuyerAsOffererModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateDepositTx.class);
 
-    public static void run(ResultHandler resultHandler,
-                           ExceptionHandler exceptionHandler,
-                           WalletService walletService,
-                           Trade trade,
-                           String takerMultiSigPubKey,
-                           String arbitratorPubKeyAsHex) {
-        log.trace("Run CreateDepositTx task");
+    public CreateDepositTx(TaskRunner taskHandler, BuyerAsOffererModel model) {
+        super(taskHandler, model);
+    }
+
+    @Override
+    protected void run() {
         try {
-            String offererPubKey = walletService.getAddressInfoByTradeID(trade.getId()).getPubKeyAsHexString();
-            Coin offererInputAmount = trade.getSecurityDeposit().add(FeePolicy.TX_FEE);
-            Transaction transaction = walletService.offererCreatesMSTxAndAddPayment(offererInputAmount, offererPubKey, takerMultiSigPubKey,
-                    arbitratorPubKeyAsHex, trade.getId());
+            String offererPubKey = model.getWalletService().getAddressInfoByTradeID(model.getTrade().getId()).getPubKeyAsHexString();
+            Coin offererInputAmount = model.getTrade().getSecurityDeposit().add(FeePolicy.TX_FEE);
+            Transaction transaction = model.getWalletService().offererCreatesMSTxAndAddPayment(
+                    offererInputAmount,
+                    offererPubKey,
+                    model.getTradePubKeyAsHex(),
+                    model.getArbitratorPubKey(),
+                    model.getTrade().getId());
 
             String preparedOffererDepositTxAsHex = Utils.HEX.encode(transaction.bitcoinSerialize());
             long offererTxOutIndex = transaction.getInput(0).getOutpoint().getIndex();
 
-            resultHandler.onResult(offererPubKey, preparedOffererDepositTxAsHex, offererTxOutIndex);
+            model.setOffererPubKey(offererPubKey);
+            model.setPreparedOffererDepositTxAsHex(preparedOffererDepositTxAsHex);
+            model.setOffererTxOutIndex(offererTxOutIndex);
+
+            complete();
         } catch (InsufficientMoneyException e) {
-            log.error("Create deposit tx failed due InsufficientMoneyException " + e);
-            exceptionHandler.handleException(e);
+            failed(e);
         }
     }
-
-    public interface ResultHandler {
-        void onResult(String offererPubKey, String preparedOffererDepositTxAsHex, long offererTxOutIndex);
-    }
-
 }

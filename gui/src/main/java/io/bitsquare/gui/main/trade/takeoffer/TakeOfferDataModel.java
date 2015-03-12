@@ -138,7 +138,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
     }
 
     void takeOffer() {
-        final Trade trade = tradeManager.takeOffer(amountAsCoin.get(), offer);
+        final Trade trade = tradeManager.requestTakeOffer(amountAsCoin.get(), offer);
         trade.stateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("trade state = " + newValue);
             switch (newValue) {

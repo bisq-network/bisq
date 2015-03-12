@@ -15,29 +15,32 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.taker.tasks;
+package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
+import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
 import io.bitsquare.util.tasks.Task;
 import io.bitsquare.util.tasks.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VerifyOfferFeePayment extends Task<SellerAsTakerModel> {
-    private static final Logger log = LoggerFactory.getLogger(VerifyOfferFeePayment.class);
+import static io.bitsquare.util.Validator.checkTradeId;
 
-    public VerifyOfferFeePayment(TaskRunner taskHandler, SellerAsTakerModel model) {
+public class ProcessRequestTakeOfferMessage extends Task<BuyerAsOffererModel> {
+    private static final Logger log = LoggerFactory.getLogger(ProcessRequestTakeOfferMessage.class);
+
+    public ProcessRequestTakeOfferMessage(TaskRunner taskHandler, BuyerAsOffererModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void run() {
-        //TODO impl. missing
-        int numOfPeersSeenTx = model.getWalletService().getNumOfPeersSeenTx(model.getTrade().getTakeOfferFeeTxId());
-       /* if (numOfPeersSeenTx > 2) {
-            resultHandler.handleResult();
-        }*/
-        complete();
+        try {
+            checkTradeId(model.getOffer().getId(), model.getTradeMessage());
+
+            complete();
+        } catch (Throwable t) {
+            failed(t);
+        }
     }
 }

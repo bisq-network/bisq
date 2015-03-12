@@ -15,29 +15,28 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.taker.tasks;
+package io.bitsquare.trade.protocol.trade.offerer;
 
-import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
-import io.bitsquare.util.tasks.Task;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.util.handlers.FaultHandler;
+import io.bitsquare.util.handlers.ResultHandler;
 import io.bitsquare.util.tasks.TaskRunner;
+
+import org.jetbrains.annotations.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VerifyOfferFeePayment extends Task<SellerAsTakerModel> {
-    private static final Logger log = LoggerFactory.getLogger(VerifyOfferFeePayment.class);
+public class BuyerAsOffererTaskRunner<T extends BuyerAsOffererModel> extends TaskRunner<BuyerAsOffererModel> {
+    private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererTaskRunner.class);
 
-    public VerifyOfferFeePayment(TaskRunner taskHandler, SellerAsTakerModel model) {
-        super(taskHandler, model);
+    public BuyerAsOffererTaskRunner(T sharedModel, ResultHandler resultHandler, FaultHandler faultHandler) {
+        super(sharedModel, resultHandler, faultHandler);
     }
 
     @Override
-    protected void run() {
-        //TODO impl. missing
-        int numOfPeersSeenTx = model.getWalletService().getNumOfPeersSeenTx(model.getTrade().getTakeOfferFeeTxId());
-       /* if (numOfPeersSeenTx > 2) {
-            resultHandler.handleResult();
-        }*/
-        complete();
+    public void handleFault(String message, @NotNull Throwable throwable) {
+        sharedModel.getTrade().setState(Trade.State.FAILED);
+        super.handleFault(message, throwable);
     }
 }

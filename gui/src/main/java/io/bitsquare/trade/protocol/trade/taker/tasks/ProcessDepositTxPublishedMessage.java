@@ -18,28 +18,26 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
+import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.util.tasks.Task;
 import io.bitsquare.util.tasks.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.Preconditions.checkState;
 import static io.bitsquare.util.Validator.*;
 
-public class ValidateDepositTxPublishedMessage extends Task<SellerTakesOfferModel> {
-    private static final Logger log = LoggerFactory.getLogger(ValidateDepositTxPublishedMessage.class);
+public class ProcessDepositTxPublishedMessage extends Task<SellerAsTakerModel> {
+    private static final Logger log = LoggerFactory.getLogger(ProcessDepositTxPublishedMessage.class);
 
-    public ValidateDepositTxPublishedMessage(TaskRunner taskHandler, SellerTakesOfferModel model) {
+    public ProcessDepositTxPublishedMessage(TaskRunner taskHandler, SellerAsTakerModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void run() {
         try {
-            checkState(model.getTrade().getPreviousTask() == SendSignedTakerDepositTxAsHex.class);
-            checkTradeId(model.getTradeId(), model.getTradeMessage());
+            checkTradeId(model.getTrade().getId(), model.getTradeMessage());
             
             DepositTxPublishedMessage message = (DepositTxPublishedMessage) model.getTradeMessage();
             model.setDepositTxAsHex(nonEmptyStringOf(message.getDepositTxAsHex()));

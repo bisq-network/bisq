@@ -182,7 +182,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     @FXML
     void onShowPayFundsScreen() {
-        if (model.displaySecurityDepositInfo()) {
+        // TODO deactivate for testing the moment
+       /* if (model.displaySecurityDepositInfo()) {
             overlayManager.blurContent();
             List<Action> actions = new ArrayList<>();
             actions.add(new AbstractAction(BSResources.get("shared.close")) {
@@ -198,7 +199,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     actions);
 
             model.securityDepositInfoDisplayed();
-        }
+        }*/
 
         priceAmountPane.setInactive();
 

@@ -17,40 +17,40 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.trade.listeners.SendMessageListener;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
-import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage;
 import io.bitsquare.util.tasks.Task;
 import io.bitsquare.util.tasks.TaskRunner;
 
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendDepositTxIdToTaker extends Task<BuyerAsOffererModel> {
-    private static final Logger log = LoggerFactory.getLogger(SendDepositTxIdToTaker.class);
+import static io.bitsquare.util.Validator.*;
 
-    public SendDepositTxIdToTaker(TaskRunner taskHandler, BuyerAsOffererModel model) {
+public class ProcessPayoutTxPublishedMessage extends Task<BuyerAsOffererModel> {
+    private static final Logger log = LoggerFactory.getLogger(ProcessPayoutTxPublishedMessage.class);
+
+    public ProcessPayoutTxPublishedMessage(TaskRunner taskHandler, BuyerAsOffererModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void run() {
-        DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(model.getTrade().getId(),
-                Utils.HEX.encode(model.getTrade().getDepositTx().bitcoinSerialize()));
+        try {
+            checkTradeId(model.getTrade().getId(), model.getTradeMessage());
+            String payoutTxAsHex = nonEmptyStringOf(((PayoutTxPublishedMessage) model.getTradeMessage()).getPayoutTxAsHex());
+            Transaction payoutTx = new Transaction(model.getWalletService().getWallet().getParams(), Utils.parseAsHexOrBase58(payoutTxAsHex));
+           
+            model.getTrade().setPayoutTx(payoutTx);
+            model.getTrade().setState(Trade.State.PAYOUT_PUBLISHED);
 
-        model.getTradeMessageService().sendMessage(model.getPeer(), tradeMessage, new SendMessageListener() {
-            @Override
-            public void handleResult() {
-                log.trace("DepositTxPublishedMessage successfully arrived at peer");
-                complete();
-            }
-
-            @Override
-            public void handleFault() {
-                failed("Sending DepositTxPublishedMessage failed.");
-            }
-        });
+            complete();
+        } catch (Throwable t) {
+            failed(t);
+        }
     }
 }

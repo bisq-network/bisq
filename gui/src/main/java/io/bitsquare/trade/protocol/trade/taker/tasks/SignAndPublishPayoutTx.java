@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
+import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.util.tasks.Task;
 import io.bitsquare.util.tasks.TaskRunner;
 
@@ -33,10 +33,10 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SignAndPublishPayoutTx extends Task<SellerTakesOfferModel> {
+public class SignAndPublishPayoutTx extends Task<SellerAsTakerModel> {
     private static final Logger log = LoggerFactory.getLogger(SignAndPublishPayoutTx.class);
 
-    public SignAndPublishPayoutTx(TaskRunner taskHandler, SellerTakesOfferModel model) {
+    public SignAndPublishPayoutTx(TaskRunner taskHandler, SellerAsTakerModel model) {
         super(taskHandler, model);
     }
 
@@ -49,7 +49,7 @@ public class SignAndPublishPayoutTx extends Task<SellerTakesOfferModel> {
                     model.getOffererPaybackAmount(),
                     model.getTakerPaybackAmount(),
                     model.getOffererPayoutAddress(),
-                    model.getTradeId(),
+                    model.getTrade().getId(),
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {

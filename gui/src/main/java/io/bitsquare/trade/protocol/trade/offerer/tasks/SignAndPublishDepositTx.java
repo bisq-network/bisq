@@ -17,8 +17,10 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.btc.WalletService;
-import io.bitsquare.util.handlers.ExceptionHandler;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
 import org.bitcoinj.core.Transaction;
 
@@ -29,47 +31,40 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SignAndPublishDepositTx {
+public class SignAndPublishDepositTx extends Task<BuyerAsOffererModel> {
     private static final Logger log = LoggerFactory.getLogger(SignAndPublishDepositTx.class);
 
-    public static void run(ResultHandler resultHandler,
-                           ExceptionHandler exceptionHandler,
-                           WalletService walletService,
-                           String preparedOffererDepositTxAsHex,
-                           String signedTakerDepositTxAsHex,
-                           String txConnOutAsHex,
-                           String txScriptSigAsHex,
-                           long offererTxOutIndex,
-                           long takerTxOutIndex) {
-        log.trace("Run task");
+    public SignAndPublishDepositTx(TaskRunner taskHandler, BuyerAsOffererModel model) {
+        super(taskHandler, model);
+    }
+
+    @Override
+    protected void run() {
         try {
-            walletService.offererSignAndPublishTx(preparedOffererDepositTxAsHex,
-                    signedTakerDepositTxAsHex,
-                    txConnOutAsHex,
-                    txScriptSigAsHex,
-                    offererTxOutIndex,
-                    takerTxOutIndex,
+            model.getWalletService().offererSignAndPublishTx(model.getPreparedOffererDepositTxAsHex(),
+                    model.getSignedTakerDepositTxAsHex(),
+                    model.getTxConnOutAsHex(),
+                    model.getTxScriptSigAsHex(),
+                    model.getOffererTxOutIndex(),
+                    model.getTakerTxOutIndex(),
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {
                             log.trace("offererSignAndPublishTx succeeded " + transaction);
-                            resultHandler.onResult(transaction);
+
+                            model.getTrade().setDepositTx(transaction);
+                            model.getTrade().setState(Trade.State.DEPOSIT_PUBLISHED);
+
+                            complete();
                         }
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
-                            log.error("offererSignAndPublishTx faultHandler.onFault:" + t);
-                            exceptionHandler.handleException(t);
+                            failed(t);
                         }
                     });
         } catch (Exception e) {
-            log.error("offererSignAndPublishTx faultHandler.onFault:" + e);
-            exceptionHandler.handleException(e);
+            failed(e);
         }
     }
-
-    public interface ResultHandler {
-        void onResult(Transaction depositTransaction);
-    }
-
 }

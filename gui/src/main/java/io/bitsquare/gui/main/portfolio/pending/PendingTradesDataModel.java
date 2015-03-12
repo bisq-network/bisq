@@ -163,6 +163,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     void fiatPaymentStarted() {
+        getTrade().setState(Trade.State.FIAT_PAYMENT_STARTED);
         tradeManager.fiatPaymentStarted(getTrade().getId());
     }
 

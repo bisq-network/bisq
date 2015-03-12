@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.trade.listeners.SendMessageListener;
-import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
+import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestTakeOfferMessage;
 import io.bitsquare.util.tasks.Task;
 import io.bitsquare.util.tasks.TaskRunner;
@@ -26,16 +26,16 @@ import io.bitsquare.util.tasks.TaskRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RequestTakeOffer extends Task<SellerTakesOfferModel> {
+public class RequestTakeOffer extends Task<SellerAsTakerModel> {
     private static final Logger log = LoggerFactory.getLogger(RequestTakeOffer.class);
 
-    public RequestTakeOffer(TaskRunner taskHandler, SellerTakesOfferModel model) {
+    public RequestTakeOffer(TaskRunner taskHandler, SellerAsTakerModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void run() {
-        model.getTradeMessageService().sendMessage(model.getPeer(), new RequestTakeOfferMessage(model.getTradeId()),
+        model.getTradeMessageService().sendMessage(model.getPeer(), new RequestTakeOfferMessage(model.getTrade().getId()),
                 new SendMessageListener() {
                     @Override
                     public void handleResult() {

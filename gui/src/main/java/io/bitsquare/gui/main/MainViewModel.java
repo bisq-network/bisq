@@ -183,7 +183,7 @@ class MainViewModel implements ViewModel {
         Observable<Object> walletServiceObservable = walletService.initialize(Platform::runLater);
         walletServiceObservable.subscribe(
                 next -> {
-                    log.trace("wallet next");
+                    //log.trace("wallet next");
                 },
                 error -> Platform.runLater(() -> {
                     log.trace("wallet error");
@@ -195,7 +195,7 @@ class MainViewModel implements ViewModel {
 
         Observable<UpdateProcess.State> updateProcessObservable = this.updateProcess.getProcess();
         updateProcessObservable.subscribe(next -> {
-                    log.trace("updateProcess next");
+                    //log.trace("updateProcess next");
                 },
                 error -> {
                     log.trace("updateProcess error");

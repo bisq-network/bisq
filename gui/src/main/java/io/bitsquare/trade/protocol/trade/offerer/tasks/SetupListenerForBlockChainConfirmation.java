@@ -17,7 +17,10 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.trade.listeners.BuyerAcceptsOfferProtocolListener;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
@@ -26,25 +29,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // TODO should be removed
-public class SetupListenerForBlockChainConfirmation {
+public class SetupListenerForBlockChainConfirmation extends Task<BuyerAsOffererModel> {
     private static final Logger log = LoggerFactory.getLogger(SetupListenerForBlockChainConfirmation.class);
 
-    public static void run(Transaction depositTransaction, BuyerAcceptsOfferProtocolListener listener) {
-        log.trace("Run SetupListenerForBlockChainConfirmation task");
-        //TODO
-        // sharedModel.offererPaymentProtocolListener.onDepositTxConfirmedInBlockchain();
+    public SetupListenerForBlockChainConfirmation(TaskRunner taskHandler, BuyerAsOffererModel model) {
+        super(taskHandler, model);
+    }
 
-        depositTransaction.getConfidence().addEventListener(new TransactionConfidence.Listener() {
+    @Override
+    protected void run() {
+        TransactionConfidence confidence = model.getTrade().getDepositTx().getConfidence();
+        confidence.addEventListener(new TransactionConfidence.Listener() {
             @Override
             public void onConfidenceChanged(Transaction tx, ChangeReason reason) {
                 log.trace("onConfidenceChanged " + tx.getConfidence());
-                if (reason == ChangeReason.TYPE &&
-                        tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
-                    listener.onDepositTxConfirmedInBlockchain();
-                    depositTransaction.getConfidence().removeEventListener(this);
-                    log.trace("Tx is in blockchain");
+                if (reason == ChangeReason.TYPE && tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
+                    
+                    model.getTrade().setState(Trade.State.DEPOSIT_CONFIRMED);
+                    
+                    //TODO not sure if that works
+                    confidence.removeEventListener(this);
                 }
             }
         });
+        
+        complete();
     }
 }

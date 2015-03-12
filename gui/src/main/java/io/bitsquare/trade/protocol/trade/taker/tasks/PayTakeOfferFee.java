@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
+import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.util.tasks.Task;
 import io.bitsquare.util.tasks.TaskRunner;
 
@@ -31,17 +31,17 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PayTakeOfferFee extends Task<SellerTakesOfferModel> {
+public class PayTakeOfferFee extends Task<SellerAsTakerModel> {
     private static final Logger log = LoggerFactory.getLogger(PayTakeOfferFee.class);
 
-    public PayTakeOfferFee(TaskRunner taskHandler, SellerTakesOfferModel model) {
+    public PayTakeOfferFee(TaskRunner taskHandler, SellerAsTakerModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void run() {
         try {
-            model.getWalletService().payTakeOfferFee(model.getTradeId(), new FutureCallback<Transaction>() {
+            model.getWalletService().payTakeOfferFee(model.getTrade().getId(), new FutureCallback<Transaction>() {
                 @Override
                 public void onSuccess(Transaction transaction) {
                     log.debug("Take offer fee paid successfully. Transaction ID = " + transaction.getHashAsString());

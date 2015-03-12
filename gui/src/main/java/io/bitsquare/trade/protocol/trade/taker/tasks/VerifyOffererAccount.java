@@ -17,17 +17,17 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
+import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.util.tasks.Task;
 import io.bitsquare.util.tasks.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VerifyOffererAccount extends Task<SellerTakesOfferModel> {
+public class VerifyOffererAccount extends Task<SellerAsTakerModel> {
     private static final Logger log = LoggerFactory.getLogger(VerifyOffererAccount.class);
 
-    public VerifyOffererAccount(TaskRunner taskHandler, SellerTakesOfferModel model) {
+    public VerifyOffererAccount(TaskRunner taskHandler, SellerAsTakerModel model) {
         super(taskHandler, model);
     }
 

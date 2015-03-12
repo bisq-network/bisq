@@ -17,53 +17,43 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.network.Peer;
-import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.SendMessageListener;
+import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
 import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferInitedMessage;
-import io.bitsquare.util.handlers.ExceptionHandler;
-
-import org.bitcoinj.core.Coin;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendBankTransferInitedMessage {
+public class SendBankTransferInitedMessage extends Task<BuyerAsOffererModel> {
     private static final Logger log = LoggerFactory.getLogger(SendBankTransferInitedMessage.class);
 
-    public static void run(ExceptionHandler exceptionHandler,
-                           Peer peer,
-                           TradeMessageService tradeMessageService,
-                           String tradeId,
-                           String depositTxAsHex,
-                           String offererSignatureR,
-                           String offererSignatureS,
-                           Coin offererPaybackAmount,
-                           Coin takerPaybackAmount,
-                           String offererPayoutAddress) {
-        log.trace("Run SendSignedPayoutTx task");
-        try {
-            BankTransferInitedMessage tradeMessage = new BankTransferInitedMessage(tradeId,
-                    depositTxAsHex,
-                    offererSignatureR,
-                    offererSignatureS,
-                    offererPaybackAmount,
-                    takerPaybackAmount,
-                    offererPayoutAddress);
-            tradeMessageService.sendMessage(peer, tradeMessage, new SendMessageListener() {
-                @Override
-                public void handleResult() {
-                    log.trace("Sending BankTransferInitedMessage succeeded.");
-                }
+    public SendBankTransferInitedMessage(TaskRunner taskHandler, BuyerAsOffererModel model) {
+        super(taskHandler, model);
+    }
 
-                @Override
-                public void handleFault() {
-                    exceptionHandler.handleException(new Exception("Sending BankTransferInitedMessage failed."));
+    @Override
+    protected void run() {
+        BankTransferInitedMessage tradeMessage = new BankTransferInitedMessage(
+                model.getTrade().getId(),
+                model.getDepositTxAsHex(),
+                model.getOffererSignatureR(),
+                model.getOffererSignatureS(),
+                model.getOffererPaybackAmount(),
+                model.getTakerPaybackAmount(),
+                model.getOffererPaybackAddress());
+        model.getTradeMessageService().sendMessage(model.getPeer(), tradeMessage, new SendMessageListener() {
+            @Override
+            public void handleResult() {
+                log.trace("Sending BankTransferInitedMessage succeeded.");
+                complete();
+            }
 
-                }
-            });
-        } catch (Exception e) {
-            exceptionHandler.handleException(e);
-        }
+            @Override
+            public void handleFault() {
+                failed("Sending BankTransferInitedMessage failed.");
+            }
+        });
     }
 }

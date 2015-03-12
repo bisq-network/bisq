@@ -20,7 +20,6 @@ package io.bitsquare.trade.protocol.trade.taker;
 import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeTaskRunner;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferInitedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
@@ -36,10 +35,10 @@ import io.bitsquare.trade.protocol.trade.taker.tasks.SendSignedTakerDepositTxAsH
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendTakeOfferFeePayedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SignAndPublishPayoutTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCommitDepositTx;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ValidateBankTransferInitedMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ValidateDepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ValidateRespondToTakeOfferRequestMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ValidateTakerDepositPaymentRequestMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessBankTransferInitedMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessDepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRespondToTakeOfferRequestMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessTakerDepositPaymentRequestMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOffererAccount;
 
@@ -56,24 +55,29 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
  * It uses sub tasks to not pollute the main class too much with all the async result/fault handling.
  * Any data from incoming messages as well data used to send to the peer need to be validated before further processing.
  */
-public class SellerTakesOfferProtocol {
-    private static final Logger log = LoggerFactory.getLogger(SellerTakesOfferProtocol.class);
+public class SellerAsTakerProtocol {
+    private static final Logger log = LoggerFactory.getLogger(SellerAsTakerProtocol.class);
 
-    private final SellerTakesOfferModel model;
+    private final SellerAsTakerModel model;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SellerTakesOfferProtocol(SellerTakesOfferModel model) {
+    public SellerAsTakerProtocol(SellerAsTakerModel model) {
         this.model = model;
     }
+    
 
-    public void start() {
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI event handling
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    
+    public void handleRequestTakeOfferUIEvent() {
         model.getTradeMessageService().addMessageHandler(this::handleMessage);
 
-        TradeTaskRunner<SellerTakesOfferModel> sequence1 = new TradeTaskRunner<>(model,
+        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence = new SellerAsTakerTaskRunner<>(model,
                 () -> {
                     log.debug("sequence1 completed");
                 },
@@ -81,16 +85,17 @@ public class SellerTakesOfferProtocol {
                     log.error(message);
                 }
         );
-        sequence1.addTasks(
+        sequence.addTasks(
                 GetPeerAddress.class,
                 RequestTakeOffer.class
         );
-        sequence1.run();
+        sequence.run();
     }
 
     public void cleanup() {
         model.getTradeMessageService().removeMessageHandler(this::handleMessage);
     }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handling
@@ -103,16 +108,16 @@ public class SellerTakesOfferProtocol {
             nonEmptyStringOf(tradeMessage.getTradeId());
 
             if (tradeMessage instanceof RespondToTakeOfferRequestMessage) {
-                handleTradeMessage((RespondToTakeOfferRequestMessage) tradeMessage);
+                handleRespondToTakeOfferRequestMessage((RespondToTakeOfferRequestMessage) tradeMessage);
             }
             else if (tradeMessage instanceof TakerDepositPaymentRequestMessage) {
-                handleTradeMessage((TakerDepositPaymentRequestMessage) tradeMessage);
+                handleTakerDepositPaymentRequestMessage((TakerDepositPaymentRequestMessage) tradeMessage);
             }
             else if (tradeMessage instanceof DepositTxPublishedMessage) {
-                handleTradeMessage((DepositTxPublishedMessage) tradeMessage);
+                handleDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
             }
             else if (tradeMessage instanceof BankTransferInitedMessage) {
-                handleTradeMessage((BankTransferInitedMessage) tradeMessage);
+                handleBankTransferInitedMessage((BankTransferInitedMessage) tradeMessage);
             }
             else {
                 log.error("Incoming message not supported. " + tradeMessage);
@@ -120,10 +125,10 @@ public class SellerTakesOfferProtocol {
         }
     }
 
-    private void handleTradeMessage(RespondToTakeOfferRequestMessage tradeMessage) {
+    private void handleRespondToTakeOfferRequestMessage(RespondToTakeOfferRequestMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        TradeTaskRunner<SellerTakesOfferModel> sequence2 = new TradeTaskRunner<>(model,
+        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence2 = new SellerAsTakerTaskRunner<>(model,
                 () -> {
                     log.debug("sequence2 completed");
                 },
@@ -132,17 +137,17 @@ public class SellerTakesOfferProtocol {
                 }
         );
         sequence2.addTasks(
-                ValidateRespondToTakeOfferRequestMessage.class,
+                ProcessRespondToTakeOfferRequestMessage.class,
                 PayTakeOfferFee.class,
                 SendTakeOfferFeePayedMessage.class
         );
         sequence2.run();
     }
 
-    private void handleTradeMessage(TakerDepositPaymentRequestMessage tradeMessage) {
+    private void handleTakerDepositPaymentRequestMessage(TakerDepositPaymentRequestMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        TradeTaskRunner<SellerTakesOfferModel> sequence3 = new TradeTaskRunner<>(model,
+        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence3 = new SellerAsTakerTaskRunner<>(model,
                 () -> {
                     log.debug("sequence3 completed");
                 },
@@ -151,7 +156,7 @@ public class SellerTakesOfferProtocol {
                 }
         );
         sequence3.addTasks(
-                ValidateTakerDepositPaymentRequestMessage.class,
+                ProcessTakerDepositPaymentRequestMessage.class,
                 VerifyOffererAccount.class,
                 CreateAndSignContract.class,
                 PayDeposit.class,
@@ -160,10 +165,10 @@ public class SellerTakesOfferProtocol {
         sequence3.run();
     }
 
-    private void handleTradeMessage(DepositTxPublishedMessage tradeMessage) {
+    private void handleDepositTxPublishedMessage(DepositTxPublishedMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        TradeTaskRunner<SellerTakesOfferModel> sequence4 = new TradeTaskRunner<>(model,
+        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence4 = new SellerAsTakerTaskRunner<>(model,
                 () -> {
                     log.debug("sequence4 completed");
                 },
@@ -172,16 +177,16 @@ public class SellerTakesOfferProtocol {
                 }
         );
         sequence4.addTasks(
-                ValidateDepositTxPublishedMessage.class,
+                ProcessDepositTxPublishedMessage.class,
                 TakerCommitDepositTx.class
         );
         sequence4.run();
     }
 
-    private void handleTradeMessage(BankTransferInitedMessage tradeMessage) {
+    private void handleBankTransferInitedMessage(BankTransferInitedMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        TradeTaskRunner<SellerTakesOfferModel> sequence5 = new TradeTaskRunner<>(model,
+        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence5 = new SellerAsTakerTaskRunner<>(model,
                 () -> {
                     log.debug("sequence5 completed");
                     model.getTrade().setState(Trade.State.FIAT_PAYMENT_STARTED);
@@ -190,7 +195,7 @@ public class SellerTakesOfferProtocol {
                     log.error(message);
                 }
         );
-        sequence5.addTasks(ValidateBankTransferInitedMessage.class);
+        sequence5.addTasks(ProcessBankTransferInitedMessage.class);
         sequence5.run();
     }
 
@@ -200,7 +205,7 @@ public class SellerTakesOfferProtocol {
 
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     public void handleFiatReceivedUIEvent() {
-        TradeTaskRunner<SellerTakesOfferModel> sequence6 = new TradeTaskRunner<>(model,
+        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence6 = new SellerAsTakerTaskRunner<>(model,
                 () -> {
                     log.debug("sequence6 completed");
                 },

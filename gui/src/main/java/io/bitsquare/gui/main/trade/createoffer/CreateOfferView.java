@@ -148,7 +148,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     @FXML
     void onShowPayFundsScreen() {
-        if (model.displaySecurityDepositInfo()) {
+        // TODO deactivate for testing the moment
+       /* if (model.displaySecurityDepositInfo()) {
             overlayManager.blurContent();
             List<Action> actions = new ArrayList<>();
             actions.add(new AbstractAction(BSResources.get("shared.close")) {
@@ -165,7 +166,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     actions);
 
             model.securityDepositInfoDisplayed();
-        }
+        }*/
 
 
         priceAmountPane.setInactive();

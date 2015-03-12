@@ -17,43 +17,43 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.bank.BankAccount;
-import io.bitsquare.network.Peer;
-import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.SendMessageListener;
+import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
 import io.bitsquare.trade.protocol.trade.offerer.messages.TakerDepositPaymentRequestMessage;
-import io.bitsquare.util.handlers.ErrorMessageHandler;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendTakerDepositPaymentRequest {
+public class SendTakerDepositPaymentRequest extends Task<BuyerAsOffererModel> {
     private static final Logger log = LoggerFactory.getLogger(SendTakerDepositPaymentRequest.class);
 
-    public static void run(ErrorMessageHandler errorMessageHandler,
-                           Peer peer,
-                           TradeMessageService tradeMessageService,
-                           String tradeId,
-                           BankAccount bankAccount,
-                           String accountId,
-                           String offererPubKey,
-                           String preparedOffererDepositTxAsHex,
-                           long offererTxOutIndex) {
-        log.trace("Run SendTakerDepositPaymentRequest task");
+    public SendTakerDepositPaymentRequest(TaskRunner taskHandler, BuyerAsOffererModel model) {
+        super(taskHandler, model);
+    }
+
+    @Override
+    protected void run() {
         TakerDepositPaymentRequestMessage tradeMessage = new TakerDepositPaymentRequestMessage(
-                tradeId, bankAccount, accountId, offererPubKey, preparedOffererDepositTxAsHex, offererTxOutIndex);
-        tradeMessageService.sendMessage(peer, tradeMessage, new SendMessageListener() {
+                model.getTrade().getId(),
+                model.getBankAccount(),
+                model.getAccountId(),
+                model.getOffererPubKey(),
+                model.getPreparedOffererDepositTxAsHex(),
+                model.getOffererTxOutIndex());
+
+        model.getTradeMessageService().sendMessage(model.getPeer(), tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");
+                complete();
             }
 
             @Override
             public void handleFault() {
-                log.error("RequestTakerDepositPaymentMessage  did not arrive at peer");
-                errorMessageHandler.handleErrorMessage("RequestTakerDepositPaymentMessage did not arrive at peer");
+                failed("RequestTakerDepositPaymentMessage did not arrive at peer");
             }
         });
     }
-
 }

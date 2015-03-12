@@ -17,43 +17,47 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.network.Peer;
+import io.bitsquare.offer.OpenOffer;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.SendMessageListener;
+import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToTakeOfferRequestMessage;
-import io.bitsquare.util.handlers.ErrorMessageHandler;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RespondToTakeOfferRequest {
+public class RespondToTakeOfferRequest extends Task<BuyerAsOffererModel> {
     private static final Logger log = LoggerFactory.getLogger(RespondToTakeOfferRequest.class);
 
-    public static void run(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler,
-                           TradeMessageService tradeMessageService, Peer peer, Trade.State tradeState, String tradeId) {
-        log.trace("Run HandleTakeOfferRequest task");
-        boolean takeOfferRequestAccepted = tradeState == Trade.State.OPEN;
-        if (!takeOfferRequestAccepted) {
-            log.warn("Received take offer request but the offer not marked as open anymore.");
-        }
-        RespondToTakeOfferRequestMessage tradeMessage = new RespondToTakeOfferRequestMessage(tradeId, takeOfferRequestAccepted);
-        tradeMessageService.sendMessage(peer, tradeMessage, new SendMessageListener() {
+    public RespondToTakeOfferRequest(TaskRunner taskHandler, BuyerAsOffererModel model) {
+        super(taskHandler, model);
+    }
+
+    @Override
+    protected void run() {
+        boolean takeOfferRequestAccepted = model.getOpenOffer().getState() == OpenOffer.State.OPEN;
+        if (!takeOfferRequestAccepted)
+            log.info("Received take offer request but the offer not marked as open anymore.");
+
+        Trade trade = new Trade(model.getOpenOffer().getOffer());
+        model.setTrade(trade);
+        model.getOpenOffer().setState(OpenOffer.State.OFFER_ACCEPTED);
+
+        RespondToTakeOfferRequestMessage tradeMessage = new RespondToTakeOfferRequestMessage(trade.getId(), takeOfferRequestAccepted);
+        model.getTradeMessageService().sendMessage(model.getPeer(), tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 log.trace("RespondToTakeOfferRequestMessage successfully arrived at peer");
-                resultHandler.handleResult();
+                complete();
             }
 
             @Override
             public void handleFault() {
-                log.error("AcceptTakeOfferRequestMessage  did not arrive at peer");
-                errorMessageHandler.handleErrorMessage("AcceptTakeOfferRequestMessage did not arrive at peer");
+                failed("AcceptTakeOfferRequestMessage did not arrive at peer");
             }
         });
-    }
 
-    public interface ResultHandler {
-        void handleResult();
     }
 }

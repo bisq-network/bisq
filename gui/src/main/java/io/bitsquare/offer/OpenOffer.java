@@ -19,18 +19,36 @@ package io.bitsquare.offer;
 
 import java.io.Serializable;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OpenOffer implements Serializable  {
+public class OpenOffer implements Serializable {
     private static final long serialVersionUID = -7523483764145982933L;
-    
-    private static final Logger log = LoggerFactory.getLogger(OpenOffer.class);
-    
-    private final Offer offer;
 
-    public OpenOffer( Offer offer) {
+    private static final Logger log = LoggerFactory.getLogger(OpenOffer.class);
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Enum
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static enum State {
+        OPEN,
+        OFFER_ACCEPTED
+    }
+
+    private final Offer offer;
+    private State state;
+
+    transient private ObjectProperty<State> _state;
+
+    public OpenOffer(Offer offer) {
         this.offer = offer;
+
+        state = State.OPEN;
     }
 
     public Offer getOffer() {
@@ -39,5 +57,21 @@ public class OpenOffer implements Serializable  {
 
     public String getId() {
         return offer.getId();
+    }
+
+    public void setState(State state) {
+        this.state = state;
+        stateProperty().set(state);
+    }
+
+    public State getState() {
+        return state;
+    }
+
+    public ObjectProperty<State> stateProperty() {
+        if (_state == null)
+            _state = new SimpleObjectProperty<>(state);
+
+        return _state;
     }
 }
