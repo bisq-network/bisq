@@ -52,8 +52,6 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
 
@@ -91,7 +89,6 @@ public class TradeManager {
 
     // the latest pending trade
     private Trade currentPendingTrade;
-    final StringProperty featureNotImplementedWarning = new SimpleStringProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -141,16 +138,32 @@ public class TradeManager {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Manage offers
+    // Called from UI
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestPlaceOffer(String id,
-                                  Direction direction,
-                                  Fiat price,
-                                  Coin amount,
-                                  Coin minAmount,
-                                  TransactionResultHandler resultHandler,
-                                  ErrorMessageHandler errorMessageHandler) {
+    public void onGetOfferAvailableStateRequested(Offer offer) {
+        if (!requestIsOfferAvailableProtocolMap.containsKey(offer.getId())) {
+            RequestIsOfferAvailableProtocol protocol = new RequestIsOfferAvailableProtocol(offer, tradeMessageService);
+            requestIsOfferAvailableProtocolMap.put(offer.getId(), protocol);
+            protocol.start();
+        }
+        else {
+            log.warn("requestIsOfferAvailable already called for offer with ID:" + offer.getId());
+        }
+    }
+
+    // When closing take offer view, we are not interested in the requestIsOfferAvailable result anymore, so remove from the map
+    public void onGetOfferAvailableStateRequestCanceled(Offer offer) {
+        requestIsOfferAvailableProtocolMap.remove(offer.getId());
+    }
+
+    public void onPlaceOfferRequested(String id,
+                                      Direction direction,
+                                      Fiat price,
+                                      Coin amount,
+                                      Coin minAmount,
+                                      TransactionResultHandler resultHandler,
+                                      ErrorMessageHandler errorMessageHandler) {
 
         BankAccount currentBankAccount = user.getCurrentBankAccount().get();
         Offer offer = new Offer(id,
@@ -174,147 +187,22 @@ public class TradeManager {
                 walletService,
                 offerBookService,
                 (transaction) -> {
-                    createOpenOffer(offer);
+                    OpenOffer openOffer = createOpenOffer(offer);
+                    createOffererAsBuyerProtocol(openOffer);
                     resultHandler.handleResult(transaction);
                 },
                 (message, throwable) -> errorMessageHandler.handleErrorMessage(message)
         );
 
-        placeOfferProtocol.placeOffer();
+        placeOfferProtocol.onPlaceOfferRequested();
     }
 
-    private void createOpenOffer(Offer offer) {
-        OpenOffer openOffer = new OpenOffer(offer);
-        openOffers.put(openOffer.getId(), openOffer);
-        persistOpenOffers();
-
-        createOffererAsBuyerProtocol(openOffer);
-    }
-
-    public void requestRemoveOpenOffer(String offerId, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        offerBookService.removeOffer(openOffers.get(offerId).getOffer(),
-                () -> {
-                    if (openOffers.containsKey(offerId)) {
-                        openOffers.remove(offerId);
-                        persistOpenOffers();
-                        resultHandler.handleResult();
-                    }
-                    else {
-                        log.error("Locally stored offers does not contain the offer with the ID " + offerId);
-                        errorMessageHandler.handleErrorMessage("Locally stored offers does not contain the offer with the ID " + offerId);
-                    }
-                },
-                (message, throwable) -> errorMessageHandler.handleErrorMessage(message));
+    public void onRemoveOpenOfferRequested(String offerId, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        removeOpenOffer(offerId, resultHandler, errorMessageHandler, true);
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Manage trades
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public Trade createTrade(Offer offer) {
-        if (pendingTrades.containsKey(offer.getId()))
-            log.error("trades contains already an trade with the ID " + offer.getId());
-
-        Trade trade = new Trade(offer);
-        pendingTrades.put(offer.getId(), trade);
-        persistPendingTrades();
-
-        currentPendingTrade = trade;
-
-        return trade;
-    }
-
-    public void closeTrade(Trade trade) {
-        if (!pendingTrades.containsKey(trade.getId()))
-            log.error("trades does not contain the trade with the ID " + trade.getId());
-
-        pendingTrades.remove(trade.getId());
-        persistPendingTrades();
-
-        if (takerAsSellerProtocolMap.containsKey(trade.getId()))
-            takerAsSellerProtocolMap.remove(trade.getId());
-        else if (offererAsBuyerProtocolMap.containsKey(trade.getId()))
-            offererAsBuyerProtocolMap.remove(trade.getId());
-
-        closedTrades.put(trade.getId(), trade);
-        persistClosedTrades();
-    }
-
-    private void removeFailedTrade(Trade trade) {
-        if (!pendingTrades.containsKey(trade.getId()))
-            log.error("trades does not contain the trade with the ID " + trade.getId());
-
-        pendingTrades.remove(trade.getId());
-        persistPendingTrades();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Trading protocols
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void createOffererAsBuyerProtocol(OpenOffer openOffer) {
-        BuyerAsOffererModel model = new BuyerAsOffererModel(
-                openOffer,
-                tradeMessageService,
-                walletService,
-                blockChainService,
-                signatureService,
-                user);
-
-        openOffer.stateProperty().addListener((ov, oldValue, newValue) -> {
-            log.debug("trade state = " + newValue);
-            switch (newValue) {
-                case OPEN:
-                    break;
-                case OFFER_ACCEPTED:
-                    requestRemoveOpenOffer(openOffer.getId(),
-                            () -> log.debug("remove offer was successful"),
-                            (message) -> log.error(message));
-
-                    Trade trade = model.getTrade();
-                    pendingTrades.put(trade.getId(), trade);
-                    persistPendingTrades();
-                    currentPendingTrade = trade;
-
-                    // TODO check, remove listener
-                    trade.stateProperty().addListener((ov2, oldValue2, newValue2) -> {
-                        log.debug("trade state = " + newValue);
-                        switch (newValue2) {
-                            case OPEN:
-                                break;
-                            case OFFERER_ACCEPTED: // only taker side
-                            case DEPOSIT_PUBLISHED:
-                            case DEPOSIT_CONFIRMED:
-                            case FIAT_PAYMENT_STARTED:
-                            case FIAT_PAYMENT_RECEIVED:
-                            case PAYOUT_PUBLISHED:
-                                persistPendingTrades();
-                                break;
-                            case OFFERER_REJECTED:
-                            case FAILED:
-                                removeFailedTrade(trade);
-                                break;
-                            default:
-                                log.error("Unhandled trade state: " + newValue);
-                                break;
-                        }
-                    });
-                    break;
-                default:
-                    log.error("Unhandled trade state: " + newValue);
-                    break;
-            }
-        });
-
-        BuyerAsOffererProtocol buyerAcceptsOfferProtocol = new BuyerAsOffererProtocol(model);
-        offererAsBuyerProtocolMap.put(openOffer.getId(), buyerAcceptsOfferProtocol);
-        buyerAcceptsOfferProtocol.start();
-    }
-
-
-    public Trade requestTakeOffer(Coin amount, Offer offer) {
+    public Trade onTakeOfferRequested(Coin amount, Offer offer) {
         Trade trade = createTrade(offer);
         trade.setTradeAmount(amount);
 
@@ -353,60 +241,186 @@ public class TradeManager {
         SellerAsTakerProtocol sellerTakesOfferProtocol = new SellerAsTakerProtocol(model);
         takerAsSellerProtocolMap.put(trade.getId(), sellerTakesOfferProtocol);
 
-        sellerTakesOfferProtocol.handleRequestTakeOfferUIEvent();
+        sellerTakesOfferProtocol.onTakeOfferRequested();
 
         return trade;
     }
 
-    //TODO we don't support interruptions yet.
-    // If the user has shut down the app we lose the offererAsBuyerProtocolMap
-    // Also we don't support yet offline messaging (mail box)
-    public void fiatPaymentStarted(String tradeId) {
-        if (offererAsBuyerProtocolMap.get(tradeId) != null) {
-            offererAsBuyerProtocolMap.get(tradeId).handleBankTransferStartedUIEvent();
+    public void onFiatPaymentStarted(String tradeId) {
+        // TODO remove if check when peristence is impl.
+        if (offererAsBuyerProtocolMap.containsKey(tradeId)) {
+            offererAsBuyerProtocolMap.get(tradeId).onFiatPaymentStarted();
             persistPendingTrades();
         }
-        else {
-            featureNotImplementedWarning.set("Sorry, you cannot continue. You have restarted the application in the " +
-                    "meantime. Interruption of the trade process is not supported yet. Will need more time to be " +
-                    "implemented.");
-        }
     }
 
-    public void fiatPaymentReceived(String tradeId) {
-        takerAsSellerProtocolMap.get(tradeId).handleFiatReceivedUIEvent();
+    public void onFiatPaymentReceived(String tradeId) {
+        takerAsSellerProtocolMap.get(tradeId).onFiatPaymentReceived();
     }
 
-    public void requestIsOfferAvailable(Offer offer) {
-        if (!requestIsOfferAvailableProtocolMap.containsKey(offer.getId())) {
-            RequestIsOfferAvailableProtocol protocol = new RequestIsOfferAvailableProtocol(offer, tradeMessageService);
-            requestIsOfferAvailableProtocolMap.put(offer.getId(), protocol);
-            protocol.start();
-        }
-        else {
-            log.warn("requestIsOfferAvailable already called for offer with ID:" + offer.getId());
-        }
+
+    public void onCloseTradeRequested(Trade trade) {
+        closeTrade(trade, false);
     }
 
-    // When closing take offer view, we are not interested in the requestIsOfferAvailable result anymore, so remove from the map
-    public void stopRequestIsOfferAvailableRequest(Offer offer) {
-        requestIsOfferAvailableProtocolMap.remove(offer.getId());
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Called from Offerbook (DHT)
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
 
     public void onOfferRemovedFromRemoteOfferBook(Offer offer) {
         requestIsOfferAvailableProtocolMap.remove(offer.getId());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private OpenOffer createOpenOffer(Offer offer) {
+        OpenOffer openOffer = new OpenOffer(offer);
+        openOffers.put(openOffer.getId(), openOffer);
+        persistOpenOffers();
+        return openOffer;
+    }
+
+    private void removeOpenOffer(String offerId,
+                                 ResultHandler resultHandler,
+                                 ErrorMessageHandler errorMessageHandler,
+                                 boolean removeFromOffererAsBuyerProtocolMap) {
+        offerBookService.removeOffer(openOffers.get(offerId).getOffer(),
+                () -> {
+                    if (openOffers.containsKey(offerId)) {
+                        openOffers.remove(offerId);
+                        persistOpenOffers();
+                        if (removeFromOffererAsBuyerProtocolMap && offererAsBuyerProtocolMap.containsKey(offerId)) {
+                            offererAsBuyerProtocolMap.get(offerId).cleanup();
+                            offererAsBuyerProtocolMap.remove(offerId);
+                        }
+                        resultHandler.handleResult();
+                    }
+                    else {
+                        log.error("Locally stored offers does not contain the offer with the ID " + offerId);
+                        errorMessageHandler.handleErrorMessage("Locally stored offers does not contain the offer with the ID " + offerId);
+                    }
+                },
+                (message, throwable) -> errorMessageHandler.handleErrorMessage(message));
+    }
+
+    private Trade createTrade(Offer offer) {
+        if (pendingTrades.containsKey(offer.getId()))
+            log.error("trades contains already an trade with the ID " + offer.getId());
+
+        Trade trade = new Trade(offer);
+        pendingTrades.put(offer.getId(), trade);
+        persistPendingTrades();
+
+        currentPendingTrade = trade;
+
+        return trade;
+    }
+
+    private void createOffererAsBuyerProtocol(OpenOffer openOffer) {
+        BuyerAsOffererModel model = new BuyerAsOffererModel(
+                openOffer,
+                tradeMessageService,
+                walletService,
+                blockChainService,
+                signatureService,
+                user);
+
+        openOffer.stateProperty().addListener((ov, oldValue, newValue) -> {
+            log.debug("trade state = " + newValue);
+            switch (newValue) {
+                case OPEN:
+                    break;
+                case OFFER_ACCEPTED:
+                    removeOpenOffer(openOffer.getId(),
+                            () -> log.debug("remove offer was successful"),
+                            (message) -> log.error(message),
+                            false);
+
+                    Trade trade = model.getTrade();
+                    pendingTrades.put(trade.getId(), trade);
+                    persistPendingTrades();
+                    currentPendingTrade = trade;
+
+                    // TODO check, remove listener
+                    trade.stateProperty().addListener((ov2, oldValue2, newValue2) -> {
+                        log.debug("trade state = " + newValue);
+                        switch (newValue2) {
+                            case OPEN:
+                                break;
+                            case OFFERER_ACCEPTED: // only taker side
+                            case DEPOSIT_PUBLISHED:
+                            case DEPOSIT_CONFIRMED:
+                            case FIAT_PAYMENT_STARTED:
+                            case FIAT_PAYMENT_RECEIVED:
+                            case PAYOUT_PUBLISHED:
+                                persistPendingTrades();
+                                break;
+                            case OFFERER_REJECTED:
+                            case FAILED:
+                                removeFailedTrade(trade);
+                                offererAsBuyerProtocolMap.get(trade.getId()).cleanup();
+                                break;
+                            default:
+                                log.error("Unhandled trade state: " + newValue);
+                                break;
+                        }
+                    });
+                    break;
+                default:
+                    log.error("Unhandled trade state: " + newValue);
+                    break;
+            }
+        });
+
+        BuyerAsOffererProtocol buyerAcceptsOfferProtocol = new BuyerAsOffererProtocol(model);
+        offererAsBuyerProtocolMap.put(openOffer.getId(), buyerAcceptsOfferProtocol);
+    }
+
+    private void removeFailedTrade(Trade trade) {
+        closeTrade(trade, true);
+    }
+
+    private void closeTrade(Trade trade, boolean failed) {
+        if (!pendingTrades.containsKey(trade.getId()))
+            log.error("trades does not contain the trade with the ID " + trade.getId());
+
+        pendingTrades.remove(trade.getId());
+        persistPendingTrades();
+
+        if (takerAsSellerProtocolMap.containsKey(trade.getId())) {
+            takerAsSellerProtocolMap.get(trade.getId()).cleanup();
+            takerAsSellerProtocolMap.remove(trade.getId());
+        }
+        else if (offererAsBuyerProtocolMap.containsKey(trade.getId())) {
+            offererAsBuyerProtocolMap.get(trade.getId()).cleanup();
+            offererAsBuyerProtocolMap.remove(trade.getId());
+        }
+
+
+        if (!failed) {
+            closedTrades.put(trade.getId(), trade);
+            persistClosedTrades();
+        }
+        else {
+            // TODO add failed trades to history
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Process new tradeMessages
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // TODO remove
     // Routes the incoming messages to the responsible protocol
     private void handleNewMessage(Message message, Peer sender) {
         log.trace("handleNewMessage: message = " + message.getClass().getSimpleName());
         log.trace("handleNewMessage: sender = " + sender);
 
-        // TODO remove
+
         if (message instanceof OfferMessage) {
             OfferMessage offerMessage = (OfferMessage) message;
             // Before starting any take offer activity we check if the offer is still available.
@@ -441,10 +455,6 @@ public class TradeManager {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setFeatureNotImplementedWarning(String featureNotImplementedWarning) {
-        this.featureNotImplementedWarning.set(featureNotImplementedWarning);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -466,13 +476,6 @@ public class TradeManager {
         return currentPendingTrade;
     }
 
-    public String getFeatureNotImplementedWarning() {
-        return featureNotImplementedWarning.get();
-    }
-
-    public StringProperty featureNotImplementedWarningProperty() {
-        return featureNotImplementedWarning;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

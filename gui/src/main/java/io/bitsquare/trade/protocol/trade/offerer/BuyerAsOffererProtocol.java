@@ -45,15 +45,6 @@ import org.slf4j.LoggerFactory;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
-/**
- * Responsible for the correct execution of the sequence of tasks, message passing to the peer and message processing
- * from the peer.
- * <p/>
- * This class handles the role of the offerer as the Bitcoin buyer.
- * <p/>
- * It uses sub tasks to not pollute the main class too much with all the async result/fault handling.
- * Any data from incoming messages need to be validated before further processing.
- */
 public class BuyerAsOffererProtocol {
 
     private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererProtocol.class);
@@ -67,16 +58,14 @@ public class BuyerAsOffererProtocol {
 
     public BuyerAsOffererProtocol(BuyerAsOffererModel model) {
         this.model = model;
+
+        model.getTradeMessageService().addMessageHandler(this::handleMessage);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void start() {
-        model.getTradeMessageService().addMessageHandler(this::handleMessage);
-    }
 
     public void cleanup() {
         model.getTradeMessageService().removeMessageHandler(this::handleMessage);
@@ -118,7 +107,7 @@ public class BuyerAsOffererProtocol {
 
         BuyerAsOffererTaskRunner<BuyerAsOffererModel> sequence = new BuyerAsOffererTaskRunner<>(model,
                 () -> {
-                    log.debug("sequence0 completed");
+                    log.debug("sequence at handleRequestTakeOfferMessage completed");
                 },
                 (message, throwable) -> {
                     log.error(message);
@@ -136,7 +125,7 @@ public class BuyerAsOffererProtocol {
 
         BuyerAsOffererTaskRunner<BuyerAsOffererModel> sequence = new BuyerAsOffererTaskRunner<>(model,
                 () -> {
-                    log.debug("sequence1 completed");
+                    log.debug("sequence at handleTakeOfferFeePayedMessage completed");
                 },
                 (message, throwable) -> {
                     log.error(message);
@@ -155,7 +144,7 @@ public class BuyerAsOffererProtocol {
 
         BuyerAsOffererTaskRunner<BuyerAsOffererModel> sequence = new BuyerAsOffererTaskRunner<>(model,
                 () -> {
-                    log.debug("sequence2 completed");
+                    log.debug("sequence at handleRequestOffererPublishDepositTxMessage completed");
                 },
                 (message, throwable) -> {
                     log.error(message);
@@ -174,14 +163,14 @@ public class BuyerAsOffererProtocol {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI event handling
+    // Called from UI
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // User clicked the "bank transfer started" button
-    public void handleBankTransferStartedUIEvent() {
+    public void onFiatPaymentStarted() {
         BuyerAsOffererTaskRunner<BuyerAsOffererModel> sequence = new BuyerAsOffererTaskRunner<>(model,
                 () -> {
-                    log.debug("sequence3 completed");
+                    log.debug("sequence at handleBankTransferStartedUIEvent completed");
                 },
                 (message, throwable) -> {
                     log.error(message);
@@ -205,7 +194,7 @@ public class BuyerAsOffererProtocol {
 
         BuyerAsOffererTaskRunner<BuyerAsOffererModel> sequence = new BuyerAsOffererTaskRunner<>(model,
                 () -> {
-                    log.debug("sequence4 completed");
+                    log.debug("sequence at handlePayoutTxPublishedMessage completed");
                 },
                 (message, throwable) -> {
                     log.error(message);
@@ -214,5 +203,4 @@ public class BuyerAsOffererProtocol {
         sequence.addTasks(ProcessPayoutTxPublishedMessage.class);
         sequence.run();
     }
-
 }

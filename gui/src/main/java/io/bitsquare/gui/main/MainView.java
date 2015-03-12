@@ -162,11 +162,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             }
         });
 
-        model.featureNotImplementedWarning.addListener((ov, oldValue, newValue) -> {
-            if (oldValue == null && newValue != null)
-                Popups.openWarningPopup(newValue);
-        });
-
         // Delay a bit to give time for rendering the splash screen
         Platform.runLater(() -> model.initBackend());
     }

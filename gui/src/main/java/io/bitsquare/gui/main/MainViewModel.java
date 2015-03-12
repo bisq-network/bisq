@@ -96,7 +96,6 @@ class MainViewModel implements ViewModel {
     final ObjectProperty<BankAccount> currentBankAccount = new SimpleObjectProperty<>();
 
     final BooleanProperty showAppScreen = new SimpleBooleanProperty();
-    final StringProperty featureNotImplementedWarning = new SimpleStringProperty();
     final StringProperty numPendingTradesAsString = new SimpleStringProperty();
     final BooleanProperty showPendingTradesNotification = new SimpleBooleanProperty();
 
@@ -142,13 +141,6 @@ class MainViewModel implements ViewModel {
         });
         bankAccountsComboBoxDisable.set(user.getBankAccounts().isEmpty());
         bankAccountsComboBoxPrompt.set(user.getBankAccounts().isEmpty() ? "No accounts" : "");
-
-        tradeManager.featureNotImplementedWarningProperty().addListener((ov, oldValue, newValue) -> {
-            if (oldValue == null && newValue != null) {
-                featureNotImplementedWarning.set(newValue);
-                tradeManager.setFeatureNotImplementedWarning(null);
-            }
-        });
     }
 
     public void restart() {

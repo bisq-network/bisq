@@ -54,7 +54,7 @@ public class OfferBook {
     private final User user;
 
     private final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-    private final OfferBookService.Listener remoteOfferBookListener;
+    private final OfferBookService.Listener offerBookServiceListener;
     private final ChangeListener<BankAccount> bankAccountChangeListener;
     private final ChangeListener<Number> invalidationListener;
     private String fiatCode;
@@ -75,7 +75,7 @@ public class OfferBook {
         bankAccountChangeListener = (observableValue, oldValue, newValue) -> setBankAccount(newValue);
         invalidationListener = (ov, oldValue, newValue) -> requestGetOffers();
 
-        remoteOfferBookListener = new OfferBookService.Listener() {
+        offerBookServiceListener = new OfferBookService.Listener() {
             @Override
             public void onOfferAdded(Offer offer) {
                 addOfferToOfferBookListItems(offer);
@@ -150,14 +150,14 @@ public class OfferBook {
     private void addListeners() {
         log.debug("addListeners ");
         user.currentBankAccountProperty().addListener(bankAccountChangeListener);
-        offerBookService.addListener(remoteOfferBookListener);
+        offerBookService.addListener(offerBookServiceListener);
         offerBookService.invalidationTimestampProperty().addListener(invalidationListener);
     }
 
     private void removeListeners() {
         log.debug("removeListeners ");
         user.currentBankAccountProperty().removeListener(bankAccountChangeListener);
-        offerBookService.removeListener(remoteOfferBookListener);
+        offerBookService.removeListener(offerBookServiceListener);
         offerBookService.invalidationTimestampProperty().removeListener(invalidationListener);
     }
 

@@ -277,7 +277,7 @@ public class PlaceOfferProtocolTest {
             countDownLatch.countDown();
         };
         PlaceOfferProtocol placeOfferProtocol = getPlaceOfferProtocol(getOffer(), resultHandler, faultHandler);
-        placeOfferProtocol.placeOffer();
+        placeOfferProtocol.onPlaceOfferRequested();
         countDownLatch.await();
     }
 

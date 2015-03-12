@@ -48,13 +48,6 @@ import org.slf4j.LoggerFactory;
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
 
-/**
- * Responsible for the correct execution of the sequence of tasks, message passing to the peer and message processing
- * from the peer.
- * That class handles the role of the taker as the Bitcoin seller.
- * It uses sub tasks to not pollute the main class too much with all the async result/fault handling.
- * Any data from incoming messages as well data used to send to the peer need to be validated before further processing.
- */
 public class SellerAsTakerProtocol {
     private static final Logger log = LoggerFactory.getLogger(SellerAsTakerProtocol.class);
 
@@ -71,15 +64,15 @@ public class SellerAsTakerProtocol {
     
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI event handling
+    // Called from UI
     ///////////////////////////////////////////////////////////////////////////////////////////
     
-    public void handleRequestTakeOfferUIEvent() {
+    public void onTakeOfferRequested() {
         model.getTradeMessageService().addMessageHandler(this::handleMessage);
 
         SellerAsTakerTaskRunner<SellerAsTakerModel> sequence = new SellerAsTakerTaskRunner<>(model,
                 () -> {
-                    log.debug("sequence1 completed");
+                    log.debug("sequence at handleRequestTakeOfferUIEvent completed");
                 },
                 (message, throwable) -> {
                     log.error(message);
@@ -128,96 +121,96 @@ public class SellerAsTakerProtocol {
     private void handleRespondToTakeOfferRequestMessage(RespondToTakeOfferRequestMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence2 = new SellerAsTakerTaskRunner<>(model,
+        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence = new SellerAsTakerTaskRunner<>(model,
                 () -> {
-                    log.debug("sequence2 completed");
+                    log.debug("sequence at handleRespondToTakeOfferRequestMessage completed");
                 },
                 (message, throwable) -> {
                     log.error(message);
                 }
         );
-        sequence2.addTasks(
+        sequence.addTasks(
                 ProcessRespondToTakeOfferRequestMessage.class,
                 PayTakeOfferFee.class,
                 SendTakeOfferFeePayedMessage.class
         );
-        sequence2.run();
+        sequence.run();
     }
 
     private void handleTakerDepositPaymentRequestMessage(TakerDepositPaymentRequestMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence3 = new SellerAsTakerTaskRunner<>(model,
+        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence = new SellerAsTakerTaskRunner<>(model,
                 () -> {
-                    log.debug("sequence3 completed");
+                    log.debug("sequence at handleTakerDepositPaymentRequestMessage completed");
                 },
                 (message, throwable) -> {
                     log.error(message);
                 }
         );
-        sequence3.addTasks(
+        sequence.addTasks(
                 ProcessTakerDepositPaymentRequestMessage.class,
                 VerifyOffererAccount.class,
                 CreateAndSignContract.class,
                 PayDeposit.class,
                 SendSignedTakerDepositTxAsHex.class
         );
-        sequence3.run();
+        sequence.run();
     }
 
     private void handleDepositTxPublishedMessage(DepositTxPublishedMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence4 = new SellerAsTakerTaskRunner<>(model,
+        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence = new SellerAsTakerTaskRunner<>(model,
                 () -> {
-                    log.debug("sequence4 completed");
+                    log.debug("sequence at handleDepositTxPublishedMessage completed");
                 },
                 (message, throwable) -> {
                     log.error(message);
                 }
         );
-        sequence4.addTasks(
+        sequence.addTasks(
                 ProcessDepositTxPublishedMessage.class,
                 TakerCommitDepositTx.class
         );
-        sequence4.run();
+        sequence.run();
     }
 
     private void handleBankTransferInitedMessage(BankTransferInitedMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence5 = new SellerAsTakerTaskRunner<>(model,
+        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence = new SellerAsTakerTaskRunner<>(model,
                 () -> {
-                    log.debug("sequence5 completed");
+                    log.debug("sequence at handleBankTransferInitedMessage completed");
                     model.getTrade().setState(Trade.State.FIAT_PAYMENT_STARTED);
                 },
                 (message, throwable) -> {
                     log.error(message);
                 }
         );
-        sequence5.addTasks(ProcessBankTransferInitedMessage.class);
-        sequence5.run();
+        sequence.addTasks(ProcessBankTransferInitedMessage.class);
+        sequence.run();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI event handling
+    // Called from UI
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // User clicked the "bank transfer received" button, so we release the funds for pay out
-    public void handleFiatReceivedUIEvent() {
-        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence6 = new SellerAsTakerTaskRunner<>(model,
+    public void onFiatPaymentReceived() {
+        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence = new SellerAsTakerTaskRunner<>(model,
                 () -> {
-                    log.debug("sequence6 completed");
+                    log.debug("sequence at handleFiatReceivedUIEvent completed");
                 },
                 (message, throwable) -> {
                     log.error(message);
                 }
         );
-        sequence6.addTasks(
+        sequence.addTasks(
                 SignAndPublishPayoutTx.class,
                 VerifyOfferFeePayment.class,
                 SendPayoutTxToOfferer.class
         );
-        sequence6.run();
+        sequence.run();
     }
 }

@@ -164,12 +164,12 @@ class PendingTradesDataModel implements Activatable, DataModel {
 
     void fiatPaymentStarted() {
         getTrade().setState(Trade.State.FIAT_PAYMENT_STARTED);
-        tradeManager.fiatPaymentStarted(getTrade().getId());
+        tradeManager.onFiatPaymentStarted(getTrade().getId());
     }
 
     void fiatPaymentReceived() {
         getTrade().setState(Trade.State.FIAT_PAYMENT_RECEIVED);
-        tradeManager.fiatPaymentReceived(getTrade().getId());
+        tradeManager.onFiatPaymentReceived(getTrade().getId());
     }
 
     void withdraw(String toAddress) {
@@ -200,7 +200,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
             log.error(e.getMessage());
         }
 
-        tradeManager.closeTrade(getTrade());
+        tradeManager.onCloseTradeRequested(getTrade());
 
 /*
         Action response = Popups.openConfirmPopup(
