@@ -268,9 +268,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         });
 
         dataModel.isWalletFunded.addListener((ov, oldValue, newValue) -> {
-            if (newValue) {
-                updateButtonDisableState();
-            }
+            updateButtonDisableState();
         });
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding

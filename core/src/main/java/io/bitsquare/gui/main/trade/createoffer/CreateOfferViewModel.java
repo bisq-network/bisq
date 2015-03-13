@@ -142,7 +142,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         dataModel.requestPlaceOfferErrorMessage.set(null);
         dataModel.requestPlaceOfferSuccess.set(false);
 
-        isPlaceOfferButtonDisabled.set(true);
         isPlaceOfferSpinnerVisible.set(true);
 
         dataModel.placeOffer();
@@ -291,9 +290,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             updateButtonDisableState();
         });
         dataModel.isWalletFunded.addListener((ov, oldValue, newValue) -> {
-            if (newValue) {
-                updateButtonDisableState();
-            }
+            updateButtonDisableState();
         });
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
@@ -304,7 +301,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
         dataModel.requestPlaceOfferErrorMessage.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                isPlaceOfferButtonDisabled.set(false);
                 isPlaceOfferSpinnerVisible.set(false);
             }
         });

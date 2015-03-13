@@ -33,7 +33,7 @@ public class FeePolicy {
 
     // TODO: Change REGISTRATION_FEE to 0.00001 (See https://github.com/bitsquare/bitsquare/issues/228)
     public static final Coin REGISTRATION_FEE = TX_FEE.add(TX_FEE);
-    public static final Coin CREATE_OFFER_FEE = Coin.valueOf(20000); // 0.0002 BTC
+    public static final Coin CREATE_OFFER_FEE = Coin.valueOf(10000000); // 0.1 BTC
     public static final Coin TAKE_OFFER_FEE = CREATE_OFFER_FEE;
 
     private final BitcoinNetwork bitcoinNetwork;

@@ -65,7 +65,7 @@ public abstract class Task<T extends SharedModel> {
     }
 
     protected void appendExceptionToErrorMessage(Throwable t) {
-        errorMessage += "\n Exception message: " + t.getMessage();
+        errorMessage += "\nException message: " + t.getMessage();
     }
 
     protected void complete() {

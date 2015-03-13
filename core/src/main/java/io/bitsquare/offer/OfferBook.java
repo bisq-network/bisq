@@ -49,6 +49,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class OfferBook {
 
     private static final Logger log = LoggerFactory.getLogger(OfferBook.class);
+    private static final int POLLING_INTERVAL = 1000;
 
     private final OfferBookService offerBookService;
     private final User user;
@@ -180,7 +181,7 @@ public class OfferBook {
     private void startPolling() {
         addListeners();
         setBankAccount(user.getCurrentBankAccount().get());
-        pollingTimer = Utilities.setInterval(3000, (animationTimer) -> {
+        pollingTimer = Utilities.setInterval(POLLING_INTERVAL, (animationTimer) -> {
             offerBookService.requestInvalidationTimeStampFromDHT(fiatCode);
             return null;
         });
