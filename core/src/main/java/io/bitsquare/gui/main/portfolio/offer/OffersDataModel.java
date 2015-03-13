@@ -24,13 +24,12 @@ import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 import io.bitsquare.util.handlers.ErrorMessageHandler;
 import io.bitsquare.util.handlers.ResultHandler;
+import io.bitsquare.viewfx.model.Activatable;
+import io.bitsquare.viewfx.model.DataModel;
 
 import com.google.inject.Inject;
 
 import java.util.stream.Collectors;
-
-import io.bitsquare.viewfx.model.Activatable;
-import io.bitsquare.viewfx.model.DataModel;
 
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
@@ -78,8 +77,8 @@ class OffersDataModel implements Activatable, DataModel {
         tradeManager.getOpenOffers().removeListener(offerMapChangeListener);
     }
 
-    void removeOpenOffer(String offerId, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        tradeManager.removeOpenOffer(offerId, resultHandler, errorMessageHandler);
+    void removeOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        tradeManager.removeOpenOffer(offer, resultHandler, errorMessageHandler);
     }
 
 

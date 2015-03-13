@@ -54,18 +54,20 @@ public class TaskRunner<T extends SharedModel> {
     }
 
     protected void next() {
-        if (!failed && !isCanceled && tasks.size() > 0) {
-            try {
-                currentTask = tasks.poll();
-                log.trace("Run task: " + currentTask.getSimpleName());
-                currentTask.getDeclaredConstructor(TaskRunner.class, sharedModel.getClass()).newInstance(this, sharedModel).run();
-            } catch (Throwable throwable) {
-                throwable.printStackTrace();
-                handleErrorMessage("Error at taskRunner: " + throwable.getMessage());
+        if (!failed && !isCanceled) {
+            if (tasks.size() > 0) {
+                try {
+                    currentTask = tasks.poll();
+                    log.trace("Run task: " + currentTask.getSimpleName());
+                    currentTask.getDeclaredConstructor(TaskRunner.class, sharedModel.getClass()).newInstance(this, sharedModel).run();
+                } catch (Throwable throwable) {
+                    throwable.printStackTrace();
+                    handleErrorMessage("Error at taskRunner: " + throwable.getMessage());
+                }
             }
-        }
-        else {
-            resultHandler.handleResult();
+            else {
+                resultHandler.handleResult();
+            }
         }
     }
 

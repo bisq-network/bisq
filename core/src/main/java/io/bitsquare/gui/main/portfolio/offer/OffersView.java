@@ -18,12 +18,12 @@
 package io.bitsquare.gui.main.portfolio.offer;
 
 import io.bitsquare.gui.components.Popups;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.util.Utilities;
+import io.bitsquare.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.viewfx.view.FxmlView;
 
 import javax.inject.Inject;
-
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.ActivatableViewAndModel;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.fxml.FXML;
@@ -63,8 +63,8 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
         table.setItems(model.getList());
     }
 
-    private void removeOpenOffer(String offerId) {
-        model.removeOpenOffer(offerId);
+    private void removeOpenOffer(Offer offer) {
+        model.removeOpenOffer(offer);
     }
 
     private void openOfferDetails(OpenOfferListItem item) {
@@ -233,7 +233,7 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
                                 super.updateItem(item, empty);
 
                                 if (item != null) {
-                                    button.setOnAction(event -> removeOpenOffer(item.getOpenOffer().getId()));
+                                    button.setOnAction(event -> removeOpenOffer(item.getOpenOffer().getOffer()));
                                     setGraphic(button);
                                 }
                                 else {

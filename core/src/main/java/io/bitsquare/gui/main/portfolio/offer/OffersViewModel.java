@@ -19,11 +19,11 @@ package io.bitsquare.gui.main.portfolio.offer;
 
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.offer.Offer;
+import io.bitsquare.viewfx.model.ActivatableWithDataModel;
+import io.bitsquare.viewfx.model.ViewModel;
 
 import com.google.inject.Inject;
-
-import io.bitsquare.viewfx.model.ViewModel;
-import io.bitsquare.viewfx.model.ActivatableWithDataModel;
 
 import javafx.collections.ObservableList;
 
@@ -44,8 +44,8 @@ class OffersViewModel extends ActivatableWithDataModel<OffersDataModel> implemen
     }
 
 
-    void removeOpenOffer(String offerId) {
-        dataModel.removeOpenOffer(offerId,
+    void removeOpenOffer(Offer offer) {
+        dataModel.removeOpenOffer(offer,
                 () -> {
                     // visual feedback?
                     log.debug("Remove offer was successful");

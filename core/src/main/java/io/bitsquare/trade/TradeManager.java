@@ -191,8 +191,8 @@ public class TradeManager {
         placeOfferProtocol.placeOffer();
     }
 
-    public void removeOpenOffer(String offerId, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        removeOpenOffer(offerId, resultHandler, errorMessageHandler, true);
+    public void removeOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        removeOpenOffer(offer, resultHandler, errorMessageHandler, true);
     }
 
     public Trade takeOffer(Coin amount, Offer offer) {
@@ -304,11 +304,12 @@ public class TradeManager {
         return openOffer;
     }
 
-    private void removeOpenOffer(String offerId,
+    private void removeOpenOffer(Offer offer,
                                  ResultHandler resultHandler,
                                  ErrorMessageHandler errorMessageHandler,
                                  boolean removeFromOffererAsBuyerProtocolMap) {
-        offerBookService.removeOffer(openOffers.get(offerId).getOffer(),
+        String offerId = offer.getId();
+        offerBookService.removeOffer(offer,
                 () -> {
                     if (openOffers.containsKey(offerId)) {
                         OpenOffer openOffer = openOffers.remove(offerId);
@@ -357,7 +358,7 @@ public class TradeManager {
                 case OPEN:
                     break;
                 case OFFER_ACCEPTED:
-                    removeOpenOffer(openOffer.getId(),
+                    removeOpenOffer(openOffer.getOffer(),
                             () -> log.debug("remove offer was successful"),
                             (message) -> log.error(message),
                             false);

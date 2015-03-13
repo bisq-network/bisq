@@ -31,6 +31,9 @@ import org.slf4j.LoggerFactory;
 public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(BroadcastCreateOfferFeeTx.class);
 
+    private boolean removeOfferFailed;
+    private boolean addOfferFailed;
+
     public BroadcastCreateOfferFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
 
@@ -41,6 +44,8 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
     @Override
     protected void doRun() {
         model.getWalletService().broadcastCreateOfferFeeTx(model.getTransaction(), new FutureCallback<Transaction>() {
+
+
             @Override
             public void onSuccess(Transaction transaction) {
                 log.info("Broadcast of offer fee payment succeeded: transaction = " + transaction.toString());
@@ -64,11 +69,13 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                                             },
                                             (message, throwable) -> {
                                                 log.error("addOffer failed");
+                                                addOfferFailed = true;
                                                 failed(throwable);
                                             });
                                 },
                                 (message, throwable) -> {
                                     log.error("removeOffer failed");
+                                    removeOfferFailed = true;
                                     failed(throwable);
                                 });
                     }
@@ -84,4 +91,19 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
             }
         });
     }
+
+    protected void applyErrorState() {
+        if (!removeOfferFailed && !addOfferFailed) {
+            // If broadcast fails we need to remove offer from offerbook
+            model.getOfferBookService().removeOffer(model.getOffer(),
+                    () -> {
+                        log.info("Offer removed from offerbook because broadcast failed.");
+                    },
+                    (message, throwable) -> {
+                        log.error("removeOffer failed");
+                        failed(throwable);
+                    });
+        }
+    }
+
 }

@@ -99,8 +99,8 @@ public class DebugView extends InitializableView {
                         PlaceOfferProtocol.class,
                         ValidateOffer.class,
                         CreateOfferFeeTx.class,
-                        BroadcastCreateOfferFeeTx.class,
                         AddOfferToRemoteOfferBook.class,
+                        BroadcastCreateOfferFeeTx.class,
                         Boolean.class, /* used as seperator*/
 
                         
