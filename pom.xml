@@ -38,8 +38,7 @@
 
     <modules>
         <module>gui</module>
-        <module>common</module>
-        <module>net</module>
+        <module>bootstrap</module>
     </modules>
 
     <build>
