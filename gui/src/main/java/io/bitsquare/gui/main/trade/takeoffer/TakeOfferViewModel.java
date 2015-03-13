@@ -24,14 +24,13 @@ import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.viewfx.model.ActivatableWithDataModel;
+import io.bitsquare.viewfx.model.ViewModel;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
-
-import io.bitsquare.viewfx.model.ViewModel;
-import io.bitsquare.viewfx.model.ActivatableWithDataModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -81,7 +80,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final BooleanProperty isTakeOfferSpinnerVisible = new SimpleBooleanProperty(false);
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
-    final BooleanProperty tabIsClosable = new SimpleBooleanProperty(true);
     final ObjectProperty<Offer.State> offerIsAvailable = new SimpleObjectProperty<>(Offer.State.UNKNOWN);
 
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
@@ -272,7 +270,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         dataModel.isWalletFunded.addListener((ov, oldValue, newValue) -> {
             if (newValue) {
                 updateButtonDisableState();
-                tabIsClosable.set(false);
             }
         });
 

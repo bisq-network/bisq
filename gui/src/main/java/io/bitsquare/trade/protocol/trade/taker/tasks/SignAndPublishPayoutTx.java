@@ -19,8 +19,8 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
-import io.bitsquare.util.tasks.Task;
-import io.bitsquare.util.tasks.TaskRunner;
+import io.bitsquare.util.taskrunner.Task;
+import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Transaction;
@@ -41,7 +41,7 @@ public class SignAndPublishPayoutTx extends Task<SellerAsTakerModel> {
     }
 
     @Override
-    protected void run() {
+    protected void doRun() {
         try {
             model.getWalletService().takerSignsAndSendsTx(model.getDepositTxAsHex(),
                     model.getOffererSignatureR(),

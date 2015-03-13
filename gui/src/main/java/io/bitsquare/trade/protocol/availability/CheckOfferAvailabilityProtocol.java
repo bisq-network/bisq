@@ -20,18 +20,17 @@ package io.bitsquare.trade.protocol.availability;
 import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.trade.listeners.MessageHandler;
+import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress;
+import io.bitsquare.trade.protocol.availability.tasks.ProcessReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.tasks.RequestIsOfferAvailable;
-import io.bitsquare.util.tasks.TaskRunner;
+import io.bitsquare.util.taskrunner.TaskRunner;
 
 import javafx.application.Platform;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
 public class CheckOfferAvailabilityProtocol {
     private static final Logger log = LoggerFactory.getLogger(CheckOfferAvailabilityProtocol.class);
@@ -53,7 +52,7 @@ public class CheckOfferAvailabilityProtocol {
     }
 
     public void cleanup() {
-        // cannot remove listener in same execution cycle, so we delay it
+        // Cannot remove listener in same execution cycle, so we delay it
         Platform.runLater(() -> model.getTradeMessageService().removeMessageHandler(messageHandler));
     }
 
@@ -69,8 +68,8 @@ public class CheckOfferAvailabilityProtocol {
                 () -> {
                     log.debug("sequence at onCheckOfferAvailability completed");
                 },
-                (message, throwable) -> {
-                    log.error(message);
+                (errorMessage) -> {
+                    log.error(errorMessage);
                 }
         );
         sequence.addTasks(
@@ -83,7 +82,9 @@ public class CheckOfferAvailabilityProtocol {
     public void cancel() {
         isCanceled = true;
         sequence.cancel();
+        model.getOffer().setState(Offer.State.UNKNOWN);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handling
@@ -91,18 +92,24 @@ public class CheckOfferAvailabilityProtocol {
 
     private void handleMessage(Message message, Peer sender) {
         if (!isCanceled) {
-            if (message instanceof ReportOfferAvailabilityMessage) {
-                ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = (ReportOfferAvailabilityMessage) message;
-                nonEmptyStringOf(reportOfferAvailabilityMessage.getOfferId());
-
-                if (model.getOffer().getState() != Offer.State.OFFER_REMOVED) {
-                    if (reportOfferAvailabilityMessage.isOfferOpen())
-                        model.getOffer().setState(Offer.State.OFFER_AVAILABLE);
-                    else
-                        model.getOffer().setState(Offer.State.OFFER_NOT_AVAILABLE);
-                }
-            }
-            model.getResultHandler().handleResult();
+            if (message instanceof ReportOfferAvailabilityMessage)
+                handleReportOfferAvailabilityMessage((ReportOfferAvailabilityMessage) message);
         }
+    }
+
+    private void handleReportOfferAvailabilityMessage(ReportOfferAvailabilityMessage message) {
+        model.setMessage(message);
+
+        sequence = new TaskRunner<>(model,
+                () -> {
+                    log.debug("sequence at handleReportOfferAvailabilityMessage completed");
+                    model.getResultHandler().handleResult();
+                },
+                (errorMessage) -> {
+                    log.error(errorMessage);
+                }
+        );
+        sequence.addTasks(ProcessReportOfferAvailabilityMessage.class);
+        sequence.run();
     }
 }

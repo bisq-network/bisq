@@ -17,46 +17,42 @@
 
 package io.bitsquare.trade.protocol.availability.tasks;
 
-import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.trade.listeners.GetPeerAddressListener;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityModel;
+import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
 import io.bitsquare.util.taskrunner.Task;
 import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GetPeerAddress extends Task<CheckOfferAvailabilityModel> {
-    private static final Logger log = LoggerFactory.getLogger(GetPeerAddress.class);
+import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
-    public GetPeerAddress(TaskRunner taskHandler, CheckOfferAvailabilityModel model) {
+public class ProcessReportOfferAvailabilityMessage extends Task<CheckOfferAvailabilityModel> {
+    private static final Logger log = LoggerFactory.getLogger(ProcessReportOfferAvailabilityMessage.class);
+
+    public ProcessReportOfferAvailabilityMessage(TaskRunner taskHandler, CheckOfferAvailabilityModel model) {
         super(taskHandler, model);
-
-        errorMessage = "DHT lookup for peer address failed. Maybe the offerer was offline for too long time.";
     }
 
     @Override
     protected void doRun() {
-        model.getTradeMessageService().getPeerAddress(model.getOffer().getMessagePublicKey(), new GetPeerAddressListener() {
-            @Override
-            public void onResult(Peer peer) {
-                log.trace("Found peer: " + peer.toString());
+        ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = (ReportOfferAvailabilityMessage) model.getMessage();
+        nonEmptyStringOf(reportOfferAvailabilityMessage.getOfferId());
 
-                model.setPeer(peer);
-                complete();
-            }
+        if (model.getOffer().getState() != Offer.State.REMOVED) {
+            if (reportOfferAvailabilityMessage.isOfferOpen())
+                model.getOffer().setState(Offer.State.AVAILABLE);
+            else
+                model.getOffer().setState(Offer.State.NOT_AVAILABLE);
+        }
 
-            @Override
-            public void onFailed() {
-                failed();
-            }
-        });
+        complete();
     }
 
     @Override
     protected void applyErrorState() {
-        model.getOffer().setState(Offer.State.OFFERER_OFFLINE);
+        model.getOffer().setState(Offer.State.AVAILABILITY_CHECK_FAILED);
     }
 }
 

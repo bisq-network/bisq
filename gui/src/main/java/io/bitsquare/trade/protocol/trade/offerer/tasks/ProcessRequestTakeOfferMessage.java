@@ -18,8 +18,8 @@
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
-import io.bitsquare.util.tasks.Task;
-import io.bitsquare.util.tasks.TaskRunner;
+import io.bitsquare.util.taskrunner.Task;
+import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ public class ProcessRequestTakeOfferMessage extends Task<BuyerAsOffererModel> {
     }
 
     @Override
-    protected void run() {
+    protected void doRun() {
         try {
             checkTradeId(model.getOffer().getId(), model.getTradeMessage());
 

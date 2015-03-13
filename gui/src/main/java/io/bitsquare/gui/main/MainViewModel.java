@@ -37,6 +37,7 @@ import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
+import io.bitsquare.viewfx.model.ViewModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
@@ -49,8 +50,6 @@ import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeoutException;
-
-import io.bitsquare.viewfx.model.ViewModel;
 
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -367,10 +366,10 @@ class MainViewModel implements ViewModel {
                     Arbitrator.ID_TYPE.REAL_LIFE_ID,
                     languages,
                     new Reputation(),
-                    Coin.parseCoin("0.001"),
+                    Coin.parseCoin("0.1"),
                     arbitrationMethods,
                     idVerifications,
-                    "https://bitsquare.io/",
+                    "https://bitsquare.io",
                     "Bla bla...");
 
             accountSettings.addAcceptedArbitrator(arbitrator);

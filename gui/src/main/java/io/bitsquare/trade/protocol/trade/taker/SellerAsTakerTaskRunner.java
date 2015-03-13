@@ -17,12 +17,9 @@
 
 package io.bitsquare.trade.protocol.trade.taker;
 
-import io.bitsquare.trade.Trade;
-import io.bitsquare.util.handlers.FaultHandler;
+import io.bitsquare.util.handlers.ErrorMessageHandler;
 import io.bitsquare.util.handlers.ResultHandler;
-import io.bitsquare.util.tasks.TaskRunner;
-
-import org.jetbrains.annotations.NotNull;
+import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,13 +27,13 @@ import org.slf4j.LoggerFactory;
 public class SellerAsTakerTaskRunner<T extends SellerAsTakerModel> extends TaskRunner<SellerAsTakerModel> {
     private static final Logger log = LoggerFactory.getLogger(SellerAsTakerTaskRunner.class);
 
-    public SellerAsTakerTaskRunner(T sharedModel, ResultHandler resultHandler, FaultHandler faultHandler) {
-        super(sharedModel, resultHandler, faultHandler);
+    public SellerAsTakerTaskRunner(T sharedModel, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        super(sharedModel, resultHandler, errorMessageHandler);
     }
 
-    @Override
-    public void handleFault(String message, @NotNull Throwable throwable) {
+   /* @Override
+    public void handleErrorMessage(String errorMessage) {
         sharedModel.getTrade().setState(Trade.State.FAILED);
-        super.handleFault(message, throwable);
-    }
+        super.handleErrorMessage(errorMessage);
+    }*/
 }

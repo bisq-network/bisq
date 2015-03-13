@@ -29,8 +29,8 @@ import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.offer.OpenOffer;
 import io.bitsquare.persistence.Persistence;
+import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
-import io.bitsquare.trade.listeners.MessageHandler;
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityModel;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityProtocol;
@@ -119,7 +119,7 @@ public class TradeManager {
             closedTrades.putAll((Map<String, Trade>) closedTradesObject);
         }
         messageHandler = this::handleMessage;
-        
+
         tradeMessageService.addMessageHandler(messageHandler);
     }
 
@@ -183,7 +183,9 @@ public class TradeManager {
                     createOffererAsBuyerProtocol(openOffer);
                     resultHandler.handleResult(transaction);
                 },
-                (message, throwable) -> errorMessageHandler.handleErrorMessage(message)
+                (message) -> {
+                    errorMessageHandler.handleErrorMessage(message);
+                }
         );
 
         placeOfferProtocol.placeOffer();
@@ -278,6 +280,7 @@ public class TradeManager {
             tradeMessageService.sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
                 @Override
                 public void handleResult() {
+                    // Offerer does not do anything at that moment. Peer might only watch the offer and does nto start a trade.
                     log.trace("ReportOfferAvailabilityMessage successfully arrived at peer");
                 }
 

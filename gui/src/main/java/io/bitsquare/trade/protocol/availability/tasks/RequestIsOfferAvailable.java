@@ -17,11 +17,12 @@
 
 package io.bitsquare.trade.protocol.availability.tasks;
 
+import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityModel;
 import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
-import io.bitsquare.util.tasks.Task;
-import io.bitsquare.util.tasks.TaskRunner;
+import io.bitsquare.util.taskrunner.Task;
+import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,20 +35,25 @@ public class RequestIsOfferAvailable extends Task<CheckOfferAvailabilityModel> {
     }
 
     @Override
-    protected void run() {
+    protected void doRun() {
         model.getTradeMessageService().sendMessage(model.getPeer(), new RequestIsOfferAvailableMessage(model.getOffer().getId()),
                 new SendMessageListener() {
                     @Override
                     public void handleResult() {
-                        log.trace("RequestIsOfferAvailableMessage successfully arrived at peer");
                         complete();
                     }
 
                     @Override
                     public void handleFault() {
-                        failed("Sending RequestIsOfferAvailableMessage failed.");
+                        model.getOffer().setState(Offer.State.OFFERER_OFFLINE);
+                        failed();
                     }
                 });
+    }
+
+    @Override
+    protected void applyErrorState() {
+        model.getOffer().setState(Offer.State.AVAILABILITY_CHECK_FAILED);
     }
 }
 

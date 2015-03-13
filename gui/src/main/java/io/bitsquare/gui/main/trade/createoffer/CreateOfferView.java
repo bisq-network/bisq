@@ -31,11 +31,12 @@ import io.bitsquare.gui.main.account.content.restrictions.RestrictionsView;
 import io.bitsquare.gui.main.account.settings.AccountSettingsView;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
-import io.bitsquare.gui.main.portfolio.PortfolioView;
-import io.bitsquare.gui.main.portfolio.offer.OffersView;
+import io.bitsquare.gui.main.trade.TradeView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.offer.Direction;
+import io.bitsquare.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.viewfx.view.FxmlView;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -45,10 +46,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.ActivatableViewAndModel;
-
-import javafx.beans.property.BooleanProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.HPos;
@@ -98,12 +95,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private ImageView expand;
     private ImageView collapse;
     private PopOver totalToPayInfoPopover;
-    private BooleanProperty tabIsClosable;
     private boolean detailsVisible;
     private boolean advancedScreenInited;
 
     private final Navigation navigation;
     private final OverlayManager overlayManager;
+    private TradeView.CloseHandler closeHandler;
 
     @Inject
     private CreateOfferView(CreateOfferViewModel model, Navigation navigation,
@@ -124,7 +121,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     @Override
     protected void doDeactivate() {
-        tabIsClosable.unbind();
+
     }
 
     public void initWithData(Direction direction, Coin amount, Fiat price) {
@@ -136,9 +133,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             imageView.setId("image-sell-large");
     }
 
-    public void configCloseHandlers(BooleanProperty tabIsClosable) {
-        this.tabIsClosable = tabIsClosable;
-        tabIsClosable.bind(model.tabIsClosable);
+    public void setCloseHandler(TradeView.CloseHandler closeHandler) {
+        this.closeHandler = closeHandler;
     }
 
     @FXML
@@ -233,12 +229,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void close() {
-        TabPane tabPane = ((TabPane) (root.getParent().getParent()));
-
-        // Might fix #315  Offerbook tab gets closed 
-        // tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
-        tabPane.getTabs().remove(1);
-        navigation.navigateTo(MainView.class, PortfolioView.class, OffersView.class);
+        if (closeHandler != null)
+            closeHandler.close();
     }
 
     private void setupListeners() {
@@ -268,24 +260,21 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         // warnings
         model.showWarningInvalidBtcDecimalPlaces.addListener((o, oldValue, newValue) -> {
             if (newValue) {
-                Popups.openWarningPopup(BSResources.get("shared.warning"),
-                        BSResources.get("createOffer.amountPriceBox.warning.invalidBtcDecimalPlaces"));
+                Popups.openWarningPopup(BSResources.get("shared.warning"), BSResources.get("createOffer.amountPriceBox.warning.invalidBtcDecimalPlaces"));
                 model.showWarningInvalidBtcDecimalPlaces.set(false);
             }
         });
 
         model.showWarningInvalidFiatDecimalPlaces.addListener((o, oldValue, newValue) -> {
             if (newValue) {
-                Popups.openWarningPopup(BSResources.get("shared.warning"),
-                        BSResources.get("createOffer.amountPriceBox.warning.invalidFiatDecimalPlaces"));
+                Popups.openWarningPopup(BSResources.get("shared.warning"), BSResources.get("createOffer.amountPriceBox.warning.invalidFiatDecimalPlaces"));
                 model.showWarningInvalidFiatDecimalPlaces.set(false);
             }
         });
 
         model.showWarningAdjustedVolume.addListener((o, oldValue, newValue) -> {
             if (newValue) {
-                Popups.openWarningPopup(BSResources.get("shared.warning"),
-                        BSResources.get("createOffer.amountPriceBox.warning.adjustedVolume"));
+                Popups.openWarningPopup(BSResources.get("shared.warning"), BSResources.get("createOffer.amountPriceBox.warning.adjustedVolume"));
                 model.showWarningAdjustedVolume.set(false);
                 volumeTextField.setText(model.volume.get());
             }
@@ -293,9 +282,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         model.requestPlaceOfferErrorMessage.addListener((o, oldValue, newValue) -> {
             if (newValue != null) {
-                Popups.openErrorPopup(BSResources.get("shared.error"),
-                        BSResources.get("createOffer.amountPriceBox.error.message",
-                                model.requestPlaceOfferErrorMessage.get()));
+                Popups.openErrorPopup(BSResources.get("shared.error"), BSResources.get("createOffer.amountPriceBox.error.message",
+                        model.requestPlaceOfferErrorMessage.get()));
                 Popups.removeBlurContent();
             }
         });

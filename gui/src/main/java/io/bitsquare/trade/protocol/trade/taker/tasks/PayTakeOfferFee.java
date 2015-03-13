@@ -18,8 +18,8 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
-import io.bitsquare.util.tasks.Task;
-import io.bitsquare.util.tasks.TaskRunner;
+import io.bitsquare.util.taskrunner.Task;
+import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
@@ -39,7 +39,7 @@ public class PayTakeOfferFee extends Task<SellerAsTakerModel> {
     }
 
     @Override
-    protected void run() {
+    protected void doRun() {
         try {
             model.getWalletService().payTakeOfferFee(model.getTrade().getId(), new FutureCallback<Transaction>() {
                 @Override
@@ -51,11 +51,11 @@ public class PayTakeOfferFee extends Task<SellerAsTakerModel> {
 
                 @Override
                 public void onFailure(@NotNull Throwable t) {
-                    failed("Pay take offer fee caused an exception: ", t);
+                    failed(t);
                 }
             });
         } catch (InsufficientMoneyException e) {
-            failed("Pay take offer fee caused an exception: ", e);
+            failed(e);
         }
     }
 }

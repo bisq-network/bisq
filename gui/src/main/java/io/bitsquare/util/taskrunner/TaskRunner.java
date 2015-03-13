@@ -15,16 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.util.tasks;
+package io.bitsquare.util.taskrunner;
 
-import io.bitsquare.util.handlers.FaultHandler;
+import io.bitsquare.util.handlers.ErrorMessageHandler;
 import io.bitsquare.util.handlers.ResultHandler;
 
 import java.util.Arrays;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
-
-import org.jetbrains.annotations.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,37 +33,36 @@ public class TaskRunner<T extends SharedModel> {
     private final Queue<Class> tasks = new LinkedBlockingQueue<>();
     protected final T sharedModel;
     private final ResultHandler resultHandler;
-    private final FaultHandler faultHandler;
-
+    private final ErrorMessageHandler errorMessageHandler;
     private boolean failed = false;
-
-
     private boolean isCanceled;
+
     private Class<? extends Task> currentTask;
 
-    public TaskRunner(T sharedModel, ResultHandler resultHandler, FaultHandler faultHandler) {
+    public TaskRunner(T sharedModel, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         this.sharedModel = sharedModel;
         this.resultHandler = resultHandler;
-        this.faultHandler = faultHandler;
+        this.errorMessageHandler = errorMessageHandler;
+    }
+
+    public void addTasks(Class<? extends Task>... items) {
+        tasks.addAll(Arrays.asList(items));
     }
 
     public void run() {
         next();
     }
 
-
     protected void next() {
         if (!failed && !isCanceled) {
             if (tasks.size() > 0) {
                 try {
                     currentTask = tasks.poll();
-                    interceptBeforeRun(currentTask);
                     log.trace("Run task: " + currentTask.getSimpleName());
                     currentTask.getDeclaredConstructor(TaskRunner.class, sharedModel.getClass()).newInstance(this, sharedModel).run();
-                    interceptAfterRun(currentTask);
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                    faultHandler.handleFault(t.getMessage(), t);
+                } catch (Throwable throwable) {
+                    throwable.printStackTrace();
+                    handleErrorMessage("Error at taskRunner: " + throwable.getMessage());
                 }
             }
             else {
@@ -74,44 +71,19 @@ public class TaskRunner<T extends SharedModel> {
         }
     }
 
-    protected void interceptBeforeRun(Class<? extends Task> task) {
-        if (task == TaskInterception.taskToInterceptBeforeRun)
-            throw new RuntimeException("Task intercepted before run executed: task = " + task.getSimpleName());
-    }
-
-    protected void interceptAfterRun(Class<? extends Task> task) {
-        if (task == TaskInterception.taskToInterceptAfterRun)
-            throw new RuntimeException("Task intercepted after run executed: task = " + task.getSimpleName());
-    }
-
-
     public void cancel() {
         isCanceled = true;
     }
 
-    public void addTask(Class<? extends Task> task) {
-        tasks.add(task);
-    }
-
-    public void addTasks(Class<? extends Task>... items) {
-        tasks.addAll(Arrays.asList(items));
-    }
-
-    public void complete() {
+    void handleComplete() {
         log.trace("Task completed: " + currentTask.getSimpleName());
         next();
     }
 
-    public void handleFault(String message) {
-        handleFault(message, new Exception(message));
-    }
-
-    public void handleFault(String message, @NotNull Throwable throwable) {
+    void handleErrorMessage(String errorMessage) {
         log.error("Task failed: " + currentTask.getSimpleName());
-        log.debug(throwable.getMessage());
+        log.error("errorMessage: " + errorMessage);
         failed = true;
-        faultHandler.handleFault(message, throwable);
+        errorMessageHandler.handleErrorMessage(errorMessage);
     }
-
-
 }

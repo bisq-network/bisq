@@ -15,11 +15,15 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.util.tasks;
+package io.bitsquare.util.taskrunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SharedModel {
-    private static final Logger log = LoggerFactory.getLogger(SharedModel.class);
+public class InterceptTaskException extends RuntimeException{
+    private static final Logger log = LoggerFactory.getLogger(InterceptTaskException.class);
+
+    public InterceptTaskException(String message) {
+        super(message);
+    }
 }

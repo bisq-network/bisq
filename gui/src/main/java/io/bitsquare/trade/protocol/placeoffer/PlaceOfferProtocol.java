@@ -22,8 +22,8 @@ import io.bitsquare.trade.protocol.placeoffer.tasks.AddOfferToRemoteOfferBook;
 import io.bitsquare.trade.protocol.placeoffer.tasks.BroadcastCreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.ValidateOffer;
-import io.bitsquare.util.handlers.FaultHandler;
-import io.bitsquare.util.tasks.TaskRunner;
+import io.bitsquare.util.handlers.ErrorMessageHandler;
+import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ public class PlaceOfferProtocol {
 
     private final PlaceOfferModel model;
     private TransactionResultHandler resultHandler;
-    private FaultHandler faultHandle;
+    private ErrorMessageHandler errorMessageHandler;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -41,10 +41,10 @@ public class PlaceOfferProtocol {
 
     public PlaceOfferProtocol(PlaceOfferModel model,
                               TransactionResultHandler resultHandler,
-                              FaultHandler faultHandle) {
+                              ErrorMessageHandler errorMessageHandler) {
         this.model = model;
         this.resultHandler = resultHandler;
-        this.faultHandle = faultHandle;
+        this.errorMessageHandler = errorMessageHandler;
     }
 
 
@@ -58,16 +58,16 @@ public class PlaceOfferProtocol {
                     log.debug("sequence at handleRequestTakeOfferMessage completed");
                     resultHandler.handleResult(model.getTransaction());
                 },
-                (message, throwable) -> {
-                    log.error(message);
-                    faultHandle.handleFault(message, throwable);
+                (errorMessage) -> {
+                    log.error(errorMessage);
+                    errorMessageHandler.handleErrorMessage(errorMessage);
                 }
         );
         sequence.addTasks(
                 ValidateOffer.class,
                 CreateOfferFeeTx.class,
-                BroadcastCreateOfferFeeTx.class,
-                AddOfferToRemoteOfferBook.class
+                AddOfferToRemoteOfferBook.class,
+                BroadcastCreateOfferFeeTx.class
         );
 
         sequence.run();

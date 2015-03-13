@@ -91,7 +91,7 @@ public class OfferBook {
             @Override
             public void onOfferRemoved(Offer offer) {
                 // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
-                offer.setState(Offer.State.OFFER_REMOVED);
+                offer.setState(Offer.State.REMOVED);
 
                 // clean up possible references in tradeManager 
                 tradeManager.onOfferRemovedFromRemoteOfferBook(offer);

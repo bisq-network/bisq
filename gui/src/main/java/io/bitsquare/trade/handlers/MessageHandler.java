@@ -15,10 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.listeners;
+package io.bitsquare.trade.handlers;
 
-import net.tomp2p.peers.PeerAddress;
+import io.bitsquare.network.Message;
+import io.bitsquare.network.Peer;
 
-public interface TakeOfferRequestListener {
-    void onTakeOfferRequested(String offerId, PeerAddress sender);
+public interface MessageHandler {
+    void handleMessage(Message message, Peer sender);
 }

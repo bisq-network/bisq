@@ -26,15 +26,14 @@ import io.bitsquare.gui.main.trade.offerbook.OfferBookView;
 import io.bitsquare.gui.main.trade.takeoffer.TakeOfferView;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.viewfx.view.ActivatableView;
+import io.bitsquare.viewfx.view.View;
+import io.bitsquare.viewfx.view.ViewLoader;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import java.util.List;
-
-import io.bitsquare.viewfx.view.View;
-import io.bitsquare.viewfx.view.ViewLoader;
-import io.bitsquare.viewfx.view.ActivatableView;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
@@ -78,8 +77,7 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
         // TODO Find a way to do that in the InputTextField directly, but a tab change does not trigger any event...
         TabPane tabPane = root;
         tabPane.getSelectionModel().selectedIndexProperty()
-                .addListener((observableValue, oldValue, newValue) ->
-                        Platform.runLater(InputTextField::hideErrorMessageDisplay));
+                .addListener((observableValue, oldValue, newValue) -> Platform.runLater(InputTextField::hideErrorMessageDisplay));
 
         // We want to get informed when a tab get closed
         tabPane.getTabs().addListener((ListChangeListener<Tab>) change -> {
@@ -165,7 +163,10 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
             createOfferView.initWithData(direction, amount, price);
             createOfferPane = ((CreateOfferView) view).getRoot();
             final Tab tab = new Tab("Create offer");
-            createOfferView.configCloseHandlers(tab.closableProperty());
+            createOfferView.setCloseHandler(() -> {
+                if (tabPane.getTabs().size() == 2)
+                    tabPane.getTabs().remove(1);
+            });
             tab.setContent(createOfferPane);
             tabPane.getTabs().add(tab);
             tabPane.getSelectionModel().select(tab);
@@ -178,12 +179,16 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
             takeOfferView.initWithData(direction, amount, offer);
             takeOfferPane = ((TakeOfferView) view).getRoot();
             final Tab tab = new Tab("Take offer");
-            takeOfferView.configCloseHandlers(tab.closableProperty());
+            takeOfferView.setCloseHandler(() -> {
+                if (tabPane.getTabs().size() == 2)
+                    tabPane.getTabs().remove(1);
+            });
             tab.setContent(takeOfferPane);
             tabPane.getTabs().add(tab);
             tabPane.getSelectionModel().select(tab);
         }
     }
+
 
     private void onCreateOfferViewRemoved() {
         createOfferView = null;
@@ -204,6 +209,10 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
         void createOffer(Coin amount, Fiat price);
 
         void takeOffer(Coin amount, Fiat price, Offer offer);
+    }
+
+    public interface CloseHandler {
+        void close();
     }
 }
 

@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.offerer;
 
 import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
-import io.bitsquare.trade.listeners.MessageHandler;
+import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateDepositTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
@@ -71,8 +71,6 @@ public class BuyerAsOffererProtocol {
 
     public void cleanup() {
         model.getTradeMessageService().removeMessageHandler(messageHandler);
-        // cannot remove listener in same execution cycle, so we delay it
-        //Platform.runLater(() -> model.getTradeMessageService().removeMessageHandler(messageHandler));
     }
 
 
@@ -113,8 +111,8 @@ public class BuyerAsOffererProtocol {
                 () -> {
                     log.debug("sequence at handleRequestTakeOfferMessage completed");
                 },
-                (message, throwable) -> {
-                    log.error(message);
+                (errorMessage) -> {
+                    log.error(errorMessage);
                 }
         );
         sequence.addTasks(
@@ -131,8 +129,8 @@ public class BuyerAsOffererProtocol {
                 () -> {
                     log.debug("sequence at handleTakeOfferFeePayedMessage completed");
                 },
-                (message, throwable) -> {
-                    log.error(message);
+                (errorMessage) -> {
+                    log.error(errorMessage);
                 }
         );
         sequence.addTasks(
@@ -150,8 +148,8 @@ public class BuyerAsOffererProtocol {
                 () -> {
                     log.debug("sequence at handleRequestOffererPublishDepositTxMessage completed");
                 },
-                (message, throwable) -> {
-                    log.error(message);
+                (errorMessage) -> {
+                    log.error(errorMessage);
                 }
         );
         sequence.addTasks(
@@ -176,8 +174,8 @@ public class BuyerAsOffererProtocol {
                 () -> {
                     log.debug("sequence at handleBankTransferStartedUIEvent completed");
                 },
-                (message, throwable) -> {
-                    log.error(message);
+                (errorMessage) -> {
+                    log.error(errorMessage);
                 }
         );
         sequence.addTasks(
@@ -200,8 +198,8 @@ public class BuyerAsOffererProtocol {
                 () -> {
                     log.debug("sequence at handlePayoutTxPublishedMessage completed");
                 },
-                (message, throwable) -> {
-                    log.error(message);
+                (errorMessage) -> {
+                    log.error(errorMessage);
                 }
         );
         sequence.addTasks(ProcessPayoutTxPublishedMessage.class);

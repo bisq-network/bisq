@@ -20,8 +20,8 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
-import io.bitsquare.util.tasks.Task;
-import io.bitsquare.util.tasks.TaskRunner;
+import io.bitsquare.util.taskrunner.Task;
+import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.Utils;
@@ -37,7 +37,7 @@ public class SendSignedTakerDepositTxAsHex extends Task<SellerAsTakerModel> {
     }
 
     @Override
-    protected void run() {
+    protected void doRun() {
         Transaction signedTakerDepositTx = model.getSignedTakerDepositTx();
         long takerTxOutIndex = model.getSignedTakerDepositTx().getInput(1).getOutpoint().getIndex();
 

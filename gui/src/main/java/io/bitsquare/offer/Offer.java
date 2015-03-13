@@ -48,9 +48,11 @@ public class Offer implements Serializable {
 
     public enum State {
         UNKNOWN,
-        OFFER_AVAILABLE,
-        OFFER_NOT_AVAILABLE,
-        OFFER_REMOVED
+        AVAILABLE,
+        OFFERER_OFFLINE,
+        NOT_AVAILABLE,
+        AVAILABILITY_CHECK_FAILED,
+        REMOVED
     }
 
     // key attributes for lookup

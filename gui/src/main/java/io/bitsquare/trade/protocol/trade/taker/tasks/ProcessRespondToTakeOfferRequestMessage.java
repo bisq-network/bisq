@@ -20,8 +20,8 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToTakeOfferRequestMessage;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
-import io.bitsquare.util.tasks.Task;
-import io.bitsquare.util.tasks.TaskRunner;
+import io.bitsquare.util.taskrunner.Task;
+import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ public class ProcessRespondToTakeOfferRequestMessage extends Task<SellerAsTakerM
     }
 
     @Override
-    protected void run() {
+    protected void doRun() {
         try {
             checkTradeId(model.getTrade().getId(), model.getTradeMessage());
 
@@ -49,7 +49,7 @@ public class ProcessRespondToTakeOfferRequestMessage extends Task<SellerAsTakerM
                 failed("Requested offer rejected because it is not available anymore.");
             }
         } catch (Throwable t) {
-            failed("Validation for RespondToTakeOfferRequestMessage failed.", t);
+            failed( t);
         }
     }
 }

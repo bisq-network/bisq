@@ -19,8 +19,8 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
-import io.bitsquare.util.tasks.Task;
-import io.bitsquare.util.tasks.TaskRunner;
+import io.bitsquare.util.taskrunner.Task;
+import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
@@ -37,7 +37,7 @@ public class SetupListenerForBlockChainConfirmation extends Task<BuyerAsOffererM
     }
 
     @Override
-    protected void run() {
+    protected void doRun() {
         TransactionConfidence confidence = model.getTrade().getDepositTx().getConfidence();
         confidence.addEventListener(new TransactionConfidence.Listener() {
             @Override

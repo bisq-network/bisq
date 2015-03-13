@@ -33,14 +33,13 @@ import io.bitsquare.gui.util.validation.OptionalFiatValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.viewfx.view.FxmlView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
-
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.ActivatableViewAndModel;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -222,7 +221,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         if (model.isRegistered()) {
             if (offer.getDirection() == Direction.BUY) {
                 // reset available state
-                if (offer.getState() != Offer.State.OFFER_REMOVED)
+                if (offer.getState() != Offer.State.REMOVED)
                     offer.setState(Offer.State.UNKNOWN);
 
                 offerActionHandler.takeOffer(model.getAmountAsCoin(), model.getPriceAsCoin(), offer);
@@ -524,11 +523,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         case UNKNOWN:
                                             iconView.setId("image-offer_state_unknown");
                                             break;
-                                        case OFFER_AVAILABLE:
+                                        case AVAILABLE:
                                             iconView.setId("image-offer_state_available");
                                             break;
-                                        case OFFER_NOT_AVAILABLE:
-                                        case OFFER_REMOVED:
+                                        case OFFERER_OFFLINE:
+                                        case NOT_AVAILABLE:
+                                        case AVAILABILITY_CHECK_FAILED:
+                                        case REMOVED:
                                             iconView.setId("image-offer_state_not_available");
                                             break;
                                     }

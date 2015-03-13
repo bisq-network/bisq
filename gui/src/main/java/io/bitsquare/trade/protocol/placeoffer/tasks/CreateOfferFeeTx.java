@@ -18,8 +18,8 @@
 package io.bitsquare.trade.protocol.placeoffer.tasks;
 
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
-import io.bitsquare.util.tasks.Task;
-import io.bitsquare.util.tasks.TaskRunner;
+import io.bitsquare.util.taskrunner.Task;
+import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Transaction;
 
@@ -34,10 +34,12 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
     }
 
     @Override
-    protected void run() {
+    protected void doRun() {
         try {
             Transaction transaction = model.getWalletService().createOfferFeeTx(model.getOffer().getId());
-            
+           
+            // We assume there will be no tx malleability. We add a check later in case the published offer has a different hash.
+            model.getOffer().setOfferFeePaymentTxID(transaction.getHashAsString());
             model.setTransaction(transaction);
 
             complete();

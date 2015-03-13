@@ -20,8 +20,8 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
-import io.bitsquare.util.tasks.Task;
-import io.bitsquare.util.tasks.TaskRunner;
+import io.bitsquare.util.taskrunner.Task;
+import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ public class SendTakeOfferFeePayedMessage extends Task<SellerAsTakerModel> {
     }
 
     @Override
-    protected void run() {
+    protected void doRun() {
         TakeOfferFeePayedMessage msg = new TakeOfferFeePayedMessage(
                 model.getTrade().getId(),
                 model.getTrade().getTakeOfferFeeTxId(),

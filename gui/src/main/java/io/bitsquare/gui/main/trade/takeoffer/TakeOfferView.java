@@ -31,10 +31,13 @@ import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.pending.PendingTradesView;
+import io.bitsquare.gui.main.trade.TradeView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.viewfx.view.FxmlView;
 
 import org.bitcoinj.core.Coin;
 
@@ -43,10 +46,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.ActivatableViewAndModel;
-
-import javafx.beans.property.BooleanProperty;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -96,6 +96,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private final Navigation navigation;
     private final OverlayManager overlayManager;
     private ChangeListener<Offer.State> offerIsAvailableChangeListener;
+    private TradeView.CloseHandler closeHandler;
 
     @Inject
     private TakeOfferView(TakeOfferViewModel model, Navigation navigation,
@@ -152,27 +153,39 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         handleOfferIsAvailableState(model.offerIsAvailable.get());
     }
 
-    private void handleOfferIsAvailableState(Offer.State state) {
-        if (state == Offer.State.OFFER_AVAILABLE) {
-            isOfferAvailableLabel.setVisible(false);
-            isOfferAvailableLabel.setManaged(false);
-            isOfferAvailableProgressIndicator.setProgress(0);
-            isOfferAvailableProgressIndicator.setVisible(false);
-            isOfferAvailableProgressIndicator.setManaged(false);
-            showPaymentInfoScreenButton.setVisible(true);
-        }
-        else if ((state == Offer.State.OFFER_NOT_AVAILABLE)) {
-            Popups.openWarningPopup("You cannot take that offer", "The offerer is either offline or the offer was already taken by another trader.");
-            close();
-        }
-        else if ((state == Offer.State.OFFER_REMOVED)) {
-            Popups.openWarningPopup("You cannot take that offer", "The offerer has been removed in the meantime.");
-            close();
-        }
+    public void setCloseHandler(TradeView.CloseHandler closeHandler) {
+        this.closeHandler = closeHandler;
     }
 
-    public void configCloseHandlers(BooleanProperty tabIsClosable) {
-        tabIsClosable.bind(model.tabIsClosable);
+    private void handleOfferIsAvailableState(Offer.State state) {
+        switch (state) {
+            case UNKNOWN:
+                break;
+            case AVAILABLE:
+                isOfferAvailableLabel.setVisible(false);
+                isOfferAvailableLabel.setManaged(false);
+                isOfferAvailableProgressIndicator.setProgress(0);
+                isOfferAvailableProgressIndicator.setVisible(false);
+                isOfferAvailableProgressIndicator.setManaged(false);
+                showPaymentInfoScreenButton.setVisible(true);
+                break;
+            case OFFERER_OFFLINE:
+                Popups.openWarningPopup("You cannot take that offer", "The offerer is offline.");
+                Platform.runLater(this::close);
+                break;
+            case NOT_AVAILABLE:
+                Popups.openWarningPopup("You cannot take that offer", "The offer was already taken by another trader.");
+                Platform.runLater(this::close);
+                break;
+            case AVAILABILITY_CHECK_FAILED:
+                Popups.openWarningPopup("You cannot take that offer", "The check for the offer availability failed.");
+                Platform.runLater(this::close);
+                break;
+            case REMOVED:
+                Popups.openWarningPopup("You cannot take that offer", "The offerer has been removed in the meantime.");
+                Platform.runLater(this::close);
+                break;
+        }
     }
 
     @FXML
@@ -261,12 +274,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void close() {
-        TabPane tabPane = ((TabPane) (root.getParent().getParent()));
-
-        // Might fix #315  Offerbook tab gets closed 
-        //tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
-        if (tabPane != null && tabPane.getTabs() != null && tabPane.getTabs().size() > 1)
-            tabPane.getTabs().remove(1);
+        if (closeHandler != null)
+            closeHandler.close();
     }
 
     private void setupListeners() {

@@ -19,8 +19,8 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.trade.protocol.trade.offerer.messages.TakerDepositPaymentRequestMessage;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
-import io.bitsquare.util.tasks.Task;
-import io.bitsquare.util.tasks.TaskRunner;
+import io.bitsquare.util.taskrunner.Task;
+import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ public class ProcessTakerDepositPaymentRequestMessage extends Task<SellerAsTaker
     }
 
     @Override
-    protected void run() {
+    protected void doRun() {
         try {
             checkTradeId(model.getTrade().getId(), model.getTradeMessage());
             TakerDepositPaymentRequestMessage message = (TakerDepositPaymentRequestMessage) model.getTradeMessage();
@@ -48,7 +48,7 @@ public class ProcessTakerDepositPaymentRequestMessage extends Task<SellerAsTaker
 
             complete();
         } catch (Throwable t) {
-            failed("Validation for TakerDepositPaymentRequestMessage failed.", t);
+            failed(t);
         }
     }
 }

@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.debug;
 
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityProtocol;
+import io.bitsquare.trade.protocol.availability.tasks.ProcessReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.tasks.RequestIsOfferAvailable;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
 import io.bitsquare.trade.protocol.placeoffer.tasks.AddOfferToRemoteOfferBook;
@@ -56,14 +57,13 @@ import io.bitsquare.trade.protocol.trade.taker.tasks.SignAndPublishPayoutTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCommitDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOffererAccount;
-import io.bitsquare.util.tasks.TaskInterception;
+import io.bitsquare.util.taskrunner.Task;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.InitializableView;
 
 import java.util.Arrays;
 
 import javax.inject.Inject;
-
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.InitializableView;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -91,6 +91,7 @@ public class DebugView extends InitializableView {
                         CheckOfferAvailabilityProtocol.class,
                         io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress.class,
                         RequestIsOfferAvailable.class,
+                        ProcessReportOfferAvailabilityMessage.class,
                         Boolean.class, /* used as seperator*/
 
                         
@@ -178,11 +179,20 @@ public class DebugView extends InitializableView {
     void onSelectTask() {
         Class item = taskComboBox.getSelectionModel().getSelectedItem();
         if (!item.getSimpleName().contains("Protocol")) {
-            if (interceptBeforeCheckBox.isSelected())
-                TaskInterception.taskToInterceptBeforeRun = item;
-            else
-                TaskInterception.taskToInterceptAfterRun = item;
+            if (interceptBeforeCheckBox.isSelected()) {
+                Task.taskToInterceptBeforeRun = item;
+                Task.taskToInterceptAfterRun = null;
+            }
+            else {
+                Task.taskToInterceptAfterRun = item;
+                Task.taskToInterceptBeforeRun = null;
+            }
         }
+    }
+
+    @FXML
+    void onCheckBoxChanged() {
+        onSelectTask();
     }
 }
 

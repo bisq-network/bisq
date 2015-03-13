@@ -18,8 +18,8 @@
 package io.bitsquare.trade.protocol.placeoffer.tasks;
 
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
-import io.bitsquare.util.tasks.Task;
-import io.bitsquare.util.tasks.TaskRunner;
+import io.bitsquare.util.taskrunner.Task;
+import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Transaction;
 
@@ -33,33 +33,55 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
 
     public BroadcastCreateOfferFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
+
+        appendToErrorMessage("Broadcast of offer fee payment failed because transaction = null.");
+        appendToErrorMessage("Maybe you have connection problems. Please try later again.");
     }
 
     @Override
-    protected void run() {
-        try {
-            model.getWalletService().broadcastCreateOfferFeeTx(model.getTransaction(), new FutureCallback<Transaction>() {
-                @Override
-                public void onSuccess(Transaction transaction) {
-                    log.info("Broadcast of offer fee payment succeeded: transaction = " + transaction.toString());
-                    if (transaction != null) {
-                        // need to write data before storage, otherwise hash is different when removing offer from DHT!
-                        model.getOffer().setOfferFeePaymentTxID(model.getTransaction().getHashAsString());
-                        
+    protected void doRun() {
+        model.getWalletService().broadcastCreateOfferFeeTx(model.getTransaction(), new FutureCallback<Transaction>() {
+            @Override
+            public void onSuccess(Transaction transaction) {
+                log.info("Broadcast of offer fee payment succeeded: transaction = " + transaction.toString());
+                if (transaction != null) {
+
+                    if (model.getTransaction().getHashAsString() == transaction.getHashAsString()) {
+                        // No tx malleability happened after broadcast (still not in blockchain)
                         complete();
                     }
                     else {
-                        failed("Broadcast of offer fee payment failed because transaction = null.");
+                        log.warn("Tx malleability happened after broadcast. We publish the changed offer to the DHT again.");
+                        // Tx malleability happened after broadcast. We publish the changed offer to the DHT again.
+                        model.getOfferBookService().removeOffer(model.getOffer(),
+                                () -> {
+                                    log.info("We store now the changed txID to the offer and add that again.");
+                                    // We store now the changed txID to the offer and add that again.
+                                    model.getOffer().setOfferFeePaymentTxID(transaction.getHashAsString());
+                                    model.getOfferBookService().addOffer(model.getOffer(),
+                                            () -> {
+                                                complete();
+                                            },
+                                            (message, throwable) -> {
+                                                log.error("addOffer failed");
+                                                failed(throwable);
+                                            });
+                                },
+                                (message, throwable) -> {
+                                    log.error("removeOffer failed");
+                                    failed(throwable);
+                                });
                     }
                 }
-
-                @Override
-                public void onFailure(Throwable t) {
-                    failed(t);
+                else {
+                    failed("Fault reason: Transaction = null.");
                 }
-            });
-        } catch (Throwable t) {
-            failed(t);
-        }
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                failed(t);
+            }
+        });
     }
 }

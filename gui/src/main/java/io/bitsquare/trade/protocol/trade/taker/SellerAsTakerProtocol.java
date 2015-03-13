@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.taker;
 import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.listeners.MessageHandler;
+import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
@@ -75,8 +75,8 @@ public class SellerAsTakerProtocol {
                 () -> {
                     log.debug("sequence at handleRequestTakeOfferUIEvent completed");
                 },
-                (message, throwable) -> {
-                    log.error(message);
+                (errorMessage) -> {
+                    log.error(errorMessage);
                 }
         );
         sequence.addTasks(
@@ -88,8 +88,6 @@ public class SellerAsTakerProtocol {
 
     public void cleanup() {
         model.getTradeMessageService().removeMessageHandler(messageHandler);
-        // cannot remove listener in same execution cycle, so we delay it
-        // Platform.runLater(() -> model.getTradeMessageService().removeMessageHandler(messageHandler));
     }
 
 
@@ -128,8 +126,8 @@ public class SellerAsTakerProtocol {
                 () -> {
                     log.debug("sequence at handleRespondToTakeOfferRequestMessage completed");
                 },
-                (message, throwable) -> {
-                    log.error(message);
+                (errorMessage) -> {
+                    log.error(errorMessage);
                 }
         );
         sequence.addTasks(
@@ -147,8 +145,8 @@ public class SellerAsTakerProtocol {
                 () -> {
                     log.debug("sequence at handleTakerDepositPaymentRequestMessage completed");
                 },
-                (message, throwable) -> {
-                    log.error(message);
+                (errorMessage) -> {
+                    log.error(errorMessage);
                 }
         );
         sequence.addTasks(
@@ -168,8 +166,8 @@ public class SellerAsTakerProtocol {
                 () -> {
                     log.debug("sequence at handleDepositTxPublishedMessage completed");
                 },
-                (message, throwable) -> {
-                    log.error(message);
+                (errorMessage) -> {
+                    log.error(errorMessage);
                 }
         );
         sequence.addTasks(
@@ -187,8 +185,8 @@ public class SellerAsTakerProtocol {
                     log.debug("sequence at handleBankTransferInitedMessage completed");
                     model.getTrade().setState(Trade.State.FIAT_PAYMENT_STARTED);
                 },
-                (message, throwable) -> {
-                    log.error(message);
+                (errorMessage) -> {
+                    log.error(errorMessage);
                 }
         );
         sequence.addTasks(ProcessBankTransferInitedMessage.class);
@@ -205,8 +203,8 @@ public class SellerAsTakerProtocol {
                 () -> {
                     log.debug("sequence at handleFiatReceivedUIEvent completed");
                 },
-                (message, throwable) -> {
-                    log.error(message);
+                (errorMessage) -> {
+                    log.error(errorMessage);
                 }
         );
         sequence.addTasks(

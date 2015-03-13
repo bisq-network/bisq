@@ -20,8 +20,8 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
 import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
-import io.bitsquare.util.tasks.Task;
-import io.bitsquare.util.tasks.TaskRunner;
+import io.bitsquare.util.taskrunner.Task;
+import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Utils;
 
@@ -36,7 +36,7 @@ public class SendDepositTxIdToTaker extends Task<BuyerAsOffererModel> {
     }
 
     @Override
-    protected void run() {
+    protected void doRun() {
         DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(model.getTrade().getId(),
                 Utils.HEX.encode(model.getTrade().getDepositTx().bitcoinSerialize()));
 

@@ -18,8 +18,8 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
-import io.bitsquare.util.tasks.Task;
-import io.bitsquare.util.tasks.TaskRunner;
+import io.bitsquare.util.taskrunner.Task;
+import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +32,7 @@ public class VerifyOfferFeePayment extends Task<SellerAsTakerModel> {
     }
 
     @Override
-    protected void run() {
+    protected void doRun() {
         //TODO impl. missing
         int numOfPeersSeenTx = model.getWalletService().getNumOfPeersSeenTx(model.getTrade().getTakeOfferFeeTxId());
        /* if (numOfPeersSeenTx > 2) {

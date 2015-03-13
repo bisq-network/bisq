@@ -24,7 +24,7 @@ import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.user.User;
-import io.bitsquare.util.tasks.SharedModel;
+import io.bitsquare.util.taskrunner.SharedModel;
 
 import org.bitcoinj.core.ECKey;
 
