@@ -102,7 +102,7 @@ public class BootstrapNode {
                         log.info(peerAddress.toString());
                     }
                     try {
-                        Thread.sleep(60000);
+                        Thread.sleep(10000);
                     } catch (InterruptedException e) {
                         return;
                     }

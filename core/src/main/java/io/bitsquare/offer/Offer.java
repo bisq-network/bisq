@@ -86,7 +86,7 @@ public class Offer implements Serializable {
     // don't access directly as it might be null; use getStateProperty() which creates an object if not instantiated
     private transient ObjectProperty<State> stateProperty;
 
-
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////

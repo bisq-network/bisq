@@ -53,7 +53,8 @@ public class RequestIsOfferAvailable extends Task<CheckOfferAvailabilityModel> {
 
     @Override
     protected void applyErrorState() {
-        model.getOffer().setState(Offer.State.AVAILABILITY_CHECK_FAILED);
+        if (model.getOffer().getState() != Offer.State.OFFERER_OFFLINE)
+            model.getOffer().setState(Offer.State.AVAILABILITY_CHECK_FAILED);
     }
 }
 

@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class Task<T extends SharedModel> {
     private static final Logger log = LoggerFactory.getLogger(Task.class);
+
     public static Class<? extends Task> taskToInterceptBeforeRun;
     public static Class<? extends Task> taskToInterceptAfterRun;
 
@@ -35,15 +36,14 @@ public abstract class Task<T extends SharedModel> {
     }
 
     protected void run() {
-        interceptBeforeRun();
         try {
+            interceptBeforeRun();
             doRun();
         } catch (Throwable t) {
             appendExceptionToErrorMessage(t);
             failed();
         }
     }
-
 
     abstract protected void doRun();
 
@@ -52,12 +52,12 @@ public abstract class Task<T extends SharedModel> {
 
     private void interceptBeforeRun() {
         if (getClass() == taskToInterceptBeforeRun)
-            throw new InterceptTaskException("Task intercepted before run executed: task = " + getClass().getSimpleName());
+            throw new InterceptTaskException("Task intercepted before run got executed. Task = " + getClass().getSimpleName());
     }
 
     private void interceptBeforeComplete() {
         if (getClass() == taskToInterceptAfterRun)
-            throw new InterceptTaskException("Task intercepted before complete called: task = " + getClass().getSimpleName());
+            throw new InterceptTaskException("Task intercepted before complete was called. Task = " + getClass().getSimpleName());
     }
 
     protected void appendToErrorMessage(String message) {
@@ -69,7 +69,12 @@ public abstract class Task<T extends SharedModel> {
     }
 
     protected void complete() {
-        interceptBeforeComplete();
+        try {
+            interceptBeforeComplete();
+        } catch (Throwable t) {
+            appendExceptionToErrorMessage(t);
+            failed();
+        }
         taskHandler.handleComplete();
     }
 
