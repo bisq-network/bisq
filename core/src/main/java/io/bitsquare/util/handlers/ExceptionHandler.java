@@ -18,7 +18,7 @@
 package io.bitsquare.util.handlers;
 
 /**
- * For reporting throwables only
+ * For reporting throwable objects only
  */
 public interface ExceptionHandler {
     void handleException(Throwable throwable);

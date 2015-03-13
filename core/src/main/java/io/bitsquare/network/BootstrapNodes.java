@@ -30,7 +30,7 @@ public interface BootstrapNodes {
     Node DEFAULT = DIGITAL_OCEAN_1;
 
     /**
-     * A locally-running {@link io.bitsquare.app.bootstrap.BootstrapNode} instance.
+     * A locally-running BootstrapNode instance.
      * Typically used only for testing. Not included in results from {@link #all()}.
      */
     Node LOCALHOST = Node.at("localhost", "127.0.0.1");

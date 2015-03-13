@@ -53,7 +53,7 @@ public class PlaceOfferProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void placeOffer() {
-        TaskRunner<PlaceOfferModel> sequence = new TaskRunner<>(model,
+        TaskRunner<PlaceOfferModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleRequestTakeOfferMessage completed");
                     resultHandler.handleResult(model.getTransaction());
@@ -63,13 +63,13 @@ public class PlaceOfferProtocol {
                     errorMessageHandler.handleErrorMessage(errorMessage);
                 }
         );
-        sequence.addTasks(
+        taskRunner.addTasks(
                 ValidateOffer.class,
                 CreateOfferFeeTx.class,
                 AddOfferToRemoteOfferBook.class,
                 BroadcastCreateOfferFeeTx.class
         );
 
-        sequence.run();
+        taskRunner.run();
     }
 }

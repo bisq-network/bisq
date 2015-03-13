@@ -71,7 +71,7 @@ public class SellerAsTakerProtocol {
     public void takeOffer() {
         model.getTradeMessageService().addMessageHandler(messageHandler);
 
-        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence = new SellerAsTakerTaskRunner<>(model,
+        SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleRequestTakeOfferUIEvent completed");
                 },
@@ -79,11 +79,11 @@ public class SellerAsTakerProtocol {
                     log.error(errorMessage);
                 }
         );
-        sequence.addTasks(
+        taskRunner.addTasks(
                 GetPeerAddress.class,
                 RequestTakeOffer.class
         );
-        sequence.run();
+        taskRunner.run();
     }
 
     public void cleanup() {
@@ -122,7 +122,7 @@ public class SellerAsTakerProtocol {
     private void handleRespondToTakeOfferRequestMessage(RespondToTakeOfferRequestMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence = new SellerAsTakerTaskRunner<>(model,
+        SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleRespondToTakeOfferRequestMessage completed");
                 },
@@ -130,18 +130,18 @@ public class SellerAsTakerProtocol {
                     log.error(errorMessage);
                 }
         );
-        sequence.addTasks(
+        taskRunner.addTasks(
                 ProcessRespondToTakeOfferRequestMessage.class,
                 PayTakeOfferFee.class,
                 SendTakeOfferFeePayedMessage.class
         );
-        sequence.run();
+        taskRunner.run();
     }
 
     private void handleTakerDepositPaymentRequestMessage(TakerDepositPaymentRequestMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence = new SellerAsTakerTaskRunner<>(model,
+        SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleTakerDepositPaymentRequestMessage completed");
                 },
@@ -149,20 +149,20 @@ public class SellerAsTakerProtocol {
                     log.error(errorMessage);
                 }
         );
-        sequence.addTasks(
+        taskRunner.addTasks(
                 ProcessTakerDepositPaymentRequestMessage.class,
                 VerifyOffererAccount.class,
                 CreateAndSignContract.class,
                 PayDeposit.class,
                 SendSignedTakerDepositTxAsHex.class
         );
-        sequence.run();
+        taskRunner.run();
     }
 
     private void handleDepositTxPublishedMessage(DepositTxPublishedMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence = new SellerAsTakerTaskRunner<>(model,
+        SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleDepositTxPublishedMessage completed");
                 },
@@ -170,17 +170,17 @@ public class SellerAsTakerProtocol {
                     log.error(errorMessage);
                 }
         );
-        sequence.addTasks(
+        taskRunner.addTasks(
                 ProcessDepositTxPublishedMessage.class,
                 TakerCommitDepositTx.class
         );
-        sequence.run();
+        taskRunner.run();
     }
 
     private void handleBankTransferInitedMessage(BankTransferStartedMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence = new SellerAsTakerTaskRunner<>(model,
+        SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleBankTransferInitedMessage completed");
                     model.getTrade().setState(Trade.State.FIAT_PAYMENT_STARTED);
@@ -189,8 +189,8 @@ public class SellerAsTakerProtocol {
                     log.error(errorMessage);
                 }
         );
-        sequence.addTasks(ProcessBankTransferInitedMessage.class);
-        sequence.run();
+        taskRunner.addTasks(ProcessBankTransferInitedMessage.class);
+        taskRunner.run();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -199,7 +199,7 @@ public class SellerAsTakerProtocol {
 
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     public void onFiatPaymentReceived() {
-        SellerAsTakerTaskRunner<SellerAsTakerModel> sequence = new SellerAsTakerTaskRunner<>(model,
+        SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleFiatReceivedUIEvent completed");
                 },
@@ -207,11 +207,11 @@ public class SellerAsTakerProtocol {
                     log.error(errorMessage);
                 }
         );
-        sequence.addTasks(
+        taskRunner.addTasks(
                 SignAndPublishPayoutTx.class,
                 VerifyOfferFeePayment.class,
                 SendPayoutTxToOfferer.class
         );
-        sequence.run();
+        taskRunner.run();
     }
 }

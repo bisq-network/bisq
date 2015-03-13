@@ -107,7 +107,7 @@ public class BuyerAsOffererProtocol {
         model.setTradeMessage(tradeMessage);
         model.setPeer(peer);
 
-        BuyerAsOffererTaskRunner<BuyerAsOffererModel> sequence = new BuyerAsOffererTaskRunner<>(model,
+        BuyerAsOffererTaskRunner<BuyerAsOffererModel> taskRunner = new BuyerAsOffererTaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleRequestTakeOfferMessage completed");
                 },
@@ -115,17 +115,17 @@ public class BuyerAsOffererProtocol {
                     log.error(errorMessage);
                 }
         );
-        sequence.addTasks(
+        taskRunner.addTasks(
                 ProcessRequestTakeOfferMessage.class,
                 RespondToTakeOfferRequest.class
         );
-        sequence.run();
+        taskRunner.run();
     }
 
     private void handleTakeOfferFeePayedMessage(TakeOfferFeePayedMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        BuyerAsOffererTaskRunner<BuyerAsOffererModel> sequence = new BuyerAsOffererTaskRunner<>(model,
+        BuyerAsOffererTaskRunner<BuyerAsOffererModel> taskRunner = new BuyerAsOffererTaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleTakeOfferFeePayedMessage completed");
                 },
@@ -133,18 +133,18 @@ public class BuyerAsOffererProtocol {
                     log.error(errorMessage);
                 }
         );
-        sequence.addTasks(
+        taskRunner.addTasks(
                 ProcessTakeOfferFeePayedMessage.class,
                 CreateDepositTx.class,
                 SendTakerDepositPaymentRequest.class
         );
-        sequence.run();
+        taskRunner.run();
     }
 
     private void handleRequestOffererPublishDepositTxMessage(RequestOffererPublishDepositTxMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        BuyerAsOffererTaskRunner<BuyerAsOffererModel> sequence = new BuyerAsOffererTaskRunner<>(model,
+        BuyerAsOffererTaskRunner<BuyerAsOffererModel> taskRunner = new BuyerAsOffererTaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleRequestOffererPublishDepositTxMessage completed");
                 },
@@ -152,7 +152,7 @@ public class BuyerAsOffererProtocol {
                     log.error(errorMessage);
                 }
         );
-        sequence.addTasks(
+        taskRunner.addTasks(
                 ProcessRequestOffererPublishDepositTxMessage.class,
                 VerifyTakerAccount.class,
                 VerifyAndSignContract.class,
@@ -160,7 +160,7 @@ public class BuyerAsOffererProtocol {
                 SetupListenerForBlockChainConfirmation.class,
                 SendDepositTxIdToTaker.class
         );
-        sequence.run();
+        taskRunner.run();
     }
 
 
@@ -170,7 +170,7 @@ public class BuyerAsOffererProtocol {
 
     // User clicked the "bank transfer started" button
     public void onFiatPaymentStarted() {
-        BuyerAsOffererTaskRunner<BuyerAsOffererModel> sequence = new BuyerAsOffererTaskRunner<>(model,
+        BuyerAsOffererTaskRunner<BuyerAsOffererModel> taskRunner = new BuyerAsOffererTaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleBankTransferStartedUIEvent completed");
                 },
@@ -178,12 +178,12 @@ public class BuyerAsOffererProtocol {
                     log.error(errorMessage);
                 }
         );
-        sequence.addTasks(
+        taskRunner.addTasks(
                 SignPayoutTx.class,
                 VerifyTakeOfferFeePayment.class,
                 SendBankTransferInitedMessage.class
         );
-        sequence.run();
+        taskRunner.run();
     }
 
 
@@ -194,7 +194,7 @@ public class BuyerAsOffererProtocol {
     private void handlePayoutTxPublishedMessage(PayoutTxPublishedMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        BuyerAsOffererTaskRunner<BuyerAsOffererModel> sequence = new BuyerAsOffererTaskRunner<>(model,
+        BuyerAsOffererTaskRunner<BuyerAsOffererModel> taskRunner = new BuyerAsOffererTaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handlePayoutTxPublishedMessage completed");
                 },
@@ -202,7 +202,7 @@ public class BuyerAsOffererProtocol {
                     log.error(errorMessage);
                 }
         );
-        sequence.addTasks(ProcessPayoutTxPublishedMessage.class);
-        sequence.run();
+        taskRunner.addTasks(ProcessPayoutTxPublishedMessage.class);
+        taskRunner.run();
     }
 }

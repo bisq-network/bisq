@@ -39,7 +39,7 @@ public class CheckOfferAvailabilityProtocol {
     private final MessageHandler messageHandler;
 
     private boolean isCanceled;
-    private TaskRunner<CheckOfferAvailabilityModel> sequence;
+    private TaskRunner<CheckOfferAvailabilityModel> taskRunner;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +64,7 @@ public class CheckOfferAvailabilityProtocol {
     public void checkOfferAvailability() {
         model.getTradeMessageService().addMessageHandler(messageHandler);
 
-        sequence = new TaskRunner<>(model,
+        taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("sequence at onCheckOfferAvailability completed");
                 },
@@ -72,16 +72,16 @@ public class CheckOfferAvailabilityProtocol {
                     log.error(errorMessage);
                 }
         );
-        sequence.addTasks(
+        taskRunner.addTasks(
                 GetPeerAddress.class,
                 RequestIsOfferAvailable.class
         );
-        sequence.run();
+        taskRunner.run();
     }
 
     public void cancel() {
         isCanceled = true;
-        sequence.cancel();
+        taskRunner.cancel();
         model.getOffer().setState(Offer.State.UNKNOWN);
     }
 
@@ -100,7 +100,7 @@ public class CheckOfferAvailabilityProtocol {
     private void handleReportOfferAvailabilityMessage(ReportOfferAvailabilityMessage message) {
         model.setMessage(message);
 
-        sequence = new TaskRunner<>(model,
+        taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleReportOfferAvailabilityMessage completed");
                     model.getResultHandler().handleResult();
@@ -109,7 +109,7 @@ public class CheckOfferAvailabilityProtocol {
                     log.error(errorMessage);
                 }
         );
-        sequence.addTasks(ProcessReportOfferAvailabilityMessage.class);
-        sequence.run();
+        taskRunner.addTasks(ProcessReportOfferAvailabilityMessage.class);
+        taskRunner.run();
     }
 }
