@@ -30,9 +30,9 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import viewfx.view.FxmlView;
-import viewfx.view.Wizard;
-import viewfx.view.support.InitializableView;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.Wizard;
+import io.bitsquare.viewfx.view.InitializableView;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;

@@ -26,8 +26,8 @@ import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
 
-import viewfx.model.ViewModel;
-import viewfx.model.support.WithDataModel;
+import io.bitsquare.viewfx.model.ViewModel;
+import io.bitsquare.viewfx.model.WithDataModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;

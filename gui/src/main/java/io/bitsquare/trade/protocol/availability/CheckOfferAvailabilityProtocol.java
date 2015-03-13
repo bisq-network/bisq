@@ -20,10 +20,13 @@ package io.bitsquare.trade.protocol.availability;
 import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.trade.listeners.MessageHandler;
 import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress;
 import io.bitsquare.trade.protocol.availability.tasks.RequestIsOfferAvailable;
 import io.bitsquare.util.tasks.TaskRunner;
+
+import javafx.application.Platform;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +36,9 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 public class CheckOfferAvailabilityProtocol {
     private static final Logger log = LoggerFactory.getLogger(CheckOfferAvailabilityProtocol.class);
 
-    private CheckOfferAvailabilityModel model;
+    private final CheckOfferAvailabilityModel model;
+    private final MessageHandler messageHandler;
+
     private boolean isCanceled;
     private TaskRunner<CheckOfferAvailabilityModel> sequence;
 
@@ -44,10 +49,12 @@ public class CheckOfferAvailabilityProtocol {
 
     public CheckOfferAvailabilityProtocol(CheckOfferAvailabilityModel model) {
         this.model = model;
+        messageHandler = this::handleMessage;
     }
 
     public void cleanup() {
-        model.getTradeMessageService().removeMessageHandler(this::handleMessage);
+        // cannot remove listener in same execution cycle, so we delay it
+        Platform.runLater(() -> model.getTradeMessageService().removeMessageHandler(messageHandler));
     }
 
 
@@ -56,7 +63,7 @@ public class CheckOfferAvailabilityProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void checkOfferAvailability() {
-        model.getTradeMessageService().addMessageHandler(this::handleMessage);
+        model.getTradeMessageService().addMessageHandler(messageHandler);
 
         sequence = new TaskRunner<>(model,
                 () -> {
@@ -95,8 +102,7 @@ public class CheckOfferAvailabilityProtocol {
                         model.getOffer().setState(Offer.State.OFFER_NOT_AVAILABLE);
                 }
             }
+            model.getResultHandler().handleResult();
         }
-
-        model.getResultHandler().handleResult();
     }
 }

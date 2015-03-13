@@ -29,8 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import viewfx.view.View;
-import viewfx.view.ViewPath;
+import io.bitsquare.viewfx.view.View;
+import io.bitsquare.viewfx.view.ViewPath;
 
 public class Navigation {
 

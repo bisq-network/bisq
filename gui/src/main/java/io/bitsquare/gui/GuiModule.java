@@ -35,11 +35,11 @@ import com.google.inject.name.Names;
 
 import java.util.ResourceBundle;
 
-import viewfx.view.ViewFactory;
-import viewfx.view.ViewLoader;
-import viewfx.view.support.CachingViewLoader;
-import viewfx.view.support.fxml.FxmlViewLoader;
-import viewfx.view.support.guice.InjectorViewFactory;
+import io.bitsquare.viewfx.view.ViewFactory;
+import io.bitsquare.viewfx.view.ViewLoader;
+import io.bitsquare.viewfx.view.CachingViewLoader;
+import io.bitsquare.viewfx.view.fxml.FxmlViewLoader;
+import io.bitsquare.viewfx.view.guice.InjectorViewFactory;
 
 import javafx.stage.Stage;
 

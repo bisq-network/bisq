@@ -29,8 +29,8 @@ import com.google.inject.Inject;
 
 import java.util.stream.Collectors;
 
-import viewfx.model.Activatable;
-import viewfx.model.DataModel;
+import io.bitsquare.viewfx.model.Activatable;
+import io.bitsquare.viewfx.model.DataModel;
 
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;

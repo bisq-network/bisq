@@ -22,8 +22,8 @@ import io.bitsquare.network.ClientNode;
 
 import javax.inject.Inject;
 
-import viewfx.view.FxmlView;
-import viewfx.view.support.InitializableView;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.InitializableView;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;

@@ -62,8 +62,8 @@ import java.util.Arrays;
 
 import javax.inject.Inject;
 
-import viewfx.view.FxmlView;
-import viewfx.view.support.InitializableView;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.InitializableView;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

@@ -34,10 +34,10 @@ import com.google.inject.Injector;
 
 import java.io.IOException;
 
-import viewfx.view.View;
-import viewfx.view.ViewLoader;
-import viewfx.view.support.CachingViewLoader;
-import viewfx.view.support.guice.InjectorViewFactory;
+import io.bitsquare.viewfx.view.View;
+import io.bitsquare.viewfx.view.ViewLoader;
+import io.bitsquare.viewfx.view.CachingViewLoader;
+import io.bitsquare.viewfx.view.guice.InjectorViewFactory;
 
 import javafx.application.Application;
 import javafx.scene.*;

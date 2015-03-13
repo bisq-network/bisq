@@ -31,8 +31,8 @@ import org.bitcoinj.utils.Fiat;
 
 import com.google.inject.Inject;
 
-import viewfx.model.ViewModel;
-import viewfx.model.support.ActivatableWithDataModel;
+import io.bitsquare.viewfx.model.ViewModel;
+import io.bitsquare.viewfx.model.ActivatableWithDataModel;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;

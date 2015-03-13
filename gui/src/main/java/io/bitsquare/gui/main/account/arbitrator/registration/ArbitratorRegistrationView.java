@@ -44,8 +44,8 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
-import viewfx.view.FxmlView;
-import viewfx.view.support.ActivatableView;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.ActivatableView;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;

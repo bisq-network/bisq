@@ -29,12 +29,12 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
-import viewfx.view.FxmlView;
-import viewfx.view.View;
-import viewfx.view.ViewLoader;
-import viewfx.view.Wizard;
-import viewfx.view.support.ActivatableViewAndModel;
-import viewfx.view.support.CachingViewLoader;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.View;
+import io.bitsquare.viewfx.view.ViewLoader;
+import io.bitsquare.viewfx.view.Wizard;
+import io.bitsquare.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.viewfx.view.CachingViewLoader;
 
 import javafx.fxml.FXML;
 import javafx.scene.*;

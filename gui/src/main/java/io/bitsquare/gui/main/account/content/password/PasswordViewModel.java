@@ -22,7 +22,7 @@ import io.bitsquare.gui.util.validation.PasswordValidator;
 
 import com.google.inject.Inject;
 
-import viewfx.model.ViewModel;
+import io.bitsquare.viewfx.model.ViewModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;

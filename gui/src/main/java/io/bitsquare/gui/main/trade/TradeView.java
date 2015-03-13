@@ -32,9 +32,9 @@ import org.bitcoinj.utils.Fiat;
 
 import java.util.List;
 
-import viewfx.view.View;
-import viewfx.view.ViewLoader;
-import viewfx.view.support.ActivatableView;
+import io.bitsquare.viewfx.view.View;
+import io.bitsquare.viewfx.view.ViewLoader;
+import io.bitsquare.viewfx.view.ActivatableView;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;

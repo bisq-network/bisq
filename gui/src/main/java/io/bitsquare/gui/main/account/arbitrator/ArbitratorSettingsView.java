@@ -21,11 +21,11 @@ import io.bitsquare.gui.main.account.arbitrator.registration.ArbitratorRegistrat
 
 import javax.inject.Inject;
 
-import viewfx.view.FxmlView;
-import viewfx.view.View;
-import viewfx.view.ViewLoader;
-import viewfx.view.support.AbstractView;
-import viewfx.view.support.CachingViewLoader;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.View;
+import io.bitsquare.viewfx.view.ViewLoader;
+import io.bitsquare.viewfx.view.AbstractView;
+import io.bitsquare.viewfx.view.CachingViewLoader;
 
 import javafx.fxml.FXML;
 import javafx.scene.*;

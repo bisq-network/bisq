@@ -50,7 +50,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeoutException;
 
-import viewfx.model.ViewModel;
+import io.bitsquare.viewfx.model.ViewModel;
 
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;

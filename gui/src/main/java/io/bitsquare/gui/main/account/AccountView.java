@@ -25,11 +25,11 @@ import io.bitsquare.gui.main.account.setup.AccountSetupWizard;
 
 import javax.inject.Inject;
 
-import viewfx.view.FxmlView;
-import viewfx.view.View;
-import viewfx.view.ViewLoader;
-import viewfx.view.support.ActivatableView;
-import viewfx.view.support.CachingViewLoader;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.View;
+import io.bitsquare.viewfx.view.ViewLoader;
+import io.bitsquare.viewfx.view.ActivatableView;
+import io.bitsquare.viewfx.view.CachingViewLoader;
 
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;

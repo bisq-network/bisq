@@ -35,9 +35,9 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import viewfx.view.FxmlView;
-import viewfx.view.Wizard;
-import viewfx.view.support.ActivatableViewAndModel;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.Wizard;
+import io.bitsquare.viewfx.view.ActivatableViewAndModel;
 
 import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;

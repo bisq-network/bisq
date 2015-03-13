@@ -39,8 +39,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import viewfx.view.FxmlView;
-import viewfx.view.support.ActivatableViewAndModel;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.ActivatableViewAndModel;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;

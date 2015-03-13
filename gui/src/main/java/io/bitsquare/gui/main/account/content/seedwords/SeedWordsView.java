@@ -22,9 +22,9 @@ import io.bitsquare.gui.main.help.HelpId;
 
 import javax.inject.Inject;
 
-import viewfx.view.FxmlView;
-import viewfx.view.Wizard;
-import viewfx.view.support.InitializableView;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.Wizard;
+import io.bitsquare.viewfx.view.InitializableView;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;

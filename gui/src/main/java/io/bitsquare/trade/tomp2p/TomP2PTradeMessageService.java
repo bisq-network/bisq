@@ -134,11 +134,13 @@ public class TomP2PTradeMessageService implements TradeMessageService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addMessageHandler(MessageHandler listener) {
-        messageHandlers.add(listener);
+        if (!messageHandlers.add(listener))
+            throw new RuntimeException("Add listener did not change list. Probably listener has been already added.");
     }
 
     public void removeMessageHandler(MessageHandler listener) {
-        messageHandlers.remove(listener);
+        if (!messageHandlers.remove(listener))
+            throw new RuntimeException("Try to remove listener which was never added.");
     }
 
 

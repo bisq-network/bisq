@@ -30,6 +30,7 @@ import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.offer.OpenOffer;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
+import io.bitsquare.trade.listeners.MessageHandler;
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityModel;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityProtocol;
@@ -80,6 +81,7 @@ public class TradeManager {
     private final ObservableMap<String, OpenOffer> openOffers = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> pendingTrades = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> closedTrades = FXCollections.observableHashMap();
+    private final MessageHandler messageHandler;
 
     private Trade currentPendingTrade;
 
@@ -116,8 +118,9 @@ public class TradeManager {
         if (closedTradesObject instanceof Map) {
             closedTrades.putAll((Map<String, Trade>) closedTradesObject);
         }
-
-        tradeMessageService.addMessageHandler(this::handleMessage);
+        messageHandler = this::handleMessage;
+        
+        tradeMessageService.addMessageHandler(messageHandler);
     }
 
 

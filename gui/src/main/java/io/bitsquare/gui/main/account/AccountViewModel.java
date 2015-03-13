@@ -21,7 +21,7 @@ import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 
-import viewfx.model.ViewModel;
+import io.bitsquare.viewfx.model.ViewModel;
 
 class AccountViewModel implements ViewModel {
 

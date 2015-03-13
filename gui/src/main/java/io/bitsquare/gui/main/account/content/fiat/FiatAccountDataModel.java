@@ -31,8 +31,8 @@ import com.google.inject.Inject;
 
 import java.util.Currency;
 
-import viewfx.model.Activatable;
-import viewfx.model.DataModel;
+import io.bitsquare.viewfx.model.Activatable;
+import io.bitsquare.viewfx.model.DataModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;

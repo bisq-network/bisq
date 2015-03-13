@@ -19,6 +19,7 @@ package io.bitsquare.trade.protocol.trade.offerer;
 
 import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
+import io.bitsquare.trade.listeners.MessageHandler;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateDepositTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
@@ -50,7 +51,7 @@ public class BuyerAsOffererProtocol {
     private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererProtocol.class);
 
     private BuyerAsOffererModel model;
-
+    private final MessageHandler messageHandler;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -58,8 +59,9 @@ public class BuyerAsOffererProtocol {
 
     public BuyerAsOffererProtocol(BuyerAsOffererModel model) {
         this.model = model;
+        messageHandler = this::handleMessage;
 
-        model.getTradeMessageService().addMessageHandler(this::handleMessage);
+        model.getTradeMessageService().addMessageHandler(messageHandler);
     }
 
 
@@ -68,7 +70,9 @@ public class BuyerAsOffererProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void cleanup() {
-        model.getTradeMessageService().removeMessageHandler(this::handleMessage);
+        model.getTradeMessageService().removeMessageHandler(messageHandler);
+        // cannot remove listener in same execution cycle, so we delay it
+        //Platform.runLater(() -> model.getTradeMessageService().removeMessageHandler(messageHandler));
     }
 
 

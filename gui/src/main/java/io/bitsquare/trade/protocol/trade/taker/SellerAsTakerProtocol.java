@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.trade.taker;
 import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.listeners.MessageHandler;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
@@ -29,16 +30,16 @@ import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
 import io.bitsquare.trade.protocol.trade.taker.tasks.GetPeerAddress;
 import io.bitsquare.trade.protocol.trade.taker.tasks.PayDeposit;
 import io.bitsquare.trade.protocol.trade.taker.tasks.PayTakeOfferFee;
+import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessBankTransferInitedMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessDepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRespondToTakeOfferRequestMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessTakerDepositPaymentRequestMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.RequestTakeOffer;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendPayoutTxToOfferer;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendSignedTakerDepositTxAsHex;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendTakeOfferFeePayedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SignAndPublishPayoutTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCommitDepositTx;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessBankTransferInitedMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessDepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRespondToTakeOfferRequestMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessTakerDepositPaymentRequestMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOffererAccount;
 
@@ -51,7 +52,7 @@ public class SellerAsTakerProtocol {
     private static final Logger log = LoggerFactory.getLogger(SellerAsTakerProtocol.class);
 
     private final SellerAsTakerModel model;
-
+    private final MessageHandler messageHandler;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -59,15 +60,16 @@ public class SellerAsTakerProtocol {
 
     public SellerAsTakerProtocol(SellerAsTakerModel model) {
         this.model = model;
+        messageHandler = this::handleMessage;
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Called from UI
     ///////////////////////////////////////////////////////////////////////////////////////////
-    
+
     public void takeOffer() {
-        model.getTradeMessageService().addMessageHandler(this::handleMessage);
+        model.getTradeMessageService().addMessageHandler(messageHandler);
 
         SellerAsTakerTaskRunner<SellerAsTakerModel> sequence = new SellerAsTakerTaskRunner<>(model,
                 () -> {
@@ -85,9 +87,11 @@ public class SellerAsTakerProtocol {
     }
 
     public void cleanup() {
-        model.getTradeMessageService().removeMessageHandler(this::handleMessage);
+        model.getTradeMessageService().removeMessageHandler(messageHandler);
+        // cannot remove listener in same execution cycle, so we delay it
+        // Platform.runLater(() -> model.getTradeMessageService().removeMessageHandler(messageHandler));
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handling

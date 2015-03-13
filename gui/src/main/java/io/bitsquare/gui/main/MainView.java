@@ -36,11 +36,11 @@ import io.bitsquare.gui.util.Transitions;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import viewfx.view.FxmlView;
-import viewfx.view.View;
-import viewfx.view.ViewLoader;
-import viewfx.view.support.CachingViewLoader;
-import viewfx.view.support.InitializableView;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.View;
+import io.bitsquare.viewfx.view.ViewLoader;
+import io.bitsquare.viewfx.view.CachingViewLoader;
+import io.bitsquare.viewfx.view.InitializableView;
 
 import javafx.application.Platform;
 import javafx.geometry.Insets;

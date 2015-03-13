@@ -28,9 +28,9 @@ import java.util.Currency;
 
 import javax.inject.Inject;
 
-import viewfx.view.FxmlView;
-import viewfx.view.Wizard;
-import viewfx.view.support.ActivatableViewAndModel;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.Wizard;
+import io.bitsquare.viewfx.view.ActivatableViewAndModel;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;

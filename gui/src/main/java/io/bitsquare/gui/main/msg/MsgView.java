@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.main.msg;
 
-import viewfx.view.FxmlView;
-import viewfx.view.support.AbstractView;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.AbstractView;
 
 // will be probably only used for arbitration communication, will be renamed and the icon changed
 @FxmlView

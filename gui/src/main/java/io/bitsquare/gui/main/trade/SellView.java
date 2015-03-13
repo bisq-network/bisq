@@ -21,8 +21,8 @@ import io.bitsquare.gui.Navigation;
 
 import javax.inject.Inject;
 
-import viewfx.view.FxmlView;
-import viewfx.view.ViewLoader;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.ViewLoader;
 
 @FxmlView
 public class SellView extends TradeView {

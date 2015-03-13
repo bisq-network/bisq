@@ -39,8 +39,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import viewfx.model.Activatable;
-import viewfx.model.DataModel;
+import io.bitsquare.viewfx.model.Activatable;
+import io.bitsquare.viewfx.model.DataModel;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
