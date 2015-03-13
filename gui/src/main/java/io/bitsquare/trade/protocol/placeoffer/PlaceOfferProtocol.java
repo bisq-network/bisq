@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.placeoffer;
 
 import io.bitsquare.trade.handlers.TransactionResultHandler;
-import io.bitsquare.trade.protocol.placeoffer.tasks.AddOffer;
+import io.bitsquare.trade.protocol.placeoffer.tasks.AddOfferToRemoteOfferBook;
 import io.bitsquare.trade.protocol.placeoffer.tasks.BroadcastCreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.ValidateOffer;
@@ -67,8 +67,9 @@ public class PlaceOfferProtocol {
                 ValidateOffer.class,
                 CreateOfferFeeTx.class,
                 BroadcastCreateOfferFeeTx.class,
-                AddOffer.class
+                AddOfferToRemoteOfferBook.class
         );
+
         sequence.run();
     }
 }

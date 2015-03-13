@@ -15,11 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.offer.tasks;
+package io.bitsquare.trade.protocol.availability.tasks;
 
 import io.bitsquare.trade.listeners.SendMessageListener;
-import io.bitsquare.trade.protocol.offer.CheckOfferAvailabilityModel;
-import io.bitsquare.trade.protocol.offer.messages.RequestIsOfferAvailableMessage;
+import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityModel;
+import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
 import io.bitsquare.util.tasks.Task;
 import io.bitsquare.util.tasks.TaskRunner;
 

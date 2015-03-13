@@ -24,18 +24,15 @@ import io.bitsquare.util.tasks.TaskRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AddOffer extends Task<PlaceOfferModel> {
-    private static final Logger log = LoggerFactory.getLogger(AddOffer.class);
+public class AddOfferToRemoteOfferBook extends Task<PlaceOfferModel> {
+    private static final Logger log = LoggerFactory.getLogger(AddOfferToRemoteOfferBook.class);
 
-    public AddOffer(TaskRunner taskHandler, PlaceOfferModel model) {
+    public AddOfferToRemoteOfferBook(TaskRunner taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void run() {
-        // need to write data before storage, otherwise hash is different when removing offer!
-        model.getOffer().setOfferFeePaymentTxID(model.getTransaction().getHashAsString());
-
         model.getOfferBookService().addOffer(model.getOffer(),
                 () -> {
                     complete();

@@ -207,7 +207,7 @@ public class BootstrappedPeerBuilder {
 
         futureRelayNAT.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
-            public void operationComplete(BaseFuture future) throws Exception {
+            public void operationComplete(BaseFuture futureRelayNAT) throws Exception {
                 if (futureDiscover.isSuccess()) {
                     if (useManualPortForwarding) {
                         setState(BootstrapState.DISCOVERY_MANUAL_PORT_FORWARDING_SUCCEEDED,
@@ -228,7 +228,7 @@ public class BootstrappedPeerBuilder {
                         bootstrap();
                     }
                     else {
-                        if (future.isSuccess()) {
+                        if (futureRelayNAT.isSuccess()) {
                             // relay mode succeeded
                             setState(BootstrapState.RELAY_SUCCEEDED, "Bootstrap using relay was successful.");
                             bootstrap();

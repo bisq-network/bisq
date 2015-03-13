@@ -21,6 +21,7 @@ import io.bitsquare.account.AccountSettings;
 import io.bitsquare.gui.SystemTray;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
@@ -42,7 +43,9 @@ import javafx.application.Application;
 import javafx.scene.*;
 import javafx.scene.image.*;
 import javafx.scene.input.*;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +61,8 @@ public class BitsquareApp extends Application {
 
     private BitsquareAppModule bitsquareAppModule;
     private Injector injector;
+    private Stage primaryStage;
+    private Scene scene;
 
     public static void setEnvironment(Environment env) {
         BitsquareApp.env = env;
@@ -65,6 +70,8 @@ public class BitsquareApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
+        this.primaryStage = primaryStage;
+
         log.trace("BitsquareApp.start");
         bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
         injector = Guice.createInjector(bitsquareAppModule);
@@ -92,10 +99,10 @@ public class BitsquareApp extends Application {
         // load the main view and create the main scene
 
         log.trace("viewLoader.load(MainView.class)");
-        ViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
+        CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
         View view = viewLoader.load(MainView.class);
 
-        Scene scene = new Scene((Parent) view.getRoot(), 1000, 600);
+        scene = new Scene((Parent) view.getRoot(), 1000, 600);
         scene.getStylesheets().setAll(
                 "/io/bitsquare/gui/bitsquare.css",
                 "/io/bitsquare/gui/images.css");
@@ -112,6 +119,8 @@ public class BitsquareApp extends Application {
             if (new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN).match(keyEvent) ||
                     new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
                 stop();
+            else if (new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
+                showDebugWindow();
         });
 
 
@@ -139,6 +148,24 @@ public class BitsquareApp extends Application {
 
         log.trace("primaryStage.show");
         primaryStage.show();
+
+        //TODO just temp.
+        showDebugWindow();
+    }
+
+    private void showDebugWindow() {
+        ViewLoader viewLoader = injector.getInstance(ViewLoader.class);
+        View debugView = viewLoader.load(DebugView.class);
+        Parent parent = (Parent) debugView.getRoot();
+        Stage stage = new Stage();
+        stage.setScene(new Scene(parent));
+        stage.setTitle("Debug window");
+        stage.initModality(Modality.NONE);
+        stage.initStyle(StageStyle.UTILITY);
+        stage.initOwner(scene.getWindow());
+        stage.setX(primaryStage.getX() + primaryStage.getWidth() + 10);
+        stage.setY(primaryStage.getY());
+        stage.show();
     }
 
     @Override

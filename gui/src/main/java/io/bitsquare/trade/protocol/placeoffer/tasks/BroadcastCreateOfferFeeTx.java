@@ -42,10 +42,15 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                 @Override
                 public void onSuccess(Transaction transaction) {
                     log.info("Broadcast of offer fee payment succeeded: transaction = " + transaction.toString());
-                    if (transaction == null)
-                        failed("Broadcast of offer fee payment failed because transaction = null.");
-                    else
+                    if (transaction != null) {
+                        // need to write data before storage, otherwise hash is different when removing offer from DHT!
+                        model.getOffer().setOfferFeePaymentTxID(model.getTransaction().getHashAsString());
+                        
                         complete();
+                    }
+                    else {
+                        failed("Broadcast of offer fee payment failed because transaction = null.");
+                    }
                 }
 
                 @Override

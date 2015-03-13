@@ -19,6 +19,7 @@ package io.bitsquare.offer;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.btc.Restrictions;
 import io.bitsquare.locale.Country;
 
 import org.bitcoinj.core.Coin;
@@ -38,7 +39,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import static com.google.common.base.Preconditions.*;
-import static io.bitsquare.btc.Restrictions.MIN_TRADE_AMOUNT;
 
 //TODO flatten down?
 
@@ -226,9 +226,9 @@ public class Offer implements Serializable {
     }
 
     public State getState() {
-        if(state == null)
+        if (state == null)
             setState(State.UNKNOWN);
-        
+
         return state;
     }
 
@@ -253,17 +253,15 @@ public class Offer implements Serializable {
         checkNotNull(getMinAmount(), "MinAmount is null");
         checkNotNull(getPrice(), "Price is null");
 
-        checkArgument(getMinAmount().compareTo(MIN_TRADE_AMOUNT) >= 0, "MinAmount is less then " + MIN_TRADE_AMOUNT);
-        checkArgument(getAmount().compareTo(MIN_TRADE_AMOUNT) >= 0, "Amount is less then " + MIN_TRADE_AMOUNT);
+        checkArgument(getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0, "MinAmount is less then " + Restrictions.MIN_TRADE_AMOUNT.toFriendlyString());
+        checkArgument(getAmount().compareTo(Restrictions.MAX_TRADE_AMOUNT) <= 0, "Amount is larger then " + Restrictions.MAX_TRADE_AMOUNT.toFriendlyString());
         checkArgument(getAmount().compareTo(getMinAmount()) >= 0, "MinAmount is larger then Amount");
-        checkArgument(getSecurityDeposit().isPositive(), "SecurityDeposit is not positive");
-        checkArgument(getPrice().isPositive(), "Price is 0 or negative");
 
-        // TODO check balance
-        // securityDeposit
-        // Coin totalsToFund
-        // getAddressInfoByTradeID(offerId)
-        // TODO when offer is flattened continue here...
+        checkArgument(getSecurityDeposit().compareTo(Restrictions.MIN_SECURITY_DEPOSIT) >= 0,
+                "SecurityDeposit is less then " + Restrictions.MIN_SECURITY_DEPOSIT.toFriendlyString());
+
+        checkArgument(getPrice().isPositive(), "Price is not a positive value");
+        // TODO check upper and lower bounds for fiat
     }
 
     @Override

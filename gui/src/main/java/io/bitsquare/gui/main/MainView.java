@@ -99,8 +99,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Pane portfolioButtonHolder = new Pane(portfolioButton);
         Pane bankAccountComboBoxHolder = new Pane();
 
-        HBox leftNavPane = new HBox(
-                homeButton, buyButton, sellButton, portfolioButtonHolder, fundsButton, new Pane(msgButton)) {{
+        HBox leftNavPane = new HBox(homeButton, buyButton, sellButton, portfolioButtonHolder, fundsButton, new Pane(msgButton)) {{
             setSpacing(10);
             setLeftAnchor(this, 10d);
             setTopAnchor(this, 0d);

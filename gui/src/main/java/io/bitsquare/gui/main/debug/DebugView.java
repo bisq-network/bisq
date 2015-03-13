@@ -1,0 +1,188 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package io.bitsquare.gui.main.debug;
+
+import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityProtocol;
+import io.bitsquare.trade.protocol.availability.tasks.RequestIsOfferAvailable;
+import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
+import io.bitsquare.trade.protocol.placeoffer.tasks.AddOfferToRemoteOfferBook;
+import io.bitsquare.trade.protocol.placeoffer.tasks.BroadcastCreateOfferFeeTx;
+import io.bitsquare.trade.protocol.placeoffer.tasks.CreateOfferFeeTx;
+import io.bitsquare.trade.protocol.placeoffer.tasks.ValidateOffer;
+import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererProtocol;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateDepositTx;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestOffererPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestTakeOfferMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessTakeOfferFeePayedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.RespondToTakeOfferRequest;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.SendBankTransferInitedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.SendDepositTxIdToTaker;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.SendTakerDepositPaymentRequest;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.SetupListenerForBlockChainConfirmation;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.SignAndPublishDepositTx;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.SignPayoutTx;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyAndSignContract;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakeOfferFeePayment;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakerAccount;
+import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerProtocol;
+import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
+import io.bitsquare.trade.protocol.trade.taker.tasks.PayDeposit;
+import io.bitsquare.trade.protocol.trade.taker.tasks.PayTakeOfferFee;
+import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessBankTransferInitedMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessDepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRespondToTakeOfferRequestMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessTakerDepositPaymentRequestMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.RequestTakeOffer;
+import io.bitsquare.trade.protocol.trade.taker.tasks.SendPayoutTxToOfferer;
+import io.bitsquare.trade.protocol.trade.taker.tasks.SendSignedTakerDepositTxAsHex;
+import io.bitsquare.trade.protocol.trade.taker.tasks.SendTakeOfferFeePayedMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.SignAndPublishPayoutTx;
+import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCommitDepositTx;
+import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOfferFeePayment;
+import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOffererAccount;
+import io.bitsquare.util.tasks.TaskInterception;
+
+import java.util.Arrays;
+
+import javax.inject.Inject;
+
+import viewfx.view.FxmlView;
+import viewfx.view.support.InitializableView;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+import javafx.util.StringConverter;
+
+@FxmlView
+public class DebugView extends InitializableView {
+
+
+    @FXML ComboBox<Class> taskComboBox;
+    @FXML CheckBox interceptBeforeCheckBox;
+
+    @Inject
+    public DebugView() {
+    }
+
+    @Override
+    public void initialize() {
+        interceptBeforeCheckBox.setSelected(true);
+
+        final ObservableList<Class> items = FXCollections.observableArrayList(Arrays.asList(
+                        /*---- Protocol ----*/
+                        CheckOfferAvailabilityProtocol.class,
+                        io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress.class,
+                        RequestIsOfferAvailable.class,
+                        Boolean.class, /* used as seperator*/
+
+                        
+                        /*---- Protocol ----*/
+                        PlaceOfferProtocol.class,
+                        ValidateOffer.class,
+                        CreateOfferFeeTx.class,
+                        BroadcastCreateOfferFeeTx.class,
+                        AddOfferToRemoteOfferBook.class,
+                        Boolean.class, /* used as seperator*/
+
+                        
+                        /*---- Protocol ----*/
+                        BuyerAsOffererProtocol.class,
+                        ProcessRequestTakeOfferMessage.class,
+                        RespondToTakeOfferRequest.class,
+
+                        ProcessTakeOfferFeePayedMessage.class,
+                        CreateDepositTx.class,
+                        SendTakerDepositPaymentRequest.class,
+
+                        ProcessRequestOffererPublishDepositTxMessage.class,
+                        VerifyTakerAccount.class,
+                        VerifyAndSignContract.class,
+                        SignAndPublishDepositTx.class,
+                        SetupListenerForBlockChainConfirmation.class,
+                        SendDepositTxIdToTaker.class,
+
+                        SignPayoutTx.class,
+                        VerifyTakeOfferFeePayment.class,
+                        SendBankTransferInitedMessage.class,
+
+                        ProcessPayoutTxPublishedMessage.class,
+                        Boolean.class, /* used as seperator*/
+                        
+
+                        /*---- Protocol ----*/
+                        SellerAsTakerProtocol.class,
+                        io.bitsquare.trade.protocol.trade.taker.tasks.GetPeerAddress.class,
+                        RequestTakeOffer.class,
+
+                        ProcessRespondToTakeOfferRequestMessage.class,
+                        PayTakeOfferFee.class,
+                        SendTakeOfferFeePayedMessage.class,
+
+                        ProcessTakerDepositPaymentRequestMessage.class,
+                        VerifyOffererAccount.class,
+                        CreateAndSignContract.class,
+                        PayDeposit.class,
+                        SendSignedTakerDepositTxAsHex.class,
+
+                        ProcessDepositTxPublishedMessage.class,
+                        TakerCommitDepositTx.class,
+
+                        ProcessBankTransferInitedMessage.class,
+
+                        SignAndPublishPayoutTx.class,
+                        VerifyOfferFeePayment.class,
+                        SendPayoutTxToOfferer.class
+                )
+        );
+
+
+        taskComboBox.setVisibleRowCount(items.size());
+        taskComboBox.setItems(items);
+        taskComboBox.setConverter(new StringConverter<Class>() {
+            @Override
+            public String toString(Class item) {
+                if (item.getSimpleName().contains("Protocol"))
+                    return "--- " + item.getSimpleName() + " ---";
+                else if (item.getSimpleName().contains("Boolean"))
+                    return "";
+                else
+                    return item.getSimpleName();
+            }
+
+            @Override
+            public Class fromString(String s) {
+                return null;
+            }
+        });
+    }
+
+    @FXML
+    void onSelectTask() {
+        Class item = taskComboBox.getSelectionModel().getSelectedItem();
+        if (!item.getSimpleName().contains("Protocol")) {
+            if (interceptBeforeCheckBox.isSelected())
+                TaskInterception.taskToInterceptBeforeRun = item;
+            else
+                TaskInterception.taskToInterceptAfterRun = item;
+        }
+    }
+}
+

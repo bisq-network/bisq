@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.offer.messages;
+package io.bitsquare.trade.protocol.availability.messages;
 
 import io.bitsquare.trade.protocol.trade.OfferMessage;
 

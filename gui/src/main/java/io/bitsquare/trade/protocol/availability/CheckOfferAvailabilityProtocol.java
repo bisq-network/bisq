@@ -15,14 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.offer;
+package io.bitsquare.trade.protocol.availability;
 
 import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.trade.protocol.offer.messages.ReportOfferAvailabilityMessage;
-import io.bitsquare.trade.protocol.offer.tasks.GetPeerAddress;
-import io.bitsquare.trade.protocol.offer.tasks.RequestIsOfferAvailable;
+import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
+import io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress;
+import io.bitsquare.trade.protocol.availability.tasks.RequestIsOfferAvailable;
 import io.bitsquare.util.tasks.TaskRunner;
 
 import org.slf4j.Logger;

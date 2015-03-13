@@ -23,6 +23,8 @@ import org.bitcoinj.core.Transaction;
 // Lets see if we get more restriction otherwise move it to other class
 public class Restrictions {
     public static final Coin MIN_TRADE_AMOUNT = Coin.parseCoin("0.0001");
+    public static final Coin MAX_TRADE_AMOUNT = Coin.parseCoin("10");
+    public static final Coin MIN_SECURITY_DEPOSIT = Coin.parseCoin("0.0001");
 
 
     public static boolean isMinSpendableAmount(Coin amount) {

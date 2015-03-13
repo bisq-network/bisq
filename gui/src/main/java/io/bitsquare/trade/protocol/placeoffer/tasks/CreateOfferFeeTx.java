@@ -37,6 +37,7 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
     protected void run() {
         try {
             Transaction transaction = model.getWalletService().createOfferFeeTx(model.getOffer().getId());
+            
             model.setTransaction(transaction);
 
             complete();

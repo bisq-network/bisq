@@ -15,30 +15,25 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.placeoffer.tasks;
+package io.bitsquare.trade.protocol.availability.messages;
 
-import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
-import io.bitsquare.util.tasks.Task;
-import io.bitsquare.util.tasks.TaskRunner;
+import io.bitsquare.trade.protocol.trade.OfferMessage;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.Serializable;
 
-public class ValidateOffer extends Task<PlaceOfferModel> {
-    private static final Logger log = LoggerFactory.getLogger(ValidateOffer.class);
+// That msg is used to ping the offerer if he is online and if the offer is still available
+public class RequestIsOfferAvailableMessage implements Serializable, OfferMessage {
+    private static final long serialVersionUID = 4630151440192191798L;
+    private final String offerId;
 
-    public ValidateOffer(TaskRunner taskHandler, PlaceOfferModel model) {
-        super(taskHandler, model);
+    public RequestIsOfferAvailableMessage(String offerId) {
+        this.offerId = offerId;
     }
 
     @Override
-    protected void run() {
-        try {
-            model.getOffer().validate();
-
-            complete();
-        } catch (Exception e) {
-            failed(e);
-        }
+    public String getOfferId() {
+        return offerId;
     }
+
+
 }

@@ -38,10 +38,10 @@ public class TaskRunner<T extends SharedModel> {
     private final FaultHandler faultHandler;
 
     private boolean failed = false;
-    private Class<? extends Task> currentTask;
-    private Class<? extends Task> previousTask;
+
 
     private boolean isCanceled;
+    private Class<? extends Task> currentTask;
 
     public TaskRunner(T sharedModel, ResultHandler resultHandler, FaultHandler faultHandler) {
         this.sharedModel = sharedModel;
@@ -53,18 +53,16 @@ public class TaskRunner<T extends SharedModel> {
         next();
     }
 
-    public Class<? extends Task> getCurrentTask() {
-        return currentTask;
-    }
 
     protected void next() {
         if (!failed && !isCanceled) {
             if (tasks.size() > 0) {
                 try {
-                    setCurrentTask(tasks.poll());
+                    currentTask = tasks.poll();
+                    interceptBeforeRun(currentTask);
                     log.trace("Run task: " + currentTask.getSimpleName());
                     currentTask.getDeclaredConstructor(TaskRunner.class, sharedModel.getClass()).newInstance(this, sharedModel).run();
-                    setPreviousTask(currentTask);
+                    interceptAfterRun(currentTask);
                 } catch (Throwable t) {
                     t.printStackTrace();
                     faultHandler.handleFault(t.getMessage(), t);
@@ -76,16 +74,19 @@ public class TaskRunner<T extends SharedModel> {
         }
     }
 
+    protected void interceptBeforeRun(Class<? extends Task> task) {
+        if (task == TaskInterception.taskToInterceptBeforeRun)
+            throw new RuntimeException("Task intercepted before run executed: task = " + task.getSimpleName());
+    }
+
+    protected void interceptAfterRun(Class<? extends Task> task) {
+        if (task == TaskInterception.taskToInterceptAfterRun)
+            throw new RuntimeException("Task intercepted after run executed: task = " + task.getSimpleName());
+    }
+
+
     public void cancel() {
         isCanceled = true;
-    }
-
-    protected void setPreviousTask(Class<? extends Task> task) {
-        previousTask = task;
-    }
-
-    protected void setCurrentTask(Class<? extends Task> task) {
-        currentTask = task;
     }
 
     public void addTask(Class<? extends Task> task) {
@@ -97,6 +98,7 @@ public class TaskRunner<T extends SharedModel> {
     }
 
     public void complete() {
+        log.trace("Task completed: " + currentTask.getSimpleName());
         next();
     }
 
@@ -105,9 +107,11 @@ public class TaskRunner<T extends SharedModel> {
     }
 
     public void handleFault(String message, @NotNull Throwable throwable) {
+        log.error("Task failed: " + currentTask.getSimpleName());
         log.debug(throwable.getMessage());
         failed = true;
         faultHandler.handleFault(message, throwable);
     }
+
 
 }
