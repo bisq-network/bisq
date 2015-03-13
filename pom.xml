@@ -37,7 +37,7 @@
     </properties>
 
     <modules>
-        <module>gui</module>
+        <module>core</module>
         <module>bootstrap</module>
     </modules>
 

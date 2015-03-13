@@ -77,7 +77,7 @@
     <dependencies>
         <dependency>
             <groupId>io.bitsquare</groupId>
-            <artifactId>gui</artifactId>
+            <artifactId>core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
