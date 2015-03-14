@@ -20,26 +20,28 @@ package io.bitsquare.trade.protocol.trade.offerer.messages;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 
+import org.bitcoinj.core.Transaction;
+
 import java.io.Serializable;
 
-public class TakerDepositPaymentRequestMessage implements Serializable, TradeMessage {
+public class RequestDepositPaymentMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = -3988720410493712913L;
 
     private final String tradeId;
     private final BankAccount bankAccount;
     private final String accountID;
     private final byte[] offererPubKey;
-    private final String preparedOffererDepositTxAsHex;
+    private final Transaction preparedDepositTx;
     private final long offererTxOutIndex;
 
-    public TakerDepositPaymentRequestMessage(String tradeId, BankAccount bankAccount, String accountID,
-                                             byte[] offererPubKey, String preparedOffererDepositTxAsHex,
-                                             long offererTxOutIndex) {
+    public RequestDepositPaymentMessage(String tradeId, BankAccount bankAccount, String accountID,
+                                        byte[] offererPubKey, Transaction preparedDepositTx,
+                                        long offererTxOutIndex) {
         this.tradeId = tradeId;
         this.bankAccount = bankAccount;
         this.accountID = accountID;
         this.offererPubKey = offererPubKey;
-        this.preparedOffererDepositTxAsHex = preparedOffererDepositTxAsHex;
+        this.preparedDepositTx = preparedDepositTx;
         this.offererTxOutIndex = offererTxOutIndex;
     }
 
@@ -60,8 +62,8 @@ public class TakerDepositPaymentRequestMessage implements Serializable, TradeMes
         return offererPubKey;
     }
 
-    public String getPreparedOffererDepositTxAsHex() {
-        return preparedOffererDepositTxAsHex;
+    public Transaction getPreparedDepositTx() {
+        return preparedDepositTx;
     }
 
     public long getOffererTxOutIndex() {

@@ -21,15 +21,15 @@ import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateDepositTx;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.PrepareDepositTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestOffererPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestTakeOfferMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessTakeOfferFeePayedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.RequestDepositPayment;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.RespondToTakeOfferRequest;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendBankTransferInitedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendDepositTxIdToTaker;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.SendTakerDepositPaymentRequest;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SetupListenerForBlockChainConfirmation;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SignAndPublishDepositTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SignPayoutTx;
@@ -110,8 +110,8 @@ public class BuyerAsOffererProtocol {
         );
         taskRunner.addTasks(
                 ProcessTakeOfferFeePayedMessage.class,
-                CreateDepositTx.class,
-                SendTakerDepositPaymentRequest.class
+                PrepareDepositTx.class,
+                RequestDepositPayment.class
         );
         taskRunner.run();
     }
@@ -192,21 +192,23 @@ public class BuyerAsOffererProtocol {
             TradeMessage tradeMessage = (TradeMessage) message;
             nonEmptyStringOf(tradeMessage.getTradeId());
 
-            if (tradeMessage instanceof RequestTakeOfferMessage) {
-                handleRequestTakeOfferMessage((RequestTakeOfferMessage) tradeMessage, peer);
-            }
-            else if (tradeMessage instanceof TakeOfferFeePayedMessage) {
-                handleTakeOfferFeePayedMessage((TakeOfferFeePayedMessage) tradeMessage);
-            }
+            if (tradeMessage.getTradeId().equals(model.getOffer().getId())) {
+                if (tradeMessage instanceof RequestTakeOfferMessage) {
+                    handleRequestTakeOfferMessage((RequestTakeOfferMessage) tradeMessage, peer);
+                }
+                else if (tradeMessage instanceof TakeOfferFeePayedMessage) {
+                    handleTakeOfferFeePayedMessage((TakeOfferFeePayedMessage) tradeMessage);
+                }
 
-            else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage) {
-                handleRequestOffererPublishDepositTxMessage((RequestOffererPublishDepositTxMessage) tradeMessage);
-            }
-            else if (tradeMessage instanceof PayoutTxPublishedMessage) {
-                handlePayoutTxPublishedMessage((PayoutTxPublishedMessage) tradeMessage);
-            }
-            else {
-                log.error("Incoming tradeMessage not supported. " + tradeMessage);
+                else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage) {
+                    handleRequestOffererPublishDepositTxMessage((RequestOffererPublishDepositTxMessage) tradeMessage);
+                }
+                else if (tradeMessage instanceof PayoutTxPublishedMessage) {
+                    handlePayoutTxPublishedMessage((PayoutTxPublishedMessage) tradeMessage);
+                }
+                else {
+                    log.error("Incoming tradeMessage not supported. " + tradeMessage);
+                }
             }
         }
     }

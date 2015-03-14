@@ -602,11 +602,11 @@ public class WalletService {
 
     // 1. step: deposit tx
     // Offerer creates the 2of3 multiSig deposit tx with his unsigned input and change output
-    public Transaction offererCreatesMSTxAndAddPayment(Coin offererInputAmount,
-                                                       byte[] offererPubKey,
-                                                       byte[] takerPubKey,
-                                                       byte[] arbitratorPubKey,
-                                                       String tradeId) throws InsufficientMoneyException {
+    public Transaction prepareDepositTx(Coin offererInputAmount,
+                                        byte[] offererPubKey,
+                                        byte[] takerPubKey,
+                                        byte[] arbitratorPubKey,
+                                        String tradeId) throws InsufficientMoneyException {
         log.debug("offererCreatesMSTxAndAddPayment");
         log.trace("inputs: ");
         log.trace("offererInputAmount=" + offererInputAmount.toFriendlyString());
@@ -640,7 +640,8 @@ public class WalletService {
 
         // The completeTx() call signs the input, but we don't want to pass over a signed tx so we remove the
         // signature to make sure the tx is invalid for publishing
-        tx.getInput(0).setScriptSig(new Script(new byte[]{}));
+        // We have exactly 1 input as our spending transaction output is from the create offer fee payment and has only 1 output
+        tx.getInputs().get(0).setScriptSig(new Script(new byte[]{}));
 
         log.trace("verify tx");
         tx.verify();
@@ -660,13 +661,12 @@ public class WalletService {
 
     // 2. step: deposit tx
     // Taker adds his input and change output, changes the multiSig amount to the correct value and sign his input
-
     public Transaction takerAddPaymentAndSignTx(Coin takerInputAmount,
                                                 Coin msOutputAmount,
                                                 byte[] offererPubKey,
                                                 byte[] takerPubKey,
                                                 byte[] arbitratorPubKey,
-                                                String offerersPartialDepositTxAsHex,
+                                                Transaction preparedDepositTransaction,
                                                 String tradeId) throws InsufficientMoneyException {
         log.debug("takerAddPaymentAndSignTx");
         log.trace("inputs: ");
@@ -675,7 +675,7 @@ public class WalletService {
         log.trace("offererPubKey=" + offererPubKey);
         log.trace("takerPubKey=" + takerPubKey);
         log.trace("arbitratorPubKey=" + arbitratorPubKey);
-        log.trace("offerersPartialDepositTxAsHex=" + offerersPartialDepositTxAsHex);
+        log.trace("preparedDepositTransaction=" + preparedDepositTransaction);
         log.trace("tradeId=" + tradeId);
 
         // We pay the btc tx fee 2 times to the deposit tx:
@@ -710,10 +710,8 @@ public class WalletService {
         OUT[1] Optional change = input taker - takerInputAmount - fee btc tx fee
          */
 
-
         // Now we construct the real 2of3 multiSig tx from the serialized offerers tx
-        Transaction tx = new Transaction(params, Utils.parseAsHexOrBase58(offerersPartialDepositTxAsHex));
-        log.trace("offerersPartialDepositTx=" + tx);
+        Transaction tx = new Transaction(params, preparedDepositTransaction.bitcoinSerialize());
 
         // The serialized offerers tx looks like:
         /*
@@ -724,15 +722,14 @@ public class WalletService {
         */
 
         // Now we add the inputs and outputs from our temp tx and change the multiSig amount to the correct value
-        // TODO multiple inputs not supported yet
-        tx.addInput(tempTx.getInput(0));
+        for (TransactionInput input : tempTx.getInputs()) {
+            tx.addInput(input);
+        }
         // handle optional change output
         if (tempTx.getOutputs().size() == 2) {
             tx.addOutput(tempTx.getOutput(1));
         }
 
-        // We add the btc tx fee to the msOutputAmount and apply the change to the multiSig output
-        msOutputAmount = msOutputAmount.add(FeePolicy.TX_FEE);
         tx.getOutput(0).setValue(msOutputAmount);
 
         // Now we sign our input (index 1)
@@ -782,8 +779,7 @@ public class WalletService {
 
     // 3. step: deposit tx
     // Offerer signs tx and publishes it
-
-    public void offererSignAndPublishTx(String offerersFirstTxAsHex,
+    public void offererSignAndPublishTx(Transaction preparedDepositTx,
                                         String takersSignedTxAsHex,
                                         String takersSignedConnOutAsHex,
                                         String takersSignedScriptSigAsHex,
@@ -792,7 +788,7 @@ public class WalletService {
                                         FutureCallback<Transaction> callback) {
         log.debug("offererSignAndPublishTx");
         log.trace("inputs: ");
-        log.trace("offerersFirstTxAsHex=" + offerersFirstTxAsHex);
+        log.trace("preparedDepositTx=" + preparedDepositTx);
         log.trace("takersSignedTxAsHex=" + takersSignedTxAsHex);
         log.trace("takersSignedConnOutAsHex=" + takersSignedConnOutAsHex);
         log.trace("takersSignedScriptSigAsHex=" + takersSignedScriptSigAsHex);
@@ -803,7 +799,7 @@ public class WalletService {
         Transaction tx = new Transaction(params);
 
         // offerers first tx
-        Transaction offerersFirstTx = new Transaction(params, Utils.parseAsHexOrBase58(offerersFirstTxAsHex));
+        Transaction offerersFirstTx = new Transaction(params, preparedDepositTx.bitcoinSerialize());
 
         printInputs("offerersFirstTx", offerersFirstTx);
         log.trace("offerersFirstTx = " + offerersFirstTx);
@@ -1039,16 +1035,6 @@ public class WalletService {
         List<ECKey> keys = ImmutableList.of(offererKey, takerKey, arbitratorKey);
         return ScriptBuilder.createMultiSigOutputScript(2, keys);
     }
-
-    private Script getMultiSigScript(String offererPubKey, String takerPubKey, String arbitratorPubKey) {
-        ECKey offererKey = ECKey.fromPublicOnly(Utils.parseAsHexOrBase58(offererPubKey));
-        ECKey takerKey = ECKey.fromPublicOnly(Utils.parseAsHexOrBase58(takerPubKey));
-        ECKey arbitratorKey = ECKey.fromPublicOnly(Utils.parseAsHexOrBase58(arbitratorPubKey));
-
-        List<ECKey> keys = ImmutableList.of(offererKey, takerKey, arbitratorKey);
-        return ScriptBuilder.createMultiSigOutputScript(2, keys);
-    }
-
 
     private Transaction createPayoutTx(String depositTxAsHex, Coin offererPaybackAmount, Coin takerPaybackAmount,
                                        String offererAddress, String takerAddress) throws AddressFormatException {

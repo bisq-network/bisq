@@ -29,6 +29,7 @@ import io.bitsquare.trade.protocol.trade.OfferSharedModel;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
 import java.security.PublicKey;
 
@@ -50,7 +51,7 @@ public class BuyerAsOffererModel extends OfferSharedModel {
     private Trade trade;
     private Peer taker;
 
-    private String preparedOffererDepositTxAsHex;
+    private Transaction preparedDepositTx;
     private String depositTxAsHex;
 
     private String takerAccountId;
@@ -109,12 +110,12 @@ public class BuyerAsOffererModel extends OfferSharedModel {
         return offererPaybackAddress;
     }
 
-    public String getPreparedOffererDepositTxAsHex() {
-        return preparedOffererDepositTxAsHex;
+    public Transaction getPreparedDepositTx() {
+        return preparedDepositTx;
     }
 
-    public void setPreparedOffererDepositTxAsHex(String preparedOffererDepositTxAsHex) {
-        this.preparedOffererDepositTxAsHex = preparedOffererDepositTxAsHex;
+    public void setPreparedDepositTx(Transaction preparedDepositTx) {
+        this.preparedDepositTx = preparedDepositTx;
     }
 
     public long getOffererTxOutIndex() {

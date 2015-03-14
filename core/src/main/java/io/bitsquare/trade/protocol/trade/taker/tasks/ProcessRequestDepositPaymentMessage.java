@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.trade.protocol.trade.offerer.messages.TakerDepositPaymentRequestMessage;
+import io.bitsquare.trade.protocol.trade.offerer.messages.RequestDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.util.taskrunner.Task;
 import io.bitsquare.util.taskrunner.TaskRunner;
@@ -28,10 +28,10 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.*;
 
-public class ProcessTakerDepositPaymentRequestMessage extends Task<SellerAsTakerModel> {
-    private static final Logger log = LoggerFactory.getLogger(ProcessTakerDepositPaymentRequestMessage.class);
+public class ProcessRequestDepositPaymentMessage extends Task<SellerAsTakerModel> {
+    private static final Logger log = LoggerFactory.getLogger(ProcessRequestDepositPaymentMessage.class);
 
-    public ProcessTakerDepositPaymentRequestMessage(TaskRunner taskHandler, SellerAsTakerModel model) {
+    public ProcessRequestDepositPaymentMessage(TaskRunner taskHandler, SellerAsTakerModel model) {
         super(taskHandler, model);
     }
 
@@ -39,11 +39,11 @@ public class ProcessTakerDepositPaymentRequestMessage extends Task<SellerAsTaker
     protected void doRun() {
         try {
             checkTradeId(model.getTrade().getId(), model.getTradeMessage());
-            TakerDepositPaymentRequestMessage message = (TakerDepositPaymentRequestMessage) model.getTradeMessage();
+            RequestDepositPaymentMessage message = (RequestDepositPaymentMessage) model.getTradeMessage();
             model.setTakerAccountId(nonEmptyStringOf(message.getAccountId()));
             model.setTakerBankAccount(checkNotNull(message.getBankAccount()));
             model.setOffererPubKeyAsHex(checkNotNull(message.getOffererPubKey()));
-            model.setPreparedOffererDepositTxAsHex(nonEmptyStringOf(message.getPreparedOffererDepositTxAsHex()));
+            model.setPreparedDepositTx(checkNotNull(message.getPreparedDepositTx()));
             model.setOffererTxOutIndex(nonNegativeLongOf(message.getOffererTxOutIndex()));
 
             complete();

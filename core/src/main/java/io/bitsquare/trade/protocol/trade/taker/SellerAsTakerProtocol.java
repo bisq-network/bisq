@@ -24,16 +24,16 @@ import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.messages.RequestDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToTakeOfferRequestMessage;
-import io.bitsquare.trade.protocol.trade.offerer.messages.TakerDepositPaymentRequestMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
 import io.bitsquare.trade.protocol.trade.taker.tasks.GetPeerAddress;
 import io.bitsquare.trade.protocol.trade.taker.tasks.PayDeposit;
 import io.bitsquare.trade.protocol.trade.taker.tasks.PayTakeOfferFee;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessBankTransferInitedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessDepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRequestDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRespondToTakeOfferRequestMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessTakerDepositPaymentRequestMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.RequestTakeOffer;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendPayoutTxToOfferer;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendSignedTakerDepositTxAsHex;
@@ -114,7 +114,7 @@ public class SellerAsTakerProtocol {
         taskRunner.run();
     }
 
-    private void handleTakerDepositPaymentRequestMessage(TakerDepositPaymentRequestMessage tradeMessage) {
+    private void handleRequestDepositPaymentMessage(RequestDepositPaymentMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
         SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
@@ -126,7 +126,7 @@ public class SellerAsTakerProtocol {
                 }
         );
         taskRunner.addTasks(
-                ProcessTakerDepositPaymentRequestMessage.class,
+                ProcessRequestDepositPaymentMessage.class,
                 VerifyOffererAccount.class,
                 CreateAndSignContract.class,
                 PayDeposit.class,
@@ -201,21 +201,23 @@ public class SellerAsTakerProtocol {
         if (message instanceof TradeMessage) {
             TradeMessage tradeMessage = (TradeMessage) message;
             nonEmptyStringOf(tradeMessage.getTradeId());
-
-            if (tradeMessage instanceof RespondToTakeOfferRequestMessage) {
-                handleRespondToTakeOfferRequestMessage((RespondToTakeOfferRequestMessage) tradeMessage);
-            }
-            else if (tradeMessage instanceof TakerDepositPaymentRequestMessage) {
-                handleTakerDepositPaymentRequestMessage((TakerDepositPaymentRequestMessage) tradeMessage);
-            }
-            else if (tradeMessage instanceof DepositTxPublishedMessage) {
-                handleDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
-            }
-            else if (tradeMessage instanceof BankTransferStartedMessage) {
-                handleBankTransferInitedMessage((BankTransferStartedMessage) tradeMessage);
-            }
-            else {
-                log.error("Incoming message not supported. " + tradeMessage);
+           
+            if (tradeMessage.getTradeId().equals(model.getOffer().getId())) {
+                if (tradeMessage instanceof RespondToTakeOfferRequestMessage) {
+                    handleRespondToTakeOfferRequestMessage((RespondToTakeOfferRequestMessage) tradeMessage);
+                }
+                else if (tradeMessage instanceof RequestDepositPaymentMessage) {
+                    handleRequestDepositPaymentMessage((RequestDepositPaymentMessage) tradeMessage);
+                }
+                else if (tradeMessage instanceof DepositTxPublishedMessage) {
+                    handleDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
+                }
+                else if (tradeMessage instanceof BankTransferStartedMessage) {
+                    handleBankTransferInitedMessage((BankTransferStartedMessage) tradeMessage);
+                }
+                else {
+                    log.error("Incoming message not supported. " + tradeMessage);
+                }
             }
         }
     }

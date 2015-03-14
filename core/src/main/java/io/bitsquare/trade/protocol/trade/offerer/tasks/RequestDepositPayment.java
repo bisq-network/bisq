@@ -19,28 +19,28 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
-import io.bitsquare.trade.protocol.trade.offerer.messages.TakerDepositPaymentRequestMessage;
+import io.bitsquare.trade.protocol.trade.offerer.messages.RequestDepositPaymentMessage;
 import io.bitsquare.util.taskrunner.Task;
 import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendTakerDepositPaymentRequest extends Task<BuyerAsOffererModel> {
-    private static final Logger log = LoggerFactory.getLogger(SendTakerDepositPaymentRequest.class);
+public class RequestDepositPayment extends Task<BuyerAsOffererModel> {
+    private static final Logger log = LoggerFactory.getLogger(RequestDepositPayment.class);
 
-    public SendTakerDepositPaymentRequest(TaskRunner taskHandler, BuyerAsOffererModel model) {
+    public RequestDepositPayment(TaskRunner taskHandler, BuyerAsOffererModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void doRun() {
-        TakerDepositPaymentRequestMessage tradeMessage = new TakerDepositPaymentRequestMessage(
+        RequestDepositPaymentMessage tradeMessage = new RequestDepositPaymentMessage(
                 model.getTrade().getId(),
                 model.getBankAccount(),
                 model.getAccountId(),
                 model.getOffererPubKey(),
-                model.getPreparedOffererDepositTxAsHex(),
+                model.getPreparedDepositTx(),
                 model.getOffererTxOutIndex());
 
         model.getTradeMessageService().sendMessage(model.getTaker(), tradeMessage, new SendMessageListener() {
