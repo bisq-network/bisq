@@ -44,17 +44,19 @@ public class SetupListenerForBlockChainConfirmation extends Task<BuyerAsOffererM
             public void onConfidenceChanged(Transaction tx, ChangeReason reason) {
                 log.trace("onConfidenceChanged " + tx.getConfidence());
                 if (reason == ChangeReason.TYPE && tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
-                    
+
                     model.getTrade().setState(Trade.State.DEPOSIT_CONFIRMED);
-                    
+
                     //TODO not sure if that works
                     confidence.removeEventListener(this);
                 }
             }
         });
-        
+
         complete();
-    } @Override
-      protected void rollBackOnFault() {
+    }
+
+    @Override
+    protected void rollBackOnFault() {
     }
 }

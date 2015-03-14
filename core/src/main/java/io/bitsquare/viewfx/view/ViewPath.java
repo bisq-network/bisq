@@ -41,6 +41,6 @@ public class ViewPath extends ArrayList<Class<? extends View>> {
         if (size() == 0)
             return null;
 
-        return get(size()-1);
+        return get(size() - 1);
     }
 }

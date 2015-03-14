@@ -55,7 +55,9 @@ public class CreateAndSignContract extends Task<SellerAsTakerModel> {
         trade.setTakerContractSignature(signature);
 
         complete();
-    } @Override
-      protected void rollBackOnFault() {
+    }
+
+    @Override
+    protected void rollBackOnFault() {
     }
 }

@@ -38,9 +38,10 @@ public class VerifyTakeOfferFeePayment extends Task<BuyerAsOffererModel> {
        /* if (numOfPeersSeenTx > 2) {
             resultHandler.handleResult();
         }*/
-        
+
         complete();
     }
+
     @Override
     protected void rollBackOnFault() {
     }

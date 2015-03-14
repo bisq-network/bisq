@@ -55,7 +55,9 @@ public class ProcessRequestOffererPublishDepositTxMessage extends Task<BuyerAsOf
         } catch (Throwable t) {
             failed(t);
         }
-    } @Override
-      protected void rollBackOnFault() {
+    }
+
+    @Override
+    protected void rollBackOnFault() {
     }
 }

@@ -43,9 +43,9 @@ import org.slf4j.LoggerFactory;
 
 public class TomP2PArbitratorMessageService implements ArbitratorMessageService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PArbitratorMessageService.class);
-    
+
     private static final String ARBITRATORS_ROOT = "ArbitratorsRoot";
-    
+
     private final TomP2PNode tomP2PNode;
     private final List<ArbitratorListener> arbitratorListeners = new ArrayList<>();
     private Executor executor;
@@ -59,7 +59,7 @@ public class TomP2PArbitratorMessageService implements ArbitratorMessageService 
         this.tomP2PNode = tomP2PNode;
     }
 
-    
+
     public void setExecutor(Executor executor) {
         this.executor = executor;
     }

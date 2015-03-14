@@ -66,7 +66,9 @@ public class SignAndPublishDepositTx extends Task<BuyerAsOffererModel> {
         } catch (Exception e) {
             failed(e);
         }
-    } @Override
-      protected void rollBackOnFault() {
+    }
+
+    @Override
+    protected void rollBackOnFault() {
     }
 }

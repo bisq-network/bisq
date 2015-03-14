@@ -84,7 +84,7 @@ public class Navigation {
         }
 
         currentPath = newPath;
-        persistence.write(this, CURRENT_PATH_KEY, (List<? extends Serializable>)currentPath);
+        persistence.write(this, CURRENT_PATH_KEY, (List<? extends Serializable>) currentPath);
         listeners.stream().forEach((e) -> e.onNavigationRequested(currentPath));
     }
 

@@ -44,7 +44,7 @@ public class ProcessPayoutTxPublishedMessage extends Task<BuyerAsOffererModel> {
             checkTradeId(model.getTrade().getId(), model.getTradeMessage());
             String payoutTxAsHex = nonEmptyStringOf(((PayoutTxPublishedMessage) model.getTradeMessage()).getPayoutTxAsHex());
             Transaction payoutTx = new Transaction(model.getWalletService().getWallet().getParams(), Utils.parseAsHexOrBase58(payoutTxAsHex));
-           
+
             model.getTrade().setPayoutTx(payoutTx);
             model.getTrade().setState(Trade.State.PAYOUT_PUBLISHED);
 
@@ -52,7 +52,9 @@ public class ProcessPayoutTxPublishedMessage extends Task<BuyerAsOffererModel> {
         } catch (Throwable t) {
             failed(t);
         }
-    } @Override
-      protected void rollBackOnFault() {
+    }
+
+    @Override
+    protected void rollBackOnFault() {
     }
 }

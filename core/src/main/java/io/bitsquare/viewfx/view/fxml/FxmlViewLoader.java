@@ -55,7 +55,7 @@ public class FxmlViewLoader implements ViewLoader {
 
         final Class<? extends FxmlView.PathConvention> convention;
         final Class<? extends FxmlView.PathConvention> defaultConvention =
-                (Class<? extends FxmlView.PathConvention>) getDefaultValue(FxmlView.class,  "convention");
+                (Class<? extends FxmlView.PathConvention>) getDefaultValue(FxmlView.class, "convention");
 
         final String specifiedLocation;
         final String defaultLocation = (String) getDefaultValue(FxmlView.class, "location");

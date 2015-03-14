@@ -21,7 +21,7 @@ import io.bitsquare.locale.BSResources;
 
 /**
  * Base class for other specialized validators.
- * <p>
+ * <p/>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
 public class InputValidator {

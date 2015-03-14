@@ -50,7 +50,9 @@ public class ProcessTakerDepositPaymentRequestMessage extends Task<SellerAsTaker
         } catch (Throwable t) {
             failed(t);
         }
-    } @Override
-      protected void rollBackOnFault() {
+    }
+
+    @Override
+    protected void rollBackOnFault() {
     }
 }

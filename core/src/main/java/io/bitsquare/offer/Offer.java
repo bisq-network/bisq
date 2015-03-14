@@ -86,7 +86,7 @@ public class Offer implements Serializable {
     // don't access directly as it might be null; use getStateProperty() which creates an object if not instantiated
     private transient ObjectProperty<State> stateProperty;
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -255,7 +255,8 @@ public class Offer implements Serializable {
         checkNotNull(getMinAmount(), "MinAmount is null");
         checkNotNull(getPrice(), "Price is null");
 
-        checkArgument(getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0, "MinAmount is less then " + Restrictions.MIN_TRADE_AMOUNT.toFriendlyString());
+        checkArgument(getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0, "MinAmount is less then " + Restrictions.MIN_TRADE_AMOUNT
+                .toFriendlyString());
         checkArgument(getAmount().compareTo(Restrictions.MAX_TRADE_AMOUNT) <= 0, "Amount is larger then " + Restrictions.MAX_TRADE_AMOUNT.toFriendlyString());
         checkArgument(getAmount().compareTo(getMinAmount()) >= 0, "MinAmount is larger then Amount");
 

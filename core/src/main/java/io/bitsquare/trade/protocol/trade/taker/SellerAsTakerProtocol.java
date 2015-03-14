@@ -190,7 +190,7 @@ public class SellerAsTakerProtocol {
         );
         taskRunner.run();
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Massage dispatcher

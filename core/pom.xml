@@ -188,12 +188,12 @@
             <version>1.0.2</version>
         </dependency>
 
-         <dependency>
-             <groupId>com.vinumeris</groupId>
-             <artifactId>updatefx</artifactId>
-             <version>1.2</version>
-         </dependency>
-        
+        <dependency>
+            <groupId>com.vinumeris</groupId>
+            <artifactId>updatefx</artifactId>
+            <version>1.2</version>
+        </dependency>
+
         <!-- 
           <dependency>
                <groupId>com.vinumeris</groupId>

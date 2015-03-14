@@ -29,7 +29,7 @@ import java.security.PublicKey;
 import java.util.concurrent.Executor;
 
 public interface TradeMessageService extends MessageBroker {
-    
+
     void setExecutor(Executor executor);
 
     void sendMessage(Peer peer, Message message, SendMessageListener listener);

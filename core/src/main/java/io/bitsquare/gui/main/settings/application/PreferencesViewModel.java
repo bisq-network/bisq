@@ -50,5 +50,4 @@ class PreferencesViewModel extends ActivatableWithDataModel<PreferencesDataModel
     }
 
 
-
 }

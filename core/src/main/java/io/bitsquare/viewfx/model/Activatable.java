@@ -24,7 +24,7 @@ public interface Activatable {
     void deactivate();
 
 
-    Activatable NOOP_INSTANCE = new Activatable() {;
+    Activatable NOOP_INSTANCE = new Activatable() {
         @Override
         public void activate() {
         }

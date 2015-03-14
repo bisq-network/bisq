@@ -51,7 +51,9 @@ public class ProcessTakeOfferFeePayedMessage extends Task<BuyerAsOffererModel> {
         } catch (Throwable t) {
             failed(t);
         }
-    } @Override
-      protected void rollBackOnFault() {
+    }
+
+    @Override
+    protected void rollBackOnFault() {
     }
 }

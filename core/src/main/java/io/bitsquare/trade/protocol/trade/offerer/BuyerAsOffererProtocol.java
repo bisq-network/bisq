@@ -185,7 +185,7 @@ public class BuyerAsOffererProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Massage dispatcher
     ///////////////////////////////////////////////////////////////////////////////////////////
-   
+
     private void handleMessage(Message message, Peer peer) {
         log.trace("handleNewMessage: message = " + message.getClass().getSimpleName());
         if (message instanceof TradeMessage) {

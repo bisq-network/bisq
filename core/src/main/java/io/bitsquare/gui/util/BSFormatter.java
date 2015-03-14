@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Central point for formatting and input parsing.
- * <p>
+ * <p/>
  * Note that we never use for text input values any coin or currency symbol or code.
  * BtcFormat does not support
  */

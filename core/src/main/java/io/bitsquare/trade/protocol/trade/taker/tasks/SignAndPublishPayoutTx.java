@@ -59,7 +59,7 @@ public class SignAndPublishPayoutTx extends Task<SellerAsTakerModel> {
                             model.setPayoutTx(transaction);
                             model.setPayoutTxAsHex(payoutTxAsHex);
                             model.getTrade().setState(Trade.State.PAYOUT_PUBLISHED);
-                            
+
                             complete();
                         }
 
@@ -71,7 +71,9 @@ public class SignAndPublishPayoutTx extends Task<SellerAsTakerModel> {
         } catch (AddressFormatException e) {
             failed(e);
         }
-    } @Override
-      protected void rollBackOnFault() {
+    }
+
+    @Override
+    protected void rollBackOnFault() {
     }
 }

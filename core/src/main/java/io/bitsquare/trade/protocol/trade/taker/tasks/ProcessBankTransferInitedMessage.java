@@ -39,7 +39,7 @@ public class ProcessBankTransferInitedMessage extends Task<SellerAsTakerModel> {
         try {
             checkTradeId(model.getTrade().getId(), model.getTradeMessage());
             BankTransferStartedMessage message = (BankTransferStartedMessage) model.getTradeMessage();
-            
+
             model.setDepositTxAsHex(nonEmptyStringOf(message.getDepositTxAsHex()));
             model.setOffererSignatureR(nonEmptyStringOf(message.getOffererSignatureR()));
             model.setOffererSignatureS(nonEmptyStringOf(message.getOffererSignatureS()));
@@ -52,7 +52,9 @@ public class ProcessBankTransferInitedMessage extends Task<SellerAsTakerModel> {
         } catch (Throwable t) {
             failed(t);
         }
-    } @Override
-      protected void rollBackOnFault() {
+    }
+
+    @Override
+    protected void rollBackOnFault() {
     }
 }

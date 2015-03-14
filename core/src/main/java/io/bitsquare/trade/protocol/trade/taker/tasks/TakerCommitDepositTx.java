@@ -42,7 +42,9 @@ public class TakerCommitDepositTx extends Task<SellerAsTakerModel> {
         model.getTrade().setState(Trade.State.DEPOSIT_PUBLISHED);
 
         complete();
-    } @Override
-      protected void rollBackOnFault() {
+    }
+
+    @Override
+    protected void rollBackOnFault() {
     }
 }

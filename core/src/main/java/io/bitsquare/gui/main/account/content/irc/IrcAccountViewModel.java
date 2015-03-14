@@ -126,7 +126,6 @@ class IrcAccountViewModel extends ActivatableWithDataModel<IrcAccountDataModel> 
     }
 
 
-
     private InputValidator.ValidationResult validateInput() {
         InputValidator.ValidationResult result = nickNameValidator.validate(dataModel.nickName.get());
         if (dataModel.currency.get() == null)

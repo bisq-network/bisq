@@ -53,7 +53,7 @@ public class UpdateProcess {
 
     // Edit version for updateFX
     private static final int BUILD_VERSION = 3;
-    
+
     private static final List<ECPoint> UPDATE_SIGNING_KEYS = Crypto.decode("0296CFF54A8B1611499D4C1024E654140AFBB58C505FE4BB7C847B4F4A7C683DF6");
     private static final String UPDATES_BASE_URL = "http://bitsquare.io/updateFX/";
     private static final int UPDATE_SIGNING_THRESHOLD = 1;
@@ -62,7 +62,7 @@ public class UpdateProcess {
     public static int getBuildVersion() {
         return BUILD_VERSION;
     }
-    
+
     private Environment environment;
 
     public enum State {
@@ -107,7 +107,7 @@ public class UpdateProcess {
             }
         });
         timeoutTimer.start();
-        
+
         String agent = environment.getProperty(BitsquareEnvironment.APP_NAME_KEY) + BUILD_VERSION;
         Path dataDirPath = new File(environment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY)).toPath();
         Updater updater = new Updater(UPDATES_BASE_URL, agent, BUILD_VERSION, dataDirPath, ROOT_CLASS_PATH,
@@ -130,7 +130,7 @@ public class UpdateProcess {
         updater.setOnSucceeded(event -> {
             try {
                 UpdateSummary summary = updater.get();
-                log.info("summary " +summary.toString());
+                log.info("summary " + summary.toString());
                 if (summary.descriptions != null && summary.descriptions.size() > 0) {
                     log.info("One liner: {}", summary.descriptions.get(0).getOneLiner());
                     log.info("{}", summary.descriptions.get(0).getDescription());

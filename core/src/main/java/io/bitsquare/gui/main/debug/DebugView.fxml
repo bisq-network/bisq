@@ -60,7 +60,7 @@
             <Insets bottom="-15"/>
         </GridPane.margin>
     </Label>
-    <CheckBox fx:id="interceptBeforeCheckBox" onAction="#onCheckBoxChanged"  GridPane.rowIndex="3" GridPane.columnIndex="1">
+    <CheckBox fx:id="interceptBeforeCheckBox" onAction="#onCheckBoxChanged" GridPane.rowIndex="3" GridPane.columnIndex="1">
         <GridPane.margin>
             <Insets bottom="-15"/>
         </GridPane.margin>

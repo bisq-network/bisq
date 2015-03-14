@@ -38,7 +38,7 @@ public class ProcessDepositTxPublishedMessage extends Task<SellerAsTakerModel> {
     protected void doRun() {
         try {
             checkTradeId(model.getTrade().getId(), model.getTradeMessage());
-            
+
             DepositTxPublishedMessage message = (DepositTxPublishedMessage) model.getTradeMessage();
             model.setDepositTxAsHex(nonEmptyStringOf(message.getDepositTxAsHex()));
 
@@ -46,7 +46,9 @@ public class ProcessDepositTxPublishedMessage extends Task<SellerAsTakerModel> {
         } catch (Throwable t) {
             failed(t);
         }
-    } @Override
-      protected void rollBackOnFault() {
+    }
+
+    @Override
+    protected void rollBackOnFault() {
     }
 }

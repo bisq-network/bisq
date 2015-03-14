@@ -264,7 +264,6 @@ class CreateOfferDataModel implements Activatable, DataModel {
     }
 
 
-
     private void updateBalance(@NotNull Coin balance) {
         isWalletFunded.set(totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0);
     }

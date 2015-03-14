@@ -20,7 +20,7 @@ package io.bitsquare.util.taskrunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class InterceptTaskException extends RuntimeException{
+public class InterceptTaskException extends RuntimeException {
     private static final Logger log = LoggerFactory.getLogger(InterceptTaskException.class);
 
     public InterceptTaskException(String message) {

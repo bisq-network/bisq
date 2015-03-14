@@ -25,7 +25,7 @@ import java.math.BigDecimal;
 
 /**
  * BtcValidator for validating BTC values.
- * <p>
+ * <p/>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
 public final class OptionalBtcValidator extends NumberValidator {

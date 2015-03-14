@@ -148,7 +148,7 @@ class MainViewModel implements ViewModel {
 
     public void initBackend() {
         Platform.runLater(() -> updateProcess.init());
-        
+
         setBitcoinNetworkSyncProgress(-1);
         walletService.getDownloadProgress().subscribe(
                 percentage -> Platform.runLater(() -> {

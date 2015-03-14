@@ -120,15 +120,11 @@ public class UtilsDHT2 {
      * Creates peers for testing. The first peer (peer[0]) will be used as the master. This means that shutting down
      * peer[0] will shut down all other peers
      *
-     * @param nrOfPeers
-     *            The number of peers to create including the master
-     * @param rnd
-     *            The random object to create random peer IDs
-     * @param port
-     *            The port where the master peer will listen to
+     * @param nrOfPeers The number of peers to create including the master
+     * @param rnd       The random object to create random peer IDs
+     * @param port      The port where the master peer will listen to
      * @return All the peers, with the master peer at position 0 -> peer[0]
-     * @throws Exception
-     *             If the creation of nodes fail.
+     * @throws Exception If the creation of nodes fail.
      */
     public static PeerDHT[] createNodes(int nrOfPeers, Random rnd, int port, AutomaticFuture automaticFuture,
                                         boolean maintenance) throws Exception {
@@ -210,8 +206,7 @@ public class UtilsDHT2 {
      * Perfect routing, where each neighbor has contacted each other. This means that for small number of peers, every
      * peer knows every other peer.
      *
-     * @param peers
-     *            The peers taking part in the p2p network.
+     * @param peers The peers taking part in the p2p network.
      */
     public static void perfectRouting(PeerDHT... peers) {
         for (int i = 0; i < peers.length; i++) {

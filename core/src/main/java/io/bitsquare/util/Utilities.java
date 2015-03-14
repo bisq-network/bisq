@@ -180,8 +180,8 @@ public class Utilities {
 
     /**
      * Empty and delete a folder (and subfolders).
-     * @param folder
-     *            folder to empty
+     *
+     * @param folder folder to empty
      */
     public static void removeDirectory(final File folder) {
         // check if folder file is a real folder
