@@ -24,7 +24,6 @@ import io.bitsquare.util.taskrunner.Task;
 import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,8 +46,8 @@ public class SendSignedTakerDepositTxAsHex extends Task<SellerAsTakerModel> {
                 model.getAccountId(),
                 model.getMessagePublicKey(),
                 takersSignedDepositTx,
-                Utils.HEX.encode(takersSignedDepositTx.getInput(1).getScriptBytes()),
-                Utils.HEX.encode(takersSignedDepositTx.getInput(1).getConnectedOutput().getParentTransaction().bitcoinSerialize()),
+                takersSignedDepositTx.getInput(1).getScriptBytes(),
+                takersSignedDepositTx.getInput(1).getConnectedOutput().getParentTransaction(),
                 model.getTrade().getContractAsJson(),
                 model.getTrade().getTakerContractSignature(),
                 model.getWalletService().getAddressInfo(model.getTrade().getId()).getAddressString(),

@@ -33,8 +33,8 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
     private final String accountID;
     private final PublicKey takerMessagePublicKey;
     private final Transaction takersSignedDepositTx;
-    private final String txScriptSigAsHex;
-    private final String txConnOutAsHex;
+    private final byte[] txScriptSig;
+    private final Transaction takersFromTx;
     private final String contractAsJson;
     private final String takerContractSignature;
     private final String takerPayoutAddress;
@@ -48,8 +48,8 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
                                                  String accountID,
                                                  PublicKey takerMessagePublicKey,
                                                  Transaction takersSignedDepositTx,
-                                                 String txScriptSigAsHex,
-                                                 String txConnOutAsHex,
+                                                 byte[] txScriptSig,
+                                                 Transaction takersFromTx,
                                                  String contractAsJson,
                                                  String takerContractSignature,
                                                  String takerPayoutAddress,
@@ -61,8 +61,8 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
         this.accountID = accountID;
         this.takerMessagePublicKey = takerMessagePublicKey;
         this.takersSignedDepositTx = takersSignedDepositTx;
-        this.txScriptSigAsHex = txScriptSigAsHex;
-        this.txConnOutAsHex = txConnOutAsHex;
+        this.txScriptSig = txScriptSig;
+        this.takersFromTx = takersFromTx;
         this.contractAsJson = contractAsJson;
         this.takerContractSignature = takerContractSignature;
         this.takerPayoutAddress = takerPayoutAddress;
@@ -96,12 +96,12 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
         return takersSignedDepositTx;
     }
 
-    public String getTxScriptSigAsHex() {
-        return txScriptSigAsHex;
+    public byte[] getTxScriptSig() {
+        return txScriptSig;
     }
 
-    public String getTxConnOutAsHex() {
-        return txConnOutAsHex;
+    public Transaction getTakersFromTx() {
+        return takersFromTx;
     }
 
     public String getTakerContractAsJson() {

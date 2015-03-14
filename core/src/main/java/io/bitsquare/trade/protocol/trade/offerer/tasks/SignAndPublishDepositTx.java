@@ -44,8 +44,8 @@ public class SignAndPublishDepositTx extends Task<BuyerAsOffererModel> {
             model.getWalletService().offererSignAndPublishTx(
                     model.getPreparedDepositTx(),
                     model.getTakersSignedDepositTx(),
-                    model.getTxConnOutAsHex(),
-                    model.getTxScriptSigAsHex(),
+                    model.getTakersFromTx(),
+                    model.getTxScriptSig(),
                     model.getOffererTxOutIndex(),
                     model.getTakerTxOutIndex(),
                     new FutureCallback<Transaction>() {

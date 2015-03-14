@@ -782,17 +782,17 @@ public class WalletService {
     // Offerer signs tx and publishes it
     public void offererSignAndPublishTx(Transaction preparedDepositTx,
                                         Transaction takersSignedDepositTx,
-                                        String takersSignedConnOutAsHex,
-                                        String takersSignedScriptSigAsHex,
+                                        Transaction takersFromTx,
+                                        byte[] takersSignedScriptSig,
                                         long offererTxOutIndex,
                                         long takerTxOutIndex,
                                         FutureCallback<Transaction> callback) {
         log.debug("offererSignAndPublishTx");
         log.trace("inputs: ");
         log.trace("preparedDepositTx=" + preparedDepositTx);
-        log.trace("takersSignedTxAsHex=" + takersSignedDepositTx);
-        log.trace("takersSignedConnOutAsHex=" + takersSignedConnOutAsHex);
-        log.trace("takersSignedScriptSigAsHex=" + takersSignedScriptSigAsHex);
+        log.trace("takersSignedTx=" + takersSignedDepositTx);
+        log.trace("takersFromTx=" + takersFromTx);
+        log.trace("takersSignedScriptSig=" + takersSignedScriptSig);
         log.trace("callback=" + callback);
 
         // We create an empty tx (did not find a way to manipulate a tx input, otherwise the takers tx could be used
@@ -819,11 +819,11 @@ public class WalletService {
         log.trace("takersSignedTx = " + takersSignedDepositTx);
 
         // add input
-        Transaction takersSignedTxConnOut = new Transaction(params, Utils.parseAsHexOrBase58(takersSignedConnOutAsHex));
-        TransactionOutPoint takersSignedTxOutPoint =
-                new TransactionOutPoint(params, takerTxOutIndex, takersSignedTxConnOut);
+        //todo not needed
+        takersFromTx = new Transaction(params, takersFromTx.bitcoinSerialize());
+        TransactionOutPoint takersSignedTxOutPoint = new TransactionOutPoint(params, takerTxOutIndex, takersFromTx);
         TransactionInput takersSignedTxInput = new TransactionInput(
-                params, tx, Utils.parseAsHexOrBase58(takersSignedScriptSigAsHex), takersSignedTxOutPoint);
+                params, tx, takersSignedScriptSig, takersSignedTxOutPoint);
         takersSignedTxInput.setParent(tx);
         tx.addInput(takersSignedTxInput);
 

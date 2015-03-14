@@ -61,8 +61,8 @@ public class BuyerAsOffererModel extends OfferSharedModel {
 
     private Transaction takersSignedDepositTx;
 
-    private String txConnOutAsHex;
-    private String txScriptSigAsHex;
+    private Transaction takersFromTx;
+    private byte[] txScriptSig;
 
     private long takerTxOutIndex;
     private Coin takerPaybackAmount;
@@ -186,20 +186,20 @@ public class BuyerAsOffererModel extends OfferSharedModel {
         this.takersSignedDepositTx = takersSignedDepositTx;
     }
 
-    public String getTxConnOutAsHex() {
-        return txConnOutAsHex;
+    public Transaction getTakersFromTx() {
+        return takersFromTx;
     }
 
-    public void setTxConnOutAsHex(String txConnOutAsHex) {
-        this.txConnOutAsHex = txConnOutAsHex;
+    public void setTakersFromTx(Transaction takersFromTx) {
+        this.takersFromTx = takersFromTx;
     }
 
-    public String getTxScriptSigAsHex() {
-        return txScriptSigAsHex;
+    public byte[] getTxScriptSig() {
+        return txScriptSig;
     }
 
-    public void setTxScriptSigAsHex(String txScriptSigAsHex) {
-        this.txScriptSigAsHex = txScriptSigAsHex;
+    public void setTxScriptSig(byte[] txScriptSig) {
+        this.txScriptSig = txScriptSig;
     }
 
     public long getTakerTxOutIndex() {
