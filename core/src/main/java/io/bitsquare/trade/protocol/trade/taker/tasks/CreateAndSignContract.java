@@ -58,6 +58,6 @@ public class CreateAndSignContract extends Task<SellerAsTakerModel> {
     }
 
     @Override
-    protected void rollBackOnFault() {
+    protected void applyStateOnFault() {
     }
 }

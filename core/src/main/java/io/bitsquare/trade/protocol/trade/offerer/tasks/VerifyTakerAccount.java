@@ -49,6 +49,6 @@ public class VerifyTakerAccount extends Task<BuyerAsOffererModel> {
     }
 
     @Override
-    protected void rollBackOnFault() {
+    protected void applyStateOnFault() {
     }
 }

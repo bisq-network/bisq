@@ -58,6 +58,6 @@ public class SendTakerDepositPaymentRequest extends Task<BuyerAsOffererModel> {
     }
 
     @Override
-    protected void rollBackOnFault() {
+    protected void applyStateOnFault() {
     }
 }

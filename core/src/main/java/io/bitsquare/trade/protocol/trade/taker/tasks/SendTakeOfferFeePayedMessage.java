@@ -33,6 +33,8 @@ public class SendTakeOfferFeePayedMessage extends Task<SellerAsTakerModel> {
         super(taskHandler, model);
     }
 
+    public int retryCounter = 0;
+
     @Override
     protected void doRun() {
         TakeOfferFeePayedMessage msg = new TakeOfferFeePayedMessage(
@@ -43,6 +45,7 @@ public class SendTakeOfferFeePayedMessage extends Task<SellerAsTakerModel> {
         );
 
         model.getTradeMessageService().sendMessage(model.getPeer(), msg, new SendMessageListener() {
+
             @Override
             public void handleResult() {
                 log.trace("Sending TakeOfferFeePayedMessage succeeded.");
@@ -51,12 +54,22 @@ public class SendTakeOfferFeePayedMessage extends Task<SellerAsTakerModel> {
 
             @Override
             public void handleFault() {
-                failed();
+                // Take offer fee is already paid, so we need to try to get that trade to succeed.
+                // We try to repeat once and if that fails as well we persist the state for a later retry.
+                if (retryCounter == 0) {
+                    retryCounter++;
+                    doRun();
+                }
+                else {
+                    failed();
+                }
             }
         });
     }
 
     @Override
-    protected void rollBackOnFault() {
+    protected void applyStateOnFault() {
+        appendToErrorMessage("Sending TakeOfferFeePayedMessage to offerer failed. Maybe the network connection was lost or the offerer lost his connection. " +
+                "We persisted the state of the trade, please try again later or cancel that trade.");
     }
 }

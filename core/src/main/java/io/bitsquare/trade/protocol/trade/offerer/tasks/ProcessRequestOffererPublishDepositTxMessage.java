@@ -58,6 +58,6 @@ public class ProcessRequestOffererPublishDepositTxMessage extends Task<BuyerAsOf
     }
 
     @Override
-    protected void rollBackOnFault() {
+    protected void applyStateOnFault() {
     }
 }

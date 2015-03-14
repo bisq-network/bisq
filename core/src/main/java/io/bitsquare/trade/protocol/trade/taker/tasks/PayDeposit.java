@@ -58,6 +58,6 @@ public class PayDeposit extends Task<SellerAsTakerModel> {
     }
 
     @Override
-    protected void rollBackOnFault() {
+    protected void applyStateOnFault() {
     }
 }

@@ -49,6 +49,7 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
     }
 
     @Override
-    protected void rollBackOnFault() {
+    protected void applyStateOnFault() {
+        // do nothing
     }
 }

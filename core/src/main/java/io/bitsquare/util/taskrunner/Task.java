@@ -47,7 +47,7 @@ public abstract class Task<T extends SharedModel> {
 
     abstract protected void doRun();
 
-    abstract protected void rollBackOnFault();
+    abstract protected void applyStateOnFault();
 
     private void interceptBeforeRun() {
         if (getClass() == taskToInterceptBeforeRun)
@@ -88,7 +88,7 @@ public abstract class Task<T extends SharedModel> {
     }
 
     protected void failed() {
-        rollBackOnFault();
+        applyStateOnFault();
         taskHandler.handleErrorMessage(errorMessage);
     }
 

@@ -51,6 +51,6 @@ public class SendPayoutTxToOfferer extends Task<SellerAsTakerModel> {
     }
 
     @Override
-    protected void rollBackOnFault() {
+    protected void applyStateOnFault() {
     }
 }

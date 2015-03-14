@@ -57,6 +57,6 @@ public class SetupListenerForBlockChainConfirmation extends Task<BuyerAsOffererM
     }
 
     @Override
-    protected void rollBackOnFault() {
+    protected void applyStateOnFault() {
     }
 }

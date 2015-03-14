@@ -47,6 +47,8 @@ public class PayTakeOfferFee extends Task<SellerAsTakerModel> {
                 public void onSuccess(Transaction transaction) {
                     log.debug("Take offer fee paid successfully. Transaction ID = " + transaction.getHashAsString());
                     model.getTrade().setTakeOfferFeeTxID(transaction.getHashAsString());
+                    model.getTrade().setState(Trade.State.TAKE_OFFER_FEE_PAID);
+                    
                     complete();
                 }
 
@@ -61,8 +63,10 @@ public class PayTakeOfferFee extends Task<SellerAsTakerModel> {
     }
 
     @Override
-    protected void rollBackOnFault() {
-        // in error case take offer can be repeated so we reset the trade state
+    protected void applyStateOnFault() {
+        // As long as the take offer fee was not paid nothing critical happens.
+        // The take offer process can be repeated so we reset the trade state.
+        appendToErrorMessage("Take offer fee payment failed. Maybe your network connection was lost. Please try again.");
         model.getTrade().setState(Trade.State.OPEN);
     }
 }

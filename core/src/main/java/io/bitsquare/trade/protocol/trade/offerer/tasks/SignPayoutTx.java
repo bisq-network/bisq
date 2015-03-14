@@ -64,7 +64,7 @@ public class SignPayoutTx extends Task<BuyerAsOffererModel> {
     }
 
     @Override
-    protected void rollBackOnFault() {
+    protected void applyStateOnFault() {
     }
 }
 

@@ -54,6 +54,7 @@ public class ProcessRespondToTakeOfferRequestMessage extends Task<SellerAsTakerM
     }
 
     @Override
-    protected void rollBackOnFault() {
+    protected void applyStateOnFault() {
+        // do nothing
     }
 }
