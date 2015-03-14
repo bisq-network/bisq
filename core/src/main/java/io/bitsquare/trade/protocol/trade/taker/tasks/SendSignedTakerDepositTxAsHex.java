@@ -38,7 +38,7 @@ public class SendSignedTakerDepositTxAsHex extends Task<SellerAsTakerModel> {
 
     @Override
     protected void doRun() {
-        Transaction signedTakerDepositTx = model.getSignedTakerDepositTx();
+        Transaction takersSignedDepositTx = model.getSignedTakerDepositTx();
         long takerTxOutIndex = model.getSignedTakerDepositTx().getInput(1).getOutpoint().getIndex();
 
         RequestOffererPublishDepositTxMessage tradeMessage = new RequestOffererPublishDepositTxMessage(
@@ -46,9 +46,9 @@ public class SendSignedTakerDepositTxAsHex extends Task<SellerAsTakerModel> {
                 model.getBankAccount(),
                 model.getAccountId(),
                 model.getMessagePublicKey(),
-                Utils.HEX.encode(signedTakerDepositTx.bitcoinSerialize()),
-                Utils.HEX.encode(signedTakerDepositTx.getInput(1).getScriptBytes()),
-                Utils.HEX.encode(signedTakerDepositTx.getInput(1).getConnectedOutput().getParentTransaction().bitcoinSerialize()),
+                takersSignedDepositTx,
+                Utils.HEX.encode(takersSignedDepositTx.getInput(1).getScriptBytes()),
+                Utils.HEX.encode(takersSignedDepositTx.getInput(1).getConnectedOutput().getParentTransaction().bitcoinSerialize()),
                 model.getTrade().getContractAsJson(),
                 model.getTrade().getTakerContractSignature(),
                 model.getWalletService().getAddressInfo(model.getTrade().getId()).getAddressString(),

@@ -46,7 +46,7 @@ public class ProcessRequestOffererPublishDepositTxMessage extends Task<BuyerAsOf
             model.setTakerBankAccount(checkNotNull(message.getTakerBankAccount()));
             model.setTakerMessagePublicKey(checkNotNull(message.getTakerMessagePublicKey()));
             model.setTakerContractAsJson(nonEmptyStringOf(message.getTakerContractAsJson()));
-            model.setSignedTakerDepositTxAsHex(nonEmptyStringOf(message.getSignedTakerDepositTxAsHex()));
+            model.setTakersSignedDepositTx(checkNotNull(message.getTakersSignedDepositTx()));
             model.setTxConnOutAsHex(nonEmptyStringOf(message.getTxConnOutAsHex()));
             model.setTxScriptSigAsHex(nonEmptyStringOf(message.getTxScriptSigAsHex()));
             model.setTakerTxOutIndex(nonNegativeLongOf(message.getTakerTxOutIndex()));

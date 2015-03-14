@@ -601,12 +601,12 @@ public class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // 1. step: deposit tx
-    // Offerer creates the 2of3 multiSig deposit tx with his unsigned input and change output
-    public Transaction prepareDepositTx(Coin offererInputAmount,
-                                        byte[] offererPubKey,
-                                        byte[] takerPubKey,
-                                        byte[] arbitratorPubKey,
-                                        String tradeId) throws InsufficientMoneyException {
+    // Offerer creates the temporary 2of3 multiSig deposit tx with his unsigned input and change output
+    public Transaction offererPreparesDepositTx(Coin offererInputAmount,
+                                                String tradeId,
+                                                byte[] offererPubKey,
+                                                byte[] takerPubKey,
+                                                byte[] arbitratorPubKey) throws InsufficientMoneyException {
         log.debug("offererCreatesMSTxAndAddPayment");
         log.trace("inputs: ");
         log.trace("offererInputAmount=" + offererInputAmount.toFriendlyString());
@@ -656,6 +656,7 @@ public class WalletService {
         log.trace("Check if wallet is consistent: result=" + wallet.isConsistent());
         printInputs("offererCreatesMSTxAndAddPayment", tx);
         log.debug("tx = " + tx);
+
         return tx;
     }
 
@@ -663,11 +664,11 @@ public class WalletService {
     // Taker adds his input and change output, changes the multiSig amount to the correct value and sign his input
     public Transaction takerAddPaymentAndSignTx(Coin takerInputAmount,
                                                 Coin msOutputAmount,
+                                                Transaction preparedDepositTx,
+                                                String tradeId,
                                                 byte[] offererPubKey,
                                                 byte[] takerPubKey,
-                                                byte[] arbitratorPubKey,
-                                                Transaction preparedDepositTransaction,
-                                                String tradeId) throws InsufficientMoneyException {
+                                                byte[] arbitratorPubKey) throws InsufficientMoneyException {
         log.debug("takerAddPaymentAndSignTx");
         log.trace("inputs: ");
         log.trace("takerInputAmount=" + takerInputAmount.toFriendlyString());
@@ -675,7 +676,7 @@ public class WalletService {
         log.trace("offererPubKey=" + offererPubKey);
         log.trace("takerPubKey=" + takerPubKey);
         log.trace("arbitratorPubKey=" + arbitratorPubKey);
-        log.trace("preparedDepositTransaction=" + preparedDepositTransaction);
+        log.trace("preparedDepositTransaction=" + preparedDepositTx);
         log.trace("tradeId=" + tradeId);
 
         // We pay the btc tx fee 2 times to the deposit tx:
@@ -711,7 +712,7 @@ public class WalletService {
          */
 
         // Now we construct the real 2of3 multiSig tx from the serialized offerers tx
-        Transaction tx = new Transaction(params, preparedDepositTransaction.bitcoinSerialize());
+        Transaction tx = new Transaction(params, preparedDepositTx.bitcoinSerialize());
 
         // The serialized offerers tx looks like:
         /*
@@ -780,7 +781,7 @@ public class WalletService {
     // 3. step: deposit tx
     // Offerer signs tx and publishes it
     public void offererSignAndPublishTx(Transaction preparedDepositTx,
-                                        String takersSignedTxAsHex,
+                                        Transaction takersSignedDepositTx,
                                         String takersSignedConnOutAsHex,
                                         String takersSignedScriptSigAsHex,
                                         long offererTxOutIndex,
@@ -789,7 +790,7 @@ public class WalletService {
         log.debug("offererSignAndPublishTx");
         log.trace("inputs: ");
         log.trace("preparedDepositTx=" + preparedDepositTx);
-        log.trace("takersSignedTxAsHex=" + takersSignedTxAsHex);
+        log.trace("takersSignedTxAsHex=" + takersSignedDepositTx);
         log.trace("takersSignedConnOutAsHex=" + takersSignedConnOutAsHex);
         log.trace("takersSignedScriptSigAsHex=" + takersSignedScriptSigAsHex);
         log.trace("callback=" + callback);
@@ -806,21 +807,16 @@ public class WalletService {
 
         // add input
         Transaction offerersFirstTxConnOut = wallet.getTransaction(offerersFirstTx.getInput(0).getOutpoint().getHash());
-        TransactionOutPoint offerersFirstTxOutPoint =
-                new TransactionOutPoint(params, offererTxOutIndex, offerersFirstTxConnOut);
-        //TransactionInput offerersFirstTxInput = new TransactionInput(params, tx,
-        // offerersFirstTx.getInput(0).getScriptBytes(), offerersFirstTxOutPoint);   // pass that around!
-        // getScriptBytes =
-        // empty bytes array
+        TransactionOutPoint offerersFirstTxOutPoint = new TransactionOutPoint(params, offererTxOutIndex, offerersFirstTxConnOut);
         TransactionInput offerersFirstTxInput = new TransactionInput(params, tx, new byte[]{}, offerersFirstTxOutPoint);
         offerersFirstTxInput.setParent(tx);
         tx.addInput(offerersFirstTxInput);
 
         // takers signed tx
-        Transaction takersSignedTx = new Transaction(params, Utils.parseAsHexOrBase58(takersSignedTxAsHex));
+        takersSignedDepositTx = new Transaction(params, takersSignedDepositTx.bitcoinSerialize());
 
-        printInputs("takersSignedTxInput", takersSignedTx);
-        log.trace("takersSignedTx = " + takersSignedTx);
+        printInputs("takersSignedTxInput", takersSignedDepositTx);
+        log.trace("takersSignedTx = " + takersSignedDepositTx);
 
         // add input
         Transaction takersSignedTxConnOut = new Transaction(params, Utils.parseAsHexOrBase58(takersSignedConnOutAsHex));
@@ -831,14 +827,13 @@ public class WalletService {
         takersSignedTxInput.setParent(tx);
         tx.addInput(takersSignedTxInput);
 
-        //TODO onResult non change output cases
         // add outputs from takers tx, they are already correct
-        tx.addOutput(takersSignedTx.getOutput(0));
-        if (takersSignedTx.getOutputs().size() > 1) {
-            tx.addOutput(takersSignedTx.getOutput(1));
+        tx.addOutput(takersSignedDepositTx.getOutput(0));
+        if (takersSignedDepositTx.getOutputs().size() > 1) {
+            tx.addOutput(takersSignedDepositTx.getOutput(1));
         }
-        if (takersSignedTx.getOutputs().size() == 3) {
-            tx.addOutput(takersSignedTx.getOutput(2));
+        if (takersSignedDepositTx.getOutputs().size() == 3) {
+            tx.addOutput(takersSignedDepositTx.getOutput(2));
         }
 
         printInputs("tx", tx);

@@ -20,6 +20,8 @@ package io.bitsquare.trade.protocol.trade.taker.messages;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 
+import org.bitcoinj.core.Transaction;
+
 import java.io.Serializable;
 
 import java.security.PublicKey;
@@ -30,7 +32,7 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
     private final BankAccount bankAccount;
     private final String accountID;
     private final PublicKey takerMessagePublicKey;
-    private final String signedTakerDepositTxAsHex;
+    private final Transaction takersSignedDepositTx;
     private final String txScriptSigAsHex;
     private final String txConnOutAsHex;
     private final String contractAsJson;
@@ -45,7 +47,7 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
                                                  BankAccount bankAccount,
                                                  String accountID,
                                                  PublicKey takerMessagePublicKey,
-                                                 String signedTakerDepositTxAsHex,
+                                                 Transaction takersSignedDepositTx,
                                                  String txScriptSigAsHex,
                                                  String txConnOutAsHex,
                                                  String contractAsJson,
@@ -58,7 +60,7 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
         this.bankAccount = bankAccount;
         this.accountID = accountID;
         this.takerMessagePublicKey = takerMessagePublicKey;
-        this.signedTakerDepositTxAsHex = signedTakerDepositTxAsHex;
+        this.takersSignedDepositTx = takersSignedDepositTx;
         this.txScriptSigAsHex = txScriptSigAsHex;
         this.txConnOutAsHex = txConnOutAsHex;
         this.contractAsJson = contractAsJson;
@@ -90,8 +92,8 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
         return takerMessagePublicKey;
     }
 
-    public String getSignedTakerDepositTxAsHex() {
-        return signedTakerDepositTxAsHex;
+    public Transaction getTakersSignedDepositTx() {
+        return takersSignedDepositTx;
     }
 
     public String getTxScriptSigAsHex() {

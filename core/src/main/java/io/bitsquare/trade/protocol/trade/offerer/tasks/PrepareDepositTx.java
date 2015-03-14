@@ -41,12 +41,12 @@ public class PrepareDepositTx extends Task<BuyerAsOffererModel> {
         try {
             byte[] offererPubKey = model.getWalletService().getAddressInfo(model.getTrade().getId()).getPubKey();
             Coin offererInputAmount = model.getTrade().getSecurityDeposit().add(FeePolicy.TX_FEE);
-            Transaction transaction = model.getWalletService().prepareDepositTx(
+            Transaction transaction = model.getWalletService().offererPreparesDepositTx(
                     offererInputAmount,
+                    model.getTrade().getId(),
                     offererPubKey,
                     model.getTakerPubKey(),
-                    model.getArbitratorPubKey(),
-                    model.getTrade().getId());
+                    model.getArbitratorPubKey());
 
             long offererTxOutIndex = transaction.getInput(0).getOutpoint().getIndex();
 

@@ -59,7 +59,7 @@ public class BuyerAsOffererModel extends OfferSharedModel {
     private PublicKey takerMessagePublicKey;
     private String takerContractAsJson;
 
-    private String signedTakerDepositTxAsHex;
+    private Transaction takersSignedDepositTx;
 
     private String txConnOutAsHex;
     private String txScriptSigAsHex;
@@ -178,12 +178,12 @@ public class BuyerAsOffererModel extends OfferSharedModel {
         this.takerContractAsJson = takerContractAsJson;
     }
 
-    public String getSignedTakerDepositTxAsHex() {
-        return signedTakerDepositTxAsHex;
+    public Transaction getTakersSignedDepositTx() {
+        return takersSignedDepositTx;
     }
 
-    public void setSignedTakerDepositTxAsHex(String signedTakerDepositTxAsHex) {
-        this.signedTakerDepositTxAsHex = signedTakerDepositTxAsHex;
+    public void setTakersSignedDepositTx(Transaction takersSignedDepositTx) {
+        this.takersSignedDepositTx = takersSignedDepositTx;
     }
 
     public String getTxConnOutAsHex() {

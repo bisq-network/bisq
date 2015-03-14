@@ -44,11 +44,11 @@ public class PayDeposit extends Task<SellerAsTakerModel> {
             Transaction signedTakerDepositTx = model.getWalletService().takerAddPaymentAndSignTx(
                     amountToPay,
                     msOutputAmount,
+                    model.getPreparedDepositTx(),
+                    model.getTrade().getId(),
                     model.getOffererPubKey(),
                     model.getTakerPubKey(),
-                    model.getArbitratorPubKey(),
-                    model.getPreparedDepositTx(),
-                    model.getTrade().getId());
+                    model.getArbitratorPubKey());
 
             model.setSignedTakerDepositTx(signedTakerDepositTx);
 
