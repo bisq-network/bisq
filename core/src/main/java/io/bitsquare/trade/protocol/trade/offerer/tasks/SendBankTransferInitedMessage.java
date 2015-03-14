@@ -37,7 +37,7 @@ public class SendBankTransferInitedMessage extends Task<BuyerAsOffererModel> {
     protected void doRun() {
         BankTransferStartedMessage tradeMessage = new BankTransferStartedMessage(
                 model.getTrade().getId(),
-                model.getDepositTxAsHex(),
+                model.getDepositTx(),
                 model.getOffererSignatureR(),
                 model.getOffererSignatureS(),
                 model.getOffererPaybackAmount(),

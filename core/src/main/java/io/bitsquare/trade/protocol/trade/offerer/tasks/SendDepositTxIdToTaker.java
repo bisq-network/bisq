@@ -23,8 +23,6 @@ import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMess
 import io.bitsquare.util.taskrunner.Task;
 import io.bitsquare.util.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.Utils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +36,7 @@ public class SendDepositTxIdToTaker extends Task<BuyerAsOffererModel> {
     @Override
     protected void doRun() {
         DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(model.getTrade().getId(),
-                Utils.HEX.encode(model.getTrade().getDepositTx().bitcoinSerialize()));
+                model.getTrade().getDepositTx());
 
         model.getTradeMessageService().sendMessage(model.getTaker(), tradeMessage, new SendMessageListener() {
             @Override

@@ -19,6 +19,8 @@ package io.bitsquare.trade.protocol.trade.offerer.messages;
 
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 
+import org.bitcoinj.core.Transaction;
+
 import java.io.Serializable;
 
 public class DepositTxPublishedMessage implements Serializable, TradeMessage {
@@ -26,11 +28,11 @@ public class DepositTxPublishedMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = -1532231540167406581L;
     private final String tradeId;
 
-    private final String depositTxAsHex;
+    private final Transaction depositTx;
 
-    public DepositTxPublishedMessage(String tradeId, String depositTxAsHex) {
+    public DepositTxPublishedMessage(String tradeId, Transaction depositTx) {
         this.tradeId = tradeId;
-        this.depositTxAsHex = depositTxAsHex;
+        this.depositTx = depositTx;
     }
 
     @Override
@@ -38,7 +40,7 @@ public class DepositTxPublishedMessage implements Serializable, TradeMessage {
         return tradeId;
     }
 
-    public String getDepositTxAsHex() {
-        return depositTxAsHex;
+    public Transaction getDepositTx() {
+        return depositTx;
     }
 }

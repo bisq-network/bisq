@@ -24,6 +24,7 @@ import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Transaction;
 
 import javafx.util.Pair;
 
@@ -45,13 +46,15 @@ public class SignPayoutTx extends Task<BuyerAsOffererModel> {
             Coin offererPaybackAmount = trade.getTradeAmount().add(securityDeposit);
             @SuppressWarnings("UnnecessaryLocalVariable") Coin takerPaybackAmount = securityDeposit;
 
-            Pair<ECKey.ECDSASignature, String> result = model.getWalletService().offererCreatesAndSignsPayoutTx(
-                    trade.getDepositTx().getHashAsString(), offererPaybackAmount, takerPaybackAmount, model.getTakerPayoutAddress(), model.getTrade().getId());
+            Pair<ECKey.ECDSASignature, Transaction> result = model.getWalletService().offererCreatesAndSignsPayoutTx(
+                    trade.getDepositTx().getHashAsString(), 
+                    offererPaybackAmount, 
+                    takerPaybackAmount, 
+                    model.getTakerPayoutAddress(), 
+                    model.getTrade().getId());
 
+            model.setDepositTx(result.getValue());
             ECKey.ECDSASignature offererSignature = result.getKey();
-            String depositTxAsHex = result.getValue();
-
-            model.setDepositTxAsHex(depositTxAsHex);
             model.setOffererSignatureR(offererSignature.r.toString());
             model.setOffererSignatureS(offererSignature.s.toString());
             model.setOffererPaybackAmount(offererPaybackAmount);

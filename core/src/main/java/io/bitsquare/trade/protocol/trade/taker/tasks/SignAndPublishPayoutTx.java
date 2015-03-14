@@ -43,7 +43,7 @@ public class SignAndPublishPayoutTx extends Task<SellerAsTakerModel> {
     @Override
     protected void doRun() {
         try {
-            model.getWalletService().takerSignsAndSendsTx(model.getDepositTxAsHex(),
+            model.getWalletService().takerSignsAndSendsTx(model.getDepositTx(),
                     model.getOffererSignatureR(),
                     model.getOffererSignatureS(),
                     model.getOffererPaybackAmount(),

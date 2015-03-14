@@ -25,6 +25,7 @@ import io.bitsquare.util.taskrunner.TaskRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.*;
 
 public class ProcessBankTransferInitedMessage extends Task<SellerAsTakerModel> {
@@ -40,7 +41,7 @@ public class ProcessBankTransferInitedMessage extends Task<SellerAsTakerModel> {
             checkTradeId(model.getTrade().getId(), model.getTradeMessage());
             BankTransferStartedMessage message = (BankTransferStartedMessage) model.getTradeMessage();
 
-            model.setDepositTxAsHex(nonEmptyStringOf(message.getDepositTxAsHex()));
+            model.setDepositTx(checkNotNull(message.getDepositTx()));
             model.setOffererSignatureR(nonEmptyStringOf(message.getOffererSignatureR()));
             model.setOffererSignatureS(nonEmptyStringOf(message.getOffererSignatureS()));
             model.setOffererPaybackAmount(positiveCoinOf(nonZeroCoinOf(message.getOffererPaybackAmount())));

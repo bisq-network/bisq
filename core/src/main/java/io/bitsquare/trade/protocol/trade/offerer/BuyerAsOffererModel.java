@@ -52,7 +52,7 @@ public class BuyerAsOffererModel extends OfferSharedModel {
     private Peer taker;
 
     private Transaction preparedDepositTx;
-    private String depositTxAsHex;
+    private Transaction depositTx;
 
     private String takerAccountId;
     private BankAccount takerBankAccount;
@@ -218,12 +218,12 @@ public class BuyerAsOffererModel extends OfferSharedModel {
         this.offererPubKey = offererPubKey;
     }
 
-    public String getDepositTxAsHex() {
-        return depositTxAsHex;
+    public Transaction getDepositTx() {
+        return depositTx;
     }
 
-    public void setDepositTxAsHex(String depositTxAsHex) {
-        this.depositTxAsHex = depositTxAsHex;
+    public void setDepositTx(Transaction depositTx) {
+        this.depositTx = depositTx;
     }
 
     public String getOffererSignatureR() {

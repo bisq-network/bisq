@@ -41,7 +41,7 @@ public class SellerAsTakerModel extends OfferSharedModel {
     // written/read by task
     private Peer offerer;
     private Transaction preparedDepositTx;
-    private String depositTxAsHex;
+    private Transaction depositTx;
     private Transaction signedTakerDepositTx;
     private Transaction payoutTx;
     private String payoutTxAsHex;
@@ -123,12 +123,12 @@ public class SellerAsTakerModel extends OfferSharedModel {
         this.offererTxOutIndex = offererTxOutIndex;
     }
 
-    public String getDepositTxAsHex() {
-        return depositTxAsHex;
+    public Transaction getDepositTx() {
+        return depositTx;
     }
 
-    public void setDepositTxAsHex(String depositTxAsHex) {
-        this.depositTxAsHex = depositTxAsHex;
+    public void setDepositTx(Transaction depositTx) {
+        this.depositTx = depositTx;
     }
 
     public String getOffererSignatureR() {

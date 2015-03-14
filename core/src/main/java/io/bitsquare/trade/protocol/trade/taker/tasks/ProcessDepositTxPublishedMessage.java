@@ -25,6 +25,7 @@ import io.bitsquare.util.taskrunner.TaskRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.*;
 
 public class ProcessDepositTxPublishedMessage extends Task<SellerAsTakerModel> {
@@ -40,7 +41,7 @@ public class ProcessDepositTxPublishedMessage extends Task<SellerAsTakerModel> {
             checkTradeId(model.getTrade().getId(), model.getTradeMessage());
 
             DepositTxPublishedMessage message = (DepositTxPublishedMessage) model.getTradeMessage();
-            model.setDepositTxAsHex(nonEmptyStringOf(message.getDepositTxAsHex()));
+            model.setDepositTx(checkNotNull(message.getDepositTx()));
 
             complete();
         } catch (Throwable t) {

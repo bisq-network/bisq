@@ -36,12 +36,15 @@ public class TakerCommitDepositTx extends Task<SellerAsTakerModel> {
 
     @Override
     protected void doRun() {
-        Transaction transaction = model.getWalletService().takerCommitDepositTx(model.getDepositTxAsHex());
+        try {
+            Transaction transaction = model.getWalletService().takerCommitDepositTx(model.getDepositTx());
+            model.getTrade().setDepositTx(transaction);
+            model.getTrade().setState(Trade.State.DEPOSIT_PUBLISHED);
 
-        model.getTrade().setDepositTx(transaction);
-        model.getTrade().setState(Trade.State.DEPOSIT_PUBLISHED);
-
-        complete();
+            complete();
+        } catch (Throwable t) {
+            failed(t);
+        }
     }
 
     @Override
