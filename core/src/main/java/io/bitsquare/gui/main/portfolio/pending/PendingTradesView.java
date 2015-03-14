@@ -87,7 +87,6 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
     private ChangeListener<String> txIdChangeListener;
     private ChangeListener<PendingTradesViewModel.State> offererStateChangeListener;
     private ChangeListener<PendingTradesViewModel.State> takerStateChangeListener;
-    private ChangeListener<Throwable> faultChangeListener;
 
     private final Navigation navigation;
 
@@ -129,7 +128,6 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
 
         offererStateChangeListener = (ov, oldValue, newValue) -> applyOffererState(newValue);
         takerStateChangeListener = (ov, oldValue, newValue) -> applyTakerState(newValue);
-        faultChangeListener = (ov, oldValue, newValue) -> onFault(newValue);
 
         withdrawAddressTextField.setValidator(model.getBtcAddressValidator());
         withdrawButton.disableProperty().bind(model.withdrawalButtonDisable);
@@ -141,7 +139,6 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
 
         model.getList().addListener(listChangeListener);
         model.txId.addListener(txIdChangeListener);
-        model.fault.addListener(faultChangeListener);
 
         txIdTextField.setup(model.getWalletService(), model.txId.get());
         table.getSelectionModel().select(model.getSelectedItem());
@@ -163,7 +160,6 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
         table.getSelectionModel().selectedItemProperty().removeListener(selectedItemChangeListener);
         model.getList().removeListener(listChangeListener);
         model.txId.removeListener(txIdChangeListener);
-        model.fault.removeListener(faultChangeListener);
 
         model.state.removeListener(offererStateChangeListener);
         model.state.removeListener(takerStateChangeListener);
@@ -412,12 +408,6 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
                     break;
             }
         }
-    }
-
-    private void onFault(Throwable fault) {
-        // TODO error handling not implemented yet
-        if (fault != null)
-            log.error(fault.toString());
     }
 
     private void setPaymentsControlsVisible(boolean visible) {

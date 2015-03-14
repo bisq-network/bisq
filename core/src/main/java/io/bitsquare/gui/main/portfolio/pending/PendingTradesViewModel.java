@@ -65,7 +65,6 @@ class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataM
 
     final StringProperty txId = new SimpleStringProperty();
     final ObjectProperty<State> state = new SimpleObjectProperty<>();
-    final ObjectProperty<Throwable> fault = new SimpleObjectProperty<>();
     final BooleanProperty withdrawalButtonDisable = new SimpleBooleanProperty(true);
 
 
@@ -82,7 +81,6 @@ class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataM
     @Override
     public void doActivate() {
         txId.bind(dataModel.txId);
-        fault.bind(dataModel.fault);
 
         dataModel.tradeState.addListener(stateChangeListener);
         updateState();
@@ -91,7 +89,6 @@ class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataM
     @Override
     public void doDeactivate() {
         txId.unbind();
-        fault.unbind();
 
         dataModel.tradeState.removeListener(stateChangeListener);
     }
@@ -236,7 +233,7 @@ class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataM
                 case PAYOUT_PUBLISHED:
                     state.set(dataModel.isOfferer() ? State.OFFERER_BUYER_COMPLETED : State.TAKER_SELLER_COMPLETED);
                     break;
-                case FAILED:
+                case MESSAGE_SENDING_FAILED:
                     // TODO error states not implemented yet
                     break;
                 default:

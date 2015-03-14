@@ -163,8 +163,9 @@ class TakeOfferDataModel implements Activatable, DataModel {
                     break;
                 case FIAT_PAYMENT_STARTED:
                     break;
-                case FAILED:
-                    requestTakeOfferErrorMessage.set("An error occurred. Error: " + trade.getFault().getMessage());
+                case MESSAGE_SENDING_FAILED:
+                    requestTakeOfferErrorMessage.set("An error occurred when sending a message to the offerer. Maybe there are connection problems. Please " +
+                            "try later again.");
                     break;
                 case PAYOUT_PUBLISHED:
                     break;

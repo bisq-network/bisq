@@ -74,8 +74,8 @@ public class TradeManager {
     private final SignatureService signatureService;
     private final OfferBookService offerBookService;
 
-    private final Map<String, SellerAsTakerProtocol> takerAsSellerProtocolMap = new HashMap<>();
-    private final Map<String, BuyerAsOffererProtocol> offererAsBuyerProtocolMap = new HashMap<>();
+    private final Map<String, SellerAsTakerProtocol> sellerAsTakerProtocolMap = new HashMap<>();
+    private final Map<String, BuyerAsOffererProtocol> buyerAcceptsOfferProtocolMap = new HashMap<>();
     private final Map<String, CheckOfferAvailabilityProtocol> checkOfferAvailabilityProtocolMap = new HashMap<>();
 
     private final ObservableMap<String, OpenOffer> openOffers = FXCollections.observableHashMap();
@@ -121,6 +121,13 @@ public class TradeManager {
         messageHandler = this::handleMessage;
 
         tradeMessageService.addMessageHandler(messageHandler);
+    }
+
+    // When all services are initialized we create the protocols for our open offers (which will listen for take offer requests)
+    public void onAllServicesInitialized() {
+        for (Map.Entry<String, OpenOffer> entry : openOffers.entrySet()) {
+            createBuyerAcceptsOfferProtocol(entry.getValue());
+        }
     }
 
 
@@ -180,7 +187,7 @@ public class TradeManager {
                 model,
                 (transaction) -> {
                     OpenOffer openOffer = createOpenOffer(offer);
-                    createOffererAsBuyerProtocol(openOffer);
+                    createBuyerAcceptsOfferProtocol(openOffer);
                     resultHandler.handleResult(transaction);
                 },
                 (message) -> {
@@ -214,7 +221,7 @@ public class TradeManager {
                     persistPendingTrades();
                     break;
                 case OFFERER_REJECTED:
-                case FAILED:
+                case MESSAGE_SENDING_FAILED:
                     removeFailedTrade(trade);
                     break;
                 default:
@@ -232,7 +239,7 @@ public class TradeManager {
                 user);
 
         SellerAsTakerProtocol sellerTakesOfferProtocol = new SellerAsTakerProtocol(model);
-        takerAsSellerProtocolMap.put(trade.getId(), sellerTakesOfferProtocol);
+        sellerAsTakerProtocolMap.put(trade.getId(), sellerTakesOfferProtocol);
 
         sellerTakesOfferProtocol.takeOffer();
 
@@ -241,14 +248,14 @@ public class TradeManager {
 
     public void onFiatPaymentStarted(String tradeId) {
         // TODO remove if check when peristence is impl.
-        if (offererAsBuyerProtocolMap.containsKey(tradeId)) {
-            offererAsBuyerProtocolMap.get(tradeId).onFiatPaymentStarted();
+        if (buyerAcceptsOfferProtocolMap.containsKey(tradeId)) {
+            buyerAcceptsOfferProtocolMap.get(tradeId).onFiatPaymentStarted();
             persistPendingTrades();
         }
     }
 
     public void onFiatPaymentReceived(String tradeId) {
-        takerAsSellerProtocolMap.get(tradeId).onFiatPaymentReceived();
+        sellerAsTakerProtocolMap.get(tradeId).onFiatPaymentReceived();
     }
 
 
@@ -315,9 +322,9 @@ public class TradeManager {
                         OpenOffer openOffer = openOffers.remove(offerId);
                         disposeCheckOfferAvailabilityRequest(openOffer.getOffer());
                         persistOpenOffers();
-                        if (removeFromOffererAsBuyerProtocolMap && offererAsBuyerProtocolMap.containsKey(offerId)) {
-                            offererAsBuyerProtocolMap.get(offerId).cleanup();
-                            offererAsBuyerProtocolMap.remove(offerId);
+                        if (removeFromOffererAsBuyerProtocolMap && buyerAcceptsOfferProtocolMap.containsKey(offerId)) {
+                            buyerAcceptsOfferProtocolMap.get(offerId).cleanup();
+                            buyerAcceptsOfferProtocolMap.remove(offerId);
                         }
 
                         resultHandler.handleResult();
@@ -343,7 +350,7 @@ public class TradeManager {
         return trade;
     }
 
-    private void createOffererAsBuyerProtocol(OpenOffer openOffer) {
+    private void createBuyerAcceptsOfferProtocol(OpenOffer openOffer) {
         BuyerAsOffererModel model = new BuyerAsOffererModel(
                 openOffer,
                 tradeMessageService,
@@ -383,9 +390,9 @@ public class TradeManager {
                                 persistPendingTrades();
                                 break;
                             case OFFERER_REJECTED:
-                            case FAILED:
+                            case MESSAGE_SENDING_FAILED:
                                 removeFailedTrade(trade);
-                                offererAsBuyerProtocolMap.get(trade.getId()).cleanup();
+                                buyerAcceptsOfferProtocolMap.get(trade.getId()).cleanup();
                                 break;
                             default:
                                 log.error("Unhandled trade state: " + newValue);
@@ -400,7 +407,7 @@ public class TradeManager {
         });
 
         BuyerAsOffererProtocol buyerAcceptsOfferProtocol = new BuyerAsOffererProtocol(model);
-        offererAsBuyerProtocolMap.put(openOffer.getId(), buyerAcceptsOfferProtocol);
+        buyerAcceptsOfferProtocolMap.put(openOffer.getId(), buyerAcceptsOfferProtocol);
     }
 
     private void removeFailedTrade(Trade trade) {
@@ -414,13 +421,13 @@ public class TradeManager {
         pendingTrades.remove(trade.getId());
         persistPendingTrades();
 
-        if (takerAsSellerProtocolMap.containsKey(trade.getId())) {
-            takerAsSellerProtocolMap.get(trade.getId()).cleanup();
-            takerAsSellerProtocolMap.remove(trade.getId());
+        if (sellerAsTakerProtocolMap.containsKey(trade.getId())) {
+            sellerAsTakerProtocolMap.get(trade.getId()).cleanup();
+            sellerAsTakerProtocolMap.remove(trade.getId());
         }
-        else if (offererAsBuyerProtocolMap.containsKey(trade.getId())) {
-            offererAsBuyerProtocolMap.get(trade.getId()).cleanup();
-            offererAsBuyerProtocolMap.remove(trade.getId());
+        else if (buyerAcceptsOfferProtocolMap.containsKey(trade.getId())) {
+            buyerAcceptsOfferProtocolMap.get(trade.getId()).cleanup();
+            buyerAcceptsOfferProtocolMap.remove(trade.getId());
         }
 
         if (!failed) {

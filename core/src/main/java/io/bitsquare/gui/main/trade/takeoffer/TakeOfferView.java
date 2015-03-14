@@ -151,6 +151,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         offerIsAvailableChangeListener = (ov, oldValue, newValue) -> handleOfferIsAvailableState(newValue);
         model.offerIsAvailable.addListener(offerIsAvailableChangeListener);
         handleOfferIsAvailableState(model.offerIsAvailable.get());
+
+        // In case of returning to a canceled or failed take offer request and if trade wallet is sufficient funded we display directly the payment screen
+        if (!model.isTakeOfferButtonDisabled.get()) {
+            showPayFundsScreen();
+            showPaymentInfoScreenButton.setVisible(false);
+        }
     }
 
     public void setCloseHandler(TradeView.CloseHandler closeHandler) {
@@ -167,7 +173,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 isOfferAvailableProgressIndicator.setProgress(0);
                 isOfferAvailableProgressIndicator.setVisible(false);
                 isOfferAvailableProgressIndicator.setManaged(false);
-                showPaymentInfoScreenButton.setVisible(true);
+                if (model.isTakeOfferButtonDisabled.get())
+                    showPaymentInfoScreenButton.setVisible(true);
                 break;
             case OFFERER_OFFLINE:
                 Popups.openWarningPopup("You cannot take that offer", "The offerer is offline.");
@@ -195,6 +202,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     @FXML
     void onShowPayFundsScreen() {
+        showPayFundsScreen();
+    }
+
+    private void showPayFundsScreen() {
         // TODO deactivate for testing the moment
        /* if (model.displaySecurityDepositInfo()) {
             overlayManager.blurContent();

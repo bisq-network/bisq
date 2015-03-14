@@ -70,12 +70,10 @@ class PendingTradesDataModel implements Activatable, DataModel {
     private TxConfidenceListener txConfidenceListener;
 
     private final ChangeListener<Trade.State> stateChangeListener;
-    private final ChangeListener<Throwable> faultChangeListener;
     private final MapChangeListener<String, Trade> mapChangeListener;
 
     final StringProperty txId = new SimpleStringProperty();
     final ObjectProperty<Trade.State> tradeState = new SimpleObjectProperty<>();
-    final ObjectProperty<Throwable> fault = new SimpleObjectProperty<>();
 
 
     @Inject
@@ -85,7 +83,6 @@ class PendingTradesDataModel implements Activatable, DataModel {
         this.user = user;
 
         this.stateChangeListener = (ov, oldValue, newValue) -> tradeState.set(newValue);
-        this.faultChangeListener = (ov, oldValue, newValue) -> fault.set(newValue);
 
         this.mapChangeListener = change -> {
             if (change.wasAdded())
@@ -151,9 +148,6 @@ class PendingTradesDataModel implements Activatable, DataModel {
             };
             walletService.addTxConfidenceListener(txConfidenceListener);
             updateConfidence(walletService.getConfidenceForTxId(txId.get()));
-
-            trade.faultProperty().addListener(faultChangeListener);
-            fault.set(trade.faultProperty().get());
         }
         else {
             txId.set(null);
@@ -296,7 +290,6 @@ class PendingTradesDataModel implements Activatable, DataModel {
         if (selectedItem != null) {
             Trade trade = getTrade();
             trade.stateProperty().removeListener(stateChangeListener);
-            trade.faultProperty().removeListener(faultChangeListener);
         }
 
         if (txConfidenceListener != null)

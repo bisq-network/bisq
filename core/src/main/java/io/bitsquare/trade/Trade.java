@@ -47,7 +47,7 @@ public class Trade implements Serializable {
         FIAT_PAYMENT_STARTED,
         FIAT_PAYMENT_RECEIVED,
         PAYOUT_PUBLISHED,
-        FAILED
+        MESSAGE_SENDING_FAILED
     }
 
     private final Offer offer;
@@ -61,7 +61,6 @@ public class Trade implements Serializable {
 
     private Coin tradeAmount;
     private State state;
-    private Throwable fault;
 
     // For changing values we use properties to get binding support in the UI (table)
     // When serialized those transient properties are not instantiated, so we instantiate them in the getters at first
@@ -69,8 +68,7 @@ public class Trade implements Serializable {
     transient private ObjectProperty<Coin> _tradeAmount;
     transient private ObjectProperty<Fiat> _tradeVolume;
     transient private ObjectProperty<State> _state;
-    transient private ObjectProperty<Throwable> _fault;
-
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -131,11 +129,6 @@ public class Trade implements Serializable {
         stateProperty().set(state);
     }
 
-    public void setFault(Throwable fault) {
-        this.fault = fault;
-        faultProperty().set(fault);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -159,10 +152,6 @@ public class Trade implements Serializable {
 
     public State getState() {
         return state;
-    }
-
-    public Throwable getFault() {
-        return fault;
     }
 
     public Coin getSecurityDeposit() {
@@ -209,11 +198,5 @@ public class Trade implements Serializable {
             _state = new SimpleObjectProperty<>(state);
 
         return _state;
-    }
-
-    public ObjectProperty<Throwable> faultProperty() {
-        if (_fault == null)
-            _fault = new SimpleObjectProperty<>(fault);
-        return _fault;
     }
 }

@@ -195,16 +195,16 @@ class MainViewModel implements ViewModel {
                     log.trace("updateProcess completed");
                 });
 
-        Observable<?> allTasks = Observable.merge(messageObservable, walletServiceObservable, updateProcessObservable);
-        allTasks.subscribe(
+        Observable<?> allServices = Observable.merge(messageObservable, walletServiceObservable, updateProcessObservable);
+        allServices.subscribe(
                 next -> {
                 },
                 error -> log.error(error.toString()),
-                () -> Platform.runLater(() -> allTasksCompleted())
+                () -> Platform.runLater(() -> onAllServicesInitialized())
         );
     }
 
-    private void allTasksCompleted() {
+    private void onAllServicesInitialized() {
         log.trace("backend completed");
 
         tradeManager.getPendingTrades().addListener(
@@ -232,6 +232,8 @@ class MainViewModel implements ViewModel {
             user.setAccountID(walletService.getRegistrationAddressEntry().toString());
             persistence.write(user.getClass().getName(), user);
         }
+        
+        tradeManager.onAllServicesInitialized();
     }
 
     private void applyUpdateState(UpdateProcess.State state) {
