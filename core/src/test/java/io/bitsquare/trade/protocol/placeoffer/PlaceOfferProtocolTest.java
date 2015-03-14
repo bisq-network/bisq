@@ -145,7 +145,7 @@ public class PlaceOfferProtocolTest {
                 () -> {
                     log.trace("wallet completed");
                     // 1. Use that address for funding the trading wallet
-                    address = walletService.getAddressInfoByTradeID(OFFER_ID).getAddress();
+                    address = walletService.getAddressInfo(OFFER_ID).getAddress();
                     log.info("address for funding wallet = " + address.toString());//muoTvFHJmQwPKYoA8Fr7t87UCSfZM4fciG
                     log.info("Balance = " + walletService.getBalanceForAddress(address));
                     countDownLatch.countDown();

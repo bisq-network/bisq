@@ -34,7 +34,6 @@ import io.bitsquare.viewfx.model.DataModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.Utils;
 
 import com.google.inject.Inject;
 
@@ -124,7 +123,7 @@ class IrcAccountDataModel implements Activatable, DataModel {
 
     private void addMockArbitrator() {
         if (accountSettings.getAcceptedArbitrators().isEmpty() && user.getMessageKeyPair() != null) {
-            String pubKeyAsHex = Utils.HEX.encode(new ECKey().getPubKey());
+            byte[] pubKey = new ECKey().getPubKey();
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
             List<Locale> languages = new ArrayList<>();
             languages.add(LanguageUtil.getDefaultLanguageLocale());
@@ -134,7 +133,7 @@ class IrcAccountDataModel implements Activatable, DataModel {
             idVerifications.add(Arbitrator.ID_VERIFICATION.PASSPORT);
             idVerifications.add(Arbitrator.ID_VERIFICATION.GOV_ID);
 
-            Arbitrator arbitrator = new Arbitrator(pubKeyAsHex,
+            Arbitrator arbitrator = new Arbitrator(pubKey,
                     messagePubKeyAsHex,
                     "Manfred Karrer",
                     Arbitrator.ID_TYPE.REAL_LIFE_ID,

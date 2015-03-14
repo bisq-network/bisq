@@ -80,7 +80,7 @@ public class BuyerAsOffererProtocol {
 
     private void handleRequestTakeOfferMessage(RequestTakeOfferMessage tradeMessage, Peer peer) {
         model.setTradeMessage(tradeMessage);
-        model.setPeer(peer);
+        model.setTaker(peer);
 
         BuyerAsOffererTaskRunner<BuyerAsOffererModel> taskRunner = new BuyerAsOffererTaskRunner<>(model,
                 () -> {

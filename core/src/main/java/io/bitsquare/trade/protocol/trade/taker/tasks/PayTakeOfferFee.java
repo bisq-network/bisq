@@ -58,6 +58,7 @@ public class PayTakeOfferFee extends Task<SellerAsTakerModel> {
                 }
             });
         } catch (InsufficientMoneyException e) {
+            appendToErrorMessage(e.getMessage());
             failed(e);
         }
     }
@@ -67,6 +68,7 @@ public class PayTakeOfferFee extends Task<SellerAsTakerModel> {
         // As long as the take offer fee was not paid nothing critical happens.
         // The take offer process can be repeated so we reset the trade state.
         appendToErrorMessage("Take offer fee payment failed. Maybe your network connection was lost. Please try again.");
-        model.getTrade().setState(Trade.State.OPEN);
+        model.getTrade().setTakeOfferFeeTxID(null);
+        model.getTrade().setState(Trade.State.TAKE_OFFER_FEE_PAYMENT_FAILED);
     }
 }

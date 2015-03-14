@@ -30,6 +30,7 @@ public class Arbitrator implements Serializable {
 
     private String id;
     private String pubKeyAsHex;
+    private byte[] pubKey;
     private String messagePubKeyAsHex;
     private String name;
     private ID_TYPE idType;
@@ -46,7 +47,7 @@ public class Arbitrator implements Serializable {
     public Arbitrator() {
     }
 
-    public Arbitrator(String pubKeyAsHex,
+    public Arbitrator(byte[] pubKey,
                       String messagePubKeyAsHex,
                       String name,
                       ID_TYPE idType,
@@ -57,7 +58,7 @@ public class Arbitrator implements Serializable {
                       List<ID_VERIFICATION> idVerifications,
                       String webUrl,
                       String description) {
-        this.pubKeyAsHex = pubKeyAsHex;
+        this.pubKey=pubKey;
         this.messagePubKeyAsHex = messagePubKeyAsHex;
         this.name = name;
         this.idType = idType;
@@ -119,6 +120,10 @@ public class Arbitrator implements Serializable {
 
     public String getPubKeyAsHex() {
         return pubKeyAsHex;
+    }
+
+    public byte[] getPubKey() {
+        return pubKey;
     }
 
     public String getMessagePubKeyAsHex() {

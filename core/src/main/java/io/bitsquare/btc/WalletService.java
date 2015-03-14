@@ -92,10 +92,6 @@ import rx.subjects.Subject;
 
 import static org.bitcoinj.script.ScriptOpCodes.OP_RETURN;
 
-/**
- * TODO: use walletextension (with protobuffer) instead of saving addressEntryList via storage
- * TODO: break that class up. maybe a bitsquarewallet
- */
 public class WalletService {
     private static final Logger log = LoggerFactory.getLogger(WalletService.class);
     private static final String LOCK_NAME = "lock";
@@ -225,8 +221,7 @@ public class WalletService {
         if (serializable instanceof List) {
             List<AddressEntry> persistedAddressEntryList = (List<AddressEntry>) serializable;
             for (AddressEntry persistedAddressEntry : persistedAddressEntryList) {
-                persistedAddressEntry.setDeterministicKey(
-                        (DeterministicKey) wallet.findKeyFromPubHash(persistedAddressEntry.getPubKeyHash()));
+                persistedAddressEntry.setDeterministicKey((DeterministicKey) wallet.findKeyFromPubHash(persistedAddressEntry.getPubKeyHash()));
             }
             addressEntryList = persistedAddressEntryList;
             registrationAddressEntry = addressEntryList.get(0);
@@ -310,7 +305,7 @@ public class WalletService {
         return arbitratorDepositAddressEntry;
     }
 
-    public AddressEntry getAddressInfoByTradeID(String offerId) {
+    public AddressEntry getAddressInfo(String offerId) {
         Optional<AddressEntry> addressEntry = getAddressEntryList().stream().filter(e ->
                 offerId.equals(e.getOfferId())).findFirst();
 
@@ -533,7 +528,7 @@ public class WalletService {
         sendRequest.shuffleOutputs = false;
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
         // wait for 1 confirmation)
-        AddressEntry addressEntry = getAddressInfoByTradeID(offerId);
+        AddressEntry addressEntry = getAddressInfo(offerId);
         sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry, true);
         sendRequest.changeAddress = addressEntry.getAddress();
         wallet.completeTx(sendRequest);
@@ -547,8 +542,7 @@ public class WalletService {
         Futures.addCallback(future, callback);
     }
 
-    public String payTakeOfferFee(String offerId, FutureCallback<Transaction> callback) throws
-            InsufficientMoneyException {
+    public String payTakeOfferFee(String offerId, FutureCallback<Transaction> callback) throws InsufficientMoneyException {
         Transaction tx = new Transaction(params);
         Coin fee = FeePolicy.TAKE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
         log.trace("fee: " + fee.toFriendlyString());
@@ -558,8 +552,8 @@ public class WalletService {
         sendRequest.shuffleOutputs = false;
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
         // wait for 1 confirmation)
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, getAddressInfoByTradeID(offerId), true);
-        sendRequest.changeAddress = getAddressInfoByTradeID(offerId).getAddress();
+        sendRequest.coinSelector = new AddressBasedCoinSelector(params, getAddressInfo(offerId), true);
+        sendRequest.changeAddress = getAddressInfo(offerId).getAddress();
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         Futures.addCallback(sendResult.broadcastComplete, callback);
 
@@ -577,8 +571,7 @@ public class WalletService {
     public String sendFunds(String withdrawFromAddress,
                             String withdrawToAddress,
                             Coin amount,
-                            FutureCallback<Transaction> callback) throws AddressFormatException,
-            InsufficientMoneyException, IllegalArgumentException {
+                            FutureCallback<Transaction> callback) throws AddressFormatException, InsufficientMoneyException, IllegalArgumentException {
         Transaction tx = new Transaction(params);
         tx.addOutput(amount.subtract(FeePolicy.TX_FEE), new Address(params, withdrawToAddress));
 
@@ -603,8 +596,6 @@ public class WalletService {
     }
 
 
-    // TODO: Trade process - use P2SH instead and optimize tx creation and data exchange
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Trade process
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -612,9 +603,9 @@ public class WalletService {
     // 1. step: deposit tx
     // Offerer creates the 2of3 multiSig deposit tx with his unsigned input and change output
     public Transaction offererCreatesMSTxAndAddPayment(Coin offererInputAmount,
-                                                       String offererPubKey,
-                                                       String takerPubKey,
-                                                       String arbitratorPubKey,
+                                                       byte[] offererPubKey,
+                                                       byte[] takerPubKey,
+                                                       byte[] arbitratorPubKey,
                                                        String tradeId) throws InsufficientMoneyException {
         log.debug("offererCreatesMSTxAndAddPayment");
         log.trace("inputs: ");
@@ -640,7 +631,7 @@ public class WalletService {
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
         sendRequest.shuffleOutputs = false;
-        AddressEntry addressEntry = getAddressInfoByTradeID(tradeId);
+        AddressEntry addressEntry = getAddressInfo(tradeId);
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
         // wait for 1 confirmation)
         sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry, true);
@@ -672,9 +663,9 @@ public class WalletService {
 
     public Transaction takerAddPaymentAndSignTx(Coin takerInputAmount,
                                                 Coin msOutputAmount,
-                                                String offererPubKey,
-                                                String takerPubKey,
-                                                String arbitratorPubKey,
+                                                byte[] offererPubKey,
+                                                byte[] takerPubKey,
+                                                byte[] arbitratorPubKey,
                                                 String offerersPartialDepositTxAsHex,
                                                 String tradeId) throws InsufficientMoneyException {
         log.debug("takerAddPaymentAndSignTx");
@@ -700,7 +691,7 @@ public class WalletService {
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tempTx);
         sendRequest.shuffleOutputs = false;
-        AddressEntry addressEntry = getAddressInfoByTradeID(tradeId);
+        AddressEntry addressEntry = getAddressInfo(tradeId);
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
         // wait for 1 confirmation)
         sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry, true);
@@ -952,13 +943,13 @@ public class WalletService {
 
         // We create the payout tx
         Transaction tx = createPayoutTx(depositTxAsHex, offererPaybackAmount, takerPaybackAmount,
-                getAddressInfoByTradeID(tradeID).getAddressString(), takerAddress);
+                getAddressInfo(tradeID).getAddressString(), takerAddress);
 
         // We create the signature for that tx
         TransactionOutput multiSigOutput = tx.getInput(0).getConnectedOutput();
         Script multiSigScript = multiSigOutput.getScriptPubKey();
         Sha256Hash sigHash = tx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
-        ECKey.ECDSASignature offererSignature = getAddressInfoByTradeID(tradeID).getKey().sign(sigHash);
+        ECKey.ECDSASignature offererSignature = getAddressInfo(tradeID).getKey().sign(sigHash);
 
         TransactionSignature offererTxSig = new TransactionSignature(offererSignature, Transaction.SigHash.ALL, false);
         Script inputScript = ScriptBuilder.createMultiSigInputScript(ImmutableList.of(offererTxSig));
@@ -989,7 +980,7 @@ public class WalletService {
 
         // We create the payout tx
         Transaction tx = createPayoutTx(depositTxAsHex, offererPaybackAmount, takerPaybackAmount, offererAddress,
-                getAddressInfoByTradeID(tradeID).getAddressString());
+                getAddressInfo(tradeID).getAddressString());
 
         // We sign that tx with our key and apply the signature form the offerer
         TransactionOutput multiSigOutput = tx.getInput(0).getConnectedOutput();
@@ -997,7 +988,7 @@ public class WalletService {
         Sha256Hash sigHash = tx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
         log.trace("sigHash=" + sigHash);
 
-        ECKey.ECDSASignature takerSignature = getAddressInfoByTradeID(tradeID).getKey().sign(sigHash);
+        ECKey.ECDSASignature takerSignature = getAddressInfo(tradeID).getKey().sign(sigHash);
         TransactionSignature takerTxSig = new TransactionSignature(takerSignature, Transaction.SigHash.ALL, false);
 
         ECKey.ECDSASignature offererSignature =
@@ -1040,7 +1031,15 @@ public class WalletService {
         }
     }
 
-    //TODO
+    private Script getMultiSigScript(byte[] offererPubKey, byte[] takerPubKey, byte[] arbitratorPubKey) {
+        ECKey offererKey = ECKey.fromPublicOnly(offererPubKey);
+        ECKey takerKey = ECKey.fromPublicOnly(takerPubKey);
+        ECKey arbitratorKey = ECKey.fromPublicOnly(arbitratorPubKey);
+
+        List<ECKey> keys = ImmutableList.of(offererKey, takerKey, arbitratorKey);
+        return ScriptBuilder.createMultiSigOutputScript(2, keys);
+    }
+
     private Script getMultiSigScript(String offererPubKey, String takerPubKey, String arbitratorPubKey) {
         ECKey offererKey = ECKey.fromPublicOnly(Utils.parseAsHexOrBase58(offererPubKey));
         ECKey takerKey = ECKey.fromPublicOnly(Utils.parseAsHexOrBase58(takerPubKey));

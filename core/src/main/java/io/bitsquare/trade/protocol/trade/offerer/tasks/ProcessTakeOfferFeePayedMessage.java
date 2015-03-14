@@ -26,6 +26,7 @@ import io.bitsquare.util.taskrunner.TaskRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.*;
 
 public class ProcessTakeOfferFeePayedMessage extends Task<BuyerAsOffererModel> {
@@ -45,7 +46,7 @@ public class ProcessTakeOfferFeePayedMessage extends Task<BuyerAsOffererModel> {
             trade.setTakeOfferFeeTxID(nonEmptyStringOf(takeOfferFeePayedMessage.getTakeOfferFeeTxId()));
             trade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(takeOfferFeePayedMessage.getTradeAmount())));
             model.setTakeOfferFeeTxId(nonEmptyStringOf(takeOfferFeePayedMessage.getTakeOfferFeeTxId()));
-            model.setTradePubKeyAsHex(nonEmptyStringOf(takeOfferFeePayedMessage.getTakerPubKeyAsHex()));
+            model.setTakerPubKey(checkNotNull(takeOfferFeePayedMessage.getTakerPubKey()));
 
             complete();
         } catch (Throwable t) {
@@ -55,5 +56,6 @@ public class ProcessTakeOfferFeePayedMessage extends Task<BuyerAsOffererModel> {
 
     @Override
     protected void updateStateOnFault() {
+        // do nothing
     }
 }

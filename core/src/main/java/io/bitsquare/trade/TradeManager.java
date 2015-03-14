@@ -385,6 +385,7 @@ public class TradeManager {
                             case OPEN:
                                 break;
                             case OFFERER_ACCEPTED: // only taker side
+                            case TAKE_OFFER_FEE_PAID:
                             case DEPOSIT_PUBLISHED:
                             case DEPOSIT_CONFIRMED:
                             case FIAT_PAYMENT_STARTED:
@@ -393,6 +394,7 @@ public class TradeManager {
                                 persistPendingTrades();
                                 break;
                             case OFFERER_REJECTED:
+                            case TAKE_OFFER_FEE_PAYMENT_FAILED:
                             case MESSAGE_SENDING_FAILED:
                                 removeFailedTrade(trade);
                                 buyerAcceptsOfferProtocolMap.get(trade.getId()).cleanup();

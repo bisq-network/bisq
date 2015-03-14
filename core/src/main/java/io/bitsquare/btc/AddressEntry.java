@@ -36,6 +36,7 @@ public class AddressEntry implements Serializable {
     private final NetworkParameters params;
     private final AddressContext addressContext;
     private final String offerId;
+    private final byte[] pubKey;
     private final byte[] pubKeyHash;
 
 
@@ -49,6 +50,7 @@ public class AddressEntry implements Serializable {
         this.addressContext = addressContext;
         this.offerId = offerId;
 
+        pubKey = key.getPubOnly().getPubKey();
         pubKeyHash = key.getPubOnly().getPubKeyHash();
     }
 
@@ -64,7 +66,7 @@ public class AddressEntry implements Serializable {
         return getAddress().toString();
     }
 
-    public String getPubKeyAsHexString() {
+    public String getPubKeyAsHex() {
         return Utils.HEX.encode(key.getPubKey());
     }
 
@@ -82,6 +84,10 @@ public class AddressEntry implements Serializable {
 
     public byte[] getPubKeyHash() {
         return pubKeyHash;
+    }
+
+    public byte[] getPubKey() {
+        return pubKey;
     }
 
     public static enum AddressContext {

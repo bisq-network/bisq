@@ -125,7 +125,7 @@ class CreateOfferDataModel implements Activatable, DataModel {
         networkFeeAsCoin.set(FeePolicy.TX_FEE);
 
         if (walletService != null && walletService.getWallet() != null) {
-            addressEntry = walletService.getAddressInfoByTradeID(offerId);
+            addressEntry = walletService.getAddressInfo(offerId);
 
             walletService.addBalanceListener(new BalanceListener(getAddressEntry().getAddress()) {
                 @Override

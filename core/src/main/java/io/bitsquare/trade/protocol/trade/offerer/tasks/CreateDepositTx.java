@@ -40,12 +40,13 @@ public class CreateDepositTx extends Task<BuyerAsOffererModel> {
     @Override
     protected void doRun() {
         try {
-            String offererPubKey = model.getWalletService().getAddressInfoByTradeID(model.getTrade().getId()).getPubKeyAsHexString();
+            
+            byte[] offererPubKey = model.getWalletService().getAddressInfo(model.getTrade().getId()).getPubKey();
             Coin offererInputAmount = model.getTrade().getSecurityDeposit().add(FeePolicy.TX_FEE);
             Transaction transaction = model.getWalletService().offererCreatesMSTxAndAddPayment(
                     offererInputAmount,
                     offererPubKey,
-                    model.getTradePubKeyAsHex(),
+                    model.getTakerPubKey(),
                     model.getArbitratorPubKey(),
                     model.getTrade().getId());
 

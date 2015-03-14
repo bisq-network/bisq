@@ -41,7 +41,6 @@ import io.bitsquare.viewfx.model.ViewModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.Utils;
 
 import com.google.inject.Inject;
 
@@ -232,7 +231,7 @@ class MainViewModel implements ViewModel {
             user.setAccountID(walletService.getRegistrationAddressEntry().toString());
             persistence.write(user.getClass().getName(), user);
         }
-        
+
         tradeManager.onAllServicesInitialized();
     }
 
@@ -352,7 +351,7 @@ class MainViewModel implements ViewModel {
 
     private void addMockArbitrator() {
         if (accountSettings.getAcceptedArbitrators().isEmpty() && user.getMessageKeyPair() != null) {
-            String pubKeyAsHex = Utils.HEX.encode(new ECKey().getPubKey());
+            byte[] pubKey = new ECKey().getPubKey();
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
             List<Locale> languages = new ArrayList<>();
             languages.add(LanguageUtil.getDefaultLanguageLocale());
@@ -362,7 +361,7 @@ class MainViewModel implements ViewModel {
             idVerifications.add(Arbitrator.ID_VERIFICATION.PASSPORT);
             idVerifications.add(Arbitrator.ID_VERIFICATION.GOV_ID);
 
-            Arbitrator arbitrator = new Arbitrator(pubKeyAsHex,
+            Arbitrator arbitrator = new Arbitrator(pubKey,
                     messagePubKeyAsHex,
                     "Manfred Karrer",
                     Arbitrator.ID_TYPE.REAL_LIFE_ID,

@@ -43,7 +43,7 @@ public class SendTakerDepositPaymentRequest extends Task<BuyerAsOffererModel> {
                 model.getPreparedOffererDepositTxAsHex(),
                 model.getOffererTxOutIndex());
 
-        model.getTradeMessageService().sendMessage(model.getPeer(), tradeMessage, new SendMessageListener() {
+        model.getTradeMessageService().sendMessage(model.getTaker(), tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");

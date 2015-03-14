@@ -50,7 +50,7 @@ public class RespondToTakeOfferRequest extends Task<BuyerAsOffererModel> {
         }
 
         RespondToTakeOfferRequestMessage tradeMessage = new RespondToTakeOfferRequestMessage(model.getOpenOffer().getId(), offerIsAvailable);
-        model.getTradeMessageService().sendMessage(model.getPeer(), tradeMessage, new SendMessageListener() {
+        model.getTradeMessageService().sendMessage(model.getTaker(), tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 complete();
@@ -66,8 +66,8 @@ public class RespondToTakeOfferRequest extends Task<BuyerAsOffererModel> {
     @Override
     protected void updateStateOnFault() {
         if (offerIsAvailable && model.getOpenOffer().getState() == OpenOffer.State.OFFER_ACCEPTED) {
-            model.getOpenOffer().setState(OpenOffer.State.OPEN);
             model.setTrade(null);
+            model.getOpenOffer().setState(OpenOffer.State.OPEN);
         }
     }
 }

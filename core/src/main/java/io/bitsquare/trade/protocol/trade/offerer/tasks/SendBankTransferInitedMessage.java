@@ -43,7 +43,7 @@ public class SendBankTransferInitedMessage extends Task<BuyerAsOffererModel> {
                 model.getOffererPaybackAmount(),
                 model.getTakerPaybackAmount(),
                 model.getOffererPaybackAddress());
-        model.getTradeMessageService().sendMessage(model.getPeer(), tradeMessage, new SendMessageListener() {
+        model.getTradeMessageService().sendMessage(model.getTaker(), tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 log.trace("Sending BankTransferInitedMessage succeeded.");

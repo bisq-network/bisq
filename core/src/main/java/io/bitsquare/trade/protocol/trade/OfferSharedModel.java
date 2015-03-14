@@ -33,8 +33,8 @@ import java.security.PublicKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TradeSharedModel extends SharedModel {
-    protected static final Logger log = LoggerFactory.getLogger(TradeSharedModel.class);
+public class OfferSharedModel extends SharedModel {
+    protected static final Logger log = LoggerFactory.getLogger(OfferSharedModel.class);
 
     // provided
     protected final Offer offer;
@@ -44,19 +44,19 @@ public class TradeSharedModel extends SharedModel {
     protected final SignatureService signatureService;
 
     // derived
-    protected final String arbitratorPubKey;
     protected final BankAccount bankAccount;
     protected final String accountId;
     protected final PublicKey messagePublicKey;
     protected final ECKey accountKey;
+    protected final byte[] arbitratorPubKey;
 
     // data written/read by tasks
-    private TradeMessage tradeMessage;
-    protected String tradePubKeyAsHex;
+    protected TradeMessage tradeMessage;
+    protected byte[] takerPubKey;
     protected String peersAccountId;
     protected BankAccount peersBankAccount;
 
-    public TradeSharedModel(Offer offer,
+    public OfferSharedModel(Offer offer,
                             TradeMessageService tradeMessageService,
                             WalletService walletService,
                             BlockChainService blockChainService,
@@ -69,7 +69,7 @@ public class TradeSharedModel extends SharedModel {
         this.signatureService = signatureService;
 
         //TODO use default arbitrator for now
-        arbitratorPubKey = offer.getArbitrators().get(0).getPubKeyAsHex();
+        arbitratorPubKey = offer.getArbitrators().get(0).getPubKey();
         bankAccount = user.getBankAccount(offer.getBankAccountId());
         accountId = user.getAccountId();
         messagePublicKey = user.getMessagePublicKey();
@@ -98,7 +98,7 @@ public class TradeSharedModel extends SharedModel {
         return offer;
     }
 
-    public String getArbitratorPubKey() {
+    public byte[] getArbitratorPubKey() {
         return arbitratorPubKey;
     }
 
@@ -118,27 +118,27 @@ public class TradeSharedModel extends SharedModel {
         return accountKey;
     }
 
-    public String getTradePubKeyAsHex() {
-        return tradePubKeyAsHex;
+    public byte[] getTakerPubKey() {
+        return takerPubKey;
     }
 
-    public void setTradePubKeyAsHex(String tradePubKeyAsHex) {
-        this.tradePubKeyAsHex = tradePubKeyAsHex;
+    public void setTakerPubKey(byte[] takerPubKey) {
+        this.takerPubKey = takerPubKey;
     }
 
-    public String getPeersAccountId() {
+    public String getTakerAccountId() {
         return peersAccountId;
     }
 
-    public void setPeersAccountId(String peersAccountId) {
+    public void setTakerAccountId(String peersAccountId) {
         this.peersAccountId = peersAccountId;
     }
 
-    public BankAccount getPeersBankAccount() {
+    public BankAccount getTakerBankAccount() {
         return peersBankAccount;
     }
 
-    public void setPeersBankAccount(BankAccount peersBankAccount) {
+    public void setTakerBankAccount(BankAccount peersBankAccount) {
         this.peersBankAccount = peersBankAccount;
     }
 

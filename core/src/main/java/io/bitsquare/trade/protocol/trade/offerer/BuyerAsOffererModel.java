@@ -25,7 +25,7 @@ import io.bitsquare.network.Peer;
 import io.bitsquare.offer.OpenOffer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeMessageService;
-import io.bitsquare.trade.protocol.trade.TradeSharedModel;
+import io.bitsquare.trade.protocol.trade.OfferSharedModel;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;
@@ -35,7 +35,7 @@ import java.security.PublicKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BuyerAsOffererModel extends TradeSharedModel {
+public class BuyerAsOffererModel extends OfferSharedModel {
 
     private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererModel.class);
 
@@ -48,15 +48,15 @@ public class BuyerAsOffererModel extends TradeSharedModel {
 
     // data written/read by tasks
     private Trade trade;
-    private Peer peer;
+    private Peer taker;
 
     private String preparedOffererDepositTxAsHex;
     private String depositTxAsHex;
 
-    private String peersAccountId;
-    private BankAccount peersBankAccount;
-    private PublicKey peersMessagePublicKey;
-    private String peersContractAsJson;
+    private String takerAccountId;
+    private BankAccount takerBankAccount;
+    private PublicKey takerMessagePublicKey;
+    private String takerContractAsJson;
 
     private String signedTakerDepositTxAsHex;
 
@@ -66,11 +66,10 @@ public class BuyerAsOffererModel extends TradeSharedModel {
     private long takerTxOutIndex;
     private Coin takerPaybackAmount;
     private String takeOfferFeeTxId;
-    private String tradePubKeyAsHex;
     private String takerPayoutAddress;
 
     private long offererTxOutIndex;
-    private String offererPubKey;
+    private byte[] offererPubKey;
     private String offererSignatureR;
     private String offererSignatureS;
     private Coin offererPaybackAmount;
@@ -94,7 +93,7 @@ public class BuyerAsOffererModel extends TradeSharedModel {
                 user);
         this.openOffer = openOffer;
 
-        offererPaybackAddress = walletService.getAddressInfoByTradeID(offer.getId()).getAddressString();
+        offererPaybackAddress = walletService.getAddressInfo(offer.getId()).getAddressString();
     }
 
     //getter/setter
@@ -102,8 +101,8 @@ public class BuyerAsOffererModel extends TradeSharedModel {
         return openOffer;
     }
 
-    public Peer getPeer() {
-        return peer;
+    public Peer getTaker() {
+        return taker;
     }
 
     public String getOffererPaybackAddress() {
@@ -134,16 +133,6 @@ public class BuyerAsOffererModel extends TradeSharedModel {
         this.takeOfferFeeTxId = takeOfferFeeTxId;
     }
 
-    @Override
-    public String getTradePubKeyAsHex() {
-        return tradePubKeyAsHex;
-    }
-
-    @Override
-    public void setTradePubKeyAsHex(String tradePubKeyAsHex) {
-        this.tradePubKeyAsHex = tradePubKeyAsHex;
-    }
-
     public String getTakerPayoutAddress() {
         return takerPayoutAddress;
     }
@@ -153,39 +142,39 @@ public class BuyerAsOffererModel extends TradeSharedModel {
     }
 
     @Override
-    public String getPeersAccountId() {
-        return peersAccountId;
+    public String getTakerAccountId() {
+        return takerAccountId;
     }
 
     @Override
-    public void setPeersAccountId(String peersAccountId) {
-        this.peersAccountId = peersAccountId;
+    public void setTakerAccountId(String takerAccountId) {
+        this.takerAccountId = takerAccountId;
     }
 
     @Override
-    public BankAccount getPeersBankAccount() {
-        return peersBankAccount;
+    public BankAccount getTakerBankAccount() {
+        return takerBankAccount;
     }
 
     @Override
-    public void setPeersBankAccount(BankAccount peersBankAccount) {
-        this.peersBankAccount = peersBankAccount;
+    public void setTakerBankAccount(BankAccount takerBankAccount) {
+        this.takerBankAccount = takerBankAccount;
     }
 
-    public PublicKey getPeersMessagePublicKey() {
-        return peersMessagePublicKey;
+    public PublicKey getTakerMessagePublicKey() {
+        return takerMessagePublicKey;
     }
 
-    public void setPeersMessagePublicKey(PublicKey peersMessagePublicKey) {
-        this.peersMessagePublicKey = peersMessagePublicKey;
+    public void setTakerMessagePublicKey(PublicKey takerMessagePublicKey) {
+        this.takerMessagePublicKey = takerMessagePublicKey;
     }
 
-    public String getPeersContractAsJson() {
-        return peersContractAsJson;
+    public String getTakerContractAsJson() {
+        return takerContractAsJson;
     }
 
-    public void setPeersContractAsJson(String peersContractAsJson) {
-        this.peersContractAsJson = peersContractAsJson;
+    public void setTakerContractAsJson(String takerContractAsJson) {
+        this.takerContractAsJson = takerContractAsJson;
     }
 
     public String getSignedTakerDepositTxAsHex() {
@@ -220,11 +209,11 @@ public class BuyerAsOffererModel extends TradeSharedModel {
         this.takerTxOutIndex = takerTxOutIndex;
     }
 
-    public String getOffererPubKey() {
+    public byte[] getOffererPubKey() {
         return offererPubKey;
     }
 
-    public void setOffererPubKey(String offererPubKey) {
+    public void setOffererPubKey(byte[] offererPubKey) {
         this.offererPubKey = offererPubKey;
     }
 
@@ -276,7 +265,7 @@ public class BuyerAsOffererModel extends TradeSharedModel {
         return trade;
     }
 
-    public void setPeer(Peer peer) {
-        this.peer = peer;
+    public void setTaker(Peer taker) {
+        this.taker = taker;
     }
 }

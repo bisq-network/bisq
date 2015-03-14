@@ -149,7 +149,7 @@ public class BitsquareApp extends Application {
         primaryStage.show();
 
         //TODO just temp.
-        showDebugWindow();
+        //showDebugWindow();
     }
 
     private void showDebugWindow() {

@@ -25,17 +25,17 @@ import java.io.Serializable;
 
 public class TakeOfferFeePayedMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = -5057935061275354312L;
+    
     private final String tradeId;
-
     private final Coin tradeAmount;
     private final String takeOfferFeeTxID;
-    private final String tradePubKeyAsHex;
+    private final byte[] takerPubKey;
 
-    public TakeOfferFeePayedMessage(String tradeId, String takeOfferFeeTxID, Coin tradeAmount, String tradePubKeyAsHex) {
+    public TakeOfferFeePayedMessage(String tradeId, String takeOfferFeeTxID, Coin tradeAmount, byte[] takerPubKey) {
         this.tradeId = tradeId;
         this.takeOfferFeeTxID = takeOfferFeeTxID;
         this.tradeAmount = tradeAmount;
-        this.tradePubKeyAsHex = tradePubKeyAsHex;
+        this.takerPubKey = takerPubKey;
     }
 
     @Override
@@ -51,8 +51,8 @@ public class TakeOfferFeePayedMessage implements Serializable, TradeMessage {
         return takeOfferFeeTxID;
     }
 
-    public String getTakerPubKeyAsHex() {
-        return tradePubKeyAsHex;
+    public byte[] getTakerPubKey() {
+        return takerPubKey;
     }
 
 }

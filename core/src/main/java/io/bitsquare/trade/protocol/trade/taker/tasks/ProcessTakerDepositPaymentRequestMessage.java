@@ -40,11 +40,11 @@ public class ProcessTakerDepositPaymentRequestMessage extends Task<SellerAsTaker
         try {
             checkTradeId(model.getTrade().getId(), model.getTradeMessage());
             TakerDepositPaymentRequestMessage message = (TakerDepositPaymentRequestMessage) model.getTradeMessage();
-            model.setPeersAccountId(nonEmptyStringOf(message.getAccountId()));
-            model.setPeersBankAccount(checkNotNull(message.getBankAccount()));
-            model.setPeersPubKey(nonEmptyStringOf(message.getOffererPubKey()));
-            model.setPreparedPeersDepositTxAsHex(nonEmptyStringOf(message.getPreparedOffererDepositTxAsHex()));
-            model.setPeersTxOutIndex(nonNegativeLongOf(message.getOffererTxOutIndex()));
+            model.setTakerAccountId(nonEmptyStringOf(message.getAccountId()));
+            model.setTakerBankAccount(checkNotNull(message.getBankAccount()));
+            model.setOffererPubKeyAsHex(checkNotNull(message.getOffererPubKey()));
+            model.setPreparedOffererDepositTxAsHex(nonEmptyStringOf(message.getPreparedOffererDepositTxAsHex()));
+            model.setOffererTxOutIndex(nonNegativeLongOf(message.getOffererTxOutIndex()));
 
             complete();
         } catch (Throwable t) {

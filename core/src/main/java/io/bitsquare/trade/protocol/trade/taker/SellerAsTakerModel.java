@@ -23,41 +23,31 @@ import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeMessageService;
-import io.bitsquare.trade.protocol.trade.TradeSharedModel;
+import io.bitsquare.trade.protocol.trade.OfferSharedModel;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
-import java.security.PublicKey;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SellerAsTakerModel extends TradeSharedModel {
+public class SellerAsTakerModel extends OfferSharedModel {
     private static final Logger log = LoggerFactory.getLogger(SellerAsTakerModel.class);
 
     // provided
     private final Trade trade;
 
-    // derived
-    private final Coin tradeAmount;
-    private final Coin securityDeposit;
-    private final PublicKey offererMessagePublicKey;
-
     // written/read by task
-    private Peer peer;
-
-    private String preparedPeersDepositTxAsHex;
+    private Peer offerer;
+    private String preparedOffererDepositTxAsHex;
     private String depositTxAsHex;
     private Transaction signedTakerDepositTx;
     private Transaction payoutTx;
     private String payoutTxAsHex;
-
     private Coin takerPaybackAmount;
-
-    private String peersPubKey;
-    private long peersTxOutIndex;
+    private byte[] offererPubKey;
+    private long offererTxOutIndex;
     private String offererSignatureR;
     private String offererSignatureS;
     private Coin offererPaybackAmount;
@@ -77,10 +67,7 @@ public class SellerAsTakerModel extends TradeSharedModel {
                 user);
 
         this.trade = trade;
-        tradeAmount = trade.getTradeAmount();
-        securityDeposit = trade.getSecurityDeposit();
-        offererMessagePublicKey = offer.getMessagePublicKey();
-        tradePubKeyAsHex = walletService.getAddressInfoByTradeID(trade.getId()).getPubKeyAsHexString();
+        takerPubKey = walletService.getAddressInfo(trade.getId()).getPubKey();
     }
 
     // getter/setter
@@ -88,24 +75,12 @@ public class SellerAsTakerModel extends TradeSharedModel {
         return trade;
     }
 
-    public Coin getTradeAmount() {
-        return tradeAmount;
+    public Peer getOfferer() {
+        return offerer;
     }
 
-    public Coin getSecurityDeposit() {
-        return securityDeposit;
-    }
-
-    public PublicKey getOffererMessagePublicKey() {
-        return offererMessagePublicKey;
-    }
-
-    public Peer getPeer() {
-        return peer;
-    }
-
-    public void setPeer(Peer peer) {
-        this.peer = peer;
+    public void setOfferer(Peer offerer) {
+        this.offerer = offerer;
     }
 
     public Transaction getPayoutTx() {
@@ -124,28 +99,28 @@ public class SellerAsTakerModel extends TradeSharedModel {
         this.payoutTxAsHex = payoutTxAsHex;
     }
 
-    public String getPeersPubKey() {
-        return peersPubKey;
+    public byte[] getOffererPubKey() {
+        return offererPubKey;
     }
 
-    public void setPeersPubKey(String peersPubKey) {
-        this.peersPubKey = peersPubKey;
+    public void setOffererPubKeyAsHex(byte[] offererPubKey) {
+        this.offererPubKey = offererPubKey;
     }
 
-    public String getPreparedPeersDepositTxAsHex() {
-        return preparedPeersDepositTxAsHex;
+    public String getPreparedOffererDepositTxAsHex() {
+        return preparedOffererDepositTxAsHex;
     }
 
-    public void setPreparedPeersDepositTxAsHex(String preparedPeersDepositTxAsHex) {
-        this.preparedPeersDepositTxAsHex = preparedPeersDepositTxAsHex;
+    public void setPreparedOffererDepositTxAsHex(String preparedOffererDepositTxAsHex) {
+        this.preparedOffererDepositTxAsHex = preparedOffererDepositTxAsHex;
     }
 
-    public long getPeersTxOutIndex() {
-        return peersTxOutIndex;
+    public long getOffererTxOutIndex() {
+        return offererTxOutIndex;
     }
 
-    public void setPeersTxOutIndex(long peersTxOutIndex) {
-        this.peersTxOutIndex = peersTxOutIndex;
+    public void setOffererTxOutIndex(long offererTxOutIndex) {
+        this.offererTxOutIndex = offererTxOutIndex;
     }
 
     public String getDepositTxAsHex() {

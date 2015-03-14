@@ -121,7 +121,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
         calculateVolume();
         calculateTotalToPay();
 
-        addressEntry = walletService.getAddressInfoByTradeID(offer.getId());
+        addressEntry = walletService.getAddressInfo(offer.getId());
         walletService.addBalanceListener(new BalanceListener(addressEntry.getAddress()) {
             @Override
             public void onBalanceChanged(@NotNull Coin balance) {
@@ -148,6 +148,8 @@ class TakeOfferDataModel implements Activatable, DataModel {
                 case OFFERER_REJECTED:
                     requestTakeOfferErrorMessage.set("Take offer request got rejected. Maybe another trader has taken the offer in the meantime.");
                     break;
+                case TAKE_OFFER_FEE_PAID:
+                    break;
                 case DEPOSIT_PUBLISHED:
                 case DEPOSIT_CONFIRMED:
                     // TODO Check why DEPOSIT_CONFIRMED can happen, refactor state handling
@@ -163,9 +165,12 @@ class TakeOfferDataModel implements Activatable, DataModel {
                     break;
                 case FIAT_PAYMENT_STARTED:
                     break;
+                case TAKE_OFFER_FEE_PAYMENT_FAILED:
+                    requestTakeOfferErrorMessage.set("An error occurred when paying the trade fee.");
+                    break;
                 case MESSAGE_SENDING_FAILED:
-                    requestTakeOfferErrorMessage.set("An error occurred when sending a message to the offerer. Maybe there are connection problems. Please " +
-                            "try later again.");
+                    requestTakeOfferErrorMessage.set("An error occurred when sending a message to the offerer. Maybe there are connection problems. " +
+                            "Please try later again.");
                     break;
                 case PAYOUT_PUBLISHED:
                     break;

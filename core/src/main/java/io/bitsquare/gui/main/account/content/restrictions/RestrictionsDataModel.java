@@ -33,7 +33,6 @@ import io.bitsquare.viewfx.model.DataModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.Utils;
 
 import com.google.inject.Inject;
 
@@ -154,7 +153,7 @@ class RestrictionsDataModel implements Activatable, DataModel {
     // TODO Remove mock later
     private void addMockArbitrator() {
         if (accountSettings.getAcceptedArbitrators().isEmpty() && user.getMessageKeyPair() != null) {
-            String pubKeyAsHex = Utils.HEX.encode(new ECKey().getPubKey());
+            byte[] pubKey = new ECKey().getPubKey();
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
             List<Locale> languages = new ArrayList<>();
             languages.add(LanguageUtil.getDefaultLanguageLocale());
@@ -166,7 +165,7 @@ class RestrictionsDataModel implements Activatable, DataModel {
 
             // TODO use very small sec. dposit to make testing in testnet less expensive
             // Revert later to 0.1 BTC again
-            Arbitrator arbitrator = new Arbitrator(pubKeyAsHex,
+            Arbitrator arbitrator = new Arbitrator(pubKey,
                     messagePubKeyAsHex,
                     "Manfred Karrer",
                     Arbitrator.ID_TYPE.REAL_LIFE_ID,

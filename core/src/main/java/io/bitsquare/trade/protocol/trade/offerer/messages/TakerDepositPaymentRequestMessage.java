@@ -28,12 +28,12 @@ public class TakerDepositPaymentRequestMessage implements Serializable, TradeMes
     private final String tradeId;
     private final BankAccount bankAccount;
     private final String accountID;
-    private final String offererPubKey;
+    private final byte[] offererPubKey;
     private final String preparedOffererDepositTxAsHex;
     private final long offererTxOutIndex;
 
     public TakerDepositPaymentRequestMessage(String tradeId, BankAccount bankAccount, String accountID,
-                                             String offererPubKey, String preparedOffererDepositTxAsHex,
+                                             byte[] offererPubKey, String preparedOffererDepositTxAsHex,
                                              long offererTxOutIndex) {
         this.tradeId = tradeId;
         this.bankAccount = bankAccount;
@@ -56,7 +56,7 @@ public class TakerDepositPaymentRequestMessage implements Serializable, TradeMes
         return accountID;
     }
 
-    public String getOffererPubKey() {
+    public byte[] getOffererPubKey() {
         return offererPubKey;
     }
 

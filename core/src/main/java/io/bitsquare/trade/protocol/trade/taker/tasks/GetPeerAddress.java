@@ -42,7 +42,7 @@ public class GetPeerAddress extends Task<SellerAsTakerModel> {
             public void onResult(Peer peer) {
                 log.trace("Found peer: " + peer.toString());
 
-                model.setPeer(peer);
+                model.setOfferer(peer);
                 complete();
             }
 

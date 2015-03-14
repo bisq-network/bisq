@@ -40,7 +40,7 @@ public class SendDepositTxIdToTaker extends Task<BuyerAsOffererModel> {
         DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(model.getTrade().getId(),
                 Utils.HEX.encode(model.getTrade().getDepositTx().bitcoinSerialize()));
 
-        model.getTradeMessageService().sendMessage(model.getPeer(), tradeMessage, new SendMessageListener() {
+        model.getTradeMessageService().sendMessage(model.getTaker(), tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 log.trace("DepositTxPublishedMessage successfully arrived at peer");

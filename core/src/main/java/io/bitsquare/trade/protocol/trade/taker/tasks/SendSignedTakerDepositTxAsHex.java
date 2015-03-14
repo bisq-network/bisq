@@ -51,11 +51,11 @@ public class SendSignedTakerDepositTxAsHex extends Task<SellerAsTakerModel> {
                 Utils.HEX.encode(signedTakerDepositTx.getInput(1).getConnectedOutput().getParentTransaction().bitcoinSerialize()),
                 model.getTrade().getContractAsJson(),
                 model.getTrade().getTakerContractSignature(),
-                model.getWalletService().getAddressInfoByTradeID(model.getTrade().getId()).getAddressString(),
+                model.getWalletService().getAddressInfo(model.getTrade().getId()).getAddressString(),
                 takerTxOutIndex,
-                model.getPeersTxOutIndex());
+                model.getOffererTxOutIndex());
 
-        model.getTradeMessageService().sendMessage(model.getPeer(), tradeMessage, new SendMessageListener() {
+        model.getTradeMessageService().sendMessage(model.getOfferer(), tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 complete();

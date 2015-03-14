@@ -41,6 +41,7 @@ public class Trade implements Serializable {
         OPEN,
         OFFERER_ACCEPTED,
         OFFERER_REJECTED, /* For taker only*/
+        TAKE_OFFER_FEE_PAYMENT_FAILED,
         TAKE_OFFER_FEE_PAID,
         DEPOSIT_PUBLISHED,
         DEPOSIT_CONFIRMED,

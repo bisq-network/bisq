@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
@@ -40,12 +41,11 @@ public class SendTakeOfferFeePayedMessage extends Task<SellerAsTakerModel> {
         TakeOfferFeePayedMessage msg = new TakeOfferFeePayedMessage(
                 model.getTrade().getId(),
                 model.getTrade().getTakeOfferFeeTxId(),
-                model.getTradeAmount(),
-                model.getTradePubKeyAsHex()
+                model.getTrade().getTradeAmount(),
+                model.getTakerPubKey()
         );
 
-        model.getTradeMessageService().sendMessage(model.getPeer(), msg, new SendMessageListener() {
-
+        model.getTradeMessageService().sendMessage(model.getOfferer(), msg, new SendMessageListener() {
             @Override
             public void handleResult() {
                 log.trace("Sending TakeOfferFeePayedMessage succeeded.");
@@ -71,5 +71,6 @@ public class SendTakeOfferFeePayedMessage extends Task<SellerAsTakerModel> {
     protected void updateStateOnFault() {
         appendToErrorMessage("Sending TakeOfferFeePayedMessage to offerer failed. Maybe the network connection was lost or the offerer lost his connection. " +
                 "We persisted the state of the trade, please try again later or cancel that trade.");
+        model.getTrade().setState(Trade.State.MESSAGE_SENDING_FAILED);
     }
 }

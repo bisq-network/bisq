@@ -35,7 +35,7 @@ public class VerifyTakerAccount extends Task<BuyerAsOffererModel> {
     protected void doRun() {
         //TODO mocked yet
         if (model.getBlockChainService().verifyAccountRegistration()) {
-            if (model.getBlockChainService().isAccountBlackListed(model.getPeersAccountId(), model.getPeersBankAccount())) {
+            if (model.getBlockChainService().isAccountBlackListed(model.getTakerAccountId(), model.getTakerBankAccount())) {
                 log.error("Taker is blacklisted");
                 failed("Taker is blacklisted");
             }

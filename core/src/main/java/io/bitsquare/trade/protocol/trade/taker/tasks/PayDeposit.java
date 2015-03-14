@@ -38,15 +38,15 @@ public class PayDeposit extends Task<SellerAsTakerModel> {
     @Override
     protected void doRun() {
         try {
-            Coin amountToPay = model.getTradeAmount().add(model.getSecurityDeposit());
-            Coin msOutputAmount = amountToPay.add(model.getSecurityDeposit());
+            Coin amountToPay = model.getTrade().getTradeAmount().add(model.getTrade().getSecurityDeposit());
+            Coin msOutputAmount = amountToPay.add(model.getTrade().getSecurityDeposit());
             Transaction signedTakerDepositTx = model.getWalletService().takerAddPaymentAndSignTx(
                     amountToPay,
                     msOutputAmount,
-                    model.getPeersPubKey(),
-                    model.getTradePubKeyAsHex(),
+                    model.getOffererPubKey(),
+                    model.getTakerPubKey(),
                     model.getArbitratorPubKey(),
-                    model.getPreparedPeersDepositTxAsHex(),
+                    model.getPreparedOffererDepositTxAsHex(),
                     model.getTrade().getId());
 
             model.setSignedTakerDepositTx(signedTakerDepositTx);
