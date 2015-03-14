@@ -55,5 +55,7 @@ public class SendBankTransferInitedMessage extends Task<BuyerAsOffererModel> {
                 failed("Sending BankTransferInitedMessage failed.");
             }
         });
+    } @Override
+      protected void rollBackOnFault() {
     }
 }

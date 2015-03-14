@@ -46,5 +46,7 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
         } catch (Throwable t) {
             failed(t);
         }
+    } @Override
+      protected void rollBackOnFault() {
     }
 }

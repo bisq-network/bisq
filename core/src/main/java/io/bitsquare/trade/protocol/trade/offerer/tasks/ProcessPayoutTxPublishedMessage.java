@@ -52,5 +52,7 @@ public class ProcessPayoutTxPublishedMessage extends Task<BuyerAsOffererModel> {
         } catch (Throwable t) {
             failed(t);
         }
+    } @Override
+      protected void rollBackOnFault() {
     }
 }

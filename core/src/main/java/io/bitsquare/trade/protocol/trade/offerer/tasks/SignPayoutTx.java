@@ -61,6 +61,8 @@ public class SignPayoutTx extends Task<BuyerAsOffererModel> {
         } catch (Exception e) {
             failed(e);
         }
+    } @Override
+      protected void rollBackOnFault() {
     }
 }
 

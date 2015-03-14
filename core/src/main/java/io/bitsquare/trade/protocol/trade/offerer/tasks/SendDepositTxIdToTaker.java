@@ -52,5 +52,7 @@ public class SendDepositTxIdToTaker extends Task<BuyerAsOffererModel> {
                 failed("Sending DepositTxPublishedMessage failed.");
             }
         });
+    } @Override
+      protected void rollBackOnFault() {
     }
 }

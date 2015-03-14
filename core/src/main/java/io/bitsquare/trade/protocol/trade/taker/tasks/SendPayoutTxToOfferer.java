@@ -48,5 +48,7 @@ public class SendPayoutTxToOfferer extends Task<SellerAsTakerModel> {
                 failed("Sending PayoutTxPublishedMessage failed.");
             }
         });
+    } @Override
+      protected void rollBackOnFault() {
     }
 }

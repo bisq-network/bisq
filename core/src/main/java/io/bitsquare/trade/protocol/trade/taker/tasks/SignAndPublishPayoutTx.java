@@ -71,5 +71,7 @@ public class SignAndPublishPayoutTx extends Task<SellerAsTakerModel> {
         } catch (AddressFormatException e) {
             failed(e);
         }
+    } @Override
+      protected void rollBackOnFault() {
     }
 }

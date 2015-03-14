@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 public class RespondToTakeOfferRequest extends Task<BuyerAsOffererModel> {
     private static final Logger log = LoggerFactory.getLogger(RespondToTakeOfferRequest.class);
+    private boolean offerIsAvailable;
 
     public RespondToTakeOfferRequest(TaskRunner taskHandler, BuyerAsOffererModel model) {
         super(taskHandler, model);
@@ -37,27 +38,36 @@ public class RespondToTakeOfferRequest extends Task<BuyerAsOffererModel> {
 
     @Override
     protected void doRun() {
-        boolean takeOfferRequestAccepted = model.getOpenOffer().getState() == OpenOffer.State.OPEN;
-        if (!takeOfferRequestAccepted)
+        offerIsAvailable = model.getOpenOffer().getState() == OpenOffer.State.OPEN;
+
+        if (offerIsAvailable) {
+            model.getOpenOffer().setState(OpenOffer.State.OFFER_ACCEPTED);
+            Trade trade = new Trade(model.getOpenOffer().getOffer());
+            model.setTrade(trade);
+        }
+        else {
             log.info("Received take offer request but the offer not marked as open anymore.");
+        }
 
-        Trade trade = new Trade(model.getOpenOffer().getOffer());
-        model.setTrade(trade);
-        model.getOpenOffer().setState(OpenOffer.State.OFFER_ACCEPTED);
-
-        RespondToTakeOfferRequestMessage tradeMessage = new RespondToTakeOfferRequestMessage(trade.getId(), takeOfferRequestAccepted);
+        RespondToTakeOfferRequestMessage tradeMessage = new RespondToTakeOfferRequestMessage(model.getOpenOffer().getId(), offerIsAvailable);
         model.getTradeMessageService().sendMessage(model.getPeer(), tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
-                log.trace("RespondToTakeOfferRequestMessage successfully arrived at peer");
                 complete();
             }
 
             @Override
             public void handleFault() {
-                failed("AcceptTakeOfferRequestMessage did not arrive at peer");
+                failed();
             }
         });
+    }
 
+    @Override
+    protected void rollBackOnFault() {
+        if (offerIsAvailable && model.getOpenOffer().getState() == OpenOffer.State.OFFER_ACCEPTED) {
+            model.getOpenOffer().setState(OpenOffer.State.OPEN);
+            model.setTrade(null);
+        }
     }
 }

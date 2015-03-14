@@ -51,8 +51,12 @@ public class SendTakeOfferFeePayedMessage extends Task<SellerAsTakerModel> {
 
             @Override
             public void handleFault() {
-                failed("Sending TakeOfferFeePayedMessage failed.");
+                failed();
             }
         });
+    }
+
+    @Override
+    protected void rollBackOnFault() {
     }
 }

@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
+import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestTakeOfferMessage;
@@ -39,14 +40,20 @@ public class RequestTakeOffer extends Task<SellerAsTakerModel> {
                 new SendMessageListener() {
                     @Override
                     public void handleResult() {
-                        log.trace("Sending RequestTakeOfferMessage succeeded.");
                         complete();
                     }
 
                     @Override
                     public void handleFault() {
-                        failed("Sending RequestTakeOfferMessage failed.");
+                        model.getOffer().setState(Offer.State.OFFERER_OFFLINE);
+                        failed();
                     }
                 });
+    }
+
+    @Override
+    protected void rollBackOnFault() {
+        if (model.getOffer().getState() != Offer.State.OFFERER_OFFLINE)
+            model.getOffer().setState(Offer.State.AVAILABILITY_CHECK_FAILED);
     }
 }

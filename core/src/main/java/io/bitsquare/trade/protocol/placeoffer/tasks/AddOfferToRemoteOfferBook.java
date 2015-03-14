@@ -41,5 +41,7 @@ public class AddOfferToRemoteOfferBook extends Task<PlaceOfferModel> {
                 (message, throwable) -> {
                     failed(throwable);
                 });
+    } @Override
+      protected void rollBackOnFault() {
     }
 }

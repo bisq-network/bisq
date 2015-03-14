@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.util.taskrunner.Task;
 import io.bitsquare.util.taskrunner.TaskRunner;
@@ -57,5 +58,11 @@ public class PayTakeOfferFee extends Task<SellerAsTakerModel> {
         } catch (InsufficientMoneyException e) {
             failed(e);
         }
+    }
+
+    @Override
+    protected void rollBackOnFault() {
+        // in error case take offer can be repeated so we reset the trade state
+        model.getTrade().setState(Trade.State.OPEN);
     }
 }

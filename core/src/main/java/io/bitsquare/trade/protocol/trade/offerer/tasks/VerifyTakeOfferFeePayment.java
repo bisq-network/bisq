@@ -41,5 +41,7 @@ public class VerifyTakeOfferFeePayment extends Task<BuyerAsOffererModel> {
         
         complete();
     }
-
+    @Override
+    protected void rollBackOnFault() {
+    }
 }

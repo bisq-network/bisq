@@ -67,5 +67,7 @@ public class SendSignedTakerDepositTxAsHex extends Task<SellerAsTakerModel> {
             }
         });
     }
-
+    @Override
+    protected void rollBackOnFault() {
+    }
 }

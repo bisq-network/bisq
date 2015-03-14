@@ -46,5 +46,7 @@ public class VerifyTakerAccount extends Task<BuyerAsOffererModel> {
         else {
             failed("Account registration validation for peer failed.");
         }
+    } @Override
+      protected void rollBackOnFault() {
     }
 }

@@ -40,7 +40,7 @@ public class ProcessRespondToTakeOfferRequestMessage extends Task<SellerAsTakerM
         try {
             checkTradeId(model.getTrade().getId(), model.getTradeMessage());
 
-            if (((RespondToTakeOfferRequestMessage) model.getTradeMessage()).isTakeOfferRequestAccepted()) {
+            if (((RespondToTakeOfferRequestMessage) model.getTradeMessage()).isOfferIsAvailable()) {
                 model.getTrade().setState(Trade.State.OFFERER_ACCEPTED);
                 complete();
             }
@@ -49,7 +49,11 @@ public class ProcessRespondToTakeOfferRequestMessage extends Task<SellerAsTakerM
                 failed("Requested offer rejected because it is not available anymore.");
             }
         } catch (Throwable t) {
-            failed( t);
+            failed(t);
         }
+    }
+
+    @Override
+    protected void rollBackOnFault() {
     }
 }

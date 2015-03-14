@@ -26,11 +26,11 @@ import org.jetbrains.annotations.NotNull;
 public class RespondToTakeOfferRequestMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = 6177387534087739018L;
     private final String tradeId;
-    private final boolean takeOfferRequestAccepted;
+    private final boolean offerIsAvailable;
 
-    public RespondToTakeOfferRequestMessage(@NotNull String tradeId, boolean takeOfferRequestAccepted) {
+    public RespondToTakeOfferRequestMessage(@NotNull String tradeId, boolean offerIsAvailable) {
         this.tradeId = tradeId;
-        this.takeOfferRequestAccepted = takeOfferRequestAccepted;
+        this.offerIsAvailable = offerIsAvailable;
     }
 
     @Override
@@ -38,7 +38,7 @@ public class RespondToTakeOfferRequestMessage implements Serializable, TradeMess
         return tradeId;
     }
 
-    public boolean isTakeOfferRequestAccepted() {
-        return takeOfferRequestAccepted;
+    public boolean isOfferIsAvailable() {
+        return offerIsAvailable;
     }
 }

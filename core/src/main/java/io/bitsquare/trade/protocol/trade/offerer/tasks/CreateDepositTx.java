@@ -60,5 +60,7 @@ public class CreateDepositTx extends Task<BuyerAsOffererModel> {
         } catch (InsufficientMoneyException e) {
             failed(e);
         }
+    } @Override
+      protected void rollBackOnFault() {
     }
 }

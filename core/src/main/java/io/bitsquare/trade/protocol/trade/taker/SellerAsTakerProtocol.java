@@ -68,6 +68,10 @@ public class SellerAsTakerProtocol {
     // Called from UI
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void cleanup() {
+        model.getTradeMessageService().removeMessageHandler(messageHandler);
+    }
+
     public void takeOffer() {
         model.getTradeMessageService().addMessageHandler(messageHandler);
 
@@ -86,38 +90,10 @@ public class SellerAsTakerProtocol {
         taskRunner.run();
     }
 
-    public void cleanup() {
-        model.getTradeMessageService().removeMessageHandler(messageHandler);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void handleMessage(Message message, Peer sender) {
-        log.trace("handleNewMessage: message = " + message.getClass().getSimpleName());
-        if (message instanceof TradeMessage) {
-            TradeMessage tradeMessage = (TradeMessage) message;
-            nonEmptyStringOf(tradeMessage.getTradeId());
-
-            if (tradeMessage instanceof RespondToTakeOfferRequestMessage) {
-                handleRespondToTakeOfferRequestMessage((RespondToTakeOfferRequestMessage) tradeMessage);
-            }
-            else if (tradeMessage instanceof TakerDepositPaymentRequestMessage) {
-                handleTakerDepositPaymentRequestMessage((TakerDepositPaymentRequestMessage) tradeMessage);
-            }
-            else if (tradeMessage instanceof DepositTxPublishedMessage) {
-                handleDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
-            }
-            else if (tradeMessage instanceof BankTransferStartedMessage) {
-                handleBankTransferInitedMessage((BankTransferStartedMessage) tradeMessage);
-            }
-            else {
-                log.error("Incoming message not supported. " + tradeMessage);
-            }
-        }
-    }
 
     private void handleRespondToTakeOfferRequestMessage(RespondToTakeOfferRequestMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
@@ -213,5 +189,34 @@ public class SellerAsTakerProtocol {
                 SendPayoutTxToOfferer.class
         );
         taskRunner.run();
+    }
+    
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Massage dispatcher
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void handleMessage(Message message, Peer sender) {
+        log.trace("handleNewMessage: message = " + message.getClass().getSimpleName());
+        if (message instanceof TradeMessage) {
+            TradeMessage tradeMessage = (TradeMessage) message;
+            nonEmptyStringOf(tradeMessage.getTradeId());
+
+            if (tradeMessage instanceof RespondToTakeOfferRequestMessage) {
+                handleRespondToTakeOfferRequestMessage((RespondToTakeOfferRequestMessage) tradeMessage);
+            }
+            else if (tradeMessage instanceof TakerDepositPaymentRequestMessage) {
+                handleTakerDepositPaymentRequestMessage((TakerDepositPaymentRequestMessage) tradeMessage);
+            }
+            else if (tradeMessage instanceof DepositTxPublishedMessage) {
+                handleDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
+            }
+            else if (tradeMessage instanceof BankTransferStartedMessage) {
+                handleBankTransferInitedMessage((BankTransferStartedMessage) tradeMessage);
+            }
+            else {
+                log.error("Incoming message not supported. " + tradeMessage);
+            }
+        }
     }
 }

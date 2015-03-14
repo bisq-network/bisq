@@ -56,5 +56,7 @@ public class VerifyAndSignContract extends Task<BuyerAsOffererModel> {
         trade.setTakerContractSignature(signature);
 
         complete();
+    } @Override
+      protected void rollBackOnFault() {
     }
 }

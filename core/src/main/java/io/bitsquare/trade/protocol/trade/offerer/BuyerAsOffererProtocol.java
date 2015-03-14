@@ -78,31 +78,6 @@ public class BuyerAsOffererProtocol {
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handleMessage(Message message, Peer peer) {
-        log.trace("handleNewMessage: message = " + message.getClass().getSimpleName());
-        if (message instanceof TradeMessage) {
-            TradeMessage tradeMessage = (TradeMessage) message;
-            nonEmptyStringOf(tradeMessage.getTradeId());
-
-            if (tradeMessage instanceof RequestTakeOfferMessage) {
-                handleRequestTakeOfferMessage((RequestTakeOfferMessage) tradeMessage, peer);
-            }
-            else if (tradeMessage instanceof TakeOfferFeePayedMessage) {
-                handleTakeOfferFeePayedMessage((TakeOfferFeePayedMessage) tradeMessage);
-            }
-
-            else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage) {
-                handleRequestOffererPublishDepositTxMessage((RequestOffererPublishDepositTxMessage) tradeMessage);
-            }
-            else if (tradeMessage instanceof PayoutTxPublishedMessage) {
-                handlePayoutTxPublishedMessage((PayoutTxPublishedMessage) tradeMessage);
-            }
-            else {
-                log.error("Incoming tradeMessage not supported. " + tradeMessage);
-            }
-        }
-    }
-
     private void handleRequestTakeOfferMessage(RequestTakeOfferMessage tradeMessage, Peer peer) {
         model.setTradeMessage(tradeMessage);
         model.setPeer(peer);
@@ -204,5 +179,35 @@ public class BuyerAsOffererProtocol {
         );
         taskRunner.addTasks(ProcessPayoutTxPublishedMessage.class);
         taskRunner.run();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Massage dispatcher
+    ///////////////////////////////////////////////////////////////////////////////////////////
+   
+    private void handleMessage(Message message, Peer peer) {
+        log.trace("handleNewMessage: message = " + message.getClass().getSimpleName());
+        if (message instanceof TradeMessage) {
+            TradeMessage tradeMessage = (TradeMessage) message;
+            nonEmptyStringOf(tradeMessage.getTradeId());
+
+            if (tradeMessage instanceof RequestTakeOfferMessage) {
+                handleRequestTakeOfferMessage((RequestTakeOfferMessage) tradeMessage, peer);
+            }
+            else if (tradeMessage instanceof TakeOfferFeePayedMessage) {
+                handleTakeOfferFeePayedMessage((TakeOfferFeePayedMessage) tradeMessage);
+            }
+
+            else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage) {
+                handleRequestOffererPublishDepositTxMessage((RequestOffererPublishDepositTxMessage) tradeMessage);
+            }
+            else if (tradeMessage instanceof PayoutTxPublishedMessage) {
+                handlePayoutTxPublishedMessage((PayoutTxPublishedMessage) tradeMessage);
+            }
+            else {
+                log.error("Incoming tradeMessage not supported. " + tradeMessage);
+            }
+        }
     }
 }

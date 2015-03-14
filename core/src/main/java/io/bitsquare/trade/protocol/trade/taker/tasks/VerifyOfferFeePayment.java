@@ -39,5 +39,7 @@ public class VerifyOfferFeePayment extends Task<SellerAsTakerModel> {
             resultHandler.handleResult();
         }*/
         complete();
+    } @Override
+      protected void rollBackOnFault() {
     }
 }

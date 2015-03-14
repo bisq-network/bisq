@@ -103,7 +103,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
         }
     }
 
-    protected void applyErrorState() {
+    protected void rollBackOnFault() {
         if (!removeOfferFailed && !addOfferFailed) {
             // If broadcast fails we need to remove offer from offerbook
             model.getOfferBookService().removeOffer(model.getOffer(),

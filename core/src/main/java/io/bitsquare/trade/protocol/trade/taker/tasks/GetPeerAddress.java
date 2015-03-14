@@ -18,6 +18,7 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.network.Peer;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.listeners.GetPeerAddressListener;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.util.taskrunner.Task;
@@ -31,23 +32,32 @@ public class GetPeerAddress extends Task<SellerAsTakerModel> {
 
     public GetPeerAddress(TaskRunner taskHandler, SellerAsTakerModel model) {
         super(taskHandler, model);
+        errorMessage = "DHT lookup for peer address failed. Maybe the offerer was offline for too long time.";
     }
 
     @Override
     protected void doRun() {
-        model.getTradeMessageService().getPeerAddress(model.getOffererMessagePublicKey(), new GetPeerAddressListener() {
+        model.getTradeMessageService().getPeerAddress(model.getOffer().getMessagePublicKey(), new GetPeerAddressListener() {
             @Override
             public void onResult(Peer peer) {
                 log.trace("Found peer: " + peer.toString());
+
                 model.setPeer(peer);
                 complete();
             }
 
             @Override
             public void onFailed() {
-                failed("DHT lookup for peer address failed.");
+                model.getOffer().setState(Offer.State.OFFERER_OFFLINE);
+                failed();
             }
         });
+    }
+
+    @Override
+    protected void rollBackOnFault() {
+        if (model.getOffer().getState() != Offer.State.OFFERER_OFFLINE)
+            model.getOffer().setState(Offer.State.AVAILABILITY_CHECK_FAILED);
     }
 }
 

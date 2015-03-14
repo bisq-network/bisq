@@ -55,5 +55,7 @@ public class PayDeposit extends Task<SellerAsTakerModel> {
         } catch (InsufficientMoneyException e) {
             failed(e);
         }
+    } @Override
+      protected void rollBackOnFault() {
     }
 }

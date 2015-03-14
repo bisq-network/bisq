@@ -55,5 +55,7 @@ public class SendTakerDepositPaymentRequest extends Task<BuyerAsOffererModel> {
                 failed("RequestTakerDepositPaymentMessage did not arrive at peer");
             }
         });
+    } @Override
+      protected void rollBackOnFault() {
     }
 }

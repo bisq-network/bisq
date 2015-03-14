@@ -46,5 +46,7 @@ public class ProcessDepositTxPublishedMessage extends Task<SellerAsTakerModel> {
         } catch (Throwable t) {
             failed(t);
         }
+    } @Override
+      protected void rollBackOnFault() {
     }
 }

@@ -55,7 +55,7 @@ public class GetPeerAddress extends Task<CheckOfferAvailabilityModel> {
     }
 
     @Override
-    protected void applyErrorState() {
+    protected void rollBackOnFault() {
         model.getOffer().setState(Offer.State.OFFERER_OFFLINE);
     }
 }
