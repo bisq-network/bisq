@@ -43,6 +43,7 @@ public class BootstrapNode {
     private static boolean running = true;
 
     private final Environment env;
+    private boolean noPeersInfoPrinted;
 
     public BootstrapNode(Environment env) {
         this.env = env;
@@ -97,14 +98,21 @@ public class BootstrapNode {
             log.info("Bootstrap node started with name " + name + " and port " + port);
             new Thread(() -> {
                 while (running) {
-                    log.info("List of all peers online ----------------------------");
-                    for (PeerAddress peerAddress : peer.peerBean().peerMap().all()) {
-                        log.info(peerAddress.toString());
+                    if (peer.peerBean().peerMap().all().size() > 0) {
+                        noPeersInfoPrinted = false;
+                        log.info("Number of peers online = " + peer.peerBean().peerMap().all().size());
+                        for (PeerAddress peerAddress : peer.peerBean().peerMap().all()) {
+                            log.info("Peer: " + peerAddress.toString());
+                        }
+                        try {
+                            Thread.sleep(10000);
+                        } catch (InterruptedException e) {
+                            return;
+                        }
                     }
-                    try {
-                        Thread.sleep(10000);
-                    } catch (InterruptedException e) {
-                        return;
+                    else if (noPeersInfoPrinted) {
+                        log.info("No peers online");
+                        noPeersInfoPrinted = true;
                     }
                 }
             }).start();
