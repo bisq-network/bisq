@@ -32,7 +32,7 @@ import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestOffererPubl
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestTakeOfferMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessTakeOfferFeePayedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.RespondToTakeOfferRequest;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.SendBankTransferInitedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.SendBankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendDepositTxIdToTaker;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.RequestDepositPayment;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SetupListenerForBlockChainConfirmation;
@@ -45,7 +45,7 @@ import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerProtocol;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
 import io.bitsquare.trade.protocol.trade.taker.tasks.PayDeposit;
 import io.bitsquare.trade.protocol.trade.taker.tasks.PayTakeOfferFee;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessBankTransferInitedMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessBankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRespondToTakeOfferRequestMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRequestDepositPaymentMessage;
@@ -122,7 +122,7 @@ public class DebugView extends InitializableView {
 
                         SignPayoutTx.class,
                         VerifyTakeOfferFeePayment.class,
-                        SendBankTransferInitedMessage.class,
+                        SendBankTransferStartedMessage.class,
 
                         ProcessPayoutTxPublishedMessage.class,
                         Boolean.class, /* used as seperator*/
@@ -146,7 +146,7 @@ public class DebugView extends InitializableView {
                         ProcessDepositTxPublishedMessage.class,
                         TakerCommitDepositTx.class,
 
-                        ProcessBankTransferInitedMessage.class,
+                        ProcessBankTransferStartedMessage.class,
 
                         SignAndPublishPayoutTx.class,
                         VerifyOfferFeePayment.class,

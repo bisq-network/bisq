@@ -30,7 +30,7 @@ import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
 import io.bitsquare.trade.protocol.trade.taker.tasks.GetPeerAddress;
 import io.bitsquare.trade.protocol.trade.taker.tasks.PayDeposit;
 import io.bitsquare.trade.protocol.trade.taker.tasks.PayTakeOfferFee;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessBankTransferInitedMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessBankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRequestDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRespondToTakeOfferRequestMessage;
@@ -153,7 +153,7 @@ public class SellerAsTakerProtocol {
         taskRunner.run();
     }
 
-    private void handleBankTransferInitedMessage(BankTransferStartedMessage tradeMessage) {
+    private void handleBankTransferStartedMessage(BankTransferStartedMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
         SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
@@ -165,7 +165,7 @@ public class SellerAsTakerProtocol {
                     log.error(errorMessage);
                 }
         );
-        taskRunner.addTasks(ProcessBankTransferInitedMessage.class);
+        taskRunner.addTasks(ProcessBankTransferStartedMessage.class);
         taskRunner.run();
     }
 
@@ -213,7 +213,7 @@ public class SellerAsTakerProtocol {
                     handleDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
                 }
                 else if (tradeMessage instanceof BankTransferStartedMessage) {
-                    handleBankTransferInitedMessage((BankTransferStartedMessage) tradeMessage);
+                    handleBankTransferStartedMessage((BankTransferStartedMessage) tradeMessage);
                 }
                 else {
                     log.error("Incoming message not supported. " + tradeMessage);

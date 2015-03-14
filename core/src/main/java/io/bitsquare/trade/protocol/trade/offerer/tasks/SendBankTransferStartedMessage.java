@@ -26,10 +26,10 @@ import io.bitsquare.util.taskrunner.TaskRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendBankTransferInitedMessage extends Task<BuyerAsOffererModel> {
-    private static final Logger log = LoggerFactory.getLogger(SendBankTransferInitedMessage.class);
+public class SendBankTransferStartedMessage extends Task<BuyerAsOffererModel> {
+    private static final Logger log = LoggerFactory.getLogger(SendBankTransferStartedMessage.class);
 
-    public SendBankTransferInitedMessage(TaskRunner taskHandler, BuyerAsOffererModel model) {
+    public SendBankTransferStartedMessage(TaskRunner taskHandler, BuyerAsOffererModel model) {
         super(taskHandler, model);
     }
 
@@ -38,8 +38,7 @@ public class SendBankTransferInitedMessage extends Task<BuyerAsOffererModel> {
         BankTransferStartedMessage tradeMessage = new BankTransferStartedMessage(
                 model.getTrade().getId(),
                 model.getDepositTx(),
-                model.getOffererSignatureR(),
-                model.getOffererSignatureS(),
+                model.getOffererSignature().encodeToDER(),
                 model.getOffererPaybackAmount(),
                 model.getTakerPaybackAmount(),
                 model.getOffererPaybackAddress());

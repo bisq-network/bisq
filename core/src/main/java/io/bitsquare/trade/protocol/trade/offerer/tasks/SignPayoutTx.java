@@ -54,9 +54,7 @@ public class SignPayoutTx extends Task<BuyerAsOffererModel> {
                     model.getTrade().getId());
 
             model.setDepositTx(result.getValue());
-            ECKey.ECDSASignature offererSignature = result.getKey();
-            model.setOffererSignatureR(offererSignature.r.toString());
-            model.setOffererSignatureS(offererSignature.s.toString());
+            model.setOffererSignature(result.getKey());
             model.setOffererPaybackAmount(offererPaybackAmount);
             model.setTakerPaybackAmount(takerPaybackAmount);
 

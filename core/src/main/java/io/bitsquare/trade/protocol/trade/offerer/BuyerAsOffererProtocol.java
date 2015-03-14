@@ -28,7 +28,7 @@ import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestTakeOfferMe
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessTakeOfferFeePayedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.RequestDepositPayment;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.RespondToTakeOfferRequest;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.SendBankTransferInitedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.SendBankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendDepositTxIdToTaker;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SetupListenerForBlockChainConfirmation;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SignAndPublishDepositTx;
@@ -156,7 +156,7 @@ public class BuyerAsOffererProtocol {
         taskRunner.addTasks(
                 SignPayoutTx.class,
                 VerifyTakeOfferFeePayment.class,
-                SendBankTransferInitedMessage.class
+                SendBankTransferStartedMessage.class
         );
         taskRunner.run();
     }

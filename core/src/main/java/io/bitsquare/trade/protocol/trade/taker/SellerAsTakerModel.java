@@ -27,6 +27,7 @@ import io.bitsquare.trade.protocol.trade.OfferSharedModel;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 
 import org.slf4j.Logger;
@@ -48,8 +49,7 @@ public class SellerAsTakerModel extends OfferSharedModel {
     private Coin takerPaybackAmount;
     private byte[] offererPubKey;
     private long offererTxOutIndex;
-    private String offererSignatureR;
-    private String offererSignatureS;
+    private ECKey.ECDSASignature offererSignature;
     private Coin offererPaybackAmount;
     private String offererPayoutAddress;
 
@@ -131,20 +131,12 @@ public class SellerAsTakerModel extends OfferSharedModel {
         this.depositTx = depositTx;
     }
 
-    public String getOffererSignatureR() {
-        return offererSignatureR;
+    public ECKey.ECDSASignature getOffererSignature() {
+        return offererSignature;
     }
 
-    public void setOffererSignatureR(String offererSignatureR) {
-        this.offererSignatureR = offererSignatureR;
-    }
-
-    public String getOffererSignatureS() {
-        return offererSignatureS;
-    }
-
-    public void setOffererSignatureS(String offererSignatureS) {
-        this.offererSignatureS = offererSignatureS;
+    public void setOffererSignature(ECKey.ECDSASignature offererSignature) {
+        this.offererSignature = offererSignature;
     }
 
     public Coin getOffererPaybackAmount() {

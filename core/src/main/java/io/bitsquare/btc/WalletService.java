@@ -59,8 +59,6 @@ import com.google.common.util.concurrent.Service;
 import java.io.File;
 import java.io.Serializable;
 
-import java.math.BigInteger;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -909,13 +907,11 @@ public class WalletService {
     }
 
     // 5. step payout tx: Offerer creates payout tx and signs it
-
     public Pair<ECKey.ECDSASignature, Transaction> offererCreatesAndSignsPayoutTx(String depositTxID,
-                                                                             Coin offererPaybackAmount,
-                                                                             Coin takerPaybackAmount,
-                                                                             String takerAddress,
-                                                                             String tradeID)
-            throws AddressFormatException {
+                                                                                  Coin offererPaybackAmount,
+                                                                                  Coin takerPaybackAmount,
+                                                                                  String takerAddress,
+                                                                                  String tradeID) throws AddressFormatException {
         log.debug("offererCreatesAndSignsPayoutTx");
         log.trace("inputs: ");
         log.trace("depositTxID=" + depositTxID);
@@ -925,7 +921,7 @@ public class WalletService {
 
         // Offerer has published depositTx earlier, so he has it in his wallet
         Transaction depositTx = wallet.getTransaction(new Sha256Hash(depositTxID));
-       // String depositTxAsHex = Utils.HEX.encode(depositTx.bitcoinSerialize());
+        // String depositTxAsHex = Utils.HEX.encode(depositTx.bitcoinSerialize());
 
         // We create the payout tx
         Transaction tx = createPayoutTx(depositTx, offererPaybackAmount, takerPaybackAmount,
@@ -947,8 +943,7 @@ public class WalletService {
 
     // 6. step payout tx: Taker signs and publish tx
     public void takerSignsAndSendsTx(Transaction depositTx,
-                                     String offererSignatureR,
-                                     String offererSignatureS,
+                                     ECKey.ECDSASignature offererSignature,
                                      Coin offererPaybackAmount,
                                      Coin takerPaybackAmount,
                                      String offererAddress,
@@ -957,16 +952,14 @@ public class WalletService {
         log.debug("takerSignsAndSendsTx");
         log.trace("inputs: ");
         log.trace("depositTx=" + depositTx);
-        log.trace("offererSignatureR=" + offererSignatureR);
-        log.trace("offererSignatureS=" + offererSignatureS);
+        log.trace("offererSignature=" + offererSignature);
         log.trace("offererPaybackAmount=" + offererPaybackAmount.toFriendlyString());
         log.trace("takerPaybackAmount=" + takerPaybackAmount.toFriendlyString());
         log.trace("offererAddress=" + offererAddress);
         log.trace("callback=" + callback);
 
         // We create the payout tx
-        Transaction tx = createPayoutTx(depositTx, offererPaybackAmount, takerPaybackAmount, offererAddress,
-                getAddressInfo(tradeID).getAddressString());
+        Transaction tx = createPayoutTx(depositTx, offererPaybackAmount, takerPaybackAmount, offererAddress, getAddressInfo(tradeID).getAddressString());
 
         // We sign that tx with our key and apply the signature form the offerer
         TransactionOutput multiSigOutput = tx.getInput(0).getConnectedOutput();
@@ -977,8 +970,6 @@ public class WalletService {
         ECKey.ECDSASignature takerSignature = getAddressInfo(tradeID).getKey().sign(sigHash);
         TransactionSignature takerTxSig = new TransactionSignature(takerSignature, Transaction.SigHash.ALL, false);
 
-        ECKey.ECDSASignature offererSignature =
-                new ECKey.ECDSASignature(new BigInteger(offererSignatureR), new BigInteger(offererSignatureS));
         TransactionSignature offererTxSig = new TransactionSignature(offererSignature, Transaction.SigHash.ALL, false);
 
         Script inputScript = ScriptBuilder.createMultiSigInputScript(ImmutableList.of(offererTxSig, takerTxSig));
@@ -1036,7 +1027,7 @@ public class WalletService {
         log.trace("offererAddress=" + offererAddress);
         log.trace("takerAddress=" + takerAddress);
 
-       // Transaction depositTx = new Transaction(params, Utils.parseAsHexOrBase58(depositTx));
+        // Transaction depositTx = new Transaction(params, Utils.parseAsHexOrBase58(depositTx));
         TransactionOutput multiSigOutput = depositTx.getOutput(0);
         Transaction tx = new Transaction(params);
         tx.addInput(multiSigOutput);
