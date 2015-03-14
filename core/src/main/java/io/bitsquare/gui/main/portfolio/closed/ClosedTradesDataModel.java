@@ -22,11 +22,10 @@ import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
-
-import com.google.inject.Inject;
-
 import io.bitsquare.viewfx.model.Activatable;
 import io.bitsquare.viewfx.model.DataModel;
+
+import com.google.inject.Inject;
 
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;

@@ -23,6 +23,7 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
+import io.bitsquare.viewfx.model.DataModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -33,8 +34,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 
 import javax.annotation.Nullable;
-
-import io.bitsquare.viewfx.model.DataModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;

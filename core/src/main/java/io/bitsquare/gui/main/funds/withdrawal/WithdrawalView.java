@@ -25,6 +25,8 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.util.Utilities;
+import io.bitsquare.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.viewfx.view.FxmlView;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
@@ -37,9 +39,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.ActivatableViewAndModel;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;

@@ -17,10 +17,10 @@
 
 package io.bitsquare.gui.main.settings.application;
 
-import com.google.inject.Inject;
-
-import io.bitsquare.viewfx.model.ViewModel;
 import io.bitsquare.viewfx.model.ActivatableWithDataModel;
+import io.bitsquare.viewfx.model.ViewModel;
+
+import com.google.inject.Inject;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.StringProperty;

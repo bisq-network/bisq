@@ -26,15 +26,14 @@ import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Preferences;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.viewfx.model.Activatable;
+import io.bitsquare.viewfx.model.DataModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
 import com.google.inject.Inject;
-
-import io.bitsquare.viewfx.model.Activatable;
-import io.bitsquare.viewfx.model.DataModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;

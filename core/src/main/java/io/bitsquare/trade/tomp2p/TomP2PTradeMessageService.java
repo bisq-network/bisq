@@ -22,8 +22,8 @@ import io.bitsquare.network.Peer;
 import io.bitsquare.network.tomp2p.TomP2PNode;
 import io.bitsquare.network.tomp2p.TomP2PPeer;
 import io.bitsquare.trade.TradeMessageService;
-import io.bitsquare.trade.listeners.GetPeerAddressListener;
 import io.bitsquare.trade.handlers.MessageHandler;
+import io.bitsquare.trade.listeners.GetPeerAddressListener;
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.user.User;
 

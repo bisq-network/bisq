@@ -18,10 +18,9 @@
 package io.bitsquare.gui.main.account;
 
 import io.bitsquare.user.User;
+import io.bitsquare.viewfx.model.ViewModel;
 
 import com.google.inject.Inject;
-
-import io.bitsquare.viewfx.model.ViewModel;
 
 class AccountViewModel implements ViewModel {
 

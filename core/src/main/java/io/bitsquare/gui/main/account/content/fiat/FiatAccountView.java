@@ -28,16 +28,15 @@ import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
+import io.bitsquare.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.Wizard;
 
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
 
 import javax.inject.Inject;
-
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.Wizard;
-import io.bitsquare.viewfx.view.ActivatableViewAndModel;
 
 import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;

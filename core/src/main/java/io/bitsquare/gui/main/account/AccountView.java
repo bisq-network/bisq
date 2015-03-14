@@ -22,14 +22,13 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.arbitrator.ArbitratorSettingsView;
 import io.bitsquare.gui.main.account.settings.AccountSettingsView;
 import io.bitsquare.gui.main.account.setup.AccountSetupWizard;
-
-import javax.inject.Inject;
-
+import io.bitsquare.viewfx.view.ActivatableView;
+import io.bitsquare.viewfx.view.CachingViewLoader;
 import io.bitsquare.viewfx.view.FxmlView;
 import io.bitsquare.viewfx.view.View;
 import io.bitsquare.viewfx.view.ViewLoader;
-import io.bitsquare.viewfx.view.ActivatableView;
-import io.bitsquare.viewfx.view.CachingViewLoader;
+
+import javax.inject.Inject;
 
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;

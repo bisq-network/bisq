@@ -17,8 +17,6 @@
 
 package io.bitsquare.viewfx.view;
 
-import io.bitsquare.viewfx.view.View;
-
 import javafx.fxml.FXML;
 import javafx.scene.*;
 

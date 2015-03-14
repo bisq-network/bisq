@@ -17,11 +17,11 @@
 
 package io.bitsquare.viewfx.view.guice;
 
+import io.bitsquare.viewfx.view.ViewFactory;
+
 import com.google.common.base.Preconditions;
 
 import com.google.inject.Injector;
-
-import io.bitsquare.viewfx.view.ViewFactory;
 
 public class InjectorViewFactory implements ViewFactory {
 

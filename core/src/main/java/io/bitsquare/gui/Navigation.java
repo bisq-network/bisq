@@ -20,6 +20,8 @@ package io.bitsquare.gui;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.trade.BuyView;
 import io.bitsquare.persistence.Persistence;
+import io.bitsquare.viewfx.view.View;
+import io.bitsquare.viewfx.view.ViewPath;
 
 import com.google.inject.Inject;
 
@@ -28,9 +30,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import io.bitsquare.viewfx.view.View;
-import io.bitsquare.viewfx.view.ViewPath;
 
 public class Navigation {
 

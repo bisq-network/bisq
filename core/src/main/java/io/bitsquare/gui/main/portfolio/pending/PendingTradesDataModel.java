@@ -26,6 +26,8 @@ import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
+import io.bitsquare.viewfx.model.Activatable;
+import io.bitsquare.viewfx.model.DataModel;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
@@ -38,9 +40,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 
 import java.util.Optional;
-
-import io.bitsquare.viewfx.model.Activatable;
-import io.bitsquare.viewfx.model.DataModel;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;

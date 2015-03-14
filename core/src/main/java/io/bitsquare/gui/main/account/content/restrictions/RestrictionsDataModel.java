@@ -19,15 +19,17 @@ package io.bitsquare.gui.main.account.content.restrictions;
 
 import io.bitsquare.account.AccountSettings;
 import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.arbitrator.ArbitratorMessageService;
 import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.Region;
-import io.bitsquare.arbitrator.ArbitratorMessageService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
+import io.bitsquare.viewfx.model.Activatable;
+import io.bitsquare.viewfx.model.DataModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
@@ -38,9 +40,6 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
-import io.bitsquare.viewfx.model.Activatable;
-import io.bitsquare.viewfx.model.DataModel;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

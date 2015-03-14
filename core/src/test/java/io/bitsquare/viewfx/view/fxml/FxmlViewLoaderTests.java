@@ -18,14 +18,13 @@
 package io.bitsquare.viewfx.view.fxml;
 
 import io.bitsquare.viewfx.ViewfxException;
+import io.bitsquare.viewfx.view.AbstractView;
 import io.bitsquare.viewfx.view.FxmlView;
 import io.bitsquare.viewfx.view.View;
-
-import java.util.ResourceBundle;
-
 import io.bitsquare.viewfx.view.ViewFactory;
 import io.bitsquare.viewfx.view.ViewLoader;
-import io.bitsquare.viewfx.view.AbstractView;
+
+import java.util.ResourceBundle;
 
 import javafx.fxml.LoadException;
 

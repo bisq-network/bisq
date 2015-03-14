@@ -17,13 +17,9 @@
 
 package io.bitsquare.viewfx.view;
 
-import io.bitsquare.viewfx.view.View;
-
 import java.util.HashMap;
 
 import javax.inject.Inject;
-
-import io.bitsquare.viewfx.view.ViewLoader;
 
 public class CachingViewLoader implements ViewLoader {
 

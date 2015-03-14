@@ -19,12 +19,11 @@ package io.bitsquare.gui.main.account.content.seedwords;
 
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.InitializableView;
+import io.bitsquare.viewfx.view.Wizard;
 
 import javax.inject.Inject;
-
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.Wizard;
-import io.bitsquare.viewfx.view.InitializableView;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;

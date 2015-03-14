@@ -20,6 +20,8 @@ package io.bitsquare.viewfx.view.fxml;
 import io.bitsquare.viewfx.ViewfxException;
 import io.bitsquare.viewfx.view.FxmlView;
 import io.bitsquare.viewfx.view.View;
+import io.bitsquare.viewfx.view.ViewFactory;
+import io.bitsquare.viewfx.view.ViewLoader;
 
 import java.io.IOException;
 
@@ -28,9 +30,6 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import javax.inject.Inject;
-
-import io.bitsquare.viewfx.view.ViewFactory;
-import io.bitsquare.viewfx.view.ViewLoader;
 
 import javafx.fxml.FXMLLoader;
 

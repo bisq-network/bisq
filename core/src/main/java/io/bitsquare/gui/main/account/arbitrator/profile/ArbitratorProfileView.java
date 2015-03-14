@@ -19,11 +19,10 @@ package io.bitsquare.gui.main.account.arbitrator.profile;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.viewfx.view.AbstractView;
+import io.bitsquare.viewfx.view.FxmlView;
 
 import javax.inject.Inject;
-
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.AbstractView;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;

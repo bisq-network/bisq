@@ -22,6 +22,8 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.viewfx.model.ActivatableWithDataModel;
+import io.bitsquare.viewfx.model.ViewModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -29,9 +31,6 @@ import org.bitcoinj.utils.Fiat;
 import com.google.inject.Inject;
 
 import java.util.Date;
-
-import io.bitsquare.viewfx.model.ViewModel;
-import io.bitsquare.viewfx.model.ActivatableWithDataModel;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.BooleanProperty;

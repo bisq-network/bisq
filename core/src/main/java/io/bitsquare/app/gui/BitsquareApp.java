@@ -26,6 +26,10 @@ import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
+import io.bitsquare.viewfx.view.CachingViewLoader;
+import io.bitsquare.viewfx.view.View;
+import io.bitsquare.viewfx.view.ViewLoader;
+import io.bitsquare.viewfx.view.guice.InjectorViewFactory;
 
 import com.google.common.base.Throwables;
 
@@ -33,11 +37,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import java.io.IOException;
-
-import io.bitsquare.viewfx.view.View;
-import io.bitsquare.viewfx.view.ViewLoader;
-import io.bitsquare.viewfx.view.CachingViewLoader;
-import io.bitsquare.viewfx.view.guice.InjectorViewFactory;
 
 import javafx.application.Application;
 import javafx.scene.*;

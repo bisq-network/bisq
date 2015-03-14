@@ -41,8 +41,8 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
 import static io.bitsquare.app.BitsquareEnvironment.*;
-import static io.bitsquare.network.tomp2p.TomP2PNetworkModule.*;
 import static io.bitsquare.network.Node.*;
+import static io.bitsquare.network.tomp2p.TomP2PNetworkModule.*;
 import static java.util.Arrays.asList;
 
 public class BitsquareAppMain extends BitsquareExecutable {

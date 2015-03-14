@@ -24,15 +24,14 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.InitializableView;
+import io.bitsquare.viewfx.view.Wizard;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
-
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.Wizard;
-import io.bitsquare.viewfx.view.InitializableView;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;

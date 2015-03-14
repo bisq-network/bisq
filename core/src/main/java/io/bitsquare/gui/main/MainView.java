@@ -32,15 +32,14 @@ import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.main.trade.BuyView;
 import io.bitsquare.gui.main.trade.SellView;
 import io.bitsquare.gui.util.Transitions;
+import io.bitsquare.viewfx.view.CachingViewLoader;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.InitializableView;
+import io.bitsquare.viewfx.view.View;
+import io.bitsquare.viewfx.view.ViewLoader;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.View;
-import io.bitsquare.viewfx.view.ViewLoader;
-import io.bitsquare.viewfx.view.CachingViewLoader;
-import io.bitsquare.viewfx.view.InitializableView;
 
 import javafx.application.Platform;
 import javafx.geometry.Insets;

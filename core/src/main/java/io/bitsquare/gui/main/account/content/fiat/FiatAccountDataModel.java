@@ -26,13 +26,12 @@ import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.Region;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
+import io.bitsquare.viewfx.model.Activatable;
+import io.bitsquare.viewfx.model.DataModel;
 
 import com.google.inject.Inject;
 
 import java.util.Currency;
-
-import io.bitsquare.viewfx.model.Activatable;
-import io.bitsquare.viewfx.model.DataModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;

@@ -18,11 +18,10 @@
 package io.bitsquare.gui.main.settings.application;
 
 import io.bitsquare.settings.Preferences;
-
-import com.google.inject.Inject;
-
 import io.bitsquare.viewfx.model.Activatable;
 import io.bitsquare.viewfx.model.DataModel;
+
+import com.google.inject.Inject;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;

@@ -18,10 +18,10 @@
 package io.bitsquare.network.tomp2p;
 
 import io.bitsquare.BitsquareException;
-import io.bitsquare.network.MessageBroker;
 import io.bitsquare.network.BootstrapState;
 import io.bitsquare.network.ClientNode;
 import io.bitsquare.network.ConnectionType;
+import io.bitsquare.network.MessageBroker;
 import io.bitsquare.network.NetworkException;
 import io.bitsquare.network.Node;
 

@@ -21,15 +21,14 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.funds.transactions.TransactionsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
-
-import javax.inject.Inject;
-
 import io.bitsquare.viewfx.model.Activatable;
+import io.bitsquare.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.viewfx.view.CachingViewLoader;
 import io.bitsquare.viewfx.view.FxmlView;
 import io.bitsquare.viewfx.view.View;
 import io.bitsquare.viewfx.view.ViewLoader;
-import io.bitsquare.viewfx.view.ActivatableViewAndModel;
-import io.bitsquare.viewfx.view.CachingViewLoader;
+
+import javax.inject.Inject;
 
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;

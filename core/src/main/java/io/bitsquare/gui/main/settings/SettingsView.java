@@ -22,15 +22,14 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.settings.application.PreferencesView;
 import io.bitsquare.gui.main.settings.network.NetworkSettingsView;
 import io.bitsquare.settings.Preferences;
-
-import javax.inject.Inject;
-
 import io.bitsquare.viewfx.model.Activatable;
+import io.bitsquare.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.viewfx.view.CachingViewLoader;
 import io.bitsquare.viewfx.view.FxmlView;
 import io.bitsquare.viewfx.view.View;
 import io.bitsquare.viewfx.view.ViewLoader;
-import io.bitsquare.viewfx.view.ActivatableViewAndModel;
-import io.bitsquare.viewfx.view.CachingViewLoader;
+
+import javax.inject.Inject;
 
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;

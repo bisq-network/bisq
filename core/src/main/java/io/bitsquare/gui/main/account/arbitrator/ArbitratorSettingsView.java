@@ -18,14 +18,13 @@
 package io.bitsquare.gui.main.account.arbitrator;
 
 import io.bitsquare.gui.main.account.arbitrator.registration.ArbitratorRegistrationView;
-
-import javax.inject.Inject;
-
+import io.bitsquare.viewfx.view.AbstractView;
+import io.bitsquare.viewfx.view.CachingViewLoader;
 import io.bitsquare.viewfx.view.FxmlView;
 import io.bitsquare.viewfx.view.View;
 import io.bitsquare.viewfx.view.ViewLoader;
-import io.bitsquare.viewfx.view.AbstractView;
-import io.bitsquare.viewfx.view.CachingViewLoader;
+
+import javax.inject.Inject;
 
 import javafx.fxml.FXML;
 import javafx.scene.*;

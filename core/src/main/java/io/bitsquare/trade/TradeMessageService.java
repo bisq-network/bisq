@@ -20,8 +20,8 @@ package io.bitsquare.trade;
 import io.bitsquare.network.Message;
 import io.bitsquare.network.MessageBroker;
 import io.bitsquare.network.Peer;
-import io.bitsquare.trade.listeners.GetPeerAddressListener;
 import io.bitsquare.trade.handlers.MessageHandler;
+import io.bitsquare.trade.listeners.GetPeerAddressListener;
 import io.bitsquare.trade.listeners.SendMessageListener;
 
 import java.security.PublicKey;

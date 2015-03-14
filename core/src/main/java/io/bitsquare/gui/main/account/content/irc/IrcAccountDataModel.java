@@ -19,16 +19,18 @@ package io.bitsquare.gui.main.account.content.irc;
 
 import io.bitsquare.account.AccountSettings;
 import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.arbitrator.ArbitratorMessageService;
 import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.arbitrator.ArbitratorMessageService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
+import io.bitsquare.viewfx.model.Activatable;
+import io.bitsquare.viewfx.model.DataModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
@@ -40,9 +42,6 @@ import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
-
-import io.bitsquare.viewfx.model.Activatable;
-import io.bitsquare.viewfx.model.DataModel;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;

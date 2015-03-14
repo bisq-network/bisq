@@ -19,22 +19,21 @@ package io.bitsquare.gui.main.account.arbitrator.browser;
 
 import io.bitsquare.account.AccountSettings;
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.main.account.arbitrator.profile.ArbitratorProfileView;
-import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.arbitrator.ArbitratorMessageService;
 import io.bitsquare.arbitrator.listeners.ArbitratorListener;
+import io.bitsquare.gui.main.account.arbitrator.profile.ArbitratorProfileView;
+import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.persistence.Persistence;
+import io.bitsquare.viewfx.view.ActivatableView;
+import io.bitsquare.viewfx.view.CachingViewLoader;
+import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.viewfx.view.View;
+import io.bitsquare.viewfx.view.ViewLoader;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
-
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.View;
-import io.bitsquare.viewfx.view.ViewLoader;
-import io.bitsquare.viewfx.view.ActivatableView;
-import io.bitsquare.viewfx.view.CachingViewLoader;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
