@@ -36,6 +36,7 @@ import java.net.URI;
 import java.util.function.Function;
 
 import javafx.animation.AnimationTimer;
+import javafx.application.Platform;
 import javafx.scene.input.*;
 
 import org.slf4j.Logger;
@@ -209,7 +210,7 @@ public class Utilities {
             @Override
             public void handle(long arg0) {
                 if (System.currentTimeMillis() > delay + lastTimeStamp) {
-                    callback.apply(this);
+                    Platform.runLater(() -> callback.apply(this));
                     this.stop();
                 }
             }

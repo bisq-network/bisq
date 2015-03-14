@@ -96,6 +96,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private final Navigation navigation;
     private final OverlayManager overlayManager;
     private ChangeListener<Offer.State> offerIsAvailableChangeListener;
+    private ChangeListener<String> errorMessageChangeListener;
     private TradeView.CloseHandler closeHandler;
 
     @Inject
@@ -117,6 +118,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     protected void doDeactivate() {
         if (offerIsAvailableChangeListener != null)
             model.offerIsAvailable.removeListener(offerIsAvailableChangeListener);
+
+        if (errorMessageChangeListener != null)
+            model.errorMessage.removeListener(errorMessageChangeListener);
     }
 
     public void initWithData(Direction direction, Coin amount, Offer offer) {
@@ -152,15 +156,20 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         model.offerIsAvailable.addListener(offerIsAvailableChangeListener);
         handleOfferIsAvailableState(model.offerIsAvailable.get());
 
-        // In case of returning to a canceled or failed take offer request and if trade wallet is sufficient funded we display directly the payment screen
-        if (!model.isTakeOfferButtonDisabled.get()) {
-            showPayFundsScreen();
-            showPaymentInfoScreenButton.setVisible(false);
-        }
+        errorMessageChangeListener = (ov, oldValue, newValue) -> handleErrorMessage(newValue);
+        model.errorMessage.addListener(errorMessageChangeListener);
     }
 
     public void setCloseHandler(TradeView.CloseHandler closeHandler) {
         this.closeHandler = closeHandler;
+    }
+
+
+    private void handleErrorMessage(String errorMessage) {
+        if (errorMessage != null)
+            Popups.openErrorPopup("An error occurred", errorMessage);
+
+        model.errorMessage.set(null);
     }
 
     private void handleOfferIsAvailableState(Offer.State state) {
@@ -173,8 +182,16 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 isOfferAvailableProgressIndicator.setProgress(0);
                 isOfferAvailableProgressIndicator.setVisible(false);
                 isOfferAvailableProgressIndicator.setManaged(false);
-                if (model.isTakeOfferButtonDisabled.get())
+
+                // In case of returning to a canceled or failed take offer request and if trade wallet is sufficient funded we display directly the payment 
+                // screen
+                if (!model.isTakeOfferButtonDisabled.get()) {
+                    showPayFundsScreen();
+                    showPaymentInfoScreenButton.setVisible(false);
+                }
+                else {
                     showPaymentInfoScreenButton.setVisible(true);
+                }
                 break;
             case OFFERER_OFFLINE:
                 Popups.openWarningPopup("You cannot take that offer", "The offerer is offline.");

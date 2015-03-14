@@ -359,6 +359,9 @@ public class TradeManager {
                 signatureService,
                 user);
 
+        if (pendingTrades.containsKey(openOffer.getId()))
+            model.setTrade(pendingTrades.get(openOffer.getId()));
+
         openOffer.stateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("openOffer state = " + newValue);
             switch (newValue) {

@@ -301,6 +301,7 @@ public class TomP2PNode implements ClientNode {
             else {
                 throw new RuntimeException("Received msg from myself. That must never happen.");
             }
+
             return true;
         });
     }

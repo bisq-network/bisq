@@ -41,9 +41,9 @@ public class RespondToTakeOfferRequest extends Task<BuyerAsOffererModel> {
         offerIsAvailable = model.getOpenOffer().getState() == OpenOffer.State.OPEN;
 
         if (offerIsAvailable) {
-            model.getOpenOffer().setState(OpenOffer.State.OFFER_ACCEPTED);
             Trade trade = new Trade(model.getOpenOffer().getOffer());
             model.setTrade(trade);
+            model.getOpenOffer().setState(OpenOffer.State.OFFER_ACCEPTED);
         }
         else {
             log.info("Received take offer request but the offer not marked as open anymore.");

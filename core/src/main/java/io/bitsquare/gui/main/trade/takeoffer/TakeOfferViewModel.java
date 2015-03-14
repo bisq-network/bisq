@@ -24,6 +24,7 @@ import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.util.Utilities;
 import io.bitsquare.viewfx.model.ActivatableWithDataModel;
 import io.bitsquare.viewfx.model.ViewModel;
 
@@ -32,6 +33,7 @@ import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
+import javafx.animation.AnimationTimer;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -39,9 +41,13 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> implements ViewModel {
+    private static final Logger log = LoggerFactory.getLogger(TakeOfferViewModel.class);
 
     private String fiatCode;
     private String amountRange;
@@ -73,6 +79,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final StringProperty transactionId = new SimpleStringProperty();
     final StringProperty requestTakeOfferErrorMessage = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
+    final StringProperty errorMessage = new SimpleStringProperty();
 
 
     final BooleanProperty isTakeOfferButtonVisible = new SimpleBooleanProperty(false);
@@ -86,6 +93,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     // Needed for the addressTextField
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
+    private AnimationTimer timeoutTimer;
 
 
     @Inject
@@ -143,6 +151,14 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         isTakeOfferButtonDisabled.set(true);
         isTakeOfferSpinnerVisible.set(true);
+
+        timeoutTimer = Utilities.setTimeout(20000, animationTimer -> {
+            errorMessage.set("Timeout reached. Maybe there are connection problems. Please try again later.");
+            updateButtonDisableState();
+            isTakeOfferSpinnerVisible.set(false);
+            return null;
+        });
+        timeoutTimer.start();
 
         dataModel.takeOffer();
     }
