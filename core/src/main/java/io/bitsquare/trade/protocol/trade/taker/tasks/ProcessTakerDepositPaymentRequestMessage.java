@@ -53,6 +53,6 @@ public class ProcessTakerDepositPaymentRequestMessage extends Task<SellerAsTaker
     }
 
     @Override
-    protected void applyStateOnFault() {
+    protected void updateStateOnFault() {
     }
 }

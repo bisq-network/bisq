@@ -151,8 +151,7 @@ public class TomP2PTradeMessageService implements TradeMessageService {
     @Override
     public void handleMessage(Object message, Peer sender) {
         if (message instanceof Message && sender instanceof TomP2PPeer) {
-            executor.execute(() -> messageHandlers.stream().forEach(e ->
-                    e.handleMessage((Message) message, sender)));
+            executor.execute(() -> messageHandlers.stream().forEach(e -> e.handleMessage((Message) message, sender)));
         }
     }
 }

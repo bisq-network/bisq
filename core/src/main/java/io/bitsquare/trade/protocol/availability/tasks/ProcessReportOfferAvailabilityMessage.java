@@ -51,7 +51,7 @@ public class ProcessReportOfferAvailabilityMessage extends Task<CheckOfferAvaila
     }
 
     @Override
-    protected void applyStateOnFault() {
+    protected void updateStateOnFault() {
         model.getOffer().setState(Offer.State.AVAILABILITY_CHECK_FAILED);
     }
 }

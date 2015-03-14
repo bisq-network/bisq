@@ -54,7 +54,7 @@ public class ProcessRespondToTakeOfferRequestMessage extends Task<SellerAsTakerM
     }
 
     @Override
-    protected void applyStateOnFault() {
+    protected void updateStateOnFault() {
         model.getTrade().setState(Trade.State.MESSAGE_SENDING_FAILED);
     }
 }

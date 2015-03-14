@@ -38,13 +38,16 @@ import java.util.Locale;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static com.google.common.base.Preconditions.*;
 
 //TODO flatten down?
 
 public class Offer implements Serializable {
     private static final long serialVersionUID = -971164804305475826L;
-
+    private transient static final Logger log = LoggerFactory.getLogger(Offer.class);
 
     public enum State {
         UNKNOWN,
@@ -58,11 +61,10 @@ public class Offer implements Serializable {
     // key attributes for lookup
     private final Direction direction;
     private final Currency currency;
-
     private final String id;
-
     private final Date creationDate;
 
+    //TODO check with latest bitcoinJ version
     // Fiat cause problems with offer removal (don` found out why, but we want plain objects anyway)
     private final long fiatPrice;
     private final Coin amount;
@@ -135,6 +137,7 @@ public class Offer implements Serializable {
         this.state = state;
         getStateProperty().set(state);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters

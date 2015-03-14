@@ -64,7 +64,7 @@ public class RespondToTakeOfferRequest extends Task<BuyerAsOffererModel> {
     }
 
     @Override
-    protected void applyStateOnFault() {
+    protected void updateStateOnFault() {
         if (offerIsAvailable && model.getOpenOffer().getState() == OpenOffer.State.OFFER_ACCEPTED) {
             model.getOpenOffer().setState(OpenOffer.State.OPEN);
             model.setTrade(null);

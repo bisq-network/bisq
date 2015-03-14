@@ -63,7 +63,7 @@ public class PayTakeOfferFee extends Task<SellerAsTakerModel> {
     }
 
     @Override
-    protected void applyStateOnFault() {
+    protected void updateStateOnFault() {
         // As long as the take offer fee was not paid nothing critical happens.
         // The take offer process can be repeated so we reset the trade state.
         appendToErrorMessage("Take offer fee payment failed. Maybe your network connection was lost. Please try again.");

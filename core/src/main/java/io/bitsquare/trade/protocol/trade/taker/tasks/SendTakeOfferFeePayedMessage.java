@@ -68,7 +68,7 @@ public class SendTakeOfferFeePayedMessage extends Task<SellerAsTakerModel> {
     }
 
     @Override
-    protected void applyStateOnFault() {
+    protected void updateStateOnFault() {
         appendToErrorMessage("Sending TakeOfferFeePayedMessage to offerer failed. Maybe the network connection was lost or the offerer lost his connection. " +
                 "We persisted the state of the trade, please try again later or cancel that trade.");
     }

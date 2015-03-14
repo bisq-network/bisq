@@ -45,6 +45,6 @@ public class TakerCommitDepositTx extends Task<SellerAsTakerModel> {
     }
 
     @Override
-    protected void applyStateOnFault() {
+    protected void updateStateOnFault() {
     }
 }

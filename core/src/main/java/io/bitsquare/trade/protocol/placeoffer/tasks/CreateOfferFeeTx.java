@@ -49,7 +49,7 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
     }
 
     @Override
-    protected void applyStateOnFault() {
+    protected void updateStateOnFault() {
         // do nothing
     }
 }

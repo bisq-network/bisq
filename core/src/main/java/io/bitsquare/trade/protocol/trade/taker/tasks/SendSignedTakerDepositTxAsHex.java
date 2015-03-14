@@ -69,6 +69,6 @@ public class SendSignedTakerDepositTxAsHex extends Task<SellerAsTakerModel> {
     }
 
     @Override
-    protected void applyStateOnFault() {
+    protected void updateStateOnFault() {
     }
 }

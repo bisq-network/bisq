@@ -64,7 +64,7 @@ public class RequestTakeOffer extends Task<SellerAsTakerModel> {
     }
 
     @Override
-    protected void applyStateOnFault() {
+    protected void updateStateOnFault() {
         timeoutTimer.stop();
         if (model.getOffer().getState() != Offer.State.OFFERER_OFFLINE)
             model.getOffer().setState(Offer.State.AVAILABILITY_CHECK_FAILED);

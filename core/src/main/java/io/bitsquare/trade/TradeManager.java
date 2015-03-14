@@ -314,7 +314,7 @@ public class TradeManager {
     private void removeOpenOffer(Offer offer,
                                  ResultHandler resultHandler,
                                  ErrorMessageHandler errorMessageHandler,
-                                 boolean removeFromOffererAsBuyerProtocolMap) {
+                                 boolean removeFromBuyerAcceptsOfferProtocolMap) {
         String offerId = offer.getId();
         offerBookService.removeOffer(offer,
                 () -> {
@@ -322,7 +322,7 @@ public class TradeManager {
                         OpenOffer openOffer = openOffers.remove(offerId);
                         disposeCheckOfferAvailabilityRequest(openOffer.getOffer());
                         persistOpenOffers();
-                        if (removeFromOffererAsBuyerProtocolMap && buyerAcceptsOfferProtocolMap.containsKey(offerId)) {
+                        if (removeFromBuyerAcceptsOfferProtocolMap && buyerAcceptsOfferProtocolMap.containsKey(offerId)) {
                             buyerAcceptsOfferProtocolMap.get(offerId).cleanup();
                             buyerAcceptsOfferProtocolMap.remove(offerId);
                         }

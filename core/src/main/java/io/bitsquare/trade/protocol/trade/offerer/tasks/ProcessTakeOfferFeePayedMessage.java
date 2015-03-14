@@ -54,6 +54,6 @@ public class ProcessTakeOfferFeePayedMessage extends Task<BuyerAsOffererModel> {
     }
 
     @Override
-    protected void applyStateOnFault() {
+    protected void updateStateOnFault() {
     }
 }

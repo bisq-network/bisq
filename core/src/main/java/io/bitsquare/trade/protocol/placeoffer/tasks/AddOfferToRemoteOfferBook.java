@@ -44,7 +44,7 @@ public class AddOfferToRemoteOfferBook extends Task<PlaceOfferModel> {
     }
 
     @Override
-    protected void applyStateOnFault() {
+    protected void updateStateOnFault() {
         // do nothing
     }
 }

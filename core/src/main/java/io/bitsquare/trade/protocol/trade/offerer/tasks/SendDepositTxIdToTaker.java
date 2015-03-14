@@ -55,6 +55,6 @@ public class SendDepositTxIdToTaker extends Task<BuyerAsOffererModel> {
     }
 
     @Override
-    protected void applyStateOnFault() {
+    protected void updateStateOnFault() {
     }
 }

@@ -96,7 +96,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private final Navigation navigation;
     private final OverlayManager overlayManager;
     private ChangeListener<Offer.State> offerIsAvailableChangeListener;
-    private ChangeListener<String> errorMessageChangeListener;
     private TradeView.CloseHandler closeHandler;
 
     @Inject
@@ -118,9 +117,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     protected void doDeactivate() {
         if (offerIsAvailableChangeListener != null)
             model.offerIsAvailable.removeListener(offerIsAvailableChangeListener);
-
-        if (errorMessageChangeListener != null)
-            model.errorMessage.removeListener(errorMessageChangeListener);
     }
 
     public void initWithData(Direction direction, Coin amount, Offer offer) {
@@ -155,21 +151,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         offerIsAvailableChangeListener = (ov, oldValue, newValue) -> handleOfferIsAvailableState(newValue);
         model.offerIsAvailable.addListener(offerIsAvailableChangeListener);
         handleOfferIsAvailableState(model.offerIsAvailable.get());
-
-        errorMessageChangeListener = (ov, oldValue, newValue) -> handleErrorMessage(newValue);
-        model.errorMessage.addListener(errorMessageChangeListener);
     }
 
     public void setCloseHandler(TradeView.CloseHandler closeHandler) {
         this.closeHandler = closeHandler;
-    }
-
-
-    private void handleErrorMessage(String errorMessage) {
-        if (errorMessage != null)
-            Popups.openErrorPopup("An error occurred", errorMessage);
-
-        model.errorMessage.set(null);
     }
 
     private void handleOfferIsAvailableState(Offer.State state) {

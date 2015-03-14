@@ -77,7 +77,7 @@ public class SellerAsTakerProtocol {
 
         SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
                 () -> {
-                    log.debug("sequence at handleRequestTakeOfferUIEvent completed");
+                    log.debug("taskRunner at handleRequestTakeOfferUIEvent completed");
                 },
                 (errorMessage) -> {
                     log.error(errorMessage);
@@ -100,7 +100,7 @@ public class SellerAsTakerProtocol {
 
         SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
                 () -> {
-                    log.debug("sequence at handleRespondToTakeOfferRequestMessage completed");
+                    log.debug("taskRunner at handleRespondToTakeOfferRequestMessage completed");
                 },
                 (errorMessage) -> {
                     log.error(errorMessage);
@@ -119,7 +119,7 @@ public class SellerAsTakerProtocol {
 
         SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
                 () -> {
-                    log.debug("sequence at handleTakerDepositPaymentRequestMessage completed");
+                    log.debug("taskRunner at handleTakerDepositPaymentRequestMessage completed");
                 },
                 (errorMessage) -> {
                     log.error(errorMessage);
@@ -140,7 +140,7 @@ public class SellerAsTakerProtocol {
 
         SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
                 () -> {
-                    log.debug("sequence at handleDepositTxPublishedMessage completed");
+                    log.debug("taskRunner at handleDepositTxPublishedMessage completed");
                 },
                 (errorMessage) -> {
                     log.error(errorMessage);
@@ -158,7 +158,7 @@ public class SellerAsTakerProtocol {
 
         SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
                 () -> {
-                    log.debug("sequence at handleBankTransferInitedMessage completed");
+                    log.debug("taskRunner at handleBankTransferInitedMessage completed");
                     model.getTrade().setState(Trade.State.FIAT_PAYMENT_STARTED);
                 },
                 (errorMessage) -> {
@@ -177,7 +177,7 @@ public class SellerAsTakerProtocol {
     public void onFiatPaymentReceived() {
         SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
                 () -> {
-                    log.debug("sequence at handleFiatReceivedUIEvent completed");
+                    log.debug("taskRunner at handleFiatReceivedUIEvent completed");
                 },
                 (errorMessage) -> {
                     log.error(errorMessage);
