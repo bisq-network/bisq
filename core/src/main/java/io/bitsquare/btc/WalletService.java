@@ -709,7 +709,7 @@ public class WalletService {
          */
 
         // Now we construct the real 2of3 multiSig tx from the serialized offerers tx
-
+        preparedDepositTx = new Transaction(params, preparedDepositTx.bitcoinSerialize());
         // The serialized offerers tx looks like:
         /*
         IN[0]  any input offerer > offererInputAmount + fee (unsigned)
@@ -798,6 +798,7 @@ public class WalletService {
         printInputs("preparedDepositTx", preparedDepositTx);
         log.trace("preparedDepositTx = " + preparedDepositTx);
 
+        preparedDepositTx = new Transaction(params, preparedDepositTx.bitcoinSerialize());
         // add input
         Transaction offerersFirstTxConnOut = wallet.getTransaction(preparedDepositTx.getInput(0).getOutpoint().getHash());
         TransactionOutPoint offerersFirstTxOutPoint = new TransactionOutPoint(params, offererTxOutIndex, offerersFirstTxConnOut);
@@ -930,13 +931,29 @@ public class WalletService {
         // We create the signature for that tx
         TransactionOutput multiSigOutput = tx.getInput(0).getConnectedOutput();
         Script multiSigScript = multiSigOutput.getScriptPubKey();
+        
         Sha256Hash sigHash = tx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
         ECKey.ECDSASignature offererSignature = getAddressInfo(tradeID).getKey().sign(sigHash);
-
         TransactionSignature offererTxSig = new TransactionSignature(offererSignature, Transaction.SigHash.ALL, false);
-        Script inputScript = ScriptBuilder.createMultiSigInputScript(ImmutableList.of(offererTxSig));
+        Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(offererTxSig), multiSigScript);
         tx.getInput(0).setScriptSig(inputScript);
 
+        log.trace("check if it can be correctly spent for ms input");
+        try {
+            tx.getInput(0).getScriptSig().correctlySpends(tx, 0, inputScript);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            log.error(t.getMessage());
+        }
+
+        log.trace("verify multiSigOutput");
+        try {
+            tx.getInput(0).verify(multiSigOutput);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            log.error(t.getMessage());
+        }
+        
         log.trace("sigHash=" + sigHash);
         return new Pair<>(offererSignature, depositTx);
     }
@@ -959,31 +976,49 @@ public class WalletService {
         log.trace("callback=" + callback);
 
         // We create the payout tx
+        depositTx = new Transaction(params, depositTx.bitcoinSerialize());
         Transaction tx = createPayoutTx(depositTx, offererPaybackAmount, takerPaybackAmount, offererAddress, getAddressInfo(tradeID).getAddressString());
 
         // We sign that tx with our key and apply the signature form the offerer
         TransactionOutput multiSigOutput = tx.getInput(0).getConnectedOutput();
         Script multiSigScript = multiSigOutput.getScriptPubKey();
+       
         Sha256Hash sigHash = tx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
         log.trace("sigHash=" + sigHash);
 
         ECKey.ECDSASignature takerSignature = getAddressInfo(tradeID).getKey().sign(sigHash);
         TransactionSignature takerTxSig = new TransactionSignature(takerSignature, Transaction.SigHash.ALL, false);
-
         TransactionSignature offererTxSig = new TransactionSignature(offererSignature, Transaction.SigHash.ALL, false);
-
-        Script inputScript = ScriptBuilder.createMultiSigInputScript(ImmutableList.of(offererTxSig, takerTxSig));
+        Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(offererTxSig, takerTxSig), multiSigScript);
         tx.getInput(0).setScriptSig(inputScript);
-
+        
         log.trace("verify tx");
         tx.verify();
 
         log.trace("check if it can be correctly spent for ms input");
-        tx.getInput(0).getScriptSig().correctlySpends(tx, 0, multiSigScript);
+        try {
+            tx.getInput(0).getScriptSig().correctlySpends(tx, 0, inputScript);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            log.error(t.getMessage());
+        }
+        try {
+            tx.getInput(0).getScriptSig().correctlySpends(tx, 0, inputScript);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            log.error(t.getMessage());
+        }
+
+
 
         log.trace("verify multiSigOutput");
-        tx.getInput(0).verify(multiSigOutput);
-
+        try {
+            tx.getInput(0).verify(multiSigOutput);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            log.error(t.getMessage());
+        }
+        
         ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(tx);
         Futures.addCallback(broadcastComplete, callback);
 
@@ -1014,7 +1049,7 @@ public class WalletService {
         ECKey arbitratorKey = ECKey.fromPublicOnly(arbitratorPubKey);
 
         List<ECKey> keys = ImmutableList.of(offererKey, takerKey, arbitratorKey);
-        return ScriptBuilder.createMultiSigOutputScript(2, keys);
+        return ScriptBuilder.createP2SHOutputScript(2, keys);
     }
 
     private Transaction createPayoutTx(Transaction depositTx, Coin offererPaybackAmount, Coin takerPaybackAmount,
