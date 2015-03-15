@@ -19,6 +19,7 @@ package io.bitsquare.trade.protocol.trade.offerer;
 
 import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.GetOffererDepositTxInputs;
@@ -40,6 +41,11 @@ import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestTakeOfferMessage;
 import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
+
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
+
+import javafx.application.Platform;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,7 +127,21 @@ public class BuyerAsOffererProtocol {
 
         BuyerAsOffererTaskRunner<BuyerAsOffererModel> taskRunner = new BuyerAsOffererTaskRunner<>(model,
                 () -> {
-                    log.debug("sequence at handleRequestOffererPublishDepositTxMessage completed");
+                    log.debug("taskRunner at handleRequestOffererPublishDepositTxMessage completed");
+                    TransactionConfidence confidence = model.getTrade().getDepositTx().getConfidence();
+                    confidence.addEventListener(new TransactionConfidence.Listener() {
+                        @Override
+                        public void onConfidenceChanged(Transaction tx, ChangeReason reason) {
+                            log.trace("onConfidenceChanged " + tx.getConfidence());
+                            if (reason == ChangeReason.TYPE && tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
+
+                                model.getTrade().setState(Trade.State.DEPOSIT_CONFIRMED);
+
+                                //TODO not sure if that works
+                                Platform.runLater(() -> confidence.removeEventListener(this));
+                            }
+                        }
+                    });
                 },
                 (errorMessage) -> {
                     log.error(errorMessage);

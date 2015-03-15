@@ -812,7 +812,9 @@ public class WalletService {
         log.trace("inputs: ");
         log.trace("depositTx=" + depositTx);
         // If not recreate the tx we get a null pointer at receivePending
-        //depositTx = new Transaction(params, depositTx.bitcoinSerialize());
+        log.debug("tx id "+depositTx.getHashAsString());
+        depositTx = new Transaction(params, depositTx.bitcoinSerialize());
+        log.debug("tx id "+depositTx.getHashAsString());
         log.trace("depositTx=" + depositTx);
         // boolean isAlreadyInWallet = wallet.maybeCommitTx(depositTx);
         //log.trace("isAlreadyInWallet=" + isAlreadyInWallet);
