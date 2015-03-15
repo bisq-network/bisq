@@ -703,7 +703,7 @@ public class WalletService {
         // Add all inputs from offerer (normally its just 1 input)
         for (TransactionOutput connectedOutputForInput : offererConnectedOutputsForAllInputs) {
             TransactionOutPoint outPoint = new TransactionOutPoint(params, connectedOutputForInput.getIndex(), connectedOutputForInput.getParentTransaction());
-            TransactionInput transactionInput = new TransactionInput(params, depositTx, new byte[]{}, outPoint);
+            TransactionInput transactionInput = new TransactionInput(params, depositTx, new byte[]{}, outPoint, connectedOutputForInput.getValue());
             depositTx.addInput(transactionInput);
         }
 
@@ -756,7 +756,7 @@ public class WalletService {
         // Add all inputs from offerer (normally its just 1 input)
         for (TransactionOutput connectedOutputForInput : offererConnectedOutputsForAllInputs) {
             TransactionOutPoint outPoint = new TransactionOutPoint(params, connectedOutputForInput.getIndex(), connectedOutputForInput.getParentTransaction());
-            TransactionInput input = new TransactionInput(params, depositTx, new byte[]{}, outPoint);
+            TransactionInput input = new TransactionInput(params, depositTx, new byte[]{}, outPoint, connectedOutputForInput.getValue());
             offererInputs.add(input);
             depositTx.addInput(input);
         }
@@ -772,7 +772,7 @@ public class WalletService {
                 TransactionInput signedInput = result.get();
                 Script script = signedInput.getScriptSig();
 
-                TransactionInput transactionInput = new TransactionInput(params, depositTx, script.getProgram(), outPoint);
+                TransactionInput transactionInput = new TransactionInput(params, depositTx, script.getProgram(), outPoint, connectedOutputForInput.getValue());
                 depositTx.addInput(transactionInput);
             }
         }
@@ -796,6 +796,7 @@ public class WalletService {
 
         verifyTransaction(depositTx);
         checkWalletConsistency();
+        checkScriptSigForAllInputs(depositTx);
        
         // Broadcast depositTx
         log.trace("Wallet balance before broadcastTransaction: " + wallet.getBalance());
@@ -1027,12 +1028,12 @@ public class WalletService {
         }
     }
 
- /*   private void checkScriptSigForAllInputs(Transaction transaction) throws TransactionVerificationException {
+    private void checkScriptSigForAllInputs(Transaction transaction) throws TransactionVerificationException {
         int inputIndex = 0;
         for (TransactionInput input : transaction.getInputs()) {
             checkScriptSig(transaction, input, inputIndex);
         }
-    }*/
+    }
 
     private void removeSignatures(Transaction transaction) throws InsufficientMoneyException {
         for (TransactionInput input : transaction.getInputs()) {
