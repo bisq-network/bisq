@@ -18,6 +18,7 @@
 package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.bank.BankAccount;
+import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
@@ -50,6 +51,9 @@ public class OfferSharedModel extends SharedModel {
     protected final ECKey accountKey;
     protected final byte[] arbitratorPubKey;
 
+    // lazy initialized at first read access, as we don't want to create an entry before it is really needed
+    protected AddressEntry addressInfo;
+
     // data written/read by tasks
     protected TradeMessage tradeMessage;
     protected byte[] takerPubKey;
@@ -77,6 +81,28 @@ public class OfferSharedModel extends SharedModel {
     }
 
     // getter/setter
+    public AddressEntry getAddressInfo() {
+        if (addressInfo == null)
+            addressInfo = getWalletService().getAddressInfo(offer.getId());
+
+        return addressInfo;
+    }
+
+    public String getPeersAccountId() {
+        return peersAccountId;
+    }
+
+    public void setPeersAccountId(String peersAccountId) {
+        this.peersAccountId = peersAccountId;
+    }
+
+    public BankAccount getPeersBankAccount() {
+        return peersBankAccount;
+    }
+
+    public void setPeersBankAccount(BankAccount peersBankAccount) {
+        this.peersBankAccount = peersBankAccount;
+    }
 
     public TradeMessageService getTradeMessageService() {
         return tradeMessageService;

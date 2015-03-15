@@ -35,13 +35,14 @@ public class RequestDepositPayment extends Task<BuyerAsOffererModel> {
 
     @Override
     protected void doRun() {
+        byte[] offererPubKey = model.getWalletService().getAddressInfo(model.getTrade().getId()).getPubKey();
         RequestDepositPaymentMessage tradeMessage = new RequestDepositPaymentMessage(
                 model.getTrade().getId(),
+                model.getOffererConnectedOutputsForAllInputs(),
+                model.getOffererOutputs(),
+                offererPubKey,
                 model.getBankAccount(),
-                model.getAccountId(),
-                model.getOffererPubKey(),
-                model.getPreparedDepositTx(),
-                model.getOffererTxOutIndex());
+                model.getAccountId());
 
         model.getTradeMessageService().sendMessage(model.getTaker(), tradeMessage, new SendMessageListener() {
             @Override

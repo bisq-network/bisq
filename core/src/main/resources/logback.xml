@@ -38,16 +38,17 @@
     <logger name="net.tomp2p" level="ERROR"/>
     <logger name="com.vinumeris.updatefx" level="OFF"/>
     <logger name="io.netty" level="OFF"/>
+    <logger name="org.bitcoinj.core.BitcoinSerializer" level="ERROR"/>
+    <logger name="org.bitcoinj.core.Peer" level="ERROR"/>
     
-
-   <!-- <logger name="net.tomp2p.message.Encoder" level="WARN"/>
-    <logger name="net.tomp2p.message.Decoder" level="WARN"/>
-    <logger name="net.tomp2p.message.MessageHeaderCodec" level="WARN"/>
-
-
-    <logger name="io.netty.util" level="WARN"/>
-    <logger name="io.netty.channel" level="WARN"/>
-    <logger name="io.netty.buffer" level="WARN"/>-->
+    <!-- <logger name="net.tomp2p.message.Encoder" level="WARN"/>
+     <logger name="net.tomp2p.message.Decoder" level="WARN"/>
+     <logger name="net.tomp2p.message.MessageHeaderCodec" level="WARN"/>
+ 
+ 
+     <logger name="io.netty.util" level="WARN"/>
+     <logger name="io.netty.channel" level="WARN"/>
+     <logger name="io.netty.buffer" level="WARN"/>-->
 
    
 

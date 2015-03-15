@@ -40,7 +40,6 @@ public class ProcessTakeOfferFeePayedMessage extends Task<BuyerAsOffererModel> {
     protected void doRun() {
         try {
             checkTradeId(model.getTrade().getId(), model.getTradeMessage());
-
             Trade trade = model.getTrade();
             TakeOfferFeePayedMessage takeOfferFeePayedMessage = (TakeOfferFeePayedMessage) model.getTradeMessage();
             trade.setTakeOfferFeeTxID(nonEmptyStringOf(takeOfferFeePayedMessage.getTakeOfferFeeTxId()));

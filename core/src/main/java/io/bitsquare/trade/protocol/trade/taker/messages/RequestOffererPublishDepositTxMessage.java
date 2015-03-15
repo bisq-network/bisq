@@ -21,10 +21,13 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
 
 import java.io.Serializable;
 
 import java.security.PublicKey;
+
+import java.util.List;
 
 public class RequestOffererPublishDepositTxMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = 2179683654379803071L;
@@ -32,52 +35,36 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
     private final BankAccount bankAccount;
     private final String accountID;
     private final PublicKey takerMessagePublicKey;
-    private final Transaction takersSignedDepositTx;
-    private final byte[] txScriptSig;
-    private final Transaction takersFromTx;
     private final String contractAsJson;
     private final String takerContractSignature;
-    private final String takerPayoutAddress;
-    private final long takerTxOutIndex;
-
-
-    private final long offererTxOutIndex;
+    private Transaction takersDepositTx;
+    private List<TransactionOutput> takersConnectedOutputsForAllInputs;
+    private List<TransactionOutput> takerOutputs;
 
     public RequestOffererPublishDepositTxMessage(String tradeId,
                                                  BankAccount bankAccount,
                                                  String accountID,
                                                  PublicKey takerMessagePublicKey,
-                                                 Transaction takersSignedDepositTx,
-                                                 byte[] txScriptSig,
-                                                 Transaction takersFromTx,
                                                  String contractAsJson,
                                                  String takerContractSignature,
-                                                 String takerPayoutAddress,
-                                                 long takerTxOutIndex,
-                                                 long offererTxOutIndex) {
-
+                                                 Transaction takersDepositTx,
+                                                 List<TransactionOutput> takersConnectedOutputsForAllInputs,
+                                                 List<TransactionOutput> takerOutputs) {
         this.tradeId = tradeId;
         this.bankAccount = bankAccount;
         this.accountID = accountID;
         this.takerMessagePublicKey = takerMessagePublicKey;
-        this.takersSignedDepositTx = takersSignedDepositTx;
-        this.txScriptSig = txScriptSig;
-        this.takersFromTx = takersFromTx;
         this.contractAsJson = contractAsJson;
         this.takerContractSignature = takerContractSignature;
-        this.takerPayoutAddress = takerPayoutAddress;
-        this.takerTxOutIndex = takerTxOutIndex;
-        this.offererTxOutIndex = offererTxOutIndex;
+        this.takersDepositTx = takersDepositTx;
+        this.takersConnectedOutputsForAllInputs = takersConnectedOutputsForAllInputs;
+        this.takerOutputs = takerOutputs;
     }
 
 
     @Override
     public String getTradeId() {
         return tradeId;
-    }
-
-    public long getOffererTxOutIndex() {
-        return offererTxOutIndex;
     }
 
     public BankAccount getTakerBankAccount() {
@@ -92,18 +79,6 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
         return takerMessagePublicKey;
     }
 
-    public Transaction getTakersSignedDepositTx() {
-        return takersSignedDepositTx;
-    }
-
-    public byte[] getTxScriptSig() {
-        return txScriptSig;
-    }
-
-    public Transaction getTakersFromTx() {
-        return takersFromTx;
-    }
-
     public String getTakerContractAsJson() {
         return contractAsJson;
     }
@@ -112,12 +87,27 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
         return takerContractSignature;
     }
 
-    public String getTakerPayoutAddress() {
-        return takerPayoutAddress;
+    public List<TransactionOutput> getTakerOutputs() {
+        return takerOutputs;
     }
 
-    public long getTakerTxOutIndex() {
-        return takerTxOutIndex;
+    public BankAccount getBankAccount() {
+        return bankAccount;
     }
 
+    public String getAccountID() {
+        return accountID;
+    }
+
+    public String getContractAsJson() {
+        return contractAsJson;
+    }
+
+    public Transaction getTakersDepositTx() {
+        return takersDepositTx;
+    }
+
+    public List<TransactionOutput> getTakersConnectedOutputsForAllInputs() {
+        return takersConnectedOutputsForAllInputs;
+    }
 }

@@ -26,7 +26,7 @@ import io.bitsquare.trade.protocol.placeoffer.tasks.BroadcastCreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.ValidateOffer;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererProtocol;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.PrepareDepositTx;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.GetOffererDepositTxInputs;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestOffererPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestTakeOfferMessage;
@@ -43,7 +43,7 @@ import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakeOfferFeePayment
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakerAccount;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerProtocol;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
-import io.bitsquare.trade.protocol.trade.taker.tasks.PayDeposit;
+import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCreatesAndSignsDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.PayTakeOfferFee;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessBankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessDepositTxPublishedMessage;
@@ -51,7 +51,7 @@ import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRespondToTakeOfferRe
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRequestDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.RequestTakeOffer;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendPayoutTxToOfferer;
-import io.bitsquare.trade.protocol.trade.taker.tasks.SendSignedTakerDepositTxAsHex;
+import io.bitsquare.trade.protocol.trade.taker.tasks.SendSignedTakerDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendTakeOfferFeePayedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SignAndPublishPayoutTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCommitDepositTx;
@@ -110,7 +110,7 @@ public class DebugView extends InitializableView {
                         RespondToTakeOfferRequest.class,
 
                         ProcessTakeOfferFeePayedMessage.class,
-                        PrepareDepositTx.class,
+                        GetOffererDepositTxInputs.class,
                         RequestDepositPayment.class,
 
                         ProcessRequestOffererPublishDepositTxMessage.class,
@@ -140,8 +140,8 @@ public class DebugView extends InitializableView {
                         ProcessRequestDepositPaymentMessage.class,
                         VerifyOffererAccount.class,
                         CreateAndSignContract.class,
-                        PayDeposit.class,
-                        SendSignedTakerDepositTxAsHex.class,
+                        TakerCreatesAndSignsDepositTx.class,
+                        SendSignedTakerDepositTx.class,
 
                         ProcessDepositTxPublishedMessage.class,
                         TakerCommitDepositTx.class,

@@ -53,7 +53,7 @@ public class SignPayoutTx extends Task<BuyerAsOffererModel> {
                     model.getTakerPayoutAddress(), 
                     model.getTrade().getId());
 
-            model.setDepositTx(result.getValue());
+            model.setOffererPayoutTx(result.getValue());
             model.setOffererSignature(result.getKey());
             model.setOffererPaybackAmount(offererPaybackAmount);
             model.setTakerPaybackAmount(takerPaybackAmount);

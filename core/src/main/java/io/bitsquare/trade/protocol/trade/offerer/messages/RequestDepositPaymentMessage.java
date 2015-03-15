@@ -20,34 +20,51 @@ package io.bitsquare.trade.protocol.trade.offerer.messages;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 
-import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
 
 import java.io.Serializable;
+
+import java.util.List;
 
 public class RequestDepositPaymentMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = -3988720410493712913L;
 
     private final String tradeId;
+    private final List<TransactionOutput> offererConnectedOutputsForAllInputs;
+    private final List<TransactionOutput> offererOutputs;
+    private final byte[] offererPubKey;
     private final BankAccount bankAccount;
     private final String accountID;
-    private final byte[] offererPubKey;
-    private final Transaction preparedDepositTx;
-    private final long offererTxOutIndex;
 
-    public RequestDepositPaymentMessage(String tradeId, BankAccount bankAccount, String accountID,
-                                        byte[] offererPubKey, Transaction preparedDepositTx,
-                                        long offererTxOutIndex) {
+    public RequestDepositPaymentMessage(String tradeId,
+                                        List<TransactionOutput> offererConnectedOutputsForAllInputs,
+                                        List<TransactionOutput> offererOutputs,
+                                        byte[] offererPubKey,
+                                        BankAccount bankAccount,
+                                        String accountID) {
         this.tradeId = tradeId;
+        this.offererConnectedOutputsForAllInputs = offererConnectedOutputsForAllInputs;
+        this.offererOutputs = offererOutputs;
+        this.offererPubKey = offererPubKey;
         this.bankAccount = bankAccount;
         this.accountID = accountID;
-        this.offererPubKey = offererPubKey;
-        this.preparedDepositTx = preparedDepositTx;
-        this.offererTxOutIndex = offererTxOutIndex;
     }
 
     @Override
     public String getTradeId() {
         return tradeId;
+    }
+
+    public List<TransactionOutput> getOffererConnectedOutputsForAllInputs() {
+        return offererConnectedOutputsForAllInputs;
+    }
+
+    public List<TransactionOutput> getOffererOutputs() {
+        return offererOutputs;
+    }
+
+    public byte[] getOffererPubKey() {
+        return offererPubKey;
     }
 
     public BankAccount getBankAccount() {
@@ -56,17 +73,5 @@ public class RequestDepositPaymentMessage implements Serializable, TradeMessage 
 
     public String getAccountId() {
         return accountID;
-    }
-
-    public byte[] getOffererPubKey() {
-        return offererPubKey;
-    }
-
-    public Transaction getPreparedDepositTx() {
-        return preparedDepositTx;
-    }
-
-    public long getOffererTxOutIndex() {
-        return offererTxOutIndex;
     }
 }

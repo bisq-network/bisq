@@ -42,17 +42,18 @@ public class SignAndPublishDepositTx extends Task<BuyerAsOffererModel> {
     protected void doRun() {
         try {
             model.getWalletService().offererSignAndPublishTx(
-                    model.getPreparedDepositTx(),
-                    model.getTakersSignedDepositTx(),
-                    model.getTakersFromTx(),
-                    model.getTxScriptSig(),
-                    model.getOffererTxOutIndex(),
-                    model.getTakerTxOutIndex(),
+                    model.getTakerDepositTx(),
+                    model.getTakerConnectedOutputsForAllInputs(),
+                    model.getOffererConnectedOutputsForAllInputs(),
+                    model.getOffererPubKey(),
+                    model.getTakerPubKey(),
+                    model.getArbitratorPubKey(),
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {
                             log.trace("offererSignAndPublishTx succeeded " + transaction);
 
+                            model.setPublishedDepositTx(transaction);
                             model.getTrade().setDepositTx(transaction);
                             model.getTrade().setState(Trade.State.DEPOSIT_PUBLISHED);
 

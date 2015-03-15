@@ -18,42 +18,46 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.util.taskrunner.Task;
 import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.Transaction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PayDeposit extends Task<SellerAsTakerModel> {
-    private static final Logger log = LoggerFactory.getLogger(PayDeposit.class);
+public class TakerCreatesAndSignsDepositTx extends Task<SellerAsTakerModel> {
+    private static final Logger log = LoggerFactory.getLogger(TakerCreatesAndSignsDepositTx.class);
 
-    public PayDeposit(TaskRunner taskHandler, SellerAsTakerModel model) {
+    public TakerCreatesAndSignsDepositTx(TaskRunner taskHandler, SellerAsTakerModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void doRun() {
         try {
-            Coin amountToPay = model.getTrade().getTradeAmount().add(model.getTrade().getSecurityDeposit());
-            Coin msOutputAmount = amountToPay.add(model.getTrade().getSecurityDeposit()).add(FeePolicy.TX_FEE);
-            Transaction signedTakerDepositTx = model.getWalletService().takerAddPaymentAndSignTx(
-                    amountToPay,
+            Coin inputAmount = model.getTrade().getTradeAmount().add(model.getTrade().getSecurityDeposit());
+            Coin msOutputAmount = inputAmount.add(model.getTrade().getSecurityDeposit()).add(FeePolicy.TX_FEE);
+
+            WalletService.TransactionDataResult result = model.getWalletService().takerCreatesAndSignsDepositTx(
+                    inputAmount,
                     msOutputAmount,
-                    model.getPreparedDepositTx(),
-                    model.getTrade().getId(),
+                    model.getOffererConnectedOutputsForAllInputs(),
+                    model.getOffererOutputs(),
+                    model.getAddressInfo(),
                     model.getOffererPubKey(),
                     model.getTakerPubKey(),
                     model.getArbitratorPubKey());
 
-            model.setSignedTakerDepositTx(signedTakerDepositTx);
+            
+            model.setTakerConnectedOutputsForAllInputs(result.getConnectedOutputsForAllInputs());
+            model.setTakerOutputs(result.getOutputs());
+            model.setTakerDepositTx(result.getDepositTx());
 
             complete();
-        } catch (InsufficientMoneyException e) {
+        } catch (Exception e) {
             failed(e);
         }
     }

@@ -25,7 +25,7 @@ import io.bitsquare.util.taskrunner.TaskRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.*;
 import static io.bitsquare.util.Validator.*;
 
 public class ProcessRequestOffererPublishDepositTxMessage extends Task<BuyerAsOffererModel> {
@@ -39,17 +39,16 @@ public class ProcessRequestOffererPublishDepositTxMessage extends Task<BuyerAsOf
     protected void doRun() {
         try {
             checkTradeId(model.getTrade().getId(), model.getTradeMessage());
-
             RequestOffererPublishDepositTxMessage message = (RequestOffererPublishDepositTxMessage) model.getTradeMessage();
-            model.setTakerPayoutAddress(nonEmptyStringOf(message.getTakerPayoutAddress()));
-            model.setTakerAccountId(nonEmptyStringOf(message.getTakerAccountId()));
+
             model.setTakerBankAccount(checkNotNull(message.getTakerBankAccount()));
+            model.setTakerAccountId(nonEmptyStringOf(message.getTakerAccountId()));
             model.setTakerMessagePublicKey(checkNotNull(message.getTakerMessagePublicKey()));
             model.setTakerContractAsJson(nonEmptyStringOf(message.getTakerContractAsJson()));
-            model.setTakersSignedDepositTx(checkNotNull(message.getTakersSignedDepositTx()));
-            model.setTakersFromTx(checkNotNull(message.getTakersFromTx()));
-            model.setTxScriptSig(checkNotNull(message.getTxScriptSig()));
-            model.setTakerTxOutIndex(nonNegativeLongOf(message.getTakerTxOutIndex()));
+            model.setTakerDepositTx(checkNotNull(message.getTakersDepositTx()));
+            model.setTakerConnectedOutputsForAllInputs(checkNotNull(message.getTakersConnectedOutputsForAllInputs()));
+            checkArgument(message.getTakersConnectedOutputsForAllInputs().size() > 0);
+            model.setTakerOutputs(checkNotNull(message.getTakerOutputs()));
 
             complete();
         } catch (Throwable t) {

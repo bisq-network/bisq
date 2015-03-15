@@ -51,7 +51,6 @@ import org.slf4j.LoggerFactory;
  * The TomP2P library codebase shall not be used outside that service.
  * That way we limit the dependency of the TomP2P library only to that class (and it's sub components).
  * <p/>
- * TODO: improve callbacks that executor.execute is not necessary. We call usually that methods form teh UI thread.
  */
 public class TomP2PTradeMessageService implements TradeMessageService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PTradeMessageService.class);

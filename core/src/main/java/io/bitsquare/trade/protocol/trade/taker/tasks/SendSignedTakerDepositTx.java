@@ -23,36 +23,29 @@ import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDep
 import io.bitsquare.util.taskrunner.Task;
 import io.bitsquare.util.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.Transaction;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendSignedTakerDepositTxAsHex extends Task<SellerAsTakerModel> {
-    private static final Logger log = LoggerFactory.getLogger(SendSignedTakerDepositTxAsHex.class);
+public class SendSignedTakerDepositTx extends Task<SellerAsTakerModel> {
+    private static final Logger log = LoggerFactory.getLogger(SendSignedTakerDepositTx.class);
 
-    public SendSignedTakerDepositTxAsHex(TaskRunner taskHandler, SellerAsTakerModel model) {
+    public SendSignedTakerDepositTx(TaskRunner taskHandler, SellerAsTakerModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void doRun() {
-        Transaction takersSignedDepositTx = model.getSignedTakerDepositTx();
-        long takerTxOutIndex = model.getSignedTakerDepositTx().getInput(1).getOutpoint().getIndex();
-
         RequestOffererPublishDepositTxMessage tradeMessage = new RequestOffererPublishDepositTxMessage(
                 model.getTrade().getId(),
                 model.getBankAccount(),
                 model.getAccountId(),
                 model.getMessagePublicKey(),
-                takersSignedDepositTx,
-                takersSignedDepositTx.getInput(1).getScriptBytes(),
-                takersSignedDepositTx.getInput(1).getConnectedOutput().getParentTransaction(),
                 model.getTrade().getContractAsJson(),
                 model.getTrade().getTakerContractSignature(),
-                model.getWalletService().getAddressInfo(model.getTrade().getId()).getAddressString(),
-                takerTxOutIndex,
-                model.getOffererTxOutIndex());
+                model.getTakerDepositTx(),
+                model.getTakerConnectedOutputsForAllInputs(),
+                model.getTakerOutputs()
+        );
 
         model.getTradeMessageService().sendMessage(model.getOfferer(), tradeMessage, new SendMessageListener() {
             @Override

@@ -36,9 +36,6 @@ public class ProcessRequestTakeOfferMessage extends Task<BuyerAsOffererModel> {
     @Override
     protected void doRun() {
         try {
-            log.debug("######### " + model.getOffer().getId());
-            log.debug("######### " + model.getTradeMessage().getTradeId());
-
             checkTradeId(model.getOffer().getId(), model.getTradeMessage());
 
             complete();

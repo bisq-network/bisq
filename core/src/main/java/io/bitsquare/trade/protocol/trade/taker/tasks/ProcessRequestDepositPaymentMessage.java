@@ -25,7 +25,7 @@ import io.bitsquare.util.taskrunner.TaskRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.*;
 import static io.bitsquare.util.Validator.*;
 
 public class ProcessRequestDepositPaymentMessage extends Task<SellerAsTakerModel> {
@@ -40,11 +40,13 @@ public class ProcessRequestDepositPaymentMessage extends Task<SellerAsTakerModel
         try {
             checkTradeId(model.getTrade().getId(), model.getTradeMessage());
             RequestDepositPaymentMessage message = (RequestDepositPaymentMessage) model.getTradeMessage();
-            model.setTakerAccountId(nonEmptyStringOf(message.getAccountId()));
+
+            model.setOffererConnectedOutputsForAllInputs(checkNotNull(message.getOffererConnectedOutputsForAllInputs()));
+            checkArgument(message.getOffererConnectedOutputsForAllInputs().size() > 0);
+            model.setOffererOutputs(checkNotNull(message.getOffererOutputs()));
+            model.setOffererPubKey(checkNotNull(message.getOffererPubKey()));
             model.setTakerBankAccount(checkNotNull(message.getBankAccount()));
-            model.setOffererPubKeyAsHex(checkNotNull(message.getOffererPubKey()));
-            model.setPreparedDepositTx(checkNotNull(message.getPreparedDepositTx()));
-            model.setOffererTxOutIndex(nonNegativeLongOf(message.getOffererTxOutIndex()));
+            model.setTakerAccountId(nonEmptyStringOf(message.getAccountId()));
 
             complete();
         } catch (Throwable t) {

@@ -36,7 +36,6 @@ public class RequestTakeOffer extends Task<SellerAsTakerModel> {
 
     @Override
     protected void doRun() {
-        log.debug("######### " + model.getTrade().getId());
         model.getTradeMessageService().sendMessage(model.getOfferer(), new RequestTakeOfferMessage(model.getTrade().getId()),
                 new SendMessageListener() {
                     @Override

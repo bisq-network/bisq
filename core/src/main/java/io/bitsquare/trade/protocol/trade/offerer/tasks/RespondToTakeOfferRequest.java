@@ -39,7 +39,7 @@ public class RespondToTakeOfferRequest extends Task<BuyerAsOffererModel> {
     @Override
     protected void doRun() {
         offerIsAvailable = model.getOpenOffer().getState() == OpenOffer.State.OPEN;
-
+        
         if (offerIsAvailable) {
             Trade trade = new Trade(model.getOpenOffer().getOffer());
             model.setTrade(trade);

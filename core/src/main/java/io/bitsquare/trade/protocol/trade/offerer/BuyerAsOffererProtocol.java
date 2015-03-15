@@ -21,7 +21,7 @@ import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.PrepareDepositTx;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.GetOffererDepositTxInputs;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestOffererPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestTakeOfferMessage;
@@ -110,7 +110,7 @@ public class BuyerAsOffererProtocol {
         );
         taskRunner.addTasks(
                 ProcessTakeOfferFeePayedMessage.class,
-                PrepareDepositTx.class,
+                GetOffererDepositTxInputs.class,
                 RequestDepositPayment.class
         );
         taskRunner.run();

@@ -29,6 +29,9 @@ import io.bitsquare.user.User;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
+
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +41,7 @@ public class SellerAsTakerModel extends OfferSharedModel {
 
     // provided
     private final Trade trade;
+    
 
     // written/read by task
     private Peer offerer;
@@ -52,6 +56,12 @@ public class SellerAsTakerModel extends OfferSharedModel {
     private ECKey.ECDSASignature offererSignature;
     private Coin offererPaybackAmount;
     private String offererPayoutAddress;
+    private  List<TransactionOutput> offererConnectedOutputsForAllInputs;
+    private  List<TransactionOutput> offererOutputs;
+    private List<TransactionOutput> takerConnectedOutputsForAllInputs;
+    private List<TransactionOutput> takerOutputs;
+    private Transaction takerDepositTx;
+    private Transaction publishedDepositTx;
 
     public SellerAsTakerModel(Trade trade,
                               TradeMessageService tradeMessageService,
@@ -68,9 +78,29 @@ public class SellerAsTakerModel extends OfferSharedModel {
 
         this.trade = trade;
         takerPubKey = walletService.getAddressInfo(trade.getId()).getPubKey();
+       
     }
 
     // getter/setter
+    public void setOffererPubKey(byte[] offererPubKey) {
+        this.offererPubKey = offererPubKey;
+    }
+
+    public List<TransactionOutput> getOffererConnectedOutputsForAllInputs() {
+        return offererConnectedOutputsForAllInputs;
+    }
+
+    public void setOffererConnectedOutputsForAllInputs(List<TransactionOutput> offererConnectedOutputsForAllInputs) {
+        this.offererConnectedOutputsForAllInputs = offererConnectedOutputsForAllInputs;
+    }
+
+    public List<TransactionOutput> getOffererOutputs() {
+        return offererOutputs;
+    }
+
+    public void setOffererOutputs(List<TransactionOutput> offererOutputs) {
+        this.offererOutputs = offererOutputs;
+    }
     public Trade getTrade() {
         return trade;
     }
@@ -103,9 +133,6 @@ public class SellerAsTakerModel extends OfferSharedModel {
         return offererPubKey;
     }
 
-    public void setOffererPubKeyAsHex(byte[] offererPubKey) {
-        this.offererPubKey = offererPubKey;
-    }
 
     public Transaction getPreparedDepositTx() {
         return preparedDepositTx;
@@ -172,4 +199,35 @@ public class SellerAsTakerModel extends OfferSharedModel {
     }
 
 
+    public void setTakerConnectedOutputsForAllInputs(List<TransactionOutput> takerConnectedOutputsForAllInputs) {
+        this.takerConnectedOutputsForAllInputs = takerConnectedOutputsForAllInputs;
+    }
+
+    public List<TransactionOutput> getTakerConnectedOutputsForAllInputs() {
+        return takerConnectedOutputsForAllInputs;
+    }
+
+    public void setTakerOutputs(List<TransactionOutput> takerOutputs) {
+        this.takerOutputs = takerOutputs;
+    }
+
+    public List<TransactionOutput> getTakerOutputs() {
+        return takerOutputs;
+    }
+
+    public void setTakerDepositTx(Transaction takerDepositTx) {
+        this.takerDepositTx = takerDepositTx;
+    }
+
+    public Transaction getTakerDepositTx() {
+        return takerDepositTx;
+    }
+
+    public void setPublishedDepositTx(Transaction publishedDepositTx) {
+        this.publishedDepositTx = publishedDepositTx;
+    }
+
+    public Transaction getPublishedDepositTx() {
+        return publishedDepositTx;
+    }
 }
