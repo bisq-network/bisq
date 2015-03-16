@@ -28,7 +28,6 @@ import org.bitcoinj.core.TransactionConfidence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// TODO should be removed
 public class SetupListenerForBlockChainConfirmation extends Task<BuyerAsOffererModel> {
     private static final Logger log = LoggerFactory.getLogger(SetupListenerForBlockChainConfirmation.class);
 
@@ -47,8 +46,8 @@ public class SetupListenerForBlockChainConfirmation extends Task<BuyerAsOffererM
 
                     model.getTrade().setState(Trade.State.DEPOSIT_CONFIRMED);
 
-                    //TODO not sure if that works
-                    confidence.removeEventListener(this);
+                    boolean removed = confidence.removeEventListener(this);
+                    log.debug("listener removed? "+removed);
                 }
             }
         });

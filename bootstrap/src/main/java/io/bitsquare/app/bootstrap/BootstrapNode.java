@@ -104,15 +104,16 @@ public class BootstrapNode {
                         for (PeerAddress peerAddress : peer.peerBean().peerMap().all()) {
                             log.info("Peer: " + peerAddress.toString());
                         }
-                        try {
-                            Thread.sleep(10000);
-                        } catch (InterruptedException e) {
-                            return;
-                        }
                     }
                     else if (noPeersInfoPrinted) {
                         log.info("No peers online");
                         noPeersInfoPrinted = true;
+                    }
+                    try {
+                        Thread.sleep(10000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                        return;
                     }
                 }
             }).start();
