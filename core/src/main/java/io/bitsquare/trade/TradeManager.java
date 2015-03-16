@@ -213,6 +213,7 @@ public class TradeManager {
                 case OPEN:
                     break;
                 case OFFERER_ACCEPTED:
+                case TAKE_OFFER_FEE_PAID:
                 case DEPOSIT_PUBLISHED:
                 case DEPOSIT_CONFIRMED:
                 case FIAT_PAYMENT_STARTED:

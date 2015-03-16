@@ -370,7 +370,7 @@ public class WalletService {
         List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
 
         mergedOutputs.stream().filter(e -> e.getScriptPubKey().isSentToAddress() ||
-                e.getScriptPubKey().isSentToP2SH()).forEach(transactionOutput -> {
+                e.getScriptPubKey().isPayToScriptHash()).forEach(transactionOutput -> {
             Address outputAddress = transactionOutput.getScriptPubKey().getToAddress(params);
             if (address.equals(outputAddress)) {
                 transactionConfidenceList.add(tx.getConfidence());
@@ -440,12 +440,10 @@ public class WalletService {
     private Coin getBalance(LinkedList<TransactionOutput> transactionOutputs, Address address) {
         Coin balance = Coin.ZERO;
         for (TransactionOutput transactionOutput : transactionOutputs) {
-            if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey()
-                    .isSentToP2SH()) {
+            if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
                 Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
-                if (addressOutput.equals(address)) {
+                if (addressOutput.equals(address)) 
                     balance = balance.add(transactionOutput.getValue());
-                }
             }
         }
         return balance;
@@ -795,7 +793,7 @@ public class WalletService {
 
         verifyTransaction(depositTx);
         checkWalletConsistency();
-        checkScriptSigForAllInputs(depositTx);
+        //checkScriptSigForAllInputs(depositTx);
 
         // Broadcast depositTx
         log.trace("Wallet balance before broadcastTransaction: " + wallet.getBalance());
@@ -1017,9 +1015,8 @@ public class WalletService {
 
     private void checkScriptSig(Transaction transaction, TransactionInput input, int inputIndex) throws TransactionVerificationException {
         try {
-            log.trace("Verifies that this script (interpreted as a scriptSig) correctly spends the given scriptPubKey.");
+            log.trace("Verifies that this script (interpreted as a scriptSig) correctly spends the given scriptPubKey. Check input at index: " + inputIndex);
             input.getScriptSig().correctlySpends(transaction, inputIndex, input.getConnectedOutput().getScriptPubKey());
-            inputIndex++;
         } catch (Throwable t) {
             t.printStackTrace();
             log.error(t.getMessage());
@@ -1027,12 +1024,13 @@ public class WalletService {
         }
     }
 
-    private void checkScriptSigForAllInputs(Transaction transaction) throws TransactionVerificationException {
+    /*private void checkScriptSigForAllInputs(Transaction transaction) throws TransactionVerificationException {
         int inputIndex = 0;
         for (TransactionInput input : transaction.getInputs()) {
             checkScriptSig(transaction, input, inputIndex);
+            inputIndex++;
         }
-    }
+    }*/
 
     private void removeSignatures(Transaction transaction) throws InsufficientMoneyException {
         for (TransactionInput input : transaction.getInputs()) {
