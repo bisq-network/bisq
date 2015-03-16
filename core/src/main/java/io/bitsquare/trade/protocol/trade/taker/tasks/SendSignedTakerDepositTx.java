@@ -42,7 +42,7 @@ public class SendSignedTakerDepositTx extends Task<SellerAsTakerModel> {
                 model.getNetworkPubKey(),
                 model.getTrade().getContractAsJson(),
                 model.getTrade().getTakerContractSignature(),
-                model.getWalletService().getAddressEntry(model.getId()).getAddressString(),
+                model.getAddressEntry().getAddressString(),
                 model.getTakerDepositTx(),
                 model.getTakerConnectedOutputsForAllInputs(),
                 model.getTakerOutputs()

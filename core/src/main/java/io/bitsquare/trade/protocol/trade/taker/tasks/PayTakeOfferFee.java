@@ -42,13 +42,13 @@ public class PayTakeOfferFee extends Task<SellerAsTakerModel> {
     @Override
     protected void doRun() {
         try {
-            model.getWalletService().payTakeOfferFee(model.getId(), new FutureCallback<Transaction>() {
+            model.getTradeService().payTakeOfferFee(model.getAddressEntry(), new FutureCallback<Transaction>() {
                 @Override
                 public void onSuccess(Transaction transaction) {
                     log.debug("Take offer fee paid successfully. Transaction ID = " + transaction.getHashAsString());
                     model.getTrade().setTakeOfferFeeTxID(transaction.getHashAsString());
                     model.getTrade().setState(Trade.State.TAKE_OFFER_FEE_PAID);
-                    
+
                     complete();
                 }
 

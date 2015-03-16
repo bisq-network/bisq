@@ -41,7 +41,7 @@ public class SendBankTransferStartedMessage extends Task<BuyerAsOffererModel> {
                 model.getOffererSignature().encodeToDER(),
                 model.getOffererPayoutAmount(),
                 model.getTakerPayoutAmount(),
-                model.getWalletService().getAddressEntry(model.getId()).getAddressString());
+                model.getAddressEntry().getAddressString());
         model.getTradeMessageService().sendMessage(model.getTaker(), tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {

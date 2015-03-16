@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.TradeService;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.util.taskrunner.Task;
@@ -42,7 +42,7 @@ public class TakerCreatesAndSignsDepositTx extends Task<SellerAsTakerModel> {
             Coin takerInputAmount = model.getTrade().getTradeAmount().add(model.getTrade().getSecurityDeposit()).add(FeePolicy.TX_FEE);
             Coin msOutputAmount = takerInputAmount.add(model.getTrade().getSecurityDeposit());
 
-            WalletService.TransactionDataResult result = model.getWalletService().takerCreatesAndSignsDepositTx(
+            TradeService.TransactionDataResult result = model.getTradeService().takerCreatesAndSignsDepositTx(
                     takerInputAmount,
                     msOutputAmount,
                     model.getOffererConnectedOutputsForAllInputs(),
