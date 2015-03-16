@@ -26,7 +26,7 @@ import java.io.Serializable;
 
 public class BankTransferStartedMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = -3479634129543632523L;
-    
+
     private final String tradeId;
     private final Transaction depositTx;
     private final byte[] offererSignature;

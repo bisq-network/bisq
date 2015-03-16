@@ -47,7 +47,7 @@ public class SetupListenerForBlockChainConfirmation extends Task<BuyerAsOffererM
                     model.getTrade().setState(Trade.State.DEPOSIT_CONFIRMED);
 
                     boolean removed = confidence.removeEventListener(this);
-                    log.debug("listener removed? "+removed);
+                    log.debug("listener removed? " + removed);
                 }
             }
         });

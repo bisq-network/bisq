@@ -38,7 +38,7 @@ public class AddressEntry implements Serializable {
     private final byte[] pubKey;
     private final byte[] pubKeyHash;
 
-    public AddressEntry(DeterministicKey keyPair, NetworkParameters params, AddressContext addressContext) {
+    public AddressEntry(DeterministicKey keyPair, NetworkParameters params, @SuppressWarnings("SameParameterValue") AddressContext addressContext) {
         this(keyPair, params, addressContext, null);
     }
 

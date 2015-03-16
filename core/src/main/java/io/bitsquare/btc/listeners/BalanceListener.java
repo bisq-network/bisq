@@ -34,6 +34,7 @@ public class BalanceListener {
         return address;
     }
 
+    @SuppressWarnings("UnusedParameters")
     public void onBalanceChanged(Coin balance) {
     }
 }

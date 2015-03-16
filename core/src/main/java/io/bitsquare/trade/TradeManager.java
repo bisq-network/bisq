@@ -103,17 +103,17 @@ public class TradeManager {
         this.offerBookService = offerBookService;
 
         Object openOffersObject = persistence.read(this, "openOffers");
-        if (openOffersObject instanceof Map) {
+        if (openOffersObject instanceof Map<?, ?>) {
             openOffers.putAll((Map<String, OpenOffer>) openOffersObject);
         }
 
         Object pendingTradesObject = persistence.read(this, "pendingTrades");
-        if (pendingTradesObject instanceof Map) {
+        if (pendingTradesObject instanceof Map<?, ?>) {
             pendingTrades.putAll((Map<String, Trade>) pendingTradesObject);
         }
 
         Object closedTradesObject = persistence.read(this, "closedTrades");
-        if (closedTradesObject instanceof Map) {
+        if (closedTradesObject instanceof Map<?, ?>) {
             closedTrades.putAll((Map<String, Trade>) closedTradesObject);
         }
 

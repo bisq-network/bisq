@@ -31,6 +31,7 @@ public class AddressConfidenceListener {
         return address;
     }
 
+    @SuppressWarnings("UnusedParameters")
     public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
     }
 }

@@ -28,7 +28,6 @@ import io.bitsquare.trade.protocol.trade.offerer.messages.RequestDepositPaymentM
 import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToTakeOfferRequestMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
 import io.bitsquare.trade.protocol.trade.taker.tasks.GetPeerAddress;
-import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCreatesAndSignsDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.PayTakeOfferFee;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessBankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessDepositTxPublishedMessage;
@@ -40,6 +39,7 @@ import io.bitsquare.trade.protocol.trade.taker.tasks.SendSignedTakerDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendTakeOfferFeePayedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SignAndPublishPayoutTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCommitDepositTx;
+import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCreatesAndSignsDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOffererAccount;
 
@@ -196,12 +196,12 @@ public class SellerAsTakerProtocol {
     // Massage dispatcher
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handleMessage(Message message, @SuppressWarnings("UnusedParameters") Peer sender) {
+    private void handleMessage(Message message, Peer sender) {
         log.trace("handleNewMessage: message = " + message.getClass().getSimpleName());
         if (message instanceof TradeMessage) {
             TradeMessage tradeMessage = (TradeMessage) message;
             nonEmptyStringOf(tradeMessage.getTradeId());
-           
+
             if (tradeMessage.getTradeId().equals(model.getOffer().getId())) {
                 if (tradeMessage instanceof RespondToTakeOfferRequestMessage) {
                     handleRespondToTakeOfferRequestMessage((RespondToTakeOfferRequestMessage) tradeMessage);

@@ -2660,8 +2660,8 @@ is being used to size a border should also be in pixels.
 }
 
 /* Header Sort Arrows */
-.table-view /*> column-header-background > nested-column-header >*/  .arrow,
-.tree-table-view /*> column-header-background > nested-column-header >*/  .arrow {
+.table-view /*> column-header-background > nested-column-header >*/   .arrow,
+.tree-table-view /*> column-header-background > nested-column-header >*/   .arrow {
     -fx-background-color: -fx-mark-color;
     -fx-padding: 0.25em 0.3125em 0.25em 0.3125em; /* 3 3.75 3 3.75 */
     -fx-shape: "M 0 0 h 7 l -3.5 4 z";

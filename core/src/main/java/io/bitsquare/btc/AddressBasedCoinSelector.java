@@ -53,12 +53,13 @@ class AddressBasedCoinSelector extends DefaultCoinSelector {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AddressBasedCoinSelector(NetworkParameters params, AddressEntry addressEntry, boolean includePending) {
+    public AddressBasedCoinSelector(NetworkParameters params, AddressEntry addressEntry, @SuppressWarnings("SameParameterValue") boolean includePending) {
         this.params = params;
         this.addressEntry = addressEntry;
         this.includePending = includePending;
     }
 
+    @SuppressWarnings("WeakerAccess")
     @VisibleForTesting
     static void sortOutputs(ArrayList<TransactionOutput> outputs) {
         Collections.sort(outputs, (a, b) -> {
@@ -130,14 +131,14 @@ class AddressBasedCoinSelector extends DefaultCoinSelector {
     }
 
     private boolean matchesRequiredAddress(TransactionOutput transactionOutput) {
-        if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH
+        if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash
                 ()) {
             Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
             log.trace("matchesRequiredAddress?");
             log.trace(addressOutput.toString());
             log.trace(addressEntry.getAddress().toString());
 
-            if (addressEntry != null && addressOutput.equals(addressEntry.getAddress())) {
+            if (addressOutput.equals(addressEntry.getAddress())) {
                 return true;
             }
             log.warn("No match found at matchesRequiredAddress addressOutput/addressEntry " + addressOutput.toString

@@ -25,7 +25,7 @@ import java.io.Serializable;
 
 public class TakeOfferFeePayedMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = -5057935061275354312L;
-    
+
     private final String tradeId;
     private final Coin tradeAmount;
     private final String takeOfferFeeTxID;

@@ -80,8 +80,8 @@ public class TradeService {
 
     private final NetworkParameters params;
     private final Wallet wallet;
-    private WalletAppKit walletAppKit;
-    private FeePolicy feePolicy;
+    private final WalletAppKit walletAppKit;
+    private final FeePolicy feePolicy;
 
     public TradeService(NetworkParameters params, Wallet wallet, WalletAppKit walletAppKit, FeePolicy feePolicy) {
         this.params = params;
@@ -136,7 +136,7 @@ public class TradeService {
     // Trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TransactionDataResult offererCreatesDepositTxInputs(Coin inputAmount, AddressEntry addressInfo) throws InsufficientMoneyException,
+    public TransactionDataResult offererCreatesDepositTxInputs(Coin inputAmount, AddressEntry addressInfo) throws
             TransactionVerificationException, WalletException {
 
         // We pay the tx fee 2 times to the deposit tx:
@@ -199,7 +199,7 @@ public class TradeService {
                                                                AddressEntry addressInfo,
                                                                byte[] offererPubKey,
                                                                byte[] takerPubKey,
-                                                               byte[] arbitratorPubKey) throws InsufficientMoneyException, SigningException,
+                                                               byte[] arbitratorPubKey) throws SigningException,
             TransactionVerificationException, WalletException {
 
         checkArgument(offererConnectedOutputsForAllInputs.size() > 0);
@@ -308,7 +308,6 @@ public class TradeService {
         }
 
         // Add taker inputs and apply signature
-        List<TransactionInput> takerInputs = new ArrayList<>();
         for (TransactionOutput connectedOutputForInput : takerConnectedOutputsForAllInputs) {
             TransactionOutPoint outPoint = new TransactionOutPoint(params, connectedOutputForInput.getIndex(), connectedOutputForInput.getParentTransaction());
 
@@ -319,7 +318,6 @@ public class TradeService {
                 throw new TransactionVerificationException("Inputs from taker not singed.");
 
             TransactionInput transactionInput = new TransactionInput(params, depositTx, scriptProgram, outPoint, connectedOutputForInput.getValue());
-            takerInputs.add(transactionInput);
             depositTx.addInput(transactionInput);
         }
 
@@ -372,7 +370,7 @@ public class TradeService {
                                                                 Coin takerPayoutAmount,
                                                                 String takerAddressString,
                                                                 AddressEntry addressEntry)
-            throws AddressFormatException, TransactionVerificationException, WalletException {
+            throws AddressFormatException, TransactionVerificationException {
 
         Transaction payoutTx = createPayoutTx(depositTx, offererPayoutAmount, takerPayoutAmount, addressEntry.getAddressString(), takerAddressString);
 
@@ -442,7 +440,7 @@ public class TradeService {
         return tx;
     }
 
-    public static void printTxWithInputs(String tracePrefix, Transaction tx) {
+    private static void printTxWithInputs(String tracePrefix, Transaction tx) {
         log.trace(tracePrefix + ": " + tx.toString());
         for (TransactionInput input : tx.getInputs()) {
             if (input.getConnectedOutput() != null)
@@ -474,7 +472,7 @@ public class TradeService {
         }
     }
 
-    private void signInput(Transaction transaction, TransactionInput input, int inputIndex) throws SigningException, TransactionVerificationException {
+    private void signInput(Transaction transaction, TransactionInput input, int inputIndex) throws SigningException {
         Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
         ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
         Sha256Hash hash = transaction.hashForSignature(inputIndex, scriptPubKey, Transaction.SigHash.ALL, false);
@@ -510,7 +508,7 @@ public class TradeService {
         }
     }*/
 
-    private void removeSignatures(Transaction transaction) throws InsufficientMoneyException {
+    private void removeSignatures(Transaction transaction) {
         for (TransactionInput input : transaction.getInputs()) {
             input.setScriptSig(new Script(new byte[]{}));
         }

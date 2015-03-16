@@ -43,14 +43,14 @@ public class GetPeerAddress extends Task<SellerAsTakerModel> {
                 log.trace("Found peer: " + peer.toString());
 
                 model.setOfferer(peer);
-                
+
                 complete();
             }
 
             @Override
             public void onFailed() {
                 model.getOffer().setState(Offer.State.OFFERER_OFFLINE);
-                
+
                 failed();
             }
         });

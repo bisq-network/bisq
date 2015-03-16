@@ -24,6 +24,7 @@ import javax.inject.Inject;
 /**
  * A service delivers blockchain functionality from the BitcoinJ library.
  */
+@SuppressWarnings({"UnusedDeclaration", "UnusedParameters"})
 public class BlockChainService {
     @Inject
     public BlockChainService() {
@@ -31,36 +32,43 @@ public class BlockChainService {
     }
 
     //TODO
-    public boolean isAccountBlackListed(String accountID, BankAccount bankAccount) {
+    @SuppressWarnings("SameReturnValue")
+    public boolean isAccountBlackListed(String accountId, BankAccount bankAccount) {
         return false;
     }
 
     //TODO
+    @SuppressWarnings("SameReturnValue")
     public boolean verifyAccountRegistration() {
         return true;
     }
 
+    @SuppressWarnings("SameReturnValue")
     private boolean findAddressInBlockChain(String address) {
         // TODO lookup for address in blockchain
         return true;
     }
 
 
+    @SuppressWarnings("SameReturnValue")
     private byte[] getDataForTxWithAddress(String address) {
         // TODO return data after OP_RETURN
         return null;
     }
 
+    @SuppressWarnings("SameReturnValue")
     private boolean isFeePayed(String address) {
         // TODO check if fee is paid
         return true;
     }
 
+    @SuppressWarnings("SameReturnValue")
     private boolean isAccountIDBlacklisted(String accountID) {
         // TODO check if accountID is on blacklist
         return false;
     }
 
+    @SuppressWarnings("SameReturnValue")
     private boolean isBankAccountBlacklisted(BankAccount bankAccount) {
         // TODO check if accountID is on blacklist
         return false;

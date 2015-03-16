@@ -211,7 +211,7 @@ public class WalletService {
         wallet.addEventListener(walletEventListener);
 
         Serializable serializable = persistence.read(this, "addressEntryList");
-        if (serializable instanceof List) {
+        if (serializable instanceof List<?>) {
             List<AddressEntry> persistedAddressEntryList = (List<AddressEntry>) serializable;
             for (AddressEntry persistedAddressEntry : persistedAddressEntryList) {
                 persistedAddressEntry.setDeterministicKey((DeterministicKey) wallet.findKeyFromPubHash(persistedAddressEntry.getPubKeyHash()));
@@ -355,9 +355,6 @@ public class WalletService {
         return null;
     }
 
-    private void notifyConfidenceListeners(Transaction tx) {
-    }
-
     private TransactionConfidence getTransactionConfidence(Transaction tx, Address address) {
         List<TransactionOutput> mergedOutputs = getOutputsWithConnectedOutputs(tx);
         List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
@@ -412,6 +409,7 @@ public class WalletService {
     }
 
 
+    @SuppressWarnings("UnusedDeclaration")
     public boolean isRegistrationFeeConfirmed() {
         TransactionConfidence transactionConfidence = null;
         if (getRegistrationAddressEntry() != null) {
@@ -442,7 +440,7 @@ public class WalletService {
         return balance;
     }
 
-    public Coin getWalletBalance() {
+    Coin getWalletBalance() {
         return wallet.getBalance(Wallet.BalanceType.ESTIMATED);
     }
 
@@ -454,16 +452,19 @@ public class WalletService {
         return getBalanceForAddress(getArbitratorDepositAddressEntry().getAddress());
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public boolean isRegistrationFeeBalanceNonZero() {
         return getRegistrationBalance().compareTo(Coin.ZERO) > 0;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public boolean isRegistrationFeeBalanceSufficient() {
         return getRegistrationBalance().compareTo(FeePolicy.REGISTRATION_FEE) >= 0;
     }
 
     //TODO
-    public int getNumOfPeersSeenTx(String txID) {
+    @SuppressWarnings("SameReturnValue")
+    public int getNumOfPeersSeenTx(String txId) {
         // TODO check from blockchain
         // will be async
         return 3;
@@ -558,7 +559,7 @@ public class WalletService {
         }
     }
 
-    public static void printTxWithInputs(String tracePrefix, Transaction tx) {
+    private static void printTxWithInputs(String tracePrefix, Transaction tx) {
         log.trace(tracePrefix + ": " + tx.toString());
         for (TransactionInput input : tx.getInputs()) {
             if (input.getConnectedOutput() != null)

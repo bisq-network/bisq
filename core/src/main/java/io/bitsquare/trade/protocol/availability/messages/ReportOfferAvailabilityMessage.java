@@ -23,7 +23,7 @@ import java.io.Serializable;
 
 public class ReportOfferAvailabilityMessage implements Serializable, OfferMessage {
     private static final long serialVersionUID = 6177387534187739018L;
-    
+
     private final String offerId;
     private final boolean isOfferOpen;
 

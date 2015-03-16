@@ -44,7 +44,7 @@ public class GetPeerAddress extends Task<CheckOfferAvailabilityModel> {
                 log.trace("Found peer: " + peer.toString());
 
                 model.setPeer(peer);
-                
+
                 complete();
             }
 

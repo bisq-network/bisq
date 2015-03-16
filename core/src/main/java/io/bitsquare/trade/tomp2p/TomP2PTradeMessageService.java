@@ -25,7 +25,6 @@ import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.listeners.GetPeerAddressListener;
 import io.bitsquare.trade.listeners.SendMessageListener;
-import io.bitsquare.user.User;
 
 import java.security.PublicKey;
 
@@ -64,7 +63,7 @@ public class TomP2PTradeMessageService implements TradeMessageService {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TomP2PTradeMessageService(User user, TomP2PNode tomP2PNode) {
+    public TomP2PTradeMessageService(TomP2PNode tomP2PNode) {
         this.tomP2PNode = tomP2PNode;
     }
 

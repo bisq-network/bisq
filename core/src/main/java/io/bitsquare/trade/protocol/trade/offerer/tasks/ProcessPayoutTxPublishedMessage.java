@@ -42,7 +42,7 @@ public class ProcessPayoutTxPublishedMessage extends Task<BuyerAsOffererModel> {
             checkTradeId(model.getId(), model.getTradeMessage());
 
             model.getTrade().setPayoutTx(checkNotNull(((PayoutTxPublishedMessage) model.getTradeMessage()).getPayoutTx()));
-            
+
             model.getTrade().setState(Trade.State.PAYOUT_PUBLISHED);
 
             complete();

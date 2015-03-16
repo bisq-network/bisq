@@ -24,7 +24,7 @@ import java.io.Serializable;
 // That msg is used to ping the offerer if he is online and if the offer is still available
 public class RequestIsOfferAvailableMessage implements Serializable, OfferMessage {
     private static final long serialVersionUID = 4630151440192191798L;
-    
+
     private final String offerId;
 
     public RequestIsOfferAvailableMessage(String offerId) {

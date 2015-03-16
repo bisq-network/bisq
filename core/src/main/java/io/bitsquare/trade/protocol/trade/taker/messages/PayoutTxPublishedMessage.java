@@ -25,7 +25,7 @@ import java.io.Serializable;
 
 public class PayoutTxPublishedMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = 1288653559218403873L;
-    
+
     private final String tradeId;
     private final Transaction payoutTx;
 

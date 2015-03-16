@@ -30,6 +30,7 @@ public class TxConfidenceListener {
         return txID;
     }
 
+    @SuppressWarnings("UnusedParameters")
     public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
     }
 }

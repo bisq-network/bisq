@@ -58,7 +58,7 @@ public class Arbitrator implements Serializable {
                       List<ID_VERIFICATION> idVerifications,
                       String webUrl,
                       String description) {
-        this.pubKey=pubKey;
+        this.pubKey = pubKey;
         this.messagePubKeyAsHex = messagePubKeyAsHex;
         this.name = name;
         this.idType = idType;

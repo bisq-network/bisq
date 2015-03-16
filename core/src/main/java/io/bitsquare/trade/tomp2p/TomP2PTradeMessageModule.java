@@ -20,7 +20,6 @@ package io.bitsquare.trade.tomp2p;
 import io.bitsquare.network.tomp2p.TomP2PNode;
 import io.bitsquare.trade.TradeMessageModule;
 import io.bitsquare.trade.TradeMessageService;
-import io.bitsquare.user.User;
 
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
@@ -47,8 +46,8 @@ class TomP2PTradeMessageServiceProvider implements Provider<TradeMessageService>
     private final TradeMessageService tradeMessageService;
 
     @Inject
-    public TomP2PTradeMessageServiceProvider(User user, TomP2PNode tomP2PNode) {
-        tradeMessageService = new TomP2PTradeMessageService(user, tomP2PNode);
+    public TomP2PTradeMessageServiceProvider(TomP2PNode tomP2PNode) {
+        tradeMessageService = new TomP2PTradeMessageService(tomP2PNode);
         tradeMessageService.setExecutor(Platform::runLater);
     }
 
