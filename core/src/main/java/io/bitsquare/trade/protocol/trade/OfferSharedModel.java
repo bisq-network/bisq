@@ -39,34 +39,34 @@ public class OfferSharedModel extends SharedModel {
     protected static final Logger log = LoggerFactory.getLogger(OfferSharedModel.class);
 
     // provided
-    protected final Offer offer;
-    protected final TradeMessageService tradeMessageService;
-    protected final WalletService walletService;
-    protected final BlockChainService blockChainService;
-    protected final SignatureService signatureService;
+    private final Offer offer;
+    private final TradeMessageService tradeMessageService;
+    private final WalletService walletService;
+    private final BlockChainService blockChainService;
+    private final SignatureService signatureService;
 
 
     // derived
-    protected final String id;
-    protected final BankAccount bankAccount;
-    protected final String accountId;
-    protected final PublicKey networkPubKey;
-    protected final byte[] registrationPubKey;
-    protected final DeterministicKey registrationKeyPair;
-    protected final byte[] arbitratorPubKey;
-    protected final AddressEntry addressEntry;
+    private final String id;
+    private final BankAccount bankAccount;
+    private final String accountId;
+    private final PublicKey networkPubKey;
+    private final byte[] registrationPubKey;
+    private final DeterministicKey registrationKeyPair;
+    private final byte[] arbitratorPubKey;
+    private final AddressEntry addressEntry;
     private final TradeService tradeService;
 
     // data written/read by tasks
-    protected TradeMessage tradeMessage;
+    private TradeMessage tradeMessage;
 
 
-    public OfferSharedModel(Offer offer,
-                            TradeMessageService tradeMessageService,
-                            WalletService walletService,
-                            BlockChainService blockChainService,
-                            SignatureService signatureService,
-                            User user) {
+    protected OfferSharedModel(Offer offer,
+                               TradeMessageService tradeMessageService,
+                               WalletService walletService,
+                               BlockChainService blockChainService,
+                               SignatureService signatureService,
+                               User user) {
         this.offer = offer;
         this.tradeMessageService = tradeMessageService;
         this.walletService = walletService;

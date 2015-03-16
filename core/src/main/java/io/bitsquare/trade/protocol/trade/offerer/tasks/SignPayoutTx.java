@@ -41,7 +41,7 @@ public class SignPayoutTx extends Task<BuyerAsOffererModel> {
             Trade trade = model.getTrade();
             Coin securityDeposit = trade.getSecurityDeposit();
             Coin offererPayoutAmount = trade.getTradeAmount().add(securityDeposit);
-            Coin takerPayoutAmount = securityDeposit;
+            @SuppressWarnings("UnnecessaryLocalVariable") Coin takerPayoutAmount = securityDeposit;
 
             TradeService.TransactionDataResult result = model.getTradeService().offererCreatesAndSignsPayoutTx(
                     trade.getDepositTx(),

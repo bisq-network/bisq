@@ -56,7 +56,6 @@ public class TomP2PTradeMessageService implements TradeMessageService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PTradeMessageService.class);
 
     private final TomP2PNode tomP2PNode;
-    private final User user;
     private final List<MessageHandler> messageHandlers = new ArrayList<>();
     private Executor executor;
 
@@ -66,10 +65,8 @@ public class TomP2PTradeMessageService implements TradeMessageService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public TomP2PTradeMessageService(User user, TomP2PNode tomP2PNode) {
-        this.user = user;
         this.tomP2PNode = tomP2PNode;
     }
-
 
     public void setExecutor(Executor executor) {
         this.executor = executor;

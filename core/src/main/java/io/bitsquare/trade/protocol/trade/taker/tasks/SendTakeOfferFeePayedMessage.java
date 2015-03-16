@@ -34,7 +34,7 @@ public class SendTakeOfferFeePayedMessage extends Task<SellerAsTakerModel> {
         super(taskHandler, model);
     }
 
-    public int retryCounter = 0;
+    private int retryCounter = 0;
 
     @Override
     protected void doRun() {

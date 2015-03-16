@@ -24,7 +24,7 @@ import io.bitsquare.util.taskrunner.TaskRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SellerAsTakerTaskRunner<T extends SellerAsTakerModel> extends TaskRunner<SellerAsTakerModel> {
+class SellerAsTakerTaskRunner<T extends SellerAsTakerModel> extends TaskRunner<SellerAsTakerModel> {
     private static final Logger log = LoggerFactory.getLogger(SellerAsTakerTaskRunner.class);
 
     public SellerAsTakerTaskRunner(T sharedModel, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {

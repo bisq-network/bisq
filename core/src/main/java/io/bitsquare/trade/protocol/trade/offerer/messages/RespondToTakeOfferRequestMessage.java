@@ -21,14 +21,13 @@ import io.bitsquare.trade.protocol.trade.TradeMessage;
 
 import java.io.Serializable;
 
-import org.jetbrains.annotations.NotNull;
-
 public class RespondToTakeOfferRequestMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = 6177387534087739018L;
+    
     private final String tradeId;
     private final boolean offerIsAvailable;
 
-    public RespondToTakeOfferRequestMessage(@NotNull String tradeId, boolean offerIsAvailable) {
+    public RespondToTakeOfferRequestMessage(String tradeId, boolean offerIsAvailable) {
         this.tradeId = tradeId;
         this.offerIsAvailable = offerIsAvailable;
     }

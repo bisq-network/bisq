@@ -28,7 +28,6 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.DownloadListener;
-import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
@@ -157,7 +156,7 @@ public class WalletService {
                 initWallet();
 
                 tradeService = new TradeService(params, wallet, walletAppKit, feePolicy);
-                
+
                 status.onCompleted();
             }
         };
@@ -478,7 +477,7 @@ public class WalletService {
     public TradeService getTradeService() {
         return tradeService;
     }
-    
+
     public void payRegistrationFee(String stringifiedBankAccounts, FutureCallback<Transaction> callback) throws
             InsufficientMoneyException {
         log.debug("payRegistrationFee");
@@ -513,7 +512,6 @@ public class WalletService {
         printTxWithInputs("payRegistrationFee", tx);
     }
 
-  
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Withdrawal
@@ -548,71 +546,6 @@ public class WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Trade process
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-   
-    /*
-    public TransactionDataResult offererCreatesDepositTxInputs(Coin inputAmount, AddressEntry addressInfo) throws InsufficientMoneyException,
-            TransactionVerificationException, WalletException {
-
-        // We pay the tx fee 2 times to the deposit tx:
-        // 1. Will be spent when publishing the deposit tx (paid by offerer)
-        // 2. Will be added to the MS amount, so when publishing the payout tx the fee is already there and the outputs are not changed by fee reduction
-        // The fee for the payout will be paid by the taker.
-
-        // inputAmount includes the tx fee. So we subtract the fee to get the dummyOutputAmount.
-        Coin dummyOutputAmount = inputAmount.subtract(FeePolicy.TX_FEE);
-
-        Transaction dummyTX = new Transaction(params);
-        // The output is just used to get the right inputs and change outputs, so we use an anonymous ECKey, as it will never be used for anything.
-        // We don't care about fee calculation differences between the real tx and that dummy tx as we use a static tx fee.
-        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTX, dummyOutputAmount, new ECKey().toAddress(params));
-        dummyTX.addOutput(dummyOutput);
-
-        // Fin the needed inputs to pay the output, optional add change output.
-        // Normally only 1 input and no change output is used, but we support multiple inputs and outputs. Our spending transaction output is from the create
-        // offer fee payment. In future changes (in case of no offer fee) multiple inputs might become used.
-        addAvailableInputsAndChangeOutputs(dummyTX, addressInfo);
-
-        // The completeTx() call signs the input, but we don't want to pass over signed tx inputs
-        // But to be safe and to support future changes (in case of no offer fee) we handle potential multiple inputs
-        removeSignatures(dummyTX);
-
-        verifyTransaction(dummyTX);
-        checkWalletConsistency();
-
-        // The created tx looks like:
-         *//*
-        IN[0]  any input > inputAmount (including tx fee) (unsigned)
-        IN[1...n] optional inputs supported, but currently there is just 1 input (unsigned)
-        OUT[0] dummyOutputAmount (inputAmount - tx fee)
-        OUT[1] Optional Change = inputAmount - dummyOutputAmount - tx fee
-        OUT[2...n] optional more outputs are supported, but currently there is just max. 1 optional change output
-         *//*
-
-        printTxWithInputs("dummyTX", dummyTX);
-
-        List<TransactionOutput> connectedOutputsForAllInputs = new ArrayList<>();
-        for (TransactionInput input : dummyTX.getInputs()) {
-            connectedOutputsForAllInputs.add(input.getConnectedOutput());
-        }
-
-        // Only save offerer outputs, the MS output is ignored
-        List<TransactionOutput> outputs = new ArrayList<>();
-        for (TransactionOutput output : dummyTX.getOutputs()) {
-            if (output.equals(dummyOutput))
-                continue;
-            outputs.add(output);
-        }
-
-        return new TransactionDataResult(connectedOutputsForAllInputs, outputs);
-    }*/
-
-   
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -638,53 +571,6 @@ public class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Inner classes
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public class TransactionDataResult {
-        private List<TransactionOutput> connectedOutputsForAllInputs;
-        private List<TransactionOutput> outputs;
-        private Transaction depositTx;
-
-
-        private Transaction payoutTx;
-        private ECKey.ECDSASignature offererSignature;
-
-        public TransactionDataResult(List<TransactionOutput> connectedOutputsForAllInputs, List<TransactionOutput> outputs) {
-            this.connectedOutputsForAllInputs = connectedOutputsForAllInputs;
-            this.outputs = outputs;
-        }
-
-        public TransactionDataResult(Transaction depositTx, List<TransactionOutput> connectedOutputsForAllInputs, List<TransactionOutput> outputs) {
-            this.depositTx = depositTx;
-            this.connectedOutputsForAllInputs = connectedOutputsForAllInputs;
-            this.outputs = outputs;
-        }
-
-        public TransactionDataResult(Transaction payoutTx, ECKey.ECDSASignature offererSignature) {
-
-            this.payoutTx = payoutTx;
-            this.offererSignature = offererSignature;
-        }
-
-        public List<TransactionOutput> getOutputs() {
-            return outputs;
-        }
-
-        public List<TransactionOutput> getConnectedOutputsForAllInputs() {
-            return connectedOutputsForAllInputs;
-        }
-
-        public Transaction getDepositTx() {
-            return depositTx;
-        }
-
-        public Transaction getPayoutTx() {
-            return payoutTx;
-        }
-
-        public ECKey.ECDSASignature getOffererSignature() {
-            return offererSignature;
-        }
-    }
 
     private static class ObservableDownloadListener extends DownloadListener {
 

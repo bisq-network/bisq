@@ -31,7 +31,6 @@ import io.bitsquare.offer.tomp2p.TomP2POfferModule;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Preferences;
 import io.bitsquare.trade.TradeMessageModule;
-import io.bitsquare.trade.TradeModule;
 import io.bitsquare.trade.tomp2p.TomP2PTradeMessageModule;
 import io.bitsquare.user.User;
 
@@ -72,7 +71,6 @@ class BitsquareAppModule extends BitsquareModule {
         install(networkModule());
         install(bitcoinModule());
         install(cryptoModule());
-        install(tradeModule());
         install(tradeMessageModule());
         install(offerModule());
         install(arbitratorMessageModule());
@@ -93,10 +91,6 @@ class BitsquareAppModule extends BitsquareModule {
 
     protected CryptoModule cryptoModule() {
         return new CryptoModule(env);
-    }
-
-    protected TradeModule tradeModule() {
-        return new TradeModule(env);
     }
 
     protected TradeMessageModule tradeMessageModule() {

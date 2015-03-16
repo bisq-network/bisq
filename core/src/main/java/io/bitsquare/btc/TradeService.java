@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.inject.internal.util.$Preconditions.*;
 
-// 
+// TradeService handles all trade relevant transactions as a delegate for WalletService
 /*
 
     Deposit tx:

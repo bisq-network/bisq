@@ -32,8 +32,8 @@ public class PlaceOfferProtocol {
     private static final Logger log = LoggerFactory.getLogger(PlaceOfferProtocol.class);
 
     private final PlaceOfferModel model;
-    private TransactionResultHandler resultHandler;
-    private ErrorMessageHandler errorMessageHandler;
+    private final TransactionResultHandler resultHandler;
+    private final ErrorMessageHandler errorMessageHandler;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor

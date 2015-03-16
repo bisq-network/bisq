@@ -40,7 +40,7 @@ public class GetOffererDepositTxInputs extends Task<BuyerAsOffererModel> {
     protected void doRun() {
         try {
             Coin offererInputAmount = model.getTrade().getSecurityDeposit().add(FeePolicy.TX_FEE);
-            AddressEntry addressInfo = model.getWalletService().getAddressEntry(model.getId());
+            AddressEntry addressInfo = model.getAddressEntry();
             TradeService.TransactionDataResult result = model.getTradeService().offererCreatesDepositTxInputs(offererInputAmount, addressInfo);
           
             model.setOffererConnectedOutputsForAllInputs(result.getConnectedOutputsForAllInputs());

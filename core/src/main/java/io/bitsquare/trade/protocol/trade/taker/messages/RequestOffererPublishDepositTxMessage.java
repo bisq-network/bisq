@@ -31,16 +31,17 @@ import java.util.List;
 
 public class RequestOffererPublishDepositTxMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = 2179683654379803071L;
+
     private final String tradeId;
     private final BankAccount bankAccount;
     private final String accountID;
     private final PublicKey takerMessagePublicKey;
     private final String contractAsJson;
     private final String takerContractSignature;
-    private String takerPayoutAddress;
-    private Transaction takersDepositTx;
-    private List<TransactionOutput> takerConnectedOutputsForAllInputs;
-    private List<TransactionOutput> takerOutputs;
+    private final String takerPayoutAddress;
+    private final Transaction takersDepositTx;
+    private final List<TransactionOutput> takerConnectedOutputsForAllInputs;
+    private final List<TransactionOutput> takerOutputs;
 
     public RequestOffererPublishDepositTxMessage(String tradeId,
                                                  BankAccount bankAccount,

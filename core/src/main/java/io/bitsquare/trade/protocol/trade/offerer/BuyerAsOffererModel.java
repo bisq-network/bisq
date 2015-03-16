@@ -112,7 +112,6 @@ public class BuyerAsOffererModel extends OfferSharedModel {
         this.offererOutputs = offererOutputs;
     }
 
-
     public OpenOffer getOpenOffer() {
         return openOffer;
     }
@@ -120,7 +119,6 @@ public class BuyerAsOffererModel extends OfferSharedModel {
     public Peer getTaker() {
         return taker;
     }
-
 
     public String getTakeOfferFeeTxId() {
         return takeOfferFeeTxId;
@@ -201,7 +199,6 @@ public class BuyerAsOffererModel extends OfferSharedModel {
     public void setTaker(Peer taker) {
         this.taker = taker;
     }
-
 
     public void setTakerDepositTx(Transaction takerDepositTx) {
         this.takerDepositTx = takerDepositTx;

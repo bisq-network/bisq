@@ -29,7 +29,6 @@ import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.offer.OpenOffer;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityModel;
@@ -81,7 +80,6 @@ public class TradeManager {
     private final ObservableMap<String, OpenOffer> openOffers = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> pendingTrades = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> closedTrades = FXCollections.observableHashMap();
-    private final MessageHandler messageHandler;
 
     private Trade currentPendingTrade;
 
@@ -118,9 +116,8 @@ public class TradeManager {
         if (closedTradesObject instanceof Map) {
             closedTrades.putAll((Map<String, Trade>) closedTradesObject);
         }
-        messageHandler = this::handleMessage;
 
-        tradeMessageService.addMessageHandler(messageHandler);
+        tradeMessageService.addMessageHandler(this::handleMessage);
     }
 
     // When all services are initialized we create the protocols for our open offers (which will listen for take offer requests)
@@ -190,9 +187,7 @@ public class TradeManager {
                     createBuyerAcceptsOfferProtocol(openOffer);
                     resultHandler.handleResult(transaction);
                 },
-                (message) -> {
-                    errorMessageHandler.handleErrorMessage(message);
-                }
+                (message) -> errorMessageHandler.handleErrorMessage(message)
         );
 
         placeOfferProtocol.placeOffer();
@@ -249,7 +244,7 @@ public class TradeManager {
     }
 
     public void onFiatPaymentStarted(String tradeId) {
-        // TODO remove if check when peristence is impl.
+        // TODO remove if check when persistence is impl.
         if (buyerAcceptsOfferProtocolMap.containsKey(tradeId)) {
             buyerAcceptsOfferProtocolMap.get(tradeId).onFiatPaymentStarted();
             persistPendingTrades();
@@ -442,9 +437,9 @@ public class TradeManager {
             closedTrades.put(trade.getId(), trade);
             persistClosedTrades();
         }
-        else {
+        /*else {
             // TODO add failed trades to history
-        }
+        }*/
     }
 
     private void disposeCheckOfferAvailabilityRequest(Offer offer) {
@@ -456,7 +451,7 @@ public class TradeManager {
         }
     }
 
-    public boolean isOfferOpen(String offerId) {
+    boolean isOfferOpen(String offerId) {
         // Don't use openOffers as the offer gets removed async from DHT, but is added sync to pendingTrades
         return !pendingTrades.containsKey(offerId) && !closedTrades.containsKey(offerId);
     }

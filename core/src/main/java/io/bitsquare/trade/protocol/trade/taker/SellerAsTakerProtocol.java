@@ -196,7 +196,7 @@ public class SellerAsTakerProtocol {
     // Massage dispatcher
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handleMessage(Message message, Peer sender) {
+    private void handleMessage(Message message, @SuppressWarnings("UnusedParameters") Peer sender) {
         log.trace("handleNewMessage: message = " + message.getClass().getSimpleName());
         if (message instanceof TradeMessage) {
             TradeMessage tradeMessage = (TradeMessage) message;

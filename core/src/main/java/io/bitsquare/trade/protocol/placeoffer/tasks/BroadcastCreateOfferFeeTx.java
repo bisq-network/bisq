@@ -28,6 +28,8 @@ import org.bitcoinj.core.Transaction;
 
 import com.google.common.util.concurrent.FutureCallback;
 
+import org.jetbrains.annotations.NotNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,44 +58,39 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                 @Override
                 public void onSuccess(Transaction transaction) {
                     log.info("Broadcast of offer fee payment succeeded: transaction = " + transaction.toString());
-                    if (transaction != null) {
 
-                        if (model.getTransaction().getHashAsString() == transaction.getHashAsString()) {
-                            // No tx malleability happened after broadcast (still not in blockchain)
-                            complete();
-                        }
-                        else {
-                            log.warn("Tx malleability happened after broadcast. We publish the changed offer to the DHT again.");
-                            // Tx malleability happened after broadcast. We publish the changed offer to the DHT again.
-                            model.getOfferBookService().removeOffer(model.getOffer(),
-                                    () -> {
-                                        log.info("We store now the changed txID to the offer and add that again.");
-                                        // We store now the changed txID to the offer and add that again.
-                                        model.getOffer().setOfferFeePaymentTxID(transaction.getHashAsString());
-                                        model.getOfferBookService().addOffer(model.getOffer(),
-                                                () -> {
-                                                    complete();
-                                                },
-                                                (message, throwable) -> {
-                                                    log.error("addOffer failed");
-                                                    addOfferFailed = true;
-                                                    failed(throwable);
-                                                });
-                                    },
-                                    (message, throwable) -> {
-                                        log.error("removeOffer failed");
-                                        removeOfferFailed = true;
-                                        failed(throwable);
-                                    });
-                        }
+                    if (model.getTransaction().getHashAsString().equals(transaction.getHashAsString())) {
+                        // No tx malleability happened after broadcast (still not in blockchain)
+                        complete();
                     }
                     else {
-                        failed("Fault reason: Transaction = null.");
+                        log.warn("Tx malleability happened after broadcast. We publish the changed offer to the DHT again.");
+                        // Tx malleability happened after broadcast. We publish the changed offer to the DHT again.
+                        model.getOfferBookService().removeOffer(model.getOffer(),
+                                () -> {
+                                    log.info("We store now the changed txID to the offer and add that again.");
+                                    // We store now the changed txID to the offer and add that again.
+                                    model.getOffer().setOfferFeePaymentTxID(transaction.getHashAsString());
+                                    model.getOfferBookService().addOffer(model.getOffer(),
+                                            () -> {
+                                                complete();
+                                            },
+                                            (message, throwable) -> {
+                                                log.error("addOffer failed");
+                                                addOfferFailed = true;
+                                                failed(throwable);
+                                            });
+                                },
+                                (message, throwable) -> {
+                                    log.error("removeOffer failed");
+                                    removeOfferFailed = true;
+                                    failed(throwable);
+                                });
                     }
                 }
 
                 @Override
-                public void onFailure(Throwable t) {
+                public void onFailure(@NotNull Throwable t) {
                     failed(t);
                 }
             });

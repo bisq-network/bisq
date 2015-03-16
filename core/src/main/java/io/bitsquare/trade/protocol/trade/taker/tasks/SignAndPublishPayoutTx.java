@@ -23,7 +23,6 @@ import io.bitsquare.util.taskrunner.Task;
 import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.Utils;
 
 import com.google.common.util.concurrent.FutureCallback;
 
@@ -52,9 +51,6 @@ public class SignAndPublishPayoutTx extends Task<SellerAsTakerModel> {
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {
-                            log.debug("published payoutTx " + transaction);
-                            String payoutTxAsHex = Utils.HEX.encode(transaction.bitcoinSerialize());
-
                             model.setPayoutTx(transaction);
                             model.getTrade().setState(Trade.State.PAYOUT_PUBLISHED);
 

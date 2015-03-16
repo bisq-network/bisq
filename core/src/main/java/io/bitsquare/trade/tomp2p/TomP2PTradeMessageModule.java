@@ -22,7 +22,6 @@ import io.bitsquare.trade.TradeMessageModule;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.user.User;
 
-import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
@@ -41,11 +40,6 @@ public class TomP2PTradeMessageModule extends TradeMessageModule {
     @Override
     protected void doConfigure() {
         bind(TradeMessageService.class).toProvider(TomP2PTradeMessageServiceProvider.class).in(Singleton.class);
-    }
-
-    @Override
-    protected void doClose(Injector injector) {
-        super.doClose(injector);
     }
 }
 

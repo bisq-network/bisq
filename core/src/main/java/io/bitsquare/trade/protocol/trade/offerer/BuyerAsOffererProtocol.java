@@ -56,7 +56,7 @@ public class BuyerAsOffererProtocol {
 
     private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererProtocol.class);
 
-    private BuyerAsOffererModel model;
+    private final BuyerAsOffererModel model;
     private final MessageHandler messageHandler;
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -53,7 +53,7 @@ public class RequestDepositPayment extends Task<BuyerAsOffererModel> {
 
             @Override
             public void handleFault() {
-                failed("RequestTakerDepositPaymentMessage did not arrive at peer");
+                failed();
             }
         });
     }

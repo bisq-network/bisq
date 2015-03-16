@@ -49,13 +49,10 @@ public class SellerAsTakerModel extends OfferSharedModel {
 
     // written/read by task
     private Peer offerer;
-    private Transaction preparedDepositTx;
     private Transaction depositTx;
-    private Transaction signedTakerDepositTx;
     private Transaction payoutTx;
     private Coin takerPayoutAmount;
     private byte[] offererPubKey;
-    private long offererTxOutIndex;
     private Coin offererPayoutAmount;
     private String offererPayoutAddress;
     private List<TransactionOutput> offererConnectedOutputsForAllInputs;
@@ -134,23 +131,6 @@ public class SellerAsTakerModel extends OfferSharedModel {
         return offererPubKey;
     }
 
-
-    public Transaction getPreparedDepositTx() {
-        return preparedDepositTx;
-    }
-
-    public void setPreparedDepositTx(Transaction preparedDepositTx) {
-        this.preparedDepositTx = preparedDepositTx;
-    }
-
-    public long getOffererTxOutIndex() {
-        return offererTxOutIndex;
-    }
-
-    public void setOffererTxOutIndex(long offererTxOutIndex) {
-        this.offererTxOutIndex = offererTxOutIndex;
-    }
-
     public Transaction getDepositTx() {
         return depositTx;
     }
@@ -182,15 +162,6 @@ public class SellerAsTakerModel extends OfferSharedModel {
     public void setOffererPayoutAddress(String offererPayoutAddress) {
         this.offererPayoutAddress = offererPayoutAddress;
     }
-
-    public Transaction getSignedTakerDepositTx() {
-        return signedTakerDepositTx;
-    }
-
-    public void setSignedTakerDepositTx(Transaction signedTakerDepositTx) {
-        this.signedTakerDepositTx = signedTakerDepositTx;
-    }
-
 
     public void setTakerConnectedOutputsForAllInputs(List<TransactionOutput> takerConnectedOutputsForAllInputs) {
         this.takerConnectedOutputsForAllInputs = takerConnectedOutputsForAllInputs;

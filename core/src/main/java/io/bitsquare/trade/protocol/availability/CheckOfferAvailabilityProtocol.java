@@ -90,7 +90,7 @@ public class CheckOfferAvailabilityProtocol {
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handleMessage(Message message, Peer sender) {
+    private void handleMessage(Message message, @SuppressWarnings("UnusedParameters") Peer sender) {
         if (!isCanceled) {
             if (message instanceof ReportOfferAvailabilityMessage)
                 handleReportOfferAvailabilityMessage((ReportOfferAvailabilityMessage) message);

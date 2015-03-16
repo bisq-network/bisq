@@ -22,7 +22,6 @@ import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.util.taskrunner.Task;
 import io.bitsquare.util.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -57,7 +56,7 @@ public class PayTakeOfferFee extends Task<SellerAsTakerModel> {
                     failed(t);
                 }
             });
-        } catch (InsufficientMoneyException e) {
+        } catch (Exception e) {
             appendToErrorMessage(e.getMessage());
             failed(e);
         }
