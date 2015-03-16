@@ -43,7 +43,7 @@ import javafx.collections.ObservableList;
 public class User implements Serializable {
     private static final long serialVersionUID = 7409078808248518638L;
 
-    private KeyPair messageKeyPair;
+    private KeyPair networkKeyPair;
     private String accountID;
 
     // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is
@@ -57,8 +57,7 @@ public class User implements Serializable {
     public User() {
         // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is
         // only temporary
-        bankAccounts.addListener((ListChangeListener<BankAccount>) change ->
-                _bankAccounts = new ArrayList<>(bankAccounts));
+        bankAccounts.addListener((ListChangeListener<BankAccount>) change -> _bankAccounts = new ArrayList<>(bankAccounts));
 
         currentBankAccount.addListener((ov) -> _currentBankAccount = currentBankAccount.get());
     }
@@ -72,13 +71,13 @@ public class User implements Serializable {
         if (persistedUser != null) {
             bankAccounts.setAll(persistedUser.getSerializedBankAccounts());
             setCurrentBankAccount(persistedUser.getSerializedCurrentBankAccount());
-            messageKeyPair = persistedUser.getMessageKeyPair();
+            networkKeyPair = persistedUser.getNetworkKeyPair();
             accountID = persistedUser.getAccountId();
         }
         else {
             // First time
             // TODO use separate thread. DSAKeyUtil.getKeyPair() runs in same thread now
-            messageKeyPair = DSAKeyUtil.generateKeyPair();
+            networkKeyPair = DSAKeyUtil.generateKeyPair();
         }
     }
 
@@ -153,7 +152,6 @@ public class User implements Serializable {
     }
 
     public BankAccount getBankAccount(String bankAccountId) {
-        // TODO use steam API
         for (final BankAccount bankAccount : bankAccounts) {
             if (bankAccount.getUid().equals(bankAccountId)) {
                 return bankAccount;
@@ -162,24 +160,19 @@ public class User implements Serializable {
         return null;
     }
 
-    public KeyPair getMessageKeyPair() {
-        return messageKeyPair;
+    public KeyPair getNetworkKeyPair() {
+        return networkKeyPair;
     }
 
-    public PublicKey getMessagePublicKey() {
-        return messageKeyPair.getPublic();
-    }
-
-    public String getMessagePublicKeyAsString() {
-        return DSAKeyUtil.getHexStringFromPublicKey(getMessagePublicKey());
+    public PublicKey getNetworkPubKey() {
+        return networkKeyPair.getPublic();
     }
 
     public ObjectProperty<BankAccount> currentBankAccountProperty() {
         return currentBankAccount;
     }
 
-    // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is
-    // only temporary
+    // Used for serialisation (ObservableList cannot be serialized) 
     List<BankAccount> getSerializedBankAccounts() {
         return _bankAccounts;
     }

@@ -27,7 +27,7 @@ import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.user.User;
 import io.bitsquare.util.taskrunner.SharedModel;
 
-import org.bitcoinj.core.ECKey;
+import org.bitcoinj.crypto.DeterministicKey;
 
 import java.security.PublicKey;
 
@@ -47,18 +47,15 @@ public class OfferSharedModel extends SharedModel {
     // derived
     protected final BankAccount bankAccount;
     protected final String accountId;
-    protected final PublicKey messagePublicKey;
-    protected final ECKey accountKey;
-    protected final byte[] arbitratorPubKey;
+    protected final PublicKey networkPubKey;
+    protected final byte[] registrationPubKey;
 
-    // lazy initialized at first read access, as we don't want to create an entry before it is really needed
-    protected AddressEntry addressInfo;
+    protected final DeterministicKey registrationKeyPair;
+    protected final byte[] arbitratorPubKey;
+    protected final AddressEntry addressInfo;
 
     // data written/read by tasks
     protected TradeMessage tradeMessage;
-    protected byte[] takerPubKey;
-    protected String peersAccountId;
-    protected BankAccount peersBankAccount;
 
     public OfferSharedModel(Offer offer,
                             TradeMessageService tradeMessageService,
@@ -74,34 +71,26 @@ public class OfferSharedModel extends SharedModel {
 
         //TODO use default arbitrator for now
         arbitratorPubKey = offer.getArbitrators().get(0).getPubKey();
+        registrationPubKey = walletService.getRegistrationAddressEntry().getPubKey();
+        registrationKeyPair = walletService.getRegistrationAddressEntry().getKeyPair();
+        addressInfo = walletService.getAddressInfo(offer.getId());
         bankAccount = user.getBankAccount(offer.getBankAccountId());
         accountId = user.getAccountId();
-        messagePublicKey = user.getMessagePublicKey();
-        accountKey = walletService.getRegistrationAddressEntry().getKey();
+        networkPubKey = user.getNetworkPubKey();
     }
 
     // getter/setter
-    public AddressEntry getAddressInfo() {
-        if (addressInfo == null)
-            addressInfo = getWalletService().getAddressInfo(offer.getId());
 
-        return addressInfo;
+    public TradeMessage getTradeMessage() {
+        return tradeMessage;
     }
 
-    public String getPeersAccountId() {
-        return peersAccountId;
+    public void setTradeMessage(TradeMessage tradeMessage) {
+        this.tradeMessage = tradeMessage;
     }
 
-    public void setPeersAccountId(String peersAccountId) {
-        this.peersAccountId = peersAccountId;
-    }
-
-    public BankAccount getPeersBankAccount() {
-        return peersBankAccount;
-    }
-
-    public void setPeersBankAccount(BankAccount peersBankAccount) {
-        this.peersBankAccount = peersBankAccount;
+    public Offer getOffer() {
+        return offer;
     }
 
     public TradeMessageService getTradeMessageService() {
@@ -120,14 +109,6 @@ public class OfferSharedModel extends SharedModel {
         return signatureService;
     }
 
-    public Offer getOffer() {
-        return offer;
-    }
-
-    public byte[] getArbitratorPubKey() {
-        return arbitratorPubKey;
-    }
-
     public BankAccount getBankAccount() {
         return bankAccount;
     }
@@ -136,44 +117,24 @@ public class OfferSharedModel extends SharedModel {
         return accountId;
     }
 
-    public PublicKey getMessagePublicKey() {
-        return messagePublicKey;
+    public PublicKey getNetworkPubKey() {
+        return networkPubKey;
     }
 
-    public ECKey getAccountKey() {
-        return accountKey;
+    public byte[] getRegistrationPubKey() {
+        return registrationPubKey;
     }
 
-    public byte[] getTakerPubKey() {
-        return takerPubKey;
+    public DeterministicKey getRegistrationKeyPair() {
+        return registrationKeyPair;
     }
 
-    public void setTakerPubKey(byte[] takerPubKey) {
-        this.takerPubKey = takerPubKey;
+    public byte[] getArbitratorPubKey() {
+        return arbitratorPubKey;
     }
 
-    public String getTakerAccountId() {
-        return peersAccountId;
-    }
-
-    public void setTakerAccountId(String peersAccountId) {
-        this.peersAccountId = peersAccountId;
-    }
-
-    public BankAccount getTakerBankAccount() {
-        return peersBankAccount;
-    }
-
-    public void setTakerBankAccount(BankAccount peersBankAccount) {
-        this.peersBankAccount = peersBankAccount;
-    }
-
-    public TradeMessage getTradeMessage() {
-        return tradeMessage;
-    }
-
-    public void setTradeMessage(TradeMessage tradeMessage) {
-        this.tradeMessage = tradeMessage;
+    public AddressEntry getAddressInfo() {
+        return addressInfo;
     }
 
 }

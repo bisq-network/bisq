@@ -130,7 +130,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
         selectedItem = item;
 
         if (selectedItem != null) {
-            isOfferer = getTrade().getOffer().getMessagePublicKey().equals(user.getMessagePublicKey());
+            isOfferer = getTrade().getOffer().getMessagePublicKey().equals(user.getNetworkPubKey());
 
             Trade trade = getTrade();
             trade.stateProperty().addListener(stateChangeListener);
@@ -253,7 +253,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     public Direction getDirection(Offer offer) {
-        return offer.getMessagePublicKey().equals(user.getMessagePublicKey()) ?
+        return offer.getMessagePublicKey().equals(user.getNetworkPubKey()) ?
                 offer.getDirection() : offer.getMirroredDirection();
     }
 

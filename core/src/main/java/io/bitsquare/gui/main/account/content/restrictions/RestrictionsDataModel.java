@@ -152,9 +152,9 @@ class RestrictionsDataModel implements Activatable, DataModel {
 
     // TODO Remove mock later
     private void addMockArbitrator() {
-        if (accountSettings.getAcceptedArbitrators().isEmpty() && user.getMessageKeyPair() != null) {
+        if (accountSettings.getAcceptedArbitrators().isEmpty() && user.getNetworkKeyPair() != null) {
             byte[] pubKey = new ECKey().getPubKey();
-            String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
+            String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getNetworkPubKey());
             List<Locale> languages = new ArrayList<>();
             languages.add(LanguageUtil.getDefaultLanguageLocale());
             List<Arbitrator.METHOD> arbitrationMethods = new ArrayList<>();

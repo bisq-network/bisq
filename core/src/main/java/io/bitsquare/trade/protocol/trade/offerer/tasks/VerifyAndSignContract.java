@@ -46,10 +46,10 @@ public class VerifyAndSignContract extends Task<BuyerAsOffererModel> {
                 model.getTakerAccountId(),
                 model.getBankAccount(),
                 model.getTakerBankAccount(),
-                model.getMessagePublicKey(),
+                model.getNetworkPubKey(),
                 model.getTakerMessagePublicKey());
         String contractAsJson = Utilities.objectToJson(contract);
-        String signature = model.getSignatureService().signMessage(model.getAccountKey(), contractAsJson);
+        String signature = model.getSignatureService().signMessage(model.getRegistrationKeyPair(), contractAsJson);
 
         trade.setContract(contract);
         trade.setContractAsJson(contractAsJson);

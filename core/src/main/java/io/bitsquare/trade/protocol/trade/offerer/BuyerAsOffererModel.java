@@ -44,12 +44,11 @@ public class BuyerAsOffererModel extends OfferSharedModel {
 
     private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererModel.class);
 
-
     // provided
     private final OpenOffer openOffer;
 
     // derived
-    private final String offererPaybackAddress;
+    private final byte[] offererPubKey;
 
     // data written/read by tasks
     private Trade trade;
@@ -63,7 +62,7 @@ public class BuyerAsOffererModel extends OfferSharedModel {
     private Coin takerPaybackAmount;
     private String takeOfferFeeTxId;
 
-    private byte[] offererPubKey;
+
     private ECKey.ECDSASignature offererSignature;
     private Coin offererPaybackAmount;
     private List<TransactionOutput> offererConnectedOutputsForAllInputs;
@@ -74,6 +73,7 @@ public class BuyerAsOffererModel extends OfferSharedModel {
     private String takerPayoutAddress;
     private Transaction offererPayoutTx;
     private Transaction publishedDepositTx;
+    private byte[] takerPubKey;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -93,21 +93,34 @@ public class BuyerAsOffererModel extends OfferSharedModel {
                 signatureService,
                 user);
         this.openOffer = openOffer;
-
-        offererPaybackAddress = walletService.getAddressInfo(offer.getId()).getAddressString();
+        
+        offererPubKey = getAddressInfo().getPubKey();
     }
 
     //getter/setter
+    public List<TransactionOutput> getOffererConnectedOutputsForAllInputs() {
+        return offererConnectedOutputsForAllInputs;
+    }
+
+    public void setOffererConnectedOutputsForAllInputs(List<TransactionOutput> offererConnectedOutputsForAllInputs) {
+        this.offererConnectedOutputsForAllInputs = offererConnectedOutputsForAllInputs;
+    }
+
+    public List<TransactionOutput> getOffererOutputs() {
+        return offererOutputs;
+    }
+
+    public void setOffererOutputs(List<TransactionOutput> offererOutputs) {
+        this.offererOutputs = offererOutputs;
+    }
+
+
     public OpenOffer getOpenOffer() {
         return openOffer;
     }
 
     public Peer getTaker() {
         return taker;
-    }
-
-    public String getOffererPaybackAddress() {
-        return offererPaybackAddress;
     }
 
 
@@ -119,22 +132,18 @@ public class BuyerAsOffererModel extends OfferSharedModel {
         this.takeOfferFeeTxId = takeOfferFeeTxId;
     }
 
-    @Override
     public String getTakerAccountId() {
         return takerAccountId;
     }
 
-    @Override
     public void setTakerAccountId(String takerAccountId) {
         this.takerAccountId = takerAccountId;
     }
 
-    @Override
     public BankAccount getTakerBankAccount() {
         return takerBankAccount;
     }
 
-    @Override
     public void setTakerBankAccount(BankAccount takerBankAccount) {
         this.takerBankAccount = takerBankAccount;
     }
@@ -155,15 +164,9 @@ public class BuyerAsOffererModel extends OfferSharedModel {
         this.takerContractAsJson = takerContractAsJson;
     }
 
-
     public byte[] getOffererPubKey() {
         return offererPubKey;
     }
-
-    public void setOffererPubKey(byte[] offererPubKey) {
-        this.offererPubKey = offererPubKey;
-    }
-
 
     public ECKey.ECDSASignature getOffererSignature() {
         return offererSignature;
@@ -201,21 +204,6 @@ public class BuyerAsOffererModel extends OfferSharedModel {
         this.taker = taker;
     }
 
-    public List<TransactionOutput> getOffererConnectedOutputsForAllInputs() {
-        return offererConnectedOutputsForAllInputs;
-    }
-
-    public void setOffererConnectedOutputsForAllInputs(List<TransactionOutput> offererConnectedOutputsForAllInputs) {
-        this.offererConnectedOutputsForAllInputs = offererConnectedOutputsForAllInputs;
-    }
-
-    public List<TransactionOutput> getOffererOutputs() {
-        return offererOutputs;
-    }
-
-    public void setOffererOutputs(List<TransactionOutput> offererOutputs) {
-        this.offererOutputs = offererOutputs;
-    }
 
     public void setTakerDepositTx(Transaction takerDepositTx) {
         this.takerDepositTx = takerDepositTx;
@@ -263,5 +251,13 @@ public class BuyerAsOffererModel extends OfferSharedModel {
 
     public Transaction getPublishedDepositTx() {
         return publishedDepositTx;
+    }
+
+    public byte[] getTakerPubKey() {
+        return takerPubKey;
+    }
+
+    public void setTakerPubKey(byte[] takerPubKey) {
+        this.takerPubKey = takerPubKey;
     }
 }

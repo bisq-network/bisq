@@ -88,7 +88,7 @@ class OffersDataModel implements Activatable, DataModel {
 
     public Direction getDirection(OpenOffer openOffer) {
         Offer offer = openOffer.getOffer();
-        return offer.getMessagePublicKey().equals(user.getMessagePublicKey()) ?
+        return offer.getMessagePublicKey().equals(user.getNetworkPubKey()) ?
                 offer.getDirection() : offer.getMirroredDirection();
     }
 }

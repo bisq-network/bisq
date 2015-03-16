@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.taker;
 
+import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
@@ -27,7 +28,6 @@ import io.bitsquare.trade.protocol.trade.OfferSharedModel;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
@@ -41,7 +41,10 @@ public class SellerAsTakerModel extends OfferSharedModel {
 
     // provided
     private final Trade trade;
-    
+
+
+    // derived
+    private final byte[] takerPubKey;
 
     // written/read by task
     private Peer offerer;
@@ -53,15 +56,16 @@ public class SellerAsTakerModel extends OfferSharedModel {
     private Coin takerPaybackAmount;
     private byte[] offererPubKey;
     private long offererTxOutIndex;
-    private ECKey.ECDSASignature offererSignature;
     private Coin offererPaybackAmount;
     private String offererPayoutAddress;
-    private  List<TransactionOutput> offererConnectedOutputsForAllInputs;
-    private  List<TransactionOutput> offererOutputs;
+    private List<TransactionOutput> offererConnectedOutputsForAllInputs;
+    private List<TransactionOutput> offererOutputs;
     private List<TransactionOutput> takerConnectedOutputsForAllInputs;
     private List<TransactionOutput> takerOutputs;
     private Transaction takerDepositTx;
     private Transaction publishedDepositTx;
+    private BankAccount takerBankAccount;
+    private String takerAccountId;
 
     public SellerAsTakerModel(Trade trade,
                               TradeMessageService tradeMessageService,
@@ -77,11 +81,14 @@ public class SellerAsTakerModel extends OfferSharedModel {
                 user);
 
         this.trade = trade;
-        takerPubKey = walletService.getAddressInfo(trade.getId()).getPubKey();
-       
+        takerPubKey = getAddressInfo().getPubKey();
     }
 
     // getter/setter
+    public byte[] getTakerPubKey() {
+        return takerPubKey;
+    }
+
     public void setOffererPubKey(byte[] offererPubKey) {
         this.offererPubKey = offererPubKey;
     }
@@ -101,6 +108,7 @@ public class SellerAsTakerModel extends OfferSharedModel {
     public void setOffererOutputs(List<TransactionOutput> offererOutputs) {
         this.offererOutputs = offererOutputs;
     }
+
     public Trade getTrade() {
         return trade;
     }
@@ -156,14 +164,6 @@ public class SellerAsTakerModel extends OfferSharedModel {
 
     public void setDepositTx(Transaction depositTx) {
         this.depositTx = depositTx;
-    }
-
-    public ECKey.ECDSASignature getOffererSignature() {
-        return offererSignature;
-    }
-
-    public void setOffererSignature(ECKey.ECDSASignature offererSignature) {
-        this.offererSignature = offererSignature;
     }
 
     public Coin getOffererPaybackAmount() {
@@ -229,5 +229,21 @@ public class SellerAsTakerModel extends OfferSharedModel {
 
     public Transaction getPublishedDepositTx() {
         return publishedDepositTx;
+    }
+
+    public void setTakerBankAccount(BankAccount takerBankAccount) {
+        this.takerBankAccount = takerBankAccount;
+    }
+
+    public BankAccount getTakerBankAccount() {
+        return takerBankAccount;
+    }
+
+    public void setTakerAccountId(String takerAccountId) {
+        this.takerAccountId = takerAccountId;
+    }
+
+    public String getTakerAccountId() {
+        return takerAccountId;
     }
 }

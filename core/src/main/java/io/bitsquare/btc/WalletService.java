@@ -490,8 +490,7 @@ public class WalletService {
 
         Transaction tx = new Transaction(params);
 
-        byte[] data = signatureService.digestMessageWithSignature(
-                getRegistrationAddressEntry().getKey(), stringifiedBankAccounts);
+        byte[] data = signatureService.digestMessageWithSignature(getRegistrationAddressEntry().getKeyPair(), stringifiedBankAccounts);
         tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, new ScriptBuilder().op(OP_RETURN).data(data).build());
 
         // We don't take a fee at the moment
@@ -615,7 +614,7 @@ public class WalletService {
         Transaction dummyTX = new Transaction(params);
         // The output is just used to get the right inputs and change outputs, so we use an anonymous ECKey, as it will never be used for anything.
         // We don't care about fee calculation differences between the real tx and that dummy tx as we use a static tx fee.
-        TransactionOutput msOutput = new TransactionOutput(params, dummyTX, dummyOutputAmount, new ECKey());
+        TransactionOutput msOutput = new TransactionOutput(params, dummyTX, dummyOutputAmount, new ECKey().toAddress(params));
         dummyTX.addOutput(msOutput);
 
         // Fin the needed inputs to pay the output, optional add change output.
@@ -670,7 +669,7 @@ public class WalletService {
             TransactionVerificationException, WalletException {
 
         // TODO verify amounts, addresses, MS
-        
+
         Transaction depositTx = new Transaction(params);
         Script multiSigOutputScript = getMultiSigOutputScript(offererPubKey, takerPubKey, arbitratorPubKey);
         // We use temporary inputAmount as the value for the output amount to get the correct inputs from the takers side. 
@@ -719,8 +718,8 @@ public class WalletService {
         // Taker inputs are the first inputs (0 -n), so the index of takerInputs and depositTx.getInputs() matches for the number of takerInputs.
         int index = 0;
         for (TransactionInput input : takerInputs) {
-            log.debug("signInput input "+input.toString());
-            log.debug("signInput index "+index);
+            log.debug("signInput input " + input.toString());
+            log.debug("signInput index " + index);
             signInput(depositTx, input, index);
             checkScriptSig(depositTx, input, index);
             index++;
@@ -746,7 +745,7 @@ public class WalletService {
                                         FutureCallback<Transaction> callback) throws SigningException, TransactionVerificationException, WalletException {
 
         // TODO verify amounts, addresses, MS
-        
+
         // The outpoints are not available from the serialized takersDepositTx, so we cannot use that tx directly, but we use it to construct a new depositTx
         Transaction depositTx = new Transaction(params);
 
@@ -782,7 +781,7 @@ public class WalletService {
 
         printInputs("depositTx", depositTx);
         log.debug("depositTx = " + depositTx);
-        
+
         // Offerer inputs are the first inputs (0 -n), so the index of offererInputs and depositTx.getInputs() matches for the number of offererInputs.
         int index = 0;
         for (TransactionInput input : offererInputs) {
@@ -797,7 +796,7 @@ public class WalletService {
         verifyTransaction(depositTx);
         checkWalletConsistency();
         checkScriptSigForAllInputs(depositTx);
-       
+
         // Broadcast depositTx
         log.trace("Wallet balance before broadcastTransaction: " + wallet.getBalance());
         log.trace("Check if wallet is consistent before broadcastTransaction: result=" + wallet.isConsistent());
@@ -813,9 +812,9 @@ public class WalletService {
         log.trace("inputs: ");
         log.trace("depositTx=" + depositTx);
         // If not recreate the tx we get a null pointer at receivePending
-        log.debug("tx id "+depositTx.getHashAsString());
+        log.debug("tx id " + depositTx.getHashAsString());
         depositTx = new Transaction(params, depositTx.bitcoinSerialize());
-        log.debug("tx id "+depositTx.getHashAsString());
+        log.debug("tx id " + depositTx.getHashAsString());
         log.trace("depositTx=" + depositTx);
         // boolean isAlreadyInWallet = wallet.maybeCommitTx(depositTx);
         //log.trace("isAlreadyInWallet=" + isAlreadyInWallet);
@@ -859,7 +858,7 @@ public class WalletService {
         TransactionOutput multiSigOutput = tx.getInput(0).getConnectedOutput();
         Script multiSigScript = multiSigOutput.getScriptPubKey();
         Sha256Hash sigHash = tx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
-        ECKey.ECDSASignature offererSignature = getAddressInfo(tradeID).getKey().sign(sigHash);
+        ECKey.ECDSASignature offererSignature = getAddressInfo(tradeID).getKeyPair().sign(sigHash);
 
         TransactionSignature offererTxSig = new TransactionSignature(offererSignature, Transaction.SigHash.ALL, false);
         Script inputScript = ScriptBuilder.createMultiSigInputScript(ImmutableList.of(offererTxSig));
@@ -895,7 +894,7 @@ public class WalletService {
         Sha256Hash sigHash = tx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
         log.trace("sigHash=" + sigHash);
 
-        ECKey.ECDSASignature takerSignature = getAddressInfo(tradeID).getKey().sign(sigHash);
+        ECKey.ECDSASignature takerSignature = getAddressInfo(tradeID).getKeyPair().sign(sigHash);
         TransactionSignature takerTxSig = new TransactionSignature(takerSignature, Transaction.SigHash.ALL, false);
 
         TransactionSignature offererTxSig = new TransactionSignature(offererSignature, Transaction.SigHash.ALL, false);

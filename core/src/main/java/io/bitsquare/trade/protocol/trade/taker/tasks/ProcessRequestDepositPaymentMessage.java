@@ -45,6 +45,7 @@ public class ProcessRequestDepositPaymentMessage extends Task<SellerAsTakerModel
             checkArgument(message.getOffererConnectedOutputsForAllInputs().size() > 0);
             model.setOffererOutputs(checkNotNull(message.getOffererOutputs()));
             model.setOffererPubKey(checkNotNull(message.getOffererPubKey()));
+            
             model.setTakerBankAccount(checkNotNull(message.getBankAccount()));
             model.setTakerAccountId(nonEmptyStringOf(message.getAccountId()));
 

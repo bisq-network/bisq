@@ -167,7 +167,7 @@ public class TradeManager {
 
         BankAccount currentBankAccount = user.getCurrentBankAccount().get();
         Offer offer = new Offer(id,
-                user.getMessagePublicKey(),
+                user.getNetworkPubKey(),
                 direction,
                 price.getValue(),
                 amount,

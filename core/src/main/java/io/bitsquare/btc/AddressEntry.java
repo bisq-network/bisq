@@ -19,7 +19,6 @@ package io.bitsquare.btc;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.Utils;
 import org.bitcoinj.crypto.DeterministicKey;
 
 import java.io.Serializable;
@@ -32,26 +31,25 @@ import java.util.Arrays;
  */
 public class AddressEntry implements Serializable {
     private static final long serialVersionUID = 5501603992599920416L;
-    private transient DeterministicKey key;
+    private transient DeterministicKey keyPair;
     private final NetworkParameters params;
     private final AddressContext addressContext;
     private final String offerId;
     private final byte[] pubKey;
     private final byte[] pubKeyHash;
 
-
-    public AddressEntry(DeterministicKey key, NetworkParameters params, AddressContext addressContext) {
-        this(key, params, addressContext, null);
+    public AddressEntry(DeterministicKey keyPair, NetworkParameters params, AddressContext addressContext) {
+        this(keyPair, params, addressContext, null);
     }
 
-    public AddressEntry(DeterministicKey key, NetworkParameters params, AddressContext addressContext, String offerId) {
-        this.key = key;
+    public AddressEntry(DeterministicKey keyPair, NetworkParameters params, AddressContext addressContext, String offerId) {
+        this.keyPair = keyPair;
         this.params = params;
         this.addressContext = addressContext;
         this.offerId = offerId;
 
-        pubKey = key.getPubOnly().getPubKey();
-        pubKeyHash = key.getPubOnly().getPubKeyHash();
+        pubKey = keyPair.getPubOnly().getPubKey();
+        pubKeyHash = keyPair.getPubOnly().getPubKeyHash();
     }
 
     public String getOfferId() {
@@ -66,20 +64,16 @@ public class AddressEntry implements Serializable {
         return getAddress().toString();
     }
 
-    public String getPubKeyAsHex() {
-        return Utils.HEX.encode(key.getPubKey());
-    }
-
-    public DeterministicKey getKey() {
-        return key;
+    public DeterministicKey getKeyPair() {
+        return keyPair;
     }
 
     public Address getAddress() {
-        return key.toAddress(params);
+        return keyPair.toAddress(params);
     }
 
-    public void setDeterministicKey(DeterministicKey key) {
-        this.key = key;
+    public void setDeterministicKey(DeterministicKey deterministicKey) {
+        this.keyPair = deterministicKey;
     }
 
     public byte[] getPubKeyHash() {
@@ -100,7 +94,7 @@ public class AddressEntry implements Serializable {
     public String toString() {
         return "AddressEntry{" +
                 "addressString=" + getAddress().toString() +
-                "key=" + key +
+                "key=" + keyPair +
                 ", params=" + params +
                 ", addressContext=" + addressContext +
                 ", offerId='" + offerId + '\'' +
