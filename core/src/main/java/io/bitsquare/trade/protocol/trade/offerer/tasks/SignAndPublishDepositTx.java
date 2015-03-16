@@ -17,11 +17,13 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
 import io.bitsquare.util.taskrunner.Task;
 import io.bitsquare.util.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -41,10 +43,13 @@ public class SignAndPublishDepositTx extends Task<BuyerAsOffererModel> {
     @Override
     protected void doRun() {
         try {
+            Coin offererInputAmount = model.getTrade().getSecurityDeposit().add(FeePolicy.TX_FEE);
             model.getWalletService().offererSignAndPublishTx(
                     model.getTakerDepositTx(),
-                    model.getTakerConnectedOutputsForAllInputs(),
                     model.getOffererConnectedOutputsForAllInputs(),
+                    model.getTakerConnectedOutputsForAllInputs(),
+                    model.getOffererOutputs(),
+                    offererInputAmount,
                     model.getOffererPubKey(),
                     model.getTakerPubKey(),
                     model.getArbitratorPubKey(),

@@ -26,4 +26,8 @@ public class TransactionVerificationException extends Exception {
     public TransactionVerificationException(Throwable t) {
         super(t);
     }
+
+    public TransactionVerificationException(String errorMessage) {
+        super(errorMessage);
+    }
 }

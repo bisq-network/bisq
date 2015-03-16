@@ -223,6 +223,7 @@ public class TradeManager {
                     break;
                 case OFFERER_REJECTED:
                 case MESSAGE_SENDING_FAILED:
+                case FAULT:
                     removeFailedTrade(trade);
                     break;
                 default:
@@ -397,6 +398,7 @@ public class TradeManager {
                             case OFFERER_REJECTED:
                             case TAKE_OFFER_FEE_PAYMENT_FAILED:
                             case MESSAGE_SENDING_FAILED:
+                            case FAULT:
                                 removeFailedTrade(trade);
                                 buyerAcceptsOfferProtocolMap.get(trade.getId()).cleanup();
                                 break;

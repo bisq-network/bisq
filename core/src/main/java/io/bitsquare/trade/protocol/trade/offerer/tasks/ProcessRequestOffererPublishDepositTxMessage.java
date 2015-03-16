@@ -46,8 +46,8 @@ public class ProcessRequestOffererPublishDepositTxMessage extends Task<BuyerAsOf
             model.setTakerMessagePublicKey(checkNotNull(message.getTakerMessagePublicKey()));
             model.setTakerContractAsJson(nonEmptyStringOf(message.getTakerContractAsJson()));
             model.setTakerDepositTx(checkNotNull(message.getTakersDepositTx()));
-            model.setTakerConnectedOutputsForAllInputs(checkNotNull(message.getTakersConnectedOutputsForAllInputs()));
-            checkArgument(message.getTakersConnectedOutputsForAllInputs().size() > 0);
+            model.setTakerConnectedOutputsForAllInputs(checkNotNull(message.getTakerConnectedOutputsForAllInputs()));
+            checkArgument(message.getTakerConnectedOutputsForAllInputs().size() > 0);
             model.setTakerOutputs(checkNotNull(message.getTakerOutputs()));
 
             complete();

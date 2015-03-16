@@ -140,6 +140,10 @@ class TakeOfferDataModel implements Activatable, DataModel {
         final Trade trade = tradeManager.takeOffer(amountAsCoin.get(), offer);
         trade.stateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("trade state = " + newValue);
+            String errorMessage = "";
+            if (newValue.getErrorMessage() != null)
+                errorMessage = "\nError message: " + newValue.getErrorMessage();
+
             switch (newValue) {
                 case OPEN:
                     break;
@@ -166,14 +170,19 @@ class TakeOfferDataModel implements Activatable, DataModel {
                 case FIAT_PAYMENT_STARTED:
                     break;
                 case TAKE_OFFER_FEE_PAYMENT_FAILED:
-                    requestTakeOfferErrorMessage.set("An error occurred when paying the trade fee.");
+                    requestTakeOfferErrorMessage.set("An error occurred when paying the trade fee." + errorMessage);
                     break;
                 case MESSAGE_SENDING_FAILED:
                     requestTakeOfferErrorMessage.set("An error occurred when sending a message to the offerer. Maybe there are connection problems. " +
-                            "Please try later again.");
+                            "Please try later again." + errorMessage);
                     break;
                 case PAYOUT_PUBLISHED:
                     break;
+                case FAULT:
+                    requestTakeOfferErrorMessage.set(errorMessage);
+                    break;
+
+
                 default:
                     log.error("Unhandled trade state: " + newValue);
                     break;

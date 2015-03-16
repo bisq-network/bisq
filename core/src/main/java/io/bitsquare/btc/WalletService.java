@@ -89,7 +89,7 @@ import rx.Observable;
 import rx.subjects.BehaviorSubject;
 import rx.subjects.Subject;
 
-import static com.google.inject.internal.util.$Preconditions.checkState;
+import static com.google.inject.internal.util.$Preconditions.*;
 import static org.bitcoinj.script.ScriptOpCodes.OP_RETURN;
 
 public class WalletService {
@@ -442,7 +442,7 @@ public class WalletService {
         for (TransactionOutput transactionOutput : transactionOutputs) {
             if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
                 Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
-                if (addressOutput.equals(address)) 
+                if (addressOutput.equals(address))
                     balance = balance.add(transactionOutput.getValue());
             }
         }
@@ -512,7 +512,7 @@ public class WalletService {
         Futures.addCallback(sendResult.broadcastComplete, callback);
 
         log.debug("Registration transaction: " + tx);
-        printInputs("payRegistrationFee", tx);
+        printTxWithInputs("payRegistrationFee", tx);
     }
 
     public Transaction createOfferFeeTx(String offerId) throws InsufficientMoneyException {
@@ -529,7 +529,7 @@ public class WalletService {
         sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry, true);
         sendRequest.changeAddress = addressEntry.getAddress();
         wallet.completeTx(sendRequest);
-        printInputs("payCreateOfferFee", tx);
+        printTxWithInputs("payCreateOfferFee", tx);
         return tx;
     }
 
@@ -554,7 +554,7 @@ public class WalletService {
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         Futures.addCallback(sendResult.broadcastComplete, callback);
 
-        printInputs("payTakeOfferFee", tx);
+        printTxWithInputs("payTakeOfferFee", tx);
         log.debug("tx=" + tx);
 
         return tx.getHashAsString();
@@ -586,7 +586,7 @@ public class WalletService {
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         Futures.addCallback(sendResult.broadcastComplete, callback);
 
-        printInputs("sendFunds", tx);
+        printTxWithInputs("sendFunds", tx);
         log.debug("tx=" + tx);
 
         return tx.getHashAsString();
@@ -612,8 +612,8 @@ public class WalletService {
         Transaction dummyTX = new Transaction(params);
         // The output is just used to get the right inputs and change outputs, so we use an anonymous ECKey, as it will never be used for anything.
         // We don't care about fee calculation differences between the real tx and that dummy tx as we use a static tx fee.
-        TransactionOutput msOutput = new TransactionOutput(params, dummyTX, dummyOutputAmount, new ECKey().toAddress(params));
-        dummyTX.addOutput(msOutput);
+        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTX, dummyOutputAmount, new ECKey().toAddress(params));
+        dummyTX.addOutput(dummyOutput);
 
         // Fin the needed inputs to pay the output, optional add change output.
         // Normally only 1 input and no change output is used, but we support multiple inputs and outputs. Our spending transaction output is from the create
@@ -636,8 +636,7 @@ public class WalletService {
         OUT[2...n] optional more outputs are supported, but currently there is just max. 1 optional change output
          */
 
-        printInputs("dummyTX", dummyTX);
-        log.debug("dummyTX created: " + dummyTX);
+        printTxWithInputs("dummyTX", dummyTX);
 
         List<TransactionOutput> connectedOutputsForAllInputs = new ArrayList<>();
         for (TransactionInput input : dummyTX.getInputs()) {
@@ -647,7 +646,7 @@ public class WalletService {
         // Only save offerer outputs, the MS output is ignored
         List<TransactionOutput> outputs = new ArrayList<>();
         for (TransactionOutput output : dummyTX.getOutputs()) {
-            if (output.equals(msOutput))
+            if (output.equals(dummyOutput))
                 continue;
             outputs.add(output);
         }
@@ -656,7 +655,7 @@ public class WalletService {
     }
 
     // 2. step: Taker creates a deposit tx and signs his inputs
-    public TransactionDataResult takerCreatesAndSignsDepositTx(Coin inputAmount,
+    public TransactionDataResult takerCreatesAndSignsDepositTx(Coin takerInputAmount,
                                                                Coin msOutputAmount,
                                                                List<TransactionOutput> offererConnectedOutputsForAllInputs,
                                                                List<TransactionOutput> offererOutputs,
@@ -666,68 +665,90 @@ public class WalletService {
                                                                byte[] arbitratorPubKey) throws InsufficientMoneyException, SigningException,
             TransactionVerificationException, WalletException {
 
-        // TODO verify amounts, addresses, MS
+        checkArgument(offererConnectedOutputsForAllInputs.size() > 0);
 
-        Transaction depositTx = new Transaction(params);
-        Script multiSigOutputScript = getMultiSigOutputScript(offererPubKey, takerPubKey, arbitratorPubKey);
-        // We use temporary inputAmount as the value for the output amount to get the correct inputs from the takers side. 
-        // Later when we add the offerer inputs we replace the output amount with the real msOutputAmount
-        // Tx fee for deposit tx will be paid by offerer.
-        TransactionOutput msOutput = new TransactionOutput(params, depositTx, inputAmount, multiSigOutputScript.getProgram());
-        depositTx.addOutput(msOutput);
+        // To keep tx consistent with tx used for publishing we use always following ordering of inputs and outputs (offerer first then taker):
+        /*
+        IN[0] offerer (mandatory) e.g. 0.1 BTC
+        IN[...] optional additional offerer inputs (normally never used as we pay from trade fee tx and always have 1 output there)
+        IN[...] taker (mandatory) e.g. 1.1001 BTC
+        IN[...] optional additional taker inputs (normally never used as we pay from trade fee tx and always have 1 output there)
+        OUT[0] Multisig output (include tx fee for payout tx) e.g. 1.2001
+        OUT[1] offerer change (normally never used as we pay from trade fee tx and always have 1 output there)
+        OUT[...] optional additional offerer outputs (supported but no use case yet for that)
+        OUT[...] taker change (normally never used as we pay from trade fee tx and always have 1 output there)
+        OUT[...] optional additional taker outputs (supported but no use case yet for that)
+        FEE tx fee 0.0001 BTC
+         */
 
-        // Not lets find the inputs to satisfy that output and add an optional change output
-        addAvailableInputsAndChangeOutputs(depositTx, addressInfo);
-
-        // Now as we have the takers inputs and outputs we replace the temporary output amount with the real msOutputAmount
-        msOutput.setValue(msOutputAmount);
-
-        // Save reference to inputs for signing, before we add offerer inputs
-        List<TransactionInput> takerInputs = new ArrayList<>(depositTx.getInputs());
-        List<TransactionOutput> connectedOutputsForAllTakerInputs = new ArrayList<>();
-        for (TransactionInput input : takerInputs) {
-            connectedOutputsForAllTakerInputs.add(input.getConnectedOutput());
-        }
-
-        // Lets save the takerOutputs for passing later to the result, the MS output is ignored
+        // First we construct a dummy TX to get the inputs and outputs we want to use for the real deposit tx. Same as in first step at offerer.
+        Transaction dummyTx = new Transaction(params);
+        Coin dummyOutputAmount = takerInputAmount.subtract(FeePolicy.TX_FEE);
+        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTx, dummyOutputAmount, new ECKey().toAddress(params));
+        dummyTx.addOutput(dummyOutput);
+        addAvailableInputsAndChangeOutputs(dummyTx, addressInfo);
+        List<TransactionInput> takerInputs = dummyTx.getInputs();
         List<TransactionOutput> takerOutputs = new ArrayList<>();
-        for (TransactionOutput output : depositTx.getOutputs()) {
-            if (output.equals(msOutput))
-                continue;
-            takerOutputs.add(output);
+        // we store optional change outputs (ignoring dummyOutput)
+        for (int i = 1; i < dummyTx.getOutputs().size(); i++) {
+            takerOutputs.add(dummyTx.getOutput(i));
         }
 
-        // Add all inputs from offerer (normally its just 1 input)
+        // Now we construct real deposit tx
+        Transaction depositTx = new Transaction(params);
+
+        // Add offerer inputs (normally its just 1 input)
         for (TransactionOutput connectedOutputForInput : offererConnectedOutputsForAllInputs) {
             TransactionOutPoint outPoint = new TransactionOutPoint(params, connectedOutputForInput.getIndex(), connectedOutputForInput.getParentTransaction());
             TransactionInput transactionInput = new TransactionInput(params, depositTx, new byte[]{}, outPoint, connectedOutputForInput.getValue());
             depositTx.addInput(transactionInput);
         }
 
-        // Add optional outputs 
+        // Add taker inputs
+        List<TransactionOutput> connectedOutputsForAllTakerInputs = new ArrayList<>();
+        for (TransactionInput input : takerInputs) {
+            depositTx.addInput(input);
+            connectedOutputsForAllTakerInputs.add(input.getConnectedOutput());
+        }
+
+        // Add MultiSig output
+        Script multiSigOutputScript = getMultiSigOutputScript(offererPubKey, takerPubKey, arbitratorPubKey);
+        // Tx fee for deposit tx will be paid by offerer.
+        TransactionOutput msOutput = new TransactionOutput(params, depositTx, msOutputAmount, multiSigOutputScript.getProgram());
+        depositTx.addOutput(msOutput);
+
+        // Add optional offerer outputs 
         for (TransactionOutput output : offererOutputs) {
             depositTx.addOutput(output);
         }
 
-        printInputs("depositTx", depositTx);
-        log.debug("depositTx = " + depositTx);
+        Coin takersSpendingAmount = Coin.ZERO;
 
-        // Sign taker inputs
-        // Taker inputs are the first inputs (0 -n), so the index of takerInputs and depositTx.getInputs() matches for the number of takerInputs.
-        int index = 0;
-        for (TransactionInput input : takerInputs) {
-            log.debug("signInput input " + input.toString());
-            log.debug("signInput index " + index);
-            signInput(depositTx, input, index);
-            checkScriptSig(depositTx, input, index);
-            index++;
+        // Add optional taker outputs 
+        for (TransactionOutput output : takerOutputs) {
+            depositTx.addOutput(output);
+
+            // subtract change amount
+            takersSpendingAmount = takersSpendingAmount.subtract(output.getValue());
         }
+
+        // Sign inputs
+        for (int i = offererConnectedOutputsForAllInputs.size(); i < depositTx.getInputs().size(); i++) {
+            TransactionInput input = depositTx.getInput(i);
+            signInput(depositTx, input, i);
+            checkScriptSig(depositTx, input, i);
+
+            // add up spending amount
+            takersSpendingAmount = takersSpendingAmount.add(input.getConnectedOutput().getValue());
+        }
+
+        if (takerInputAmount.compareTo(takersSpendingAmount) != 0)
+            throw new TransactionVerificationException("Takers input amount does not match required value.");
 
         verifyTransaction(depositTx);
         checkWalletConsistency();
 
-        printInputs("depositTx", depositTx);
-        log.debug("depositTx = " + depositTx);
+        printTxWithInputs("depositTx", depositTx);
 
         return new TransactionDataResult(depositTx, connectedOutputsForAllTakerInputs, takerOutputs);
     }
@@ -735,72 +756,79 @@ public class WalletService {
     // 3. step: deposit tx
     // Offerer signs tx and publishes it
     public void offererSignAndPublishTx(Transaction takersDepositTx,
-                                        List<TransactionOutput> takersConnectedOutputsForAllInputs,
                                         List<TransactionOutput> offererConnectedOutputsForAllInputs,
+                                        List<TransactionOutput> takerConnectedOutputsForAllInputs,
+                                        List<TransactionOutput> offererOutputs,
+                                        Coin offererInputAmount,
                                         byte[] offererPubKey,
                                         byte[] takerPubKey,
                                         byte[] arbitratorPubKey,
                                         FutureCallback<Transaction> callback) throws SigningException, TransactionVerificationException, WalletException {
 
-        // TODO verify amounts, addresses, MS
+        checkArgument(offererConnectedOutputsForAllInputs.size() > 0);
+        checkArgument(takerConnectedOutputsForAllInputs.size() > 0);
+
+        // Check if takers Multisig script is identical to mine
+        Script multiSigOutputScript = getMultiSigOutputScript(offererPubKey, takerPubKey, arbitratorPubKey);
+        if (!takersDepositTx.getOutput(0).getScriptPubKey().equals(multiSigOutputScript))
+            throw new TransactionVerificationException("Takers multiSigOutputScript does not match to my multiSigOutputScript");
 
         // The outpoints are not available from the serialized takersDepositTx, so we cannot use that tx directly, but we use it to construct a new depositTx
         Transaction depositTx = new Transaction(params);
 
-        // We save offererInputs for later signing when tx is fully constructed
-        List<TransactionInput> offererInputs = new ArrayList<>();
-
-        // Add all inputs from offerer (normally its just 1 input)
+        // Add offerer inputs
+        Coin offererSpendingAmount = Coin.ZERO;
         for (TransactionOutput connectedOutputForInput : offererConnectedOutputsForAllInputs) {
             TransactionOutPoint outPoint = new TransactionOutPoint(params, connectedOutputForInput.getIndex(), connectedOutputForInput.getParentTransaction());
             TransactionInput input = new TransactionInput(params, depositTx, new byte[]{}, outPoint, connectedOutputForInput.getValue());
-            offererInputs.add(input);
             depositTx.addInput(input);
+
+            // add up spending amount
+            offererSpendingAmount = offererSpendingAmount.add(input.getConnectedOutput().getValue());
         }
 
-        // Add all inputs from taker and apply signature
-        for (TransactionOutput connectedOutputForInput : takersConnectedOutputsForAllInputs) {
+        // Add taker inputs and apply signature
+        List<TransactionInput> takerInputs = new ArrayList<>();
+        for (TransactionOutput connectedOutputForInput : takerConnectedOutputsForAllInputs) {
             TransactionOutPoint outPoint = new TransactionOutPoint(params, connectedOutputForInput.getIndex(), connectedOutputForInput.getParentTransaction());
 
-            // We grab the signatures from the takersDepositTx and apply it to the new tx input
-            Optional<TransactionInput> result = takersDepositTx.getInputs().stream()
-                    .filter(e -> e.getConnectedOutput().hashCode() == connectedOutputForInput.hashCode()).findAny();
-            if (result.isPresent()) {
-                TransactionInput signedInput = result.get();
-                Script script = signedInput.getScriptSig();
+            // We grab the signature from the takersDepositTx and apply it to the new tx input
+            TransactionInput takerInput = takersDepositTx.getInputs().get(offererConnectedOutputsForAllInputs.size());
+            byte[] scriptProgram = takerInput.getScriptSig().getProgram();
+            if (scriptProgram.length == 0)
+                throw new TransactionVerificationException("Inputs from taker not singed.");
 
-                TransactionInput transactionInput = new TransactionInput(params, depositTx, script.getProgram(), outPoint, connectedOutputForInput.getValue());
-                depositTx.addInput(transactionInput);
-            }
+            TransactionInput transactionInput = new TransactionInput(params, depositTx, scriptProgram, outPoint, connectedOutputForInput.getValue());
+            takerInputs.add(transactionInput);
+            depositTx.addInput(transactionInput);
         }
 
         // Add all outputs from takersDepositTx to depositTx
-        takersDepositTx.getOutputs().forEach(depositTx::addOutput);
-
-        printInputs("depositTx", depositTx);
-        log.debug("depositTx = " + depositTx);
-
-        // Offerer inputs are the first inputs (0 -n), so the index of offererInputs and depositTx.getInputs() matches for the number of offererInputs.
-        int index = 0;
-        for (TransactionInput input : offererInputs) {
-            signInput(depositTx, input, index);
-            checkScriptSig(depositTx, input, index);
-            index++;
+        for (TransactionOutput output : takersDepositTx.getOutputs()) {
+            depositTx.addOutput(output);
         }
 
-        // TODO verify MS, amounts
-        //Script multiSigOutputScript = getMultiSigOutputScript(offererPubKey, takerPubKey, arbitratorPubKey);
+        // Sign inputs
+        for (int i = 0; i < offererConnectedOutputsForAllInputs.size(); i++) {
+            TransactionInput input = depositTx.getInput(i);
+            signInput(depositTx, input, i);
+            checkScriptSig(depositTx, input, i);
+        }
+
+        // subtract change amount
+        for (int i = 1; i < offererOutputs.size() + 1; i++) {
+            offererSpendingAmount = offererSpendingAmount.subtract(depositTx.getOutput(i).getValue());
+        }
+
+        if (offererInputAmount.compareTo(offererSpendingAmount) != 0)
+            throw new TransactionVerificationException("Offerers input amount does not match required value.");
 
         verifyTransaction(depositTx);
         checkWalletConsistency();
-        //checkScriptSigForAllInputs(depositTx);
 
         // Broadcast depositTx
-        log.trace("Wallet balance before broadcastTransaction: " + wallet.getBalance());
-        log.trace("Check if wallet is consistent before broadcastTransaction: result=" + wallet.isConsistent());
+        printTxWithInputs("depositTx", depositTx);
         ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(depositTx);
-        log.trace("Wallet balance after broadcastTransaction: " + wallet.getBalance());
-        log.trace("Check if wallet is consistent after broadcastTransaction: result=" + wallet.isConsistent());
         Futures.addCallback(broadcastComplete, callback);
     }
 
@@ -914,7 +942,7 @@ public class WalletService {
 
         log.trace("getTransactions.size=" + wallet.getTransactions(true).size());
         log.trace("Check if wallet is consistent: result=" + wallet.isConsistent());
-        printInputs("takerSignsAndSendsTx", tx);
+        printTxWithInputs("takerSignsAndSendsTx", tx);
         log.debug("tx = " + tx);
     }
 
@@ -962,15 +990,13 @@ public class WalletService {
         return tx;
     }
 
-    public static void printInputs(String tracePrefix, Transaction tx) {
+    public static void printTxWithInputs(String tracePrefix, Transaction tx) {
+        log.trace(tracePrefix + ": " + tx.toString());
         for (TransactionInput input : tx.getInputs()) {
-            if (input.getConnectedOutput() != null) {
-                log.trace(tracePrefix + " input value : " + input.getConnectedOutput().getValue().toFriendlyString());
-            }
-            else {
-                log.trace(tracePrefix + ": " + "Transaction already has inputs but we don't have the connected " +
-                        "outputs, so we don't know the value.");
-            }
+            if (input.getConnectedOutput() != null)
+                log.trace(tracePrefix + " input value: " + input.getConnectedOutput().getValue().toFriendlyString());
+            else
+                log.trace(tracePrefix + ": Transaction already has inputs but we don't have the connected outputs, so we don't know the value.");
         }
     }
 
@@ -1038,20 +1064,21 @@ public class WalletService {
         }
     }
 
-    private void addAvailableInputsAndChangeOutputs(Transaction transaction, AddressEntry addressEntry) throws InsufficientMoneyException {
-        // Lets let the framework do the work to find the right inputs
-        Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(transaction);
-        sendRequest.shuffleOutputs = false;
-        // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry, true);
-        sendRequest.changeAddress = addressEntry.getAddress();
-        // With the usage of completeTx() we get all the work done with fee calculation, validation and coin selection.
-        // We don't commit that tx to the wallet as it will be changed later and it's not signed yet.
-        // So it will not change the wallet balance.
-        wallet.completeTx(sendRequest);
-
-        printInputs("transaction", transaction);
-        log.trace("transaction=" + transaction);
+    private void addAvailableInputsAndChangeOutputs(Transaction transaction, AddressEntry addressEntry) throws WalletException {
+        try {
+            // Lets let the framework do the work to find the right inputs
+            Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(transaction);
+            sendRequest.shuffleOutputs = false;
+            // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
+            sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry, true);
+            sendRequest.changeAddress = addressEntry.getAddress();
+            // With the usage of completeTx() we get all the work done with fee calculation, validation and coin selection.
+            // We don't commit that tx to the wallet as it will be changed later and it's not signed yet.
+            // So it will not change the wallet balance.
+            wallet.completeTx(sendRequest);
+        } catch (Throwable t) {
+            throw new WalletException(t);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

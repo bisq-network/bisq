@@ -38,7 +38,7 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
     private final String contractAsJson;
     private final String takerContractSignature;
     private Transaction takersDepositTx;
-    private List<TransactionOutput> takersConnectedOutputsForAllInputs;
+    private List<TransactionOutput> takerConnectedOutputsForAllInputs;
     private List<TransactionOutput> takerOutputs;
 
     public RequestOffererPublishDepositTxMessage(String tradeId,
@@ -48,7 +48,7 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
                                                  String contractAsJson,
                                                  String takerContractSignature,
                                                  Transaction takersDepositTx,
-                                                 List<TransactionOutput> takersConnectedOutputsForAllInputs,
+                                                 List<TransactionOutput> takerConnectedOutputsForAllInputs,
                                                  List<TransactionOutput> takerOutputs) {
         this.tradeId = tradeId;
         this.bankAccount = bankAccount;
@@ -57,7 +57,7 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
         this.contractAsJson = contractAsJson;
         this.takerContractSignature = takerContractSignature;
         this.takersDepositTx = takersDepositTx;
-        this.takersConnectedOutputsForAllInputs = takersConnectedOutputsForAllInputs;
+        this.takerConnectedOutputsForAllInputs = takerConnectedOutputsForAllInputs;
         this.takerOutputs = takerOutputs;
     }
 
@@ -107,7 +107,7 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
         return takersDepositTx;
     }
 
-    public List<TransactionOutput> getTakersConnectedOutputsForAllInputs() {
-        return takersConnectedOutputsForAllInputs;
+    public List<TransactionOutput> getTakerConnectedOutputsForAllInputs() {
+        return takerConnectedOutputsForAllInputs;
     }
 }

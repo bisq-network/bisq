@@ -48,7 +48,18 @@ public class Trade implements Serializable {
         FIAT_PAYMENT_STARTED,
         FIAT_PAYMENT_RECEIVED,
         PAYOUT_PUBLISHED,
-        MESSAGE_SENDING_FAILED
+        MESSAGE_SENDING_FAILED,
+        FAULT;
+
+        private String errorMessage;
+
+        public void setErrorMessage(String errorMessage) {
+            this.errorMessage = errorMessage;
+        }
+
+        public String getErrorMessage() {
+            return errorMessage;
+        }
     }
 
     private final Offer offer;
@@ -69,7 +80,7 @@ public class Trade implements Serializable {
     transient private ObjectProperty<Coin> _tradeAmount;
     transient private ObjectProperty<Fiat> _tradeVolume;
     transient private ObjectProperty<State> _state;
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
