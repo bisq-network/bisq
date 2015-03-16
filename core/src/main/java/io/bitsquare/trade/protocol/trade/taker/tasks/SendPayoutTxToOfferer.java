@@ -35,7 +35,7 @@ public class SendPayoutTxToOfferer extends Task<SellerAsTakerModel> {
 
     @Override
     protected void doRun() {
-        PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(model.getTrade().getId(), model.getPayoutTxAsHex());
+        PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(model.getId(), model.getPayoutTx());
         model.getTradeMessageService().sendMessage(model.getOfferer(), tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {

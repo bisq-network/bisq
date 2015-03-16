@@ -78,8 +78,6 @@ import javax.annotation.concurrent.GuardedBy;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import javafx.util.Pair;
-
 import org.jetbrains.annotations.NotNull;
 
 import org.slf4j.Logger;
@@ -305,7 +303,7 @@ public class WalletService {
         return arbitratorDepositAddressEntry;
     }
 
-    public AddressEntry getAddressInfo(String offerId) {
+    public AddressEntry getAddressEntry(String offerId) {
         Optional<AddressEntry> addressEntry = getAddressEntryList().stream().filter(e ->
                 offerId.equals(e.getOfferId())).findFirst();
 
@@ -525,7 +523,7 @@ public class WalletService {
         sendRequest.shuffleOutputs = false;
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
         // wait for 1 confirmation)
-        AddressEntry addressEntry = getAddressInfo(offerId);
+        AddressEntry addressEntry = getAddressEntry(offerId);
         sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry, true);
         sendRequest.changeAddress = addressEntry.getAddress();
         wallet.completeTx(sendRequest);
@@ -549,8 +547,8 @@ public class WalletService {
         sendRequest.shuffleOutputs = false;
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
         // wait for 1 confirmation)
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, getAddressInfo(offerId), true);
-        sendRequest.changeAddress = getAddressInfo(offerId).getAddress();
+        sendRequest.coinSelector = new AddressBasedCoinSelector(params, getAddressEntry(offerId), true);
+        sendRequest.changeAddress = getAddressEntry(offerId).getAddress();
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         Futures.addCallback(sendResult.broadcastComplete, callback);
 
@@ -597,7 +595,6 @@ public class WalletService {
     // Trade process
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // 1. step: Define offerers inputs and outputs for the deposit tx
     public TransactionDataResult offererCreatesDepositTxInputs(Coin inputAmount, AddressEntry addressInfo) throws InsufficientMoneyException,
             TransactionVerificationException, WalletException {
 
@@ -654,7 +651,6 @@ public class WalletService {
         return new TransactionDataResult(connectedOutputsForAllInputs, outputs);
     }
 
-    // 2. step: Taker creates a deposit tx and signs his inputs
     public TransactionDataResult takerCreatesAndSignsDepositTx(Coin takerInputAmount,
                                                                Coin msOutputAmount,
                                                                List<TransactionOutput> offererConnectedOutputsForAllInputs,
@@ -753,17 +749,15 @@ public class WalletService {
         return new TransactionDataResult(depositTx, connectedOutputsForAllTakerInputs, takerOutputs);
     }
 
-    // 3. step: deposit tx
-    // Offerer signs tx and publishes it
-    public void offererSignAndPublishTx(Transaction takersDepositTx,
-                                        List<TransactionOutput> offererConnectedOutputsForAllInputs,
-                                        List<TransactionOutput> takerConnectedOutputsForAllInputs,
-                                        List<TransactionOutput> offererOutputs,
-                                        Coin offererInputAmount,
-                                        byte[] offererPubKey,
-                                        byte[] takerPubKey,
-                                        byte[] arbitratorPubKey,
-                                        FutureCallback<Transaction> callback) throws SigningException, TransactionVerificationException, WalletException {
+    public void offererSignsAndPublishTx(Transaction takersDepositTx,
+                                         List<TransactionOutput> offererConnectedOutputsForAllInputs,
+                                         List<TransactionOutput> takerConnectedOutputsForAllInputs,
+                                         List<TransactionOutput> offererOutputs,
+                                         Coin offererInputAmount,
+                                         byte[] offererPubKey,
+                                         byte[] takerPubKey,
+                                         byte[] arbitratorPubKey,
+                                         FutureCallback<Transaction> callback) throws SigningException, TransactionVerificationException, WalletException {
 
         checkArgument(offererConnectedOutputsForAllInputs.size() > 0);
         checkArgument(takerConnectedOutputsForAllInputs.size() > 0);
@@ -832,21 +826,10 @@ public class WalletService {
         Futures.addCallback(broadcastComplete, callback);
     }
 
-    // 4 step deposit tx: Offerer send deposit tx to taker
-    public Transaction takerCommitDepositTx(Transaction depositTx) throws WalletException {
-        log.trace("takerCommitDepositTx");
-        log.trace("inputs: ");
-        log.trace("depositTx=" + depositTx);
-        // If not recreate the tx we get a null pointer at receivePending
-        log.debug("tx id " + depositTx.getHashAsString());
+    public Transaction takerCommitsDepositTx(Transaction depositTx) throws WalletException {
+        // We need to recreate the tx we get a null pointer otherwise
         depositTx = new Transaction(params, depositTx.bitcoinSerialize());
-        log.debug("tx id " + depositTx.getHashAsString());
-        log.trace("depositTx=" + depositTx);
-        // boolean isAlreadyInWallet = wallet.maybeCommitTx(depositTx);
-        //log.trace("isAlreadyInWallet=" + isAlreadyInWallet);
 
-        // Manually add the multisigContract to the wallet, overriding the isRelevant checks so we can track
-        // it and check for double-spends later
         try {
             wallet.receivePending(depositTx, null, true);
         } catch (Throwable t) {
@@ -856,94 +839,59 @@ public class WalletService {
         }
 
         return depositTx;
-
     }
 
-    // 5. step payout tx: Offerer creates payout tx and signs it
-    public Pair<ECKey.ECDSASignature, Transaction> offererCreatesAndSignsPayoutTx(String depositTxID,
-                                                                                  Coin offererPaybackAmount,
-                                                                                  Coin takerPaybackAmount,
-                                                                                  String takerAddress,
-                                                                                  String tradeID) throws AddressFormatException {
-        log.debug("offererCreatesAndSignsPayoutTx");
-        log.trace("inputs: ");
-        log.trace("depositTxID=" + depositTxID);
-        log.trace("offererPaybackAmount=" + offererPaybackAmount.toFriendlyString());
-        log.trace("takerPaybackAmount=" + takerPaybackAmount.toFriendlyString());
-        log.trace("takerAddress=" + takerAddress);
-
-        // Offerer has published depositTx earlier, so he has it in his wallet
-        Transaction depositTx = wallet.getTransaction(new Sha256Hash(depositTxID));
-        // String depositTxAsHex = Utils.HEX.encode(depositTx.bitcoinSerialize());
-
+    public TransactionDataResult offererCreatesAndSignsPayoutTx(Transaction depositTx,
+                                                                Coin offererPayoutAmount,
+                                                                Coin takerPayoutAmount,
+                                                                String takerAddressString,
+                                                                AddressEntry addressEntry) throws AddressFormatException, TransactionVerificationException {
         // We create the payout tx
-        Transaction tx = createPayoutTx(depositTx, offererPaybackAmount, takerPaybackAmount,
-                getAddressInfo(tradeID).getAddressString(), takerAddress);
+        Transaction payoutTx = createPayoutTx(depositTx, offererPayoutAmount, takerPayoutAmount, addressEntry.getAddressString(), takerAddressString);
 
         // We create the signature for that tx
-        TransactionOutput multiSigOutput = tx.getInput(0).getConnectedOutput();
+        TransactionOutput multiSigOutput = payoutTx.getInput(0).getConnectedOutput();
         Script multiSigScript = multiSigOutput.getScriptPubKey();
-        Sha256Hash sigHash = tx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
-        ECKey.ECDSASignature offererSignature = getAddressInfo(tradeID).getKeyPair().sign(sigHash);
+        Sha256Hash sigHash = payoutTx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
+        ECKey.ECDSASignature offererSignature = addressEntry.getKeyPair().sign(sigHash);
 
-        TransactionSignature offererTxSig = new TransactionSignature(offererSignature, Transaction.SigHash.ALL, false);
-        Script inputScript = ScriptBuilder.createMultiSigInputScript(ImmutableList.of(offererTxSig));
-        tx.getInput(0).setScriptSig(inputScript);
+        verifyTransaction(payoutTx);
 
-        log.trace("sigHash=" + sigHash);
-        return new Pair<>(offererSignature, depositTx);
+        return new TransactionDataResult(payoutTx, offererSignature);
     }
 
-    // 6. step payout tx: Taker signs and publish tx
-    public void takerSignsAndSendsTx(Transaction depositTx,
-                                     ECKey.ECDSASignature offererSignature,
-                                     Coin offererPaybackAmount,
-                                     Coin takerPaybackAmount,
-                                     String offererAddress,
-                                     String tradeID,
-                                     FutureCallback<Transaction> callback) throws AddressFormatException {
-        log.debug("takerSignsAndSendsTx");
-        log.trace("inputs: ");
-        log.trace("depositTx=" + depositTx);
-        log.trace("offererSignature=" + offererSignature);
-        log.trace("offererPaybackAmount=" + offererPaybackAmount.toFriendlyString());
-        log.trace("takerPaybackAmount=" + takerPaybackAmount.toFriendlyString());
-        log.trace("offererAddress=" + offererAddress);
-        log.trace("callback=" + callback);
+    public void takerSignsAndPublishPayoutTx(Transaction depositTx,
+                                             ECKey.ECDSASignature offererSignature,
+                                             Coin offererPayoutAmount,
+                                             Coin takerPayoutAmount,
+                                             String offererAddressString,
+                                             AddressEntry addressEntry,
+                                             FutureCallback<Transaction> callback) throws AddressFormatException, TransactionVerificationException, 
+            WalletException {
 
         // We create the payout tx
-        Transaction tx = createPayoutTx(depositTx, offererPaybackAmount, takerPaybackAmount, offererAddress, getAddressInfo(tradeID).getAddressString());
+        Transaction payoutTx = createPayoutTx(depositTx, offererPayoutAmount, takerPayoutAmount, offererAddressString, addressEntry.getAddressString());
 
-        // We sign that tx with our key and apply the signature form the offerer
-        TransactionOutput multiSigOutput = tx.getInput(0).getConnectedOutput();
+        // We sign that tx with our key and apply the signature from the offerer
+        TransactionInput input = payoutTx.getInput(0);
+        TransactionOutput multiSigOutput = input.getConnectedOutput();
         Script multiSigScript = multiSigOutput.getScriptPubKey();
-        Sha256Hash sigHash = tx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
-        log.trace("sigHash=" + sigHash);
-
-        ECKey.ECDSASignature takerSignature = getAddressInfo(tradeID).getKeyPair().sign(sigHash);
+        Sha256Hash sigHash = payoutTx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
+        ECKey.ECDSASignature takerSignature = addressEntry.getKeyPair().sign(sigHash);
         TransactionSignature takerTxSig = new TransactionSignature(takerSignature, Transaction.SigHash.ALL, false);
-
         TransactionSignature offererTxSig = new TransactionSignature(offererSignature, Transaction.SigHash.ALL, false);
-
         Script inputScript = ScriptBuilder.createMultiSigInputScript(ImmutableList.of(offererTxSig, takerTxSig));
-        tx.getInput(0).setScriptSig(inputScript);
+        input.setScriptSig(inputScript);
 
-        log.trace("verify tx");
-        tx.verify();
+        verifyTransaction(payoutTx);
+        checkWalletConsistency();
+        checkScriptSig(payoutTx, input, 0);
+        input.verify(multiSigOutput);
 
-        log.trace("check if it can be correctly spent for ms input");
-        tx.getInput(0).getScriptSig().correctlySpends(tx, 0, multiSigScript);
-
-        log.trace("verify multiSigOutput");
-        tx.getInput(0).verify(multiSigOutput);
-
-        ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(tx);
+        ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(payoutTx);
         Futures.addCallback(broadcastComplete, callback);
 
-        log.trace("getTransactions.size=" + wallet.getTransactions(true).size());
-        log.trace("Check if wallet is consistent: result=" + wallet.isConsistent());
-        printTxWithInputs("takerSignsAndSendsTx", tx);
-        log.debug("tx = " + tx);
+        printTxWithInputs("payoutTx", payoutTx);
     }
 
 
@@ -970,23 +918,14 @@ public class WalletService {
         return ScriptBuilder.createMultiSigOutputScript(2, keys);
     }
 
-    private Transaction createPayoutTx(Transaction depositTx, Coin offererPaybackAmount, Coin takerPaybackAmount,
-                                       String offererAddress, String takerAddress) throws AddressFormatException {
-        log.trace("createPayoutTx");
-        log.trace("inputs: ");
-        log.trace("depositTx=" + depositTx);
-        log.trace("offererPaybackAmount=" + offererPaybackAmount.toFriendlyString());
-        log.trace("takerPaybackAmount=" + takerPaybackAmount.toFriendlyString());
-        log.trace("offererAddress=" + offererAddress);
-        log.trace("takerAddress=" + takerAddress);
+    private Transaction createPayoutTx(Transaction depositTx, Coin offererPayoutAmount, Coin takerPayoutAmount,
+                                       String offererAddressString, String takerAddressString) throws AddressFormatException {
 
-        // Transaction depositTx = new Transaction(params, Utils.parseAsHexOrBase58(depositTx));
         TransactionOutput multiSigOutput = depositTx.getOutput(0);
         Transaction tx = new Transaction(params);
         tx.addInput(multiSigOutput);
-        tx.addOutput(offererPaybackAmount, new Address(params, offererAddress));
-        tx.addOutput(takerPaybackAmount, new Address(params, takerAddress));
-        log.trace("tx=" + tx);
+        tx.addOutput(offererPayoutAmount, new Address(params, offererAddressString));
+        tx.addOutput(takerPayoutAmount, new Address(params, takerAddressString));
         return tx;
     }
 
@@ -1085,11 +1024,14 @@ public class WalletService {
     // Inner classes
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     public class TransactionDataResult {
-        private final List<TransactionOutput> connectedOutputsForAllInputs;
-        private final List<TransactionOutput> outputs;
+        private List<TransactionOutput> connectedOutputsForAllInputs;
+        private List<TransactionOutput> outputs;
         private Transaction depositTx;
+
+
+        private Transaction payoutTx;
+        private ECKey.ECDSASignature offererSignature;
 
         public TransactionDataResult(List<TransactionOutput> connectedOutputsForAllInputs, List<TransactionOutput> outputs) {
             this.connectedOutputsForAllInputs = connectedOutputsForAllInputs;
@@ -1102,6 +1044,12 @@ public class WalletService {
             this.outputs = outputs;
         }
 
+        public TransactionDataResult(Transaction payoutTx, ECKey.ECDSASignature offererSignature) {
+
+            this.payoutTx = payoutTx;
+            this.offererSignature = offererSignature;
+        }
+
         public List<TransactionOutput> getOutputs() {
             return outputs;
         }
@@ -1112,6 +1060,14 @@ public class WalletService {
 
         public Transaction getDepositTx() {
             return depositTx;
+        }
+
+        public Transaction getPayoutTx() {
+            return payoutTx;
+        }
+
+        public ECKey.ECDSASignature getOffererSignature() {
+            return offererSignature;
         }
     }
 

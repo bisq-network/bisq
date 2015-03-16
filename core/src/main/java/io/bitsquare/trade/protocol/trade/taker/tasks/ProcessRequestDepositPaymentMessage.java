@@ -38,7 +38,7 @@ public class ProcessRequestDepositPaymentMessage extends Task<SellerAsTakerModel
     @Override
     protected void doRun() {
         try {
-            checkTradeId(model.getTrade().getId(), model.getTradeMessage());
+            checkTradeId(model.getId(), model.getTradeMessage());
             RequestDepositPaymentMessage message = (RequestDepositPaymentMessage) model.getTradeMessage();
 
             model.setOffererConnectedOutputsForAllInputs(checkNotNull(message.getOffererConnectedOutputsForAllInputs()));

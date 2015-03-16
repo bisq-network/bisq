@@ -39,7 +39,7 @@ public class SendTakeOfferFeePayedMessage extends Task<SellerAsTakerModel> {
     @Override
     protected void doRun() {
         TakeOfferFeePayedMessage msg = new TakeOfferFeePayedMessage(
-                model.getTrade().getId(),
+                model.getId(),
                 model.getTrade().getTakeOfferFeeTxId(),
                 model.getTrade().getTradeAmount(),
                 model.getTakerPubKey()

@@ -23,13 +23,11 @@ import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage
 import io.bitsquare.util.taskrunner.Task;
 import io.bitsquare.util.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.Utils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.util.Validator.*;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static io.bitsquare.util.Validator.checkTradeId;
 
 public class ProcessPayoutTxPublishedMessage extends Task<BuyerAsOffererModel> {
     private static final Logger log = LoggerFactory.getLogger(ProcessPayoutTxPublishedMessage.class);
@@ -41,11 +39,10 @@ public class ProcessPayoutTxPublishedMessage extends Task<BuyerAsOffererModel> {
     @Override
     protected void doRun() {
         try {
-            checkTradeId(model.getTrade().getId(), model.getTradeMessage());
-            String payoutTxAsHex = nonEmptyStringOf(((PayoutTxPublishedMessage) model.getTradeMessage()).getPayoutTxAsHex());
-            Transaction payoutTx = new Transaction(model.getWalletService().getWallet().getParams(), Utils.parseAsHexOrBase58(payoutTxAsHex));
+            checkTradeId(model.getId(), model.getTradeMessage());
 
-            model.getTrade().setPayoutTx(payoutTx);
+            model.getTrade().setPayoutTx(checkNotNull(((PayoutTxPublishedMessage) model.getTradeMessage()).getPayoutTx()));
+            
             model.getTrade().setState(Trade.State.PAYOUT_PUBLISHED);
 
             complete();

@@ -35,7 +35,7 @@ public class SendDepositTxIdToTaker extends Task<BuyerAsOffererModel> {
 
     @Override
     protected void doRun() {
-        DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(model.getTrade().getId(), model.getTrade().getDepositTx());
+        DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(model.getId(), model.getTrade().getDepositTx());
 
         model.getTradeMessageService().sendMessage(model.getTaker(), tradeMessage, new SendMessageListener() {
             @Override

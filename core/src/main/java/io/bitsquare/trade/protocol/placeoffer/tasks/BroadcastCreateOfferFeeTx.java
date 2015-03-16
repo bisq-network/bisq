@@ -48,7 +48,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
     protected void doRun() {
 
         Coin totalsNeeded = model.getOffer().getSecurityDeposit().add(FeePolicy.CREATE_OFFER_FEE).add(FeePolicy.TX_FEE);
-        AddressEntry addressEntry = model.getWalletService().getAddressInfo(model.getOffer().getId());
+        AddressEntry addressEntry = model.getWalletService().getAddressEntry(model.getOffer().getId());
         Coin balance = model.getWalletService().getBalanceForAddress(addressEntry.getAddress());
         if (balance.compareTo(totalsNeeded) >= 0) {
 

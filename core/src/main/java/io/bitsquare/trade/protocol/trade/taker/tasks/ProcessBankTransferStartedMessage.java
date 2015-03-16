@@ -22,9 +22,12 @@ import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.util.taskrunner.Task;
 import io.bitsquare.util.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.ECKey;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.*;
 
 public class ProcessBankTransferStartedMessage extends Task<SellerAsTakerModel> {
@@ -37,13 +40,13 @@ public class ProcessBankTransferStartedMessage extends Task<SellerAsTakerModel> 
     @Override
     protected void doRun() {
         try {
-            checkTradeId(model.getTrade().getId(), model.getTradeMessage());
+            checkTradeId(model.getId(), model.getTradeMessage());
             BankTransferStartedMessage message = (BankTransferStartedMessage) model.getTradeMessage();
 
-            //model.setDepositTx(checkNotNull(message.getDepositTx()));
-            //model.setOffererSignature(checkNotNull(ECKey.ECDSASignature.decodeFromDER(message.getOffererSignature())));
-            model.setOffererPaybackAmount(positiveCoinOf(nonZeroCoinOf(message.getOffererPaybackAmount())));
-            model.setTakerPaybackAmount(positiveCoinOf(nonZeroCoinOf(message.getTakerPaybackAmount())));
+            model.setDepositTx(checkNotNull(message.getDepositTx()));
+            model.setOffererSignature(checkNotNull(ECKey.ECDSASignature.decodeFromDER(message.getOffererSignature())));
+            model.setOffererPayoutAmount(positiveCoinOf(nonZeroCoinOf(message.getOffererPayoutAmount())));
+            model.setTakerPayoutAmount(positiveCoinOf(nonZeroCoinOf(message.getTakerPayoutAmount())));
             model.setOffererPayoutAddress(nonEmptyStringOf(message.getOffererPayoutAddress()));
 
             complete();

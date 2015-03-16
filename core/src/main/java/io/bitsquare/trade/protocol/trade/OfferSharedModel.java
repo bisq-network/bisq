@@ -44,15 +44,16 @@ public class OfferSharedModel extends SharedModel {
     protected final BlockChainService blockChainService;
     protected final SignatureService signatureService;
 
+
     // derived
+    protected final String id;
     protected final BankAccount bankAccount;
     protected final String accountId;
     protected final PublicKey networkPubKey;
     protected final byte[] registrationPubKey;
-
     protected final DeterministicKey registrationKeyPair;
     protected final byte[] arbitratorPubKey;
-    protected final AddressEntry addressInfo;
+    protected final AddressEntry addressEntry;
 
     // data written/read by tasks
     protected TradeMessage tradeMessage;
@@ -69,17 +70,22 @@ public class OfferSharedModel extends SharedModel {
         this.blockChainService = blockChainService;
         this.signatureService = signatureService;
 
+        id = offer.getId();
         //TODO use default arbitrator for now
         arbitratorPubKey = offer.getArbitrators().get(0).getPubKey();
         registrationPubKey = walletService.getRegistrationAddressEntry().getPubKey();
         registrationKeyPair = walletService.getRegistrationAddressEntry().getKeyPair();
-        addressInfo = walletService.getAddressInfo(offer.getId());
+        addressEntry = walletService.getAddressEntry(id);
         bankAccount = user.getBankAccount(offer.getBankAccountId());
         accountId = user.getAccountId();
         networkPubKey = user.getNetworkPubKey();
     }
 
     // getter/setter
+
+    public String getId() {
+        return id;
+    }
 
     public TradeMessage getTradeMessage() {
         return tradeMessage;
@@ -133,8 +139,8 @@ public class OfferSharedModel extends SharedModel {
         return arbitratorPubKey;
     }
 
-    public AddressEntry getAddressInfo() {
-        return addressInfo;
+    public AddressEntry getAddressEntry() {
+        return addressEntry;
     }
 
 }

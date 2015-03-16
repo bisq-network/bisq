@@ -145,7 +145,7 @@ public class PlaceOfferProtocolTest {
                 () -> {
                     log.trace("wallet completed");
                     // 1. Use that address for funding the trading wallet
-                    address = walletService.getAddressInfo(OFFER_ID).getAddress();
+                    address = walletService.getAddressEntry(OFFER_ID).getAddress();
                     log.info("address for funding wallet = " + address.toString());//muoTvFHJmQwPKYoA8Fr7t87UCSfZM4fciG
                     log.info("Balance = " + walletService.getBalanceForAddress(address));
                     countDownLatch.countDown();
@@ -280,7 +280,7 @@ public class PlaceOfferProtocolTest {
         FaultHandler faultHandler = (message, throwable) -> {
             log.error(message);
             throwable.printStackTrace();
-            log.info("Balance = " + walletService.getBalanceForAddress(walletService.getAddressInfoByTradeID(OFFER_ID).getAddress()));
+            log.info("Balance = " + walletService.getBalanceForAddress(walletService.getAddressEntryByTradeID(OFFER_ID).getAddress()));
         };
         return getPlaceOfferProtocol(offer, resultHandler, faultHandler);
     }

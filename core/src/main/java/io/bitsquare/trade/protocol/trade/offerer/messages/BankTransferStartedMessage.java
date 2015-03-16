@@ -30,21 +30,21 @@ public class BankTransferStartedMessage implements Serializable, TradeMessage {
 
     private final Transaction depositTx;
     private final byte[] offererSignature;
-    private final Coin offererPaybackAmount;
-    private final Coin takerPaybackAmount;
+    private final Coin offererPayoutAmount;
+    private final Coin takerPayoutAmount;
     private final String offererPayoutAddress;
 
     public BankTransferStartedMessage(String tradeId,
                                       Transaction depositTx,
                                       byte[] offererSignature,
-                                      Coin offererPaybackAmount,
-                                      Coin takerPaybackAmount,
+                                      Coin offererPayoutAmount,
+                                      Coin takerPayoutAmount,
                                       String offererPayoutAddress) {
         this.tradeId = tradeId;
         this.depositTx = depositTx;
         this.offererSignature = offererSignature;
-        this.offererPaybackAmount = offererPaybackAmount;
-        this.takerPaybackAmount = takerPaybackAmount;
+        this.offererPayoutAmount = offererPayoutAmount;
+        this.takerPayoutAmount = takerPayoutAmount;
         this.offererPayoutAddress = offererPayoutAddress;
     }
 
@@ -61,12 +61,12 @@ public class BankTransferStartedMessage implements Serializable, TradeMessage {
         return offererPayoutAddress;
     }
 
-    public Coin getOffererPaybackAmount() {
-        return offererPaybackAmount;
+    public Coin getOffererPayoutAmount() {
+        return offererPayoutAmount;
     }
 
-    public Coin getTakerPaybackAmount() {
-        return takerPaybackAmount;
+    public Coin getTakerPayoutAmount() {
+        return takerPayoutAmount;
     }
 
     public byte[] getOffererSignature() {

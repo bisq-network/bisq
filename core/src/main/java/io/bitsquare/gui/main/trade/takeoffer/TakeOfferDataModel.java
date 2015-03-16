@@ -121,7 +121,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
         calculateVolume();
         calculateTotalToPay();
 
-        addressEntry = walletService.getAddressInfo(offer.getId());
+        addressEntry = walletService.getAddressEntry(offer.getId());
         walletService.addBalanceListener(new BalanceListener(addressEntry.getAddress()) {
             @Override
             public void onBalanceChanged(@NotNull Coin balance) {

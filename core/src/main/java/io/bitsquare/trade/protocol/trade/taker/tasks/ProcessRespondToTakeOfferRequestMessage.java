@@ -38,7 +38,7 @@ public class ProcessRespondToTakeOfferRequestMessage extends Task<SellerAsTakerM
     @Override
     protected void doRun() {
         try {
-            checkTradeId(model.getTrade().getId(), model.getTradeMessage());
+            checkTradeId(model.getId(), model.getTradeMessage());
 
             if (((RespondToTakeOfferRequestMessage) model.getTradeMessage()).isOfferIsAvailable()) {
                 model.getTrade().setState(Trade.State.OFFERER_ACCEPTED);

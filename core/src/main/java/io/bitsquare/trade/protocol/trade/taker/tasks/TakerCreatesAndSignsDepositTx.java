@@ -47,7 +47,7 @@ public class TakerCreatesAndSignsDepositTx extends Task<SellerAsTakerModel> {
                     msOutputAmount,
                     model.getOffererConnectedOutputsForAllInputs(),
                     model.getOffererOutputs(),
-                    model.getAddressInfo(),
+                    model.getAddressEntry(),
                     model.getOffererPubKey(),
                     model.getTakerPubKey(),
                     model.getArbitratorPubKey());

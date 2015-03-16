@@ -17,16 +17,13 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
 import io.bitsquare.util.taskrunner.Task;
 import io.bitsquare.util.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.Transaction;
-
-import javafx.util.Pair;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,20 +40,20 @@ public class SignPayoutTx extends Task<BuyerAsOffererModel> {
         try {
             Trade trade = model.getTrade();
             Coin securityDeposit = trade.getSecurityDeposit();
-            Coin offererPaybackAmount = trade.getTradeAmount().add(securityDeposit);
-            @SuppressWarnings("UnnecessaryLocalVariable") Coin takerPaybackAmount = securityDeposit;
+            Coin offererPayoutAmount = trade.getTradeAmount().add(securityDeposit);
+            Coin takerPayoutAmount = securityDeposit;
 
-            Pair<ECKey.ECDSASignature, Transaction> result = model.getWalletService().offererCreatesAndSignsPayoutTx(
-                    trade.getDepositTx().getHashAsString(), 
-                    offererPaybackAmount, 
-                    takerPaybackAmount, 
-                    model.getTakerPayoutAddress(), 
-                    model.getTrade().getId());
+            WalletService.TransactionDataResult result = model.getWalletService().offererCreatesAndSignsPayoutTx(
+                    trade.getDepositTx(),
+                    offererPayoutAmount,
+                    takerPayoutAmount,
+                    model.getTakerPayoutAddress(),
+                    model.getWalletService().getAddressEntry(trade.getId()));
 
-            model.setOffererPayoutTx(result.getValue());
-            model.setOffererSignature(result.getKey());
-            model.setOffererPaybackAmount(offererPaybackAmount);
-            model.setTakerPaybackAmount(takerPaybackAmount);
+            model.setOffererPayoutTx(result.getPayoutTx());
+            model.setOffererSignature(result.getOffererSignature());
+            model.setOffererPayoutAmount(offererPayoutAmount);
+            model.setTakerPayoutAmount(takerPayoutAmount);
 
             complete();
         } catch (Exception e) {

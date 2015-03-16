@@ -36,12 +36,13 @@ public class SendSignedTakerDepositTx extends Task<SellerAsTakerModel> {
     @Override
     protected void doRun() {
         RequestOffererPublishDepositTxMessage tradeMessage = new RequestOffererPublishDepositTxMessage(
-                model.getTrade().getId(),
+                model.getId(),
                 model.getBankAccount(),
                 model.getAccountId(),
                 model.getNetworkPubKey(),
                 model.getTrade().getContractAsJson(),
                 model.getTrade().getTakerContractSignature(),
+                model.getWalletService().getAddressEntry(model.getId()).getAddressString(),
                 model.getTakerDepositTx(),
                 model.getTakerConnectedOutputsForAllInputs(),
                 model.getTakerOutputs()

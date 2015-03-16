@@ -28,6 +28,7 @@ import io.bitsquare.trade.protocol.trade.OfferSharedModel;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
@@ -52,11 +53,10 @@ public class SellerAsTakerModel extends OfferSharedModel {
     private Transaction depositTx;
     private Transaction signedTakerDepositTx;
     private Transaction payoutTx;
-    private String payoutTxAsHex;
-    private Coin takerPaybackAmount;
+    private Coin takerPayoutAmount;
     private byte[] offererPubKey;
     private long offererTxOutIndex;
-    private Coin offererPaybackAmount;
+    private Coin offererPayoutAmount;
     private String offererPayoutAddress;
     private List<TransactionOutput> offererConnectedOutputsForAllInputs;
     private List<TransactionOutput> offererOutputs;
@@ -66,6 +66,7 @@ public class SellerAsTakerModel extends OfferSharedModel {
     private Transaction publishedDepositTx;
     private BankAccount takerBankAccount;
     private String takerAccountId;
+    private ECKey.ECDSASignature offererSignature;
 
     public SellerAsTakerModel(Trade trade,
                               TradeMessageService tradeMessageService,
@@ -81,7 +82,7 @@ public class SellerAsTakerModel extends OfferSharedModel {
                 user);
 
         this.trade = trade;
-        takerPubKey = getAddressInfo().getPubKey();
+        takerPubKey = getAddressEntry().getPubKey();
     }
 
     // getter/setter
@@ -129,14 +130,6 @@ public class SellerAsTakerModel extends OfferSharedModel {
         this.payoutTx = payoutTx;
     }
 
-    public String getPayoutTxAsHex() {
-        return payoutTxAsHex;
-    }
-
-    public void setPayoutTxAsHex(String payoutTxAsHex) {
-        this.payoutTxAsHex = payoutTxAsHex;
-    }
-
     public byte[] getOffererPubKey() {
         return offererPubKey;
     }
@@ -166,20 +159,20 @@ public class SellerAsTakerModel extends OfferSharedModel {
         this.depositTx = depositTx;
     }
 
-    public Coin getOffererPaybackAmount() {
-        return offererPaybackAmount;
+    public Coin getOffererPayoutAmount() {
+        return offererPayoutAmount;
     }
 
-    public void setOffererPaybackAmount(Coin offererPaybackAmount) {
-        this.offererPaybackAmount = offererPaybackAmount;
+    public void setOffererPayoutAmount(Coin offererPayoutAmount) {
+        this.offererPayoutAmount = offererPayoutAmount;
     }
 
-    public Coin getTakerPaybackAmount() {
-        return takerPaybackAmount;
+    public Coin getTakerPayoutAmount() {
+        return takerPayoutAmount;
     }
 
-    public void setTakerPaybackAmount(Coin takerPaybackAmount) {
-        this.takerPaybackAmount = takerPaybackAmount;
+    public void setTakerPayoutAmount(Coin takerPayoutAmount) {
+        this.takerPayoutAmount = takerPayoutAmount;
     }
 
     public String getOffererPayoutAddress() {
@@ -245,5 +238,13 @@ public class SellerAsTakerModel extends OfferSharedModel {
 
     public String getTakerAccountId() {
         return takerAccountId;
+    }
+
+    public ECKey.ECDSASignature getOffererSignature() {
+        return offererSignature;
+    }
+
+    public void setOffererSignature(ECKey.ECDSASignature offererSignature) {
+        this.offererSignature = offererSignature;
     }
 }

@@ -184,7 +184,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
             }
         };
 
-        AddressEntry addressEntry = walletService.getAddressInfo(getTrade().getId());
+        AddressEntry addressEntry = walletService.getAddressEntry(getTrade().getId());
         String fromAddress = addressEntry.getAddressString();
         try {
             walletService.sendFunds(fromAddress, toAddress, getAmountToWithdraw(), callback);
@@ -258,7 +258,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     Coin getAmountToWithdraw() {
-        AddressEntry addressEntry = walletService.getAddressInfo(getTrade().getId());
+        AddressEntry addressEntry = walletService.getAddressEntry(getTrade().getId());
         log.debug("trade id " + getTrade().getId());
         log.debug("getAddressString " + addressEntry.getAddressString());
         log.debug("funds  " + walletService.getBalanceForAddress(addressEntry.getAddress()).subtract(FeePolicy

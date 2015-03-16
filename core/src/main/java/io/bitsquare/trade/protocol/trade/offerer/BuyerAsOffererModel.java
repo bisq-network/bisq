@@ -58,13 +58,11 @@ public class BuyerAsOffererModel extends OfferSharedModel {
     private BankAccount takerBankAccount;
     private PublicKey takerMessagePublicKey;
     private String takerContractAsJson;
-
-    private Coin takerPaybackAmount;
+    private Coin takerPayoutAmount;
     private String takeOfferFeeTxId;
 
-
     private ECKey.ECDSASignature offererSignature;
-    private Coin offererPaybackAmount;
+    private Coin offererPayoutAmount;
     private List<TransactionOutput> offererConnectedOutputsForAllInputs;
     private List<TransactionOutput> offererOutputs;
     private Transaction takerDepositTx;
@@ -93,8 +91,8 @@ public class BuyerAsOffererModel extends OfferSharedModel {
                 signatureService,
                 user);
         this.openOffer = openOffer;
-        
-        offererPubKey = getAddressInfo().getPubKey();
+
+        offererPubKey = getAddressEntry().getPubKey();
     }
 
     //getter/setter
@@ -176,20 +174,20 @@ public class BuyerAsOffererModel extends OfferSharedModel {
         this.offererSignature = offererSignature;
     }
 
-    public Coin getOffererPaybackAmount() {
-        return offererPaybackAmount;
+    public Coin getOffererPayoutAmount() {
+        return offererPayoutAmount;
     }
 
-    public void setOffererPaybackAmount(Coin offererPaybackAmount) {
-        this.offererPaybackAmount = offererPaybackAmount;
+    public void setOffererPayoutAmount(Coin offererPayoutAmount) {
+        this.offererPayoutAmount = offererPayoutAmount;
     }
 
-    public Coin getTakerPaybackAmount() {
-        return takerPaybackAmount;
+    public Coin getTakerPayoutAmount() {
+        return takerPayoutAmount;
     }
 
-    public void setTakerPaybackAmount(Coin takerPaybackAmount) {
-        this.takerPaybackAmount = takerPaybackAmount;
+    public void setTakerPayoutAmount(Coin takerPayoutAmount) {
+        this.takerPayoutAmount = takerPayoutAmount;
     }
 
     public void setTrade(Trade trade) {

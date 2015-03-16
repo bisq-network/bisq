@@ -37,7 +37,7 @@ public class RequestDepositPayment extends Task<BuyerAsOffererModel> {
     protected void doRun() {
         model.getOffererPubKey();
         RequestDepositPaymentMessage tradeMessage = new RequestDepositPaymentMessage(
-                model.getTrade().getId(),
+                model.getId(),
                 model.getOffererConnectedOutputsForAllInputs(),
                 model.getOffererOutputs(),
                 model.getOffererPubKey(),

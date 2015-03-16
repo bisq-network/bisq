@@ -37,6 +37,7 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
     private final PublicKey takerMessagePublicKey;
     private final String contractAsJson;
     private final String takerContractSignature;
+    private String takerPayoutAddress;
     private Transaction takersDepositTx;
     private List<TransactionOutput> takerConnectedOutputsForAllInputs;
     private List<TransactionOutput> takerOutputs;
@@ -47,6 +48,7 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
                                                  PublicKey takerMessagePublicKey,
                                                  String contractAsJson,
                                                  String takerContractSignature,
+                                                 String takerPayoutAddress,
                                                  Transaction takersDepositTx,
                                                  List<TransactionOutput> takerConnectedOutputsForAllInputs,
                                                  List<TransactionOutput> takerOutputs) {
@@ -56,6 +58,7 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
         this.takerMessagePublicKey = takerMessagePublicKey;
         this.contractAsJson = contractAsJson;
         this.takerContractSignature = takerContractSignature;
+        this.takerPayoutAddress = takerPayoutAddress;
         this.takersDepositTx = takersDepositTx;
         this.takerConnectedOutputsForAllInputs = takerConnectedOutputsForAllInputs;
         this.takerOutputs = takerOutputs;
@@ -101,6 +104,10 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
 
     public String getContractAsJson() {
         return contractAsJson;
+    }
+
+    public String getTakerPayoutAddress() {
+        return takerPayoutAddress;
     }
 
     public Transaction getTakersDepositTx() {

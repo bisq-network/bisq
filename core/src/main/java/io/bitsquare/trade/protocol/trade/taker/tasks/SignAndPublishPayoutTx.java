@@ -22,7 +22,6 @@ import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.util.taskrunner.Task;
 import io.bitsquare.util.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.Utils;
 
@@ -43,20 +42,20 @@ public class SignAndPublishPayoutTx extends Task<SellerAsTakerModel> {
     @Override
     protected void doRun() {
         try {
-            model.getWalletService().takerSignsAndSendsTx(model.getPublishedDepositTx(),
-                    null,
-                    model.getOffererPaybackAmount(),
-                    model.getTakerPaybackAmount(),
+            model.getWalletService().takerSignsAndPublishPayoutTx(
+                    model.getPublishedDepositTx(),
+                    model.getOffererSignature(),
+                    model.getOffererPayoutAmount(),
+                    model.getTakerPayoutAmount(),
                     model.getOffererPayoutAddress(),
-                    model.getTrade().getId(),
+                    model.getAddressEntry(),
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {
-                            log.debug("takerSignsAndSendsTx " + transaction);
+                            log.debug("published payoutTx " + transaction);
                             String payoutTxAsHex = Utils.HEX.encode(transaction.bitcoinSerialize());
 
                             model.setPayoutTx(transaction);
-                            model.setPayoutTxAsHex(payoutTxAsHex);
                             model.getTrade().setState(Trade.State.PAYOUT_PUBLISHED);
 
                             complete();
@@ -67,7 +66,7 @@ public class SignAndPublishPayoutTx extends Task<SellerAsTakerModel> {
                             failed(t);
                         }
                     });
-        } catch (AddressFormatException e) {
+        } catch (Throwable e) {
             failed(e);
         }
     }

@@ -19,16 +19,18 @@ package io.bitsquare.trade.protocol.trade.taker.messages;
 
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 
+import org.bitcoinj.core.Transaction;
+
 import java.io.Serializable;
 
 public class PayoutTxPublishedMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = 1288653559218403873L;
     private final String tradeId;
-    private final String payoutTxAsHex;
+    private final Transaction payoutTx;
 
-    public PayoutTxPublishedMessage(String tradeId, String payoutTxAsHex) {
+    public PayoutTxPublishedMessage(String tradeId, Transaction payoutTx) {
         this.tradeId = tradeId;
-        this.payoutTxAsHex = payoutTxAsHex;
+        this.payoutTx = payoutTx;
     }
 
     @Override
@@ -36,7 +38,7 @@ public class PayoutTxPublishedMessage implements Serializable, TradeMessage {
         return tradeId;
     }
 
-    public String getPayoutTxAsHex() {
-        return payoutTxAsHex;
+    public Transaction getPayoutTx() {
+        return payoutTx;
     }
 }
