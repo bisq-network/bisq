@@ -47,6 +47,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.HPos;
@@ -96,6 +97,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private final OverlayManager overlayManager;
     private TradeView.CloseHandler closeHandler;
 
+    private ChangeListener<String> errorMessageChangeListener;
+
     @Inject
     private TakeOfferView(TakeOfferViewModel model, Navigation navigation,
                           OverlayManager overlayManager) {
@@ -113,6 +116,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     @Override
     protected void doDeactivate() {
+        model.errorMessage.removeListener(errorMessageChangeListener);
     }
 
     public void initWithData(Direction direction, Coin amount, Offer offer) {
@@ -229,14 +233,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             }
         });
 
-
-        model.errorMessage.addListener((o, oldValue, newValue) -> {
+        errorMessageChangeListener = (o, oldValue, newValue) -> {
             if (newValue != null) {
                 Popups.openErrorPopup(BSResources.get("shared.error"), BSResources.get("takeOffer.error.message", model.errorMessage.get()));
                 Popups.removeBlurContent();
                 Platform.runLater(this::close);
             }
-        });
+        };
+        model.errorMessage.addListener(errorMessageChangeListener);
 
         model.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
             if (newValue) {
@@ -293,7 +297,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             takeOfferSpinner.setVisible(newValue);
         });
     }
-
 
     private void showCheckAvailabilityScreen() {
 

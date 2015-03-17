@@ -136,6 +136,7 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void checkOfferAvailability(Offer offer) {
+        offer.setState(Offer.State.UNKNOWN);
         if (!checkOfferAvailabilityProtocolMap.containsKey(offer.getId())) {
             CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(
                     offer,
@@ -202,10 +203,7 @@ public class TradeManager {
     }
 
     public void requestTakeOffer(Coin amount, Offer offer, TradeResultHandler tradeResultHandler) {
-        CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(
-                offer,
-                tradeMessageService);
-
+        CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(offer, tradeMessageService);
         CheckOfferAvailabilityProtocol protocol = new CheckOfferAvailabilityProtocol(model,
                 () -> {
                     disposeCheckOfferAvailabilityRequest(offer);
@@ -293,7 +291,7 @@ public class TradeManager {
     // Process new tradeMessages
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Routes the incoming messages to the responsible protocol
+    // Offerer handles those requests
     private void handleMessage(Message message, Peer sender) {
         if (message instanceof RequestIsOfferAvailableMessage) {
             String offerId = ((RequestIsOfferAvailableMessage) message).getOfferId();

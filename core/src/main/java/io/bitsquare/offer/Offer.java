@@ -83,7 +83,7 @@ public class Offer implements Serializable {
     // Mutable property. Has to be set before offer is save in DHT as it changes the objects hash!
     private String offerFeePaymentTxID;
     private State state;
-    
+
     // Those state properties are transient and only used at runtime! 
     // don't access directly as it might be null; use getStateProperty() which creates an object if not instantiated
     private transient ObjectProperty<State> stateProperty;
@@ -124,8 +124,7 @@ public class Offer implements Serializable {
         this.acceptedLanguageLocales = acceptedLanguageLocales;
 
         creationDate = new Date();
-        state = State.UNKNOWN;
-        stateProperty().set(state);
+        setState(State.UNKNOWN);
     }
 
 
@@ -231,9 +230,6 @@ public class Offer implements Serializable {
     }
 
     public State getState() {
-        if (state == null)
-            setState(State.UNKNOWN);
-
         return state;
     }
 

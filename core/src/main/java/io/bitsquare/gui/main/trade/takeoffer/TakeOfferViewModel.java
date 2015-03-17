@@ -146,62 +146,62 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         bankAccountCurrency = BSResources.get(offer.getCurrency().getDisplayName());
         bankAccountCounty = BSResources.get(offer.getBankAccountCountry().getName());
 
-        offer.stateProperty().addListener((ov, oldValue, newValue) -> {
-            log.debug("offer state = " + newValue);
+        offer.stateProperty().addListener((ov, oldValue, newValue) -> applyOfferState(newValue));
+        applyOfferState(offer.stateProperty().get());
+    }
 
-            switch (newValue) {
-                case UNKNOWN:
-                    log.error("Must not happen.");
-                    break;
-                case AVAILABLE:
-                    state.set(State.AMOUNT_SCREEN);
-                    break;
-                case RESERVED:
-                    if (takeOfferRequested)
-                        errorMessage.set("Take offer request failed because offer is not available anymore. " +
-                                "Maybe another trader has taken the offer in the meantime.");
-                    else
-                        errorMessage.set("You cannot take that offer because the offer was already taken by another trader.");
-                    takeOfferRequested = false;
-                    break;
-                case REMOVED:
-                    if (!takeOfferRequested)
-                        errorMessage.set("You cannot take that offer because the offer has been removed in the meantime.");
+   private void applyOfferState(Offer.State state) {
+        log.debug("offer state = " + state);
 
-                    takeOfferRequested = false;
-                    break;
-                case OFFERER_OFFLINE:
-                    if (takeOfferRequested)
-                        errorMessage.set("Take offer request failed because offerer is not online anymore.");
-                    else
-                        errorMessage.set("You cannot take that offer because the offerer is offline.");
-                    takeOfferRequested = false;
-                    break;
-                case FAULT:
-                    if (takeOfferRequested)
-                        errorMessage.set("Take offer request failed.");
-                    else
-                        errorMessage.set("The check for the offer availability failed.");
+        switch (state) {
+            case UNKNOWN:
+                log.error("Must not happen.");
+                break;
+            case AVAILABLE:
+                this.state.set(State.AMOUNT_SCREEN);
+                break;
+            case RESERVED:
+                if (takeOfferRequested)
+                    errorMessage.set("Take offer request failed because offer is not available anymore. " +
+                            "Maybe another trader has taken the offer in the meantime.");
+                else
+                    errorMessage.set("You cannot take that offer because the offer was already taken by another trader.");
+                takeOfferRequested = false;
+                break;
+            case REMOVED:
+                if (!takeOfferRequested)
+                    errorMessage.set("You cannot take that offer because the offer has been removed in the meantime.");
 
-                    takeOfferRequested = false;
-                    break;
-                default:
-                    log.error("Unhandled offer state: " + newValue);
-                    break;
-            }
+                takeOfferRequested = false;
+                break;
+            case OFFERER_OFFLINE:
+                if (takeOfferRequested)
+                    errorMessage.set("Take offer request failed because offerer is not online anymore.");
+                else
+                    errorMessage.set("You cannot take that offer because the offerer is offline.");
+                takeOfferRequested = false;
+                break;
+            case FAULT:
+                if (takeOfferRequested)
+                    errorMessage.set("Take offer request failed.");
+                else
+                    errorMessage.set("The check for the offer availability failed.");
 
-            if (errorMessage.get() != null) {
-                isTakeOfferSpinnerVisible.set(false);
-            }
+                takeOfferRequested = false;
+                break;
+            default:
+                log.error("Unhandled offer state: " + state);
+                break;
+        }
 
-            evaluateState();
-        });
+        if (errorMessage.get() != null) {
+            isTakeOfferSpinnerVisible.set(false);
+        }
 
         evaluateState();
     }
 
     void takeOffer() {
-        errorMessage.set(null);
         takeOfferRequested = true;
         applyTakeOfferRequestResult(false);
 
