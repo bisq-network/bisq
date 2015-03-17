@@ -21,13 +21,13 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.offer.Offer;
-import io.bitsquare.persistence.Persistence;
-import io.bitsquare.user.Preferences;
-import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeManager;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
+import io.bitsquare.offer.Offer;
+import io.bitsquare.persistence.Persistence;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TradeManager;
+import io.bitsquare.user.Preferences;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
@@ -63,11 +63,8 @@ class TakeOfferDataModel implements Activatable, DataModel {
     private Offer offer;
     private AddressEntry addressEntry;
 
-    final StringProperty requestTakeOfferErrorMessage = new SimpleStringProperty();
-    final StringProperty transactionId = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
 
-    final BooleanProperty requestTakeOfferSuccess = new SimpleBooleanProperty();
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
     final BooleanProperty useMBTC = new SimpleBooleanProperty();
 
@@ -77,8 +74,6 @@ class TakeOfferDataModel implements Activatable, DataModel {
     final ObjectProperty<Coin> securityDepositAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> offerFeeAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> networkFeeAsCoin = new SimpleObjectProperty<>();
-
-    final ObjectProperty<Offer.State> offerIsAvailable = new SimpleObjectProperty<>(Offer.State.UNKNOWN);
 
     @Inject
     public TakeOfferDataModel(TradeManager tradeManager,
@@ -130,64 +125,11 @@ class TakeOfferDataModel implements Activatable, DataModel {
         });
         updateBalance(walletService.getBalanceForAddress(addressEntry.getAddress()));
 
-        offer.stateProperty().addListener((observable, oldValue, newValue) -> {
-            offerIsAvailable.set(newValue);
-        });
         tradeManager.checkOfferAvailability(offer);
     }
 
-    void takeOffer() {
-        final Trade trade = tradeManager.takeOffer(amountAsCoin.get(), offer);
-        trade.stateProperty().addListener((ov, oldValue, newValue) -> {
-            log.debug("trade state = " + newValue);
-            String errorMessage = "";
-            if (newValue.getErrorMessage() != null)
-                errorMessage = "\nError message: " + newValue.getErrorMessage();
-
-            switch (newValue) {
-                case OPEN:
-                    break;
-                case OFFERER_ACCEPTED:
-                    break;
-                case OFFERER_REJECTED:
-                    requestTakeOfferErrorMessage.set("Take offer request got rejected. Maybe another trader has taken the offer in the meantime.");
-                    break;
-                case TAKE_OFFER_FEE_TX_CREATED:
-                    break;
-                case DEPOSIT_PUBLISHED:
-                case DEPOSIT_CONFIRMED:
-                    // TODO Check why DEPOSIT_CONFIRMED can happen, refactor state handling
-                    // TODO null pointer happened here!
-                    if (trade.getDepositTx() != null) {
-                        transactionId.set(trade.getDepositTx().getHashAsString());
-                        requestTakeOfferSuccess.set(true);
-                    }
-                    else {
-                        log.warn("trade.getDepositTx() = null. at trade state " + newValue +
-                                " That should not happen and needs more investigation why it can happen.");
-                    }
-                    break;
-                case FIAT_PAYMENT_STARTED:
-                    break;
-                case TAKE_OFFER_FEE_PUBLISH_FAILED:
-                    requestTakeOfferErrorMessage.set("An error occurred when paying the trade fee." + errorMessage);
-                    break;
-                case MESSAGE_SENDING_FAILED:
-                    requestTakeOfferErrorMessage.set("An error occurred when sending a message to the offerer. Maybe there are connection problems. " +
-                            "Please try later again." + errorMessage);
-                    break;
-                case PAYOUT_PUBLISHED:
-                    break;
-                case FAULT:
-                    requestTakeOfferErrorMessage.set(errorMessage);
-                    break;
-
-
-                default:
-                    log.error("Unhandled trade state: " + newValue);
-                    break;
-            }
-        });
+    Trade takeOffer() {
+        return tradeManager.takeOffer(amountAsCoin.get(), offer);
     }
 
     void calculateVolume() {

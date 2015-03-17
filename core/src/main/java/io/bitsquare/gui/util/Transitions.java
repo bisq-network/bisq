@@ -103,6 +103,7 @@ public class Transitions {
             if (removeBlurTimeLine != null)
                 removeBlurTimeLine.stop();
 
+            node.setMouseTransparent(true);
             GaussianBlur blur = new GaussianBlur(0.0);
             Timeline timeline = new Timeline();
             KeyValue kv1 = new KeyValue(blur.radiusProperty(), 15.0);
@@ -134,6 +135,7 @@ public class Transitions {
     public void removeBlur(Node node, int duration, boolean useDarken) {
         if (preferences.getUseEffects()) {
             if (node != null) {
+                node.setMouseTransparent(false);
                 GaussianBlur blur = (GaussianBlur) node.getEffect();
                 if (blur != null) {
                     removeBlurTimeLine = new Timeline();

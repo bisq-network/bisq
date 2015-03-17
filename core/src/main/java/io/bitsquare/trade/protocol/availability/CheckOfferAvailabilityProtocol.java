@@ -17,15 +17,14 @@
 
 package io.bitsquare.trade.protocol.availability;
 
+import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
-import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress;
 import io.bitsquare.trade.protocol.availability.tasks.ProcessReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.tasks.RequestIsOfferAvailable;
-import io.bitsquare.common.taskrunner.TaskRunner;
 
 import javafx.application.Platform;
 
@@ -82,7 +81,6 @@ public class CheckOfferAvailabilityProtocol {
     public void cancel() {
         isCanceled = true;
         taskRunner.cancel();
-        model.getOffer().setState(Offer.State.UNKNOWN);
     }
 
 

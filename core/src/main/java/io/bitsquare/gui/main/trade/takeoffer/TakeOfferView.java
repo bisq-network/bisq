@@ -18,6 +18,8 @@
 package io.bitsquare.gui.main.trade.takeoffer;
 
 
+import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.common.viewfx.view.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.AddressTextField;
@@ -36,8 +38,6 @@ import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
-import io.bitsquare.common.viewfx.view.FxmlView;
 
 import org.bitcoinj.core.Coin;
 
@@ -47,7 +47,6 @@ import java.util.List;
 import javax.inject.Inject;
 
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.HPos;
@@ -95,7 +94,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private final Navigation navigation;
     private final OverlayManager overlayManager;
-    private ChangeListener<Offer.State> offerIsAvailableChangeListener;
     private TradeView.CloseHandler closeHandler;
 
     @Inject
@@ -115,8 +113,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     @Override
     protected void doDeactivate() {
-        if (offerIsAvailableChangeListener != null)
-            model.offerIsAvailable.removeListener(offerIsAvailableChangeListener);
     }
 
     public void initWithData(Direction direction, Coin amount, Offer offer) {
@@ -127,13 +123,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         else
             imageView.setId("image-sell-large");
 
-        priceDescriptionLabel.setText(BSResources.get("takeOffer.amountPriceBox.priceDescription",
-                model.getFiatCode()));
-        volumeDescriptionLabel.setText(BSResources.get("takeOffer.amountPriceBox.volumeDescription",
-                model.getFiatCode()));
+        priceDescriptionLabel.setText(BSResources.get("takeOffer.amountPriceBox.priceDescription", model.getFiatCode()));
+        volumeDescriptionLabel.setText(BSResources.get("takeOffer.amountPriceBox.volumeDescription", model.getFiatCode()));
 
-        balanceTextField.setup(model.getWalletService(), model.address.get(),
-                model.getFormatter());
+        balanceTextField.setup(model.getWalletService(), model.address.get(), model.getFormatter());
 
         buyLabel.setText(model.getDirectionLabel());
         amountRangeTextField.setText(model.getAmountRange());
@@ -148,53 +141,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         acceptedLanguagesTextField.setText(model.getAcceptedLanguages());
         acceptedArbitratorsTextField.setText(model.getAcceptedArbitrators());
 
-        offerIsAvailableChangeListener = (ov, oldValue, newValue) -> handleOfferIsAvailableState(newValue);
-        model.offerIsAvailable.addListener(offerIsAvailableChangeListener);
-        handleOfferIsAvailableState(model.offerIsAvailable.get());
+        showCheckAvailabilityScreen();
     }
 
     public void setCloseHandler(TradeView.CloseHandler closeHandler) {
         this.closeHandler = closeHandler;
-    }
-
-    private void handleOfferIsAvailableState(Offer.State state) {
-        switch (state) {
-            case UNKNOWN:
-                break;
-            case AVAILABLE:
-                isOfferAvailableLabel.setVisible(false);
-                isOfferAvailableLabel.setManaged(false);
-                isOfferAvailableProgressIndicator.setProgress(0);
-                isOfferAvailableProgressIndicator.setVisible(false);
-                isOfferAvailableProgressIndicator.setManaged(false);
-
-                // In case of returning to a canceled or failed take offer request and if trade wallet is sufficient funded we display directly the payment 
-                // screen
-                if (!model.isTakeOfferButtonDisabled.get()) {
-                    showPayFundsScreen();
-                    showPaymentInfoScreenButton.setVisible(false);
-                }
-                else {
-                    showPaymentInfoScreenButton.setVisible(true);
-                }
-                break;
-            case OFFERER_OFFLINE:
-                Popups.openWarningPopup("You cannot take that offer", "The offerer is offline.");
-                Platform.runLater(this::close);
-                break;
-            case NOT_AVAILABLE:
-                Popups.openWarningPopup("You cannot take that offer", "The offer was already taken by another trader.");
-                Platform.runLater(this::close);
-                break;
-            case FAULT:
-                Popups.openWarningPopup("You cannot take that offer", "The check for the offer availability failed.");
-                Platform.runLater(this::close);
-                break;
-            case REMOVED:
-                Popups.openWarningPopup("You cannot take that offer", "The offerer has been removed in the meantime.");
-                Platform.runLater(this::close);
-                break;
-        }
     }
 
     @FXML
@@ -203,58 +154,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     @FXML
-    void onShowPayFundsScreen() {
-        showPayFundsScreen();
+    void onShowPaymentScreen() {
+        model.onShowPaymentScreen();
     }
 
-    private void showPayFundsScreen() {
-        // TODO deactivate for testing the moment
-       /* if (model.displaySecurityDepositInfo()) {
-            overlayManager.blurContent();
-            List<Action> actions = new ArrayList<>();
-            actions.add(new AbstractAction(BSResources.get("shared.close")) {
-                @Override
-                public void handle(ActionEvent actionEvent) {
-                    getProperties().put("type", "CLOSE");
-                    Dialog.Actions.CLOSE.handle(actionEvent);
-                }
-            });
-            Popups.openInfoPopup("To ensure that both traders behave fair they need to pay a security deposit.",
-                    "The deposit will stay in your local trading wallet until the offer gets accepted by another trader. " +
-                            "\nIt will be refunded to you after the trade has successfully completed.",
-                    actions);
-
-            model.securityDepositInfoDisplayed();
-        }*/
-
-        priceAmountPane.setInactive();
-
-        showPaymentInfoScreenButton.setVisible(false);
-
-        payFundsPane.setVisible(true);
-        totalToPayLabel.setVisible(true);
-        totalToPayInfoIconLabel.setVisible(true);
-        totalToPayTextField.setVisible(true);
-        addressLabel.setVisible(true);
-        addressTextField.setVisible(true);
-        balanceLabel.setVisible(true);
-        balanceTextField.setVisible(true);
-        fundsBoxInfoDisplay.setVisible(true);
-
-        // for irc demo
-        //showAdvancedSettingsButton.setVisible(true);
-        showAdvancedSettingsButton.setManaged(false);
-
-        if (expand == null) {
-            expand = ImageUtil.getImageViewById(ImageUtil.EXPAND);
-            collapse = ImageUtil.getImageViewById(ImageUtil.COLLAPSE);
-        }
-        showAdvancedSettingsButton.setGraphic(expand);
-
-        setupTotalToPayInfoIconLabel();
-
-        model.onShowPayFundsScreen();
-    }
 
     @FXML
     void onToggleShowAdvancedSettings() {
@@ -300,6 +203,23 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             amountTextField.setText(model.amount.get());
         });
 
+        model.state.addListener((ov, oldValue, newValue) -> {
+            switch (newValue) {
+                case CHECK_AVAILABILITY:
+                    showCheckAvailabilityScreen();
+                    break;
+                case AMOUNT_SCREEN:
+                    showAmountScreen();
+                    break;
+                case PAYMENT_SCREEN:
+                    setupPaymentScreen();
+                    break;
+                case DETAILS_SCREEN:
+                    showDetailsScreen();
+                    break;
+            }
+        });
+
         // warnings
         model.showWarningInvalidBtcDecimalPlaces.addListener((o, oldValue, newValue) -> {
             if (newValue) {
@@ -309,12 +229,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             }
         });
 
-        model.requestTakeOfferErrorMessage.addListener((o, oldValue, newValue) -> {
+
+        model.errorMessage.addListener((o, oldValue, newValue) -> {
             if (newValue != null) {
-                Popups.openErrorPopup(BSResources.get("shared.error"),
-                        BSResources.get("takeOffer.amountPriceBox.error.message",
-                                model.requestTakeOfferErrorMessage.get()));
+                Popups.openErrorPopup(BSResources.get("shared.error"), BSResources.get("takeOffer.error.message", model.errorMessage.get()));
                 Popups.removeBlurContent();
+                Platform.runLater(this::close);
             }
         });
 
@@ -364,8 +284,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
 
         // buttons
-        takeOfferButton.visibleProperty().bind(model.isTakeOfferButtonVisible);
-        takeOfferButton.disableProperty().bind(model.isTakeOfferButtonDisabled);
+        takeOfferButton.disableProperty().bind(model.takeOfferButtonDisabled);
 
         takeOfferSpinnerInfoLabel.visibleProperty().bind(model.isTakeOfferSpinnerVisible);
 
@@ -373,6 +292,68 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             takeOfferSpinner.setProgress(newValue ? -1 : 0);
             takeOfferSpinner.setVisible(newValue);
         });
+    }
+
+
+    private void showCheckAvailabilityScreen() {
+
+    }
+
+    private void showAmountScreen() {
+        isOfferAvailableLabel.setVisible(false);
+        isOfferAvailableLabel.setManaged(false);
+        isOfferAvailableProgressIndicator.setProgress(0);
+        isOfferAvailableProgressIndicator.setVisible(false);
+        isOfferAvailableProgressIndicator.setManaged(false);
+
+        showPaymentInfoScreenButton.setVisible(true);
+    }
+
+    private void setupPaymentScreen() {
+        // TODO deactivate for testing the moment
+       /* if (model.displaySecurityDepositInfo()) {
+            overlayManager.blurContent();
+            List<Action> actions = new ArrayList<>();
+            actions.add(new AbstractAction(BSResources.get("shared.close")) {
+                @Override
+                public void handle(ActionEvent actionEvent) {
+                    getProperties().put("type", "CLOSE");
+                    Dialog.Actions.CLOSE.handle(actionEvent);
+                }
+            });
+            Popups.openInfoPopup("To ensure that both traders behave fair they need to pay a security deposit.",
+                    "The deposit will stay in your local trading wallet until the offer gets accepted by another trader. " +
+                            "\nIt will be refunded to you after the trade has successfully completed.",
+                    actions);
+
+            model.securityDepositInfoDisplayed();
+        }*/
+
+        priceAmountPane.setInactive();
+        takeOfferButton.setVisible(true);
+        showPaymentInfoScreenButton.setVisible(false);
+
+        payFundsPane.setVisible(true);
+        totalToPayLabel.setVisible(true);
+        totalToPayInfoIconLabel.setVisible(true);
+        totalToPayTextField.setVisible(true);
+        addressLabel.setVisible(true);
+        addressTextField.setVisible(true);
+        balanceLabel.setVisible(true);
+        balanceTextField.setVisible(true);
+        fundsBoxInfoDisplay.setVisible(true);
+
+        // for irc demo
+        //showAdvancedSettingsButton.setVisible(true);
+        showAdvancedSettingsButton.setManaged(false);
+
+        if (expand == null) {
+            expand = ImageUtil.getImageViewById(ImageUtil.EXPAND);
+            collapse = ImageUtil.getImageViewById(ImageUtil.COLLAPSE);
+        }
+        showAdvancedSettingsButton.setGraphic(expand);
+
+        setupTotalToPayInfoIconLabel();
     }
 
     private void showDetailsScreen() {
@@ -385,6 +366,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         toggleDetailsScreen(true);
     }
+
 
     private void hideDetailsScreen() {
         payFundsPane.setActive();

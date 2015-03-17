@@ -136,7 +136,7 @@
             </ProgressIndicator>
             <Button fx:id="showPaymentInfoScreenButton" text="%takeOffer.amountPriceBox.next" id="show-details-button"
                     GridPane.columnIndex="1" GridPane.rowIndex="3" defaultButton="true" visible="false"
-                    onAction="#onShowPayFundsScreen">
+                    onAction="#onShowPaymentScreen">
                 <GridPane.margin>
                     <Insets top="15.0"/>
                 </GridPane.margin>

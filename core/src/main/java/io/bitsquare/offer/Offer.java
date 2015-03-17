@@ -55,7 +55,17 @@ public class Offer implements Serializable {
         AVAILABLE,
         NOT_AVAILABLE,
         FAULT,
-        REMOVED
+        REMOVED;
+
+        private String errorMessage;
+
+        public void setErrorMessage(String errorMessage) {
+            this.errorMessage = errorMessage;
+        }
+
+        public String getErrorMessage() {
+            return errorMessage;
+        }
     }
 
     // key attributes for lookup

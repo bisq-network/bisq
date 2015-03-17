@@ -19,6 +19,7 @@ package io.bitsquare.trade.protocol.trade.taker;
 
 import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
@@ -43,6 +44,11 @@ import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCommitDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCreatesAndSignsDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOffererAccount;
+import io.bitsquare.util.Utilities;
+
+import java.util.function.Function;
+
+import javafx.animation.AnimationTimer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,9 +57,11 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
 public class SellerAsTakerProtocol {
     private static final Logger log = LoggerFactory.getLogger(SellerAsTakerProtocol.class);
+    public static final int TIMEOUT_DELAY = 10000;
 
     private final SellerAsTakerModel model;
     private final MessageHandler messageHandler;
+    private AnimationTimer timeoutTimer;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -78,7 +86,15 @@ public class SellerAsTakerProtocol {
 
         SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
                 () -> {
-                    log.debug("taskRunner at handleRequestTakeOfferUIEvent completed");
+                    log.debug("taskRunner at takeOffer completed");
+
+                    startTimeout(animationTimer -> {
+                        Offer.State offerState = Offer.State.FAULT;
+                        offerState.setErrorMessage("We did not get any reply for the take offer request. " +
+                                "Seems that there are connection problems to your peer.");
+                        model.getOffer().setState(Offer.State.FAULT);
+                        return null;
+                    });
                 },
                 (errorMessage) -> {
                     log.error(errorMessage);
@@ -97,6 +113,8 @@ public class SellerAsTakerProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handleRespondToTakeOfferRequestMessage(RespondToTakeOfferRequestMessage tradeMessage) {
+        stopTimeout();
+
         model.setTradeMessage(tradeMessage);
 
         SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
@@ -223,4 +241,23 @@ public class SellerAsTakerProtocol {
             }
         }
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Timeout
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void startTimeout(Function<AnimationTimer, Void> callback) {
+        stopTimeout();
+        timeoutTimer = Utilities.setTimeout(TIMEOUT_DELAY, callback);
+        timeoutTimer.start();
+    }
+
+    private void stopTimeout() {
+        if (timeoutTimer != null) {
+            timeoutTimer.stop();
+            timeoutTimer = null;
+        }
+    }
+
 }
