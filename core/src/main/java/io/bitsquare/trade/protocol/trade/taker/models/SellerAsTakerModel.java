@@ -25,15 +25,17 @@ import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.protocol.trade.OfferSharedModel;
-import io.bitsquare.trade.protocol.trade.offerer.models.TakerModel;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Transaction;
 
+import java.io.Serializable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SellerAsTakerModel extends OfferSharedModel {
+public class SellerAsTakerModel extends OfferSharedModel implements Serializable {
+    private static final long serialVersionUID = -963501132927618376L;
     private static final Logger log = LoggerFactory.getLogger(SellerAsTakerModel.class);
 
     private final Trade trade;

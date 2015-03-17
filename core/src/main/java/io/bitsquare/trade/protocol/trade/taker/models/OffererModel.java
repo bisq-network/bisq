@@ -23,9 +23,13 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.TransactionOutput;
 
+import java.io.Serializable;
+
 import java.util.List;
 
-public class OffererModel {
+public class OffererModel implements Serializable {
+    private static final long serialVersionUID = 1582902150121576205L;
+
     public OffererModel(Peer peer) {
         this.peer = peer;
     }

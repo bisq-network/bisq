@@ -23,15 +23,19 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
+import java.io.Serializable;
+
 import java.util.List;
 
-class TakerModel {
-
+public class TakerModel implements Serializable {
+    private static final long serialVersionUID = -4041809885931756860L;
+    
     public List<TransactionOutput> connectedOutputsForAllInputs;
     public List<TransactionOutput> outputs;
     public Transaction depositTx;
     public FiatAccount fiatAccount;
     public String accountId;
     public Coin payoutAmount;
+    public byte[] pubKey;
 
 }

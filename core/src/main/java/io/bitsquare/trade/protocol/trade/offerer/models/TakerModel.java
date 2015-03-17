@@ -24,11 +24,15 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
+import java.io.Serializable;
+
 import java.security.PublicKey;
 
 import java.util.List;
 
-public class TakerModel {
+public class TakerModel implements Serializable{
+    private static final long serialVersionUID = 2660909397210346486L;
+    
     public Peer peer;
     public String accountId;
     public FiatAccount fiatAccount;

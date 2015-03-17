@@ -28,11 +28,13 @@ import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Transaction;
 
+import java.io.Serializable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BuyerAsOffererModel extends OfferSharedModel {
-
+public class BuyerAsOffererModel extends OfferSharedModel implements Serializable {
+    private static final long serialVersionUID = 5000457153390911569L;
     private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererModel.class);
 
     private final Trade trade;
@@ -41,11 +43,6 @@ public class BuyerAsOffererModel extends OfferSharedModel {
 
     private Transaction publishedDepositTx;
     private String takeOfferFeeTxId;
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BuyerAsOffererModel(Trade trade,
                                TradeMessageService tradeMessageService,

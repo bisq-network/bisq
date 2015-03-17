@@ -24,9 +24,13 @@ import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
+import java.io.Serializable;
+
 import java.util.List;
 
-public class OffererModel {
+public class OffererModel implements Serializable {
+    private static final long serialVersionUID = -1845177552607819927L;
+    
     public byte[] pubKey;
     public ECKey.ECDSASignature payoutSignature;
     public Coin payoutAmount;
