@@ -18,10 +18,10 @@
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
 
 import org.bitcoinj.core.Coin;
 
@@ -48,7 +48,10 @@ public class SignPayoutTx extends Task<BuyerAsOffererModel> {
                     offererPayoutAmount,
                     takerPayoutAmount,
                     model.getTakerPayoutAddress(),
-                    model.getWalletService().getAddressEntry(trade.getId()));
+                    model.getWalletService().getAddressEntry(trade.getId()),
+                    model.getOffererPubKey(),
+                    model.getTakerPubKey(),
+                    model.getArbitratorPubKey());
 
             model.setOffererPayoutTx(result.getPayoutTx());
             model.setOffererSignature(result.getOffererSignature());

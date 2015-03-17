@@ -239,7 +239,7 @@ public class TradeWalletService {
         }
 
         // Add MultiSig output
-        Script multiSigOutputScript = getMultiSigOutputScript(offererPubKey, takerPubKey, arbitratorPubKey);
+        Script multiSigOutputScript = getP2SHMultiSigOutputScript(offererPubKey, takerPubKey, arbitratorPubKey);
         // Tx fee for deposit tx will be paid by offerer.
         TransactionOutput msOutput = new TransactionOutput(params, depositTx, msOutputAmount, multiSigOutputScript.getProgram());
         depositTx.addOutput(msOutput);
@@ -293,7 +293,7 @@ public class TradeWalletService {
         checkArgument(takerConnectedOutputsForAllInputs.size() > 0);
 
         // Check if takers Multisig script is identical to mine
-        Script multiSigOutputScript = getMultiSigOutputScript(offererPubKey, takerPubKey, arbitratorPubKey);
+        Script multiSigOutputScript = getP2SHMultiSigOutputScript(offererPubKey, takerPubKey, arbitratorPubKey);
         if (!takersDepositTx.getOutput(0).getScriptPubKey().equals(multiSigOutputScript))
             throw new TransactionVerificationException("Takers multiSigOutputScript does not match to my multiSigOutputScript");
 
@@ -373,14 +373,15 @@ public class TradeWalletService {
                                                                 Coin offererPayoutAmount,
                                                                 Coin takerPayoutAmount,
                                                                 String takerAddressString,
-                                                                AddressEntry addressEntry)
+                                                                AddressEntry addressEntry,
+                                                                byte[] offererPubKey,
+                                                                byte[] takerPubKey,
+                                                                byte[] arbitratorPubKey)
             throws AddressFormatException, TransactionVerificationException {
 
         Transaction payoutTx = createPayoutTx(depositTx, offererPayoutAmount, takerPayoutAmount, addressEntry.getAddressString(), takerAddressString);
-
-        TransactionInput input = payoutTx.getInput(0);
-        TransactionOutput multiSigOutput = input.getConnectedOutput();
-        Script multiSigScript = multiSigOutput.getScriptPubKey();
+        // We need MS script not the P2SH
+        Script multiSigScript = getMultiSigRedeemScript(offererPubKey, takerPubKey, arbitratorPubKey);
         Sha256Hash sigHash = payoutTx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
         ECKey.ECDSASignature offererSignature = addressEntry.getKeyPair().sign(sigHash);
 
@@ -395,25 +396,27 @@ public class TradeWalletService {
                                              Coin takerPayoutAmount,
                                              String offererAddressString,
                                              AddressEntry addressEntry,
+                                             byte[] offererPubKey,
+                                             byte[] takerPubKey,
+                                             byte[] arbitratorPubKey,
                                              FutureCallback<Transaction> callback)
             throws AddressFormatException, TransactionVerificationException, WalletException {
 
         Transaction payoutTx = createPayoutTx(depositTx, offererPayoutAmount, takerPayoutAmount, offererAddressString, addressEntry.getAddressString());
-
-        TransactionInput input = payoutTx.getInput(0);
-        TransactionOutput multiSigOutput = input.getConnectedOutput();
-        Script multiSigScript = multiSigOutput.getScriptPubKey();
+        // We need MS script not the P2SH
+        Script multiSigScript = getMultiSigRedeemScript(offererPubKey, takerPubKey, arbitratorPubKey);
         Sha256Hash sigHash = payoutTx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
         ECKey.ECDSASignature takerSignature = addressEntry.getKeyPair().sign(sigHash);
         TransactionSignature takerTxSig = new TransactionSignature(takerSignature, Transaction.SigHash.ALL, false);
         TransactionSignature offererTxSig = new TransactionSignature(offererSignature, Transaction.SigHash.ALL, false);
-        Script inputScript = ScriptBuilder.createMultiSigInputScript(ImmutableList.of(offererTxSig, takerTxSig));
+        Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(offererTxSig, takerTxSig), multiSigScript);
+        TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
 
         verifyTransaction(payoutTx);
         checkWalletConsistency();
         checkScriptSig(payoutTx, input, 0);
-        input.verify(multiSigOutput);
+        input.verify(input.getConnectedOutput());
 
         printTxWithInputs("payoutTx", payoutTx);
         ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(payoutTx);
@@ -424,13 +427,20 @@ public class TradeWalletService {
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Script getMultiSigOutputScript(byte[] offererPubKey, byte[] takerPubKey, byte[] arbitratorPubKey) {
+    private Script getP2SHMultiSigOutputScript(byte[] offererPubKey, byte[] takerPubKey, byte[] arbitratorPubKey) {
         ECKey offererKey = ECKey.fromPublicOnly(offererPubKey);
         ECKey takerKey = ECKey.fromPublicOnly(takerPubKey);
         ECKey arbitratorKey = ECKey.fromPublicOnly(arbitratorPubKey);
-
         List<ECKey> keys = ImmutableList.of(offererKey, takerKey, arbitratorKey);
-        return ScriptBuilder.createMultiSigOutputScript(2, keys);
+        return ScriptBuilder.createP2SHOutputScript(2, keys);
+    }
+
+    private Script getMultiSigRedeemScript(byte[] offererPubKey, byte[] takerPubKey, byte[] arbitratorPubKey) {
+        ECKey offererKey = ECKey.fromPublicOnly(offererPubKey);
+        ECKey takerKey = ECKey.fromPublicOnly(takerPubKey);
+        ECKey arbitratorKey = ECKey.fromPublicOnly(arbitratorPubKey);
+        List<ECKey> keys = ImmutableList.of(offererKey, takerKey, arbitratorKey);
+        return ScriptBuilder.createRedeemScript(2, keys);
     }
 
     private Transaction createPayoutTx(Transaction depositTx, Coin offererPayoutAmount, Coin takerPayoutAmount,
