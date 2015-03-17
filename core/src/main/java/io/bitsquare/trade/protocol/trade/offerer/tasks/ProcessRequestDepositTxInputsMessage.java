@@ -44,7 +44,7 @@ public class ProcessRequestDepositTxInputsMessage extends Task<BuyerAsOffererMod
             RequestDepositTxInputsMessage requestDepositTxInputsMessage = (RequestDepositTxInputsMessage) model.getTradeMessage();
             trade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(requestDepositTxInputsMessage.getTradeAmount())));
             model.setTakeOfferFeeTxId(nonEmptyStringOf(requestDepositTxInputsMessage.getTakeOfferFeeTxId()));
-            model.setTakerPubKey(checkNotNull(requestDepositTxInputsMessage.getTakerPubKey()));
+            model.taker.pubKey = checkNotNull(requestDepositTxInputsMessage.getTakerPubKey());
 
             complete();
         } catch (Throwable t) {

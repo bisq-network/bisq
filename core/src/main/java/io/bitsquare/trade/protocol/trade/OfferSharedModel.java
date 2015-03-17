@@ -17,16 +17,17 @@
 
 package io.bitsquare.trade.protocol.trade;
 
-import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.taskrunner.SharedModel;
 import io.bitsquare.crypto.SignatureService;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.user.User;
-import io.bitsquare.common.taskrunner.SharedModel;
 
 import org.bitcoinj.crypto.DeterministicKey;
 
@@ -44,6 +45,7 @@ public class OfferSharedModel extends SharedModel {
     private final WalletService walletService;
     private final BlockChainService blockChainService;
     private final SignatureService signatureService;
+    private Persistence persistence;
 
 
     // derived
@@ -66,12 +68,14 @@ public class OfferSharedModel extends SharedModel {
                                WalletService walletService,
                                BlockChainService blockChainService,
                                SignatureService signatureService,
-                               User user) {
+                               User user,
+                               Persistence persistence) {
         this.offer = offer;
         this.tradeMessageService = tradeMessageService;
         this.walletService = walletService;
         this.blockChainService = blockChainService;
         this.signatureService = signatureService;
+        this.persistence = persistence;
 
         id = offer.getId();
         tradeWalletService = walletService.getTradeWalletService();
@@ -85,8 +89,12 @@ public class OfferSharedModel extends SharedModel {
         networkPubKey = user.getNetworkPubKey();
     }
 
-    // getter/setter
+    //setter
+    public void setTradeMessage(TradeMessage tradeMessage) {
+        this.tradeMessage = tradeMessage;
+    }
 
+    // getter
     public String getId() {
         return id;
     }
@@ -97,10 +105,6 @@ public class OfferSharedModel extends SharedModel {
 
     public TradeMessage getTradeMessage() {
         return tradeMessage;
-    }
-
-    public void setTradeMessage(TradeMessage tradeMessage) {
-        this.tradeMessage = tradeMessage;
     }
 
     public Offer getOffer() {

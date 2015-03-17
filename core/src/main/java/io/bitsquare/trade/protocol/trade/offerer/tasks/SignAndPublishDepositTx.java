@@ -45,13 +45,13 @@ public class SignAndPublishDepositTx extends Task<BuyerAsOffererModel> {
         try {
             Coin offererInputAmount = model.getTrade().getSecurityDeposit().add(FeePolicy.TX_FEE);
             model.getTradeWalletService().offererSignsAndPublishTx(
-                    model.getTakerDepositTx(),
-                    model.getOffererConnectedOutputsForAllInputs(),
-                    model.getTakerConnectedOutputsForAllInputs(),
-                    model.getOffererOutputs(),
+                    model.taker.depositTx,
+                    model.offerer.connectedOutputsForAllInputs,
+                    model.taker.connectedOutputsForAllInputs,
+                    model.offerer.outputs,
                     offererInputAmount,
-                    model.getOffererPubKey(),
-                    model.getTakerPubKey(),
+                    model.offerer.pubKey,
+                    model.taker.pubKey,
                     model.getArbitratorPubKey(),
                     new FutureCallback<Transaction>() {
                         @Override

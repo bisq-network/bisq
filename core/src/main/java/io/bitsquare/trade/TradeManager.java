@@ -125,9 +125,9 @@ public class TradeManager {
         for (Map.Entry<String, Offer> entry : openOffers.entrySet()) {
             createBuyerAcceptsOfferProtocol(entry.getValue());
         }
-       /* for (Map.Entry<String, Trade> entry : pendingTrades.entrySet()) {
+        for (Map.Entry<String, Trade> entry : pendingTrades.entrySet()) {
             createBuyerAcceptsOfferProtocol(entry.getValue().getOffer());
-        }*/
+        }
     }
 
 
@@ -251,7 +251,8 @@ public class TradeManager {
                 walletService,
                 blockChainService,
                 signatureService,
-                user);
+                user,
+                persistence);
 
         SellerAsTakerProtocol sellerTakesOfferProtocol = new SellerAsTakerProtocol(model);
         sellerAsTakerProtocolMap.put(trade.getId(), sellerTakesOfferProtocol);
@@ -359,13 +360,7 @@ public class TradeManager {
     }
 
     private void createBuyerAcceptsOfferProtocol(Offer offer) {
-        BuyerAsOffererModel model = new BuyerAsOffererModel(
-                offer,
-                tradeMessageService,
-                walletService,
-                blockChainService,
-                signatureService,
-                user);
+       
 
         Trade trade;
         if (pendingTrades.containsKey(offer.getId())) {
@@ -377,7 +372,15 @@ public class TradeManager {
             pendingTrades.put(trade.getId(), trade);
             persistPendingTrades();
         }
-        model.setTrade(trade);
+        
+        BuyerAsOffererModel model = new BuyerAsOffererModel(
+                trade,
+                tradeMessageService,
+                walletService,
+                blockChainService,
+                signatureService,
+                user,
+                persistence);
         currentPendingTrade = trade;
 
         // TODO check, remove listener

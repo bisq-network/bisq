@@ -20,9 +20,9 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
 
 import org.bitcoinj.core.Coin;
 
@@ -43,8 +43,8 @@ public class GetOffererDepositTxInputs extends Task<BuyerAsOffererModel> {
             AddressEntry addressInfo = model.getAddressEntry();
             TradeWalletService.TransactionDataResult result = model.getTradeWalletService().offererCreatesDepositTxInputs(offererInputAmount, addressInfo);
 
-            model.setOffererConnectedOutputsForAllInputs(result.getConnectedOutputsForAllInputs());
-            model.setOffererOutputs(result.getOutputs());
+            model.offerer.connectedOutputsForAllInputs = result.getConnectedOutputsForAllInputs();
+            model.offerer.outputs = result.getOutputs();
 
             complete();
         } catch (Throwable e) {

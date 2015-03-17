@@ -17,10 +17,10 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
-import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
+import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,15 +41,15 @@ public class ProcessRequestOffererPublishDepositTxMessage extends Task<BuyerAsOf
             checkTradeId(model.getId(), model.getTradeMessage());
             RequestOffererPublishDepositTxMessage message = (RequestOffererPublishDepositTxMessage) model.getTradeMessage();
 
-            model.setTakerFiatAccount(checkNotNull(message.getTakerBankAccount()));
-            model.setTakerAccountId(nonEmptyStringOf(message.getTakerAccountId()));
-            model.setTakerMessagePublicKey(checkNotNull(message.getTakerMessagePublicKey()));
-            model.setTakerContractAsJson(nonEmptyStringOf(message.getTakerContractAsJson()));
-            model.setTakerPayoutAddress(nonEmptyStringOf(message.getTakerPayoutAddress()));
-            model.setTakerDepositTx(checkNotNull(message.getTakersDepositTx()));
-            model.setTakerConnectedOutputsForAllInputs(checkNotNull(message.getTakerConnectedOutputsForAllInputs()));
+            model.taker.fiatAccount = checkNotNull(message.getTakerBankAccount());
+            model.taker.accountId = nonEmptyStringOf(message.getTakerAccountId());
+            model.taker.messagePublicKey = checkNotNull(message.getTakerMessagePublicKey());
+            model.taker.contractAsJson = nonEmptyStringOf(message.getTakerContractAsJson());
+            model.taker.payoutAddress = nonEmptyStringOf(message.getTakerPayoutAddress());
+            model.taker.depositTx = checkNotNull(message.getTakersDepositTx());
+            model.taker.connectedOutputsForAllInputs = checkNotNull(message.getTakerConnectedOutputsForAllInputs());
             checkArgument(message.getTakerConnectedOutputsForAllInputs().size() > 0);
-            model.setTakerOutputs(checkNotNull(message.getTakerOutputs()));
+            model.taker.outputs = checkNotNull(message.getTakerOutputs());
 
             complete();
         } catch (Throwable t) {

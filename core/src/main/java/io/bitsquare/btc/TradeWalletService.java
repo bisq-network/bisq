@@ -415,8 +415,6 @@ public class TradeWalletService {
 
         verifyTransaction(payoutTx);
         checkWalletConsistency();
-        checkScriptSig(payoutTx, input, 0);
-        input.verify(input.getConnectedOutput());
 
         printTxWithInputs("payoutTx", payoutTx);
         ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(payoutTx);

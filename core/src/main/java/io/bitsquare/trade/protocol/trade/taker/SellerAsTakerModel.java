@@ -17,11 +17,12 @@
 
 package io.bitsquare.trade.protocol.trade.taker;
 
-import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.network.Peer;
+import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.protocol.trade.OfferSharedModel;
@@ -71,13 +72,15 @@ public class SellerAsTakerModel extends OfferSharedModel {
                               WalletService walletService,
                               BlockChainService blockChainService,
                               SignatureService signatureService,
-                              User user) {
+                              User user,
+                              Persistence persistence) {
         super(trade.getOffer(),
                 tradeMessageService,
                 walletService,
                 blockChainService,
                 signatureService,
-                user);
+                user,
+                persistence);
 
         this.trade = trade;
         this.offerer = offerer;

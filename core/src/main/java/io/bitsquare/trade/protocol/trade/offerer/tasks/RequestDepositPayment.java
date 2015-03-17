@@ -35,16 +35,15 @@ public class RequestDepositPayment extends Task<BuyerAsOffererModel> {
 
     @Override
     protected void doRun() {
-        model.getOffererPubKey();
         RequestDepositPaymentMessage tradeMessage = new RequestDepositPaymentMessage(
                 model.getId(),
-                model.getOffererConnectedOutputsForAllInputs(),
-                model.getOffererOutputs(),
-                model.getOffererPubKey(),
+                model.offerer.connectedOutputsForAllInputs,
+                model.offerer.outputs,
+                model.offerer.pubKey,
                 model.getFiatAccount(),
                 model.getAccountId());
 
-        model.getTradeMessageService().sendMessage(model.getTaker(), tradeMessage, new SendMessageListener() {
+        model.getTradeMessageService().sendMessage(model.taker.peer, tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");

@@ -82,7 +82,7 @@ public class BuyerAsOffererProtocol {
 
     private void handleRequestDepositTxInputsMessage(RequestDepositTxInputsMessage tradeMessage, Peer taker) {
         model.setTradeMessage(tradeMessage);
-        model.setTaker(taker);
+        model.taker.peer = taker;
 
         BuyerAsOffererTaskRunner<BuyerAsOffererModel> taskRunner = new BuyerAsOffererTaskRunner<>(model,
                 () -> {
