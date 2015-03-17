@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.BlockChainService;
-import io.bitsquare.btc.TradeService;
+import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.offer.Offer;
@@ -55,7 +55,7 @@ public class OfferSharedModel extends SharedModel {
     private final DeterministicKey registrationKeyPair;
     private final byte[] arbitratorPubKey;
     private final AddressEntry addressEntry;
-    private final TradeService tradeService;
+    private final TradeWalletService tradeWalletService;
 
     // data written/read by tasks
     private TradeMessage tradeMessage;
@@ -74,7 +74,7 @@ public class OfferSharedModel extends SharedModel {
         this.signatureService = signatureService;
 
         id = offer.getId();
-        tradeService = walletService.getTradeService();
+        tradeWalletService = walletService.getTradeWalletService();
         //TODO use default arbitrator for now
         arbitratorPubKey = offer.getArbitrators().get(0).getPubKey();
         registrationPubKey = walletService.getRegistrationAddressEntry().getPubKey();
@@ -91,8 +91,8 @@ public class OfferSharedModel extends SharedModel {
         return id;
     }
 
-    public TradeService getTradeService() {
-        return tradeService;
+    public TradeWalletService getTradeWalletService() {
+        return tradeWalletService;
     }
 
     public TradeMessage getTradeMessage() {

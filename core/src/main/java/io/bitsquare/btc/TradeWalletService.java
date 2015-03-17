@@ -75,15 +75,15 @@ import static com.google.inject.internal.util.$Preconditions.*;
     OUT[1] Taker payout address
     
  */
-public class TradeService {
-    private static final Logger log = LoggerFactory.getLogger(TradeService.class);
+public class TradeWalletService {
+    private static final Logger log = LoggerFactory.getLogger(TradeWalletService.class);
 
     private final NetworkParameters params;
     private final Wallet wallet;
     private final WalletAppKit walletAppKit;
     private final FeePolicy feePolicy;
 
-    public TradeService(NetworkParameters params, Wallet wallet, WalletAppKit walletAppKit, FeePolicy feePolicy) {
+    public TradeWalletService(NetworkParameters params, Wallet wallet, WalletAppKit walletAppKit, FeePolicy feePolicy) {
         this.params = params;
         this.wallet = wallet;
         this.walletAppKit = walletAppKit;

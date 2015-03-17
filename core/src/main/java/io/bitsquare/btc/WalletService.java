@@ -110,7 +110,7 @@ public class WalletService {
     private AddressEntry arbitratorDepositAddressEntry;
     private @GuardedBy(LOCK_NAME) List<AddressEntry> addressEntryList = new ArrayList<>();
 
-    private TradeService tradeService;
+    private TradeWalletService tradeWalletService;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -155,7 +155,7 @@ public class WalletService {
                 walletAppKit.peerGroup().setBloomFilterFalsePositiveRate(0.00001);
                 initWallet();
 
-                tradeService = new TradeService(params, wallet, walletAppKit, feePolicy);
+                tradeWalletService = new TradeWalletService(params, wallet, walletAppKit, feePolicy);
 
                 status.onCompleted();
             }
@@ -475,8 +475,8 @@ public class WalletService {
     // Transactions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TradeService getTradeService() {
-        return tradeService;
+    public TradeWalletService getTradeWalletService() {
+        return tradeWalletService;
     }
 
     public void payRegistrationFee(String stringifiedBankAccounts, FutureCallback<Transaction> callback) throws
