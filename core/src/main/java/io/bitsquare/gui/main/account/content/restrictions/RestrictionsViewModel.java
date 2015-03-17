@@ -17,11 +17,11 @@
 
 package io.bitsquare.gui.main.account.content.restrictions;
 
-import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
-import io.bitsquare.viewfx.model.ActivatableWithDataModel;
-import io.bitsquare.viewfx.model.ViewModel;
+import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
+import io.bitsquare.common.viewfx.model.ViewModel;
 
 import com.google.inject.Inject;
 

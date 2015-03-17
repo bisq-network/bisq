@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.taker;
 
-import io.bitsquare.bank.BankAccount;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
@@ -61,7 +61,7 @@ public class SellerAsTakerModel extends OfferSharedModel {
     private List<TransactionOutput> takerOutputs;
     private Transaction takerDepositTx;
     private Transaction publishedDepositTx;
-    private BankAccount takerBankAccount;
+    private FiatAccount takerFiatAccount;
     private String takerAccountId;
     private ECKey.ECDSASignature offererSignature;
 
@@ -195,12 +195,12 @@ public class SellerAsTakerModel extends OfferSharedModel {
         return publishedDepositTx;
     }
 
-    public void setTakerBankAccount(BankAccount takerBankAccount) {
-        this.takerBankAccount = takerBankAccount;
+    public void setTakerFiatAccount(FiatAccount takerFiatAccount) {
+        this.takerFiatAccount = takerFiatAccount;
     }
 
-    public BankAccount getTakerBankAccount() {
-        return takerBankAccount;
+    public FiatAccount getTakerFiatAccount() {
+        return takerFiatAccount;
     }
 
     public void setTakerAccountId(String takerAccountId) {

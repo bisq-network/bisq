@@ -17,7 +17,7 @@
 
 package io.bitsquare.btc;
 
-import io.bitsquare.bank.BankAccount;
+import io.bitsquare.fiat.FiatAccount;
 
 import javax.inject.Inject;
 
@@ -33,7 +33,7 @@ public class BlockChainService {
 
     //TODO
     @SuppressWarnings("SameReturnValue")
-    public boolean isAccountBlackListed(String accountId, BankAccount bankAccount) {
+    public boolean isAccountBlackListed(String accountId, FiatAccount fiatAccount) {
         return false;
     }
 
@@ -69,7 +69,7 @@ public class BlockChainService {
     }
 
     @SuppressWarnings("SameReturnValue")
-    private boolean isBankAccountBlacklisted(BankAccount bankAccount) {
+    private boolean isBankAccountBlacklisted(FiatAccount fiatAccount) {
         // TODO check if accountID is on blacklist
         return false;
     }

@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.messages;
 
-import io.bitsquare.bank.BankAccount;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 
 import org.bitcoinj.core.TransactionOutput;
@@ -33,20 +33,20 @@ public class RequestDepositPaymentMessage implements Serializable, TradeMessage 
     private final List<TransactionOutput> offererConnectedOutputsForAllInputs;
     private final List<TransactionOutput> offererOutputs;
     private final byte[] offererPubKey;
-    private final BankAccount bankAccount;
+    private final FiatAccount fiatAccount;
     private final String accountID;
 
     public RequestDepositPaymentMessage(String tradeId,
                                         List<TransactionOutput> offererConnectedOutputsForAllInputs,
                                         List<TransactionOutput> offererOutputs,
                                         byte[] offererPubKey,
-                                        BankAccount bankAccount,
+                                        FiatAccount fiatAccount,
                                         String accountID) {
         this.tradeId = tradeId;
         this.offererConnectedOutputsForAllInputs = offererConnectedOutputsForAllInputs;
         this.offererOutputs = offererOutputs;
         this.offererPubKey = offererPubKey;
-        this.bankAccount = bankAccount;
+        this.fiatAccount = fiatAccount;
         this.accountID = accountID;
     }
 
@@ -67,8 +67,8 @@ public class RequestDepositPaymentMessage implements Serializable, TradeMessage 
         return offererPubKey;
     }
 
-    public BankAccount getBankAccount() {
-        return bankAccount;
+    public FiatAccount getFiatAccount() {
+        return fiatAccount;
     }
 
     public String getAccountId() {

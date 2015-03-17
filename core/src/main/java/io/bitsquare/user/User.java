@@ -17,7 +17,7 @@
 
 package io.bitsquare.user;
 
-import io.bitsquare.bank.BankAccount;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.util.DSAKeyUtil;
 
 import java.io.Serializable;
@@ -48,18 +48,18 @@ public class User implements Serializable {
 
     // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is
     // only temporary
-    private List<BankAccount> _bankAccounts = new ArrayList<>();
-    private BankAccount _currentBankAccount;
+    private List<FiatAccount> _fiatAccounts = new ArrayList<>();
+    private FiatAccount _currentFiatAccount;
 
-    private final transient ObservableList<BankAccount> bankAccounts = FXCollections.observableArrayList();
-    private final transient ObjectProperty<BankAccount> currentBankAccount = new SimpleObjectProperty<>();
+    private final transient ObservableList<FiatAccount> fiatAccounts = FXCollections.observableArrayList();
+    private final transient ObjectProperty<FiatAccount> currentBankAccount = new SimpleObjectProperty<>();
 
     public User() {
         // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is
         // only temporary
-        bankAccounts.addListener((ListChangeListener<BankAccount>) change -> _bankAccounts = new ArrayList<>(bankAccounts));
+        fiatAccounts.addListener((ListChangeListener<FiatAccount>) change -> _fiatAccounts = new ArrayList<>(fiatAccounts));
 
-        currentBankAccount.addListener((ov) -> _currentBankAccount = currentBankAccount.get());
+        currentBankAccount.addListener((ov) -> _currentFiatAccount = currentBankAccount.get());
     }
 
 
@@ -69,7 +69,7 @@ public class User implements Serializable {
 
     public void applyPersistedUser(User persistedUser) {
         if (persistedUser != null) {
-            bankAccounts.setAll(persistedUser.getSerializedBankAccounts());
+            fiatAccounts.setAll(persistedUser.getSerializedBankAccounts());
             setCurrentBankAccount(persistedUser.getSerializedCurrentBankAccount());
             networkKeyPair = persistedUser.getNetworkKeyPair();
             accountID = persistedUser.getAccountId();
@@ -81,24 +81,24 @@ public class User implements Serializable {
         }
     }
 
-    public void setBankAccount(BankAccount bankAccount) {
+    public void setBankAccount(FiatAccount fiatAccount) {
         // We use the account title as hashCode
         // In case we edit an existing we replace it in the list
-        if (bankAccounts.contains(bankAccount))
-            bankAccounts.remove(bankAccount);
+        if (fiatAccounts.contains(fiatAccount))
+            fiatAccounts.remove(fiatAccount);
 
-        bankAccounts.add(bankAccount);
-        setCurrentBankAccount(bankAccount);
+        fiatAccounts.add(fiatAccount);
+        setCurrentBankAccount(fiatAccount);
     }
 
     public void removeCurrentBankAccount() {
         if (currentBankAccount.get() != null)
-            bankAccounts.remove(currentBankAccount.get());
+            fiatAccounts.remove(currentBankAccount.get());
 
-        if (bankAccounts.isEmpty())
+        if (fiatAccounts.isEmpty())
             setCurrentBankAccount(null);
         else
-            setCurrentBankAccount(bankAccounts.get(0));
+            setCurrentBankAccount(fiatAccounts.get(0));
     }
 
 
@@ -112,8 +112,8 @@ public class User implements Serializable {
         this.accountID = accountID;
     }
 
-    public void setCurrentBankAccount(@Nullable BankAccount bankAccount) {
-        currentBankAccount.set(bankAccount);
+    public void setCurrentBankAccount(@Nullable FiatAccount fiatAccount) {
+        currentBankAccount.set(fiatAccount);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -124,11 +124,11 @@ public class User implements Serializable {
     public String getStringifiedBankAccounts() {
         // TODO use steam API
         String bankAccountUIDs = "";
-        for (int i = 0; i < bankAccounts.size(); i++) {
-            BankAccount bankAccount = bankAccounts.get(i);
-            bankAccountUIDs += bankAccount.toString();
+        for (int i = 0; i < fiatAccounts.size(); i++) {
+            FiatAccount fiatAccount = fiatAccounts.get(i);
+            bankAccountUIDs += fiatAccount.toString();
 
-            if (i < bankAccounts.size() - 1) {
+            if (i < fiatAccounts.size() - 1) {
                 bankAccountUIDs += ", ";
             }
         }
@@ -143,18 +143,18 @@ public class User implements Serializable {
         return getAccountId() != null;
     }
 
-    public ObservableList<BankAccount> getBankAccounts() {
-        return bankAccounts;
+    public ObservableList<FiatAccount> getFiatAccounts() {
+        return fiatAccounts;
     }
 
-    public ObjectProperty<BankAccount> getCurrentBankAccount() {
+    public ObjectProperty<FiatAccount> getCurrentBankAccount() {
         return currentBankAccount;
     }
 
-    public BankAccount getBankAccount(String bankAccountId) {
-        for (final BankAccount bankAccount : bankAccounts) {
-            if (bankAccount.getUid().equals(bankAccountId)) {
-                return bankAccount;
+    public FiatAccount getBankAccount(String bankAccountId) {
+        for (final FiatAccount fiatAccount : fiatAccounts) {
+            if (fiatAccount.getUid().equals(bankAccountId)) {
+                return fiatAccount;
             }
         }
         return null;
@@ -168,17 +168,17 @@ public class User implements Serializable {
         return networkKeyPair.getPublic();
     }
 
-    public ObjectProperty<BankAccount> currentBankAccountProperty() {
+    public ObjectProperty<FiatAccount> currentBankAccountProperty() {
         return currentBankAccount;
     }
 
     // Used for serialisation (ObservableList cannot be serialized) 
-    List<BankAccount> getSerializedBankAccounts() {
-        return _bankAccounts;
+    List<FiatAccount> getSerializedBankAccounts() {
+        return _fiatAccounts;
     }
 
-    BankAccount getSerializedCurrentBankAccount() {
-        return _currentBankAccount;
+    FiatAccount getSerializedCurrentBankAccount() {
+        return _currentFiatAccount;
     }
 
 }

@@ -22,10 +22,10 @@ import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OpenOffer;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
-import io.bitsquare.util.handlers.ErrorMessageHandler;
-import io.bitsquare.util.handlers.ResultHandler;
-import io.bitsquare.viewfx.model.Activatable;
-import io.bitsquare.viewfx.model.DataModel;
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.common.viewfx.model.Activatable;
+import io.bitsquare.common.viewfx.model.DataModel;
 
 import com.google.inject.Inject;
 

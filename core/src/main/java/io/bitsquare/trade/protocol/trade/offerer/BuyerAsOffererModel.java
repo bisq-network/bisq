@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.offerer;
 
-import io.bitsquare.bank.BankAccount;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
@@ -55,7 +55,7 @@ public class BuyerAsOffererModel extends OfferSharedModel {
     private Peer taker;
 
     private String takerAccountId;
-    private BankAccount takerBankAccount;
+    private FiatAccount takerFiatAccount;
     private PublicKey takerMessagePublicKey;
     private String takerContractAsJson;
     private Coin takerPayoutAmount;
@@ -136,12 +136,12 @@ public class BuyerAsOffererModel extends OfferSharedModel {
         this.takerAccountId = takerAccountId;
     }
 
-    public BankAccount getTakerBankAccount() {
-        return takerBankAccount;
+    public FiatAccount getTakerFiatAccount() {
+        return takerFiatAccount;
     }
 
-    public void setTakerBankAccount(BankAccount takerBankAccount) {
-        this.takerBankAccount = takerBankAccount;
+    public void setTakerFiatAccount(FiatAccount takerFiatAccount) {
+        this.takerFiatAccount = takerFiatAccount;
     }
 
     public PublicKey getTakerMessagePublicKey() {

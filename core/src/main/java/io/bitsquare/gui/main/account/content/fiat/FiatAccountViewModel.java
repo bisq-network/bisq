@@ -17,15 +17,15 @@
 
 package io.bitsquare.gui.main.account.content.fiat;
 
-import io.bitsquare.bank.BankAccount;
-import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.fiat.FiatAccount;
+import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
-import io.bitsquare.viewfx.model.ActivatableWithDataModel;
-import io.bitsquare.viewfx.model.ViewModel;
+import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
+import io.bitsquare.common.viewfx.model.ViewModel;
 
 import com.google.inject.Inject;
 
@@ -54,7 +54,7 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
     final StringProperty selectionPrompt = new SimpleStringProperty();
     final BooleanProperty selectionDisable = new SimpleBooleanProperty();
     final BooleanProperty saveButtonDisable = new SimpleBooleanProperty(true);
-    final ObjectProperty<BankAccountType> type = new SimpleObjectProperty<>();
+    final ObjectProperty<FiatAccountType> type = new SimpleObjectProperty<>();
     final ObjectProperty<Country> country = new SimpleObjectProperty<>();
     final ObjectProperty<Currency> currency = new SimpleObjectProperty<>();
 
@@ -87,7 +87,7 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
 
     @Override
     public void doActivate() {
-        dataModel.allBankAccounts.addListener((ListChangeListener<BankAccount>) change -> applyAllBankAccounts());
+        dataModel.allFiatAccounts.addListener((ListChangeListener<FiatAccount>) change -> applyAllBankAccounts());
         applyAllBankAccounts();
     }
 
@@ -108,34 +108,34 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
         dataModel.addCountryToAcceptedCountriesList();
     }
 
-    void selectBankAccount(BankAccount bankAccount) {
-        dataModel.selectBankAccount(bankAccount);
+    void selectBankAccount(FiatAccount fiatAccount) {
+        dataModel.selectBankAccount(fiatAccount);
     }
 
 
-    StringConverter<BankAccountType> getTypesConverter() {
-        return new StringConverter<BankAccountType>() {
+    StringConverter<FiatAccountType> getTypesConverter() {
+        return new StringConverter<FiatAccountType>() {
             @Override
-            public String toString(BankAccountType TypeInfo) {
+            public String toString(FiatAccountType TypeInfo) {
                 return BSResources.get(TypeInfo.toString());
             }
 
             @Override
-            public BankAccountType fromString(String s) {
+            public FiatAccountType fromString(String s) {
                 return null;
             }
         };
     }
 
-    StringConverter<BankAccount> getSelectionConverter() {
-        return new StringConverter<BankAccount>() {
+    StringConverter<FiatAccount> getSelectionConverter() {
+        return new StringConverter<FiatAccount>() {
             @Override
-            public String toString(BankAccount bankAccount) {
-                return bankAccount.getNameOfBank();
+            public String toString(FiatAccount fiatAccount) {
+                return fiatAccount.getNameOfBank();
             }
 
             @Override
-            public BankAccount fromString(String s) {
+            public FiatAccount fromString(String s) {
                 return null;
             }
         };
@@ -186,12 +186,12 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
     }
 
 
-    ObservableList<BankAccountType> getAllTypes() {
+    ObservableList<FiatAccountType> getAllTypes() {
         return dataModel.allTypes;
     }
 
-    ObservableList<BankAccount> getAllBankAccounts() {
-        return dataModel.allBankAccounts;
+    ObservableList<FiatAccount> getAllBankAccounts() {
+        return dataModel.allFiatAccounts;
     }
 
     ObservableList<Currency> getAllCurrencies() {
@@ -215,7 +215,7 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
     }
 
 
-    void setType(BankAccountType type) {
+    void setType(FiatAccountType type) {
         dataModel.setType(type);
         validateInput();
     }
@@ -232,7 +232,7 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
 
 
     private void applyAllBankAccounts() {
-        if (dataModel.allBankAccounts.isEmpty()) {
+        if (dataModel.allFiatAccounts.isEmpty()) {
             selectionPrompt.set("No bank account available");
             selectionDisable.set(true);
         }

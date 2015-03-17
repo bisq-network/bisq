@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.main.account.content.fiat;
 
-import io.bitsquare.bank.BankAccount;
-import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.fiat.FiatAccount;
+import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
@@ -28,9 +28,9 @@ import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
-import io.bitsquare.viewfx.view.ActivatableViewAndModel;
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.Wizard;
+import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.common.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.Wizard;
 
 import java.util.ArrayList;
 import java.util.Currency;
@@ -58,8 +58,8 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
     @FXML ComboBox<Country> countryComboBox;
     @FXML InputTextField nameOfBankTextField, holderNameTextField, primaryIDTextField, secondaryIDTextField;
     @FXML Button saveButton, completedButton, removeBankAccountButton;
-    @FXML ComboBox<BankAccount> selectionComboBox;
-    @FXML ComboBox<BankAccountType> typesComboBox;
+    @FXML ComboBox<FiatAccount> selectionComboBox;
+    @FXML ComboBox<FiatAccountType> typesComboBox;
     @FXML ComboBox<Currency> currencyComboBox;
 
     private Wizard wizard;
@@ -234,7 +234,7 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
             }
         });
 
-        model.getAllBankAccounts().addListener((ListChangeListener<BankAccount>) change ->
+        model.getAllBankAccounts().addListener((ListChangeListener<FiatAccount>) change ->
                 completedButton.setDisable(model.getAllBankAccounts().isEmpty()));
         completedButton.setDisable(model.getAllBankAccounts().isEmpty());
     }

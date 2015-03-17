@@ -36,8 +36,8 @@ import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.viewfx.view.ActivatableViewAndModel;
-import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.common.viewfx.view.FxmlView;
 
 import org.bitcoinj.core.Coin;
 

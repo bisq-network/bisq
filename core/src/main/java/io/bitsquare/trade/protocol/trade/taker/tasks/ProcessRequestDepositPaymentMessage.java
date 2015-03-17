@@ -19,8 +19,8 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.trade.protocol.trade.offerer.messages.RequestDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
-import io.bitsquare.util.taskrunner.Task;
-import io.bitsquare.util.taskrunner.TaskRunner;
+import io.bitsquare.common.taskrunner.Task;
+import io.bitsquare.common.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +46,7 @@ public class ProcessRequestDepositPaymentMessage extends Task<SellerAsTakerModel
             model.setOffererOutputs(checkNotNull(message.getOffererOutputs()));
             model.setOffererPubKey(checkNotNull(message.getOffererPubKey()));
 
-            model.setTakerBankAccount(checkNotNull(message.getBankAccount()));
+            model.setTakerFiatAccount(checkNotNull(message.getFiatAccount()));
             model.setTakerAccountId(nonEmptyStringOf(message.getAccountId()));
 
             complete();

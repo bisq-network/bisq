@@ -20,8 +20,8 @@ package io.bitsquare.gui;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.trade.BuyView;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.viewfx.view.View;
-import io.bitsquare.viewfx.view.ViewPath;
+import io.bitsquare.common.viewfx.view.View;
+import io.bitsquare.common.viewfx.view.ViewPath;
 
 import com.google.inject.Inject;
 

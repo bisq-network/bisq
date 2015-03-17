@@ -17,20 +17,20 @@
 
 package io.bitsquare.gui.main.trade.offerbook;
 
-import io.bitsquare.bank.BankAccount;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBook;
-import io.bitsquare.settings.Preferences;
+import io.bitsquare.user.Preferences;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
-import io.bitsquare.util.handlers.ErrorMessageHandler;
-import io.bitsquare.util.handlers.ResultHandler;
-import io.bitsquare.viewfx.model.Activatable;
-import io.bitsquare.viewfx.model.DataModel;
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.common.viewfx.model.Activatable;
+import io.bitsquare.common.viewfx.model.DataModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
@@ -65,7 +65,7 @@ class OfferBookDataModel implements Activatable, DataModel {
     private final FilteredList<OfferBookListItem> filteredItems;
     private final SortedList<OfferBookListItem> sortedItems;
     // private OfferBookInfo offerBookInfo;
-    private final ChangeListener<BankAccount> bankAccountChangeListener;
+    private final ChangeListener<FiatAccount> bankAccountChangeListener;
 
     private final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     private final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
@@ -149,11 +149,11 @@ class OfferBookDataModel implements Activatable, DataModel {
 
     boolean isTradable(Offer offer) {
         // if user has not registered yet we display all
-        BankAccount currentBankAccount = user.getCurrentBankAccount().get();
-        if (currentBankAccount == null)
+        FiatAccount currentFiatAccount = user.getCurrentBankAccount().get();
+        if (currentFiatAccount == null)
             return true;
 
-        boolean countryResult = offer.getAcceptedCountries().contains(currentBankAccount.getCountry());
+        boolean countryResult = offer.getAcceptedCountries().contains(currentFiatAccount.getCountry());
         // for IRC test version deactivate the check
         countryResult = true;
         if (!countryResult)
@@ -244,11 +244,11 @@ class OfferBookDataModel implements Activatable, DataModel {
         return direction;
     }
 
-    private void setBankAccount(BankAccount bankAccount) {
-        if (bankAccount != null) {
-            fiatCode.set(bankAccount.getCurrency().getCurrencyCode());
-            bankAccountCountry.set(bankAccount.getCountry());
-            sortedItems.stream().forEach(e -> e.setBankAccountCountry(bankAccount.getCountry()));
+    private void setBankAccount(FiatAccount fiatAccount) {
+        if (fiatAccount != null) {
+            fiatCode.set(fiatAccount.getCurrency().getCurrencyCode());
+            bankAccountCountry.set(fiatAccount.getCountry());
+            sortedItems.stream().forEach(e -> e.setBankAccountCountry(fiatAccount.getCountry()));
         }
         else {
             fiatCode.set(CurrencyUtil.getDefaultCurrency().getCurrencyCode());

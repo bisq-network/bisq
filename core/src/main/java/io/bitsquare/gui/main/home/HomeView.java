@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.main.home;
 
-import io.bitsquare.viewfx.view.AbstractView;
-import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.AbstractView;
+import io.bitsquare.common.viewfx.view.FxmlView;
 
 // home is just hosting the arbiters buttons yet, but that's just for dev, not clear yet what will be in home,
 // probably overview, event history, news, charts,... -> low prio

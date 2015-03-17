@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.util;
 
-import io.bitsquare.settings.Preferences;
+import io.bitsquare.user.Preferences;
 
 import javax.inject.Inject;
 

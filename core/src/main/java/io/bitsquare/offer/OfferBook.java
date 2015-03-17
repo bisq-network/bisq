@@ -17,7 +17,7 @@
 
 package io.bitsquare.offer;
 
-import io.bitsquare.bank.BankAccount;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.gui.main.trade.offerbook.OfferBookListItem;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
@@ -56,7 +56,7 @@ public class OfferBook {
 
     private final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
     private final OfferBookService.Listener offerBookServiceListener;
-    private final ChangeListener<BankAccount> bankAccountChangeListener;
+    private final ChangeListener<FiatAccount> bankAccountChangeListener;
     private final ChangeListener<Number> invalidationListener;
     private String fiatCode;
     private AnimationTimer pollingTimer;
@@ -134,11 +134,11 @@ public class OfferBook {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setBankAccount(BankAccount bankAccount) {
-        log.debug("setBankAccount " + bankAccount);
-        if (bankAccount != null) {
-            country = bankAccount.getCountry();
-            fiatCode = bankAccount.getCurrency().getCurrencyCode();
+    private void setBankAccount(FiatAccount fiatAccount) {
+        log.debug("setBankAccount " + fiatAccount);
+        if (fiatAccount != null) {
+            country = fiatAccount.getCountry();
+            fiatCode = fiatAccount.getCurrency().getCurrencyCode();
 
             // TODO check why that was used (probably just for update triggering, if so refactor that)
             //offerBookListItems.stream().forEach(e -> e.setBankAccountCountry(country));

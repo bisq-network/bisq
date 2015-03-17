@@ -25,8 +25,8 @@ import io.bitsquare.gui.util.validation.OptionalFiatValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.viewfx.model.ActivatableWithDataModel;
-import io.bitsquare.viewfx.model.ViewModel;
+import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
+import io.bitsquare.common.viewfx.model.ViewModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -152,7 +152,7 @@ class OfferBookViewModel extends ActivatableWithDataModel<OfferBookDataModel> im
     }
 
     String getBankAccountType(OfferBookListItem item) {
-        return (item != null) ? BSResources.get(item.getOffer().getBankAccountType().toString()) : "";
+        return (item != null) ? BSResources.get(item.getOffer().getFiatAccountType().toString()) : "";
     }
 
     String getDirectionLabel(Offer offer) {

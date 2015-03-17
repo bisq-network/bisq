@@ -20,8 +20,8 @@ package io.bitsquare.gui.main.portfolio.offer;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.util.Utilities;
-import io.bitsquare.viewfx.view.ActivatableViewAndModel;
-import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.common.viewfx.view.FxmlView;
 
 import javax.inject.Inject;
 

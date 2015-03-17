@@ -17,9 +17,9 @@
 
 package io.bitsquare.trade.protocol.trade.taker;
 
-import io.bitsquare.util.handlers.ErrorMessageHandler;
-import io.bitsquare.util.handlers.ResultHandler;
-import io.bitsquare.util.taskrunner.TaskRunner;
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.common.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

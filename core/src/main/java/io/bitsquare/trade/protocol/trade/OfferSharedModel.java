@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade;
 
-import io.bitsquare.bank.BankAccount;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.TradeWalletService;
@@ -26,7 +26,7 @@ import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.user.User;
-import io.bitsquare.util.taskrunner.SharedModel;
+import io.bitsquare.common.taskrunner.SharedModel;
 
 import org.bitcoinj.crypto.DeterministicKey;
 
@@ -48,7 +48,7 @@ public class OfferSharedModel extends SharedModel {
 
     // derived
     private final String id;
-    private final BankAccount bankAccount;
+    private final FiatAccount fiatAccount;
     private final String accountId;
     private final PublicKey networkPubKey;
     private final byte[] registrationPubKey;
@@ -80,7 +80,7 @@ public class OfferSharedModel extends SharedModel {
         registrationPubKey = walletService.getRegistrationAddressEntry().getPubKey();
         registrationKeyPair = walletService.getRegistrationAddressEntry().getKeyPair();
         addressEntry = walletService.getAddressEntry(id);
-        bankAccount = user.getBankAccount(offer.getBankAccountId());
+        fiatAccount = user.getBankAccount(offer.getBankAccountId());
         accountId = user.getAccountId();
         networkPubKey = user.getNetworkPubKey();
     }
@@ -123,8 +123,8 @@ public class OfferSharedModel extends SharedModel {
         return signatureService;
     }
 
-    public BankAccount getBankAccount() {
-        return bankAccount;
+    public FiatAccount getFiatAccount() {
+        return fiatAccount;
     }
 
     public String getAccountId() {

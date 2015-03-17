@@ -33,8 +33,8 @@ import io.bitsquare.gui.util.validation.OptionalFiatValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.viewfx.view.ActivatableViewAndModel;
-import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.common.viewfx.view.FxmlView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -349,8 +349,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
       /*  countryColumn.setComparator((o1, o2) -> o1.getOffer().getBankAccountCountry().getName().compareTo(o2
       .getOffer()
                 .getBankAccountCountry().getName()));*/
-        bankAccountTypeColumn.setComparator((o1, o2) -> o1.getOffer().getBankAccountType().compareTo(o2.getOffer()
-                .getBankAccountType()));
+        bankAccountTypeColumn.setComparator((o1, o2) -> o1.getOffer().getFiatAccountType().compareTo(o2.getOffer()
+                .getFiatAccountType()));
     }
 
     public void setOfferActionHandler(TradeView.OfferActionHandler offerActionHandler) {

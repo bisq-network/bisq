@@ -17,10 +17,10 @@
 
 package io.bitsquare.gui.main.account.arbitrator.profile;
 
-import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.viewfx.view.AbstractView;
-import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.AbstractView;
+import io.bitsquare.common.viewfx.view.FxmlView;
 
 import javax.inject.Inject;
 

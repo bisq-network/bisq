@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.util;
 
-import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;

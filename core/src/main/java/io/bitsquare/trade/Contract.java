@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade;
 
-import io.bitsquare.bank.BankAccount;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.util.DSAKeyUtil;
 
@@ -38,8 +38,8 @@ public class Contract implements Serializable {
     private final Coin tradeAmount;
     private final String offererAccountID;
     private final String takerAccountID;
-    private final BankAccount offererBankAccount;
-    private final BankAccount takerBankAccount;
+    private final FiatAccount offererFiatAccount;
+    private final FiatAccount takerFiatAccount;
     private final String offererMessagePublicKeyAsString;
     private final String takerMessagePublicKeyAsString;
 
@@ -48,8 +48,8 @@ public class Contract implements Serializable {
                     String takeOfferFeeTxID,
                     String offererAccountID,
                     String takerAccountID,
-                    BankAccount offererBankAccount,
-                    BankAccount takerBankAccount,
+                    FiatAccount offererFiatAccount,
+                    FiatAccount takerFiatAccount,
                     PublicKey offererMessagePublicKey,
                     PublicKey takerMessagePublicKey) {
         this.offer = offer;
@@ -57,8 +57,8 @@ public class Contract implements Serializable {
         this.takeOfferFeeTxID = takeOfferFeeTxID;
         this.offererAccountID = offererAccountID;
         this.takerAccountID = takerAccountID;
-        this.offererBankAccount = offererBankAccount;
-        this.takerBankAccount = takerBankAccount;
+        this.offererFiatAccount = offererFiatAccount;
+        this.takerFiatAccount = takerFiatAccount;
         this.offererMessagePublicKeyAsString = DSAKeyUtil.getHexStringFromPublicKey(offererMessagePublicKey);
         this.takerMessagePublicKeyAsString = DSAKeyUtil.getHexStringFromPublicKey(takerMessagePublicKey);
     }
@@ -88,12 +88,12 @@ public class Contract implements Serializable {
         return takerAccountID;
     }
 
-    public BankAccount getOffererBankAccount() {
-        return offererBankAccount;
+    public FiatAccount getOffererFiatAccount() {
+        return offererFiatAccount;
     }
 
-    public BankAccount getTakerBankAccount() {
-        return takerBankAccount;
+    public FiatAccount getTakerFiatAccount() {
+        return takerFiatAccount;
     }
 
     public String getTakerMessagePublicKey() {
@@ -112,8 +112,8 @@ public class Contract implements Serializable {
                 ", tradeAmount=" + tradeAmount +
                 ", offererAccountID='" + offererAccountID + '\'' +
                 ", takerAccountID='" + takerAccountID + '\'' +
-                ", offererBankAccount=" + offererBankAccount +
-                ", takerBankAccount=" + takerBankAccount +
+                ", offererBankAccount=" + offererFiatAccount +
+                ", takerBankAccount=" + takerFiatAccount +
                 ", takerMessagePublicKeyAsString=" + takerMessagePublicKeyAsString +
                 ", offererMessagePublicKeyAsString=" + offererMessagePublicKeyAsString +
                 '}';

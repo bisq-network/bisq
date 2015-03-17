@@ -22,8 +22,8 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.viewfx.model.ActivatableWithDataModel;
-import io.bitsquare.viewfx.model.ViewModel;
+import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
+import io.bitsquare.common.viewfx.model.ViewModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -166,7 +166,7 @@ class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataM
 
     // payment
     String getPaymentMethod() {
-        return BSResources.get(dataModel.getTrade().getContract().getTakerBankAccount().getBankAccountType().toString());
+        return BSResources.get(dataModel.getTrade().getContract().getTakerFiatAccount().getFiatAccountType().toString());
     }
 
     String getFiatAmount() {
@@ -174,15 +174,15 @@ class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataM
     }
 
     String getHolderName() {
-        return dataModel.getTrade().getContract().getTakerBankAccount().getAccountHolderName();
+        return dataModel.getTrade().getContract().getTakerFiatAccount().getAccountHolderName();
     }
 
     String getPrimaryId() {
-        return dataModel.getTrade().getContract().getTakerBankAccount().getAccountPrimaryID();
+        return dataModel.getTrade().getContract().getTakerFiatAccount().getAccountPrimaryID();
     }
 
     String getSecondaryId() {
-        return dataModel.getTrade().getContract().getTakerBankAccount().getAccountSecondaryID();
+        return dataModel.getTrade().getContract().getTakerFiatAccount().getAccountSecondaryID();
     }
 
     // summary

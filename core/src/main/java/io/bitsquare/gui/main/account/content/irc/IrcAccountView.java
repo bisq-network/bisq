@@ -17,15 +17,15 @@
 
 package io.bitsquare.gui.main.account.content.irc;
 
-import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.util.Utilities;
-import io.bitsquare.viewfx.view.ActivatableViewAndModel;
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.Wizard;
+import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.common.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.Wizard;
 
 import java.util.Currency;
 
@@ -46,7 +46,7 @@ public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccount
     @FXML HBox buttonsHBox;
     @FXML InputTextField ircNickNameTextField;
     @FXML Button saveButton;
-    @FXML ComboBox<BankAccountType> typesComboBox;
+    @FXML ComboBox<FiatAccountType> typesComboBox;
     @FXML ComboBox<Currency> currencyComboBox;
 
     private Wizard wizard;
@@ -63,13 +63,13 @@ public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccount
         typesComboBox.setItems(model.getAllTypes());
         typesComboBox.setConverter(model.getTypesConverter());
         // we use a custom cell for deactivating non IRC items, later we use the standard cell and the StringConverter
-        typesComboBox.setCellFactory(new Callback<ListView<BankAccountType>, ListCell<BankAccountType>>() {
+        typesComboBox.setCellFactory(new Callback<ListView<FiatAccountType>, ListCell<FiatAccountType>>() {
             @Override
-            public ListCell<BankAccountType> call(ListView<BankAccountType> p) {
-                return new ListCell<BankAccountType>() {
+            public ListCell<FiatAccountType> call(ListView<FiatAccountType> p) {
+                return new ListCell<FiatAccountType>() {
 
                     @Override
-                    protected void updateItem(BankAccountType item, boolean empty) {
+                    protected void updateItem(FiatAccountType item, boolean empty) {
                         super.updateItem(item, empty);
 
                         setText(model.getBankAccountType(item));
@@ -77,7 +77,7 @@ public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccount
                         if (item == null || empty) {
                             setGraphic(null);
                         }
-                        else if (item != BankAccountType.IRC) {
+                        else if (item != FiatAccountType.IRC) {
                             setOpacity(0.3);
                             setDisable(true);
                         }

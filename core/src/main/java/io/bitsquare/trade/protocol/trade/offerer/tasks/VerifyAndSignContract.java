@@ -21,8 +21,8 @@ import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
 import io.bitsquare.util.Utilities;
-import io.bitsquare.util.taskrunner.Task;
-import io.bitsquare.util.taskrunner.TaskRunner;
+import io.bitsquare.common.taskrunner.Task;
+import io.bitsquare.common.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,8 +44,8 @@ public class VerifyAndSignContract extends Task<BuyerAsOffererModel> {
                 model.getTakeOfferFeeTxId(),
                 model.getAccountId(),
                 model.getTakerAccountId(),
-                model.getBankAccount(),
-                model.getTakerBankAccount(),
+                model.getFiatAccount(),
+                model.getTakerFiatAccount(),
                 model.getNetworkPubKey(),
                 model.getTakerMessagePublicKey());
         String contractAsJson = Utilities.objectToJson(contract);

@@ -21,8 +21,8 @@ import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.protocol.trade.OfferMessage;
-import io.bitsquare.util.handlers.ResultHandler;
-import io.bitsquare.util.taskrunner.SharedModel;
+import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.common.taskrunner.SharedModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

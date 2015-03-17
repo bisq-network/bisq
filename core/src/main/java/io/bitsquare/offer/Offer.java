@@ -17,8 +17,8 @@
 
 package io.bitsquare.offer;
 
-import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.locale.Country;
 
@@ -71,7 +71,7 @@ public class Offer implements Serializable {
     private final Coin minAmount;
     //TODO use hex string
     private final PublicKey messagePublicKey;
-    private final BankAccountType bankAccountType;
+    private final FiatAccountType fiatAccountType;
     private final Country bankAccountCountry;
 
     private final Coin securityDeposit;
@@ -99,7 +99,7 @@ public class Offer implements Serializable {
                  long fiatPrice,
                  Coin amount,
                  Coin minAmount,
-                 BankAccountType bankAccountType,
+                 FiatAccountType fiatAccountType,
                  Currency currency,
                  Country bankAccountCountry,
                  String bankAccountUID,
@@ -113,7 +113,7 @@ public class Offer implements Serializable {
         this.fiatPrice = fiatPrice;
         this.amount = amount;
         this.minAmount = minAmount;
-        this.bankAccountType = bankAccountType;
+        this.fiatAccountType = fiatAccountType;
         this.currency = currency;
         this.bankAccountCountry = bankAccountCountry;
         this.bankAccountUID = bankAccountUID;
@@ -167,8 +167,8 @@ public class Offer implements Serializable {
         return direction == Direction.BUY ? Direction.SELL : Direction.BUY;
     }
 
-    public BankAccountType getBankAccountType() {
-        return bankAccountType;
+    public FiatAccountType getFiatAccountType() {
+        return fiatAccountType;
     }
 
     public Currency getCurrency() {
@@ -280,7 +280,7 @@ public class Offer implements Serializable {
                 ", amount=" + amount +
                 ", minAmount=" + minAmount +
                 ", messagePubKey=" + messagePublicKey.hashCode() +
-                ", bankAccountTypeEnum=" + bankAccountType +
+                ", bankAccountTypeEnum=" + fiatAccountType +
                 ", bankAccountCountryLocale=" + bankAccountCountry +
                 ", securityDeposit=" + securityDeposit +
                 ", acceptedCountryLocales=" + acceptedCountries +

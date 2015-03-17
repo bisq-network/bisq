@@ -23,12 +23,12 @@ import io.bitsquare.gui.main.portfolio.closed.ClosedTradesView;
 import io.bitsquare.gui.main.portfolio.offer.OffersView;
 import io.bitsquare.gui.main.portfolio.pending.PendingTradesView;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.viewfx.model.Activatable;
-import io.bitsquare.viewfx.view.ActivatableViewAndModel;
-import io.bitsquare.viewfx.view.CachingViewLoader;
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.View;
-import io.bitsquare.viewfx.view.ViewLoader;
+import io.bitsquare.common.viewfx.model.Activatable;
+import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.common.viewfx.view.CachingViewLoader;
+import io.bitsquare.common.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.View;
+import io.bitsquare.common.viewfx.view.ViewLoader;
 
 import javax.inject.Inject;
 

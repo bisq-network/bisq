@@ -29,11 +29,11 @@ import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.PasswordValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.offer.OfferBook;
-import io.bitsquare.viewfx.view.CachingViewLoader;
-import io.bitsquare.viewfx.view.ViewFactory;
-import io.bitsquare.viewfx.view.ViewLoader;
-import io.bitsquare.viewfx.view.fxml.FxmlViewLoader;
-import io.bitsquare.viewfx.view.guice.InjectorViewFactory;
+import io.bitsquare.common.viewfx.view.CachingViewLoader;
+import io.bitsquare.common.viewfx.view.ViewFactory;
+import io.bitsquare.common.viewfx.view.ViewLoader;
+import io.bitsquare.common.viewfx.view.fxml.FxmlViewLoader;
+import io.bitsquare.common.viewfx.view.guice.InjectorViewFactory;
 
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;

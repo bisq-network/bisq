@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.taker.messages;
 
-import io.bitsquare.bank.BankAccount;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 
 import org.bitcoinj.core.Transaction;
@@ -33,7 +33,7 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
     private static final long serialVersionUID = 2179683654379803071L;
 
     private final String tradeId;
-    private final BankAccount bankAccount;
+    private final FiatAccount fiatAccount;
     private final String accountID;
     private final PublicKey takerMessagePublicKey;
     private final String contractAsJson;
@@ -44,7 +44,7 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
     private final List<TransactionOutput> takerOutputs;
 
     public RequestOffererPublishDepositTxMessage(String tradeId,
-                                                 BankAccount bankAccount,
+                                                 FiatAccount fiatAccount,
                                                  String accountID,
                                                  PublicKey takerMessagePublicKey,
                                                  String contractAsJson,
@@ -54,7 +54,7 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
                                                  List<TransactionOutput> takerConnectedOutputsForAllInputs,
                                                  List<TransactionOutput> takerOutputs) {
         this.tradeId = tradeId;
-        this.bankAccount = bankAccount;
+        this.fiatAccount = fiatAccount;
         this.accountID = accountID;
         this.takerMessagePublicKey = takerMessagePublicKey;
         this.contractAsJson = contractAsJson;
@@ -71,8 +71,8 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
         return tradeId;
     }
 
-    public BankAccount getTakerBankAccount() {
-        return bankAccount;
+    public FiatAccount getTakerBankAccount() {
+        return fiatAccount;
     }
 
     public String getTakerAccountId() {
@@ -95,8 +95,8 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
         return takerOutputs;
     }
 
-    public BankAccount getBankAccount() {
-        return bankAccount;
+    public FiatAccount getFiatAccount() {
+        return fiatAccount;
     }
 
     public String getAccountID() {

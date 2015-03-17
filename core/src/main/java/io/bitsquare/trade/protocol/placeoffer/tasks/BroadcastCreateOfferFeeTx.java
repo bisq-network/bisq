@@ -20,8 +20,8 @@ package io.bitsquare.trade.protocol.placeoffer.tasks;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
-import io.bitsquare.util.taskrunner.Task;
-import io.bitsquare.util.taskrunner.TaskRunner;
+import io.bitsquare.common.taskrunner.Task;
+import io.bitsquare.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;

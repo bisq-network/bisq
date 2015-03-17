@@ -57,9 +57,9 @@ import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCommitDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCreatesAndSignsDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOffererAccount;
-import io.bitsquare.util.taskrunner.Task;
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.InitializableView;
+import io.bitsquare.common.taskrunner.Task;
+import io.bitsquare.common.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.InitializableView;
 
 import java.util.Arrays;
 

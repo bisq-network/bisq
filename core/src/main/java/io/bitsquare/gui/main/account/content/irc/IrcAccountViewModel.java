@@ -17,12 +17,12 @@
 
 package io.bitsquare.gui.main.account.content.irc;
 
-import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.viewfx.model.ActivatableWithDataModel;
-import io.bitsquare.viewfx.model.ViewModel;
+import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
+import io.bitsquare.common.viewfx.model.ViewModel;
 
 import com.google.inject.Inject;
 
@@ -43,7 +43,7 @@ class IrcAccountViewModel extends ActivatableWithDataModel<IrcAccountDataModel> 
 
     final StringProperty ircNickName = new SimpleStringProperty();
     final BooleanProperty saveButtonDisable = new SimpleBooleanProperty(true);
-    final ObjectProperty<BankAccountType> type = new SimpleObjectProperty<>();
+    final ObjectProperty<FiatAccountType> type = new SimpleObjectProperty<>();
     final ObjectProperty<Currency> currency = new SimpleObjectProperty<>();
 
 
@@ -69,22 +69,22 @@ class IrcAccountViewModel extends ActivatableWithDataModel<IrcAccountDataModel> 
         return result;
     }
 
-    StringConverter<BankAccountType> getTypesConverter() {
-        return new StringConverter<BankAccountType>() {
+    StringConverter<FiatAccountType> getTypesConverter() {
+        return new StringConverter<FiatAccountType>() {
             @Override
-            public String toString(BankAccountType TypeInfo) {
+            public String toString(FiatAccountType TypeInfo) {
                 return BSResources.get(TypeInfo.toString());
             }
 
             @Override
-            public BankAccountType fromString(String s) {
+            public FiatAccountType fromString(String s) {
                 return null;
             }
         };
     }
 
-    String getBankAccountType(BankAccountType bankAccountType) {
-        return bankAccountType != null ? BSResources.get(bankAccountType.toString()) : "";
+    String getBankAccountType(FiatAccountType fiatAccountType) {
+        return fiatAccountType != null ? BSResources.get(fiatAccountType.toString()) : "";
     }
 
     StringConverter<Currency> getCurrencyConverter() {
@@ -102,7 +102,7 @@ class IrcAccountViewModel extends ActivatableWithDataModel<IrcAccountDataModel> 
     }
 
 
-    ObservableList<BankAccountType> getAllTypes() {
+    ObservableList<FiatAccountType> getAllTypes() {
         return dataModel.allTypes;
     }
 
@@ -115,7 +115,7 @@ class IrcAccountViewModel extends ActivatableWithDataModel<IrcAccountDataModel> 
     }
 
 
-    void setType(BankAccountType type) {
+    void setType(FiatAccountType type) {
         dataModel.setType(type);
         validateInput();
     }

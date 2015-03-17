@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.trade.createoffer;
 
-import io.bitsquare.account.AccountSettings;
-import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.bank.BankAccount;
+import io.bitsquare.user.AccountSettings;
+import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
@@ -28,11 +28,11 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.settings.Preferences;
+import io.bitsquare.user.Preferences;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
-import io.bitsquare.viewfx.model.Activatable;
-import io.bitsquare.viewfx.model.DataModel;
+import io.bitsquare.common.viewfx.model.Activatable;
+import io.bitsquare.common.viewfx.model.DataModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
@@ -272,13 +272,13 @@ class CreateOfferDataModel implements Activatable, DataModel {
         return addressEntry;
     }
 
-    private void applyBankAccount(BankAccount bankAccount) {
-        if (bankAccount != null) {
-            bankAccountType.set(bankAccount.getBankAccountType().toString());
-            bankAccountCurrency.set(bankAccount.getCurrency().getCurrencyCode());
-            bankAccountCounty.set(bankAccount.getCountry().getName());
+    private void applyBankAccount(FiatAccount fiatAccount) {
+        if (fiatAccount != null) {
+            bankAccountType.set(fiatAccount.getFiatAccountType().toString());
+            bankAccountCurrency.set(fiatAccount.getCurrency().getCurrencyCode());
+            bankAccountCounty.set(fiatAccount.getCountry().getName());
 
-            fiatCode.set(bankAccount.getCurrency().getCurrencyCode());
+            fiatCode.set(fiatAccount.getCurrency().getCurrencyCode());
         }
     }
 }

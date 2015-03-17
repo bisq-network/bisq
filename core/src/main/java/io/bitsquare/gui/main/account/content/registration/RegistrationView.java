@@ -24,9 +24,9 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.InitializableView;
-import io.bitsquare.viewfx.view.Wizard;
+import io.bitsquare.common.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.InitializableView;
+import io.bitsquare.common.viewfx.view.Wizard;
 
 import java.util.ArrayList;
 import java.util.List;

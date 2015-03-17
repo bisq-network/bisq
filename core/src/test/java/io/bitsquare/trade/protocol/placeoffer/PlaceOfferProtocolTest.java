@@ -17,8 +17,8 @@
 
 package io.bitsquare.trade.protocol.placeoffer;
 
-import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.UserAgent;
@@ -301,7 +301,7 @@ public class PlaceOfferProtocolTest {
                 100L,
                 Coin.CENT,
                 Coin.CENT,
-                BankAccountType.INTERNATIONAL,
+                FiatAccountType.INTERNATIONAL,
                 Currency.getInstance("EUR"),
                 CountryUtil.getDefaultCountry(),
                 "bankAccountUID",

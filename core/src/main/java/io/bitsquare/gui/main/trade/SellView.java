@@ -18,8 +18,8 @@
 package io.bitsquare.gui.main.trade;
 
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.ViewLoader;
+import io.bitsquare.common.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.ViewLoader;
 
 import javax.inject.Inject;
 

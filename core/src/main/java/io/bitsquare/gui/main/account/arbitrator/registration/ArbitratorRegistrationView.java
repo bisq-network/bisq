@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.account.arbitrator.registration;
 
-import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.arbitrator.ArbitratorMessageService;
-import io.bitsquare.arbitrator.Reputation;
+import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.arbitration.ArbitratorMessageService;
+import io.bitsquare.arbitration.Reputation;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
@@ -29,8 +29,8 @@ import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
 import io.bitsquare.util.Utilities;
-import io.bitsquare.viewfx.view.ActivatableView;
-import io.bitsquare.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.ActivatableView;
+import io.bitsquare.common.viewfx.view.FxmlView;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;

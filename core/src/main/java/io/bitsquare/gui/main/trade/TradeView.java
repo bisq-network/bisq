@@ -26,9 +26,9 @@ import io.bitsquare.gui.main.trade.offerbook.OfferBookView;
 import io.bitsquare.gui.main.trade.takeoffer.TakeOfferView;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.viewfx.view.ActivatableView;
-import io.bitsquare.viewfx.view.View;
-import io.bitsquare.viewfx.view.ViewLoader;
+import io.bitsquare.common.viewfx.view.ActivatableView;
+import io.bitsquare.common.viewfx.view.View;
+import io.bitsquare.common.viewfx.view.ViewLoader;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;

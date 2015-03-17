@@ -17,13 +17,13 @@
 
 package io.bitsquare.gui.main;
 
-import io.bitsquare.account.AccountSettings;
-import io.bitsquare.app.gui.UpdateProcess;
-import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.arbitrator.ArbitratorMessageService;
-import io.bitsquare.arbitrator.Reputation;
-import io.bitsquare.bank.BankAccount;
-import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.user.AccountSettings;
+import io.bitsquare.app.UpdateProcess;
+import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.arbitration.ArbitratorMessageService;
+import io.bitsquare.arbitration.Reputation;
+import io.bitsquare.fiat.FiatAccount;
+import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.util.BSFormatter;
@@ -37,7 +37,7 @@ import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
-import io.bitsquare.viewfx.model.ViewModel;
+import io.bitsquare.common.viewfx.model.ViewModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
@@ -91,7 +91,7 @@ class MainViewModel implements ViewModel {
 
     final StringProperty bankAccountsComboBoxPrompt = new SimpleStringProperty();
     final BooleanProperty bankAccountsComboBoxDisable = new SimpleBooleanProperty();
-    final ObjectProperty<BankAccount> currentBankAccount = new SimpleObjectProperty<>();
+    final ObjectProperty<FiatAccount> currentBankAccount = new SimpleObjectProperty<>();
 
     final BooleanProperty showAppScreen = new SimpleBooleanProperty();
     final StringProperty numPendingTradesAsString = new SimpleStringProperty();
@@ -133,12 +133,12 @@ class MainViewModel implements ViewModel {
 
         user.getCurrentBankAccount().addListener((observable, oldValue, newValue) -> persistence.write(user));
         currentBankAccount.bind(user.currentBankAccountProperty());
-        user.getBankAccounts().addListener((ListChangeListener<BankAccount>) change -> {
+        user.getFiatAccounts().addListener((ListChangeListener<FiatAccount>) change -> {
             bankAccountsComboBoxDisable.set(change.getList().isEmpty());
             bankAccountsComboBoxPrompt.set(change.getList().isEmpty() ? "No accounts" : "");
         });
-        bankAccountsComboBoxDisable.set(user.getBankAccounts().isEmpty());
-        bankAccountsComboBoxPrompt.set(user.getBankAccounts().isEmpty() ? "No accounts" : "");
+        bankAccountsComboBoxDisable.set(user.getFiatAccounts().isEmpty());
+        bankAccountsComboBoxPrompt.set(user.getFiatAccounts().isEmpty() ? "No accounts" : "");
     }
 
     public void restart() {
@@ -218,14 +218,14 @@ class MainViewModel implements ViewModel {
 
         // For alpha version
         if (!user.isRegistered()) {
-            BankAccount bankAccount = new BankAccount(BankAccountType.IRC,
+            FiatAccount fiatAccount = new FiatAccount(FiatAccountType.IRC,
                     Currency.getInstance("EUR"),
                     CountryUtil.getDefaultCountry(),
                     "Demo (Name of bank)",
                     "Demo (Account holder name)",
                     "Demo (E.g. IBAN) ",
                     "Demo (E.g. BIC) ");
-            user.setBankAccount(bankAccount);
+            user.setBankAccount(fiatAccount);
             persistence.write(user);
 
             user.setAccountID(walletService.getRegistrationAddressEntry().toString());
@@ -306,26 +306,26 @@ class MainViewModel implements ViewModel {
     }
 
 
-    public StringConverter<BankAccount> getBankAccountsConverter() {
-        return new StringConverter<BankAccount>() {
+    public StringConverter<FiatAccount> getBankAccountsConverter() {
+        return new StringConverter<FiatAccount>() {
             @Override
-            public String toString(BankAccount bankAccount) {
-                return bankAccount.getNameOfBank();
+            public String toString(FiatAccount fiatAccount) {
+                return fiatAccount.getNameOfBank();
             }
 
             @Override
-            public BankAccount fromString(String s) {
+            public FiatAccount fromString(String s) {
                 return null;
             }
         };
     }
 
-    public ObservableList<BankAccount> getBankAccounts() {
-        return user.getBankAccounts();
+    public ObservableList<FiatAccount> getBankAccounts() {
+        return user.getFiatAccounts();
     }
 
-    public void setCurrentBankAccount(BankAccount currentBankAccount) {
-        user.setCurrentBankAccount(currentBankAccount);
+    public void setCurrentBankAccount(FiatAccount currentFiatAccount) {
+        user.setCurrentBankAccount(currentFiatAccount);
     }
 
     private void updateNumPendingTrades() {

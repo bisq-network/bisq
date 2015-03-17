@@ -20,8 +20,8 @@ package io.bitsquare.offer.tomp2p;
 import io.bitsquare.network.tomp2p.TomP2PNode;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
-import io.bitsquare.util.handlers.FaultHandler;
-import io.bitsquare.util.handlers.ResultHandler;
+import io.bitsquare.common.handlers.FaultHandler;
+import io.bitsquare.common.handlers.ResultHandler;
 
 import java.io.IOException;
 

@@ -17,20 +17,20 @@
 
 package io.bitsquare.gui.main.account.content.irc;
 
-import io.bitsquare.account.AccountSettings;
-import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.arbitrator.ArbitratorMessageService;
-import io.bitsquare.arbitrator.Reputation;
-import io.bitsquare.bank.BankAccount;
-import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.user.AccountSettings;
+import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.arbitration.ArbitratorMessageService;
+import io.bitsquare.arbitration.Reputation;
+import io.bitsquare.fiat.FiatAccount;
+import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
-import io.bitsquare.viewfx.model.Activatable;
-import io.bitsquare.viewfx.model.DataModel;
+import io.bitsquare.common.viewfx.model.Activatable;
+import io.bitsquare.common.viewfx.model.DataModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
@@ -57,13 +57,13 @@ class IrcAccountDataModel implements Activatable, DataModel {
     private final Persistence persistence;
 
     final StringProperty nickName = new SimpleStringProperty();
-    final ObjectProperty<BankAccountType> type = new SimpleObjectProperty<>();
+    final ObjectProperty<FiatAccountType> type = new SimpleObjectProperty<>();
     final ObjectProperty<Currency> currency = new SimpleObjectProperty<>();
 
-    final ObservableList<BankAccountType> allTypes =
-            FXCollections.observableArrayList(BankAccountType.getAllBankAccountTypes());
+    final ObservableList<FiatAccountType> allTypes =
+            FXCollections.observableArrayList(FiatAccountType.getAllBankAccountTypes());
     final ObservableList<Currency> allCurrencies = FXCollections.observableArrayList(CurrencyUtil.getAllCurrencies());
-    final ObservableList<BankAccount> allBankAccounts = FXCollections.observableArrayList();
+    final ObservableList<FiatAccount> allFiatAccounts = FXCollections.observableArrayList();
 
 
     @Inject
@@ -80,7 +80,7 @@ class IrcAccountDataModel implements Activatable, DataModel {
 
     @Override
     public void activate() {
-        allBankAccounts.setAll(user.getBankAccounts());
+        allFiatAccounts.setAll(user.getFiatAccounts());
     }
 
     @Override
@@ -89,20 +89,20 @@ class IrcAccountDataModel implements Activatable, DataModel {
     }
 
     void saveBankAccount() {
-        BankAccount bankAccount = new BankAccount(type.get(),
+        FiatAccount fiatAccount = new FiatAccount(type.get(),
                 currency.get(),
                 CountryUtil.getDefaultCountry(),
                 nickName.get(),
                 nickName.get(),
                 "irc",
                 "irc");
-        user.setBankAccount(bankAccount);
+        user.setBankAccount(fiatAccount);
         saveUser();
-        allBankAccounts.setAll(user.getBankAccounts());
+        allFiatAccounts.setAll(user.getFiatAccounts());
         reset();
     }
 
-    void setType(BankAccountType type) {
+    void setType(FiatAccountType type) {
         this.type.set(type);
     }
 

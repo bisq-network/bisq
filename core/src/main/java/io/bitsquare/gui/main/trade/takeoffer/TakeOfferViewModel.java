@@ -24,8 +24,8 @@ import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.viewfx.model.ActivatableWithDataModel;
-import io.bitsquare.viewfx.model.ViewModel;
+import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
+import io.bitsquare.common.viewfx.model.ViewModel;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -136,7 +136,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         acceptedCountries = formatter.countryLocalesToString(offer.getAcceptedCountries());
         acceptedLanguages = formatter.languageLocalesToString(offer.getAcceptedLanguageLocales());
         acceptedArbitrators = formatter.arbitratorsToString(offer.getArbitrators());
-        bankAccountType = BSResources.get(offer.getBankAccountType().toString());
+        bankAccountType = BSResources.get(offer.getFiatAccountType().toString());
         bankAccountCurrency = BSResources.get(offer.getCurrency().getDisplayName());
         bankAccountCounty = BSResources.get(offer.getBankAccountCountry().getName());
     }

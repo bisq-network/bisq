@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.account.content.changepassword;
 
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.PasswordValidator;
-import io.bitsquare.viewfx.model.ViewModel;
+import io.bitsquare.common.viewfx.model.ViewModel;
 
 import com.google.inject.Inject;
 

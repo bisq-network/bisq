@@ -19,9 +19,9 @@ package io.bitsquare.gui.main.account.content.password;
 
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.InitializableView;
-import io.bitsquare.viewfx.view.Wizard;
+import io.bitsquare.common.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.InitializableView;
+import io.bitsquare.common.viewfx.view.Wizard;
 
 import javax.inject.Inject;
 

@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main;
 
 import io.bitsquare.BitsquareException;
-import io.bitsquare.bank.BankAccount;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.Popups;
@@ -32,11 +32,11 @@ import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.main.trade.BuyView;
 import io.bitsquare.gui.main.trade.SellView;
 import io.bitsquare.gui.util.Transitions;
-import io.bitsquare.viewfx.view.CachingViewLoader;
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.InitializableView;
-import io.bitsquare.viewfx.view.View;
-import io.bitsquare.viewfx.view.ViewLoader;
+import io.bitsquare.common.viewfx.view.CachingViewLoader;
+import io.bitsquare.common.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.InitializableView;
+import io.bitsquare.common.viewfx.view.View;
+import io.bitsquare.common.viewfx.view.ViewLoader;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -301,7 +301,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     }
 
     private VBox createBankAccountComboBox() {
-        final ComboBox<BankAccount> comboBox = new ComboBox<>(model.getBankAccounts());
+        final ComboBox<FiatAccount> comboBox = new ComboBox<>(model.getBankAccounts());
         comboBox.setLayoutY(12);
         comboBox.setVisibleRowCount(5);
         comboBox.setConverter(model.getBankAccountsConverter());

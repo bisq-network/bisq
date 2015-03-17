@@ -25,12 +25,12 @@ import io.bitsquare.gui.main.account.content.registration.RegistrationView;
 import io.bitsquare.gui.main.account.content.restrictions.RestrictionsView;
 import io.bitsquare.gui.main.account.content.seedwords.SeedWordsView;
 import io.bitsquare.gui.main.trade.BuyView;
-import io.bitsquare.viewfx.view.ActivatableView;
-import io.bitsquare.viewfx.view.CachingViewLoader;
-import io.bitsquare.viewfx.view.FxmlView;
-import io.bitsquare.viewfx.view.View;
-import io.bitsquare.viewfx.view.ViewLoader;
-import io.bitsquare.viewfx.view.Wizard;
+import io.bitsquare.common.viewfx.view.ActivatableView;
+import io.bitsquare.common.viewfx.view.CachingViewLoader;
+import io.bitsquare.common.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.View;
+import io.bitsquare.common.viewfx.view.ViewLoader;
+import io.bitsquare.common.viewfx.view.Wizard;
 
 import javax.inject.Inject;
 

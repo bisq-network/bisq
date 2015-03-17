@@ -17,8 +17,8 @@
 
 package io.bitsquare.trade;
 
-import io.bitsquare.account.AccountSettings;
-import io.bitsquare.bank.BankAccount;
+import io.bitsquare.user.AccountSettings;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
@@ -42,8 +42,8 @@ import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererProtocol;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerProtocol;
 import io.bitsquare.user.User;
-import io.bitsquare.util.handlers.ErrorMessageHandler;
-import io.bitsquare.util.handlers.ResultHandler;
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -162,17 +162,17 @@ public class TradeManager {
                            TransactionResultHandler resultHandler,
                            ErrorMessageHandler errorMessageHandler) {
 
-        BankAccount currentBankAccount = user.getCurrentBankAccount().get();
+        FiatAccount currentFiatAccount = user.getCurrentBankAccount().get();
         Offer offer = new Offer(id,
                 user.getNetworkPubKey(),
                 direction,
                 price.getValue(),
                 amount,
                 minAmount,
-                currentBankAccount.getBankAccountType(),
-                currentBankAccount.getCurrency(),
-                currentBankAccount.getCountry(),
-                currentBankAccount.getUid(),
+                currentFiatAccount.getFiatAccountType(),
+                currentFiatAccount.getCurrency(),
+                currentFiatAccount.getCountry(),
+                currentFiatAccount.getUid(),
                 accountSettings.getAcceptedArbitrators(),
                 accountSettings.getSecurityDeposit(),
                 accountSettings.getAcceptedCountries(),

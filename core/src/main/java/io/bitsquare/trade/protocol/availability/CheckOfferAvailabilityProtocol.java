@@ -25,7 +25,7 @@ import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailability
 import io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress;
 import io.bitsquare.trade.protocol.availability.tasks.ProcessReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.tasks.RequestIsOfferAvailable;
-import io.bitsquare.util.taskrunner.TaskRunner;
+import io.bitsquare.common.taskrunner.TaskRunner;
 
 import javafx.application.Platform;
 
