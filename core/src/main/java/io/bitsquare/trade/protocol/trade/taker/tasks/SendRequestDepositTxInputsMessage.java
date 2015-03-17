@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.listeners.SendMessageListener;
-import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
+import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestDepositTxInputsMessage;
@@ -42,10 +42,10 @@ public class SendRequestDepositTxInputsMessage extends Task<SellerAsTakerModel> 
                 model.getId(),
                 model.getTakeOfferFeeTx().getHashAsString(),
                 model.getTrade().getTradeAmount(),
-                model.getTakerPubKey()
+                model.taker.pubKey
         );
 
-        model.getTradeMessageService().sendMessage(model.getOfferer(), msg, new SendMessageListener() {
+        model.getTradeMessageService().sendMessage(model.offerer.peer, msg, new SendMessageListener() {
             @Override
             public void handleResult() {
                 log.trace("Sending TakeOfferFeePayedMessage succeeded.");

@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade;
+package io.bitsquare.trade.protocol.trade.offerer.models;
 
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.network.Peer;
@@ -40,5 +40,4 @@ public class TakerModel {
     public List<TransactionOutput> outputs;
     public String payoutAddress;
     public byte[] pubKey;
-    
 }

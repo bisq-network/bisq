@@ -22,6 +22,7 @@ import io.bitsquare.network.Peer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
+import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.GetOffererDepositTxInputs;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestDepositTxInputsMessage;

@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
+import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 

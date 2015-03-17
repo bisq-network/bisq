@@ -15,16 +15,17 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.offerer;
+package io.bitsquare.trade.protocol.trade.taker.models;
 
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
+import io.bitsquare.network.Peer;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.protocol.trade.OfferSharedModel;
-import io.bitsquare.trade.protocol.trade.TakerModel;
+import io.bitsquare.trade.protocol.trade.offerer.models.TakerModel;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Transaction;
@@ -32,33 +33,25 @@ import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BuyerAsOffererModel extends OfferSharedModel {
-
-    private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererModel.class);
-
+public class SellerAsTakerModel extends OfferSharedModel {
+    private static final Logger log = LoggerFactory.getLogger(SellerAsTakerModel.class);
 
     private final Trade trade;
-
-
     public final TakerModel taker;
     public final OffererModel offerer;
-
-
+    
     private Transaction publishedDepositTx;
-    private String takeOfferFeeTxId;
+    private Transaction takeOfferFeeTx;
+    private Transaction payoutTx;
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public BuyerAsOffererModel(Trade trade,
-                               TradeMessageService tradeMessageService,
-                               WalletService walletService,
-                               BlockChainService blockChainService,
-                               SignatureService signatureService,
-                               User user,
-                               Persistence persistence) {
+    public SellerAsTakerModel(Trade trade,
+                              Peer offererPeer,
+                              TradeMessageService tradeMessageService,
+                              WalletService walletService,
+                              BlockChainService blockChainService,
+                              SignatureService signatureService,
+                              User user,
+                              Persistence persistence) {
         super(trade.getOffer(),
                 tradeMessageService,
                 walletService,
@@ -70,10 +63,11 @@ public class BuyerAsOffererModel extends OfferSharedModel {
         this.trade = trade;
 
         taker = new TakerModel();
-        offerer = new OffererModel();
+        offerer = new OffererModel(offererPeer);
 
-        offerer.pubKey = getAddressEntry().getPubKey();
+        taker.pubKey = getAddressEntry().getPubKey();
     }
+
 
     public Trade getTrade() {
         return trade;
@@ -87,11 +81,23 @@ public class BuyerAsOffererModel extends OfferSharedModel {
         this.publishedDepositTx = publishedDepositTx;
     }
 
-    public String getTakeOfferFeeTxId() {
-        return takeOfferFeeTxId;
+    public Transaction getTakeOfferFeeTx() {
+        return takeOfferFeeTx;
     }
 
-    public void setTakeOfferFeeTxId(String takeOfferFeeTxId) {
-        this.takeOfferFeeTxId = takeOfferFeeTxId;
+    public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {
+        this.takeOfferFeeTx = takeOfferFeeTx;
+    }
+
+    public void setDepositTx(Transaction transaction) {
+        
+    }
+
+    public Transaction getPayoutTx() {
+        return payoutTx;
+    }
+
+    public void setPayoutTx(Transaction payoutTx) {
+        this.payoutTx = payoutTx;
     }
 }

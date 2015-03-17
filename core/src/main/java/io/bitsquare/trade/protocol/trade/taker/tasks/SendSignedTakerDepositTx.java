@@ -17,11 +17,11 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.trade.listeners.SendMessageListener;
-import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
-import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.listeners.SendMessageListener;
+import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,12 +43,12 @@ public class SendSignedTakerDepositTx extends Task<SellerAsTakerModel> {
                 model.getTrade().getContractAsJson(),
                 model.getTrade().getTakerContractSignature(),
                 model.getAddressEntry().getAddressString(),
-                model.getTakerDepositTx(),
-                model.getTakerConnectedOutputsForAllInputs(),
-                model.getTakerOutputs()
+                model.taker.depositTx,
+                model.taker.connectedOutputsForAllInputs,
+                model.taker.outputs
         );
 
-        model.getTradeMessageService().sendMessage(model.getOfferer(), tradeMessage, new SendMessageListener() {
+        model.getTradeMessageService().sendMessage(model.offerer.peer, tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 complete();

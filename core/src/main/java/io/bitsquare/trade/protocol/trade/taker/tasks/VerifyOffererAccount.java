@@ -17,9 +17,9 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ public class VerifyOffererAccount extends Task<SellerAsTakerModel> {
     @Override
     protected void doRun() {
         if (model.getBlockChainService().verifyAccountRegistration()) {
-            if (model.getBlockChainService().isAccountBlackListed(model.getTakerAccountId(), model.getTakerFiatAccount())) {
+            if (model.getBlockChainService().isAccountBlackListed(model.taker.accountId, model.taker.fiatAccount)) {
                 failed("Taker is blacklisted.");
             }
             else {

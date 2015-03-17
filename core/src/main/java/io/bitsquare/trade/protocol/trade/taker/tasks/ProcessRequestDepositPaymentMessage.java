@@ -17,10 +17,10 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.trade.protocol.trade.offerer.messages.RequestDepositPaymentMessage;
-import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.protocol.trade.offerer.messages.RequestDepositPaymentMessage;
+import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,13 +41,12 @@ public class ProcessRequestDepositPaymentMessage extends Task<SellerAsTakerModel
             checkTradeId(model.getId(), model.getTradeMessage());
             RequestDepositPaymentMessage message = (RequestDepositPaymentMessage) model.getTradeMessage();
 
-            model.setOffererConnectedOutputsForAllInputs(checkNotNull(message.getOffererConnectedOutputsForAllInputs()));
+            model.offerer.connectedOutputsForAllInputs = checkNotNull(message.getOffererConnectedOutputsForAllInputs());
             checkArgument(message.getOffererConnectedOutputsForAllInputs().size() > 0);
-            model.setOffererOutputs(checkNotNull(message.getOffererOutputs()));
-            model.setOffererPubKey(checkNotNull(message.getOffererPubKey()));
-
-            model.setTakerFiatAccount(checkNotNull(message.getFiatAccount()));
-            model.setTakerAccountId(nonEmptyStringOf(message.getAccountId()));
+            model.offerer.outputs = checkNotNull(message.getOffererOutputs());
+            model.offerer.pubKey = checkNotNull(message.getOffererPubKey());
+            model.taker.fiatAccount = checkNotNull(message.getFiatAccount());
+            model.taker.accountId = nonEmptyStringOf(message.getAccountId());
 
             complete();
         } catch (Throwable t) {

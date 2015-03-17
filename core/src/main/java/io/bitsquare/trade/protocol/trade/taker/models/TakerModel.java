@@ -15,20 +15,23 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.offerer;
+package io.bitsquare.trade.protocol.trade.taker.models;
+
+import io.bitsquare.fiat.FiatAccount;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
 import java.util.List;
 
-public class OffererModel {
-    public byte[] pubKey;
-    public ECKey.ECDSASignature payoutSignature;
-    public Coin payoutAmount;
+public class TakerModel {
+
     public List<TransactionOutput> connectedOutputsForAllInputs;
     public List<TransactionOutput> outputs;
-    public Transaction payoutTx;
+    public Transaction depositTx;
+    public FiatAccount fiatAccount;
+    public String accountId;
+    public Coin payoutAmount;
+
 }

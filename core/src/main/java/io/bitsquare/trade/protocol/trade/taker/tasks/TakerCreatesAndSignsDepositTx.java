@@ -19,10 +19,10 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 
 import org.bitcoinj.core.Coin;
 
@@ -45,17 +45,17 @@ public class TakerCreatesAndSignsDepositTx extends Task<SellerAsTakerModel> {
             TradeWalletService.TransactionDataResult result = model.getTradeWalletService().takerCreatesAndSignsDepositTx(
                     takerInputAmount,
                     msOutputAmount,
-                    model.getOffererConnectedOutputsForAllInputs(),
-                    model.getOffererOutputs(),
+                    model.offerer.connectedOutputsForAllInputs,
+                    model.offerer.outputs,
                     model.getAddressEntry(),
-                    model.getOffererPubKey(),
-                    model.getTakerPubKey(),
+                    model.offerer.pubKey,
+                    model.taker.pubKey,
                     model.getArbitratorPubKey());
 
 
-            model.setTakerConnectedOutputsForAllInputs(result.getConnectedOutputsForAllInputs());
-            model.setTakerOutputs(result.getOutputs());
-            model.setTakerDepositTx(result.getDepositTx());
+            model.taker.connectedOutputsForAllInputs = result.getConnectedOutputsForAllInputs();
+            model.taker.outputs = result.getOutputs();
+            model.taker.depositTx = result.getDepositTx();
 
             complete();
         } catch (Exception e) {

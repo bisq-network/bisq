@@ -21,7 +21,7 @@ import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
+import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 import io.bitsquare.util.Utilities;
 
 import org.slf4j.Logger;
@@ -41,9 +41,9 @@ public class CreateAndSignContract extends Task<SellerAsTakerModel> {
                 model.getOffer(),
                 trade.getTradeAmount(),
                 model.getTakeOfferFeeTx().getHashAsString(),
-                model.getTakerAccountId(),
+                model.taker.accountId,
                 model.getAccountId(),
-                model.getTakerFiatAccount(),
+                model.taker.fiatAccount,
                 model.getFiatAccount(),
                 model.getOffer().getMessagePublicKey(),
                 model.getNetworkPubKey());

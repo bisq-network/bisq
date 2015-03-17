@@ -38,9 +38,9 @@ import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailability
 import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
-import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
+import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererProtocol;
-import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
+import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerProtocol;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;

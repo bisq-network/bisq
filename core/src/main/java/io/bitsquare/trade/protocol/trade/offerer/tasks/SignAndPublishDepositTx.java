@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
+import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 

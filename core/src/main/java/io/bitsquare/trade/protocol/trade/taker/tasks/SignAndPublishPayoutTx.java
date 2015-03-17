@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
+import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 
@@ -43,13 +43,13 @@ public class SignAndPublishPayoutTx extends Task<SellerAsTakerModel> {
         try {
             model.getTradeWalletService().takerSignsAndPublishPayoutTx(
                     model.getPublishedDepositTx(),
-                    model.getOffererSignature(),
-                    model.getOffererPayoutAmount(),
-                    model.getTakerPayoutAmount(),
-                    model.getOffererPayoutAddress(),
+                    model.offerer.signature,
+                    model.offerer.payoutAmount,
+                    model.taker.payoutAmount,
+                    model.offerer.payoutAddress,
                     model.getAddressEntry(),
-                    model.getOffererPubKey(),
-                    model.getTakerPubKey(),
+                    model.offerer.pubKey,
+                    model.taker.pubKey,
                     model.getArbitratorPubKey(),
                     new FutureCallback<Transaction>() {
                         @Override

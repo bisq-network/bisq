@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.trade.listeners.SendMessageListener;
-import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
+import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
@@ -36,7 +36,7 @@ public class SendPayoutTxToOfferer extends Task<SellerAsTakerModel> {
     @Override
     protected void doRun() {
         PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(model.getId(), model.getPayoutTx());
-        model.getTradeMessageService().sendMessage(model.getOfferer(), tradeMessage, new SendMessageListener() {
+        model.getTradeMessageService().sendMessage(model.offerer.peer, tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 log.trace("PayoutTxPublishedMessage successfully arrived at peer");

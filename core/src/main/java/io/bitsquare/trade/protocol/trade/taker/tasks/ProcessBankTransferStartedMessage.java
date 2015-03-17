@@ -17,10 +17,10 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 
 import org.bitcoinj.core.ECKey;
 
@@ -44,10 +44,10 @@ public class ProcessBankTransferStartedMessage extends Task<SellerAsTakerModel> 
             BankTransferStartedMessage message = (BankTransferStartedMessage) model.getTradeMessage();
 
             model.setDepositTx(checkNotNull(message.getDepositTx()));
-            model.setOffererSignature(checkNotNull(ECKey.ECDSASignature.decodeFromDER(message.getOffererSignature())));
-            model.setOffererPayoutAmount(positiveCoinOf(nonZeroCoinOf(message.getOffererPayoutAmount())));
-            model.setTakerPayoutAmount(positiveCoinOf(nonZeroCoinOf(message.getTakerPayoutAmount())));
-            model.setOffererPayoutAddress(nonEmptyStringOf(message.getOffererPayoutAddress()));
+            model.offerer.signature = checkNotNull(ECKey.ECDSASignature.decodeFromDER(message.getOffererSignature()));
+            model.offerer.payoutAmount = positiveCoinOf(nonZeroCoinOf(message.getOffererPayoutAmount()));
+            model.taker.payoutAmount = positiveCoinOf(nonZeroCoinOf(message.getTakerPayoutAmount()));
+            model.offerer.payoutAddress = nonEmptyStringOf(message.getOffererPayoutAddress());
 
             complete();
         } catch (Throwable t) {

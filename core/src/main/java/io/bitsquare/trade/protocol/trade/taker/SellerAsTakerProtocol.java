@@ -25,6 +25,7 @@ import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RequestDepositPaymentMessage;
+import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 import io.bitsquare.trade.protocol.trade.taker.tasks.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateTakeOfferFeeTx;

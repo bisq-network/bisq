@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.trade.offerer;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
