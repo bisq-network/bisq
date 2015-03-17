@@ -26,17 +26,18 @@ import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferStartedMes
 import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RequestDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToTakeOfferRequestMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
+import io.bitsquare.trade.protocol.trade.taker.tasks.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.GetPeerAddress;
-import io.bitsquare.trade.protocol.trade.taker.tasks.PayTakeOfferFee;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessBankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRequestDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRespondToTakeOfferRequestMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.RequestTakeOffer;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendPayoutTxToOfferer;
+import io.bitsquare.trade.protocol.trade.taker.tasks.SendRequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendSignedTakerDepositTx;
-import io.bitsquare.trade.protocol.trade.taker.tasks.SendTakeOfferFeePayedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SignAndPublishPayoutTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCommitDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCreatesAndSignsDepositTx;
@@ -108,8 +109,9 @@ public class SellerAsTakerProtocol {
         );
         taskRunner.addTasks(
                 ProcessRespondToTakeOfferRequestMessage.class,
-                PayTakeOfferFee.class,
-                SendTakeOfferFeePayedMessage.class
+                CreateTakeOfferFeeTx.class,
+                BroadcastTakeOfferFeeTx.class,
+                SendRequestDepositTxInputsMessage.class
         );
         taskRunner.run();
     }

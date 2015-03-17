@@ -528,7 +528,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                             break;
                                         case OFFERER_OFFLINE:
                                         case NOT_AVAILABLE:
-                                        case AVAILABILITY_CHECK_FAILED:
+                                        case FAULT:
                                         case REMOVED:
                                             iconView.setId("image-offer_state_not_available");
                                             break;
@@ -541,7 +541,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 super.updateItem(item, empty);
 
                                 if (item != null) {
-                                    stateProperty = item.getOffer().getStateProperty();
+                                    stateProperty = item.getOffer().stateProperty();
                                     this.stateChangeListener = (ov, o, n) -> updateIcon(item);
                                     stateProperty.addListener(stateChangeListener);
                                     updateIcon(item);

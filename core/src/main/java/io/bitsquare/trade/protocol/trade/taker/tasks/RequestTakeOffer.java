@@ -17,12 +17,12 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
+import io.bitsquare.common.taskrunner.Task;
+import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestTakeOfferMessage;
-import io.bitsquare.common.taskrunner.Task;
-import io.bitsquare.common.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,24 +36,29 @@ public class RequestTakeOffer extends Task<SellerAsTakerModel> {
 
     @Override
     protected void doRun() {
-        model.getTradeMessageService().sendMessage(model.getOfferer(), new RequestTakeOfferMessage(model.getId()),
-                new SendMessageListener() {
-                    @Override
-                    public void handleResult() {
-                        complete();
-                    }
+        try {
+            model.getTradeMessageService().sendMessage(model.getOfferer(), new RequestTakeOfferMessage(model.getId()),
+                    new SendMessageListener() {
+                        @Override
+                        public void handleResult() {
+                            complete();
+                        }
 
-                    @Override
-                    public void handleFault() {
-                        model.getOffer().setState(Offer.State.OFFERER_OFFLINE);
-                        failed();
-                    }
-                });
+                        @Override
+                        public void handleFault() {
+                            model.getOffer().setState(Offer.State.OFFERER_OFFLINE);
+                            
+                            failed();
+                        }
+                    });
+        } catch (Throwable t) {
+            model.getOffer().setState(Offer.State.FAULT);
+
+            failed(t);
+        }
     }
 
     @Override
     protected void updateStateOnFault() {
-        if (model.getOffer().getState() != Offer.State.OFFERER_OFFLINE)
-            model.getOffer().setState(Offer.State.AVAILABILITY_CHECK_FAILED);
     }
 }

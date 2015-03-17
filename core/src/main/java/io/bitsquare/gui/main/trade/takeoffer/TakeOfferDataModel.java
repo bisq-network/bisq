@@ -130,7 +130,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
         });
         updateBalance(walletService.getBalanceForAddress(addressEntry.getAddress()));
 
-        offer.getStateProperty().addListener((observable, oldValue, newValue) -> {
+        offer.stateProperty().addListener((observable, oldValue, newValue) -> {
             offerIsAvailable.set(newValue);
         });
         tradeManager.checkOfferAvailability(offer);
@@ -152,7 +152,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
                 case OFFERER_REJECTED:
                     requestTakeOfferErrorMessage.set("Take offer request got rejected. Maybe another trader has taken the offer in the meantime.");
                     break;
-                case TAKE_OFFER_FEE_PAID:
+                case TAKE_OFFER_FEE_TX_CREATED:
                     break;
                 case DEPOSIT_PUBLISHED:
                 case DEPOSIT_CONFIRMED:
@@ -169,7 +169,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
                     break;
                 case FIAT_PAYMENT_STARTED:
                     break;
-                case TAKE_OFFER_FEE_PAYMENT_FAILED:
+                case TAKE_OFFER_FEE_PUBLISH_FAILED:
                     requestTakeOfferErrorMessage.set("An error occurred when paying the trade fee." + errorMessage);
                     break;
                 case MESSAGE_SENDING_FAILED:

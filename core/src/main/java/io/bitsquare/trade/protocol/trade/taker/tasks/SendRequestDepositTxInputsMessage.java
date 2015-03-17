@@ -20,17 +20,17 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
-import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.protocol.trade.taker.messages.RequestDepositTxInputsMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendTakeOfferFeePayedMessage extends Task<SellerAsTakerModel> {
-    private static final Logger log = LoggerFactory.getLogger(SendTakeOfferFeePayedMessage.class);
+public class SendRequestDepositTxInputsMessage extends Task<SellerAsTakerModel> {
+    private static final Logger log = LoggerFactory.getLogger(SendRequestDepositTxInputsMessage.class);
 
-    public SendTakeOfferFeePayedMessage(TaskRunner taskHandler, SellerAsTakerModel model) {
+    public SendRequestDepositTxInputsMessage(TaskRunner taskHandler, SellerAsTakerModel model) {
         super(taskHandler, model);
     }
 
@@ -38,9 +38,9 @@ public class SendTakeOfferFeePayedMessage extends Task<SellerAsTakerModel> {
 
     @Override
     protected void doRun() {
-        TakeOfferFeePayedMessage msg = new TakeOfferFeePayedMessage(
+        RequestDepositTxInputsMessage msg = new RequestDepositTxInputsMessage(
                 model.getId(),
-                model.getTrade().getTakeOfferFeeTxId(),
+                model.getTakeOfferFeeTx().getHashAsString(),
                 model.getTrade().getTradeAmount(),
                 model.getTakerPubKey()
         );

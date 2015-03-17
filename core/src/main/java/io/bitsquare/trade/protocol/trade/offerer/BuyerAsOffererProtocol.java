@@ -26,7 +26,7 @@ import io.bitsquare.trade.protocol.trade.offerer.tasks.GetOffererDepositTxInputs
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestOffererPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestTakeOfferMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessTakeOfferFeePayedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.RequestDepositPayment;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.RespondToTakeOfferRequest;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendBankTransferStartedMessage;
@@ -40,7 +40,7 @@ import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakerAccount;
 import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestTakeOfferMessage;
-import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
+import io.bitsquare.trade.protocol.trade.taker.messages.RequestDepositTxInputsMessage;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
@@ -103,7 +103,7 @@ public class BuyerAsOffererProtocol {
         taskRunner.run();
     }
 
-    private void handleTakeOfferFeePayedMessage(TakeOfferFeePayedMessage tradeMessage) {
+    private void handleRequestDepositTxInputsMessage(RequestDepositTxInputsMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
         BuyerAsOffererTaskRunner<BuyerAsOffererModel> taskRunner = new BuyerAsOffererTaskRunner<>(model,
@@ -115,7 +115,7 @@ public class BuyerAsOffererProtocol {
                 }
         );
         taskRunner.addTasks(
-                ProcessTakeOfferFeePayedMessage.class,
+                ProcessRequestDepositTxInputsMessage.class,
                 GetOffererDepositTxInputs.class,
                 RequestDepositPayment.class
         );
@@ -216,8 +216,8 @@ public class BuyerAsOffererProtocol {
                 if (tradeMessage instanceof RequestTakeOfferMessage) {
                     handleRequestTakeOfferMessage((RequestTakeOfferMessage) tradeMessage, peer);
                 }
-                else if (tradeMessage instanceof TakeOfferFeePayedMessage) {
-                    handleTakeOfferFeePayedMessage((TakeOfferFeePayedMessage) tradeMessage);
+                else if (tradeMessage instanceof RequestDepositTxInputsMessage) {
+                    handleRequestDepositTxInputsMessage((RequestDepositTxInputsMessage) tradeMessage);
                 }
 
                 else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage) {

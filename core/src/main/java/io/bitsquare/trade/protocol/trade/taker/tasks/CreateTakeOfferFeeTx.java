@@ -19,45 +19,36 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToTakeOfferRequestMessage;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
+
+import org.bitcoinj.core.Transaction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.util.Validator.checkTradeId;
+public class CreateTakeOfferFeeTx extends Task<SellerAsTakerModel> {
+    private static final Logger log = LoggerFactory.getLogger(CreateTakeOfferFeeTx.class);
 
-public class ProcessRespondToTakeOfferRequestMessage extends Task<SellerAsTakerModel> {
-    private static final Logger log = LoggerFactory.getLogger(ProcessRespondToTakeOfferRequestMessage.class);
-
-    public ProcessRespondToTakeOfferRequestMessage(TaskRunner taskHandler, SellerAsTakerModel model) {
+    public CreateTakeOfferFeeTx(TaskRunner taskHandler, SellerAsTakerModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void doRun() {
         try {
-            checkTradeId(model.getId(), model.getTradeMessage());
+            Transaction createTakeOfferFeeTx = model.getTradeWalletService().createTakeOfferFeeTx(model.getAddressEntry());
 
-            if (((RespondToTakeOfferRequestMessage) model.getTradeMessage()).isOfferIsAvailable()) {
-                model.getOffer().setState(Offer.State.AVAILABLE);
-                model.getTrade().setState(Trade.State.OFFERER_ACCEPTED);
+            model.setTakeOfferFeeTx(createTakeOfferFeeTx);
+            model.getTrade().setState(Trade.State.TAKE_OFFER_FEE_TX_CREATED);
 
-                complete();
-            }
-            else {
-                model.getOffer().setState(Offer.State.NOT_AVAILABLE);
-                model.getTrade().setState(Trade.State.OFFERER_REJECTED);
+            complete();
+        } catch (Exception e) {
+            appendToErrorMessage(e.getMessage());
 
-                failed("Requested offer rejected because it is not available anymore.");
-            }
-        } catch (Throwable t) {
-            model.getOffer().setState(Offer.State.FAULT);
             model.getTrade().setState(Trade.State.FAULT);
 
-            failed(t);
+            failed(e);
         }
     }
 

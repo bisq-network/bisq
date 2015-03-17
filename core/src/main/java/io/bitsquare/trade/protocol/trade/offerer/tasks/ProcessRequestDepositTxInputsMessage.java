@@ -17,11 +17,11 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
-import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
+import io.bitsquare.trade.protocol.trade.taker.messages.RequestDepositTxInputsMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,10 +29,10 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.*;
 
-public class ProcessTakeOfferFeePayedMessage extends Task<BuyerAsOffererModel> {
-    private static final Logger log = LoggerFactory.getLogger(ProcessTakeOfferFeePayedMessage.class);
+public class ProcessRequestDepositTxInputsMessage extends Task<BuyerAsOffererModel> {
+    private static final Logger log = LoggerFactory.getLogger(ProcessRequestDepositTxInputsMessage.class);
 
-    public ProcessTakeOfferFeePayedMessage(TaskRunner taskHandler, BuyerAsOffererModel model) {
+    public ProcessRequestDepositTxInputsMessage(TaskRunner taskHandler, BuyerAsOffererModel model) {
         super(taskHandler, model);
     }
 
@@ -41,11 +41,10 @@ public class ProcessTakeOfferFeePayedMessage extends Task<BuyerAsOffererModel> {
         try {
             checkTradeId(model.getId(), model.getTradeMessage());
             Trade trade = model.getTrade();
-            TakeOfferFeePayedMessage takeOfferFeePayedMessage = (TakeOfferFeePayedMessage) model.getTradeMessage();
-            trade.setTakeOfferFeeTxID(nonEmptyStringOf(takeOfferFeePayedMessage.getTakeOfferFeeTxId()));
-            trade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(takeOfferFeePayedMessage.getTradeAmount())));
-            model.setTakeOfferFeeTxId(nonEmptyStringOf(takeOfferFeePayedMessage.getTakeOfferFeeTxId()));
-            model.setTakerPubKey(checkNotNull(takeOfferFeePayedMessage.getTakerPubKey()));
+            RequestDepositTxInputsMessage requestDepositTxInputsMessage = (RequestDepositTxInputsMessage) model.getTradeMessage();
+            trade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(requestDepositTxInputsMessage.getTradeAmount())));
+            model.setTakeOfferFeeTxId(nonEmptyStringOf(requestDepositTxInputsMessage.getTakeOfferFeeTxId()));
+            model.setTakerPubKey(checkNotNull(requestDepositTxInputsMessage.getTakerPubKey()));
 
             complete();
         } catch (Throwable t) {

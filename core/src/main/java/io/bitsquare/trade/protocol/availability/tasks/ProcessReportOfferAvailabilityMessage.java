@@ -17,11 +17,11 @@
 
 package io.bitsquare.trade.protocol.availability.tasks;
 
+import io.bitsquare.common.taskrunner.Task;
+import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityModel;
 import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
-import io.bitsquare.common.taskrunner.Task;
-import io.bitsquare.common.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,22 +37,26 @@ public class ProcessReportOfferAvailabilityMessage extends Task<CheckOfferAvaila
 
     @Override
     protected void doRun() {
-        ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = (ReportOfferAvailabilityMessage) model.getMessage();
-        nonEmptyStringOf(reportOfferAvailabilityMessage.getOfferId());
+        try {
+            ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = (ReportOfferAvailabilityMessage) model.getMessage();
+            nonEmptyStringOf(reportOfferAvailabilityMessage.getOfferId());
 
-        if (model.getOffer().getState() != Offer.State.REMOVED) {
-            if (reportOfferAvailabilityMessage.isOfferOpen())
-                model.getOffer().setState(Offer.State.AVAILABLE);
-            else
-                model.getOffer().setState(Offer.State.NOT_AVAILABLE);
+            if (model.getOffer().getState() != Offer.State.REMOVED) {
+                if (reportOfferAvailabilityMessage.isOfferOpen())
+                    model.getOffer().setState(Offer.State.AVAILABLE);
+                else
+                    model.getOffer().setState(Offer.State.NOT_AVAILABLE);
+            }
+
+            complete();
+        } catch (Throwable t) {
+            model.getOffer().setState(Offer.State.FAULT);
+
+            failed(t);
         }
-
-        complete();
     }
 
     @Override
     protected void updateStateOnFault() {
-        model.getOffer().setState(Offer.State.AVAILABILITY_CHECK_FAILED);
     }
 }
-

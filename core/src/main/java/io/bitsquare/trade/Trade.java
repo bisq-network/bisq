@@ -33,6 +33,7 @@ import javafx.beans.property.SimpleObjectProperty;
 public class Trade implements Serializable {
     private static final long serialVersionUID = -8275323072940974077L;
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -41,9 +42,10 @@ public class Trade implements Serializable {
         OPEN,
         OFFERER_ACCEPTED,
         OFFERER_REJECTED, /* For taker only*/
-        TAKE_OFFER_FEE_PAYMENT_FAILED,
-        TAKE_OFFER_FEE_PAID,
+        TAKE_OFFER_FEE_PUBLISH_FAILED,
+        TAKE_OFFER_FEE_TX_CREATED,
         DEPOSIT_PUBLISHED,
+        TAKE_OFFER_FEE_PUBLISHED,
         DEPOSIT_CONFIRMED,
         FIAT_PAYMENT_STARTED,
         FIAT_PAYMENT_RECEIVED,
@@ -64,7 +66,6 @@ public class Trade implements Serializable {
 
     private final Offer offer;
     private final Date date;
-    private String takeOfferFeeTxID;
     private Contract contract;
     private String contractAsJson;
     private String takerContractSignature;
@@ -100,10 +101,6 @@ public class Trade implements Serializable {
 
     public void setTakerContractSignature(String takerSignature) {
         this.takerContractSignature = takerSignature;
-    }
-
-    public void setTakeOfferFeeTxID(String takeOfferFeeTxID) {
-        this.takeOfferFeeTxID = takeOfferFeeTxID;
     }
 
     public Coin getTradeAmount() {
@@ -176,10 +173,6 @@ public class Trade implements Serializable {
 
     public Offer getOffer() {
         return offer;
-    }
-
-    public String getTakeOfferFeeTxId() {
-        return takeOfferFeeTxID;
     }
 
     public String getContractAsJson() {

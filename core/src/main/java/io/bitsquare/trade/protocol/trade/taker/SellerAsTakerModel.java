@@ -64,6 +64,7 @@ public class SellerAsTakerModel extends OfferSharedModel {
     private FiatAccount takerFiatAccount;
     private String takerAccountId;
     private ECKey.ECDSASignature offererSignature;
+    private Transaction takeOfferFeeTx;
 
     public SellerAsTakerModel(Trade trade,
                               TradeMessageService tradeMessageService,
@@ -217,5 +218,13 @@ public class SellerAsTakerModel extends OfferSharedModel {
 
     public void setOffererSignature(ECKey.ECDSASignature offererSignature) {
         this.offererSignature = offererSignature;
+    }
+
+    public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {
+        this.takeOfferFeeTx = takeOfferFeeTx;
+    }
+
+    public Transaction getTakeOfferFeeTx() {
+        return takeOfferFeeTx;
     }
 }

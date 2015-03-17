@@ -51,10 +51,10 @@ public class Offer implements Serializable {
 
     public enum State {
         UNKNOWN,
-        AVAILABLE,
         OFFERER_OFFLINE,
+        AVAILABLE,
         NOT_AVAILABLE,
-        AVAILABILITY_CHECK_FAILED,
+        FAULT,
         REMOVED
     }
 
@@ -125,7 +125,7 @@ public class Offer implements Serializable {
 
         creationDate = new Date();
         state = State.UNKNOWN;
-        getStateProperty().set(state);
+        stateProperty().set(state);
     }
 
 
@@ -135,7 +135,7 @@ public class Offer implements Serializable {
 
     public void setState(State state) {
         this.state = state;
-        getStateProperty().set(state);
+        stateProperty().set(state);
     }
 
 
@@ -237,7 +237,7 @@ public class Offer implements Serializable {
         return state;
     }
 
-    public ObjectProperty<State> getStateProperty() {
+    public ObjectProperty<State> stateProperty() {
         if (stateProperty == null)
             stateProperty = new SimpleObjectProperty<>(state);
         return stateProperty;

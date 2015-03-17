@@ -17,12 +17,12 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
+import io.bitsquare.common.taskrunner.Task;
+import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.listeners.GetPeerAddressListener;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
-import io.bitsquare.common.taskrunner.Task;
-import io.bitsquare.common.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,29 +37,31 @@ public class GetPeerAddress extends Task<SellerAsTakerModel> {
 
     @Override
     protected void doRun() {
-        model.getTradeMessageService().getPeerAddress(model.getOffer().getMessagePublicKey(), new GetPeerAddressListener() {
-            @Override
-            public void onResult(Peer peer) {
-                log.trace("Found peer: " + peer.toString());
+        try {
+            model.getTradeMessageService().getPeerAddress(model.getOffer().getMessagePublicKey(), new GetPeerAddressListener() {
+                @Override
+                public void onResult(Peer peer) {
+                    model.setOfferer(peer);
 
-                model.setOfferer(peer);
+                    complete();
+                }
 
-                complete();
-            }
+                @Override
+                public void onFailed() {
+                    model.getOffer().setState(Offer.State.OFFERER_OFFLINE);
 
-            @Override
-            public void onFailed() {
-                model.getOffer().setState(Offer.State.OFFERER_OFFLINE);
+                    failed();
+                }
+            });
+        } catch (Throwable t) {
+            model.getOffer().setState(Offer.State.FAULT);
 
-                failed();
-            }
-        });
+            failed(t);
+        }
     }
 
     @Override
     protected void updateStateOnFault() {
-        if (model.getOffer().getState() != Offer.State.OFFERER_OFFLINE)
-            model.getOffer().setState(Offer.State.AVAILABILITY_CHECK_FAILED);
     }
 }
 

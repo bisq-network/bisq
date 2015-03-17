@@ -17,6 +17,8 @@
 
 package io.bitsquare.gui.main.portfolio.pending;
 
+import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.common.viewfx.view.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.InfoDisplay;
 import io.bitsquare.gui.components.InputTextField;
@@ -33,8 +35,6 @@ import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.closed.ClosedTradesView;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.util.Utilities;
-import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
-import io.bitsquare.common.viewfx.view.FxmlView;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -105,6 +105,9 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
         setPriceColumnCellFactory();
         setVolumeColumnCellFactory();
         setDateColumnCellFactory();
+
+        //TODO just temp for testing
+        withdrawAddressTextField.setText("muZkzie5UCaH51P1U9WGWsgejTJQweamai");
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPlaceholder(new Label("No pending trades available"));

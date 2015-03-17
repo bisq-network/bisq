@@ -25,6 +25,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// Offerer has his own offers wrapped in that OpenOffer object. Taker never has an OpenOffer object.
 public class OpenOffer implements Serializable {
     private static final long serialVersionUID = -7523483764145982933L;
 

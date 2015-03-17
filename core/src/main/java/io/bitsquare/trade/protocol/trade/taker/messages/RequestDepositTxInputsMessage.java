@@ -23,17 +23,17 @@ import org.bitcoinj.core.Coin;
 
 import java.io.Serializable;
 
-public class TakeOfferFeePayedMessage implements Serializable, TradeMessage {
+public class RequestDepositTxInputsMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = -5057935061275354312L;
 
     private final String tradeId;
     private final Coin tradeAmount;
-    private final String takeOfferFeeTxID;
+    private final String takeOfferFeeTxId;
     private final byte[] takerPubKey;
 
-    public TakeOfferFeePayedMessage(String tradeId, String takeOfferFeeTxID, Coin tradeAmount, byte[] takerPubKey) {
+    public RequestDepositTxInputsMessage(String tradeId, String takeOfferFeeTxId, Coin tradeAmount, byte[] takerPubKey) {
         this.tradeId = tradeId;
-        this.takeOfferFeeTxID = takeOfferFeeTxID;
+        this.takeOfferFeeTxId = takeOfferFeeTxId;
         this.tradeAmount = tradeAmount;
         this.takerPubKey = takerPubKey;
     }
@@ -48,7 +48,7 @@ public class TakeOfferFeePayedMessage implements Serializable, TradeMessage {
     }
 
     public String getTakeOfferFeeTxId() {
-        return takeOfferFeeTxID;
+        return takeOfferFeeTxId;
     }
 
     public byte[] getTakerPubKey() {

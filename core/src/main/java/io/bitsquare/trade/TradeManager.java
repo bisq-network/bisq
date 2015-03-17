@@ -17,11 +17,12 @@
 
 package io.bitsquare.trade;
 
-import io.bitsquare.user.AccountSettings;
-import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.crypto.SignatureService;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Direction;
@@ -41,9 +42,8 @@ import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererProtocol;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerProtocol;
+import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
-import io.bitsquare.common.handlers.ErrorMessageHandler;
-import io.bitsquare.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -201,6 +201,30 @@ public class TradeManager {
         Trade trade = createTrade(offer);
         trade.setTradeAmount(amount);
 
+        offer.stateProperty().addListener((ov, oldValue, newValue) -> {
+            log.debug("trade state = " + newValue);
+            switch (newValue) {
+                case UNKNOWN:
+                    break;
+                case AVAILABLE:
+                    break;
+                case OFFERER_OFFLINE:
+                case NOT_AVAILABLE:
+                case FAULT:
+                    removeFailedTrade(trade);
+                    break;
+                case REMOVED:
+                    if (oldValue != Offer.State.AVAILABLE) {
+                        removeFailedTrade(trade);
+                    }
+                    break;
+                default:
+                    log.error("Unhandled trade state: " + newValue);
+                    break;
+            }
+        });
+
+
         // TODO check
         trade.stateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("trade state = " + newValue);
@@ -208,7 +232,7 @@ public class TradeManager {
                 case OPEN:
                     break;
                 case OFFERER_ACCEPTED:
-                case TAKE_OFFER_FEE_PAID:
+                case TAKE_OFFER_FEE_TX_CREATED:
                 case DEPOSIT_PUBLISHED:
                 case DEPOSIT_CONFIRMED:
                 case FIAT_PAYMENT_STARTED:
@@ -382,7 +406,7 @@ public class TradeManager {
                             case OPEN:
                                 break;
                             case OFFERER_ACCEPTED: // only taker side
-                            case TAKE_OFFER_FEE_PAID:
+                            case TAKE_OFFER_FEE_TX_CREATED:
                             case DEPOSIT_PUBLISHED:
                             case DEPOSIT_CONFIRMED:
                             case FIAT_PAYMENT_STARTED:
@@ -391,7 +415,7 @@ public class TradeManager {
                                 persistPendingTrades();
                                 break;
                             case OFFERER_REJECTED:
-                            case TAKE_OFFER_FEE_PAYMENT_FAILED:
+                            case TAKE_OFFER_FEE_PUBLISH_FAILED:
                             case MESSAGE_SENDING_FAILED:
                             case FAULT:
                                 removeFailedTrade(trade);
@@ -418,11 +442,10 @@ public class TradeManager {
     }
 
     private void closeTrade(Trade trade, boolean failed) {
-        if (!pendingTrades.containsKey(trade.getId()))
-            log.error("That must never happen: trades does not contain the trade with the ID " + trade.getId());
-
-        pendingTrades.remove(trade.getId());
-        persistPendingTrades();
+        if (pendingTrades.containsKey(trade.getId())) {
+            pendingTrades.remove(trade.getId());
+            persistPendingTrades();
+        }
 
         if (sellerAsTakerProtocolMap.containsKey(trade.getId())) {
             sellerAsTakerProtocolMap.get(trade.getId()).cleanup();
@@ -434,8 +457,10 @@ public class TradeManager {
         }
 
         if (!failed) {
-            closedTrades.put(trade.getId(), trade);
-            persistClosedTrades();
+            if (!closedTrades.containsKey(trade.getId())) {
+                closedTrades.put(trade.getId(), trade);
+                persistClosedTrades();
+            }
         }
         /*else {
             // TODO add failed trades to history

@@ -186,7 +186,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 Popups.openWarningPopup("You cannot take that offer", "The offer was already taken by another trader.");
                 Platform.runLater(this::close);
                 break;
-            case AVAILABILITY_CHECK_FAILED:
+            case FAULT:
                 Popups.openWarningPopup("You cannot take that offer", "The check for the offer availability failed.");
                 Platform.runLater(this::close);
                 break;

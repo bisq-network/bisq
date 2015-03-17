@@ -114,7 +114,7 @@ public class TradeWalletService {
         Futures.addCallback(future, callback);
     }
 
-    public void payTakeOfferFee(AddressEntry addressEntry, FutureCallback<Transaction> callback) throws InsufficientMoneyException {
+    public Transaction createTakeOfferFeeTx(AddressEntry addressEntry) throws InsufficientMoneyException {
         Transaction takeOfferFeeTx = new Transaction(params);
         Coin fee = FeePolicy.TAKE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
         takeOfferFeeTx.addOutput(fee, feePolicy.getAddressForTakeOfferFee());
@@ -125,10 +125,14 @@ public class TradeWalletService {
         // wait for 1 confirmation)
         sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry, true);
         sendRequest.changeAddress = addressEntry.getAddress();
-        Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
-        Futures.addCallback(sendResult.broadcastComplete, callback);
-
+        wallet.completeTx(sendRequest);
         printTxWithInputs("takeOfferFeeTx", takeOfferFeeTx);
+        return takeOfferFeeTx;
+    }
+
+    public void broadcastTakeOfferFeeTx(Transaction takeOfferFeeTx, FutureCallback<Transaction> callback) throws InsufficientMoneyException {
+        ListenableFuture<Transaction> future = walletAppKit.peerGroup().broadcastTransaction(takeOfferFeeTx);
+        Futures.addCallback(future, callback);
     }
 
 
