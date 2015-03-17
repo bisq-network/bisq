@@ -45,7 +45,7 @@ public class OfferSharedModel extends SharedModel {
     private final WalletService walletService;
     private final BlockChainService blockChainService;
     private final SignatureService signatureService;
-    private Persistence persistence;
+    private final Persistence persistence;
 
 
     // derived

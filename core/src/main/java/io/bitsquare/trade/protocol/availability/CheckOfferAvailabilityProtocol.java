@@ -36,7 +36,7 @@ public class CheckOfferAvailabilityProtocol {
 
     private final CheckOfferAvailabilityModel model;
     private final ResultHandler resultHandler;
-    private ErrorMessageHandler errorMessageHandler;
+    private final ErrorMessageHandler errorMessageHandler;
     private final MessageHandler messageHandler;
 
     private boolean isCanceled;

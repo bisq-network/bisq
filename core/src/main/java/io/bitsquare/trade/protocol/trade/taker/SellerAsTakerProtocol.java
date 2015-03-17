@@ -53,7 +53,7 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
 public class SellerAsTakerProtocol {
     private static final Logger log = LoggerFactory.getLogger(SellerAsTakerProtocol.class);
-    public static final int TIMEOUT_DELAY = 10000;
+    private static final int TIMEOUT_DELAY = 10000;
 
     private final SellerAsTakerModel model;
     private final MessageHandler messageHandler;

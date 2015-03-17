@@ -30,7 +30,7 @@ public class OffererModel {
         this.peer = peer;
     }
 
-    public Peer peer;
+    public final Peer peer;
     public byte[] pubKey;
     public Coin payoutAmount;
     public String payoutAddress;

@@ -25,7 +25,7 @@ import org.bitcoinj.core.TransactionOutput;
 
 import java.util.List;
 
-public class TakerModel {
+class TakerModel {
 
     public List<TransactionOutput> connectedOutputsForAllInputs;
     public List<TransactionOutput> outputs;

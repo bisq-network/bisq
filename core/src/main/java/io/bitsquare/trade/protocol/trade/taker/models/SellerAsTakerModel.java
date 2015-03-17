@@ -89,10 +89,6 @@ public class SellerAsTakerModel extends OfferSharedModel {
         this.takeOfferFeeTx = takeOfferFeeTx;
     }
 
-    public void setDepositTx(Transaction transaction) {
-        
-    }
-
     public Transaction getPayoutTx() {
         return payoutTx;
     }
