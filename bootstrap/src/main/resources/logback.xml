@@ -24,7 +24,7 @@
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>bootstrapNode.log</file>
+        <file>.bitsquare/bootstrapNode.log</file>
         <append>false</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
             <fileNamePattern>bootstrapNode_%i.log</fileNamePattern>

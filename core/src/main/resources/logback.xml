@@ -7,7 +7,7 @@
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>.bitsquare_logs/bitsquare.log</file>
+        <file>.bitsquare/bitsquare.log</file>
         <append>false</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
             <fileNamePattern>.bitsquare_logs/bitsquare_%i.log</fileNamePattern>

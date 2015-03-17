@@ -186,14 +186,14 @@ public class Trade implements Serializable {
     // When serialized those transient properties are not instantiated, so we need to instantiate them at first access
     public ObjectProperty<Coin> tradeAmountProperty() {
         if (_tradeAmount == null)
-            _tradeAmount = new SimpleObjectProperty<>();
+            _tradeAmount = new SimpleObjectProperty<>(tradeAmount);
 
         return _tradeAmount;
     }
 
     public ObjectProperty<Fiat> tradeVolumeProperty() {
         if (_tradeVolume == null)
-            _tradeVolume = new SimpleObjectProperty<>();
+            _tradeVolume = new SimpleObjectProperty<>(getTradeVolume());
 
         return _tradeVolume;
     }

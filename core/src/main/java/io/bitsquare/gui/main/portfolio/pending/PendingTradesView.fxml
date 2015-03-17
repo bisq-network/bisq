@@ -166,7 +166,7 @@
             <InfoDisplay fx:id="paymentsInfoDisplay" onAction="#onOpenPaymentsHelp" rowIndex="10" gridPane="$gridPane"
                          managed="false" visible="false"/>
 
-            <Button fx:id="paymentsButton" text="Payment started" onAction="#onPaymentStarted" GridPane.rowIndex="11"
+            <Button fx:id="paymentStartedButton" text="Payment started" onAction="#onPaymentStarted" GridPane.rowIndex="11"
                     GridPane.columnIndex="1" defaultButton="true" managed="false" visible="false">
                 <GridPane.margin>
                     <Insets top="15" bottom="40"/>

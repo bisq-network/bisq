@@ -66,7 +66,7 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
     @FXML TableView<PendingTradesListItem> table;
     @FXML InputTextField withdrawAddressTextField;
     @FXML InfoDisplay infoDisplay, paymentsInfoDisplay, summaryInfoDisplay;
-    @FXML Button confirmPaymentReceiptButton, paymentsButton, withdrawButton;
+    @FXML Button confirmPaymentReceiptButton, paymentStartedButton, withdrawButton;
     @FXML TitledGroupBg titledGroupBg, paymentsGroupBg, summaryGroupBg, withdrawGroupBg;
     @FXML TextFieldWithCopyIcon fiatAmountTextField, holderNameTextField, secondaryIdTextField, primaryIdTextField;
     @FXML TextField statusTextField, paymentMethodTextField, btcTradeAmountTextField, fiatTradeAmountTextField,
@@ -427,7 +427,7 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
 
         paymentMethodTextField.setVisible(visible);
         paymentsInfoDisplay.setVisible(visible);
-        paymentsButton.setVisible(visible);
+        paymentStartedButton.setVisible(visible);
         fiatAmountTextField.setVisible(visible);
         holderNameTextField.setVisible(visible);
 
@@ -446,7 +446,7 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
 
         paymentMethodTextField.setManaged(visible);
         paymentsInfoDisplay.setManaged(visible);
-        paymentsButton.setManaged(visible);
+        paymentStartedButton.setManaged(visible);
         fiatAmountTextField.setManaged(visible);
         holderNameTextField.setManaged(visible);
 
