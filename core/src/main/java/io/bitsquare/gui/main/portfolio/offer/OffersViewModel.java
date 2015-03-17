@@ -56,32 +56,32 @@ class OffersViewModel extends ActivatableWithDataModel<OffersDataModel> implemen
                 });
     }
 
-    public ObservableList<OpenOfferListItem> getList() {
+    public ObservableList<OfferListItem> getList() {
         return dataModel.getList();
     }
 
-    String getTradeId(OpenOfferListItem item) {
-        return item.getOpenOffer().getId();
+    String getTradeId(OfferListItem item) {
+        return item.getOffer().getId();
     }
 
-    String getAmount(OpenOfferListItem item) {
-        return (item != null) ? formatter.formatAmountWithMinAmount(item.getOpenOffer().getOffer()) : "";
+    String getAmount(OfferListItem item) {
+        return (item != null) ? formatter.formatAmountWithMinAmount(item.getOffer()) : "";
     }
 
-    String getPrice(OpenOfferListItem item) {
-        return (item != null) ? formatter.formatFiat(item.getOpenOffer().getOffer().getPrice()) : "";
+    String getPrice(OfferListItem item) {
+        return (item != null) ? formatter.formatFiat(item.getOffer().getPrice()) : "";
     }
 
-    String getVolume(OpenOfferListItem item) {
-        return (item != null) ? formatter.formatVolumeWithMinVolume(item.getOpenOffer().getOffer()) : "";
+    String getVolume(OfferListItem item) {
+        return (item != null) ? formatter.formatVolumeWithMinVolume(item.getOffer()) : "";
     }
 
-    String getDirectionLabel(OpenOfferListItem item) {
-        return (item != null) ? formatter.formatDirection(dataModel.getDirection(item.getOpenOffer())) : "";
+    String getDirectionLabel(OfferListItem item) {
+        return (item != null) ? formatter.formatDirection(dataModel.getDirection(item.getOffer())) : "";
     }
 
-    String getDate(OpenOfferListItem item) {
-        return formatter.formatDateTime(item.getOpenOffer().getOffer().getCreationDate());
+    String getDate(OfferListItem item) {
+        return formatter.formatDateTime(item.getOffer().getCreationDate());
     }
 
 }

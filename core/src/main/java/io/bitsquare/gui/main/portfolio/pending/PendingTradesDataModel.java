@@ -277,8 +277,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
         log.trace("updateConfidence getTrade().getState() " + getTrade().getState());
         if (confidence != null &&
                 confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING
-                && (getTrade().getState() == Trade.State.DEPOSIT_PUBLISHED ||
-                getTrade().getState() == Trade.State.OFFERER_ACCEPTED)) {
+                && getTrade().getState() == Trade.State.DEPOSIT_PUBLISHED) {
             // only set it once when actual state is DEPOSIT_PUBLISHED, and remove listener afterwards
             getTrade().setState(Trade.State.DEPOSIT_CONFIRMED);
             walletService.removeTxConfidenceListener(txConfidenceListener);

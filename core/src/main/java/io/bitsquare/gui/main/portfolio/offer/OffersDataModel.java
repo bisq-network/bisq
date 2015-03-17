@@ -17,15 +17,14 @@
 
 package io.bitsquare.gui.main.portfolio.offer;
 
-import io.bitsquare.offer.Direction;
-import io.bitsquare.offer.Offer;
-import io.bitsquare.offer.OpenOffer;
-import io.bitsquare.trade.TradeManager;
-import io.bitsquare.user.User;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
+import io.bitsquare.offer.Direction;
+import io.bitsquare.offer.Offer;
+import io.bitsquare.trade.TradeManager;
+import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 
@@ -44,8 +43,8 @@ class OffersDataModel implements Activatable, DataModel {
     private final TradeManager tradeManager;
     private final User user;
 
-    private final ObservableList<OpenOfferListItem> list = FXCollections.observableArrayList();
-    private final MapChangeListener<String, OpenOffer> offerMapChangeListener;
+    private final ObservableList<OfferListItem> list = FXCollections.observableArrayList();
+    private final MapChangeListener<String, Offer> offerMapChangeListener;
 
 
     @Inject
@@ -55,19 +54,19 @@ class OffersDataModel implements Activatable, DataModel {
 
         this.offerMapChangeListener = change -> {
             if (change.wasAdded())
-                list.add(new OpenOfferListItem(change.getValueAdded()));
+                list.add(new OfferListItem(change.getValueAdded()));
             else if (change.wasRemoved())
-                list.removeIf(e -> e.getOpenOffer().getId().equals(change.getValueRemoved().getId()));
+                list.removeIf(e -> e.getOffer().getId().equals(change.getValueRemoved().getId()));
         };
     }
 
     @Override
     public void activate() {
         list.clear();
-        list.addAll(tradeManager.getOpenOffers().values().stream().map(OpenOfferListItem::new).collect(Collectors.toList()));
+        list.addAll(tradeManager.getOpenOffers().values().stream().map(OfferListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
-        list.sort((o1, o2) -> o2.getOpenOffer().getOffer().getCreationDate().compareTo(o1.getOpenOffer().getOffer().getCreationDate()));
+        list.sort((o1, o2) -> o2.getOffer().getCreationDate().compareTo(o1.getOffer().getCreationDate()));
 
         tradeManager.getOpenOffers().addListener(offerMapChangeListener);
     }
@@ -82,12 +81,11 @@ class OffersDataModel implements Activatable, DataModel {
     }
 
 
-    public ObservableList<OpenOfferListItem> getList() {
+    public ObservableList<OfferListItem> getList() {
         return list;
     }
 
-    public Direction getDirection(OpenOffer openOffer) {
-        Offer offer = openOffer.getOffer();
+    public Direction getDirection(Offer offer) {
         return offer.getMessagePublicKey().equals(user.getNetworkPubKey()) ?
                 offer.getDirection() : offer.getMirroredDirection();
     }

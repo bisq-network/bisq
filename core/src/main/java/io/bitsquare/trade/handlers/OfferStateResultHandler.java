@@ -15,25 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.taker.messages;
+package io.bitsquare.trade.handlers;
 
-import io.bitsquare.trade.protocol.trade.TradeMessage;
-
-import java.io.Serializable;
-
-public class RequestTakeOfferMessage implements Serializable, TradeMessage {
-    private static final long serialVersionUID = 4660151440192191798L;
-
-    private final String tradeId;
-
-    public RequestTakeOfferMessage(String tradeId) {
-        this.tradeId = tradeId;
-    }
-
-    @Override
-    public String getTradeId() {
-        return tradeId;
-    }
+import io.bitsquare.offer.Offer;
 
 
+public interface OfferStateResultHandler {
+    void handleStateResult(Offer.State state);
 }

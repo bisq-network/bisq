@@ -47,7 +47,7 @@ public class RequestIsOfferAvailable extends Task<CheckOfferAvailabilityModel> {
                         @Override
                         public void handleFault() {
                             model.getOffer().setState(Offer.State.OFFERER_OFFLINE);
-                            
+
                             failed();
                         }
                     });
@@ -56,10 +56,6 @@ public class RequestIsOfferAvailable extends Task<CheckOfferAvailabilityModel> {
 
             failed(t);
         }
-    }
-
-    @Override
-    protected void updateStateOnFault() {
     }
 }
 

@@ -26,7 +26,7 @@ import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailability
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.util.Validator.nonEmptyStringOf;
+import static com.google.inject.internal.util.$Preconditions.checkState;
 
 public class ProcessReportOfferAvailabilityMessage extends Task<CheckOfferAvailabilityModel> {
     private static final Logger log = LoggerFactory.getLogger(ProcessReportOfferAvailabilityMessage.class);
@@ -39,13 +39,13 @@ public class ProcessReportOfferAvailabilityMessage extends Task<CheckOfferAvaila
     protected void doRun() {
         try {
             ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = (ReportOfferAvailabilityMessage) model.getMessage();
-            nonEmptyStringOf(reportOfferAvailabilityMessage.getOfferId());
+            checkState(model.getOffer().getId().equals(reportOfferAvailabilityMessage.getOfferId()));
 
             if (model.getOffer().getState() != Offer.State.REMOVED) {
                 if (reportOfferAvailabilityMessage.isOfferOpen())
                     model.getOffer().setState(Offer.State.AVAILABLE);
                 else
-                    model.getOffer().setState(Offer.State.NOT_AVAILABLE);
+                    model.getOffer().setState(Offer.State.RESERVED);
             }
 
             complete();
@@ -54,9 +54,5 @@ public class ProcessReportOfferAvailabilityMessage extends Task<CheckOfferAvaila
 
             failed(t);
         }
-    }
-
-    @Override
-    protected void updateStateOnFault() {
     }
 }

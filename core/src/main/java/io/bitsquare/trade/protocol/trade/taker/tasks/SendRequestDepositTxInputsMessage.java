@@ -58,7 +58,7 @@ public class SendRequestDepositTxInputsMessage extends Task<SellerAsTakerModel> 
                 // We try to repeat once and if that fails as well we persist the state for a later retry.
                 if (retryCounter == 0) {
                     retryCounter++;
-                    doRun();
+                   // doRun();
                 }
                 else {
                     failed();

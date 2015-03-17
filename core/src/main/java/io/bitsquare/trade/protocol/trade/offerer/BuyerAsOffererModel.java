@@ -17,12 +17,12 @@
 
 package io.bitsquare.trade.protocol.trade.offerer;
 
-import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.network.Peer;
-import io.bitsquare.offer.OpenOffer;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.protocol.trade.OfferSharedModel;
@@ -43,9 +43,6 @@ import org.slf4j.LoggerFactory;
 public class BuyerAsOffererModel extends OfferSharedModel {
 
     private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererModel.class);
-
-    // provided
-    private final OpenOffer openOffer;
 
     // derived
     private final byte[] offererPubKey;
@@ -78,19 +75,18 @@ public class BuyerAsOffererModel extends OfferSharedModel {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BuyerAsOffererModel(OpenOffer openOffer,
+    public BuyerAsOffererModel(Offer offer,
                                TradeMessageService tradeMessageService,
                                WalletService walletService,
                                BlockChainService blockChainService,
                                SignatureService signatureService,
                                User user) {
-        super(openOffer.getOffer(),
+        super(offer,
                 tradeMessageService,
                 walletService,
                 blockChainService,
                 signatureService,
                 user);
-        this.openOffer = openOffer;
 
         offererPubKey = getAddressEntry().getPubKey();
     }
@@ -110,10 +106,6 @@ public class BuyerAsOffererModel extends OfferSharedModel {
 
     public void setOffererOutputs(List<TransactionOutput> offererOutputs) {
         this.offererOutputs = offererOutputs;
-    }
-
-    public OpenOffer getOpenOffer() {
-        return openOffer;
     }
 
     public Peer getTaker() {

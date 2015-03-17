@@ -19,23 +19,18 @@ package io.bitsquare.trade.protocol.trade.taker;
 
 import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
-import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RequestDepositPaymentMessage;
-import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToTakeOfferRequestMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateTakeOfferFeeTx;
-import io.bitsquare.trade.protocol.trade.taker.tasks.GetPeerAddress;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessBankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRequestDepositPaymentMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRespondToTakeOfferRequestMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.RequestTakeOffer;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendPayoutTxToOfferer;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendRequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendSignedTakerDepositTx;
@@ -63,6 +58,7 @@ public class SellerAsTakerProtocol {
     private final MessageHandler messageHandler;
     private AnimationTimer timeoutTimer;
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -70,69 +66,38 @@ public class SellerAsTakerProtocol {
     public SellerAsTakerProtocol(SellerAsTakerModel model) {
         this.model = model;
         messageHandler = this::handleMessage;
+        model.getTradeMessageService().addMessageHandler(messageHandler);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Called from UI
+    // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void cleanup() {
         model.getTradeMessageService().removeMessageHandler(messageHandler);
     }
 
-    public void takeOffer() {
-        model.getTradeMessageService().addMessageHandler(messageHandler);
-
+    public void takeAvailableOffer() {
         SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
                 () -> {
-                    log.debug("taskRunner at takeOffer completed");
-
-                    startTimeout(animationTimer -> {
-                        Offer.State offerState = Offer.State.FAULT;
-                        offerState.setErrorMessage("We did not get any reply for the take offer request. " +
-                                "Seems that there are connection problems to your peer.");
-                        model.getOffer().setState(Offer.State.FAULT);
-                        return null;
-                    });
+                    log.debug("taskRunner at takeAvailableOffer completed");
                 },
                 (errorMessage) -> {
                     log.error(errorMessage);
                 }
         );
         taskRunner.addTasks(
-                GetPeerAddress.class,
-                RequestTakeOffer.class
-        );
-        taskRunner.run();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Incoming message handling
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void handleRespondToTakeOfferRequestMessage(RespondToTakeOfferRequestMessage tradeMessage) {
-        stopTimeout();
-
-        model.setTradeMessage(tradeMessage);
-
-        SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
-                () -> {
-                    log.debug("taskRunner at handleRespondToTakeOfferRequestMessage completed");
-                },
-                (errorMessage) -> {
-                    log.error(errorMessage);
-                }
-        );
-        taskRunner.addTasks(
-                ProcessRespondToTakeOfferRequestMessage.class,
                 CreateTakeOfferFeeTx.class,
                 BroadcastTakeOfferFeeTx.class,
                 SendRequestDepositTxInputsMessage.class
         );
         taskRunner.run();
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Incoming message handling
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handleRequestDepositPaymentMessage(RequestDepositPaymentMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
@@ -222,11 +187,8 @@ public class SellerAsTakerProtocol {
             TradeMessage tradeMessage = (TradeMessage) message;
             nonEmptyStringOf(tradeMessage.getTradeId());
 
-            if (tradeMessage.getTradeId().equals(model.getOffer().getId())) {
-                if (tradeMessage instanceof RespondToTakeOfferRequestMessage) {
-                    handleRespondToTakeOfferRequestMessage((RespondToTakeOfferRequestMessage) tradeMessage);
-                }
-                else if (tradeMessage instanceof RequestDepositPaymentMessage) {
+            if (tradeMessage.getTradeId().equals(model.getId())) {
+                if (tradeMessage instanceof RequestDepositPaymentMessage) {
                     handleRequestDepositPaymentMessage((RequestDepositPaymentMessage) tradeMessage);
                 }
                 else if (tradeMessage instanceof DepositTxPublishedMessage) {

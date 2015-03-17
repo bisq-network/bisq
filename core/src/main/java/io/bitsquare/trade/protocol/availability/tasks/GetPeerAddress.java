@@ -17,12 +17,12 @@
 
 package io.bitsquare.trade.protocol.availability.tasks;
 
+import io.bitsquare.common.taskrunner.Task;
+import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.listeners.GetPeerAddressListener;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityModel;
-import io.bitsquare.common.taskrunner.Task;
-import io.bitsquare.common.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,26 +38,27 @@ public class GetPeerAddress extends Task<CheckOfferAvailabilityModel> {
 
     @Override
     protected void doRun() {
-        model.getTradeMessageService().getPeerAddress(model.getOffer().getMessagePublicKey(), new GetPeerAddressListener() {
-            @Override
-            public void onResult(Peer peer) {
-                log.trace("Found peer: " + peer.toString());
+        try {
+            model.getTradeMessageService().getPeerAddress(model.getOffer().getMessagePublicKey(), new GetPeerAddressListener() {
+                @Override
+                public void onResult(Peer peer) {
+                    model.setPeer(peer);
 
-                model.setPeer(peer);
+                    complete();
+                }
 
-                complete();
-            }
+                @Override
+                public void onFailed() {
+                    model.getOffer().setState(Offer.State.OFFERER_OFFLINE);
+                    
+                    failed();
+                }
+            });
+        } catch (Throwable t) {
+            model.getOffer().setState(Offer.State.FAULT);
 
-            @Override
-            public void onFailed() {
-                failed();
-            }
-        });
-    }
-
-    @Override
-    protected void updateStateOnFault() {
-        model.getOffer().setState(Offer.State.OFFERER_OFFLINE);
+            failed(t);
+        }
     }
 }
 

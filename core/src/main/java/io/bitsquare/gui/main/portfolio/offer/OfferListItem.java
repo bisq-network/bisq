@@ -15,29 +15,22 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.offerer.messages;
+package io.bitsquare.gui.main.portfolio.offer;
 
-import io.bitsquare.trade.protocol.trade.TradeMessage;
+import io.bitsquare.offer.Offer;
 
-import java.io.Serializable;
+/**
+ * We could remove that wrapper if it is not needed for additional UI only fields.
+ */
+class OfferListItem {
 
-public class RespondToTakeOfferRequestMessage implements Serializable, TradeMessage {
-    private static final long serialVersionUID = 6177387534087739018L;
+    private final Offer offer;
 
-    private final String tradeId;
-    private final boolean offerIsAvailable;
-
-    public RespondToTakeOfferRequestMessage(String tradeId, boolean offerIsAvailable) {
-        this.tradeId = tradeId;
-        this.offerIsAvailable = offerIsAvailable;
+    public OfferListItem(Offer offer) {
+        this.offer = offer;
     }
 
-    @Override
-    public String getTradeId() {
-        return tradeId;
-    }
-
-    public boolean isOfferIsAvailable() {
-        return offerIsAvailable;
+    public Offer getOffer() {
+        return offer;
     }
 }

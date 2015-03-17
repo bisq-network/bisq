@@ -42,13 +42,12 @@ public class SellerAsTakerModel extends OfferSharedModel {
 
     // provided
     private final Trade trade;
-
+    private final Peer offerer;
 
     // derived
     private final byte[] takerPubKey;
 
     // written/read by task
-    private Peer offerer;
     private Transaction depositTx;
     private Transaction payoutTx;
     private Coin takerPayoutAmount;
@@ -67,6 +66,7 @@ public class SellerAsTakerModel extends OfferSharedModel {
     private Transaction takeOfferFeeTx;
 
     public SellerAsTakerModel(Trade trade,
+                              Peer offerer,
                               TradeMessageService tradeMessageService,
                               WalletService walletService,
                               BlockChainService blockChainService,
@@ -80,6 +80,7 @@ public class SellerAsTakerModel extends OfferSharedModel {
                 user);
 
         this.trade = trade;
+        this.offerer = offerer;
         takerPubKey = getAddressEntry().getPubKey();
     }
 
@@ -114,10 +115,6 @@ public class SellerAsTakerModel extends OfferSharedModel {
 
     public Peer getOfferer() {
         return offerer;
-    }
-
-    public void setOfferer(Peer offerer) {
-        this.offerer = offerer;
     }
 
     public Transaction getPayoutTx() {
@@ -227,4 +224,5 @@ public class SellerAsTakerModel extends OfferSharedModel {
     public Transaction getTakeOfferFeeTx() {
         return takeOfferFeeTx;
     }
+
 }

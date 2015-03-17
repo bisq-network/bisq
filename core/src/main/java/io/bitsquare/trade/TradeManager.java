@@ -28,8 +28,8 @@ import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
-import io.bitsquare.offer.OpenOffer;
 import io.bitsquare.persistence.Persistence;
+import io.bitsquare.trade.handlers.TradeResultHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityModel;
@@ -77,7 +77,7 @@ public class TradeManager {
     private final Map<String, BuyerAsOffererProtocol> buyerAcceptsOfferProtocolMap = new HashMap<>();
     private final Map<String, CheckOfferAvailabilityProtocol> checkOfferAvailabilityProtocolMap = new HashMap<>();
 
-    private final ObservableMap<String, OpenOffer> openOffers = FXCollections.observableHashMap();
+    private final ObservableMap<String, Offer> openOffers = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> pendingTrades = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> closedTrades = FXCollections.observableHashMap();
 
@@ -104,7 +104,7 @@ public class TradeManager {
 
         Object openOffersObject = persistence.read(this, "openOffers");
         if (openOffersObject instanceof Map<?, ?>) {
-            openOffers.putAll((Map<String, OpenOffer>) openOffersObject);
+            openOffers.putAll((Map<String, Offer>) openOffersObject);
         }
 
         Object pendingTradesObject = persistence.read(this, "pendingTrades");
@@ -122,9 +122,12 @@ public class TradeManager {
 
     // When all services are initialized we create the protocols for our open offers (which will listen for take offer requests)
     public void onAllServicesInitialized() {
-        for (Map.Entry<String, OpenOffer> entry : openOffers.entrySet()) {
+        for (Map.Entry<String, Offer> entry : openOffers.entrySet()) {
             createBuyerAcceptsOfferProtocol(entry.getValue());
         }
+       /* for (Map.Entry<String, Trade> entry : pendingTrades.entrySet()) {
+            createBuyerAcceptsOfferProtocol(entry.getValue().getOffer());
+        }*/
     }
 
 
@@ -134,13 +137,13 @@ public class TradeManager {
 
     public void checkOfferAvailability(Offer offer) {
         if (!checkOfferAvailabilityProtocolMap.containsKey(offer.getId())) {
-
             CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(
                     offer,
-                    tradeMessageService,
-                    () -> disposeCheckOfferAvailabilityRequest(offer));
+                    tradeMessageService);
 
-            CheckOfferAvailabilityProtocol protocol = new CheckOfferAvailabilityProtocol(model);
+            CheckOfferAvailabilityProtocol protocol = new CheckOfferAvailabilityProtocol(model,
+                    () -> disposeCheckOfferAvailabilityRequest(offer),
+                    (errorMessage) -> disposeCheckOfferAvailabilityRequest(offer));
             checkOfferAvailabilityProtocolMap.put(offer.getId(), protocol);
             protocol.checkOfferAvailability();
         }
@@ -183,8 +186,9 @@ public class TradeManager {
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 model,
                 (transaction) -> {
-                    OpenOffer openOffer = createOpenOffer(offer);
-                    createBuyerAcceptsOfferProtocol(openOffer);
+                    openOffers.put(offer.getId(), offer);
+                    persistOpenOffers();
+                    createBuyerAcceptsOfferProtocol(offer);
                     resultHandler.handleResult(transaction);
                 },
                 (message) -> errorMessageHandler.handleErrorMessage(message)
@@ -197,41 +201,33 @@ public class TradeManager {
         removeOpenOffer(offer, resultHandler, errorMessageHandler, true);
     }
 
-    public Trade takeOffer(Coin amount, Offer offer) {
+    public void requestTakeOffer(Coin amount, Offer offer, TradeResultHandler tradeResultHandler) {
+        CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(
+                offer,
+                tradeMessageService);
+
+        CheckOfferAvailabilityProtocol protocol = new CheckOfferAvailabilityProtocol(model,
+                () -> {
+                    disposeCheckOfferAvailabilityRequest(offer);
+                    if (offer.getState() == Offer.State.AVAILABLE) {
+                        Trade trade = takeAvailableOffer(amount, offer, model.getPeer());
+                        tradeResultHandler.handleTradeResult(trade);
+                    }
+                },
+                (errorMessage) -> disposeCheckOfferAvailabilityRequest(offer));
+        checkOfferAvailabilityProtocolMap.put(offer.getId(), protocol);
+        protocol.checkOfferAvailability();
+    }
+
+    private Trade takeAvailableOffer(Coin amount, Offer offer, Peer peer) {
         Trade trade = createTrade(offer);
         trade.setTradeAmount(amount);
 
-        offer.stateProperty().addListener((ov, oldValue, newValue) -> {
-            log.debug("trade state = " + newValue);
-            switch (newValue) {
-                case UNKNOWN:
-                    break;
-                case AVAILABLE:
-                    break;
-                case OFFERER_OFFLINE:
-                case NOT_AVAILABLE:
-                case FAULT:
-                    removeFailedTrade(trade);
-                    break;
-                case REMOVED:
-                    if (oldValue != Offer.State.AVAILABLE) {
-                        removeFailedTrade(trade);
-                    }
-                    break;
-                default:
-                    log.error("Unhandled trade state: " + newValue);
-                    break;
-            }
-        });
-
-
-        // TODO check
         trade.stateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("trade state = " + newValue);
             switch (newValue) {
                 case OPEN:
                     break;
-                case OFFERER_ACCEPTED:
                 case TAKE_OFFER_FEE_TX_CREATED:
                 case DEPOSIT_PUBLISHED:
                 case DEPOSIT_CONFIRMED:
@@ -240,7 +236,6 @@ public class TradeManager {
                 case PAYOUT_PUBLISHED:
                     persistPendingTrades();
                     break;
-                case OFFERER_REJECTED:
                 case MESSAGE_SENDING_FAILED:
                 case FAULT:
                     removeFailedTrade(trade);
@@ -253,6 +248,7 @@ public class TradeManager {
 
         SellerAsTakerModel model = new SellerAsTakerModel(
                 trade,
+                peer,
                 tradeMessageService,
                 walletService,
                 blockChainService,
@@ -261,8 +257,7 @@ public class TradeManager {
 
         SellerAsTakerProtocol sellerTakesOfferProtocol = new SellerAsTakerProtocol(model);
         sellerAsTakerProtocolMap.put(trade.getId(), sellerTakesOfferProtocol);
-
-        sellerTakesOfferProtocol.takeOffer();
+        sellerTakesOfferProtocol.takeAvailableOffer();
 
         return trade;
     }
@@ -325,12 +320,6 @@ public class TradeManager {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private OpenOffer createOpenOffer(Offer offer) {
-        OpenOffer openOffer = new OpenOffer(offer);
-        openOffers.put(openOffer.getId(), openOffer);
-        persistOpenOffers();
-        return openOffer;
-    }
 
     private void removeOpenOffer(Offer offer,
                                  ResultHandler resultHandler,
@@ -340,8 +329,8 @@ public class TradeManager {
         offerBookService.removeOffer(offer,
                 () -> {
                     if (openOffers.containsKey(offerId)) {
-                        OpenOffer openOffer = openOffers.remove(offerId);
-                        disposeCheckOfferAvailabilityRequest(openOffer.getOffer());
+                        openOffers.remove(offerId);
+                        disposeCheckOfferAvailabilityRequest(offer);
                         persistOpenOffers();
                         if (removeFromBuyerAcceptsOfferProtocolMap && buyerAcceptsOfferProtocolMap.containsKey(offerId)) {
                             buyerAcceptsOfferProtocolMap.get(offerId).cleanup();
@@ -371,70 +360,64 @@ public class TradeManager {
         return trade;
     }
 
-    private void createBuyerAcceptsOfferProtocol(OpenOffer openOffer) {
+    private void createBuyerAcceptsOfferProtocol(Offer offer) {
         BuyerAsOffererModel model = new BuyerAsOffererModel(
-                openOffer,
+                offer,
                 tradeMessageService,
                 walletService,
                 blockChainService,
                 signatureService,
                 user);
 
-        if (pendingTrades.containsKey(openOffer.getId()))
-            model.setTrade(pendingTrades.get(openOffer.getId()));
+        Trade trade;
+        if (pendingTrades.containsKey(offer.getId())) {
+            trade = pendingTrades.get(offer.getId());
 
-        openOffer.stateProperty().addListener((ov, oldValue, newValue) -> {
-            log.debug("openOffer state = " + newValue);
+        }
+        else {
+            trade = new Trade(offer);
+            pendingTrades.put(trade.getId(), trade);
+            persistPendingTrades();
+        }
+        model.setTrade(trade);
+        currentPendingTrade = trade;
+
+        // TODO check, remove listener
+        trade.stateProperty().addListener((ov, oldValue, newValue) -> {
+            log.debug("trade state = " + newValue);
             switch (newValue) {
                 case OPEN:
                     break;
-                case OFFER_ACCEPTED:
-                    removeOpenOffer(openOffer.getOffer(),
+                case TAKE_OFFER_FEE_TX_CREATED:
+                    persistPendingTrades();
+                    break;
+                case DEPOSIT_PUBLISHED:
+                    removeOpenOffer(offer,
                             () -> log.debug("remove offer was successful"),
                             (message) -> log.error(message),
                             false);
-
-                    Trade trade = model.getTrade();
-                    pendingTrades.put(trade.getId(), trade);
                     persistPendingTrades();
-                    currentPendingTrade = trade;
-
-                    // TODO check, remove listener
-                    trade.stateProperty().addListener((ov2, oldValue2, newValue2) -> {
-                        log.debug("trade state = " + newValue);
-                        switch (newValue2) {
-                            case OPEN:
-                                break;
-                            case OFFERER_ACCEPTED: // only taker side
-                            case TAKE_OFFER_FEE_TX_CREATED:
-                            case DEPOSIT_PUBLISHED:
-                            case DEPOSIT_CONFIRMED:
-                            case FIAT_PAYMENT_STARTED:
-                            case FIAT_PAYMENT_RECEIVED:
-                            case PAYOUT_PUBLISHED:
-                                persistPendingTrades();
-                                break;
-                            case OFFERER_REJECTED:
-                            case TAKE_OFFER_FEE_PUBLISH_FAILED:
-                            case MESSAGE_SENDING_FAILED:
-                            case FAULT:
-                                removeFailedTrade(trade);
-                                buyerAcceptsOfferProtocolMap.get(trade.getId()).cleanup();
-                                break;
-                            default:
-                                log.error("Unhandled trade state: " + newValue);
-                                break;
-                        }
-                    });
+                    break;
+                case DEPOSIT_CONFIRMED:
+                case FIAT_PAYMENT_STARTED:
+                case FIAT_PAYMENT_RECEIVED:
+                case PAYOUT_PUBLISHED:
+                    persistPendingTrades();
+                    break;
+                case TAKE_OFFER_FEE_PUBLISH_FAILED:
+                case MESSAGE_SENDING_FAILED:
+                case FAULT:
+                    removeFailedTrade(trade);
+                    buyerAcceptsOfferProtocolMap.get(trade.getId()).cleanup();
                     break;
                 default:
-                    log.error("Unhandled openOffer state: " + newValue);
+                    log.error("Unhandled trade state: " + newValue);
                     break;
             }
         });
 
         BuyerAsOffererProtocol buyerAcceptsOfferProtocol = new BuyerAsOffererProtocol(model);
-        buyerAcceptsOfferProtocolMap.put(openOffer.getId(), buyerAcceptsOfferProtocol);
+        buyerAcceptsOfferProtocolMap.put(offer.getId(), buyerAcceptsOfferProtocol);
     }
 
     private void removeFailedTrade(Trade trade) {
@@ -478,14 +461,16 @@ public class TradeManager {
 
     boolean isOfferOpen(String offerId) {
         // Don't use openOffers as the offer gets removed async from DHT, but is added sync to pendingTrades
-        return !pendingTrades.containsKey(offerId) && !closedTrades.containsKey(offerId);
+        return openOffers.containsKey(offerId)
+                && (openOffers.get(offerId).getState() == Offer.State.UNKNOWN
+                || openOffers.get(offerId).getState() == Offer.State.AVAILABLE);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableMap<String, OpenOffer> getOpenOffers() {
+    public ObservableMap<String, Offer> getOpenOffers() {
         return openOffers;
     }
 
@@ -507,7 +492,7 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void persistOpenOffers() {
-        persistence.write(this, "openOffers", (Map<String, OpenOffer>) new HashMap<>(openOffers));
+        persistence.write(this, "openOffers", (Map<String, Offer>) new HashMap<>(openOffers));
     }
 
     private void persistPendingTrades() {
@@ -517,5 +502,4 @@ public class TradeManager {
     private void persistClosedTrades() {
         persistence.write(this, "closedTrades", (Map<String, Trade>) new HashMap<>(closedTrades));
     }
-
 }

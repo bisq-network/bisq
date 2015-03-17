@@ -26,7 +26,6 @@ import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.trade.Trade;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -152,9 +151,24 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
             switch (newValue) {
                 case UNKNOWN:
+                    log.error("Must not happen.");
                     break;
                 case AVAILABLE:
                     state.set(State.AMOUNT_SCREEN);
+                    break;
+                case RESERVED:
+                    if (takeOfferRequested)
+                        errorMessage.set("Take offer request failed because offer is not available anymore. " +
+                                "Maybe another trader has taken the offer in the meantime.");
+                    else
+                        errorMessage.set("You cannot take that offer because the offer was already taken by another trader.");
+                    takeOfferRequested = false;
+                    break;
+                case REMOVED:
+                    if (!takeOfferRequested)
+                        errorMessage.set("You cannot take that offer because the offer has been removed in the meantime.");
+
+                    takeOfferRequested = false;
                     break;
                 case OFFERER_OFFLINE:
                     if (takeOfferRequested)
@@ -163,25 +177,11 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                         errorMessage.set("You cannot take that offer because the offerer is offline.");
                     takeOfferRequested = false;
                     break;
-                case NOT_AVAILABLE:
-                    if (takeOfferRequested)
-                        errorMessage.set("Take offer request failed because offer is not available anymore. " +
-                                "Maybe another trader has taken the offer in the meantime.");
-                    else
-                        errorMessage.set("You cannot take that offer because the offer was already taken by another trader.");
-                    takeOfferRequested = false;
-                    break;
                 case FAULT:
                     if (takeOfferRequested)
                         errorMessage.set("Take offer request failed.");
                     else
                         errorMessage.set("The check for the offer availability failed.");
-
-                    takeOfferRequested = false;
-                    break;
-                case REMOVED:
-                    if (!takeOfferRequested)
-                        errorMessage.set("You cannot take that offer because the offer has been removed in the meantime.");
 
                     takeOfferRequested = false;
                     break;
@@ -207,59 +207,53 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         isTakeOfferSpinnerVisible.set(true);
 
-        Trade trade = dataModel.takeOffer();
+        dataModel.takeOffer((trade) -> {
+            trade.stateProperty().addListener((ov, oldValue, newValue) -> {
+                log.debug("trade state = " + newValue);
+                String msg = "";
+                if (newValue.getErrorMessage() != null)
+                    msg = "\nError message: " + newValue.getErrorMessage();
 
-        trade.stateProperty().addListener((ov, oldValue, newValue) -> {
-            log.debug("trade state = " + newValue);
-            String msg = "";
-            if (newValue.getErrorMessage() != null)
-                msg = "\nError message: " + newValue.getErrorMessage();
+                switch (newValue) {
+                    case OPEN:
+                        break;
+                    case TAKE_OFFER_FEE_TX_CREATED:
+                        break;
+                    case DEPOSIT_PUBLISHED:
+                    case DEPOSIT_CONFIRMED:
+                        transactionId.set(trade.getDepositTx().getHashAsString());
+                        applyTakeOfferRequestResult(true);
+                        break;
+                    case FIAT_PAYMENT_STARTED:
+                        break;
+                    case TAKE_OFFER_FEE_PUBLISH_FAILED:
+                        errorMessage.set("An error occurred when paying the trade fee." + msg);
+                        takeOfferRequested = false;
+                        break;
+                    case MESSAGE_SENDING_FAILED:
+                        errorMessage.set("An error occurred when sending a message to the offerer. Maybe there are connection problems. " +
+                                "Please try later again." + msg);
+                        takeOfferRequested = false;
+                        break;
+                    case PAYOUT_PUBLISHED:
+                        break;
+                    case FAULT:
+                        errorMessage.set(msg);
+                        takeOfferRequested = false;
+                        break;
+                    default:
+                        log.error("Unhandled trade state: " + newValue);
+                        break;
+                }
 
-            switch (newValue) {
-                case OPEN:
-                    break;
-                case OFFERER_ACCEPTED:
-                    break;
-                case OFFERER_REJECTED:
-                    errorMessage.set("Your take offer request got rejected. Maybe another trader has taken the offer in the meantime.");
-                    takeOfferRequested = false;
-                    break;
-                case TAKE_OFFER_FEE_TX_CREATED:
-                    break;
-                case DEPOSIT_PUBLISHED:
-                case DEPOSIT_CONFIRMED:
-                    transactionId.set(trade.getDepositTx().getHashAsString());
-                    applyTakeOfferRequestResult(true);
-                    break;
-                case FIAT_PAYMENT_STARTED:
-                    break;
-                case TAKE_OFFER_FEE_PUBLISH_FAILED:
-                    errorMessage.set("An error occurred when paying the trade fee." + msg);
-                    takeOfferRequested = false;
-                    break;
-                case MESSAGE_SENDING_FAILED:
-                    errorMessage.set("An error occurred when sending a message to the offerer. Maybe there are connection problems. " +
-                            "Please try later again." + msg);
-                    takeOfferRequested = false;
-                    break;
-                case PAYOUT_PUBLISHED:
-                    break;
-                case FAULT:
-                    errorMessage.set(msg);
-                    takeOfferRequested = false;
-                    break;
-                default:
-                    log.error("Unhandled trade state: " + newValue);
-                    break;
-            }
+                if (errorMessage.get() != null) {
+                    isAmountAndPriceValidAndWalletFunded = false;
+                    isTakeOfferSpinnerVisible.set(false);
+                }
+            });
 
-            if (errorMessage.get() != null) {
-                isAmountAndPriceValidAndWalletFunded = false;
-                isTakeOfferSpinnerVisible.set(false);
-            }
+            evaluateState();
         });
-        
-        evaluateState();
     }
 
     void securityDepositInfoDisplayed() {

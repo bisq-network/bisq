@@ -40,8 +40,6 @@ public class Trade implements Serializable {
 
     public static enum State {
         OPEN,
-        OFFERER_ACCEPTED,
-        OFFERER_REJECTED, /* For taker only*/
         TAKE_OFFER_FEE_PUBLISH_FAILED,
         TAKE_OFFER_FEE_TX_CREATED,
         DEPOSIT_PUBLISHED,

@@ -217,8 +217,6 @@ class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataM
         log.trace("tradeState " + tradeState);
         if (tradeState != null) {
             switch (tradeState) {
-                // TODO Check why OFFERER_ACCEPTED can happen, refactor state handling
-                case OFFERER_ACCEPTED:
                 case DEPOSIT_PUBLISHED:
                     state.set(dataModel.isOfferer() ? State.OFFERER_BUYER_WAIT_TX_CONF : State.TAKER_SELLER_WAIT_TX_CONF);
                     break;

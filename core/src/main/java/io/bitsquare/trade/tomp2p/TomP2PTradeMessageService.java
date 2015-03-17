@@ -28,8 +28,8 @@ import io.bitsquare.trade.listeners.SendMessageListener;
 
 import java.security.PublicKey;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 
 import net.tomp2p.dht.FutureGet;
@@ -55,7 +55,7 @@ public class TomP2PTradeMessageService implements TradeMessageService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PTradeMessageService.class);
 
     private final TomP2PNode tomP2PNode;
-    private final List<MessageHandler> messageHandlers = new ArrayList<>();
+    private final List<MessageHandler> messageHandlers = new CopyOnWriteArrayList<>();
     private Executor executor;
 
 

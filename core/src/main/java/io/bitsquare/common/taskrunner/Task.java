@@ -51,7 +51,8 @@ public abstract class Task<T extends SharedModel> {
 
     abstract protected void doRun() throws WalletException, TransactionVerificationException, SigningException;
 
-    abstract protected void updateStateOnFault();
+    protected void updateStateOnFault() {
+    }
 
     private void interceptBeforeRun() {
         if (getClass() == taskToInterceptBeforeRun)

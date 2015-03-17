@@ -18,8 +18,8 @@
 package io.bitsquare.offer;
 
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.btc.Restrictions;
+import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.locale.Country;
 
 import org.bitcoinj.core.Coin;
@@ -51,21 +51,11 @@ public class Offer implements Serializable {
 
     public enum State {
         UNKNOWN,
-        OFFERER_OFFLINE,
         AVAILABLE,
-        NOT_AVAILABLE,
-        FAULT,
-        REMOVED;
-
-        private String errorMessage;
-
-        public void setErrorMessage(String errorMessage) {
-            this.errorMessage = errorMessage;
-        }
-
-        public String getErrorMessage() {
-            return errorMessage;
-        }
+        RESERVED,
+        REMOVED,
+        OFFERER_OFFLINE,
+        FAULT
     }
 
     // key attributes for lookup
@@ -92,9 +82,9 @@ public class Offer implements Serializable {
 
     // Mutable property. Has to be set before offer is save in DHT as it changes the objects hash!
     private String offerFeePaymentTxID;
-
+    private State state;
+    
     // Those state properties are transient and only used at runtime! 
-    private transient State state;
     // don't access directly as it might be null; use getStateProperty() which creates an object if not instantiated
     private transient ObjectProperty<State> stateProperty;
 

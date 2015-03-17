@@ -35,8 +35,8 @@ import javafx.util.Callback;
 @FxmlView
 public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewModel> {
 
-    @FXML TableView<OpenOfferListItem> table;
-    @FXML TableColumn<OpenOfferListItem, OpenOfferListItem> priceColumn, amountColumn, volumeColumn,
+    @FXML TableView<OfferListItem> table;
+    @FXML TableColumn<OfferListItem, OfferListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, offerIdColumn, removeItemColumn;
 
     @Inject
@@ -67,10 +67,10 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
         model.removeOpenOffer(offer);
     }
 
-    private void openOfferDetails(OpenOfferListItem item) {
+    private void openOfferDetails(OfferListItem item) {
         // TODO Open popup with details view
         log.debug("openOfferDetails " + item);
-        Utilities.copyToClipboard(item.getOpenOffer().getId());
+        Utilities.copyToClipboard(item.getOffer().getId());
         Popups.openWarningPopup("Under construction",
                 "The offer ID was copied to the clipboard. " +
                         "Use that to identify your trading peer in the IRC chat room \n\n" +
@@ -80,16 +80,16 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
     private void setOfferIdColumnCellFactory() {
         offerIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
         offerIdColumn.setCellFactory(
-                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem, OpenOfferListItem>>() {
+                new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem, OfferListItem>>() {
 
                     @Override
-                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(TableColumn<OpenOfferListItem,
-                            OpenOfferListItem> column) {
-                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                    public TableCell<OfferListItem, OfferListItem> call(TableColumn<OfferListItem,
+                            OfferListItem> column) {
+                        return new TableCell<OfferListItem, OfferListItem>() {
                             private Hyperlink hyperlink;
 
                             @Override
-                            public void updateItem(final OpenOfferListItem item, boolean empty) {
+                            public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
@@ -112,14 +112,14 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
     private void setDateColumnCellFactory() {
         dateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         dateColumn.setCellFactory(
-                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem,
-                        OpenOfferListItem>>() {
+                new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem,
+                        OfferListItem>>() {
                     @Override
-                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(
-                            TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
-                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                    public TableCell<OfferListItem, OfferListItem> call(
+                            TableColumn<OfferListItem, OfferListItem> column) {
+                        return new TableCell<OfferListItem, OfferListItem>() {
                             @Override
-                            public void updateItem(final OpenOfferListItem item, boolean empty) {
+                            public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(model.getDate(item));
@@ -134,14 +134,14 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
     private void setAmountColumnCellFactory() {
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
-                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem,
-                        OpenOfferListItem>>() {
+                new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem,
+                        OfferListItem>>() {
                     @Override
-                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(
-                            TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
-                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                    public TableCell<OfferListItem, OfferListItem> call(
+                            TableColumn<OfferListItem, OfferListItem> column) {
+                        return new TableCell<OfferListItem, OfferListItem>() {
                             @Override
-                            public void updateItem(final OpenOfferListItem item, boolean empty) {
+                            public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setText(model.getAmount(item));
                             }
@@ -153,14 +153,14 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
     private void setPriceColumnCellFactory() {
         priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         priceColumn.setCellFactory(
-                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem,
-                        OpenOfferListItem>>() {
+                new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem,
+                        OfferListItem>>() {
                     @Override
-                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(
-                            TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
-                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                    public TableCell<OfferListItem, OfferListItem> call(
+                            TableColumn<OfferListItem, OfferListItem> column) {
+                        return new TableCell<OfferListItem, OfferListItem>() {
                             @Override
-                            public void updateItem(final OpenOfferListItem item, boolean empty) {
+                            public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setText(model.getPrice(item));
                             }
@@ -172,14 +172,14 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
     private void setVolumeColumnCellFactory() {
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         volumeColumn.setCellFactory(
-                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem,
-                        OpenOfferListItem>>() {
+                new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem,
+                        OfferListItem>>() {
                     @Override
-                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(
-                            TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
-                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                    public TableCell<OfferListItem, OfferListItem> call(
+                            TableColumn<OfferListItem, OfferListItem> column) {
+                        return new TableCell<OfferListItem, OfferListItem>() {
                             @Override
-                            public void updateItem(final OpenOfferListItem item, boolean empty) {
+                            public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(model.getVolume(item));
@@ -194,14 +194,14 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
     private void setDirectionColumnCellFactory() {
         directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         directionColumn.setCellFactory(
-                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem,
-                        OpenOfferListItem>>() {
+                new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem,
+                        OfferListItem>>() {
                     @Override
-                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(
-                            TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
-                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                    public TableCell<OfferListItem, OfferListItem> call(
+                            TableColumn<OfferListItem, OfferListItem> column) {
+                        return new TableCell<OfferListItem, OfferListItem>() {
                             @Override
-                            public void updateItem(final OpenOfferListItem item, boolean empty) {
+                            public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setText(model.getDirectionLabel(item));
                             }
@@ -213,11 +213,11 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
     private void setRemoveColumnCellFactory() {
         removeItemColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
         removeItemColumn.setCellFactory(
-                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem, OpenOfferListItem>>() {
+                new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem, OfferListItem>>() {
                     @Override
-                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(TableColumn<OpenOfferListItem,
-                            OpenOfferListItem> directionColumn) {
-                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                    public TableCell<OfferListItem, OfferListItem> call(TableColumn<OfferListItem,
+                            OfferListItem> directionColumn) {
+                        return new TableCell<OfferListItem, OfferListItem>() {
                             final ImageView iconView = new ImageView();
                             final Button button = new Button();
 
@@ -229,11 +229,11 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
                             }
 
                             @Override
-                            public void updateItem(final OpenOfferListItem item, boolean empty) {
+                            public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null) {
-                                    button.setOnAction(event -> removeOpenOffer(item.getOpenOffer().getOffer()));
+                                    button.setOnAction(event -> removeOpenOffer(item.getOffer()));
                                     setGraphic(button);
                                 }
                                 else {

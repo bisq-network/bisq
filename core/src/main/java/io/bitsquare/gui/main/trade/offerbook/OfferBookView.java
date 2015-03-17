@@ -17,6 +17,8 @@
 
 package io.bitsquare.gui.main.trade.offerbook;
 
+import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.common.viewfx.view.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.InputTextField;
@@ -33,8 +35,6 @@ import io.bitsquare.gui.util.validation.OptionalFiatValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
-import io.bitsquare.common.viewfx.view.FxmlView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -220,10 +220,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private void takeOffer(Offer offer) {
         if (model.isRegistered()) {
             if (offer.getDirection() == Direction.BUY) {
-                // reset available state
-                if (offer.getState() != Offer.State.REMOVED)
-                    offer.setState(Offer.State.UNKNOWN);
-
                 offerActionHandler.takeOffer(model.getAmountAsCoin(), model.getPriceAsCoin(), offer);
             }
             else {
@@ -527,7 +523,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                             iconView.setId("image-offer_state_available");
                                             break;
                                         case OFFERER_OFFLINE:
-                                        case NOT_AVAILABLE:
+                                        case RESERVED:
                                         case FAULT:
                                         case REMOVED:
                                             iconView.setId("image-offer_state_not_available");

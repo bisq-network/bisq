@@ -17,6 +17,9 @@
 
 package io.bitsquare.gui.main.debug;
 
+import io.bitsquare.common.taskrunner.Task;
+import io.bitsquare.common.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.InitializableView;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityProtocol;
 import io.bitsquare.trade.protocol.availability.tasks.ProcessReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.tasks.RequestIsOfferAvailable;
@@ -28,11 +31,9 @@ import io.bitsquare.trade.protocol.placeoffer.tasks.ValidateOffer;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererProtocol;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.GetOffererDepositTxInputs;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestOffererPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestTakeOfferMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestDepositTxInputsMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestOffererPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.RequestDepositPayment;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.RespondToTakeOfferRequest;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendBankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendDepositTxIdToTaker;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SetupListenerForBlockChainConfirmation;
@@ -47,19 +48,14 @@ import io.bitsquare.trade.protocol.trade.taker.tasks.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessBankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRequestDepositPaymentMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRespondToTakeOfferRequestMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.RequestTakeOffer;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendPayoutTxToOfferer;
-import io.bitsquare.trade.protocol.trade.taker.tasks.SendSignedTakerDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendRequestDepositTxInputsMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.SendSignedTakerDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SignAndPublishPayoutTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCommitDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCreatesAndSignsDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOffererAccount;
-import io.bitsquare.common.taskrunner.Task;
-import io.bitsquare.common.viewfx.view.FxmlView;
-import io.bitsquare.common.viewfx.view.InitializableView;
 
 import java.util.Arrays;
 
@@ -106,9 +102,6 @@ public class DebugView extends InitializableView {
                         
                         /*---- Protocol ----*/
                         BuyerAsOffererProtocol.class,
-                        ProcessRequestTakeOfferMessage.class,
-                        RespondToTakeOfferRequest.class,
-
                         ProcessRequestDepositTxInputsMessage.class,
                         GetOffererDepositTxInputs.class,
                         RequestDepositPayment.class,
@@ -130,10 +123,6 @@ public class DebugView extends InitializableView {
 
                         /*---- Protocol ----*/
                         SellerAsTakerProtocol.class,
-                        io.bitsquare.trade.protocol.trade.taker.tasks.GetPeerAddress.class,
-                        RequestTakeOffer.class,
-
-                        ProcessRespondToTakeOfferRequestMessage.class,
                         CreateTakeOfferFeeTx.class,
                         SendRequestDepositTxInputsMessage.class,
 

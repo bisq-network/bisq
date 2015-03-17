@@ -17,6 +17,8 @@
 
 package io.bitsquare.trade.protocol.availability;
 
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
@@ -26,8 +28,6 @@ import io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress;
 import io.bitsquare.trade.protocol.availability.tasks.ProcessReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.tasks.RequestIsOfferAvailable;
 
-import javafx.application.Platform;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +35,8 @@ public class CheckOfferAvailabilityProtocol {
     private static final Logger log = LoggerFactory.getLogger(CheckOfferAvailabilityProtocol.class);
 
     private final CheckOfferAvailabilityModel model;
+    private final ResultHandler resultHandler;
+    private ErrorMessageHandler errorMessageHandler;
     private final MessageHandler messageHandler;
 
     private boolean isCanceled;
@@ -45,14 +47,15 @@ public class CheckOfferAvailabilityProtocol {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public CheckOfferAvailabilityProtocol(CheckOfferAvailabilityModel model) {
+    public CheckOfferAvailabilityProtocol(CheckOfferAvailabilityModel model, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         this.model = model;
+        this.resultHandler = resultHandler;
+        this.errorMessageHandler = errorMessageHandler;
         messageHandler = this::handleMessage;
     }
 
     public void cleanup() {
-        // Cannot remove listener in same execution cycle, so we delay it
-        Platform.runLater(() -> model.getTradeMessageService().removeMessageHandler(messageHandler));
+        model.getTradeMessageService().removeMessageHandler(messageHandler);
     }
 
 
@@ -101,10 +104,11 @@ public class CheckOfferAvailabilityProtocol {
         taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleReportOfferAvailabilityMessage completed");
-                    model.getResultHandler().handleResult();
+                    resultHandler.handleResult();
                 },
                 (errorMessage) -> {
                     log.error(errorMessage);
+                    errorMessageHandler.handleErrorMessage(errorMessage);
                 }
         );
         taskRunner.addTasks(ProcessReportOfferAvailabilityMessage.class);

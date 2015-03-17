@@ -15,22 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.portfolio.offer;
+package io.bitsquare.trade.handlers;
 
-import io.bitsquare.offer.OpenOffer;
+import io.bitsquare.trade.Trade;
 
-/**
- * We could remove that wrapper if it is not needed for additional UI only fields.
- */
-class OpenOfferListItem {
 
-    private final OpenOffer openOffer;
-
-    public OpenOfferListItem(OpenOffer openOffer) {
-        this.openOffer = openOffer;
-    }
-
-    public OpenOffer getOpenOffer() {
-        return openOffer;
-    }
+public interface TradeResultHandler {
+    void handleTradeResult(Trade trade);
 }

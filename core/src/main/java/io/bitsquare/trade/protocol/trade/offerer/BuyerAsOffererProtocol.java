@@ -24,11 +24,9 @@ import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.GetOffererDepositTxInputs;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestOffererPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestTakeOfferMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestDepositTxInputsMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestOffererPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.RequestDepositPayment;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.RespondToTakeOfferRequest;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendBankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendDepositTxIdToTaker;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SetupListenerForBlockChainConfirmation;
@@ -38,9 +36,8 @@ import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyAndSignContract;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakeOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakerAccount;
 import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.taker.messages.RequestTakeOfferMessage;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestDepositTxInputsMessage;
+import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
@@ -53,7 +50,6 @@ import org.slf4j.LoggerFactory;
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
 public class BuyerAsOffererProtocol {
-
     private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererProtocol.class);
 
     private final BuyerAsOffererModel model;
@@ -84,27 +80,9 @@ public class BuyerAsOffererProtocol {
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handleRequestTakeOfferMessage(RequestTakeOfferMessage tradeMessage, Peer peer) {
+    private void handleRequestDepositTxInputsMessage(RequestDepositTxInputsMessage tradeMessage, Peer taker) {
         model.setTradeMessage(tradeMessage);
-        model.setTaker(peer);
-
-        BuyerAsOffererTaskRunner<BuyerAsOffererModel> taskRunner = new BuyerAsOffererTaskRunner<>(model,
-                () -> {
-                    log.debug("sequence at handleRequestTakeOfferMessage completed");
-                },
-                (errorMessage) -> {
-                    log.error(errorMessage);
-                }
-        );
-        taskRunner.addTasks(
-                ProcessRequestTakeOfferMessage.class,
-                RespondToTakeOfferRequest.class
-        );
-        taskRunner.run();
-    }
-
-    private void handleRequestDepositTxInputsMessage(RequestDepositTxInputsMessage tradeMessage) {
-        model.setTradeMessage(tradeMessage);
+        model.setTaker(taker);
 
         BuyerAsOffererTaskRunner<BuyerAsOffererModel> taskRunner = new BuyerAsOffererTaskRunner<>(model,
                 () -> {
@@ -213,11 +191,8 @@ public class BuyerAsOffererProtocol {
             nonEmptyStringOf(tradeMessage.getTradeId());
 
             if (tradeMessage.getTradeId().equals(model.getOffer().getId())) {
-                if (tradeMessage instanceof RequestTakeOfferMessage) {
-                    handleRequestTakeOfferMessage((RequestTakeOfferMessage) tradeMessage, peer);
-                }
-                else if (tradeMessage instanceof RequestDepositTxInputsMessage) {
-                    handleRequestDepositTxInputsMessage((RequestDepositTxInputsMessage) tradeMessage);
+                if (tradeMessage instanceof RequestDepositTxInputsMessage) {
+                    handleRequestDepositTxInputsMessage((RequestDepositTxInputsMessage) tradeMessage, peer);
                 }
 
                 else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage) {
