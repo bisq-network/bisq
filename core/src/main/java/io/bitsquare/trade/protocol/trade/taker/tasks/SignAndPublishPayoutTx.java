@@ -42,11 +42,11 @@ public class SignAndPublishPayoutTx extends Task<SellerAsTakerModel> {
     protected void doRun() {
         try {
             model.tradeWalletService.takerSignsAndPublishPayoutTx(
-                    model.getPublishedDepositTx(),
+                    model.trade.getDepositTx(),
                     model.offerer.signature,
                     model.offerer.payoutAmount,
                     model.taker.payoutAmount,
-                    model.offerer.payoutAddress,
+                    model.offerer.payoutAddressString,
                     model.taker.addressEntry,
                     model.offerer.pubKey,
                     model.taker.pubKey,

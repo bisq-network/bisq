@@ -37,7 +37,7 @@ public class OffererModel implements Serializable {
     // written by tasks
     public byte[] pubKey;
     public Coin payoutAmount;
-    public String payoutAddress;
+    public String payoutAddressString;
     public List<TransactionOutput> connectedOutputsForAllInputs;
     public List<TransactionOutput> outputs;
     public byte[] signature;

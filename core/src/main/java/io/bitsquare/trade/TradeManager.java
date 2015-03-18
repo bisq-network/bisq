@@ -126,7 +126,11 @@ public class TradeManager {
             createBuyerAcceptsOfferProtocol(entry.getValue());
         }
         for (Map.Entry<String, Trade> entry : pendingTrades.entrySet()) {
-            createBuyerAcceptsOfferProtocol(entry.getValue().getOffer());
+            Trade trade = entry.getValue();
+            if (trade.getState() == Trade.State.FAULT)
+                closeTrade(trade);
+
+            createBuyerAcceptsOfferProtocol(trade.getOffer());
         }
     }
 
@@ -236,10 +240,10 @@ public class TradeManager {
                     break;
                 case MESSAGE_SENDING_FAILED:
                 case FAULT:
-                    removeFailedTrade(trade);
+                    closeTrade(trade);
                     break;
                 default:
-                    log.error("Unhandled trade state: " + newValue);
+                    log.warn("Unhandled trade state: " + newValue);
                     break;
             }
         });
@@ -273,9 +277,25 @@ public class TradeManager {
         sellerAsTakerProtocolMap.get(tradeId).onFiatPaymentReceived();
     }
 
-
     public void closeTrade(Trade trade) {
-        closeTrade(trade, false);
+        if (pendingTrades.containsKey(trade.getId())) {
+            pendingTrades.remove(trade.getId());
+            persistPendingTrades();
+        }
+
+        if (sellerAsTakerProtocolMap.containsKey(trade.getId())) {
+            sellerAsTakerProtocolMap.get(trade.getId()).cleanup();
+            sellerAsTakerProtocolMap.remove(trade.getId());
+        }
+        else if (buyerAcceptsOfferProtocolMap.containsKey(trade.getId())) {
+            buyerAcceptsOfferProtocolMap.get(trade.getId()).cleanup();
+            buyerAcceptsOfferProtocolMap.remove(trade.getId());
+        }
+
+        if (!closedTrades.containsKey(trade.getId())) {
+            closedTrades.put(trade.getId(), trade);
+            persistClosedTrades();
+        }
     }
 
 
@@ -360,17 +380,14 @@ public class TradeManager {
     }
 
     private void createBuyerAcceptsOfferProtocol(Offer offer) {
-
-
         Trade trade;
         if (pendingTrades.containsKey(offer.getId())) {
             trade = pendingTrades.get(offer.getId());
-
+            currentPendingTrade = trade;
         }
         else {
             trade = new Trade(offer);
-            pendingTrades.put(trade.getId(), trade);
-            persistPendingTrades();
+            // don't save it in pendingTrades. It is only a potential trade
         }
 
         BuyerAsOffererModel model = new BuyerAsOffererModel(
@@ -381,7 +398,7 @@ public class TradeManager {
                 signatureService,
                 user,
                 persistence);
-        currentPendingTrade = trade;
+
 
         // TODO check, remove listener
         trade.stateProperty().addListener((ov, oldValue, newValue) -> {
@@ -397,6 +414,11 @@ public class TradeManager {
                             () -> log.debug("remove offer was successful"),
                             (message) -> log.error(message),
                             false);
+                    
+                    // after we have published the deposit tx we add that trade to the pendingTrades
+                    if (pendingTrades.containsKey(trade.getId()))
+                        log.error("That must never happen: Trades contains already an trade with the ID " + trade.getId());
+                    pendingTrades.put(trade.getId(), trade);
                     persistPendingTrades();
                     break;
                 case DEPOSIT_CONFIRMED:
@@ -408,47 +430,17 @@ public class TradeManager {
                 case TAKE_OFFER_FEE_PUBLISH_FAILED:
                 case MESSAGE_SENDING_FAILED:
                 case FAULT:
-                    removeFailedTrade(trade);
+                    closeTrade(trade);
                     buyerAcceptsOfferProtocolMap.get(trade.getId()).cleanup();
                     break;
                 default:
-                    log.error("Unhandled trade state: " + newValue);
+                    log.warn("Unhandled trade state: " + newValue);
                     break;
             }
         });
 
         BuyerAsOffererProtocol buyerAcceptsOfferProtocol = new BuyerAsOffererProtocol(model);
         buyerAcceptsOfferProtocolMap.put(offer.getId(), buyerAcceptsOfferProtocol);
-    }
-
-    private void removeFailedTrade(Trade trade) {
-        closeTrade(trade, true);
-    }
-
-    private void closeTrade(Trade trade, boolean failed) {
-        if (pendingTrades.containsKey(trade.getId())) {
-            pendingTrades.remove(trade.getId());
-            persistPendingTrades();
-        }
-
-        if (sellerAsTakerProtocolMap.containsKey(trade.getId())) {
-            sellerAsTakerProtocolMap.get(trade.getId()).cleanup();
-            sellerAsTakerProtocolMap.remove(trade.getId());
-        }
-        else if (buyerAcceptsOfferProtocolMap.containsKey(trade.getId())) {
-            buyerAcceptsOfferProtocolMap.get(trade.getId()).cleanup();
-            buyerAcceptsOfferProtocolMap.remove(trade.getId());
-        }
-
-        if (!failed) {
-            if (!closedTrades.containsKey(trade.getId())) {
-                closedTrades.put(trade.getId(), trade);
-                persistClosedTrades();
-            }
-        }
-        /*else {
-            // TODO add failed trades to history
-        }*/
     }
 
     private void disposeCheckOfferAvailabilityRequest(Offer offer) {

@@ -43,6 +43,6 @@ public class TakerModel implements Serializable {
     public Coin payoutAmount;
     public Transaction depositTx;
     public List<TransactionOutput> connectedOutputsForAllInputs;
-    public String payoutAddress;
+    public String payoutAddressString;
     public byte[] pubKey;
 }

@@ -19,7 +19,6 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 
 import org.slf4j.Logger;
@@ -35,9 +34,7 @@ public class TakerCommitDepositTx extends Task<SellerAsTakerModel> {
     @Override
     protected void doRun() {
         try {
-            model.tradeWalletService.takerCommitsDepositTx(model.getPublishedDepositTx());
-            model.trade.setDepositTx(model.getPublishedDepositTx());
-            model.trade.setState(Trade.State.DEPOSIT_PUBLISHED);
+            model.tradeWalletService.takerCommitsDepositTx(model.trade.getDepositTx());
 
             complete();
         } catch (Throwable t) {

@@ -269,21 +269,23 @@ public class Offer implements Serializable {
     @Override
     public String toString() {
         return "Offer{" +
-                "direction=" + direction +
+                "id='" + id + '\'' +
+                ", state=" + state +
+                ", direction=" + direction +
                 ", currency=" + currency +
-                ", uid='" + id + '\'' +
+                ", creationDate=" + creationDate +
                 ", fiatPrice=" + fiatPrice +
                 ", amount=" + amount +
                 ", minAmount=" + minAmount +
-                ", messagePubKey=" + messagePublicKey.hashCode() +
-                ", bankAccountTypeEnum=" + fiatAccountType +
-                ", bankAccountCountryLocale=" + bankAccountCountry +
+                ", messagePublicKey=" + messagePublicKey +
+                ", fiatAccountType=" + fiatAccountType +
+                ", bankAccountCountry=" + bankAccountCountry +
                 ", securityDeposit=" + securityDeposit +
-                ", acceptedCountryLocales=" + acceptedCountries +
+                ", acceptedCountries=" + acceptedCountries +
                 ", acceptedLanguageLocales=" + acceptedLanguageLocales +
-                ", offerFeePaymentTxID='" + offerFeePaymentTxID + '\'' +
                 ", bankAccountUID='" + bankAccountUID + '\'' +
-                ", arbitrator=" + arbitrators +
+                ", arbitrators=" + arbitrators +
+                ", offerFeePaymentTxID='" + offerFeePaymentTxID + '\'' +
                 '}';
     }
 }

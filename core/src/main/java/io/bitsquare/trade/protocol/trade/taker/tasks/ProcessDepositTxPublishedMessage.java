@@ -19,6 +19,7 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 
@@ -41,8 +42,9 @@ public class ProcessDepositTxPublishedMessage extends Task<SellerAsTakerModel> {
             checkTradeId(model.id, model.getTradeMessage());
 
             DepositTxPublishedMessage message = (DepositTxPublishedMessage) model.getTradeMessage();
-            model.setPublishedDepositTx(checkNotNull(message.depositTx));
-
+            model.trade.setDepositTx(checkNotNull(message.depositTx));
+            model.trade.setState(Trade.State.DEPOSIT_PUBLISHED);
+            
             complete();
         } catch (Throwable t) {
             failed(t);

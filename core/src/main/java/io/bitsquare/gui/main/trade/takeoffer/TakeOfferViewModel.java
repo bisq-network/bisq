@@ -242,7 +242,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                         takeOfferRequested = false;
                         break;
                     default:
-                        log.error("Unhandled trade state: " + newValue);
+                        log.warn("Unhandled trade state: " + newValue);
                         break;
                 }
 

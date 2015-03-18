@@ -37,7 +37,6 @@ public class SendBankTransferStartedMessage extends Task<BuyerAsOffererModel> {
     protected void doRun() {
         BankTransferStartedMessage tradeMessage = new BankTransferStartedMessage(
                 model.id,
-                model.getPublishedDepositTx(),
                 model.offerer.payoutTxSignature,
                 model.offerer.payoutAmount,
                 model.taker.payoutAmount,

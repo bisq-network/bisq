@@ -18,27 +18,23 @@
 package io.bitsquare.trade.protocol.trade.messages;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 
 import java.io.Serializable;
 
 public class BankTransferStartedMessage extends TradeMessage implements Serializable {
     private static final long serialVersionUID = -3479634129543632523L;
 
-    public final Transaction depositTx;
     public final byte[] offererSignature;
     public final Coin offererPayoutAmount;
     public final Coin takerPayoutAmount;
     public final String offererPayoutAddress;
 
     public BankTransferStartedMessage(String tradeId,
-                                      Transaction depositTx,
                                       byte[] offererSignature,
                                       Coin offererPayoutAmount,
                                       Coin takerPayoutAmount,
                                       String offererPayoutAddress) {
         this.tradeId = tradeId;
-        this.depositTx = depositTx;
         this.offererSignature = offererSignature;
         this.offererPayoutAmount = offererPayoutAmount;
         this.takerPayoutAmount = takerPayoutAmount;

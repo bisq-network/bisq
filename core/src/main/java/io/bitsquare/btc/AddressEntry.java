@@ -31,12 +31,13 @@ import java.util.Arrays;
  */
 public class AddressEntry implements Serializable {
     private static final long serialVersionUID = 5501603992599920416L;
-    private transient DeterministicKey keyPair;
-    private final NetworkParameters params;
-    private final AddressContext addressContext;
+    
     private final String offerId;
+    private final AddressContext addressContext;
+    private transient DeterministicKey keyPair;
     private final byte[] pubKey;
     private final byte[] pubKeyHash;
+    private final NetworkParameters params;
 
     public AddressEntry(DeterministicKey keyPair, NetworkParameters params, @SuppressWarnings("SameParameterValue") AddressContext addressContext) {
         this(keyPair, params, addressContext, null);
@@ -93,12 +94,12 @@ public class AddressEntry implements Serializable {
     @Override
     public String toString() {
         return "AddressEntry{" +
-                "addressString=" + getAddress().toString() +
-                "key=" + keyPair +
-                ", params=" + params +
+                "offerId='" + offerId +
                 ", addressContext=" + addressContext +
-                ", offerId='" + offerId + '\'' +
+                ", keyPair=" + keyPair +
+                ", pubKey=" + Arrays.toString(pubKey) +
                 ", pubKeyHash=" + Arrays.toString(pubKeyHash) +
+                ", params=" + params +
                 '}';
     }
 }

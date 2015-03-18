@@ -46,7 +46,7 @@ public class ProcessRequestOffererPublishDepositTxMessage extends Task<BuyerAsOf
             model.taker.messagePublicKey = checkNotNull(message.takerMessagePublicKey);
             model.taker.contractAsJson = nonEmptyStringOf(message.takerContractAsJson);
             model.taker.contractSignature = nonEmptyStringOf(message.takerContractSignature);
-            model.taker.payoutAddress = nonEmptyStringOf(message.takerPayoutAddress);
+            model.taker.payoutAddressString = nonEmptyStringOf(message.takerPayoutAddress);
             model.taker.depositTx = checkNotNull(message.takersDepositTx);
             model.taker.connectedOutputsForAllInputs = checkNotNull(message.takerConnectedOutputsForAllInputs);
             checkArgument(message.takerConnectedOutputsForAllInputs.size() > 0);

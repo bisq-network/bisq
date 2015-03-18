@@ -46,8 +46,8 @@ public class SignPayoutTx extends Task<BuyerAsOffererModel> {
                     trade.getDepositTx(),
                     offererPayoutAmount,
                     takerPayoutAmount,
-                    model.taker.payoutAddress,
-                    model.walletService.getAddressEntry(trade.getId()),
+                    model.offerer.addressEntry,
+                    model.taker.payoutAddressString,
                     model.offerer.pubKey,
                     model.taker.pubKey,
                     model.arbitratorPubKey);

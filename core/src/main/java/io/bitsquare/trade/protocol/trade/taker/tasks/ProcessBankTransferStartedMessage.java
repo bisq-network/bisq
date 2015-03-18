@@ -41,11 +41,10 @@ public class ProcessBankTransferStartedMessage extends Task<SellerAsTakerModel> 
             checkTradeId(model.id, model.getTradeMessage());
             BankTransferStartedMessage message = (BankTransferStartedMessage) model.getTradeMessage();
 
-            model.setPublishedDepositTx(checkNotNull(message.depositTx));
             model.offerer.signature = checkNotNull(message.offererSignature);
             model.offerer.payoutAmount = positiveCoinOf(nonZeroCoinOf(message.offererPayoutAmount));
             model.taker.payoutAmount = positiveCoinOf(nonZeroCoinOf(message.takerPayoutAmount));
-            model.offerer.payoutAddress = nonEmptyStringOf(message.offererPayoutAddress);
+            model.offerer.payoutAddressString = nonEmptyStringOf(message.offererPayoutAddress);
 
             complete();
         } catch (Throwable t) {

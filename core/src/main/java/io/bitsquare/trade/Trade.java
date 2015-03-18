@@ -90,7 +90,7 @@ public class Trade implements Serializable {
         this.offer = offer;
         date = new Date();
 
-        state = State.OPEN;
+        setState(State.OPEN);
     }
 
 

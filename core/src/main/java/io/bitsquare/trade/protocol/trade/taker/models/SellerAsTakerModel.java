@@ -43,7 +43,6 @@ public class SellerAsTakerModel extends SharedTradeModel implements Serializable
     public final OffererModel offerer;
 
     // written by tasks
-    private Transaction publishedDepositTx;
     private Transaction takeOfferFeeTx;
     private Transaction payoutTx;
 
@@ -69,7 +68,6 @@ public class SellerAsTakerModel extends SharedTradeModel implements Serializable
             SellerAsTakerModel persistedModel = (SellerAsTakerModel) serializable;
             log.debug("Model reconstructed form persisted model.");
 
-            setPublishedDepositTx(persistedModel.getPublishedDepositTx());
             setTakeOfferFeeTx(persistedModel.getTakeOfferFeeTx());
             setPayoutTx(persistedModel.payoutTx);
 
@@ -96,14 +94,6 @@ public class SellerAsTakerModel extends SharedTradeModel implements Serializable
     @Override
     public void persist() {
         persistence.write(this, "SellerAsTakerModel_" + id, this);
-    }
-
-    public Transaction getPublishedDepositTx() {
-        return publishedDepositTx;
-    }
-
-    public void setPublishedDepositTx(Transaction publishedDepositTx) {
-        this.publishedDepositTx = publishedDepositTx;
     }
 
     public Transaction getTakeOfferFeeTx() {
