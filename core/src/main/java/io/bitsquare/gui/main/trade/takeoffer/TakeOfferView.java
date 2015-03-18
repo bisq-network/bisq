@@ -243,6 +243,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         model.errorMessage.addListener(errorMessageChangeListener);
 
         model.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
+            // TODO temp just for testing 
+            newValue = false;
+            close();
+            navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
+
             if (newValue) {
                 overlayManager.blurContent();
 
@@ -269,10 +274,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         Dialog.Actions.CLOSE.handle(actionEvent);
                     }
                 });
-                // TODO temp just for testing 
-               /* Popups.openInfoPopup(BSResources.get("takeOffer.success.headline"),
+
+                Popups.openInfoPopup(BSResources.get("takeOffer.success.headline"),
                         BSResources.get("takeOffer.success.info"),
-                        actions);*/
+                        actions);
             }
         });
     }

@@ -222,48 +222,48 @@ public class TradeWalletService {
         }
 
         // Now we construct real deposit tx
-        Transaction depositTx = new Transaction(params);
+        Transaction preparedDepositTx = new Transaction(params);
 
         // Add offerer inputs (normally its just 1 input)
         for (TransactionOutput connectedOutputForInput : offererConnectedOutputsForAllInputs) {
             TransactionOutPoint outPoint = new TransactionOutPoint(params, connectedOutputForInput.getIndex(), connectedOutputForInput.getParentTransaction());
-            TransactionInput transactionInput = new TransactionInput(params, depositTx, new byte[]{}, outPoint, connectedOutputForInput.getValue());
-            depositTx.addInput(transactionInput);
+            TransactionInput transactionInput = new TransactionInput(params, preparedDepositTx, new byte[]{}, outPoint, connectedOutputForInput.getValue());
+            preparedDepositTx.addInput(transactionInput);
         }
 
         // Add taker inputs
         List<TransactionOutput> connectedOutputsForAllTakerInputs = new ArrayList<>();
         for (TransactionInput input : takerInputs) {
-            depositTx.addInput(input);
+            preparedDepositTx.addInput(input);
             connectedOutputsForAllTakerInputs.add(input.getConnectedOutput());
         }
 
         // Add MultiSig output
         Script multiSigOutputScript = getP2SHMultiSigOutputScript(offererPubKey, takerPubKey, arbitratorPubKey);
         // Tx fee for deposit tx will be paid by offerer.
-        TransactionOutput msOutput = new TransactionOutput(params, depositTx, msOutputAmount, multiSigOutputScript.getProgram());
-        depositTx.addOutput(msOutput);
+        TransactionOutput msOutput = new TransactionOutput(params, preparedDepositTx, msOutputAmount, multiSigOutputScript.getProgram());
+        preparedDepositTx.addOutput(msOutput);
 
         // Add optional offerer outputs 
         for (TransactionOutput output : offererOutputs) {
-            depositTx.addOutput(output);
+            preparedDepositTx.addOutput(output);
         }
 
         Coin takersSpendingAmount = Coin.ZERO;
 
         // Add optional taker outputs 
         for (TransactionOutput output : takerOutputs) {
-            depositTx.addOutput(output);
+            preparedDepositTx.addOutput(output);
 
             // subtract change amount
             takersSpendingAmount = takersSpendingAmount.subtract(output.getValue());
         }
 
         // Sign inputs
-        for (int i = offererConnectedOutputsForAllInputs.size(); i < depositTx.getInputs().size(); i++) {
-            TransactionInput input = depositTx.getInput(i);
-            signInput(depositTx, input, i);
-            checkScriptSig(depositTx, input, i);
+        for (int i = offererConnectedOutputsForAllInputs.size(); i < preparedDepositTx.getInputs().size(); i++) {
+            TransactionInput input = preparedDepositTx.getInput(i);
+            signInput(preparedDepositTx, input, i);
+            checkScriptSig(preparedDepositTx, input, i);
 
             // add up spending amount
             takersSpendingAmount = takersSpendingAmount.add(input.getConnectedOutput().getValue());
@@ -272,11 +272,11 @@ public class TradeWalletService {
         if (takerInputAmount.compareTo(takersSpendingAmount) != 0)
             throw new TransactionVerificationException("Takers input amount does not match required value.");
 
-        verifyTransaction(depositTx);
+        verifyTransaction(preparedDepositTx);
         checkWalletConsistency();
 
-        printTxWithInputs("depositTx", depositTx);
-        return new TransactionDataResult(depositTx, connectedOutputsForAllTakerInputs, takerOutputs);
+        printTxWithInputs("preparedDepositTx", preparedDepositTx);
+        return new TransactionDataResult(preparedDepositTx, connectedOutputsForAllTakerInputs, takerOutputs);
     }
 
     public void offererSignsAndPublishTx(Transaction takersDepositTx,
@@ -354,7 +354,7 @@ public class TradeWalletService {
         Futures.addCallback(broadcastComplete, callback);
     }
 
-    public Transaction takerCommitsDepositTx(Transaction depositTx) throws WalletException {
+    public void takerCommitsDepositTx(Transaction depositTx) throws WalletException {
         // We need to recreate the tx we get a null pointer otherwise
         depositTx = new Transaction(params, depositTx.bitcoinSerialize());
 
@@ -365,8 +365,6 @@ public class TradeWalletService {
             t.printStackTrace();
             throw new WalletException(t);
         }
-
-        return depositTx;
     }
 
     public byte[] offererCreatesAndSignsPayoutTx(Transaction depositTx,
@@ -379,14 +377,15 @@ public class TradeWalletService {
                                                  byte[] arbitratorPubKey)
             throws AddressFormatException, TransactionVerificationException {
 
-        Transaction payoutTx = createPayoutTx(depositTx, offererPayoutAmount, takerPayoutAmount, addressEntry.getAddressString(), takerAddressString);
+        Transaction preparedPayoutTx = createPayoutTx(depositTx, offererPayoutAmount, takerPayoutAmount, addressEntry.getAddressString(), takerAddressString);
         // We need MS script not the P2SH
         Script multiSigScript = getMultiSigRedeemScript(offererPubKey, takerPubKey, arbitratorPubKey);
-        Sha256Hash sigHash = payoutTx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
-        ECKey.ECDSASignature offererSignature = addressEntry.getKeyPair().sign(sigHash);
+        Sha256Hash sigHash = preparedPayoutTx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
+        ECKey.ECDSASignature offererSignature = addressEntry.getKeyPair().sign(sigHash).toCanonicalised();
 
-        verifyTransaction(payoutTx);
+        verifyTransaction(preparedPayoutTx);
 
+        printTxWithInputs("preparedPayoutTx", depositTx);
         return offererSignature.encodeToDER();
     }
 
@@ -406,17 +405,16 @@ public class TradeWalletService {
         // We need MS script not the P2SH
         Script multiSigScript = getMultiSigRedeemScript(offererPubKey, takerPubKey, arbitratorPubKey);
         Sha256Hash sigHash = payoutTx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
-        ECKey.ECDSASignature takerSignature = takerAddressEntry.getKeyPair().sign(sigHash);
+        ECKey.ECDSASignature takerSignature = takerAddressEntry.getKeyPair().sign(sigHash).toCanonicalised();
         TransactionSignature takerTxSig = new TransactionSignature(takerSignature, Transaction.SigHash.ALL, false);
-        TransactionSignature offererTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(offererSignature), Transaction.SigHash.ALL, false);
+        TransactionSignature offererTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(offererSignature).toCanonicalised(),
+                Transaction.SigHash.ALL, false);
         Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(offererTxSig, takerTxSig), multiSigScript);
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
 
         verifyTransaction(payoutTx);
         checkWalletConsistency();
-       // checkScriptSig(payoutTx, input, 0);
-       // input.verify(input.getConnectedOutput());
 
         printTxWithInputs("payoutTx", payoutTx);
 
@@ -514,14 +512,6 @@ public class TradeWalletService {
             throw new TransactionVerificationException(t);
         }
     }
-
-    /*private void checkScriptSigForAllInputs(Transaction transaction) throws TransactionVerificationException {
-        int inputIndex = 0;
-        for (TransactionInput input : transaction.getInputs()) {
-            checkScriptSig(transaction, input, inputIndex);
-            inputIndex++;
-        }
-    }*/
 
     private void removeSignatures(Transaction transaction) {
         for (TransactionInput input : transaction.getInputs()) {

@@ -17,6 +17,8 @@
 
 package io.bitsquare.gui.main.trade.createoffer;
 
+import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.common.viewfx.view.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.AddressTextField;
@@ -31,12 +33,12 @@ import io.bitsquare.gui.main.account.content.restrictions.RestrictionsView;
 import io.bitsquare.gui.main.account.settings.AccountSettingsView;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
+import io.bitsquare.gui.main.portfolio.PortfolioView;
+import io.bitsquare.gui.main.portfolio.pending.PendingTradesView;
 import io.bitsquare.gui.main.trade.TradeView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.offer.Direction;
-import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
-import io.bitsquare.common.viewfx.view.FxmlView;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -289,6 +291,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         });
 
         model.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
+            // TODO temp just for testing 
+            newValue = false;
+            close();
+            navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
+
             if (newValue) {
                 overlayManager.blurContent();
 
@@ -314,10 +321,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                         Dialog.Actions.CLOSE.handle(actionEvent);
                     }
                 });
-                // TODO temp just for testing 
-               /* Popups.openInfoPopup(BSResources.get("createOffer.success.headline"),
+                Popups.openInfoPopup(BSResources.get("createOffer.success.headline"),
                         BSResources.get("createOffer.success.info"),
-                        actions);*/
+                        actions);
             }
         });
     }
