@@ -17,23 +17,16 @@
 
 package io.bitsquare.trade.protocol.availability.messages;
 
-import io.bitsquare.trade.protocol.trade.OfferMessage;
+import io.bitsquare.trade.protocol.trade.messages.OfferMessage;
 
 import java.io.Serializable;
 
 // That msg is used to ping the offerer if he is online and if the offer is still available
-public class RequestIsOfferAvailableMessage implements Serializable, OfferMessage {
+public class RequestIsOfferAvailableMessage  extends OfferMessage implements Serializable  {
     private static final long serialVersionUID = 4630151440192191798L;
 
-    private final String offerId;
-
     public RequestIsOfferAvailableMessage(String offerId) {
-        this.offerId = offerId;
-    }
-
-    @Override
-    public String getOfferId() {
-        return offerId;
+        super.offerId = offerId;
     }
 
 

@@ -36,20 +36,20 @@ public class VerifyAndSignContract extends Task<BuyerAsOffererModel> {
 
     @Override
     protected void doRun() {
-        Trade trade = model.getTrade();
+        Trade trade = model.trade;
 
         Contract contract = new Contract(
-                model.getOffer(),
+                model.offer,
                 trade.getTradeAmount(),
                 model.getTakeOfferFeeTxId(),
-                model.getAccountId(),
+                model.offerer.accountId,
                 model.taker.accountId,
-                model.getFiatAccount(),
+                model.offerer.fiatAccount,
                 model.taker.fiatAccount,
-                model.getNetworkPubKey(),
+                model.offerer.messagePubKey,
                 model.taker.messagePublicKey);
         String contractAsJson = Utilities.objectToJson(contract);
-        String signature = model.getSignatureService().signMessage(model.getRegistrationKeyPair(), contractAsJson);
+        String signature = model.signatureService.signMessage(model.offerer.registrationKeyPair, contractAsJson);
 
         trade.setContract(contract);
         trade.setContractAsJson(contractAsJson);

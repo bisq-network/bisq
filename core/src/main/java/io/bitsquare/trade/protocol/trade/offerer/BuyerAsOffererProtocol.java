@@ -21,7 +21,7 @@ import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.handlers.MessageHandler;
-import io.bitsquare.trade.protocol.trade.TradeMessage;
+import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.GetOffererDepositTxInputs;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
@@ -36,19 +36,17 @@ import io.bitsquare.trade.protocol.trade.offerer.tasks.SignPayoutTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyAndSignContract;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakeOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakerAccount;
-import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.taker.messages.RequestDepositTxInputsMessage;
-import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestOffererPublishDepositTxMessage;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 
-import javafx.application.Platform;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.util.Validator.nonEmptyStringOf;
+import static io.bitsquare.util.Validator.*;
 
 public class BuyerAsOffererProtocol {
     private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererProtocol.class);
@@ -56,15 +54,19 @@ public class BuyerAsOffererProtocol {
     private final BuyerAsOffererModel model;
     private final MessageHandler messageHandler;
 
+    private TransactionConfidence.Listener transactionConfidenceListener;
+    private TransactionConfidence transactionConfidence;
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BuyerAsOffererProtocol(BuyerAsOffererModel model) {
+        log.debug("New BuyerAsOffererProtocol " + this);
         this.model = model;
         messageHandler = this::handleMessage;
 
-        model.getTradeMessageService().addMessageHandler(messageHandler);
+        model.tradeMessageService.addMessageHandler(messageHandler);
     }
 
 
@@ -73,15 +75,20 @@ public class BuyerAsOffererProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void cleanup() {
-        model.getTradeMessageService().removeMessageHandler(messageHandler);
+        log.debug("cleanup " + this);
+        model.tradeMessageService.removeMessageHandler(messageHandler);
+        if (transactionConfidence != null) {
+            if (!transactionConfidence.removeEventListener(transactionConfidenceListener))
+                throw new RuntimeException("Remove transactionConfidenceListener failed.");
+        }
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handleRequestDepositTxInputsMessage(RequestDepositTxInputsMessage tradeMessage, Peer taker) {
+        checkTradeId(model.id, tradeMessage);
         model.setTradeMessage(tradeMessage);
         model.taker.peer = taker;
 
@@ -107,20 +114,18 @@ public class BuyerAsOffererProtocol {
         BuyerAsOffererTaskRunner<BuyerAsOffererModel> taskRunner = new BuyerAsOffererTaskRunner<>(model,
                 () -> {
                     log.debug("taskRunner at handleRequestOffererPublishDepositTxMessage completed");
-                    TransactionConfidence confidence = model.getTrade().getDepositTx().getConfidence();
-                    confidence.addEventListener(new TransactionConfidence.Listener() {
+                    transactionConfidenceListener = new TransactionConfidence.Listener() {
                         @Override
                         public void onConfidenceChanged(Transaction tx, ChangeReason reason) {
                             log.trace("onConfidenceChanged " + tx.getConfidence());
                             if (reason == ChangeReason.TYPE && tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
 
-                                model.getTrade().setState(Trade.State.DEPOSIT_CONFIRMED);
-
-                                //TODO not sure if that works
-                                Platform.runLater(() -> confidence.removeEventListener(this));
+                                model.trade.setState(Trade.State.DEPOSIT_CONFIRMED);
                             }
                         }
-                    });
+                    };
+                    transactionConfidence = model.trade.getDepositTx().getConfidence();
+                    transactionConfidence.addEventListener(transactionConfidenceListener);
                 },
                 (errorMessage) -> {
                     log.error(errorMessage);
@@ -189,9 +194,9 @@ public class BuyerAsOffererProtocol {
         log.trace("handleNewMessage: message = " + message.getClass().getSimpleName());
         if (message instanceof TradeMessage) {
             TradeMessage tradeMessage = (TradeMessage) message;
-            nonEmptyStringOf(tradeMessage.getTradeId());
+            nonEmptyStringOf(tradeMessage.tradeId);
 
-            if (tradeMessage.getTradeId().equals(model.getOffer().getId())) {
+            if (tradeMessage.tradeId.equals(model.id)) {
                 if (tradeMessage instanceof RequestDepositTxInputsMessage) {
                     handleRequestDepositTxInputsMessage((RequestDepositTxInputsMessage) tradeMessage, peer);
                 }

@@ -21,7 +21,7 @@ import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
-import io.bitsquare.trade.protocol.trade.taker.messages.RequestDepositTxInputsMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,12 +39,13 @@ public class ProcessRequestDepositTxInputsMessage extends Task<BuyerAsOffererMod
     @Override
     protected void doRun() {
         try {
-            checkTradeId(model.getId(), model.getTradeMessage());
-            Trade trade = model.getTrade();
+            checkTradeId(model.id, model.getTradeMessage());
+            Trade trade = model.trade;
             RequestDepositTxInputsMessage requestDepositTxInputsMessage = (RequestDepositTxInputsMessage) model.getTradeMessage();
-            trade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(requestDepositTxInputsMessage.getTradeAmount())));
-            model.setTakeOfferFeeTxId(nonEmptyStringOf(requestDepositTxInputsMessage.getTakeOfferFeeTxId()));
-            model.taker.pubKey = checkNotNull(requestDepositTxInputsMessage.getTakerPubKey());
+           
+            trade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(requestDepositTxInputsMessage.tradeAmount)));
+            model.setTakeOfferFeeTxId(nonEmptyStringOf(requestDepositTxInputsMessage.takeOfferFeeTxId));
+            model.taker.pubKey = checkNotNull(requestDepositTxInputsMessage.takerPubKey);
 
             complete();
         } catch (Throwable t) {

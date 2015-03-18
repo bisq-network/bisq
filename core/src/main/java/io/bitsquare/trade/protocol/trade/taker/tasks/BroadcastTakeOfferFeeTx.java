@@ -41,20 +41,20 @@ public class BroadcastTakeOfferFeeTx extends Task<SellerAsTakerModel> {
     @Override
     protected void doRun() {
         try {
-            model.getTradeWalletService().broadcastTakeOfferFeeTx(model.getTakeOfferFeeTx(),
+            model.tradeWalletService.broadcastTakeOfferFeeTx(model.getTakeOfferFeeTx(),
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {
                             log.debug("Take offer fee published successfully. Transaction ID = " + transaction.getHashAsString());
                            
-                            model.getTrade().setState(Trade.State.TAKE_OFFER_FEE_PUBLISHED);
+                            model.trade.setState(Trade.State.TAKE_OFFER_FEE_PUBLISHED);
 
                             complete();
                         }
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
-                            model.getTrade().setState(Trade.State.TAKE_OFFER_FEE_PUBLISH_FAILED);
+                            model.trade.setState(Trade.State.TAKE_OFFER_FEE_PUBLISH_FAILED);
                             failed(t);
                         }
                     });
@@ -62,7 +62,7 @@ public class BroadcastTakeOfferFeeTx extends Task<SellerAsTakerModel> {
             appendToErrorMessage("Take offer fee payment failed. Maybe your network connection was lost. Please try again.");
             appendToErrorMessage(e.getMessage());
 
-            model.getTrade().setState(Trade.State.FAULT);
+            model.trade.setState(Trade.State.FAULT);
 
             failed(e);
         }

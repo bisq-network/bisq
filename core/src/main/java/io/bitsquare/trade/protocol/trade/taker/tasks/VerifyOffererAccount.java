@@ -33,8 +33,8 @@ public class VerifyOffererAccount extends Task<SellerAsTakerModel> {
 
     @Override
     protected void doRun() {
-        if (model.getBlockChainService().verifyAccountRegistration()) {
-            if (model.getBlockChainService().isAccountBlackListed(model.taker.accountId, model.taker.fiatAccount)) {
+        if (model.blockChainService.verifyAccountRegistration()) {
+            if (model.blockChainService.isAccountBlackListed(model.offerer.accountId, model.offerer.fiatAccount)) {
                 failed("Taker is blacklisted.");
             }
             else {

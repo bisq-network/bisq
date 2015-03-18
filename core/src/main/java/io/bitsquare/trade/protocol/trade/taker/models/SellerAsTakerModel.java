@@ -24,7 +24,7 @@ import io.bitsquare.network.Peer;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeMessageService;
-import io.bitsquare.trade.protocol.trade.OfferSharedModel;
+import io.bitsquare.trade.protocol.trade.SharedTradeModel;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Transaction;
@@ -34,18 +34,18 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SellerAsTakerModel extends OfferSharedModel implements Serializable {
+public class SellerAsTakerModel extends SharedTradeModel implements Serializable {
     private static final long serialVersionUID = -963501132927618376L;
     private static final Logger log = LoggerFactory.getLogger(SellerAsTakerModel.class);
 
-    private final Trade trade;
+    public final Trade trade;
     public final TakerModel taker;
     public final OffererModel offerer;
-    
+
     private Transaction publishedDepositTx;
     private Transaction takeOfferFeeTx;
     private Transaction payoutTx;
-
+    
     public SellerAsTakerModel(Trade trade,
                               Peer offererPeer,
                               TradeMessageService tradeMessageService,
@@ -59,20 +59,42 @@ public class SellerAsTakerModel extends OfferSharedModel implements Serializable
                 walletService,
                 blockChainService,
                 signatureService,
-                user,
                 persistence);
 
         this.trade = trade;
 
-        taker = new TakerModel();
-        offerer = new OffererModel(offererPeer);
+        Object modelObject = persistence.read(this, "SellerAsTakerModel_" + id);
+        if (modelObject instanceof SellerAsTakerModel) {
+            SellerAsTakerModel persistedModel = (SellerAsTakerModel) modelObject;
+            log.debug("Model reconstructed form persisted model.");
 
-        taker.pubKey = getAddressEntry().getPubKey();
+            setPublishedDepositTx(persistedModel.getPublishedDepositTx());
+            setTakeOfferFeeTx(persistedModel.getTakeOfferFeeTx());
+            setPayoutTx(persistedModel.payoutTx);
+
+            taker = persistedModel.taker;
+            offerer = persistedModel.offerer;
+        }
+        else {
+            taker = new TakerModel();
+            offerer = new OffererModel();
+        }
+        
+        offerer.peer = offererPeer;
+
+        taker.registrationPubKey = walletService.getRegistrationAddressEntry().getPubKey();
+        taker.registrationKeyPair = walletService.getRegistrationAddressEntry().getKeyPair();
+        taker.addressEntry = walletService.getAddressEntry(id);
+        taker.fiatAccount = user.getBankAccount(offer.getBankAccountId());
+        taker.accountId = user.getAccountId();
+        taker.messagePubKey = user.getMessagePubKey();
+        taker.pubKey = taker.addressEntry.getPubKey();
     }
 
-
-    public Trade getTrade() {
-        return trade;
+    // Get called form taskRunner after each completed task
+    @Override
+    public void persist() {
+        persistence.write(this, "SellerAsTakerModel_" + id, this);
     }
 
     public Transaction getPublishedDepositTx() {

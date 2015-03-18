@@ -1,0 +1,101 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package io.bitsquare.trade.protocol.trade;
+
+import io.bitsquare.btc.BlockChainService;
+import io.bitsquare.btc.TradeWalletService;
+import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.taskrunner.SharedTaskModel;
+import io.bitsquare.crypto.SignatureService;
+import io.bitsquare.offer.Offer;
+import io.bitsquare.persistence.Persistence;
+import io.bitsquare.trade.TradeMessageService;
+import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
+
+import java.io.Serializable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class SharedTradeModel extends SharedTaskModel implements Serializable {
+    private static final long serialVersionUID = -2523252022571497157L;
+    protected static final Logger log = LoggerFactory.getLogger(SharedTradeModel.class);
+
+    // provided
+    transient public final Offer offer;
+
+    transient public final TradeMessageService tradeMessageService;
+    transient public final WalletService walletService;
+    transient public final BlockChainService blockChainService;
+    transient public final SignatureService signatureService;
+    transient protected final Persistence persistence;
+
+
+    // derived
+    transient public final String id;
+    transient public final TradeWalletService tradeWalletService;
+    transient public final byte[] arbitratorPubKey;
+    
+  /*  transient public final FiatAccount fiatAccount;
+    transient public final String accountId;
+    transient public final PublicKey messagePubKey;
+    transient public final byte[] registrationPubKey;
+    transient public final DeterministicKey registrationKeyPair;
+    transient public final AddressEntry addressEntry;*/
+
+
+    // data written/read by tasks
+    transient private TradeMessage tradeMessage;
+
+
+    protected SharedTradeModel(Offer offer,
+                               TradeMessageService tradeMessageService,
+                               WalletService walletService,
+                               BlockChainService blockChainService,
+                               SignatureService signatureService,
+                               Persistence persistence) {
+        this.offer = offer;
+        this.tradeMessageService = tradeMessageService;
+        this.walletService = walletService;
+        this.blockChainService = blockChainService;
+        this.signatureService = signatureService;
+        this.persistence = persistence;
+
+        id = offer.getId();
+        tradeWalletService = walletService.getTradeWalletService();
+        //TODO use default arbitrator for now
+        arbitratorPubKey = offer.getArbitrators().get(0).getPubKey();
+        
+       /* registrationPubKey = walletService.getRegistrationAddressEntry().getPubKey();
+        registrationKeyPair = walletService.getRegistrationAddressEntry().getKeyPair();
+        addressEntry = walletService.getAddressEntry(id);
+        fiatAccount = user.getBankAccount(offer.getBankAccountId());
+        accountId = user.getAccountId();
+        messagePubKey = user.getNetworkPubKey();*/
+    }
+
+    public void setTradeMessage(TradeMessage tradeMessage) {
+        this.tradeMessage = tradeMessage;
+    }
+
+    public TradeMessage getTradeMessage() {
+        return tradeMessage;
+    }
+
+
+}

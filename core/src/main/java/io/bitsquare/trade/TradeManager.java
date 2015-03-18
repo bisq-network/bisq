@@ -168,7 +168,7 @@ public class TradeManager {
 
         FiatAccount currentFiatAccount = user.getCurrentBankAccount().get();
         Offer offer = new Offer(id,
-                user.getNetworkPubKey(),
+                user.getMessagePubKey(),
                 direction,
                 price.getValue(),
                 amount,
@@ -295,7 +295,7 @@ public class TradeManager {
     // Offerer handles those requests
     private void handleMessage(Message message, Peer sender) {
         if (message instanceof RequestIsOfferAvailableMessage) {
-            String offerId = ((RequestIsOfferAvailableMessage) message).getOfferId();
+            String offerId = ((RequestIsOfferAvailableMessage) message).offerId;
             checkNotNull(offerId);
 
             ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(offerId, isOfferOpen(offerId));

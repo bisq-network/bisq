@@ -34,7 +34,7 @@ public class AddOfferToRemoteOfferBook extends Task<PlaceOfferModel> {
 
     @Override
     protected void doRun() {
-        model.getOfferBookService().addOffer(model.getOffer(),
+        model.offerBookService.addOffer(model.offer,
                 () -> {
                     complete();
                 },

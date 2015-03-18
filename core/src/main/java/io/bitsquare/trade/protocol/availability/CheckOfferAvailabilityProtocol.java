@@ -55,7 +55,7 @@ public class CheckOfferAvailabilityProtocol {
     }
 
     public void cleanup() {
-        model.getTradeMessageService().removeMessageHandler(messageHandler);
+        model.tradeMessageService.removeMessageHandler(messageHandler);
     }
 
 
@@ -64,7 +64,7 @@ public class CheckOfferAvailabilityProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void checkOfferAvailability() {
-        model.getTradeMessageService().addMessageHandler(messageHandler);
+        model.tradeMessageService.addMessageHandler(messageHandler);
 
         taskRunner = new TaskRunner<>(model,
                 () -> {

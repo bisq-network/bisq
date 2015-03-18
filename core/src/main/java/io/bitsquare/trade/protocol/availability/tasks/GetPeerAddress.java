@@ -39,7 +39,7 @@ public class GetPeerAddress extends Task<CheckOfferAvailabilityModel> {
     @Override
     protected void doRun() {
         try {
-            model.getTradeMessageService().getPeerAddress(model.getOffer().getMessagePublicKey(), new GetPeerAddressListener() {
+            model.tradeMessageService.getPeerAddress(model.offer.getMessagePublicKey(), new GetPeerAddressListener() {
                 @Override
                 public void onResult(Peer peer) {
                     model.setPeer(peer);
@@ -49,13 +49,13 @@ public class GetPeerAddress extends Task<CheckOfferAvailabilityModel> {
 
                 @Override
                 public void onFailed() {
-                    model.getOffer().setState(Offer.State.OFFERER_OFFLINE);
+                    model.offer.setState(Offer.State.OFFERER_OFFLINE);
                     
                     failed();
                 }
             });
         } catch (Throwable t) {
-            model.getOffer().setState(Offer.State.FAULT);
+            model.offer.setState(Offer.State.FAULT);
 
             failed(t);
         }

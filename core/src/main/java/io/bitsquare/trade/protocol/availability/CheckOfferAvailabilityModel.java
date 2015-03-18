@@ -17,20 +17,20 @@
 
 package io.bitsquare.trade.protocol.availability;
 
-import io.bitsquare.common.taskrunner.SharedModel;
+import io.bitsquare.common.taskrunner.SharedTaskModel;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.TradeMessageService;
-import io.bitsquare.trade.protocol.trade.OfferMessage;
+import io.bitsquare.trade.protocol.trade.messages.OfferMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CheckOfferAvailabilityModel extends SharedModel {
+public class CheckOfferAvailabilityModel extends SharedTaskModel {
     private static final Logger log = LoggerFactory.getLogger(CheckOfferAvailabilityModel.class);
 
-    private final Offer offer;
-    private final TradeMessageService tradeMessageService;
+    public final Offer offer;
+    public final TradeMessageService tradeMessageService;
 
     private Peer peer;
     private OfferMessage message;
@@ -38,15 +38,6 @@ public class CheckOfferAvailabilityModel extends SharedModel {
     public CheckOfferAvailabilityModel(Offer offer, TradeMessageService tradeMessageService) {
         this.offer = offer;
         this.tradeMessageService = tradeMessageService;
-    }
-
-    // getter/setter
-    public Offer getOffer() {
-        return offer;
-    }
-
-    public TradeMessageService getTradeMessageService() {
-        return tradeMessageService;
     }
 
     public Peer getPeer() {

@@ -24,7 +24,7 @@ import io.bitsquare.btc.exceptions.WalletException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class Task<T extends SharedModel> {
+public abstract class Task<T extends SharedTaskModel> {
     private static final Logger log = LoggerFactory.getLogger(Task.class);
 
     public static Class<? extends Task> taskToInterceptBeforeRun;

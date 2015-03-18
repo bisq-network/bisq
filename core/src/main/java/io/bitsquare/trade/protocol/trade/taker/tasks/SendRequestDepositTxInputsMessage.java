@@ -22,7 +22,7 @@ import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.protocol.trade.taker.messages.RequestDepositTxInputsMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,13 +39,13 @@ public class SendRequestDepositTxInputsMessage extends Task<SellerAsTakerModel> 
     @Override
     protected void doRun() {
         RequestDepositTxInputsMessage msg = new RequestDepositTxInputsMessage(
-                model.getId(),
+                model.id,
                 model.getTakeOfferFeeTx().getHashAsString(),
-                model.getTrade().getTradeAmount(),
+                model.trade.getTradeAmount(),
                 model.taker.pubKey
         );
 
-        model.getTradeMessageService().sendMessage(model.offerer.peer, msg, new SendMessageListener() {
+        model.tradeMessageService.sendMessage(model.offerer.peer, msg, new SendMessageListener() {
             @Override
             public void handleResult() {
                 log.trace("Sending TakeOfferFeePayedMessage succeeded.");
@@ -58,7 +58,7 @@ public class SendRequestDepositTxInputsMessage extends Task<SellerAsTakerModel> 
                 // We try to repeat once and if that fails as well we persist the state for a later retry.
                 if (retryCounter == 0) {
                     retryCounter++;
-                   // doRun();
+                    // doRun();
                 }
                 else {
                     failed();
@@ -71,6 +71,6 @@ public class SendRequestDepositTxInputsMessage extends Task<SellerAsTakerModel> 
     protected void updateStateOnFault() {
         appendToErrorMessage("Sending TakeOfferFeePayedMessage to offerer failed. Maybe the network connection was lost or the offerer lost his connection. " +
                 "We persisted the state of the trade, please try again later or cancel that trade.");
-        model.getTrade().setState(Trade.State.MESSAGE_SENDING_FAILED);
+        model.trade.setState(Trade.State.MESSAGE_SENDING_FAILED);
     }
 }

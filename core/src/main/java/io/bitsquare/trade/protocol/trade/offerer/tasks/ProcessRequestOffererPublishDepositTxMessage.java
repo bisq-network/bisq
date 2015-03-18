@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
-import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestOffererPublishDepositTxMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,18 +38,18 @@ public class ProcessRequestOffererPublishDepositTxMessage extends Task<BuyerAsOf
     @Override
     protected void doRun() {
         try {
-            checkTradeId(model.getId(), model.getTradeMessage());
+            checkTradeId(model.id, model.getTradeMessage());
             RequestOffererPublishDepositTxMessage message = (RequestOffererPublishDepositTxMessage) model.getTradeMessage();
 
-            model.taker.fiatAccount = checkNotNull(message.getTakerBankAccount());
-            model.taker.accountId = nonEmptyStringOf(message.getTakerAccountId());
-            model.taker.messagePublicKey = checkNotNull(message.getTakerMessagePublicKey());
-            model.taker.contractAsJson = nonEmptyStringOf(message.getTakerContractAsJson());
-            model.taker.payoutAddress = nonEmptyStringOf(message.getTakerPayoutAddress());
-            model.taker.depositTx = checkNotNull(message.getTakersDepositTx());
-            model.taker.connectedOutputsForAllInputs = checkNotNull(message.getTakerConnectedOutputsForAllInputs());
-            checkArgument(message.getTakerConnectedOutputsForAllInputs().size() > 0);
-            model.taker.outputs = checkNotNull(message.getTakerOutputs());
+            model.taker.fiatAccount = checkNotNull(message.takerFiatAccount);
+            model.taker.accountId = nonEmptyStringOf(message.takerAccountId);
+            model.taker.messagePublicKey = checkNotNull(message.takerMessagePublicKey);
+            model.taker.contractAsJson = nonEmptyStringOf(message.takerContractAsJson);
+            model.taker.payoutAddress = nonEmptyStringOf(message.takerPayoutAddress);
+            model.taker.depositTx = checkNotNull(message.takersDepositTx);
+            model.taker.connectedOutputsForAllInputs = checkNotNull(message.takerConnectedOutputsForAllInputs);
+            checkArgument(message.takerConnectedOutputsForAllInputs.size() > 0);
+            model.taker.outputs = checkNotNull(message.takerOutputs);
 
             complete();
         } catch (Throwable t) {

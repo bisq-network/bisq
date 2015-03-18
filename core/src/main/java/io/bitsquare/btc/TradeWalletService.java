@@ -94,7 +94,7 @@ public class TradeWalletService {
     // Trade fee
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction createOfferFeeTx(AddressEntry addressEntry) throws InsufficientMoneyException {
+    public Transaction createOfferFeeTx(AddressEntry offererAddressEntry) throws InsufficientMoneyException {
         Transaction createOfferFeeTx = new Transaction(params);
         Coin fee = FeePolicy.CREATE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
         createOfferFeeTx.addOutput(fee, feePolicy.getAddressForCreateOfferFee());
@@ -102,8 +102,8 @@ public class TradeWalletService {
         sendRequest.shuffleOutputs = false;
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
         // wait for 1 confirmation)
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry, true);
-        sendRequest.changeAddress = addressEntry.getAddress();
+        sendRequest.coinSelector = new AddressBasedCoinSelector(params, offererAddressEntry, true);
+        sendRequest.changeAddress = offererAddressEntry.getAddress();
         wallet.completeTx(sendRequest);
         printTxWithInputs("createOfferFeeTx", createOfferFeeTx);
         return createOfferFeeTx;
@@ -114,7 +114,7 @@ public class TradeWalletService {
         Futures.addCallback(future, callback);
     }
 
-    public Transaction createTakeOfferFeeTx(AddressEntry addressEntry) throws InsufficientMoneyException {
+    public Transaction createTakeOfferFeeTx(AddressEntry takerAddressEntry) throws InsufficientMoneyException {
         Transaction takeOfferFeeTx = new Transaction(params);
         Coin fee = FeePolicy.TAKE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
         takeOfferFeeTx.addOutput(fee, feePolicy.getAddressForTakeOfferFee());
@@ -123,8 +123,8 @@ public class TradeWalletService {
         sendRequest.shuffleOutputs = false;
         // we allow spending of unconfirmed takeOfferFeeTx (double spend risk is low and usability would suffer if we need to
         // wait for 1 confirmation)
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry, true);
-        sendRequest.changeAddress = addressEntry.getAddress();
+        sendRequest.coinSelector = new AddressBasedCoinSelector(params, takerAddressEntry, true);
+        sendRequest.changeAddress = takerAddressEntry.getAddress();
         wallet.completeTx(sendRequest);
         printTxWithInputs("takeOfferFeeTx", takeOfferFeeTx);
         return takeOfferFeeTx;
@@ -140,7 +140,7 @@ public class TradeWalletService {
     // Trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TransactionDataResult offererCreatesDepositTxInputs(Coin inputAmount, AddressEntry addressInfo) throws
+    public TransactionDataResult offererCreatesDepositTxInputs(Coin inputAmount, AddressEntry offererAddressEntry) throws
             TransactionVerificationException, WalletException {
 
         // We pay the tx fee 2 times to the deposit tx:
@@ -160,7 +160,7 @@ public class TradeWalletService {
         // Fin the needed inputs to pay the output, optional add change output.
         // Normally only 1 input and no change output is used, but we support multiple inputs and outputs. Our spending transaction output is from the create
         // offer fee payment. In future changes (in case of no offer fee) multiple inputs might become used.
-        addAvailableInputsAndChangeOutputs(dummyTX, addressInfo);
+        addAvailableInputsAndChangeOutputs(dummyTX, offererAddressEntry);
 
         // The completeTx() call signs the input, but we don't want to pass over signed tx inputs
         // But to be safe and to support future changes (in case of no offer fee) we handle potential multiple inputs
@@ -200,7 +200,7 @@ public class TradeWalletService {
                                                                Coin msOutputAmount,
                                                                List<TransactionOutput> offererConnectedOutputsForAllInputs,
                                                                List<TransactionOutput> offererOutputs,
-                                                               AddressEntry addressInfo,
+                                                               AddressEntry takerAddressInfo,
                                                                byte[] offererPubKey,
                                                                byte[] takerPubKey,
                                                                byte[] arbitratorPubKey) throws SigningException,
@@ -213,7 +213,7 @@ public class TradeWalletService {
         Coin dummyOutputAmount = takerInputAmount.subtract(FeePolicy.TX_FEE);
         TransactionOutput dummyOutput = new TransactionOutput(params, dummyTx, dummyOutputAmount, new ECKey().toAddress(params));
         dummyTx.addOutput(dummyOutput);
-        addAvailableInputsAndChangeOutputs(dummyTx, addressInfo);
+        addAvailableInputsAndChangeOutputs(dummyTx, takerAddressInfo);
         List<TransactionInput> takerInputs = dummyTx.getInputs();
         List<TransactionOutput> takerOutputs = new ArrayList<>();
         // we store optional change outputs (ignoring dummyOutput)
@@ -387,36 +387,39 @@ public class TradeWalletService {
 
         verifyTransaction(payoutTx);
 
-        return new TransactionDataResult(payoutTx, offererSignature);
+        return new TransactionDataResult(payoutTx, offererSignature.encodeToDER());
     }
 
     public void takerSignsAndPublishPayoutTx(Transaction depositTx,
-                                             ECKey.ECDSASignature offererSignature,
+                                             byte[] offererSignature,
                                              Coin offererPayoutAmount,
                                              Coin takerPayoutAmount,
                                              String offererAddressString,
-                                             AddressEntry addressEntry,
+                                             AddressEntry takerAddressEntry,
                                              byte[] offererPubKey,
                                              byte[] takerPubKey,
                                              byte[] arbitratorPubKey,
                                              FutureCallback<Transaction> callback)
             throws AddressFormatException, TransactionVerificationException, WalletException {
 
-        Transaction payoutTx = createPayoutTx(depositTx, offererPayoutAmount, takerPayoutAmount, offererAddressString, addressEntry.getAddressString());
+        Transaction payoutTx = createPayoutTx(depositTx, offererPayoutAmount, takerPayoutAmount, offererAddressString, takerAddressEntry.getAddressString());
         // We need MS script not the P2SH
         Script multiSigScript = getMultiSigRedeemScript(offererPubKey, takerPubKey, arbitratorPubKey);
         Sha256Hash sigHash = payoutTx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
-        ECKey.ECDSASignature takerSignature = addressEntry.getKeyPair().sign(sigHash);
+        ECKey.ECDSASignature takerSignature = takerAddressEntry.getKeyPair().sign(sigHash);
         TransactionSignature takerTxSig = new TransactionSignature(takerSignature, Transaction.SigHash.ALL, false);
-        TransactionSignature offererTxSig = new TransactionSignature(offererSignature, Transaction.SigHash.ALL, false);
+        TransactionSignature offererTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(offererSignature), Transaction.SigHash.ALL, false);
         Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(offererTxSig, takerTxSig), multiSigScript);
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
 
         verifyTransaction(payoutTx);
         checkWalletConsistency();
+        checkScriptSig(payoutTx, input, 0);
+        input.verify(input.getConnectedOutput());
 
         printTxWithInputs("payoutTx", payoutTx);
+
         ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(payoutTx);
         Futures.addCallback(broadcastComplete, callback);
     }
@@ -544,9 +547,9 @@ public class TradeWalletService {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Inner classes
-    ///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+// Inner classes
+///////////////////////////////////////////////////////////////////////////////////////////
 
     public class TransactionDataResult {
         private List<TransactionOutput> connectedOutputsForAllInputs;
@@ -555,7 +558,7 @@ public class TradeWalletService {
 
 
         private Transaction payoutTx;
-        private ECKey.ECDSASignature offererSignature;
+        private byte[] offererSignature;
 
         public TransactionDataResult(List<TransactionOutput> connectedOutputsForAllInputs, List<TransactionOutput> outputs) {
             this.connectedOutputsForAllInputs = connectedOutputsForAllInputs;
@@ -568,7 +571,7 @@ public class TradeWalletService {
             this.outputs = outputs;
         }
 
-        public TransactionDataResult(Transaction payoutTx, ECKey.ECDSASignature offererSignature) {
+        public TransactionDataResult(Transaction payoutTx, byte[] offererSignature) {
 
             this.payoutTx = payoutTx;
             this.offererSignature = offererSignature;
@@ -590,7 +593,7 @@ public class TradeWalletService {
             return payoutTx;
         }
 
-        public ECKey.ECDSASignature getOffererSignature() {
+        public byte[] getOffererSignature() {
             return offererSignature;
         }
     }

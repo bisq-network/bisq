@@ -39,18 +39,18 @@ public class ProcessReportOfferAvailabilityMessage extends Task<CheckOfferAvaila
     protected void doRun() {
         try {
             ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = (ReportOfferAvailabilityMessage) model.getMessage();
-            checkState(model.getOffer().getId().equals(reportOfferAvailabilityMessage.getOfferId()));
+            checkState(model.offer.getId().equals(reportOfferAvailabilityMessage.offerId));
 
-            if (model.getOffer().getState() != Offer.State.REMOVED) {
-                if (reportOfferAvailabilityMessage.isOfferOpen())
-                    model.getOffer().setState(Offer.State.AVAILABLE);
+            if (model.offer.getState() != Offer.State.REMOVED) {
+                if (reportOfferAvailabilityMessage.isOfferOpen)
+                    model.offer.setState(Offer.State.AVAILABLE);
                 else
-                    model.getOffer().setState(Offer.State.RESERVED);
+                    model.offer.setState(Offer.State.RESERVED);
             }
 
             complete();
         } catch (Throwable t) {
-            model.getOffer().setState(Offer.State.FAULT);
+            model.offer.setState(Offer.State.FAULT);
 
             failed(t);
         }

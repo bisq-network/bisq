@@ -37,7 +37,7 @@ public class RequestIsOfferAvailable extends Task<CheckOfferAvailabilityModel> {
     @Override
     protected void doRun() {
         try {
-            model.getTradeMessageService().sendMessage(model.getPeer(), new RequestIsOfferAvailableMessage(model.getOffer().getId()),
+            model.tradeMessageService.sendMessage(model.getPeer(), new RequestIsOfferAvailableMessage(model.offer.getId()),
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {
@@ -46,13 +46,13 @@ public class RequestIsOfferAvailable extends Task<CheckOfferAvailabilityModel> {
 
                         @Override
                         public void handleFault() {
-                            model.getOffer().setState(Offer.State.OFFERER_OFFLINE);
+                            model.offer.setState(Offer.State.OFFERER_OFFLINE);
 
                             failed();
                         }
                     });
         } catch (Throwable t) {
-            model.getOffer().setState(Offer.State.FAULT);
+            model.offer.setState(Offer.State.FAULT);
 
             failed(t);
         }

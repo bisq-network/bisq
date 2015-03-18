@@ -15,31 +15,20 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.offerer.messages;
-
-import io.bitsquare.trade.protocol.trade.TradeMessage;
+package io.bitsquare.trade.protocol.trade.messages;
 
 import org.bitcoinj.core.Transaction;
 
 import java.io.Serializable;
 
-public class DepositTxPublishedMessage implements Serializable, TradeMessage {
-    private static final long serialVersionUID = -1532231540167406581L;
+public class PayoutTxPublishedMessage extends TradeMessage implements Serializable {
+    private static final long serialVersionUID = 1288653559218403873L;
 
-    private final String tradeId;
-    private final Transaction depositTx;
+    public final Transaction payoutTx;
 
-    public DepositTxPublishedMessage(String tradeId, Transaction depositTx) {
+    public PayoutTxPublishedMessage(String tradeId, Transaction payoutTx) {
         this.tradeId = tradeId;
-        this.depositTx = depositTx;
+        this.payoutTx = payoutTx;
     }
 
-    @Override
-    public String getTradeId() {
-        return tradeId;
-    }
-
-    public Transaction getDepositTx() {
-        return depositTx;
-    }
 }

@@ -17,25 +17,39 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.models;
 
+import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.network.Peer;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.crypto.DeterministicKey;
 
 import java.io.Serializable;
+
+import java.security.PublicKey;
 
 import java.util.List;
 
 public class OffererModel implements Serializable {
     private static final long serialVersionUID = -1845177552607819927L;
-    
-    public byte[] pubKey;
-    public ECKey.ECDSASignature payoutSignature;
+
+    // Those fields are set at constructor but not declared as final because constructor is not called in case model gets created from a persisted model
+    // Declared transient as they will be provided in any case at construction time
+    transient public FiatAccount fiatAccount;
+    transient public String accountId;
+    transient public PublicKey messagePubKey;
+    transient public byte[] registrationPubKey;
+    transient public DeterministicKey registrationKeyPair;
+    transient public AddressEntry addressEntry;
+    transient public byte[] pubKey;
+
+    // written by tasks
+    public byte[] payoutSignature;
     public Coin payoutAmount;
     public List<TransactionOutput> connectedOutputsForAllInputs;
     public List<TransactionOutput> outputs;
-    public Transaction payoutTx;
     public Peer peer;
+    public Transaction preparedPayoutTx;
 }

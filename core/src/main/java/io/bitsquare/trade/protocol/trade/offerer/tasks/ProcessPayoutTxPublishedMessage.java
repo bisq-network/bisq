@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
-import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 
@@ -39,11 +39,11 @@ public class ProcessPayoutTxPublishedMessage extends Task<BuyerAsOffererModel> {
     @Override
     protected void doRun() {
         try {
-            checkTradeId(model.getId(), model.getTradeMessage());
+            checkTradeId(model.id, model.getTradeMessage());
 
-            model.getTrade().setPayoutTx(checkNotNull(((PayoutTxPublishedMessage) model.getTradeMessage()).getPayoutTx()));
+            model.trade.setPayoutTx(checkNotNull(((PayoutTxPublishedMessage) model.getTradeMessage()).payoutTx));
 
-            model.getTrade().setState(Trade.State.PAYOUT_PUBLISHED);
+            model.trade.setState(Trade.State.PAYOUT_PUBLISHED);
 
             complete();
         } catch (Throwable t) {

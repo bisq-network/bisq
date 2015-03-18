@@ -38,22 +38,22 @@ public class SignPayoutTx extends Task<BuyerAsOffererModel> {
     @Override
     protected void doRun() {
         try {
-            Trade trade = model.getTrade();
+            Trade trade = model.trade;
             Coin securityDeposit = trade.getSecurityDeposit();
             Coin offererPayoutAmount = trade.getTradeAmount().add(securityDeposit);
             @SuppressWarnings("UnnecessaryLocalVariable") Coin takerPayoutAmount = securityDeposit;
 
-            TradeWalletService.TransactionDataResult result = model.getTradeWalletService().offererCreatesAndSignsPayoutTx(
+            TradeWalletService.TransactionDataResult result = model.tradeWalletService.offererCreatesAndSignsPayoutTx(
                     trade.getDepositTx(),
                     offererPayoutAmount,
                     takerPayoutAmount,
                     model.taker.payoutAddress,
-                    model.getWalletService().getAddressEntry(trade.getId()),
+                    model.walletService.getAddressEntry(trade.getId()),
                     model.offerer.pubKey,
                     model.taker.pubKey,
-                    model.getArbitratorPubKey());
+                    model.arbitratorPubKey);
 
-            model.offerer.payoutTx = result.getPayoutTx();
+            model.offerer.preparedPayoutTx = result.getPayoutTx();
             model.offerer.payoutSignature = result.getOffererSignature();
             model.offerer.payoutAmount = offererPayoutAmount;
             model.taker.payoutAmount = takerPayoutAmount;

@@ -19,9 +19,9 @@ package io.bitsquare.trade.protocol.placeoffer.tasks;
 
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -49,12 +49,12 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
     @Override
     protected void doRun() {
 
-        Coin totalsNeeded = model.getOffer().getSecurityDeposit().add(FeePolicy.CREATE_OFFER_FEE).add(FeePolicy.TX_FEE);
-        AddressEntry addressEntry = model.getWalletService().getAddressEntry(model.getOffer().getId());
-        Coin balance = model.getWalletService().getBalanceForAddress(addressEntry.getAddress());
+        Coin totalsNeeded = model.offer.getSecurityDeposit().add(FeePolicy.CREATE_OFFER_FEE).add(FeePolicy.TX_FEE);
+        AddressEntry addressEntry = model.walletService.getAddressEntry(model.offer.getId());
+        Coin balance = model.walletService.getBalanceForAddress(addressEntry.getAddress());
         if (balance.compareTo(totalsNeeded) >= 0) {
 
-            model.getWalletService().getTradeWalletService().broadcastCreateOfferFeeTx(model.getTransaction(), new FutureCallback<Transaction>() {
+            model.walletService.getTradeWalletService().broadcastCreateOfferFeeTx(model.getTransaction(), new FutureCallback<Transaction>() {
                 @Override
                 public void onSuccess(Transaction transaction) {
                     log.info("Broadcast of offer fee payment succeeded: transaction = " + transaction.toString());
@@ -66,12 +66,12 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                     else {
                         log.warn("Tx malleability happened after broadcast. We publish the changed offer to the DHT again.");
                         // Tx malleability happened after broadcast. We publish the changed offer to the DHT again.
-                        model.getOfferBookService().removeOffer(model.getOffer(),
+                        model.offerBookService.removeOffer(model.offer,
                                 () -> {
                                     log.info("We store now the changed txID to the offer and add that again.");
                                     // We store now the changed txID to the offer and add that again.
-                                    model.getOffer().setOfferFeePaymentTxID(transaction.getHashAsString());
-                                    model.getOfferBookService().addOffer(model.getOffer(),
+                                    model.offer.setOfferFeePaymentTxID(transaction.getHashAsString());
+                                    model.offerBookService.addOffer(model.offer,
                                             () -> {
                                                 complete();
                                             },
@@ -103,7 +103,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
     protected void updateStateOnFault() {
         if (!removeOfferFailed && !addOfferFailed) {
             // If broadcast fails we need to remove offer from offerbook
-            model.getOfferBookService().removeOffer(model.getOffer(),
+            model.offerBookService.removeOffer(model.offer,
                     () -> {
                         log.info("Offer removed from offerbook because broadcast failed.");
                     },

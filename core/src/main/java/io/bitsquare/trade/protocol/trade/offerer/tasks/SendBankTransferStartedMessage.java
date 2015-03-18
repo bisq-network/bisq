@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
-import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.messages.BankTransferStartedMessage;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 
@@ -36,13 +36,13 @@ public class SendBankTransferStartedMessage extends Task<BuyerAsOffererModel> {
     @Override
     protected void doRun() {
         BankTransferStartedMessage tradeMessage = new BankTransferStartedMessage(
-                model.getId(),
+                model.id,
                 model.getPublishedDepositTx(),
-                model.offerer.payoutSignature.encodeToDER(),
+                model.offerer.payoutSignature,
                 model.offerer.payoutAmount,
                 model.taker.payoutAmount,
-                model.getAddressEntry().getAddressString());
-        model.getTradeMessageService().sendMessage(model.taker.peer, tradeMessage, new SendMessageListener() {
+                model.offerer.addressEntry.getAddressString());
+        model.tradeMessageService.sendMessage(model.taker.peer, tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 log.trace("Sending BankTransferInitedMessage succeeded.");

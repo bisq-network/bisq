@@ -21,10 +21,10 @@ import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.handlers.MessageHandler;
-import io.bitsquare.trade.protocol.trade.TradeMessage;
-import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.messages.RequestDepositPaymentMessage;
+import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
+import io.bitsquare.trade.protocol.trade.messages.BankTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 import io.bitsquare.trade.protocol.trade.taker.tasks.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
@@ -65,9 +65,10 @@ public class SellerAsTakerProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public SellerAsTakerProtocol(SellerAsTakerModel model) {
+        log.debug("New SellerAsTakerProtocol " + this);
         this.model = model;
         messageHandler = this::handleMessage;
-        model.getTradeMessageService().addMessageHandler(messageHandler);
+        model.tradeMessageService.addMessageHandler(messageHandler);
     }
 
 
@@ -76,7 +77,8 @@ public class SellerAsTakerProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void cleanup() {
-        model.getTradeMessageService().removeMessageHandler(messageHandler);
+        log.debug("cleanup " + this);
+        model.tradeMessageService.removeMessageHandler(messageHandler);
     }
 
     public void takeAvailableOffer() {
@@ -145,7 +147,7 @@ public class SellerAsTakerProtocol {
         SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
                 () -> {
                     log.debug("taskRunner at handleBankTransferInitedMessage completed");
-                    model.getTrade().setState(Trade.State.FIAT_PAYMENT_STARTED);
+                    model.trade.setState(Trade.State.FIAT_PAYMENT_STARTED);
                 },
                 (errorMessage) -> {
                     log.error(errorMessage);
@@ -186,9 +188,9 @@ public class SellerAsTakerProtocol {
         log.trace("handleNewMessage: message = " + message.getClass().getSimpleName());
         if (message instanceof TradeMessage) {
             TradeMessage tradeMessage = (TradeMessage) message;
-            nonEmptyStringOf(tradeMessage.getTradeId());
+            nonEmptyStringOf(tradeMessage.tradeId);
 
-            if (tradeMessage.getTradeId().equals(model.getId())) {
+            if (tradeMessage.tradeId.equals(model.id)) {
                 if (tradeMessage instanceof RequestDepositPaymentMessage) {
                     handleRequestDepositPaymentMessage((RequestDepositPaymentMessage) tradeMessage);
                 }

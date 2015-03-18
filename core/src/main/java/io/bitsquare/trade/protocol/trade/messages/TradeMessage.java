@@ -15,10 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade;
+package io.bitsquare.trade.protocol.trade.messages;
 
 import io.bitsquare.network.Message;
 
-public interface OfferMessage extends Message {
-    public String getOfferId();
+import java.io.Serializable;
+
+public class TradeMessage implements Message, Serializable {
+    private static final long serialVersionUID = 7572470983485004081L;
+    
+    public String tradeId;
 }

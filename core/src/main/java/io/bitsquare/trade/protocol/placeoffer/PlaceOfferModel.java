@@ -20,19 +20,20 @@ package io.bitsquare.trade.protocol.placeoffer;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
-import io.bitsquare.common.taskrunner.SharedModel;
+import io.bitsquare.common.taskrunner.SharedTaskModel;
 
 import org.bitcoinj.core.Transaction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PlaceOfferModel extends SharedModel {
+public class PlaceOfferModel extends SharedTaskModel {
     private static final Logger log = LoggerFactory.getLogger(PlaceOfferModel.class);
 
-    private final Offer offer;
-    private final WalletService walletService;
-    private final OfferBookService offerBookService;
+    public final Offer offer;
+    public final WalletService walletService;
+    public final OfferBookService offerBookService;
+    
     private Transaction transaction;
 
     public PlaceOfferModel(Offer offer,
@@ -43,19 +44,6 @@ public class PlaceOfferModel extends SharedModel {
         this.offerBookService = offerBookService;
     }
 
-    // getter/setter
-    public Offer getOffer() {
-        return offer;
-    }
-
-    public WalletService getWalletService() {
-        return walletService;
-    }
-
-    public OfferBookService getOfferBookService() {
-        return offerBookService;
-    }
-
     public void setTransaction(Transaction transaction) {
         this.transaction = transaction;
     }
@@ -63,5 +51,4 @@ public class PlaceOfferModel extends SharedModel {
     public Transaction getTransaction() {
         return transaction;
     }
-
 }

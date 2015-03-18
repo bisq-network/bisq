@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.listeners.SendMessageListener;
-import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestOffererPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 
 import org.slf4j.Logger;
@@ -36,19 +36,19 @@ public class SendSignedTakerDepositTx extends Task<SellerAsTakerModel> {
     @Override
     protected void doRun() {
         RequestOffererPublishDepositTxMessage tradeMessage = new RequestOffererPublishDepositTxMessage(
-                model.getId(),
-                model.getFiatAccount(),
-                model.getAccountId(),
-                model.getNetworkPubKey(),
-                model.getTrade().getContractAsJson(),
-                model.getTrade().getTakerContractSignature(),
-                model.getAddressEntry().getAddressString(),
-                model.taker.depositTx,
+                model.id,
+                model.taker.fiatAccount,
+                model.taker.accountId,
+                model.taker.messagePubKey,
+                model.trade.getContractAsJson(),
+                model.trade.getTakerContractSignature(),
+                model.taker.addressEntry.getAddressString(),
+                model.taker.preparedDepositTx,
                 model.taker.connectedOutputsForAllInputs,
                 model.taker.outputs
         );
 
-        model.getTradeMessageService().sendMessage(model.offerer.peer, tradeMessage, new SendMessageListener() {
+        model.tradeMessageService.sendMessage(model.offerer.peer, tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 complete();

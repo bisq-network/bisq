@@ -37,14 +37,14 @@ public class SetupListenerForBlockChainConfirmation extends Task<BuyerAsOffererM
 
     @Override
     protected void doRun() {
-        TransactionConfidence confidence = model.getTrade().getDepositTx().getConfidence();
+        TransactionConfidence confidence = model.trade.getDepositTx().getConfidence();
         confidence.addEventListener(new TransactionConfidence.Listener() {
             @Override
             public void onConfidenceChanged(Transaction tx, ChangeReason reason) {
                 log.trace("onConfidenceChanged " + tx.getConfidence());
                 if (reason == ChangeReason.TYPE && tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
 
-                    model.getTrade().setState(Trade.State.DEPOSIT_CONFIRMED);
+                    model.trade.setState(Trade.State.DEPOSIT_CONFIRMED);
 
                     boolean removed = confidence.removeEventListener(this);
                     log.debug("listener removed? " + removed);

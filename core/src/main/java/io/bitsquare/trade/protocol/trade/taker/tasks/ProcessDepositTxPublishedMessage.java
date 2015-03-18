@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
@@ -38,10 +38,10 @@ public class ProcessDepositTxPublishedMessage extends Task<SellerAsTakerModel> {
     @Override
     protected void doRun() {
         try {
-            checkTradeId(model.getId(), model.getTradeMessage());
+            checkTradeId(model.id, model.getTradeMessage());
 
             DepositTxPublishedMessage message = (DepositTxPublishedMessage) model.getTradeMessage();
-            model.setPublishedDepositTx(checkNotNull(message.getDepositTx()));
+            model.setPublishedDepositTx(checkNotNull(message.depositTx));
 
             complete();
         } catch (Throwable t) {

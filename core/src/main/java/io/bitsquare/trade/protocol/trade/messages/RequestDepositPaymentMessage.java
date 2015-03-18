@@ -15,10 +15,9 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.offerer.messages;
+package io.bitsquare.trade.protocol.trade.messages;
 
 import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.trade.protocol.trade.TradeMessage;
 
 import org.bitcoinj.core.TransactionOutput;
 
@@ -26,52 +25,26 @@ import java.io.Serializable;
 
 import java.util.List;
 
-public class RequestDepositPaymentMessage implements Serializable, TradeMessage {
+public class RequestDepositPaymentMessage extends TradeMessage implements Serializable {
     private static final long serialVersionUID = -3988720410493712913L;
 
-    private final String tradeId;
-    private final List<TransactionOutput> offererConnectedOutputsForAllInputs;
-    private final List<TransactionOutput> offererOutputs;
-    private final byte[] offererPubKey;
-    private final FiatAccount fiatAccount;
-    private final String accountID;
+    public final List<TransactionOutput> offererConnectedOutputsForAllInputs;
+    public final List<TransactionOutput> offererOutputs;
+    public final byte[] offererPubKey;
+    public final FiatAccount offererFiatAccount;
+    public final String offererAccountId;
 
     public RequestDepositPaymentMessage(String tradeId,
                                         List<TransactionOutput> offererConnectedOutputsForAllInputs,
                                         List<TransactionOutput> offererOutputs,
                                         byte[] offererPubKey,
-                                        FiatAccount fiatAccount,
-                                        String accountID) {
+                                        FiatAccount offererFiatAccount,
+                                        String offererAccountId) {
         this.tradeId = tradeId;
         this.offererConnectedOutputsForAllInputs = offererConnectedOutputsForAllInputs;
         this.offererOutputs = offererOutputs;
         this.offererPubKey = offererPubKey;
-        this.fiatAccount = fiatAccount;
-        this.accountID = accountID;
-    }
-
-    @Override
-    public String getTradeId() {
-        return tradeId;
-    }
-
-    public List<TransactionOutput> getOffererConnectedOutputsForAllInputs() {
-        return offererConnectedOutputsForAllInputs;
-    }
-
-    public List<TransactionOutput> getOffererOutputs() {
-        return offererOutputs;
-    }
-
-    public byte[] getOffererPubKey() {
-        return offererPubKey;
-    }
-
-    public FiatAccount getFiatAccount() {
-        return fiatAccount;
-    }
-
-    public String getAccountId() {
-        return accountID;
+        this.offererFiatAccount = offererFiatAccount;
+        this.offererAccountId = offererAccountId;
     }
 }

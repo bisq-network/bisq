@@ -34,7 +34,7 @@ class BuyerAsOffererTaskRunner<T extends BuyerAsOffererModel> extends TaskRunner
 
   /*  @Override
     public void handleFault(String message, @NotNull Throwable throwable) {
-        sharedModel.getTrade().setState(Trade.State.FAILED);
+        sharedModel.trade.setState(Trade.State.FAILED);
         super.handleFault(message, throwable);
     }*/
 }

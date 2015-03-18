@@ -15,31 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.taker.messages;
+package io.bitsquare.common.taskrunner;
 
-import io.bitsquare.trade.protocol.trade.TradeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.bitcoinj.core.Transaction;
+public class SharedTaskModel {
+    private static final Logger log = LoggerFactory.getLogger(SharedTaskModel.class);
 
-import java.io.Serializable;
-
-public class PayoutTxPublishedMessage implements Serializable, TradeMessage {
-    private static final long serialVersionUID = 1288653559218403873L;
-
-    private final String tradeId;
-    private final Transaction payoutTx;
-
-    public PayoutTxPublishedMessage(String tradeId, Transaction payoutTx) {
-        this.tradeId = tradeId;
-        this.payoutTx = payoutTx;
-    }
-
-    @Override
-    public String getTradeId() {
-        return tradeId;
-    }
-
-    public Transaction getPayoutTx() {
-        return payoutTx;
+    public void persist() {
     }
 }

@@ -43,7 +43,7 @@ import javafx.collections.ObservableList;
 public class User implements Serializable {
     private static final long serialVersionUID = 7409078808248518638L;
 
-    private KeyPair networkKeyPair;
+    private KeyPair messageKeyPair;
     private String accountID;
 
     // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is
@@ -71,13 +71,13 @@ public class User implements Serializable {
         if (persistedUser != null) {
             fiatAccounts.setAll(persistedUser.getSerializedBankAccounts());
             setCurrentBankAccount(persistedUser.getSerializedCurrentBankAccount());
-            networkKeyPair = persistedUser.getNetworkKeyPair();
+            messageKeyPair = persistedUser.getMessageKeyPair();
             accountID = persistedUser.getAccountId();
         }
         else {
             // First time
             // TODO use separate thread. DSAKeyUtil.getKeyPair() runs in same thread now
-            networkKeyPair = DSAKeyUtil.generateKeyPair();
+            messageKeyPair = DSAKeyUtil.generateKeyPair();
         }
     }
 
@@ -160,12 +160,12 @@ public class User implements Serializable {
         return null;
     }
 
-    public KeyPair getNetworkKeyPair() {
-        return networkKeyPair;
+    public KeyPair getMessageKeyPair() {
+        return messageKeyPair;
     }
 
-    public PublicKey getNetworkPubKey() {
-        return networkKeyPair.getPublic();
+    public PublicKey getMessagePubKey() {
+        return messageKeyPair.getPublic();
     }
 
     public ObjectProperty<FiatAccount> currentBankAccountProperty() {

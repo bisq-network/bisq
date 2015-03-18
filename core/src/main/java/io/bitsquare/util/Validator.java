@@ -17,7 +17,7 @@
 
 package io.bitsquare.util;
 
-import io.bitsquare.trade.protocol.trade.TradeMessage;
+import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 
 import org.bitcoinj.core.Coin;
 
@@ -52,7 +52,7 @@ public class Validator {
     }
 
     public static void checkTradeId(String tradeId, TradeMessage tradeMessage) {
-        checkArgument(tradeId.equals(tradeMessage.getTradeId()));
+        checkArgument(tradeId.equals(tradeMessage.tradeId));
     }
 
 

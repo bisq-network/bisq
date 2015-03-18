@@ -15,24 +15,21 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.offerer.messages;
-
-import io.bitsquare.trade.protocol.trade.TradeMessage;
+package io.bitsquare.trade.protocol.trade.messages;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
 import java.io.Serializable;
 
-public class BankTransferStartedMessage implements Serializable, TradeMessage {
+public class BankTransferStartedMessage extends TradeMessage implements Serializable {
     private static final long serialVersionUID = -3479634129543632523L;
 
-    private final String tradeId;
-    private final Transaction depositTx;
-    private final byte[] offererSignature;
-    private final Coin offererPayoutAmount;
-    private final Coin takerPayoutAmount;
-    private final String offererPayoutAddress;
+    public final Transaction depositTx;
+    public final byte[] offererSignature;
+    public final Coin offererPayoutAmount;
+    public final Coin takerPayoutAmount;
+    public final String offererPayoutAddress;
 
     public BankTransferStartedMessage(String tradeId,
                                       Transaction depositTx,
@@ -46,30 +43,5 @@ public class BankTransferStartedMessage implements Serializable, TradeMessage {
         this.offererPayoutAmount = offererPayoutAmount;
         this.takerPayoutAmount = takerPayoutAmount;
         this.offererPayoutAddress = offererPayoutAddress;
-    }
-
-    @Override
-    public String getTradeId() {
-        return tradeId;
-    }
-
-    public Transaction getDepositTx() {
-        return depositTx;
-    }
-
-    public String getOffererPayoutAddress() {
-        return offererPayoutAddress;
-    }
-
-    public Coin getOffererPayoutAmount() {
-        return offererPayoutAmount;
-    }
-
-    public Coin getTakerPayoutAmount() {
-        return takerPayoutAmount;
-    }
-
-    public byte[] getOffererSignature() {
-        return offererSignature;
     }
 }

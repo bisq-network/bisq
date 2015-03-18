@@ -34,7 +34,7 @@ class SellerAsTakerTaskRunner<T extends SellerAsTakerModel> extends TaskRunner<S
 
    /* @Override
     public void handleErrorMessage(String errorMessage) {
-        sharedModel.getTrade().setState(Trade.State.FAILED);
+        sharedModel.trade.setState(Trade.State.FAILED);
         super.handleErrorMessage(errorMessage);
     }*/
 }

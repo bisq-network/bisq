@@ -213,7 +213,7 @@ class OfferBookDataModel implements Activatable, DataModel {
     }
 
     boolean isMyOffer(Offer offer) {
-        return offer.getMessagePublicKey() != null && offer.getMessagePublicKey().equals(user.getNetworkPubKey());
+        return offer.getMessagePublicKey() != null && offer.getMessagePublicKey().equals(user.getMessagePubKey());
     }
 
     Coin getAmountAsCoin() {

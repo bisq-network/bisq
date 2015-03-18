@@ -27,7 +27,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TaskRunner<T extends SharedModel> {
+public class TaskRunner<T extends SharedTaskModel> {
     private static final Logger log = LoggerFactory.getLogger(TaskRunner.class);
 
     private final Queue<Class> tasks = new LinkedBlockingQueue<>();
@@ -77,7 +77,12 @@ public class TaskRunner<T extends SharedModel> {
 
     void handleComplete() {
         log.trace("Task completed: " + currentTask.getSimpleName());
+        persistModel();
         next();
+    }
+
+    protected void persistModel() {
+       // sharedModel.persist();
     }
 
     void handleErrorMessage(String errorMessage) {

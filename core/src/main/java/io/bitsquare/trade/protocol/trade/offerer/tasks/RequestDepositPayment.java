@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
-import io.bitsquare.trade.protocol.trade.offerer.messages.RequestDepositPaymentMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestDepositPaymentMessage;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 
@@ -36,14 +36,14 @@ public class RequestDepositPayment extends Task<BuyerAsOffererModel> {
     @Override
     protected void doRun() {
         RequestDepositPaymentMessage tradeMessage = new RequestDepositPaymentMessage(
-                model.getId(),
+                model.id,
                 model.offerer.connectedOutputsForAllInputs,
                 model.offerer.outputs,
                 model.offerer.pubKey,
-                model.getFiatAccount(),
-                model.getAccountId());
+                model.offerer.fiatAccount,
+                model.offerer.accountId);
 
-        model.getTradeMessageService().sendMessage(model.taker.peer, tradeMessage, new SendMessageListener() {
+        model.tradeMessageService.sendMessage(model.taker.peer, tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");

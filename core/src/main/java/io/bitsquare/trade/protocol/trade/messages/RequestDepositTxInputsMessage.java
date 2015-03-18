@@ -15,11 +15,23 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.common.taskrunner;
+package io.bitsquare.trade.protocol.trade.messages;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.bitcoinj.core.Coin;
 
-public class SharedModel {
-    private static final Logger log = LoggerFactory.getLogger(SharedModel.class);
+import java.io.Serializable;
+
+public class RequestDepositTxInputsMessage extends TradeMessage implements Serializable {
+    private static final long serialVersionUID = -5057935061275354312L;
+
+    public final Coin tradeAmount;
+    public final String takeOfferFeeTxId;
+    public final byte[] takerPubKey;
+
+    public RequestDepositTxInputsMessage(String tradeId, String takeOfferFeeTxId, Coin tradeAmount, byte[] takerPubKey) {
+        this.tradeId = tradeId;
+        this.takeOfferFeeTxId = takeOfferFeeTxId;
+        this.tradeAmount = tradeAmount;
+        this.takerPubKey = takerPubKey;
+    }
 }

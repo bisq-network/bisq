@@ -41,21 +41,21 @@ public class SignAndPublishPayoutTx extends Task<SellerAsTakerModel> {
     @Override
     protected void doRun() {
         try {
-            model.getTradeWalletService().takerSignsAndPublishPayoutTx(
+            model.tradeWalletService.takerSignsAndPublishPayoutTx(
                     model.getPublishedDepositTx(),
                     model.offerer.signature,
                     model.offerer.payoutAmount,
                     model.taker.payoutAmount,
                     model.offerer.payoutAddress,
-                    model.getAddressEntry(),
+                    model.taker.addressEntry,
                     model.offerer.pubKey,
                     model.taker.pubKey,
-                    model.getArbitratorPubKey(),
+                    model.arbitratorPubKey,
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {
                             model.setPayoutTx(transaction);
-                            model.getTrade().setState(Trade.State.PAYOUT_PUBLISHED);
+                            model.trade.setState(Trade.State.PAYOUT_PUBLISHED);
 
                             complete();
                         }

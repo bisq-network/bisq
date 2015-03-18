@@ -17,9 +17,9 @@
 
 package io.bitsquare.trade.protocol.placeoffer.tasks;
 
-import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
     @Override
     protected void doRun() {
         try {
-            model.getOffer().validate();
+            model.offer.validate();
 
             complete();
         } catch (Exception e) {

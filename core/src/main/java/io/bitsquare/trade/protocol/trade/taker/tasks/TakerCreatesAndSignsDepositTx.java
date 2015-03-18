@@ -39,23 +39,23 @@ public class TakerCreatesAndSignsDepositTx extends Task<SellerAsTakerModel> {
     @Override
     protected void doRun() {
         try {
-            Coin takerInputAmount = model.getTrade().getTradeAmount().add(model.getTrade().getSecurityDeposit()).add(FeePolicy.TX_FEE);
-            Coin msOutputAmount = takerInputAmount.add(model.getTrade().getSecurityDeposit());
+            Coin takerInputAmount = model.trade.getTradeAmount().add(model.trade.getSecurityDeposit()).add(FeePolicy.TX_FEE);
+            Coin msOutputAmount = takerInputAmount.add(model.trade.getSecurityDeposit());
 
-            TradeWalletService.TransactionDataResult result = model.getTradeWalletService().takerCreatesAndSignsDepositTx(
+            TradeWalletService.TransactionDataResult result = model.tradeWalletService.takerCreatesAndSignsDepositTx(
                     takerInputAmount,
                     msOutputAmount,
                     model.offerer.connectedOutputsForAllInputs,
                     model.offerer.outputs,
-                    model.getAddressEntry(),
+                    model.taker.addressEntry,
                     model.offerer.pubKey,
                     model.taker.pubKey,
-                    model.getArbitratorPubKey());
+                    model.arbitratorPubKey);
 
 
             model.taker.connectedOutputsForAllInputs = result.getConnectedOutputsForAllInputs();
             model.taker.outputs = result.getOutputs();
-            model.taker.depositTx = result.getDepositTx();
+            model.taker.preparedDepositTx = result.getDepositTx();
 
             complete();
         } catch (Exception e) {
@@ -67,6 +67,6 @@ public class TakerCreatesAndSignsDepositTx extends Task<SellerAsTakerModel> {
     protected void updateStateOnFault() {
         Trade.State state = Trade.State.FAULT;
         state.setErrorMessage(errorMessage);
-        model.getTrade().setState(state);
+        model.trade.setState(state);
     }
 }

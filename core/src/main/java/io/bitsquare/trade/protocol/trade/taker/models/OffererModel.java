@@ -17,10 +17,10 @@
 
 package io.bitsquare.trade.protocol.trade.taker.models;
 
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.network.Peer;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.TransactionOutput;
 
 import java.io.Serializable;
@@ -30,16 +30,14 @@ import java.util.List;
 public class OffererModel implements Serializable {
     private static final long serialVersionUID = 1582902150121576205L;
 
-    public OffererModel(Peer peer) {
-        this.peer = peer;
-    }
-
-    public final Peer peer;
+    public Peer peer;
     public byte[] pubKey;
     public Coin payoutAmount;
     public String payoutAddress;
     public List<TransactionOutput> connectedOutputsForAllInputs;
     public List<TransactionOutput> outputs;
-    public ECKey.ECDSASignature signature;
+    public byte[] signature;
+    public FiatAccount fiatAccount;
+    public String accountId;
 
 }

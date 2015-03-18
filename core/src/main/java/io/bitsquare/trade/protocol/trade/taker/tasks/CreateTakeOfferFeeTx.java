@@ -37,16 +37,16 @@ public class CreateTakeOfferFeeTx extends Task<SellerAsTakerModel> {
     @Override
     protected void doRun() {
         try {
-            Transaction createTakeOfferFeeTx = model.getTradeWalletService().createTakeOfferFeeTx(model.getAddressEntry());
+            Transaction createTakeOfferFeeTx = model.tradeWalletService.createTakeOfferFeeTx(model.taker.addressEntry);
 
             model.setTakeOfferFeeTx(createTakeOfferFeeTx);
-            model.getTrade().setState(Trade.State.TAKE_OFFER_FEE_TX_CREATED);
+            model.trade.setState(Trade.State.TAKE_OFFER_FEE_TX_CREATED);
 
             complete();
         } catch (Exception e) {
             appendToErrorMessage(e.getMessage());
 
-            model.getTrade().setState(Trade.State.FAULT);
+            model.trade.setState(Trade.State.FAULT);
 
             failed(e);
         }
