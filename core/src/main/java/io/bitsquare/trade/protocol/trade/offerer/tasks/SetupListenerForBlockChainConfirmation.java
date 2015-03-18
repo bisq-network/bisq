@@ -17,13 +17,15 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
+
+import javafx.application.Platform;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,28 +33,36 @@ import org.slf4j.LoggerFactory;
 public class SetupListenerForBlockChainConfirmation extends Task<BuyerAsOffererModel> {
     private static final Logger log = LoggerFactory.getLogger(SetupListenerForBlockChainConfirmation.class);
 
+    private TransactionConfidence.Listener transactionConfidenceListener;
+    private TransactionConfidence transactionConfidence;
+
     public SetupListenerForBlockChainConfirmation(TaskRunner taskHandler, BuyerAsOffererModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void doRun() {
-        TransactionConfidence confidence = model.trade.getDepositTx().getConfidence();
-        confidence.addEventListener(new TransactionConfidence.Listener() {
+        transactionConfidence = model.trade.getDepositTx().getConfidence();
+        transactionConfidenceListener = new TransactionConfidence.Listener() {
             @Override
             public void onConfidenceChanged(Transaction tx, ChangeReason reason) {
                 log.trace("onConfidenceChanged " + tx.getConfidence());
                 if (reason == ChangeReason.TYPE && tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
-
                     model.trade.setState(Trade.State.DEPOSIT_CONFIRMED);
 
-                    boolean removed = confidence.removeEventListener(this);
-                    log.debug("listener removed? " + removed);
+                    // transactionConfidence use CopyOnWriteArrayList as listeners, but be safe and delay remove a bit.
+                    Platform.runLater(() -> removeEventListener());
                 }
             }
-        });
+        };
+        transactionConfidence.addEventListener(transactionConfidenceListener);
 
         complete();
+    }
+
+    private void removeEventListener() {
+        if (!transactionConfidence.removeEventListener(transactionConfidenceListener))
+            throw new RuntimeException("Remove transactionConfidenceListener failed at SetupListenerForBlockChainConfirmation.");
     }
 
     @Override

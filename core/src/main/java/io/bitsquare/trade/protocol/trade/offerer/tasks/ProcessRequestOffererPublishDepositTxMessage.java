@@ -19,8 +19,8 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
 import io.bitsquare.trade.protocol.trade.messages.RequestOffererPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,11 +45,11 @@ public class ProcessRequestOffererPublishDepositTxMessage extends Task<BuyerAsOf
             model.taker.accountId = nonEmptyStringOf(message.takerAccountId);
             model.taker.messagePublicKey = checkNotNull(message.takerMessagePublicKey);
             model.taker.contractAsJson = nonEmptyStringOf(message.takerContractAsJson);
+            model.taker.contractSignature = nonEmptyStringOf(message.takerContractSignature);
             model.taker.payoutAddress = nonEmptyStringOf(message.takerPayoutAddress);
             model.taker.depositTx = checkNotNull(message.takersDepositTx);
             model.taker.connectedOutputsForAllInputs = checkNotNull(message.takerConnectedOutputsForAllInputs);
             checkArgument(message.takerConnectedOutputsForAllInputs.size() > 0);
-            model.taker.outputs = checkNotNull(message.takerOutputs);
 
             complete();
         } catch (Throwable t) {

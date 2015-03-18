@@ -29,7 +29,7 @@ import io.bitsquare.trade.protocol.placeoffer.tasks.BroadcastCreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.ValidateOffer;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererProtocol;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.GetOffererDepositTxInputs;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateOffererDepositTxInputs;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestOffererPublishDepositTxMessage;
@@ -103,7 +103,7 @@ public class DebugView extends InitializableView {
                         /*---- Protocol ----*/
                         BuyerAsOffererProtocol.class,
                         ProcessRequestDepositTxInputsMessage.class,
-                        GetOffererDepositTxInputs.class,
+                        CreateOffererDepositTxInputs.class,
                         RequestDepositPayment.class,
 
                         ProcessRequestOffererPublishDepositTxMessage.class,

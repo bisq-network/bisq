@@ -17,13 +17,13 @@
 
 package io.bitsquare.trade.protocol.placeoffer;
 
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.protocol.placeoffer.tasks.AddOfferToRemoteOfferBook;
 import io.bitsquare.trade.protocol.placeoffer.tasks.BroadcastCreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.ValidateOffer;
-import io.bitsquare.common.handlers.ErrorMessageHandler;
-import io.bitsquare.common.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

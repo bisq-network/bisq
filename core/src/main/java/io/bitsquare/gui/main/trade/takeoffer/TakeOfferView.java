@@ -269,10 +269,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         Dialog.Actions.CLOSE.handle(actionEvent);
                     }
                 });
-
-                Popups.openInfoPopup(BSResources.get("takeOffer.success.headline"),
+                // TODO temp just for testing 
+               /* Popups.openInfoPopup(BSResources.get("takeOffer.success.headline"),
                         BSResources.get("takeOffer.success.info"),
-                        actions);
+                        actions);*/
             }
         });
     }

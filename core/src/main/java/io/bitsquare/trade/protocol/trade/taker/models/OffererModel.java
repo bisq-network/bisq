@@ -30,7 +30,11 @@ import java.util.List;
 public class OffererModel implements Serializable {
     private static final long serialVersionUID = 1582902150121576205L;
 
+    // Those fields are set at constructor but not declared as final because constructor is not called in case model gets created from a persisted model
+    // Declared transient as they will be provided in any case at construction time
     public Peer peer;
+
+    // written by tasks
     public byte[] pubKey;
     public Coin payoutAmount;
     public String payoutAddress;

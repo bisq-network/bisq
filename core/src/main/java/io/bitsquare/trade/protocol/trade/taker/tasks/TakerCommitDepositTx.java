@@ -17,10 +17,10 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 
 import org.bitcoinj.core.Transaction;
 
@@ -45,9 +45,5 @@ public class TakerCommitDepositTx extends Task<SellerAsTakerModel> {
         } catch (Throwable t) {
             failed(t);
         }
-    }
-
-    @Override
-    protected void updateStateOnFault() {
     }
 }

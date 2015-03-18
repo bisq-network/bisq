@@ -52,8 +52,4 @@ public class ProcessBankTransferStartedMessage extends Task<SellerAsTakerModel> 
             failed(t);
         }
     }
-
-    @Override
-    protected void updateStateOnFault() {
-    }
 }

@@ -38,30 +38,19 @@ public class SharedTradeModel extends SharedTaskModel implements Serializable {
 
     // provided
     transient public final Offer offer;
-
     transient public final TradeMessageService tradeMessageService;
     transient public final WalletService walletService;
     transient public final BlockChainService blockChainService;
     transient public final SignatureService signatureService;
     transient protected final Persistence persistence;
 
-
     // derived
     transient public final String id;
     transient public final TradeWalletService tradeWalletService;
     transient public final byte[] arbitratorPubKey;
-    
-  /*  transient public final FiatAccount fiatAccount;
-    transient public final String accountId;
-    transient public final PublicKey messagePubKey;
-    transient public final byte[] registrationPubKey;
-    transient public final DeterministicKey registrationKeyPair;
-    transient public final AddressEntry addressEntry;*/
-
 
     // data written/read by tasks
     transient private TradeMessage tradeMessage;
-
 
     protected SharedTradeModel(Offer offer,
                                TradeMessageService tradeMessageService,
@@ -80,13 +69,6 @@ public class SharedTradeModel extends SharedTaskModel implements Serializable {
         tradeWalletService = walletService.getTradeWalletService();
         //TODO use default arbitrator for now
         arbitratorPubKey = offer.getArbitrators().get(0).getPubKey();
-        
-       /* registrationPubKey = walletService.getRegistrationAddressEntry().getPubKey();
-        registrationKeyPair = walletService.getRegistrationAddressEntry().getKeyPair();
-        addressEntry = walletService.getAddressEntry(id);
-        fiatAccount = user.getBankAccount(offer.getBankAccountId());
-        accountId = user.getAccountId();
-        messagePubKey = user.getNetworkPubKey();*/
     }
 
     public void setTradeMessage(TradeMessage tradeMessage) {
@@ -96,6 +78,5 @@ public class SharedTradeModel extends SharedTaskModel implements Serializable {
     public TradeMessage getTradeMessage() {
         return tradeMessage;
     }
-
 
 }

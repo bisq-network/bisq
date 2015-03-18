@@ -30,18 +30,19 @@ import java.security.PublicKey;
 
 import java.util.List;
 
-public class TakerModel implements Serializable{
+public class TakerModel implements Serializable {
     private static final long serialVersionUID = 2660909397210346486L;
-    
+
+    // written by tasks
     public Peer peer;
     public String accountId;
     public FiatAccount fiatAccount;
     public PublicKey messagePublicKey;
-    public String contractAsJson;
+    public String contractAsJson;//TODO only write access now, missing impl.
+    public String contractSignature;
     public Coin payoutAmount;
     public Transaction depositTx;
     public List<TransactionOutput> connectedOutputsForAllInputs;
-    public List<TransactionOutput> outputs;
     public String payoutAddress;
     public byte[] pubKey;
 }

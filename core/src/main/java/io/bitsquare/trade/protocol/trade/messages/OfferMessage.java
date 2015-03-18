@@ -23,6 +23,6 @@ import java.io.Serializable;
 
 public class OfferMessage implements Message, Serializable {
     private static final long serialVersionUID = -89035992124170905L;
-    
+
     public String offerId;
 }

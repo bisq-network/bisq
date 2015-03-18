@@ -21,10 +21,10 @@ import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.handlers.MessageHandler;
-import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.messages.BankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositPaymentMessage;
+import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 import io.bitsquare.trade.protocol.trade.taker.tasks.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
@@ -185,7 +185,7 @@ public class SellerAsTakerProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handleMessage(Message message, Peer sender) {
-        log.trace("handleNewMessage: message = " + message.getClass().getSimpleName());
+        log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + sender);
         if (message instanceof TradeMessage) {
             TradeMessage tradeMessage = (TradeMessage) message;
             nonEmptyStringOf(tradeMessage.tradeId);

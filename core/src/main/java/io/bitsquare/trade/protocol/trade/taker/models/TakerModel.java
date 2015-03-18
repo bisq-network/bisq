@@ -39,15 +39,15 @@ public class TakerModel implements Serializable {
     transient public FiatAccount fiatAccount;
     transient public String accountId;
     transient public PublicKey messagePubKey;
-    transient public byte[] registrationPubKey;
+    transient public byte[] registrationPubKey; // TODO not read yet, missing impl.
     transient public DeterministicKey registrationKeyPair;
     transient public AddressEntry addressEntry;
     transient public byte[] pubKey;
-    
+
     // written by tasks
     public List<TransactionOutput> connectedOutputsForAllInputs;
     public List<TransactionOutput> outputs;
     public Coin payoutAmount;
     public Transaction preparedDepositTx;
-    
+
 }

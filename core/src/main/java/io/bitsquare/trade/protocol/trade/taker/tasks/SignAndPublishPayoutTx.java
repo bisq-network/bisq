@@ -17,10 +17,10 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 
 import org.bitcoinj.core.Transaction;
 
@@ -68,9 +68,5 @@ public class SignAndPublishPayoutTx extends Task<SellerAsTakerModel> {
         } catch (Throwable e) {
             failed(e);
         }
-    }
-
-    @Override
-    protected void updateStateOnFault() {
     }
 }

@@ -50,7 +50,7 @@ public class GetPeerAddress extends Task<CheckOfferAvailabilityModel> {
                 @Override
                 public void onFailed() {
                     model.offer.setState(Offer.State.OFFERER_OFFLINE);
-                    
+
                     failed();
                 }
             });

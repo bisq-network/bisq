@@ -28,10 +28,10 @@ import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GetOffererDepositTxInputs extends Task<BuyerAsOffererModel> {
-    private static final Logger log = LoggerFactory.getLogger(GetOffererDepositTxInputs.class);
+public class CreateOffererDepositTxInputs extends Task<BuyerAsOffererModel> {
+    private static final Logger log = LoggerFactory.getLogger(CreateOffererDepositTxInputs.class);
 
-    public GetOffererDepositTxInputs(TaskRunner taskHandler, BuyerAsOffererModel model) {
+    public CreateOffererDepositTxInputs(TaskRunner taskHandler, BuyerAsOffererModel model) {
         super(taskHandler, model);
     }
 
@@ -39,7 +39,7 @@ public class GetOffererDepositTxInputs extends Task<BuyerAsOffererModel> {
     protected void doRun() {
         try {
             Coin offererInputAmount = model.trade.getSecurityDeposit().add(FeePolicy.TX_FEE);
-            TradeWalletService.TransactionDataResult result = model.tradeWalletService.offererCreatesDepositTxInputs(offererInputAmount, 
+            TradeWalletService.TransactionDataResult result = model.tradeWalletService.createOffererDepositTxInputs(offererInputAmount,
                     model.offerer.addressEntry);
 
             model.offerer.connectedOutputsForAllInputs = result.getConnectedOutputsForAllInputs();

@@ -18,9 +18,9 @@
 package io.bitsquare.trade.protocol.placeoffer;
 
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.taskrunner.SharedTaskModel;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
-import io.bitsquare.common.taskrunner.SharedTaskModel;
 
 import org.bitcoinj.core.Transaction;
 
@@ -33,7 +33,7 @@ public class PlaceOfferModel extends SharedTaskModel {
     public final Offer offer;
     public final WalletService walletService;
     public final OfferBookService offerBookService;
-    
+
     private Transaction transaction;
 
     public PlaceOfferModel(Offer offer,

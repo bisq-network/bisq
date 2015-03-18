@@ -23,6 +23,6 @@ import java.io.Serializable;
 
 public class TradeMessage implements Message, Serializable {
     private static final long serialVersionUID = 7572470983485004081L;
-    
+
     public String tradeId;
 }

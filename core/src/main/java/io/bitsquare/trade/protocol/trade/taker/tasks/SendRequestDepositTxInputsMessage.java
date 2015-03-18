@@ -17,12 +17,14 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.listeners.SendMessageListener;
-import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
+import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
+
+import javafx.application.Platform;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,19 +60,18 @@ public class SendRequestDepositTxInputsMessage extends Task<SellerAsTakerModel> 
                 // We try to repeat once and if that fails as well we persist the state for a later retry.
                 if (retryCounter == 0) {
                     retryCounter++;
-                    // doRun();
+                    Platform.runLater(SendRequestDepositTxInputsMessage.this::doRun);
                 }
                 else {
+                    appendToErrorMessage("Sending TakeOfferFeePayedMessage to offerer failed. Maybe the network connection was lost or the offerer lost his " +
+                            "connection. " +
+                            "We persisted the state of the trade, please try again later or cancel that trade.");
+
+                    model.trade.setState(Trade.State.MESSAGE_SENDING_FAILED);
+
                     failed();
                 }
             }
         });
-    }
-
-    @Override
-    protected void updateStateOnFault() {
-        appendToErrorMessage("Sending TakeOfferFeePayedMessage to offerer failed. Maybe the network connection was lost or the offerer lost his connection. " +
-                "We persisted the state of the trade, please try again later or cancel that trade.");
-        model.trade.setState(Trade.State.MESSAGE_SENDING_FAILED);
     }
 }

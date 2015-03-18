@@ -38,10 +38,10 @@ import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailability
 import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
-import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererProtocol;
-import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
+import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerProtocol;
+import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
 
@@ -360,7 +360,7 @@ public class TradeManager {
     }
 
     private void createBuyerAcceptsOfferProtocol(Offer offer) {
-       
+
 
         Trade trade;
         if (pendingTrades.containsKey(offer.getId())) {
@@ -372,7 +372,7 @@ public class TradeManager {
             pendingTrades.put(trade.getId(), trade);
             persistPendingTrades();
         }
-        
+
         BuyerAsOffererModel model = new BuyerAsOffererModel(
                 trade,
                 tradeMessageService,

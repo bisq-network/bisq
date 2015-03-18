@@ -19,10 +19,8 @@ package io.bitsquare.trade.protocol.trade.offerer.models;
 
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.network.Peer;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.DeterministicKey;
 
@@ -46,10 +44,8 @@ public class OffererModel implements Serializable {
     transient public byte[] pubKey;
 
     // written by tasks
-    public byte[] payoutSignature;
+    public byte[] payoutTxSignature;
     public Coin payoutAmount;
     public List<TransactionOutput> connectedOutputsForAllInputs;
-    public List<TransactionOutput> outputs;
-    public Peer peer;
-    public Transaction preparedPayoutTx;
+    public List<TransactionOutput> outputs; // used to verify amounts with change outputs
 }

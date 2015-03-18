@@ -46,7 +46,7 @@ public class BroadcastTakeOfferFeeTx extends Task<SellerAsTakerModel> {
                         @Override
                         public void onSuccess(Transaction transaction) {
                             log.debug("Take offer fee published successfully. Transaction ID = " + transaction.getHashAsString());
-                           
+
                             model.trade.setState(Trade.State.TAKE_OFFER_FEE_PUBLISHED);
 
                             complete();
@@ -55,6 +55,7 @@ public class BroadcastTakeOfferFeeTx extends Task<SellerAsTakerModel> {
                         @Override
                         public void onFailure(@NotNull Throwable t) {
                             model.trade.setState(Trade.State.TAKE_OFFER_FEE_PUBLISH_FAILED);
+                            
                             failed(t);
                         }
                     });
@@ -66,9 +67,5 @@ public class BroadcastTakeOfferFeeTx extends Task<SellerAsTakerModel> {
 
             failed(e);
         }
-    }
-
-    @Override
-    protected void updateStateOnFault() {
     }
 }

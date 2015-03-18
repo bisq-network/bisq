@@ -17,12 +17,12 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
+import io.bitsquare.common.taskrunner.Task;
+import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
 import io.bitsquare.util.Utilities;
-import io.bitsquare.common.taskrunner.Task;
-import io.bitsquare.common.taskrunner.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +53,8 @@ public class VerifyAndSignContract extends Task<BuyerAsOffererModel> {
 
         trade.setContract(contract);
         trade.setContractAsJson(contractAsJson);
-        trade.setTakerContractSignature(signature);
+        trade.setOffererContractSignature(signature);
+        trade.setTakerContractSignature(model.taker.contractSignature);
 
         complete();
     }

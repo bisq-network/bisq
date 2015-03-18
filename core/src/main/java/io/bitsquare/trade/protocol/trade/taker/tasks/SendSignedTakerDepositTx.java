@@ -60,8 +60,4 @@ public class SendSignedTakerDepositTx extends Task<SellerAsTakerModel> {
             }
         });
     }
-
-    @Override
-    protected void updateStateOnFault() {
-    }
 }

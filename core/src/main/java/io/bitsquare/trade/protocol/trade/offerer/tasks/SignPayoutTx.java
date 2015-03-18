@@ -17,7 +17,6 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
@@ -43,7 +42,7 @@ public class SignPayoutTx extends Task<BuyerAsOffererModel> {
             Coin offererPayoutAmount = trade.getTradeAmount().add(securityDeposit);
             @SuppressWarnings("UnnecessaryLocalVariable") Coin takerPayoutAmount = securityDeposit;
 
-            TradeWalletService.TransactionDataResult result = model.tradeWalletService.offererCreatesAndSignsPayoutTx(
+            byte[] offererPayoutTxSignature = model.tradeWalletService.offererCreatesAndSignsPayoutTx(
                     trade.getDepositTx(),
                     offererPayoutAmount,
                     takerPayoutAmount,
@@ -53,8 +52,7 @@ public class SignPayoutTx extends Task<BuyerAsOffererModel> {
                     model.taker.pubKey,
                     model.arbitratorPubKey);
 
-            model.offerer.preparedPayoutTx = result.getPayoutTx();
-            model.offerer.payoutSignature = result.getOffererSignature();
+            model.offerer.payoutTxSignature = offererPayoutTxSignature;
             model.offerer.payoutAmount = offererPayoutAmount;
             model.taker.payoutAmount = takerPayoutAmount;
 

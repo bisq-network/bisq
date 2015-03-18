@@ -53,8 +53,4 @@ public class ProcessRequestDepositPaymentMessage extends Task<SellerAsTakerModel
             failed(t);
         }
     }
-
-    @Override
-    protected void updateStateOnFault() {
-    }
 }

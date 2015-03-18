@@ -314,10 +314,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                         Dialog.Actions.CLOSE.handle(actionEvent);
                     }
                 });
-
-                Popups.openInfoPopup(BSResources.get("createOffer.success.headline"),
+                // TODO temp just for testing 
+               /* Popups.openInfoPopup(BSResources.get("createOffer.success.headline"),
                         BSResources.get("createOffer.success.info"),
-                        actions);
+                        actions);*/
             }
         });
     }

@@ -51,8 +51,4 @@ public class CreateTakeOfferFeeTx extends Task<SellerAsTakerModel> {
             failed(e);
         }
     }
-
-    @Override
-    protected void updateStateOnFault() {
-    }
 }

@@ -42,10 +42,11 @@ public class SellerAsTakerModel extends SharedTradeModel implements Serializable
     public final TakerModel taker;
     public final OffererModel offerer;
 
+    // written by tasks
     private Transaction publishedDepositTx;
     private Transaction takeOfferFeeTx;
     private Transaction payoutTx;
-    
+
     public SellerAsTakerModel(Trade trade,
                               Peer offererPeer,
                               TradeMessageService tradeMessageService,
@@ -63,9 +64,9 @@ public class SellerAsTakerModel extends SharedTradeModel implements Serializable
 
         this.trade = trade;
 
-        Object modelObject = persistence.read(this, "SellerAsTakerModel_" + id);
-        if (modelObject instanceof SellerAsTakerModel) {
-            SellerAsTakerModel persistedModel = (SellerAsTakerModel) modelObject;
+        Serializable serializable = persistence.read(this, "SellerAsTakerModel_" + id);
+        if (serializable instanceof SellerAsTakerModel) {
+            SellerAsTakerModel persistedModel = (SellerAsTakerModel) serializable;
             log.debug("Model reconstructed form persisted model.");
 
             setPublishedDepositTx(persistedModel.getPublishedDepositTx());
@@ -79,7 +80,7 @@ public class SellerAsTakerModel extends SharedTradeModel implements Serializable
             taker = new TakerModel();
             offerer = new OffererModel();
         }
-        
+
         offerer.peer = offererPeer;
 
         taker.registrationPubKey = walletService.getRegistrationAddressEntry().getPubKey();

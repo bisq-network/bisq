@@ -140,7 +140,7 @@ public class TradeWalletService {
     // Trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TransactionDataResult offererCreatesDepositTxInputs(Coin inputAmount, AddressEntry offererAddressEntry) throws
+    public TransactionDataResult createOffererDepositTxInputs(Coin inputAmount, AddressEntry offererAddressEntry) throws
             TransactionVerificationException, WalletException {
 
         // We pay the tx fee 2 times to the deposit tx:
@@ -369,14 +369,14 @@ public class TradeWalletService {
         return depositTx;
     }
 
-    public TransactionDataResult offererCreatesAndSignsPayoutTx(Transaction depositTx,
-                                                                Coin offererPayoutAmount,
-                                                                Coin takerPayoutAmount,
-                                                                String takerAddressString,
-                                                                AddressEntry addressEntry,
-                                                                byte[] offererPubKey,
-                                                                byte[] takerPubKey,
-                                                                byte[] arbitratorPubKey)
+    public byte[] offererCreatesAndSignsPayoutTx(Transaction depositTx,
+                                                 Coin offererPayoutAmount,
+                                                 Coin takerPayoutAmount,
+                                                 String takerAddressString,
+                                                 AddressEntry addressEntry,
+                                                 byte[] offererPubKey,
+                                                 byte[] takerPubKey,
+                                                 byte[] arbitratorPubKey)
             throws AddressFormatException, TransactionVerificationException {
 
         Transaction payoutTx = createPayoutTx(depositTx, offererPayoutAmount, takerPayoutAmount, addressEntry.getAddressString(), takerAddressString);
@@ -387,7 +387,7 @@ public class TradeWalletService {
 
         verifyTransaction(payoutTx);
 
-        return new TransactionDataResult(payoutTx, offererSignature.encodeToDER());
+        return offererSignature.encodeToDER();
     }
 
     public void takerSignsAndPublishPayoutTx(Transaction depositTx,
@@ -415,8 +415,8 @@ public class TradeWalletService {
 
         verifyTransaction(payoutTx);
         checkWalletConsistency();
-        checkScriptSig(payoutTx, input, 0);
-        input.verify(input.getConnectedOutput());
+       // checkScriptSig(payoutTx, input, 0);
+       // input.verify(input.getConnectedOutput());
 
         printTxWithInputs("payoutTx", payoutTx);
 
@@ -557,7 +557,6 @@ public class TradeWalletService {
         private Transaction depositTx;
 
 
-        private Transaction payoutTx;
         private byte[] offererSignature;
 
         public TransactionDataResult(List<TransactionOutput> connectedOutputsForAllInputs, List<TransactionOutput> outputs) {
@@ -571,12 +570,6 @@ public class TradeWalletService {
             this.outputs = outputs;
         }
 
-        public TransactionDataResult(Transaction payoutTx, byte[] offererSignature) {
-
-            this.payoutTx = payoutTx;
-            this.offererSignature = offererSignature;
-        }
-
         public List<TransactionOutput> getOutputs() {
             return outputs;
         }
@@ -587,10 +580,6 @@ public class TradeWalletService {
 
         public Transaction getDepositTx() {
             return depositTx;
-        }
-
-        public Transaction getPayoutTx() {
-            return payoutTx;
         }
 
         public byte[] getOffererSignature() {

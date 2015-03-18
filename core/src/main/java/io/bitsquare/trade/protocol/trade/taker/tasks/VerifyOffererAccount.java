@@ -45,8 +45,4 @@ public class VerifyOffererAccount extends Task<SellerAsTakerModel> {
             failed("Account registration validation for peer faultHandler.onFault.");
         }
     }
-
-    @Override
-    protected void updateStateOnFault() {
-    }
 }
