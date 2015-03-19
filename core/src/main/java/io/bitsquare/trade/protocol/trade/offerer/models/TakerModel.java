@@ -41,7 +41,7 @@ public class TakerModel implements Serializable {
     public String contractAsJson;//TODO only write access now, missing impl.
     public String contractSignature;
     public Coin payoutAmount;
-    public Transaction depositTx;
+    public Transaction preparedDepositTx;
     public List<TransactionOutput> connectedOutputsForAllInputs;
     public String payoutAddressString;
     public byte[] pubKey;

@@ -36,8 +36,8 @@ public class RequestOffererPublishDepositTxMessage extends TradeMessage implemen
     public final PublicKey takerMessagePublicKey;
     public final String takerContractAsJson;
     public final String takerContractSignature;
-    public final String takerPayoutAddress;
-    public final Transaction takersDepositTx;
+    public final String takerPayoutAddressString;
+    public final Transaction takersPreparedDepositTx;
     public final List<TransactionOutput> takerConnectedOutputsForAllInputs;
     public final List<TransactionOutput> takerOutputs;
 
@@ -47,8 +47,8 @@ public class RequestOffererPublishDepositTxMessage extends TradeMessage implemen
                                                  PublicKey takerMessagePublicKey,
                                                  String takerContractAsJson,
                                                  String takerContractSignature,
-                                                 String takerPayoutAddress,
-                                                 Transaction takersDepositTx,
+                                                 String takerPayoutAddressString,
+                                                 Transaction takersPreparedDepositTx,
                                                  List<TransactionOutput> takerConnectedOutputsForAllInputs,
                                                  List<TransactionOutput> takerOutputs) {
         this.tradeId = tradeId;
@@ -57,8 +57,8 @@ public class RequestOffererPublishDepositTxMessage extends TradeMessage implemen
         this.takerMessagePublicKey = takerMessagePublicKey;
         this.takerContractAsJson = takerContractAsJson;
         this.takerContractSignature = takerContractSignature;
-        this.takerPayoutAddress = takerPayoutAddress;
-        this.takersDepositTx = takersDepositTx;
+        this.takerPayoutAddressString = takerPayoutAddressString;
+        this.takersPreparedDepositTx = takersPreparedDepositTx;
         this.takerConnectedOutputsForAllInputs = takerConnectedOutputsForAllInputs;
         this.takerOutputs = takerOutputs;
     }

@@ -44,8 +44,8 @@ public class SignAndPublishDepositTx extends Task<BuyerAsOffererModel> {
     protected void doRun() {
         try {
             Coin offererInputAmount = model.trade.getSecurityDeposit().add(FeePolicy.TX_FEE);
-            model.tradeWalletService.offererSignsAndPublishTx(
-                    model.taker.depositTx,
+            model.tradeWalletService.offererSignsAndPublishDepositTx(
+                    model.taker.preparedDepositTx,
                     model.offerer.connectedOutputsForAllInputs,
                     model.taker.connectedOutputsForAllInputs,
                     model.offerer.outputs,
@@ -58,7 +58,6 @@ public class SignAndPublishDepositTx extends Task<BuyerAsOffererModel> {
                         public void onSuccess(Transaction transaction) {
                             log.trace("offererSignAndPublishTx succeeded " + transaction);
 
-                            model.setPublishedDepositTx(transaction);
                             model.trade.setDepositTx(transaction);
                             model.trade.setState(Trade.State.DEPOSIT_PUBLISHED);
 

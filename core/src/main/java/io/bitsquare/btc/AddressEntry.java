@@ -49,8 +49,8 @@ public class AddressEntry implements Serializable {
         this.addressContext = addressContext;
         this.offerId = offerId;
 
-        pubKey = keyPair.getPubOnly().getPubKey();
-        pubKeyHash = keyPair.getPubOnly().getPubKeyHash();
+        pubKey = keyPair.getPubKey();
+        pubKeyHash = keyPair.getPubKeyHash();
     }
 
     public String getOfferId() {

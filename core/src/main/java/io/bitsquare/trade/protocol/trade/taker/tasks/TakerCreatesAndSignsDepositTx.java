@@ -42,7 +42,7 @@ public class TakerCreatesAndSignsDepositTx extends Task<SellerAsTakerModel> {
             Coin takerInputAmount = model.trade.getTradeAmount().add(model.trade.getSecurityDeposit()).add(FeePolicy.TX_FEE);
             Coin msOutputAmount = takerInputAmount.add(model.trade.getSecurityDeposit());
 
-            TradeWalletService.TransactionDataResult result = model.tradeWalletService.takerCreatesAndSignsDepositTx(
+            TradeWalletService.Result result = model.tradeWalletService.takerCreatesAndSignsDepositTx(
                     takerInputAmount,
                     msOutputAmount,
                     model.offerer.connectedOutputsForAllInputs,

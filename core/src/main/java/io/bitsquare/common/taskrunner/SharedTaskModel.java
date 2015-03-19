@@ -25,4 +25,7 @@ public class SharedTaskModel {
 
     public void persist() {
     }
+
+    public void onComplete() {
+    }
 }

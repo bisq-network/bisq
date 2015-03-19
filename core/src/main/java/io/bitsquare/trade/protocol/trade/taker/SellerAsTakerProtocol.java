@@ -166,6 +166,9 @@ public class SellerAsTakerProtocol {
         SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
                 () -> {
                     log.debug("taskRunner at handleFiatReceivedUIEvent completed");
+
+                    // we are done!
+                    model.onComplete();
                 },
                 (errorMessage) -> {
                     log.error(errorMessage);
@@ -178,7 +181,6 @@ public class SellerAsTakerProtocol {
         );
         taskRunner.run();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Massage dispatcher

@@ -107,7 +107,7 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
         setDateColumnCellFactory();
 
         //TODO just temp for testing
-        withdrawAddressTextField.setText("mwjWBMW3tcvSDQWooybzumY8RFm4BkKSxZ");
+        withdrawAddressTextField.setText("mxmKZruv9x9JLcEj6rZx6Hnm4LLAcQHtcr");
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPlaceholder(new Label("No pending trades available"));

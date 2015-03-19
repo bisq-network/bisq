@@ -61,10 +61,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
-
-import javax.annotation.concurrent.GuardedBy;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -82,7 +79,6 @@ import static org.bitcoinj.script.ScriptOpCodes.OP_RETURN;
 
 public class WalletService {
     private static final Logger log = LoggerFactory.getLogger(WalletService.class);
-    private static final String LOCK_NAME = "lock";
 
     public static final String DIR_KEY = "wallet.dir";
     public static final String PREFIX_KEY = "wallet.prefix";
@@ -90,7 +86,6 @@ public class WalletService {
     private final List<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArrayList<>();
     private final List<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArrayList<>();
     private final List<BalanceListener> balanceListeners = new CopyOnWriteArrayList<>();
-    private final ReentrantLock lock = Threading.lock(LOCK_NAME);
 
     private final ObservableDownloadListener downloadListener = new ObservableDownloadListener();
     private final Observable<Double> downloadProgress = downloadListener.getObservable();
@@ -108,7 +103,7 @@ public class WalletService {
     private Wallet wallet;
     private AddressEntry registrationAddressEntry;
     private AddressEntry arbitratorDepositAddressEntry;
-    private @GuardedBy(LOCK_NAME) List<AddressEntry> addressEntryList = new ArrayList<>();
+    private List<AddressEntry> addressEntryList = new ArrayList<>();
 
     private TradeWalletService tradeWalletService;
 
@@ -221,12 +216,10 @@ public class WalletService {
         }
         else {
             // First time
-            lock.lock();
             DeterministicKey registrationKey = wallet.currentReceiveKey();
             registrationAddressEntry = new AddressEntry(registrationKey, params,
                     AddressEntry.AddressContext.REGISTRATION_FEE);
             addressEntryList.add(registrationAddressEntry);
-            lock.unlock();
             saveAddressInfoList();
         }
     }
@@ -300,9 +293,8 @@ public class WalletService {
 
     public AddressEntry getAddressEntry(String offerId) {
         log.trace("getAddressEntry called with offerId " + offerId);
-        Optional<AddressEntry> addressEntry = getAddressEntryList().stream().filter(e ->
-                offerId.equals(e.getOfferId())).findFirst();
-
+        Optional<AddressEntry> addressEntry = getAddressEntryList().stream().filter(e -> offerId.equals(e.getOfferId())).findFirst();
+       
         if (addressEntry.isPresent())
             return addressEntry.get();
         else
@@ -315,12 +307,11 @@ public class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private AddressEntry getNewAddressEntry(AddressEntry.AddressContext addressContext, String offerId) {
-        lock.lock();
+        log.trace("getNewAddressEntry called with offerId " + offerId);
         DeterministicKey key = wallet.freshReceiveKey();
         AddressEntry addressEntry = new AddressEntry(key, params, addressContext, offerId);
         addressEntryList.add(addressEntry);
         saveAddressInfoList();
-        lock.unlock();
         return addressEntry;
     }
 
@@ -552,12 +543,7 @@ public class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void saveAddressInfoList() {
-        lock.lock();
-        try {
-            persistence.write(this, "addressEntryList", addressEntryList);
-        } finally {
-            lock.unlock();
-        }
+        persistence.write(this, "addressEntryList", addressEntryList);
     }
 
     private static void printTxWithInputs(String tracePrefix, Transaction tx) {

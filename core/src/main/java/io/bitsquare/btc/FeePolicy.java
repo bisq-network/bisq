@@ -55,8 +55,8 @@ public class FeePolicy {
                 takeOfferFeeAddress = "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7";
                 break;
             case REGTEST:
-                createOfferFeeAddress = "mwjWBMW3tcvSDQWooybzumY8RFm4BkKSxZ";
-                takeOfferFeeAddress = "mwjWBMW3tcvSDQWooybzumY8RFm4BkKSxZ";
+                createOfferFeeAddress = "mxmKZruv9x9JLcEj6rZx6Hnm4LLAcQHtcr";
+                takeOfferFeeAddress = "mxmKZruv9x9JLcEj6rZx6Hnm4LLAcQHtcr";
                 break;
             default:
                 throw new BitsquareException("Unknown bitcoin network: %s", bitcoinNetwork);

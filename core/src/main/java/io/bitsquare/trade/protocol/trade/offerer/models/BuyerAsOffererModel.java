@@ -26,8 +26,6 @@ import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.protocol.trade.SharedTradeModel;
 import io.bitsquare.user.User;
 
-import org.bitcoinj.core.Transaction;
-
 import java.io.Serializable;
 
 import org.slf4j.Logger;
@@ -42,7 +40,6 @@ public class BuyerAsOffererModel extends SharedTradeModel implements Serializabl
     public final OffererModel offerer;
 
     // written by tasks
-    private Transaction publishedDepositTx;
     private String takeOfferFeeTxId;
 
     public BuyerAsOffererModel(Trade trade,
@@ -66,7 +63,6 @@ public class BuyerAsOffererModel extends SharedTradeModel implements Serializabl
             BuyerAsOffererModel persistedModel = (BuyerAsOffererModel) serializable;
             log.debug("Model reconstructed form persisted model.");
 
-            setPublishedDepositTx(persistedModel.getPublishedDepositTx());
             setTakeOfferFeeTxId(persistedModel.takeOfferFeeTxId);
 
             taker = persistedModel.taker;
@@ -84,6 +80,7 @@ public class BuyerAsOffererModel extends SharedTradeModel implements Serializabl
         offerer.accountId = user.getAccountId();
         offerer.messagePubKey = user.getMessagePubKey();
         offerer.pubKey = offerer.addressEntry.getPubKey();
+        log.debug("BuyerAsOffererModel addressEntry " + offerer.addressEntry);
     }
 
     // Get called form taskRunner after each completed task
@@ -92,12 +89,10 @@ public class BuyerAsOffererModel extends SharedTradeModel implements Serializabl
         persistence.write(this, "BuyerAsOffererModel_" + id, this);
     }
 
-    public Transaction getPublishedDepositTx() {
-        return publishedDepositTx;
-    }
-
-    public void setPublishedDepositTx(Transaction publishedDepositTx) {
-        this.publishedDepositTx = publishedDepositTx;
+    @Override
+    public void onComplete() {
+        // Just in case of successful completion we delete our persisted object
+        persistence.remove(this, "BuyerAsOffererModel_" + id);
     }
 
     public String getTakeOfferFeeTxId() {

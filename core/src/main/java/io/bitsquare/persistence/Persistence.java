@@ -126,6 +126,16 @@ public class Persistence {
         write(classInstance.getClass().getName() + "." + propertyKey, value);
     }
 
+    public void remove(Object classInstance, String propertyKey) {
+        try {
+            lock.lock();
+            rootMap.remove(classInstance.getClass().getName() + "." + propertyKey);
+            saveObjectToFile((Serializable) rootMap);
+        } finally {
+            lock.unlock();
+        }
+    }
+
     public void write(Object classInstance, Serializable value) {
         write(classInstance.getClass().getName(), value);
     }

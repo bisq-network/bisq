@@ -77,12 +77,8 @@ public class TaskRunner<T extends SharedTaskModel> {
 
     void handleComplete() {
         log.trace("Task completed: " + currentTask.getSimpleName());
-        persistModel();
+        sharedModel.persist();
         next();
-    }
-
-    protected void persistModel() {
-       // sharedModel.persist();
     }
 
     void handleErrorMessage(String errorMessage) {

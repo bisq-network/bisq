@@ -96,6 +96,13 @@ public class SellerAsTakerModel extends SharedTradeModel implements Serializable
         persistence.write(this, "SellerAsTakerModel_" + id, this);
     }
 
+    @Override
+    public void onComplete() {
+        // Just in case of successful completion we delete our persisted object
+        persistence.remove(this, "SellerAsTakerModel_" + id);
+    }
+
+
     public Transaction getTakeOfferFeeTx() {
         return takeOfferFeeTx;
     }

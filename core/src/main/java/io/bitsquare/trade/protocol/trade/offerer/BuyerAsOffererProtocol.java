@@ -35,7 +35,7 @@ import io.bitsquare.trade.protocol.trade.offerer.tasks.SendBankTransferStartedMe
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendDepositTxIdToTaker;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SetupListenerForBlockChainConfirmation;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SignAndPublishDepositTx;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.SignPayoutTx;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateAndSignPayoutTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyAndSignContract;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakeOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakerAccount;
@@ -162,7 +162,7 @@ public class BuyerAsOffererProtocol {
                 }
         );
         taskRunner.addTasks(
-                SignPayoutTx.class,
+                CreateAndSignPayoutTx.class,
                 VerifyTakeOfferFeePayment.class,
                 SendBankTransferStartedMessage.class
         );
@@ -180,6 +180,9 @@ public class BuyerAsOffererProtocol {
         BuyerAsOffererTaskRunner<BuyerAsOffererModel> taskRunner = new BuyerAsOffererTaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handlePayoutTxPublishedMessage completed");
+                   
+                    // we are done!
+                    model.onComplete();
                 },
                 (errorMessage) -> {
                     log.error(errorMessage);
