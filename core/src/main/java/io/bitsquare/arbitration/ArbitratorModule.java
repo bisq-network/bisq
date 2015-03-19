@@ -21,9 +21,9 @@ import io.bitsquare.BitsquareModule;
 
 import org.springframework.core.env.Environment;
 
-public abstract class ArbitratorMessageModule extends BitsquareModule {
+public abstract class ArbitratorModule extends BitsquareModule {
 
-    protected ArbitratorMessageModule(Environment env) {
+    protected ArbitratorModule(Environment env) {
         super(env);
     }
 

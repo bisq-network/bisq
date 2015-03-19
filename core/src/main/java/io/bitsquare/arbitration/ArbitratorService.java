@@ -22,11 +22,8 @@ import io.bitsquare.arbitration.listeners.ArbitratorListener;
 import io.bitsquare.network.DHTService;
 
 import java.util.Locale;
-import java.util.concurrent.Executor;
 
 public interface ArbitratorService extends DHTService {
-    void setExecutor(Executor executor);
-
     void addArbitrator(Arbitrator arbitrator);
 
     void addArbitratorListener(ArbitratorListener listener);

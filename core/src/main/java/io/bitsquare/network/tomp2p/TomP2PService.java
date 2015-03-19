@@ -18,7 +18,7 @@
 package io.bitsquare.network.tomp2p;
 
 import io.bitsquare.network.BootstrapState;
-import io.bitsquare.network.NetworkService;
+import io.bitsquare.network.P2PService;
 
 import java.util.concurrent.Executor;
 
@@ -42,7 +42,7 @@ import rx.Subscriber;
  * That way we limit the dependency of the TomP2P library only to that class (and it's sub components).
  * <p/>
  */
-public class TomP2PService implements NetworkService {
+public class TomP2PService implements P2PService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PService.class);
 
     private final Subscriber<BootstrapState> subscriber;

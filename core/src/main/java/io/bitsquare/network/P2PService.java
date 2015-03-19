@@ -15,23 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.arbitration.tomp2p;
+package io.bitsquare.network;
 
-import io.bitsquare.arbitration.ArbitratorMessageModule;
-import io.bitsquare.arbitration.ArbitratorService;
+import java.util.concurrent.Executor;
 
-import com.google.inject.Singleton;
+public interface P2PService {
+    void setExecutor(Executor executor);
 
-import org.springframework.core.env.Environment;
+    void bootstrapCompleted();
 
-public class TomP2PArbitratorMessageModule extends ArbitratorMessageModule {
-
-    public TomP2PArbitratorMessageModule(Environment env) {
-        super(env);
-    }
-
-    @Override
-    protected void doConfigure() {
-        bind(ArbitratorService.class).to(TomP2PArbitratorService.class).in(Singleton.class);
-    }
+    void shutDown();
 }

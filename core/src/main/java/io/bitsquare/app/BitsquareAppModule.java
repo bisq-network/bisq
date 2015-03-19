@@ -18,13 +18,13 @@
 package io.bitsquare.app;
 
 import io.bitsquare.BitsquareModule;
-import io.bitsquare.arbitration.ArbitratorMessageModule;
-import io.bitsquare.arbitration.tomp2p.TomP2PArbitratorMessageModule;
+import io.bitsquare.arbitration.ArbitratorModule;
+import io.bitsquare.arbitration.tomp2p.TomP2PArbitratorModule;
 import io.bitsquare.btc.BitcoinModule;
 import io.bitsquare.crypto.CryptoModule;
 import io.bitsquare.gui.GuiModule;
 import io.bitsquare.network.NetworkModule;
-import io.bitsquare.network.tomp2p.TomP2PNetworkModule;
+import io.bitsquare.network.tomp2p.TomP2PModule;
 import io.bitsquare.offer.OfferModule;
 import io.bitsquare.offer.tomp2p.TomP2POfferModule;
 import io.bitsquare.persistence.Persistence;
@@ -76,12 +76,12 @@ class BitsquareAppModule extends BitsquareModule {
         install(guiModule());
     }
 
-    protected ArbitratorMessageModule arbitratorMessageModule() {
-        return new TomP2PArbitratorMessageModule(env);
+    protected ArbitratorModule arbitratorMessageModule() {
+        return new TomP2PArbitratorModule(env);
     }
 
     protected NetworkModule networkModule() {
-        return new TomP2PNetworkModule(env);
+        return new TomP2PModule(env);
     }
 
     protected BitcoinModule bitcoinModule() {

@@ -25,7 +25,7 @@ import net.tomp2p.dht.FutureRemove;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.storage.Data;
 
-public interface DHTService extends NetworkService {
+public interface DHTService extends P2PService {
 
     FuturePut putDomainProtectedData(Number160 locationKey, Data data);
 

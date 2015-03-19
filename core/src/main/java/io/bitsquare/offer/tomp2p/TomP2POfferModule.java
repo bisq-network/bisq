@@ -17,16 +17,10 @@
 
 package io.bitsquare.offer.tomp2p;
 
-import io.bitsquare.network.tomp2p.TomP2PNode;
 import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.offer.OfferModule;
 
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
-
-import javax.inject.Inject;
-
-import javafx.application.Platform;
 
 import org.springframework.core.env.Environment;
 
@@ -39,20 +33,6 @@ public class TomP2POfferModule extends OfferModule {
     @Override
     protected void configure() {
         super.configure();
-        bind(OfferBookService.class).toProvider(OfferBookServiceProvider.class).in(Singleton.class);
-    }
-}
-
-class OfferBookServiceProvider implements Provider<OfferBookService> {
-    private final OfferBookService offerBookService;
-
-    @Inject
-    public OfferBookServiceProvider(TomP2PNode tomP2PNode) {
-        offerBookService = new TomP2POfferBookService(tomP2PNode);
-        offerBookService.setExecutor(Platform::runLater);
-    }
-
-    public OfferBookService get() {
-        return offerBookService;
+        bind(OfferBookService.class).to(TomP2POfferBookService.class).in(Singleton.class);
     }
 }

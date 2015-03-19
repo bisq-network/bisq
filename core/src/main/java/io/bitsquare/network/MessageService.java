@@ -20,7 +20,7 @@ package io.bitsquare.network;
 
 import io.bitsquare.network.listener.SendMessageListener;
 
-public interface MessageService extends NetworkService, MessageHandler {
+public interface MessageService extends P2PService, MessageHandler {
 
     void sendMessage(Peer peer, Message message, SendMessageListener listener);
 

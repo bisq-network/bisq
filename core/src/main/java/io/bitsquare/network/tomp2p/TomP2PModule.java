@@ -32,14 +32,14 @@ import org.springframework.core.env.Environment;
 
 import static io.bitsquare.network.tomp2p.BootstrappedPeerBuilder.*;
 
-public class TomP2PNetworkModule extends NetworkModule {
+public class TomP2PModule extends NetworkModule {
     public static final String BOOTSTRAP_NODE_NAME_KEY = "bootstrap.node.name";
     public static final String BOOTSTRAP_NODE_IP_KEY = "bootstrap.node.ip";
     public static final String BOOTSTRAP_NODE_PORT_KEY = "bootstrap.node.port";
     public static final String NETWORK_INTERFACE_KEY = BootstrappedPeerBuilder.NETWORK_INTERFACE_KEY;
     public static final String USE_MANUAL_PORT_FORWARDING_KEY = BootstrappedPeerBuilder.USE_MANUAL_PORT_FORWARDING_KEY;
 
-    public TomP2PNetworkModule(Environment env) {
+    public TomP2PModule(Environment env) {
         super(env);
     }
 
