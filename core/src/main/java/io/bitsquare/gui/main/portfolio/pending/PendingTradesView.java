@@ -82,13 +82,15 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
     @FXML TableColumn<PendingTradesListItem, Date> dateColumn;
     @FXML TableColumn<PendingTradesListItem, Coin> tradeAmountColumn;
 
-    private ChangeListener<PendingTradesListItem> selectedItemChangeListener;
+    private ChangeListener<Number> selectedIndexChangeListener;
     private ListChangeListener<PendingTradesListItem> listChangeListener;
     private ChangeListener<String> txIdChangeListener;
     private ChangeListener<PendingTradesViewModel.State> offererStateChangeListener;
     private ChangeListener<PendingTradesViewModel.State> takerStateChangeListener;
 
     private final Navigation navigation;
+    private ChangeListener<Boolean> focusedPropertyListener;
+    private ChangeListener<PendingTradesListItem> selectedItemChangeListener;
 
     @Inject
     public PendingTradesView(PendingTradesViewModel model, Navigation navigation) {
@@ -112,60 +114,68 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPlaceholder(new Label("No pending trades available"));
 
-        txIdChangeListener = (ov, oldValue, newValue) ->
-                txIdTextField.setup(model.getWalletService(), newValue);
+        txIdChangeListener = (ov, oldValue, newValue) -> txIdTextField.setup(model.getWalletService(), newValue);
 
-        selectedItemChangeListener = (obsValue, oldValue, newValue) -> {
-            if (oldValue != null && newValue != null) {
-                model.selectTrade(newValue);
-                updateScreen();
-            }
+        selectedIndexChangeListener = (ov, oldValue, newValue) -> {
+            if ((Integer) newValue > -1)
+                table.getSelectionModel().select((Integer) newValue);
+
+            updateScreen();
         };
 
         listChangeListener = change -> {
             change.next();
             if ((change.wasAdded() && change.getList().size() == 1) ||
                     (change.wasRemoved() && change.getList().size() == 0))
+
                 updateScreen();
         };
 
         offererStateChangeListener = (ov, oldValue, newValue) -> applyOffererState(newValue);
         takerStateChangeListener = (ov, oldValue, newValue) -> applyTakerState(newValue);
 
+        focusedPropertyListener = (ov, oldValue, newValue) -> {
+            if (oldValue && !newValue)
+                model.withdrawAddressFocusOut(withdrawAddressTextField.getText());
+        };
+        selectedItemChangeListener = (ov, oldValue, newValue) -> {
+            model.selectTrade(newValue);
+            updateScreen();
+        };
+
         withdrawAddressTextField.setValidator(model.getBtcAddressValidator());
-        withdrawButton.disableProperty().bind(model.withdrawalButtonDisable);
     }
 
     @Override
     public void doActivate() {
         table.setItems(model.getList());
-
+        table.getSelectionModel().selectedItemProperty().addListener(selectedItemChangeListener);
         model.getList().addListener(listChangeListener);
         model.txId.addListener(txIdChangeListener);
+        model.selectedIndex.addListener(selectedIndexChangeListener);
+        withdrawAddressTextField.focusedProperty().addListener(focusedPropertyListener);
 
-        txIdTextField.setup(model.getWalletService(), model.txId.get());
-        table.getSelectionModel().select(model.getSelectedItem());
-        table.getSelectionModel().selectedItemProperty().addListener(selectedItemChangeListener);
 
         // TODO Set focus to row does not work yet...
-       /* table.requestFocus();
-        table.getFocusModel().focus( table.getSelectionModel().getSelectedIndex());*/
+        Platform.runLater(() -> table.requestFocus());
+        table.getFocusModel().focus(model.selectedIndex.get());
+        txIdTextField.setup(model.getWalletService(), model.txId.get());
+        selectedIndexChangeListener.changed(null, null, model.selectedIndex.get());
 
-        withdrawAddressTextField.focusedProperty().addListener((ov, oldValue, newValue) -> {
-            if (oldValue && !newValue)
-                model.withdrawAddressFocusOut(withdrawAddressTextField.getText());
-        });
+        withdrawButton.disableProperty().bind(model.withdrawalButtonDisable);
         updateScreen();
     }
 
     @Override
     public void doDeactivate() {
-        table.getSelectionModel().selectedItemProperty().removeListener(selectedItemChangeListener);
         model.getList().removeListener(listChangeListener);
         model.txId.removeListener(txIdChangeListener);
-
         model.state.removeListener(offererStateChangeListener);
         model.state.removeListener(takerStateChangeListener);
+        model.selectedIndex.removeListener(selectedIndexChangeListener);
+        table.getSelectionModel().selectedItemProperty().removeListener(selectedItemChangeListener);
+
+        withdrawButton.disableProperty().unbind();
     }
 
     @FXML
@@ -450,7 +460,8 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
         fiatAmountTextField.setManaged(visible);
         holderNameTextField.setManaged(visible);
 
-        Platform.runLater(() -> scrollPane.setVvalue(visible ? scrollPane.getVmax() : 0));
+        if (visible)
+            Platform.runLater(() -> scrollPane.setVvalue(scrollPane.getVmax()));
     }
 
     private void setSummaryControlsVisible(boolean visible) {
@@ -491,10 +502,13 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
         withdrawButton.setManaged(visible);
 
         if (visible)
-            withdrawAddressTextField.requestFocus();
-
-        Platform.runLater(() -> scrollPane.setVvalue(visible ? scrollPane.getVmax() : 0));
+            Platform.runLater(() -> {
+                withdrawAddressTextField.requestFocus();
+                scrollPane.setVvalue(scrollPane.getVmax());
+            });
     }
+
+    // CellFactories
 
     private void setTradeIdColumnCellFactory() {
         idColumn.setCellFactory(

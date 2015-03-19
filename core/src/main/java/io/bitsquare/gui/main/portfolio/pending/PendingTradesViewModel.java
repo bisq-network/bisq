@@ -34,8 +34,10 @@ import java.util.Date;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -66,6 +68,7 @@ class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataM
     final StringProperty txId = new SimpleStringProperty();
     final ObjectProperty<State> state = new SimpleObjectProperty<>();
     final BooleanProperty withdrawalButtonDisable = new SimpleBooleanProperty(true);
+    final IntegerProperty selectedIndex = new SimpleIntegerProperty(-1);
 
 
     @Inject
@@ -81,6 +84,7 @@ class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataM
     @Override
     public void doActivate() {
         txId.bind(dataModel.txId);
+        selectedIndex.bind(dataModel.selectedIndex);
 
         dataModel.tradeState.addListener(stateChangeListener);
         updateState();
@@ -89,6 +93,7 @@ class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataM
     @Override
     public void doDeactivate() {
         txId.unbind();
+        selectedIndex.unbind();
 
         dataModel.tradeState.removeListener(stateChangeListener);
     }

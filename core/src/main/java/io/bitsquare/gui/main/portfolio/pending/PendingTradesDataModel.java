@@ -21,13 +21,13 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
+import io.bitsquare.common.viewfx.model.Activatable;
+import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
-import io.bitsquare.common.viewfx.model.Activatable;
-import io.bitsquare.common.viewfx.model.DataModel;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
@@ -39,9 +39,9 @@ import com.google.common.util.concurrent.FutureCallback;
 
 import com.google.inject.Inject;
 
-import java.util.Optional;
-
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -67,14 +67,14 @@ class PendingTradesDataModel implements Activatable, DataModel {
     private PendingTradesListItem selectedItem;
     private boolean isOfferer;
     private Trade closedTrade;
-    private TxConfidenceListener txConfidenceListener;
 
-    private final ChangeListener<Trade.State> stateChangeListener;
+    private TxConfidenceListener txConfidenceListener;
+    private final ChangeListener<Trade.State> tradeStateChangeListener;
     private final MapChangeListener<String, Trade> mapChangeListener;
 
     final StringProperty txId = new SimpleStringProperty();
     final ObjectProperty<Trade.State> tradeState = new SimpleObjectProperty<>();
-
+    final IntegerProperty selectedIndex = new SimpleIntegerProperty(-1);
 
     @Inject
     public PendingTradesDataModel(TradeManager tradeManager, WalletService walletService, User user) {
@@ -82,13 +82,23 @@ class PendingTradesDataModel implements Activatable, DataModel {
         this.walletService = walletService;
         this.user = user;
 
-        this.stateChangeListener = (ov, oldValue, newValue) -> tradeState.set(newValue);
+        tradeStateChangeListener = (ov, oldValue, newValue) -> tradeState.set(newValue);
 
-        this.mapChangeListener = change -> {
-            if (change.wasAdded())
+        mapChangeListener = change -> {
+            if (change.wasAdded()) {
                 list.add(new PendingTradesListItem(change.getValueAdded()));
-            else if (change.wasRemoved())
+                if (list.size() == 1) {
+                    selectTrade(list.get(0));
+                    selectedIndex.set(0);
+                }
+            }
+            else if (change.wasRemoved()) {
                 closedTrade = change.getValueRemoved();
+                if (list.size() == 0) {
+                    selectTrade(null);
+                    selectedIndex.set(-1);
+                }
+            }
 
             sortList();
         };
@@ -98,27 +108,33 @@ class PendingTradesDataModel implements Activatable, DataModel {
     public void activate() {
         list.clear();
         // transform trades to list of PendingTradesListItems and keep it updated
-        tradeManager.getPendingTrades().values().stream()
-                .forEach(e -> list.add(new PendingTradesListItem(e)));
+        tradeManager.getPendingTrades().values().stream().forEach(e -> list.add(new PendingTradesListItem(e)));
         tradeManager.getPendingTrades().addListener(mapChangeListener);
 
         // we sort by date, earliest first
         sortList();
 
         // select either currentPendingTrade or first in the list
-        Optional<PendingTradesListItem> currentTradeItemOptional = list.stream()
-                .filter((e) -> tradeManager.getCurrentPendingTrade() != null &&
-                        tradeManager.getCurrentPendingTrade().getId().equals(e.getTrade().getId()))
-                .findFirst();
-        if (currentTradeItemOptional.isPresent())
-            selectTrade(currentTradeItemOptional.get());
-        else if (list.size() > 0)
+        if (tradeManager.getCurrentPendingTrade() != null) {
+            for (int i = 0; i < list.size(); i++) {
+                PendingTradesListItem item = list.get(i);
+                if (tradeManager.getCurrentPendingTrade().getId().equals(item.getTrade().getId())) {
+                    selectedIndex.set(i);
+                    selectTrade(item);
+                    break;
+                }
+            }
+        }
+        else if (list.size() > 0) {
             selectTrade(list.get(0));
+            selectedIndex.set(0);
+        }
     }
 
     @Override
     public void deactivate() {
         tradeManager.getPendingTrades().removeListener(mapChangeListener);
+
         cleanUpSelectedTrade();
     }
 
@@ -133,7 +149,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
             isOfferer = getTrade().getOffer().getMessagePublicKey().equals(user.getMessagePubKey());
 
             Trade trade = getTrade();
-            trade.stateProperty().addListener(stateChangeListener);
+            trade.stateProperty().addListener(tradeStateChangeListener);
             tradeState.set(trade.stateProperty().get());
             log.trace("selectTrade trade.stateProperty().get() " + trade.stateProperty().get());
 
@@ -287,8 +303,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
 
     private void cleanUpSelectedTrade() {
         if (selectedItem != null) {
-            Trade trade = getTrade();
-            trade.stateProperty().removeListener(stateChangeListener);
+            selectedItem.getTrade().stateProperty().removeListener(tradeStateChangeListener);
         }
 
         if (txConfidenceListener != null)

@@ -48,6 +48,8 @@ import io.bitsquare.user.User;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
+import java.io.Serializable;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -102,17 +104,17 @@ public class TradeManager {
         this.signatureService = signatureService;
         this.offerBookService = offerBookService;
 
-        Object openOffersObject = persistence.read(this, "openOffers");
+        Serializable openOffersObject = persistence.read(this, "openOffers");
         if (openOffersObject instanceof Map<?, ?>) {
             openOffers.putAll((Map<String, Offer>) openOffersObject);
         }
 
-        Object pendingTradesObject = persistence.read(this, "pendingTrades");
+        Serializable pendingTradesObject = persistence.read(this, "pendingTrades");
         if (pendingTradesObject instanceof Map<?, ?>) {
             pendingTrades.putAll((Map<String, Trade>) pendingTradesObject);
         }
 
-        Object closedTradesObject = persistence.read(this, "closedTrades");
+        Serializable closedTradesObject = persistence.read(this, "closedTrades");
         if (closedTradesObject instanceof Map<?, ?>) {
             closedTrades.putAll((Map<String, Trade>) closedTradesObject);
         }
@@ -120,7 +122,8 @@ public class TradeManager {
         tradeMessageService.addMessageHandler(this::handleMessage);
     }
 
-    // When all services are initialized we create the protocols for our open offers (which will listen for take offer requests)
+    // When all services are initialized we create the protocols for our open offers and persisted not completed pendingTrades
+    // BuyerAcceptsOfferProtocol listens for take offer requests, so we need to instantiate it early.
     public void onAllServicesInitialized() {
         for (Map.Entry<String, Offer> entry : openOffers.entrySet()) {
             createBuyerAcceptsOfferProtocol(entry.getValue());
