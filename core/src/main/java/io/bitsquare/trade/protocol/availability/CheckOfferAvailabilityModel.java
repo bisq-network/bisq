@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.availability;
 
 import io.bitsquare.common.taskrunner.SharedTaskModel;
-import io.bitsquare.network.DHTService;
+import io.bitsquare.network.AddressService;
 import io.bitsquare.network.MessageService;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Offer;
@@ -32,15 +32,15 @@ public class CheckOfferAvailabilityModel extends SharedTaskModel {
 
     public final Offer offer;
     public final MessageService messageService;
-    public final DHTService dhtService;
+    public final AddressService addressService;
 
     private Peer peer;
     private OfferMessage message;
 
-    public CheckOfferAvailabilityModel(Offer offer, MessageService messageService, DHTService dhtService) {
+    public CheckOfferAvailabilityModel(Offer offer, MessageService messageService, AddressService addressService) {
         this.offer = offer;
         this.messageService = messageService;
-        this.dhtService = dhtService;
+        this.addressService = addressService;
     }
 
     public Peer getPeer() {

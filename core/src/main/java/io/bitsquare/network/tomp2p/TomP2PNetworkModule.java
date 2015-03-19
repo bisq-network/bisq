@@ -19,7 +19,7 @@ package io.bitsquare.network.tomp2p;
 
 import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.ClientNode;
-import io.bitsquare.network.DHTService;
+import io.bitsquare.network.AddressService;
 import io.bitsquare.network.MessageService;
 import io.bitsquare.network.NetworkModule;
 import io.bitsquare.network.Node;
@@ -53,7 +53,7 @@ public class TomP2PNetworkModule extends NetworkModule {
         bind(ClientNode.class).to(TomP2PNode.class).in(Singleton.class);
         bind(TomP2PNode.class).in(Singleton.class);
         bind(MessageService.class).toProvider(TomP2PMessageServiceProvider.class).in(Singleton.class);
-        bind(DHTService.class).toProvider(TomP2PDHTServiceProvider.class).in(Singleton.class);
+        bind(AddressService.class).toProvider(TomP2PAddressServiceProvider.class).in(Singleton.class);
 
         bind(int.class).annotatedWith(Names.named(Node.PORT_KEY)).toInstance(env.getProperty(Node.PORT_KEY, int.class, Node.DEFAULT_PORT));
         bind(boolean.class).annotatedWith(Names.named(USE_MANUAL_PORT_FORWARDING_KEY)).toInstance(
@@ -93,16 +93,16 @@ class TomP2PMessageServiceProvider implements Provider<MessageService> {
     }
 }
 
-class TomP2PDHTServiceProvider implements Provider<DHTService> {
-    private final DHTService dhtService;
+class TomP2PAddressServiceProvider implements Provider<AddressService> {
+    private final AddressService addressService;
 
     @Inject
-    public TomP2PDHTServiceProvider(TomP2PNode tomP2PNode) {
-        dhtService = new TomP2PDHTService(tomP2PNode);
-        dhtService.setExecutor(Platform::runLater);
+    public TomP2PAddressServiceProvider(TomP2PNode tomP2PNode) {
+        addressService = new TomP2PAddressService(tomP2PNode);
+        addressService.setExecutor(Platform::runLater);
     }
 
-    public DHTService get() {
-        return dhtService;
+    public AddressService get() {
+        return addressService;
     }
 }

@@ -17,7 +17,7 @@
 
 package io.bitsquare.network.tomp2p;
 
-import io.bitsquare.network.DHTService;
+import io.bitsquare.network.AddressService;
 import io.bitsquare.network.MessageHandler;
 import io.bitsquare.network.Peer;
 import io.bitsquare.network.listener.GetPeerAddressListener;
@@ -44,8 +44,8 @@ import org.slf4j.LoggerFactory;
  * That way we limit the dependency of the TomP2P library only to that class (and it's sub components).
  * <p/>
  */
-public class TomP2PDHTService implements DHTService {
-    private static final Logger log = LoggerFactory.getLogger(TomP2PDHTService.class);
+public class TomP2PAddressService implements AddressService {
+    private static final Logger log = LoggerFactory.getLogger(TomP2PAddressService.class);
 
     private final TomP2PNode tomP2PNode;
     private final CopyOnWriteArrayList<MessageHandler> messageHandlers = new CopyOnWriteArrayList<>();
@@ -56,7 +56,7 @@ public class TomP2PDHTService implements DHTService {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TomP2PDHTService(TomP2PNode tomP2PNode) {
+    public TomP2PAddressService(TomP2PNode tomP2PNode) {
         this.tomP2PNode = tomP2PNode;
     }
 

@@ -23,7 +23,7 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.network.DHTService;
+import io.bitsquare.network.AddressService;
 import io.bitsquare.network.Message;
 import io.bitsquare.network.MessageService;
 import io.bitsquare.network.Peer;
@@ -72,7 +72,7 @@ public class TradeManager {
     private final AccountSettings accountSettings;
     private final Persistence persistence;
     private final MessageService messageService;
-    private final DHTService dhtService;
+    private final AddressService addressService;
     private final BlockChainService blockChainService;
     private final WalletService walletService;
     private final SignatureService signatureService;
@@ -95,14 +95,14 @@ public class TradeManager {
 
     @Inject
     public TradeManager(User user, AccountSettings accountSettings, Persistence persistence,
-                        MessageService messageService, DHTService dhtService, BlockChainService blockChainService,
+                        MessageService messageService, AddressService addressService, BlockChainService blockChainService,
                         WalletService walletService, SignatureService signatureService,
                         OfferBookService offerBookService) {
         this.user = user;
         this.accountSettings = accountSettings;
         this.persistence = persistence;
         this.messageService = messageService;
-        this.dhtService = dhtService;
+        this.addressService = addressService;
         this.blockChainService = blockChainService;
         this.walletService = walletService;
         this.signatureService = signatureService;
@@ -152,7 +152,7 @@ public class TradeManager {
             CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(
                     offer,
                     messageService,
-                    dhtService);
+                    addressService);
 
             CheckOfferAvailabilityProtocol protocol = new CheckOfferAvailabilityProtocol(model,
                     () -> disposeCheckOfferAvailabilityRequest(offer),
@@ -215,7 +215,7 @@ public class TradeManager {
     }
 
     public void requestTakeOffer(Coin amount, Offer offer, TradeResultHandler tradeResultHandler) {
-        CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(offer, messageService, dhtService);
+        CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(offer, messageService, addressService);
         CheckOfferAvailabilityProtocol protocol = new CheckOfferAvailabilityProtocol(model,
                 () -> {
                     disposeCheckOfferAvailabilityRequest(offer);

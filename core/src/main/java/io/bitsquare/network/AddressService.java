@@ -24,7 +24,7 @@ import java.security.PublicKey;
 
 import java.util.concurrent.Executor;
 
-public interface DHTService {
+public interface AddressService {
     void setExecutor(Executor executor);
 
     void findPeerAddress(PublicKey messagePublicKey, GetPeerAddressListener getPeerAddressListener);
