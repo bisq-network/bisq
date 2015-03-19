@@ -15,9 +15,23 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network;
+package io.bitsquare.p2p;
 
-import java.io.Serializable;
+import io.bitsquare.BitsquareModule;
 
-public interface Message extends Serializable {
+import org.springframework.core.env.Environment;
+
+public abstract class NetworkModule extends BitsquareModule {
+
+    protected NetworkModule(Environment env) {
+        super(env);
+    }
+
+    @Override
+    protected final void configure() {
+        doConfigure();
+    }
+
+    protected void doConfigure() {
+    }
 }

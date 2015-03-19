@@ -19,8 +19,8 @@ package io.bitsquare.trade.protocol.availability.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.network.Peer;
-import io.bitsquare.network.listener.GetPeerAddressListener;
+import io.bitsquare.p2p.Peer;
+import io.bitsquare.p2p.listener.GetPeerAddressListener;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityModel;
 

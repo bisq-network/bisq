@@ -15,9 +15,9 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network.tomp2p;
+package io.bitsquare.p2p.tomp2p;
 
-import io.bitsquare.network.DHTService;
+import io.bitsquare.p2p.DHTService;
 
 import java.security.PublicKey;
 

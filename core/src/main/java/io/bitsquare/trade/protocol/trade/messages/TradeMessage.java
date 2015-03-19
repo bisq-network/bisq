@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.messages;
 
-import io.bitsquare.network.Message;
+import io.bitsquare.p2p.Message;
 
 import java.io.Serializable;
 

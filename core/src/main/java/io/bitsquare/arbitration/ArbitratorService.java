@@ -19,7 +19,7 @@ package io.bitsquare.arbitration;
 
 
 import io.bitsquare.arbitration.listeners.ArbitratorListener;
-import io.bitsquare.network.DHTService;
+import io.bitsquare.p2p.DHTService;
 
 import java.util.Locale;
 

@@ -17,7 +17,7 @@
 
 package io.bitsquare.app.bootstrap;
 
-import io.bitsquare.network.Node;
+import io.bitsquare.p2p.Node;
 
 import net.tomp2p.connection.ChannelClientConfiguration;
 import net.tomp2p.connection.ChannelServerConfiguration;

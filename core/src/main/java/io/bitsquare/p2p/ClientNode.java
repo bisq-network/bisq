@@ -15,16 +15,18 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network;
+package io.bitsquare.p2p;
 
+import java.security.KeyPair;
 
-import io.bitsquare.network.listener.SendMessageListener;
+import rx.Observable;
 
-public interface MessageService extends P2PService, MessageHandler {
+public interface ClientNode {
+    ConnectionType getConnectionType();
 
-    void sendMessage(Peer peer, Message message, SendMessageListener listener);
+    Node getAddress();
 
-    void addMessageHandler(MessageHandler listener);
+    Node getBootstrapNodeAddress();
 
-    void removeMessageHandler(MessageHandler listener);
+    public Observable<BootstrapState> bootstrap(KeyPair keyPair, MessageHandler messageHandler);
 }

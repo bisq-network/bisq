@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.taker.models;
 
 import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.network.Peer;
+import io.bitsquare.p2p.Peer;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionOutput;

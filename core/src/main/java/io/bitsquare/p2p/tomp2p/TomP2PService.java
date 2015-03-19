@@ -15,10 +15,10 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network.tomp2p;
+package io.bitsquare.p2p.tomp2p;
 
-import io.bitsquare.network.BootstrapState;
-import io.bitsquare.network.P2PService;
+import io.bitsquare.p2p.BootstrapState;
+import io.bitsquare.p2p.P2PService;
 
 import java.util.concurrent.Executor;
 

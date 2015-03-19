@@ -20,8 +20,8 @@ package io.bitsquare.arbitration.tomp2p;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorService;
 import io.bitsquare.arbitration.listeners.ArbitratorListener;
-import io.bitsquare.network.tomp2p.TomP2PDHTService;
-import io.bitsquare.network.tomp2p.TomP2PNode;
+import io.bitsquare.p2p.tomp2p.TomP2PDHTService;
+import io.bitsquare.p2p.tomp2p.TomP2PNode;
 
 import java.io.IOException;
 

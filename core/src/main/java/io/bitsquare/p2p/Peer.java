@@ -15,12 +15,12 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network.listener;
+package io.bitsquare.p2p;
 
-import io.bitsquare.network.Peer;
-
-public interface GetPeerAddressListener {
-    void onResult(Peer peer);
-
-    void onFailed();
+/**
+ * A peer on the Bitsquare network.
+ *
+ * @author Chris Beams
+ */
+public interface Peer {
 }

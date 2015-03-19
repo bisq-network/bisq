@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network;
+package io.bitsquare.p2p;
 
 public enum ConnectionType {
     UNKNOWN, DIRECT, MANUAL_PORT_FORWARDING, AUTO_PORT_FORWARDING, RELAY

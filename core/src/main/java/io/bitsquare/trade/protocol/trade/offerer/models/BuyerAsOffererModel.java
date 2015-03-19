@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.offerer.models;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
-import io.bitsquare.network.MessageService;
+import io.bitsquare.p2p.MessageService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.SharedTradeModel;

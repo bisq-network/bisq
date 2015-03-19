@@ -17,9 +17,9 @@
 
 package io.bitsquare.msg;
 
-import io.bitsquare.network.BootstrapNodes;
-import io.bitsquare.network.ConnectionType;
-import io.bitsquare.network.Node;
+import io.bitsquare.p2p.BootstrapNodes;
+import io.bitsquare.p2p.ConnectionType;
+import io.bitsquare.p2p.Node;
 import io.bitsquare.util.Repeat;
 import io.bitsquare.util.RepeatRule;
 

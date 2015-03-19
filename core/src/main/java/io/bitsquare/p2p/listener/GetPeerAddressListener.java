@@ -15,18 +15,12 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network.tomp2p;
+package io.bitsquare.p2p.listener;
 
-import org.junit.Test;
+import io.bitsquare.p2p.Peer;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.*;
+public interface GetPeerAddressListener {
+    void onResult(Peer peer);
 
-public class TomP2PPeerTest {
-
-    @Test
-    public void testToString() {
-        TomP2PPeer peer = new TomP2PPeer(null);
-        assertThat(peer.toString(), equalTo("TomP2PPeer{peerAddress=null}"));
-    }
+    void onFailed();
 }

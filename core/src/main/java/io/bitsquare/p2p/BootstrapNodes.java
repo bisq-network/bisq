@@ -15,23 +15,32 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network;
+package io.bitsquare.p2p;
 
-import io.bitsquare.BitsquareModule;
+import java.util.Arrays;
+import java.util.List;
 
-import org.springframework.core.env.Environment;
+public interface BootstrapNodes {
 
-public abstract class NetworkModule extends BitsquareModule {
+    Node DIGITAL_OCEAN_1 = Node.at("digitalocean1.bitsquare.io", "188.226.179.109");
 
-    protected NetworkModule(Environment env) {
-        super(env);
-    }
+    /**
+     * Alias to the default bootstrap node.
+     */
+    Node DEFAULT = DIGITAL_OCEAN_1;
 
-    @Override
-    protected final void configure() {
-        doConfigure();
-    }
+    /**
+     * A locally-running BootstrapNode instance.
+     * Typically used only for testing. Not included in results from {@link #all()}.
+     */
+    Node LOCALHOST = Node.at("localhost", "127.0.0.1");
 
-    protected void doConfigure() {
+    /**
+     * All known public bootstrap nodes.
+     */
+    static List<Node> all() {
+        return Arrays.asList(
+                DIGITAL_OCEAN_1
+        );
     }
 }

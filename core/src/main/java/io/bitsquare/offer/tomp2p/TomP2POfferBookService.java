@@ -19,16 +19,18 @@ package io.bitsquare.offer.tomp2p;
 
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.network.tomp2p.TomP2PDHTService;
-import io.bitsquare.network.tomp2p.TomP2PNode;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
+import io.bitsquare.p2p.tomp2p.TomP2PDHTService;
+import io.bitsquare.p2p.tomp2p.TomP2PNode;
 
 import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleLongProperty;
@@ -54,6 +56,7 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
     private final LongProperty invalidationTimestamp = new SimpleLongProperty(0);
 
 
+    @Inject
     public TomP2POfferBookService(TomP2PNode tomP2PNode) {
         super(tomP2PNode);
     }

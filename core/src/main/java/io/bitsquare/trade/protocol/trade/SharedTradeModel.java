@@ -22,7 +22,7 @@ import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.taskrunner.SharedTaskModel;
 import io.bitsquare.crypto.SignatureService;
-import io.bitsquare.network.MessageService;
+import io.bitsquare.p2p.MessageService;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;

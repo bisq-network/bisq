@@ -15,13 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network.tomp2p;
+package io.bitsquare.p2p.tomp2p;
 
-import io.bitsquare.network.Message;
-import io.bitsquare.network.MessageHandler;
-import io.bitsquare.network.MessageService;
-import io.bitsquare.network.Peer;
-import io.bitsquare.network.listener.SendMessageListener;
+import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.MessageHandler;
+import io.bitsquare.p2p.MessageService;
+import io.bitsquare.p2p.Peer;
+import io.bitsquare.p2p.listener.SendMessageListener;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 

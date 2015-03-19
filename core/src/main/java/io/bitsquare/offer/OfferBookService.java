@@ -19,7 +19,7 @@ package io.bitsquare.offer;
 
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.network.DHTService;
+import io.bitsquare.p2p.DHTService;
 
 import java.util.List;
 

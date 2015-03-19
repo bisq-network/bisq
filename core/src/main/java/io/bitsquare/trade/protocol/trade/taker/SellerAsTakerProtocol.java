@@ -17,9 +17,9 @@
 
 package io.bitsquare.trade.protocol.trade.taker;
 
-import io.bitsquare.network.Message;
-import io.bitsquare.network.MessageHandler;
-import io.bitsquare.network.Peer;
+import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.MessageHandler;
+import io.bitsquare.p2p.Peer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.BankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;

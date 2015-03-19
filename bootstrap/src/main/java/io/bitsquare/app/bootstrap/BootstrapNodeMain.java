@@ -19,7 +19,7 @@ package io.bitsquare.app.bootstrap;
 
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.BitsquareExecutable;
-import io.bitsquare.network.Node;
+import io.bitsquare.p2p.Node;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;

@@ -15,12 +15,12 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network.tomp2p;
+package io.bitsquare.p2p.tomp2p;
 
-import io.bitsquare.network.AddressService;
-import io.bitsquare.network.NetworkException;
-import io.bitsquare.network.Peer;
-import io.bitsquare.network.listener.GetPeerAddressListener;
+import io.bitsquare.p2p.AddressService;
+import io.bitsquare.p2p.NetworkException;
+import io.bitsquare.p2p.Peer;
+import io.bitsquare.p2p.listener.GetPeerAddressListener;
 import io.bitsquare.user.User;
 
 import java.io.IOException;
@@ -171,7 +171,7 @@ public class TomP2PAddressService extends TomP2PDHTService implements AddressSer
     private void removeAddress() {
         try {
             Data data = new Data(new TomP2PPeer(peerDHT.peerAddress()));
-            removeFromDataMap(locationKey, data).awaitUninterruptibly();
+            removeFromDataMap(locationKey, data).awaitUninterruptibly(1000);
         } catch (IOException e) {
             e.printStackTrace();
             log.error("Exception at removeAddress " + e.toString());

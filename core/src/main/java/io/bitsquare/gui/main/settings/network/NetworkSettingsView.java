@@ -20,7 +20,7 @@ package io.bitsquare.gui.main.settings.network;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.common.viewfx.view.FxmlView;
 import io.bitsquare.common.viewfx.view.InitializableView;
-import io.bitsquare.network.ClientNode;
+import io.bitsquare.p2p.ClientNode;
 
 import javax.inject.Inject;
 

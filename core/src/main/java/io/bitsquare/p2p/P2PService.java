@@ -15,13 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network;
+package io.bitsquare.p2p;
 
+import java.util.concurrent.Executor;
 
-import io.bitsquare.network.listener.GetPeerAddressListener;
+public interface P2PService {
+    void setExecutor(Executor executor);
 
-import java.security.PublicKey;
+    void bootstrapCompleted();
 
-public interface AddressService extends DHTService{
-    void findPeerAddress(PublicKey messagePublicKey, GetPeerAddressListener getPeerAddressListener);
+    void shutDown();
 }

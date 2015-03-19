@@ -15,24 +15,16 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network;
+package io.bitsquare.p2p;
 
-import java.io.IOException;
 
-@SuppressWarnings("serializable")
-public class NetworkException extends IOException {
+import io.bitsquare.p2p.listener.SendMessageListener;
 
-    public NetworkException(Throwable cause) {
-        super(cause);
-    }
+public interface MessageService extends P2PService, MessageHandler {
 
-    public NetworkException(String message) {
-        super(message);
-    }
+    void sendMessage(Peer peer, Message message, SendMessageListener listener);
 
-    public NetworkException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    void addMessageHandler(MessageHandler listener);
 
+    void removeMessageHandler(MessageHandler listener);
 }
-

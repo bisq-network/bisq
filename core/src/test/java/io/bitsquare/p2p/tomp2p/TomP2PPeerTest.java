@@ -15,14 +15,18 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network;
+package io.bitsquare.p2p.tomp2p;
 
-import java.util.concurrent.Executor;
+import org.junit.Test;
 
-public interface P2PService {
-    void setExecutor(Executor executor);
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.*;
 
-    void bootstrapCompleted();
+public class TomP2PPeerTest {
 
-    void shutDown();
+    @Test
+    public void testToString() {
+        TomP2PPeer peer = new TomP2PPeer(null);
+        assertThat(peer.toString(), equalTo("TomP2PPeer{peerAddress=null}"));
+    }
 }

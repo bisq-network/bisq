@@ -15,32 +15,8 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network;
+package io.bitsquare.p2p;
 
-import java.util.Arrays;
-import java.util.List;
-
-public interface BootstrapNodes {
-
-    Node DIGITAL_OCEAN_1 = Node.at("digitalocean1.bitsquare.io", "188.226.179.109");
-
-    /**
-     * Alias to the default bootstrap node.
-     */
-    Node DEFAULT = DIGITAL_OCEAN_1;
-
-    /**
-     * A locally-running BootstrapNode instance.
-     * Typically used only for testing. Not included in results from {@link #all()}.
-     */
-    Node LOCALHOST = Node.at("localhost", "127.0.0.1");
-
-    /**
-     * All known public bootstrap nodes.
-     */
-    static List<Node> all() {
-        return Arrays.asList(
-                DIGITAL_OCEAN_1
-        );
-    }
+public interface MessageHandler {
+    void handleMessage(Message message, Peer sender);
 }

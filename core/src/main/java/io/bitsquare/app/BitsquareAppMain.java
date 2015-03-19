@@ -19,8 +19,8 @@ package io.bitsquare.app;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.btc.BitcoinNetwork;
-import io.bitsquare.network.BootstrapNodes;
-import io.bitsquare.network.Node;
+import io.bitsquare.p2p.BootstrapNodes;
+import io.bitsquare.p2p.Node;
 import io.bitsquare.util.joptsimple.EnumValueConverter;
 
 import java.io.File;
@@ -39,8 +39,8 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
 import static io.bitsquare.app.BitsquareEnvironment.*;
-import static io.bitsquare.network.Node.*;
-import static io.bitsquare.network.tomp2p.TomP2PModule.*;
+import static io.bitsquare.p2p.Node.*;
+import static io.bitsquare.p2p.tomp2p.TomP2PModule.*;
 import static java.util.Arrays.asList;
 
 public class BitsquareAppMain extends BitsquareExecutable {

@@ -15,14 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network.tomp2p;
+package io.bitsquare.p2p.tomp2p;
 
-import io.bitsquare.network.AddressService;
-import io.bitsquare.network.BootstrapNodes;
-import io.bitsquare.network.ClientNode;
-import io.bitsquare.network.MessageService;
-import io.bitsquare.network.NetworkModule;
-import io.bitsquare.network.Node;
+import io.bitsquare.p2p.AddressService;
+import io.bitsquare.p2p.BootstrapNodes;
+import io.bitsquare.p2p.ClientNode;
+import io.bitsquare.p2p.MessageService;
+import io.bitsquare.p2p.NetworkModule;
+import io.bitsquare.p2p.Node;
 
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -30,7 +30,7 @@ import com.google.inject.name.Names;
 
 import org.springframework.core.env.Environment;
 
-import static io.bitsquare.network.tomp2p.BootstrappedPeerBuilder.*;
+import static io.bitsquare.p2p.tomp2p.BootstrappedPeerBuilder.*;
 
 public class TomP2PModule extends NetworkModule {
     public static final String BOOTSTRAP_NODE_NAME_KEY = "bootstrap.node.name";

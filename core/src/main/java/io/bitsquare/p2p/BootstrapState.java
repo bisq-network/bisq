@@ -15,18 +15,32 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network;
+package io.bitsquare.p2p;
 
-import java.security.KeyPair;
+public enum BootstrapState {
+    PEER_CREATION_FAILED,
+    DISCOVERY_STARTED,
+    DISCOVERY_DIRECT_SUCCEEDED,
+    DISCOVERY_MANUAL_PORT_FORWARDING_SUCCEEDED,
+    DISCOVERY_FAILED,
+    DISCOVERY_AUTO_PORT_FORWARDING_STARTED,
+    DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED,
+    DISCOVERY_AUTO_PORT_FORWARDING_FAILED,
+    RELAY_STARTED,
+    RELAY_SUCCEEDED,
+    RELAY_FAILED,
+    BOOT_STRAP_FAILED;
 
-import rx.Observable;
+    private String message;
 
-public interface ClientNode {
-    ConnectionType getConnectionType();
+    BootstrapState() {
+    }
 
-    Node getAddress();
+    public String getMessage() {
+        return message;
+    }
 
-    Node getBootstrapNodeAddress();
-
-    public Observable<BootstrapState> bootstrap(KeyPair keyPair, MessageHandler messageHandler);
+    public void setMessage(String message) {
+        this.message = message;
+    }
 }
