@@ -15,13 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.tomp2p;
+package io.bitsquare.network.tomp2p;
 
 import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
-import io.bitsquare.network.tomp2p.TomP2PNode;
-import io.bitsquare.network.tomp2p.TomP2PPeer;
-import io.bitsquare.trade.TradeMessageService;
+import io.bitsquare.network.TradeMessageService;
 import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.listeners.GetPeerAddressListener;
 import io.bitsquare.trade.listeners.SendMessageListener;
@@ -50,8 +48,8 @@ import org.slf4j.LoggerFactory;
  * That way we limit the dependency of the TomP2P library only to that class (and it's sub components).
  * <p/>
  */
-public class TomP2PTradeMessageService implements TradeMessageService {
-    private static final Logger log = LoggerFactory.getLogger(TomP2PTradeMessageService.class);
+public class TomP2PMessageService implements TradeMessageService {
+    private static final Logger log = LoggerFactory.getLogger(TomP2PMessageService.class);
 
     private final TomP2PNode tomP2PNode;
     private final CopyOnWriteArrayList<MessageHandler> messageHandlers = new CopyOnWriteArrayList<>();
@@ -62,7 +60,7 @@ public class TomP2PTradeMessageService implements TradeMessageService {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TomP2PTradeMessageService(TomP2PNode tomP2PNode) {
+    public TomP2PMessageService(TomP2PNode tomP2PNode) {
         this.tomP2PNode = tomP2PNode;
     }
 

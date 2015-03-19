@@ -34,7 +34,7 @@ import io.bitsquare.network.ClientNode;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.trade.TradeMessageService;
+import io.bitsquare.network.TradeMessageService;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
 import io.bitsquare.common.viewfx.model.ViewModel;

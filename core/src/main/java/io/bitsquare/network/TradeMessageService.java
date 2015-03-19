@@ -15,27 +15,25 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade;
+package io.bitsquare.network;
 
-import io.bitsquare.BitsquareModule;
+import io.bitsquare.trade.handlers.MessageHandler;
+import io.bitsquare.trade.listeners.GetPeerAddressListener;
+import io.bitsquare.trade.listeners.SendMessageListener;
 
-import com.google.inject.Singleton;
+import java.security.PublicKey;
 
-import org.springframework.core.env.Environment;
+import java.util.concurrent.Executor;
 
-public abstract class TradeMessageModule extends BitsquareModule {
+public interface TradeMessageService extends MessageBroker {
 
-    protected TradeMessageModule(Environment env) {
-        super(env);
-    }
+    void setExecutor(Executor executor);
 
-    @Override
-    protected final void configure() {
-        doConfigure();
+    void sendMessage(Peer peer, Message message, SendMessageListener listener);
 
-        bind(TradeManager.class).in(Singleton.class);
-    }
+    void addMessageHandler(MessageHandler listener);
 
-    protected void doConfigure() {
-    }
+    void removeMessageHandler(MessageHandler listener);
+
+    void findPeerAddress(PublicKey messagePublicKey, GetPeerAddressListener getPeerAddressListener);
 }

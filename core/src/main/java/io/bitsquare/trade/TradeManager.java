@@ -25,6 +25,7 @@ import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
+import io.bitsquare.network.TradeMessageService;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;

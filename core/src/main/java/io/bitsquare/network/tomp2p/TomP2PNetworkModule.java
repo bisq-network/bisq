@@ -21,10 +21,16 @@ import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.ClientNode;
 import io.bitsquare.network.NetworkModule;
 import io.bitsquare.network.Node;
+import io.bitsquare.network.TradeMessageService;
 
 import com.google.inject.Injector;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
+
+import javax.inject.Inject;
+
+import javafx.application.Platform;
 
 import org.springframework.core.env.Environment;
 
@@ -45,6 +51,7 @@ public class TomP2PNetworkModule extends NetworkModule {
     protected void doConfigure() {
         bind(ClientNode.class).to(TomP2PNode.class).in(Singleton.class);
         bind(TomP2PNode.class).in(Singleton.class);
+        bind(TradeMessageService.class).toProvider(TomP2PTradeMessageServiceProvider.class).in(Singleton.class);
 
         bind(int.class).annotatedWith(Names.named(Node.PORT_KEY)).toInstance(env.getProperty(Node.PORT_KEY, int.class, Node.DEFAULT_PORT));
         bind(boolean.class).annotatedWith(Names.named(USE_MANUAL_PORT_FORWARDING_KEY)).toInstance(
@@ -67,5 +74,18 @@ public class TomP2PNetworkModule extends NetworkModule {
         // First shut down TomP2PNode to remove address from DHT
         injector.getInstance(TomP2PNode.class).shutDown();
         injector.getInstance(BootstrappedPeerBuilder.class).shutDown();
+    }
+}
+class TomP2PTradeMessageServiceProvider implements Provider<TradeMessageService> {
+    private final TradeMessageService tradeMessageService;
+
+    @Inject
+    public TomP2PTradeMessageServiceProvider(TomP2PNode tomP2PNode) {
+        tradeMessageService = new TomP2PMessageService(tomP2PNode);
+        tradeMessageService.setExecutor(Platform::runLater);
+    }
+
+    public TradeMessageService get() {
+        return tradeMessageService;
     }
 }

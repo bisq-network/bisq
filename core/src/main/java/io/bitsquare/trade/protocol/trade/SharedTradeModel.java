@@ -24,7 +24,7 @@ import io.bitsquare.common.taskrunner.SharedTaskModel;
 import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.trade.TradeMessageService;
+import io.bitsquare.network.TradeMessageService;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 
 import java.io.Serializable;

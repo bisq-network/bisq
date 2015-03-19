@@ -34,8 +34,8 @@ import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.offer.tomp2p.TomP2POfferBookService;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.trade.TradeMessageService;
-import io.bitsquare.trade.tomp2p.TomP2PTradeMessageService;
+import io.bitsquare.network.TradeMessageService;
+import io.bitsquare.network.tomp2p.TomP2PMessageService;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
 
@@ -96,7 +96,7 @@ public class PlaceOfferProtocolTest {
         user.applyPersistedUser(null);
         bootstrappedPeerBuilder = new BootstrappedPeerBuilder(Node.DEFAULT_PORT, false, bootstrapNode, "<unspecified>");
         tomP2PNode = new TomP2PNode(bootstrappedPeerBuilder);
-        tradeMessageService = new TomP2PTradeMessageService(tomP2PNode);
+        tradeMessageService = new TomP2PMessageService(tomP2PNode);
 
         Observable<BootstrapState> messageObservable = tomP2PNode.bootstrap(user.getMessageKeyPair(), tradeMessageService);
         messageObservable.publish();

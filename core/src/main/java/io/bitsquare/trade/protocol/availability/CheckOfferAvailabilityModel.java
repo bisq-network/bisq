@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.availability;
 import io.bitsquare.common.taskrunner.SharedTaskModel;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.trade.TradeMessageService;
+import io.bitsquare.network.TradeMessageService;
 import io.bitsquare.trade.protocol.trade.messages.OfferMessage;
 
 import org.slf4j.Logger;

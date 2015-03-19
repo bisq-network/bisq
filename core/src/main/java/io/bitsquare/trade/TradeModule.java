@@ -15,10 +15,27 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network;
+package io.bitsquare.trade;
 
-public interface MessageHandler {
+import io.bitsquare.BitsquareModule;
 
-    public void handle(Object message);
+import com.google.inject.Singleton;
 
+import org.springframework.core.env.Environment;
+
+public class TradeModule extends BitsquareModule {
+
+    public TradeModule(Environment env) {
+        super(env);
+    }
+
+    @Override
+    protected final void configure() {
+        doConfigure();
+
+        bind(TradeManager.class).in(Singleton.class);
+    }
+
+    protected void doConfigure() {
+    }
 }

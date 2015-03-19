@@ -18,7 +18,6 @@
 package io.bitsquare.app;
 
 import io.bitsquare.BitsquareModule;
-import io.bitsquare.user.AccountSettings;
 import io.bitsquare.arbitration.ArbitratorMessageModule;
 import io.bitsquare.arbitration.tomp2p.TomP2PArbitratorMessageModule;
 import io.bitsquare.btc.BitcoinModule;
@@ -29,9 +28,9 @@ import io.bitsquare.network.tomp2p.TomP2PNetworkModule;
 import io.bitsquare.offer.OfferModule;
 import io.bitsquare.offer.tomp2p.TomP2POfferModule;
 import io.bitsquare.persistence.Persistence;
+import io.bitsquare.trade.TradeModule;
+import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.Preferences;
-import io.bitsquare.trade.TradeMessageModule;
-import io.bitsquare.trade.tomp2p.TomP2PTradeMessageModule;
 import io.bitsquare.user.User;
 
 import com.google.inject.Injector;
@@ -93,8 +92,8 @@ class BitsquareAppModule extends BitsquareModule {
         return new CryptoModule(env);
     }
 
-    protected TradeMessageModule tradeMessageModule() {
-        return new TomP2PTradeMessageModule(env);
+    protected TradeModule tradeMessageModule() {
+        return new TradeModule(env);
     }
 
     protected OfferModule offerModule() {
