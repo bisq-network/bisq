@@ -26,8 +26,6 @@ import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailability
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.inject.internal.util.$Preconditions.checkState;
-
 public class ProcessReportOfferAvailabilityMessage extends Task<CheckOfferAvailabilityModel> {
     private static final Logger log = LoggerFactory.getLogger(ProcessReportOfferAvailabilityMessage.class);
 
@@ -39,7 +37,6 @@ public class ProcessReportOfferAvailabilityMessage extends Task<CheckOfferAvaila
     protected void doRun() {
         try {
             ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = (ReportOfferAvailabilityMessage) model.getMessage();
-            checkState(model.offer.getId().equals(reportOfferAvailabilityMessage.offerId));
 
             if (model.offer.getState() != Offer.State.REMOVED) {
                 if (reportOfferAvailabilityMessage.isOfferOpen)

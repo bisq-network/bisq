@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.offerer;
 
+import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
@@ -98,7 +99,7 @@ public class BuyerAsOffererProtocol {
         model.setTradeMessage(tradeMessage);
         model.taker.peer = taker;
 
-        BuyerAsOffererTaskRunner<BuyerAsOffererModel> taskRunner = new BuyerAsOffererTaskRunner<>(model,
+        TaskRunner<BuyerAsOffererModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleTakeOfferFeePayedMessage completed");
                 },
@@ -117,7 +118,7 @@ public class BuyerAsOffererProtocol {
     private void handleRequestOffererPublishDepositTxMessage(RequestOffererPublishDepositTxMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        BuyerAsOffererTaskRunner<BuyerAsOffererModel> taskRunner = new BuyerAsOffererTaskRunner<>(model,
+        TaskRunner<BuyerAsOffererModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("taskRunner at handleRequestOffererPublishDepositTxMessage completed");
                     transactionConfidenceListener = (tx, reason) -> {
@@ -153,7 +154,7 @@ public class BuyerAsOffererProtocol {
 
     // User clicked the "bank transfer started" button
     public void onFiatPaymentStarted() {
-        BuyerAsOffererTaskRunner<BuyerAsOffererModel> taskRunner = new BuyerAsOffererTaskRunner<>(model,
+        TaskRunner<BuyerAsOffererModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleBankTransferStartedUIEvent completed");
                 },
@@ -177,7 +178,7 @@ public class BuyerAsOffererProtocol {
     private void handlePayoutTxPublishedMessage(PayoutTxPublishedMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        BuyerAsOffererTaskRunner<BuyerAsOffererModel> taskRunner = new BuyerAsOffererTaskRunner<>(model,
+        TaskRunner<BuyerAsOffererModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handlePayoutTxPublishedMessage completed");
 

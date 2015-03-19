@@ -23,14 +23,14 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.fiat.FiatAccount;
+import io.bitsquare.offer.Direction;
+import io.bitsquare.offer.Offer;
+import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.p2p.AddressService;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.p2p.listener.SendMessageListener;
-import io.bitsquare.offer.Direction;
-import io.bitsquare.offer.Offer;
-import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.handlers.TradeResultHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
@@ -134,11 +134,34 @@ public class TradeManager {
         }
         for (Map.Entry<String, Trade> entry : pendingTrades.entrySet()) {
             Trade trade = entry.getValue();
-            if (trade.getState() == Trade.State.FAULT)
+            if (trade.getState() == Trade.State.FAULT) {
                 closeTrade(trade);
-
-            createBuyerAcceptsOfferProtocol(trade.getOffer());
+            }
+            else {
+                Offer offer = trade.getOffer();
+                if (isMyOffer(offer)) {
+                    createBuyerAcceptsOfferProtocol(offer);
+                }
+                else {
+                    CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(offer, messageService, addressService);
+                    CheckOfferAvailabilityProtocol protocol = new CheckOfferAvailabilityProtocol(model,
+                            () -> {
+                                disposeCheckOfferAvailabilityRequest(offer);
+                                // TODO need to check that trade hijacking is not possible (taking trades form other peers)
+                                if (offer.getState() == Offer.State.AVAILABLE || offer.getState() == Offer.State.RESERVED) {
+                                    createSellerAsTakerProtocol(trade, model.getPeer());
+                                }
+                            },
+                            (errorMessage) -> disposeCheckOfferAvailabilityRequest(offer));
+                    checkOfferAvailabilityProtocolMap.put(offer.getId(), protocol);
+                    protocol.checkOfferAvailability();
+                }
+            }
         }
+    }
+
+    public boolean isMyOffer(Offer offer) {
+        return offer.getMessagePublicKey().equals(user.getMessagePubKey());
     }
 
 
@@ -233,6 +256,12 @@ public class TradeManager {
         Trade trade = createTrade(offer);
         trade.setTradeAmount(amount);
 
+        SellerAsTakerProtocol sellerTakesOfferProtocol = createSellerAsTakerProtocol(trade, peer);
+        sellerTakesOfferProtocol.takeAvailableOffer();
+        return trade;
+    }
+
+    private SellerAsTakerProtocol createSellerAsTakerProtocol(Trade trade, Peer peer) {
         trade.stateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("trade state = " + newValue);
             switch (newValue) {
@@ -268,9 +297,7 @@ public class TradeManager {
 
         SellerAsTakerProtocol sellerTakesOfferProtocol = new SellerAsTakerProtocol(model);
         sellerAsTakerProtocolMap.put(trade.getId(), sellerTakesOfferProtocol);
-        sellerTakesOfferProtocol.takeAvailableOffer();
-
-        return trade;
+        return sellerTakesOfferProtocol;
     }
 
     public void onFiatPaymentStarted(String tradeId) {

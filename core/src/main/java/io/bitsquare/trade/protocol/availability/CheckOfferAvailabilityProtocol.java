@@ -93,7 +93,7 @@ public class CheckOfferAvailabilityProtocol {
 
     private void handleMessage(Message message, Peer sender) {
         if (!isCanceled) {
-            if (message instanceof ReportOfferAvailabilityMessage)
+            if (message instanceof ReportOfferAvailabilityMessage && model.offer.getId().equals(((ReportOfferAvailabilityMessage) message).offerId))
                 handleReportOfferAvailabilityMessage((ReportOfferAvailabilityMessage) message);
         }
     }

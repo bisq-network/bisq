@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.taker;
 
+import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
@@ -82,7 +83,7 @@ public class SellerAsTakerProtocol {
     }
 
     public void takeAvailableOffer() {
-        SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
+        TaskRunner<SellerAsTakerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("taskRunner at takeAvailableOffer completed");
                 },
@@ -98,6 +99,7 @@ public class SellerAsTakerProtocol {
         taskRunner.run();
     }
 
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -105,7 +107,7 @@ public class SellerAsTakerProtocol {
     private void handleRequestDepositPaymentMessage(RequestDepositPaymentMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
+        TaskRunner<SellerAsTakerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("taskRunner at handleTakerDepositPaymentRequestMessage completed");
                 },
@@ -126,7 +128,7 @@ public class SellerAsTakerProtocol {
     private void handleDepositTxPublishedMessage(DepositTxPublishedMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
+        TaskRunner<SellerAsTakerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("taskRunner at handleDepositTxPublishedMessage completed");
                 },
@@ -144,7 +146,7 @@ public class SellerAsTakerProtocol {
     private void handleBankTransferStartedMessage(BankTransferStartedMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
+        TaskRunner<SellerAsTakerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("taskRunner at handleBankTransferInitedMessage completed");
                     model.trade.setState(Trade.State.FIAT_PAYMENT_STARTED);
@@ -163,7 +165,7 @@ public class SellerAsTakerProtocol {
 
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     public void onFiatPaymentReceived() {
-        SellerAsTakerTaskRunner<SellerAsTakerModel> taskRunner = new SellerAsTakerTaskRunner<>(model,
+        TaskRunner<SellerAsTakerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("taskRunner at handleFiatReceivedUIEvent completed");
 
