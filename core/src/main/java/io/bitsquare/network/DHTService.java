@@ -17,11 +17,27 @@
 
 package io.bitsquare.network;
 
-
-import io.bitsquare.network.listener.GetPeerAddressListener;
-
 import java.security.PublicKey;
 
-public interface AddressService extends DHTService{
-    void findPeerAddress(PublicKey messagePublicKey, GetPeerAddressListener getPeerAddressListener);
+import net.tomp2p.dht.FutureGet;
+import net.tomp2p.dht.FuturePut;
+import net.tomp2p.dht.FutureRemove;
+import net.tomp2p.peers.Number160;
+import net.tomp2p.storage.Data;
+
+public interface DHTService extends NetworkService {
+
+    FuturePut putDomainProtectedData(Number160 locationKey, Data data);
+
+    FuturePut putData(Number160 locationKey, Data data);
+
+    FutureGet getDomainProtectedData(Number160 locationKey, PublicKey publicKey);
+
+    FutureGet getData(Number160 locationKey);
+
+    FuturePut addProtectedData(Number160 locationKey, Data data);
+
+    FutureRemove removeFromDataMap(Number160 locationKey, Data data);
+
+    FutureGet getDataMap(Number160 locationKey);
 }

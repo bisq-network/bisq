@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.account.arbitrator.browser;
 
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.arbitration.ArbitratorMessageService;
+import io.bitsquare.arbitration.ArbitratorService;
 import io.bitsquare.arbitration.listeners.ArbitratorListener;
 import io.bitsquare.common.viewfx.view.ActivatableView;
 import io.bitsquare.common.viewfx.view.CachingViewLoader;
@@ -55,11 +55,11 @@ public class ArbitratorBrowserView extends ActivatableView<Pane, Void> implement
     private final ViewLoader viewLoader;
     private final AccountSettings accountSettings;
     private final Persistence persistence;
-    private final ArbitratorMessageService messageService;
+    private final ArbitratorService messageService;
 
     @Inject
     public ArbitratorBrowserView(CachingViewLoader viewLoader, AccountSettings accountSettings, Persistence persistence,
-                                 ArbitratorMessageService messageService) {
+                                 ArbitratorService messageService) {
         this.viewLoader = viewLoader;
         this.accountSettings = accountSettings;
         this.persistence = persistence;

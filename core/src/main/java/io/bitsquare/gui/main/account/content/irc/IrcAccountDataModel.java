@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.account.content.irc;
 
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.arbitration.ArbitratorMessageService;
+import io.bitsquare.arbitration.ArbitratorService;
 import io.bitsquare.arbitration.Reputation;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
@@ -53,7 +53,7 @@ class IrcAccountDataModel implements Activatable, DataModel {
 
     private final User user;
     private final AccountSettings accountSettings;
-    private final ArbitratorMessageService messageService;
+    private final ArbitratorService messageService;
     private final Persistence persistence;
 
     final StringProperty nickName = new SimpleStringProperty();
@@ -68,7 +68,7 @@ class IrcAccountDataModel implements Activatable, DataModel {
 
     @Inject
     public IrcAccountDataModel(User user, Persistence persistence, AccountSettings accountSettings,
-                               ArbitratorMessageService messageService) {
+                               ArbitratorService messageService) {
         this.persistence = persistence;
         this.user = user;
         this.accountSettings = accountSettings;

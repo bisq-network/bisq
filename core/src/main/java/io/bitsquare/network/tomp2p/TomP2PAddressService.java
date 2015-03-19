@@ -18,50 +18,69 @@
 package io.bitsquare.network.tomp2p;
 
 import io.bitsquare.network.AddressService;
-import io.bitsquare.network.MessageHandler;
+import io.bitsquare.network.NetworkException;
 import io.bitsquare.network.Peer;
 import io.bitsquare.network.listener.GetPeerAddressListener;
+import io.bitsquare.user.User;
+
+import java.io.IOException;
 
 import java.security.PublicKey;
 
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executor;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import javax.inject.Inject;
 
 import net.tomp2p.dht.FutureGet;
+import net.tomp2p.dht.FuturePut;
 import net.tomp2p.futures.BaseFuture;
 import net.tomp2p.futures.BaseFutureAdapter;
+import net.tomp2p.futures.BaseFutureListener;
 import net.tomp2p.peers.Number160;
+import net.tomp2p.peers.PeerAddress;
+import net.tomp2p.storage.Data;
 import net.tomp2p.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-/**
- * That service delivers direct messaging and DHT functionality from the TomP2P library
- * It is the translating domain specific functionality to the messaging layer.
- * The TomP2P library codebase shall not be used outside that service.
- * That way we limit the dependency of the TomP2P library only to that class (and it's sub components).
- * <p/>
- */
-public class TomP2PAddressService implements AddressService {
+public class TomP2PAddressService extends TomP2PDHTService implements AddressService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PAddressService.class);
+    private static final int IP_CHECK_PERIOD = 2 * 60 * 1000;           // Cheap call if nothing changes, so set it short to 2 min.
+    private static final int STORE_ADDRESS_PERIOD = 5 * 60 * 1000;      // Save every 5 min.
+    private static final int ADDRESS_TTL = STORE_ADDRESS_PERIOD * 2;    // TTL 10 min.
 
-    private final TomP2PNode tomP2PNode;
-    private final CopyOnWriteArrayList<MessageHandler> messageHandlers = new CopyOnWriteArrayList<>();
-    private Executor executor;
+    private final Number160 locationKey;
+    private PeerAddress storedPeerAddress;
+    private Timer timerForStoreAddress;
+    private Timer timerForIPCheck;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TomP2PAddressService(TomP2PNode tomP2PNode) {
-        this.tomP2PNode = tomP2PNode;
+    @Inject
+    public TomP2PAddressService(TomP2PNode tomP2PNode, User user) {
+        super(tomP2PNode);
+
+        locationKey = Utils.makeSHAHash(user.getMessageKeyPair().getPublic().getEncoded());
     }
 
-    public void setExecutor(Executor executor) {
-        this.executor = executor;
+    @Override
+    public void bootstrapCompleted() {
+        setupTimerForIPCheck();
+        setupTimerForStoreAddress();
+        storeAddress();
+    }
+
+    @Override
+    public void shutDown() {
+        timerForIPCheck.cancel();
+        timerForStoreAddress.cancel();
+        removeAddress();
+        super.shutDown();
     }
 
 
@@ -72,7 +91,7 @@ public class TomP2PAddressService implements AddressService {
     @Override
     public void findPeerAddress(PublicKey publicKey, GetPeerAddressListener listener) {
         final Number160 locationKey = Utils.makeSHAHash(publicKey.getEncoded());
-        FutureGet futureGet = tomP2PNode.getDomainProtectedData(locationKey, publicKey);
+        FutureGet futureGet = getDomainProtectedData(locationKey, publicKey);
         log.trace("findPeerAddress called");
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
@@ -88,6 +107,75 @@ public class TomP2PAddressService implements AddressService {
                 }
             }
         });
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void setupTimerForStoreAddress() {
+        timerForStoreAddress = new Timer();
+        timerForStoreAddress.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (storedPeerAddress != null && peerDHT != null && !storedPeerAddress.equals(peerDHT.peerAddress()))
+                    storeAddress();
+            }
+        }, STORE_ADDRESS_PERIOD, STORE_ADDRESS_PERIOD);
+    }
+
+    private void setupTimerForIPCheck() {
+        timerForIPCheck = new Timer();
+        timerForIPCheck.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (storedPeerAddress != null && peerDHT != null && !storedPeerAddress.equals(peerDHT.peerAddress()))
+                    storeAddress();
+            }
+        }, IP_CHECK_PERIOD, IP_CHECK_PERIOD);
+    }
+
+    private void storeAddress() {
+        try {
+            Data data = new Data(new TomP2PPeer(peerDHT.peerAddress()));
+            // We set a short time-to-live to make getAddress checks fail fast in case if the offerer is offline and to support cheap offerbook state updates
+            data.ttlSeconds(ADDRESS_TTL);
+            log.debug("storePeerAddress " + peerDHT.peerAddress().toString());
+            FuturePut futurePut = putDomainProtectedData(locationKey, data);
+            futurePut.addListener(new BaseFutureListener<BaseFuture>() {
+                @Override
+                public void operationComplete(BaseFuture future) throws Exception {
+                    if (future.isSuccess()) {
+                        storedPeerAddress = peerDHT.peerAddress();
+                        log.debug("storedPeerAddress = " + storedPeerAddress);
+                    }
+                    else {
+                        log.error("storedPeerAddress not successful");
+                        throw new NetworkException("Storing address was not successful. Reason: " + future.failedReason());
+                    }
+                }
+
+                @Override
+                public void exceptionCaught(Throwable t) throws Exception {
+                    log.error("Exception at storedPeerAddress " + t.toString());
+                    throw new NetworkException("Exception at storeAddress.", t);
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+            log.error("Exception at storePeerAddress " + e.toString());
+        }
+    }
+
+    private void removeAddress() {
+        try {
+            Data data = new Data(new TomP2PPeer(peerDHT.peerAddress()));
+            removeFromDataMap(locationKey, data).awaitUninterruptibly();
+        } catch (IOException e) {
+            e.printStackTrace();
+            log.error("Exception at removeAddress " + e.toString());
+        }
     }
 
 }

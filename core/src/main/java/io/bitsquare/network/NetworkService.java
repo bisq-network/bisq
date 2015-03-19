@@ -17,11 +17,12 @@
 
 package io.bitsquare.network;
 
+import java.util.concurrent.Executor;
 
-import io.bitsquare.network.listener.GetPeerAddressListener;
+public interface NetworkService {
+    void setExecutor(Executor executor);
 
-import java.security.PublicKey;
+    void bootstrapCompleted();
 
-public interface AddressService extends DHTService{
-    void findPeerAddress(PublicKey messagePublicKey, GetPeerAddressListener getPeerAddressListener);
+    void shutDown();
 }

@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.account.arbitrator.registration;
 
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.arbitration.ArbitratorMessageService;
+import io.bitsquare.arbitration.ArbitratorService;
 import io.bitsquare.arbitration.Reputation;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.viewfx.view.ActivatableView;
@@ -84,13 +84,13 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
 
     private final Persistence persistence;
     private final WalletService walletService;
-    private final ArbitratorMessageService messageService;
+    private final ArbitratorService messageService;
     private final User user;
     private final BSFormatter formatter;
 
     @Inject
     private ArbitratorRegistrationView(Persistence persistence, WalletService walletService,
-                                       ArbitratorMessageService messageService, User user, BSFormatter formatter) {
+                                       ArbitratorService messageService, User user, BSFormatter formatter) {
         this.persistence = persistence;
         this.walletService = walletService;
         this.messageService = messageService;

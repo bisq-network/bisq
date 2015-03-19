@@ -30,12 +30,7 @@ public class TradeModule extends BitsquareModule {
     }
 
     @Override
-    protected final void configure() {
-        doConfigure();
-
+    protected void configure() {
         bind(TradeManager.class).in(Singleton.class);
-    }
-
-    protected void doConfigure() {
     }
 }

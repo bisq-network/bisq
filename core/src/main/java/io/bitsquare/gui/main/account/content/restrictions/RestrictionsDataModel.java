@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.account.content.restrictions;
 
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.arbitration.ArbitratorMessageService;
+import io.bitsquare.arbitration.ArbitratorService;
 import io.bitsquare.arbitration.Reputation;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
@@ -48,7 +48,7 @@ class RestrictionsDataModel implements Activatable, DataModel {
     private final User user;
     private final AccountSettings accountSettings;
     private final Persistence persistence;
-    private final ArbitratorMessageService messageService;
+    private final ArbitratorService messageService;
 
     final ObservableList<Locale> languageList = FXCollections.observableArrayList();
     final ObservableList<Country> countryList = FXCollections.observableArrayList();
@@ -60,7 +60,7 @@ class RestrictionsDataModel implements Activatable, DataModel {
 
     @Inject
     public RestrictionsDataModel(User user, AccountSettings accountSettings, Persistence persistence,
-                                 ArbitratorMessageService messageService) {
+                                 ArbitratorService messageService) {
         this.user = user;
         this.accountSettings = accountSettings;
         this.persistence = persistence;

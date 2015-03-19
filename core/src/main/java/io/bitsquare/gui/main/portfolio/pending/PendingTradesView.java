@@ -504,7 +504,9 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
         if (visible)
             Platform.runLater(() -> {
                 withdrawAddressTextField.requestFocus();
-                scrollPane.setVvalue(scrollPane.getVmax());
+                
+                // delay it once more as it does not get applied at first runLater
+                Platform.runLater(() -> scrollPane.setVvalue(scrollPane.getVmax()));
             });
     }
 

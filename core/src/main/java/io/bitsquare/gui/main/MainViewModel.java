@@ -19,7 +19,7 @@ package io.bitsquare.gui.main;
 
 import io.bitsquare.app.UpdateProcess;
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.arbitration.ArbitratorMessageService;
+import io.bitsquare.arbitration.ArbitratorService;
 import io.bitsquare.arbitration.Reputation;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
@@ -103,7 +103,7 @@ class MainViewModel implements ViewModel {
     private final WalletService walletService;
     private final ClientNode clientNode;
     private MessageService messageService;
-    private ArbitratorMessageService arbitratorMessageService;
+    private ArbitratorService arbitratorService;
     private final TradeManager tradeManager;
     private UpdateProcess updateProcess;
     private final BSFormatter formatter;
@@ -112,14 +112,14 @@ class MainViewModel implements ViewModel {
 
     @Inject
     public MainViewModel(User user, WalletService walletService, ClientNode clientNode, MessageService messageService,
-                         ArbitratorMessageService arbitratorMessageService,
+                         ArbitratorService arbitratorService,
                          TradeManager tradeManager, BitcoinNetwork bitcoinNetwork, UpdateProcess updateProcess,
                          BSFormatter formatter, Persistence persistence, AccountSettings accountSettings) {
         this.user = user;
         this.walletService = walletService;
         this.clientNode = clientNode;
         this.messageService = messageService;
-        this.arbitratorMessageService = arbitratorMessageService;
+        this.arbitratorService = arbitratorService;
         this.tradeManager = tradeManager;
         this.updateProcess = updateProcess;
         this.formatter = formatter;
@@ -157,9 +157,9 @@ class MainViewModel implements ViewModel {
                 error -> log.error(error.toString()),
                 () -> Platform.runLater(() -> setBitcoinNetworkSyncProgress(1.0)));
 
-        Observable<BootstrapState> messageObservable = clientNode.bootstrap(user.getMessageKeyPair(), messageService);
-        messageObservable.publish();
-        messageObservable.subscribe(
+        Observable<BootstrapState> bootstrapStateAsObservable = clientNode.bootstrap(user.getMessageKeyPair(), messageService);
+        bootstrapStateAsObservable.publish();
+        bootstrapStateAsObservable.subscribe(
                 state -> Platform.runLater(() -> setBootstrapState(state)),
                 error -> Platform.runLater(() -> {
                     log.error(error.toString());
@@ -194,7 +194,7 @@ class MainViewModel implements ViewModel {
                     log.trace("updateProcess completed");
                 });
 
-        Observable<?> allServices = Observable.merge(messageObservable, walletServiceObservable, updateProcessObservable);
+        Observable<?> allServices = Observable.merge(bootstrapStateAsObservable, walletServiceObservable, updateProcessObservable);
         allServices.subscribe(
                 next -> {
                 },
@@ -376,7 +376,7 @@ class MainViewModel implements ViewModel {
             accountSettings.addAcceptedArbitrator(arbitrator);
             persistence.write(accountSettings);
 
-            arbitratorMessageService.addArbitrator(arbitrator);
+            arbitratorService.addArbitrator(arbitrator);
         }
     }
 }

@@ -18,8 +18,9 @@
 package io.bitsquare.arbitration.tomp2p;
 
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.arbitration.ArbitratorMessageService;
+import io.bitsquare.arbitration.ArbitratorService;
 import io.bitsquare.arbitration.listeners.ArbitratorListener;
+import io.bitsquare.network.tomp2p.TomP2PDHTService;
 import io.bitsquare.network.tomp2p.TomP2PNode;
 
 import java.io.IOException;
@@ -27,7 +28,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.Executor;
+
+import javax.inject.Inject;
 
 import net.tomp2p.dht.FutureGet;
 import net.tomp2p.dht.FuturePut;
@@ -41,28 +43,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class TomP2PArbitratorMessageService implements ArbitratorMessageService {
-    private static final Logger log = LoggerFactory.getLogger(TomP2PArbitratorMessageService.class);
+public class TomP2PArbitratorService extends TomP2PDHTService implements ArbitratorService {
+    private static final Logger log = LoggerFactory.getLogger(TomP2PArbitratorService.class);
 
     private static final String ARBITRATORS_ROOT = "ArbitratorsRoot";
 
-    private final TomP2PNode tomP2PNode;
     private final List<ArbitratorListener> arbitratorListeners = new ArrayList<>();
-    private Executor executor;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TomP2PArbitratorMessageService(TomP2PNode tomP2PNode) {
-        this.tomP2PNode = tomP2PNode;
+    @Inject
+    public TomP2PArbitratorService(TomP2PNode tomP2PNode) {
+        super(tomP2PNode);
     }
 
-
-    public void setExecutor(Executor executor) {
-        this.executor = executor;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Arbitrators
@@ -73,7 +70,7 @@ public class TomP2PArbitratorMessageService implements ArbitratorMessageService 
         try {
             final Data arbitratorData = new Data(arbitrator);
 
-            FuturePut addFuture = tomP2PNode.addProtectedData(locationKey, arbitratorData);
+            FuturePut addFuture = addProtectedData(locationKey, arbitratorData);
             addFuture.addListener(new BaseFutureAdapter<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
@@ -107,7 +104,7 @@ public class TomP2PArbitratorMessageService implements ArbitratorMessageService 
     public void removeArbitrator(Arbitrator arbitrator) throws IOException {
         Number160 locationKey = Number160.createHash(ARBITRATORS_ROOT);
         final Data arbitratorData = new Data(arbitrator);
-        FutureRemove removeFuture = tomP2PNode.removeFromDataMap(locationKey, arbitratorData);
+        FutureRemove removeFuture = removeFromDataMap(locationKey, arbitratorData);
         removeFuture.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
@@ -138,7 +135,7 @@ public class TomP2PArbitratorMessageService implements ArbitratorMessageService 
 
     public void getArbitrators(Locale languageLocale) {
         Number160 locationKey = Number160.createHash(ARBITRATORS_ROOT);
-        FutureGet futureGet = tomP2PNode.getDataMap(locationKey);
+        FutureGet futureGet = getDataMap(locationKey);
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {

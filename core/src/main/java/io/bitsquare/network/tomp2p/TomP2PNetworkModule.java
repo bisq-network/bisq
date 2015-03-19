@@ -17,21 +17,16 @@
 
 package io.bitsquare.network.tomp2p;
 
+import io.bitsquare.network.AddressService;
 import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.ClientNode;
-import io.bitsquare.network.AddressService;
 import io.bitsquare.network.MessageService;
 import io.bitsquare.network.NetworkModule;
 import io.bitsquare.network.Node;
 
 import com.google.inject.Injector;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
-
-import javax.inject.Inject;
-
-import javafx.application.Platform;
 
 import org.springframework.core.env.Environment;
 
@@ -50,10 +45,14 @@ public class TomP2PNetworkModule extends NetworkModule {
 
     @Override
     protected void doConfigure() {
+        // Used both ClientNode and TomP2PNode for injection
         bind(ClientNode.class).to(TomP2PNode.class).in(Singleton.class);
         bind(TomP2PNode.class).in(Singleton.class);
-        bind(MessageService.class).toProvider(TomP2PMessageServiceProvider.class).in(Singleton.class);
-        bind(AddressService.class).toProvider(TomP2PAddressServiceProvider.class).in(Singleton.class);
+        
+        bind(BootstrappedPeerBuilder.class).in(Singleton.class);
+        
+        bind(AddressService.class).to(TomP2PAddressService.class).in(Singleton.class);
+        bind(MessageService.class).to(TomP2PMessageService.class).in(Singleton.class);
 
         bind(int.class).annotatedWith(Names.named(Node.PORT_KEY)).toInstance(env.getProperty(Node.PORT_KEY, int.class, Node.DEFAULT_PORT));
         bind(boolean.class).annotatedWith(Names.named(USE_MANUAL_PORT_FORWARDING_KEY)).toInstance(
@@ -66,43 +65,14 @@ public class TomP2PNetworkModule extends NetworkModule {
                 )
         );
         bindConstant().annotatedWith(Names.named(NETWORK_INTERFACE_KEY)).to(env.getProperty(NETWORK_INTERFACE_KEY, NETWORK_INTERFACE_UNSPECIFIED));
-        bind(BootstrappedPeerBuilder.class).in(Singleton.class);
     }
 
     @Override
     protected void doClose(Injector injector) {
         super.doClose(injector);
 
-        // First shut down TomP2PNode to remove address from DHT
-        injector.getInstance(TomP2PNode.class).shutDown();
+        // First shut down AddressService to remove address from DHT
+        injector.getInstance(AddressService.class).shutDown();
         injector.getInstance(BootstrappedPeerBuilder.class).shutDown();
-    }
-}
-
-class TomP2PMessageServiceProvider implements Provider<MessageService> {
-    private final MessageService messageService;
-
-    @Inject
-    public TomP2PMessageServiceProvider(TomP2PNode tomP2PNode) {
-        messageService = new TomP2PMessageService(tomP2PNode);
-        messageService.setExecutor(Platform::runLater);
-    }
-
-    public MessageService get() {
-        return messageService;
-    }
-}
-
-class TomP2PAddressServiceProvider implements Provider<AddressService> {
-    private final AddressService addressService;
-
-    @Inject
-    public TomP2PAddressServiceProvider(TomP2PNode tomP2PNode) {
-        addressService = new TomP2PAddressService(tomP2PNode);
-        addressService.setExecutor(Platform::runLater);
-    }
-
-    public AddressService get() {
-        return addressService;
     }
 }

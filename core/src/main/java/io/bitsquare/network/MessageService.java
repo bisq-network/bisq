@@ -20,11 +20,7 @@ package io.bitsquare.network;
 
 import io.bitsquare.network.listener.SendMessageListener;
 
-import java.util.concurrent.Executor;
-
-public interface MessageService extends MessageHandler {
-
-    void setExecutor(Executor executor);
+public interface MessageService extends NetworkService, MessageHandler {
 
     void sendMessage(Peer peer, Message message, SendMessageListener listener);
 

@@ -24,7 +24,8 @@ import io.bitsquare.network.Peer;
 import io.bitsquare.network.listener.SendMessageListener;
 
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executor;
+
+import javax.inject.Inject;
 
 import net.tomp2p.futures.BaseFuture;
 import net.tomp2p.futures.BaseFutureListener;
@@ -33,50 +34,37 @@ import net.tomp2p.futures.FutureDirect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-/**
- * That service delivers direct messaging and DHT functionality from the TomP2P library
- * It is the translating domain specific functionality to the messaging layer.
- * The TomP2P library codebase shall not be used outside that service.
- * That way we limit the dependency of the TomP2P library only to that class (and it's sub components).
- * <p/>
- */
-public class TomP2PMessageService implements MessageService {
+public class TomP2PMessageService extends TomP2PService implements MessageService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PMessageService.class);
 
-    private final TomP2PNode tomP2PNode;
     private final CopyOnWriteArrayList<MessageHandler> messageHandlers = new CopyOnWriteArrayList<>();
-    private Executor executor;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Inject
     public TomP2PMessageService(TomP2PNode tomP2PNode) {
-        this.tomP2PNode = tomP2PNode;
-    }
-
-    @Override
-    public void setExecutor(Executor executor) {
-        this.executor = executor;
+        super(tomP2PNode);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Messages
+    // MessageService implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void sendMessage(Peer peer, Message message, SendMessageListener listener) {
-        if (!(peer instanceof TomP2PPeer)) {
-            throw new IllegalArgumentException("peer must be of type TomP2PPeer");
-        }
-        FutureDirect futureDirect = tomP2PNode.sendData(((TomP2PPeer) peer).getPeerAddress(), message);
+        if (!(peer instanceof TomP2PPeer))
+            throw new IllegalArgumentException("Peer must be of type TomP2PPeer");
+
+        FutureDirect futureDirect = peerDHT.peer().sendDirect(((TomP2PPeer) peer).getPeerAddress()).object(message).start();
         futureDirect.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
+                    log.debug("sendMessage completed");
                     executor.execute(listener::handleResult);
                 }
                 else {
@@ -87,37 +75,34 @@ public class TomP2PMessageService implements MessageService {
 
             @Override
             public void exceptionCaught(Throwable t) throws Exception {
+                log.error("Exception at sendMessage " + t.toString());
                 executor.execute(listener::handleFault);
             }
         });
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Event Listeners
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
     public void addMessageHandler(MessageHandler listener) {
         if (!messageHandlers.add(listener))
-            throw new RuntimeException("Add listener did not change list. Probably listener has been already added.");
+            throw new IllegalArgumentException("Add listener did not change list. Probably listener has been already added.");
     }
 
     @Override
     public void removeMessageHandler(MessageHandler listener) {
         if (!messageHandlers.remove(listener))
-            throw new RuntimeException("Try to remove listener which was never added.");
+            throw new IllegalArgumentException("Try to remove listener which was never added.");
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Incoming message handler
+    // MessageHandler implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void handleMessage(Message message, Peer sender) {
-        if (sender instanceof TomP2PPeer) {
+        if (sender instanceof TomP2PPeer)
             executor.execute(() -> messageHandlers.stream().forEach(e -> e.handleMessage((Message) message, sender)));
-        }
+        else
+            throw new IllegalArgumentException("Peer must be of type TomP2PPeer");
     }
 }

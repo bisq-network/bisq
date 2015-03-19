@@ -158,7 +158,13 @@ textfield */
     -fx-progress-color: dimgrey;
 }
 
-/* .table-view */
+
+/*******************************************************************************
+ *                                                                             *
+ * Table                                                                     *
+ *                                                                             *
+ ******************************************************************************/
+
 .table-view .table-cell {
     -fx-alignment: center;
 }
@@ -173,6 +179,15 @@ textfield */
 
 .table-view .text {
     -fx-fill: black;
+}
+
+.table-view:focused {
+    /*-fx-background-color: transparent;*/
+}
+.table-view:focused {
+    -fx-background-color: -fx-box-border, -fx-control-inner-background;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 1;
 }
 
 .table-view .table-row-cell:selected .table-row-cell:row-selection .table-row-cell:cell-selection .text {
@@ -215,10 +230,12 @@ textfield */
     -fx-fill: black;
 }
 
-#form-header-text {
-    -fx-font-weight: bold;
-    -fx-font-size: 14;
-}
+
+/*******************************************************************************
+ *                                                                             *
+ * Icons                                                                     *
+ *                                                                             *
+ ******************************************************************************/
 
 #non-clickable-icon {
     -fx-text-fill: #AAAAAA;
@@ -233,11 +250,13 @@ textfield */
     -fx-text-fill: #666666;
 }
 
-#form-title {
-    -fx-font-weight: bold;
-}
 
-/* tab pane */
+/*******************************************************************************
+ *                                                                             *
+ * Tab pane                                                                     *
+ *                                                                             *
+ ******************************************************************************/
+
 .tab-pane .tab-label {
     -fx-font-size: 15;
 }
@@ -254,11 +273,15 @@ textfield */
     -fx-background-color: transparent;
 }
 
-/* table-view */
-.table-view:focused {
-    -fx-background-color: transparent;
+
+#form-header-text {
+    -fx-font-weight: bold;
+    -fx-font-size: 14;
 }
 
+#form-title {
+    -fx-font-weight: bold;
+}
 /* scroll-pane */
 
 .scroll-pane {

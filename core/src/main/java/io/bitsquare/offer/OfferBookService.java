@@ -19,15 +19,13 @@ package io.bitsquare.offer;
 
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.network.DHTService;
 
 import java.util.List;
-import java.util.concurrent.Executor;
 
 import javafx.beans.property.LongProperty;
 
-public interface OfferBookService {
-
-    void setExecutor(Executor executor);
+public interface OfferBookService extends DHTService {
 
     void getOffers(String fiatCode);
 

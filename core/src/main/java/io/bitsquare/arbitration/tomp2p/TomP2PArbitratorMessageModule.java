@@ -18,16 +18,9 @@
 package io.bitsquare.arbitration.tomp2p;
 
 import io.bitsquare.arbitration.ArbitratorMessageModule;
-import io.bitsquare.arbitration.ArbitratorMessageService;
-import io.bitsquare.network.tomp2p.TomP2PNode;
+import io.bitsquare.arbitration.ArbitratorService;
 
-import com.google.inject.Injector;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
-
-import javax.inject.Inject;
-
-import javafx.application.Platform;
 
 import org.springframework.core.env.Environment;
 
@@ -39,25 +32,6 @@ public class TomP2PArbitratorMessageModule extends ArbitratorMessageModule {
 
     @Override
     protected void doConfigure() {
-        bind(ArbitratorMessageService.class).toProvider(ArbitratorMessageServiceProvider.class).in(Singleton.class);
-    }
-
-    @Override
-    protected void doClose(Injector injector) {
-        super.doClose(injector);
-    }
-}
-
-class ArbitratorMessageServiceProvider implements Provider<ArbitratorMessageService> {
-    private final ArbitratorMessageService arbitratorMessageService;
-
-    @Inject
-    public ArbitratorMessageServiceProvider(TomP2PNode tomP2PNode) {
-        arbitratorMessageService = new TomP2PArbitratorMessageService(tomP2PNode);
-        arbitratorMessageService.setExecutor(Platform::runLater);
-    }
-
-    public ArbitratorMessageService get() {
-        return arbitratorMessageService;
+        bind(ArbitratorService.class).to(TomP2PArbitratorService.class).in(Singleton.class);
     }
 }

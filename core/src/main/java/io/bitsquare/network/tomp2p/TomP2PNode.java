@@ -23,36 +23,20 @@ import io.bitsquare.network.ClientNode;
 import io.bitsquare.network.ConnectionType;
 import io.bitsquare.network.Message;
 import io.bitsquare.network.MessageHandler;
-import io.bitsquare.network.NetworkException;
 import io.bitsquare.network.Node;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
-import java.io.IOException;
-
 import java.security.KeyPair;
-import java.security.PublicKey;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.annotation.Nullable;
 
 import javax.inject.Inject;
 
-import net.tomp2p.dht.FutureGet;
-import net.tomp2p.dht.FuturePut;
-import net.tomp2p.dht.FutureRemove;
 import net.tomp2p.dht.PeerDHT;
-import net.tomp2p.futures.BaseFuture;
-import net.tomp2p.futures.BaseFutureListener;
-import net.tomp2p.futures.FutureDirect;
-import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
-import net.tomp2p.storage.Data;
-import net.tomp2p.utils.Utils;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -63,26 +47,12 @@ import rx.Observable;
 import rx.subjects.BehaviorSubject;
 import rx.subjects.Subject;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-/**
- * The fully bootstrapped P2PNode which is responsible himself for his availability in the messaging system. It saves
- * for instance the IP address periodically.
- * This class is offering generic functionality of TomP2P needed for Bitsquare, like data and domain protection.
- * It does not handle any domain aspects of Bitsquare.
- */
 public class TomP2PNode implements ClientNode {
     private static final Logger log = LoggerFactory.getLogger(TomP2PNode.class);
-    private static final int IP_CHECK_PERIOD = 2 * 60 * 1000;           // Cheap call if nothing changes, so set it short to 2 min.
-    private static final int STORE_ADDRESS_PERIOD = 5 * 60 * 1000;      // Save every 5 min.
-    private static final int ADDRESS_TTL = STORE_ADDRESS_PERIOD * 2;    // TTL 10 min.
 
-    private KeyPair keyPair;
-    private PeerAddress storedPeerAddress;
     private PeerDHT peerDHT;
     private BootstrappedPeerBuilder bootstrappedPeerBuilder;
-    private Timer timerForStoreAddress;
-    private Timer timerForIPCheck;
+    private final Subject<BootstrapState, BootstrapState> bootstrapStateSubject;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -92,26 +62,24 @@ public class TomP2PNode implements ClientNode {
     @Inject
     public TomP2PNode(BootstrappedPeerBuilder bootstrappedPeerBuilder) {
         this.bootstrappedPeerBuilder = bootstrappedPeerBuilder;
+        bootstrapStateSubject = BehaviorSubject.create();
     }
 
     // for unit testing
     TomP2PNode(KeyPair keyPair, PeerDHT peerDHT) {
-        this.keyPair = keyPair;
         this.peerDHT = peerDHT;
         peerDHT.peerBean().keyPair(keyPair);
+        bootstrapStateSubject = BehaviorSubject.create();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Observable<BootstrapState> bootstrap(KeyPair keyPair, MessageHandler messageHandler) {
-        checkNotNull(keyPair, "keyPair must not be null.");
-
-        this.keyPair = keyPair;
         bootstrappedPeerBuilder.setKeyPair(keyPair);
 
-        Subject<BootstrapState, BootstrapState> bootstrapStateSubject = BehaviorSubject.create();
 
         bootstrappedPeerBuilder.getBootstrapState().addListener((ov, oldValue, newValue) -> {
             log.debug("BootstrapState changed " + newValue);
@@ -124,14 +92,7 @@ public class TomP2PNode implements ClientNode {
             public void onSuccess(@Nullable PeerDHT peerDHT) {
                 if (peerDHT != null) {
                     TomP2PNode.this.peerDHT = peerDHT;
-                    setupTimerForIPCheck();
-                    setupTimerForStoreAddress();
                     setupReplyHandler(messageHandler);
-                    try {
-                        storeAddress();
-                    } catch (NetworkException e) {
-                        bootstrapStateSubject.onError(e);
-                    }
                     bootstrapStateSubject.onCompleted();
                 }
                 else {
@@ -150,12 +111,13 @@ public class TomP2PNode implements ClientNode {
         return bootstrapStateSubject.asObservable();
     }
 
-    void shutDown() {
-        timerForIPCheck.cancel();
-        timerForStoreAddress.cancel();
-        removeAddress();
+    public Observable<BootstrapState> getBootstrapStateAsObservable() {
+        return bootstrapStateSubject.asObservable();
     }
 
+    public PeerDHT getPeerDHT() {
+        return peerDHT;
+    }
 
     @Override
     public ConnectionType getConnectionType() {
@@ -190,147 +152,6 @@ public class TomP2PNode implements ClientNode {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Generic DHT methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // TODO remove all security features for the moment. There are some problems with a "wrong signature!" msg in
-    // the logs
-    public FuturePut putDomainProtectedData(Number160 locationKey, Data data) {
-        log.trace("putDomainProtectedData");
-        return peerDHT.put(locationKey).data(data).start();
-    }
-
-    public FuturePut putData(Number160 locationKey, Data data) {
-        log.trace("putData");
-        return peerDHT.put(locationKey).data(data).start();
-    }
-
-    public FutureGet getDomainProtectedData(Number160 locationKey, PublicKey publicKey) {
-        log.trace("getDomainProtectedData");
-        return peerDHT.get(locationKey).start();
-    }
-
-    public FutureGet getData(Number160 locationKey) {
-        //log.trace("getData");
-        return peerDHT.get(locationKey).start();
-    }
-
-    public FuturePut addProtectedData(Number160 locationKey, Data data) {
-        log.trace("addProtectedData");
-        return peerDHT.add(locationKey).data(data).start();
-    }
-
-    public FutureRemove removeFromDataMap(Number160 locationKey, Data data) {
-        Number160 contentKey = data.hash();
-        log.trace("removeFromDataMap with contentKey " + contentKey.toString());
-        return peerDHT.remove(locationKey).contentKey(contentKey).start();
-    }
-
-    public FutureGet getDataMap(Number160 locationKey) {
-        log.trace("getDataMap");
-        return peerDHT.get(locationKey).all().start();
-    }
-
-    public FutureDirect sendData(PeerAddress peerAddress, Object payLoad) {
-        log.trace("sendData");
-        FutureDirect futureDirect = peerDHT.peer().sendDirect(peerAddress).object(payLoad).start();
-        futureDirect.addListener(new BaseFutureListener<BaseFuture>() {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception {
-                if (future.isSuccess()) {
-                    log.debug("sendMessage completed");
-                }
-                else {
-                    log.error("sendData failed with Reason " + futureDirect.failedReason());
-                }
-            }
-
-            @Override
-            public void exceptionCaught(Throwable t) throws Exception {
-                log.error("Exception at sendData " + t.toString());
-            }
-        });
-
-        return futureDirect;
-    }
-
-//
-//    public FuturePut putDomainProtectedData(Number160 locationKey, Data data) {
-//        log.trace("putDomainProtectedData");
-//        data.protectEntry(keyPair);
-//        final Number160 ownerKeyHash = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
-//        return peerDHT.put(locationKey).data(data).keyPair(keyPair).domainKey(ownerKeyHash).protectDomain().start();
-//    }
-//
-//    // No protection, everybody can write.
-//    public FuturePut putData(Number160 locationKey, Data data) {
-//        log.trace("putData");
-//        return peerDHT.put(locationKey).data(data).start();
-//    }
-//
-//    // Not public readable. Only users with the public key of the peer who stored the data can read that data
-//    public FutureGet getDomainProtectedData(Number160 locationKey, PublicKey publicKey) {
-//        log.trace("getDomainProtectedData");
-//        final Number160 ownerKeyHash = Utils.makeSHAHash(publicKey.getEncoded());
-//        return peerDHT.get(locationKey).domainKey(ownerKeyHash).start();
-//    }
-//
-//    // No protection, everybody can read.
-//    public FutureGet getData(Number160 locationKey) {
-//        log.trace("getData");
-//        return peerDHT.get(locationKey).start();
-//    }
-//
-//    // No domain protection, but entry protection
-//    public FuturePut addProtectedData(Number160 locationKey, Data data) {
-//        log.trace("addProtectedData");
-//        data.protectEntry(keyPair);
-//        log.trace("addProtectedData with contentKey " + data.hash().toString());
-//        return peerDHT.add(locationKey).data(data).keyPair(keyPair).start();
-//    }
-//
-//    // No domain protection, but entry protection
-//    public FutureRemove removeFromDataMap(Number160 locationKey, Data data) {
-//        log.trace("removeFromDataMap");
-//        Number160 contentKey = data.hash();
-//        log.trace("removeFromDataMap with contentKey " + contentKey.toString());
-//        return peerDHT.remove(locationKey).contentKey(contentKey).keyPair(keyPair).start();
-//    }
-//
-//    // Public readable
-//    public FutureGet getDataMap(Number160 locationKey) {
-//        log.trace("getDataMap");
-//        return peerDHT.get(locationKey).all().start();
-//    }
-
-    // Send signed payLoad to peer
-//    public FutureDirect sendData(PeerAddress peerAddress, Object payLoad) {
-//        // use 30 seconds as max idle time before connection get closed
-//        FuturePeerConnection futurePeerConnection = peerDHT.peer().createPeerConnection(peerAddress, 30000);
-//        FutureDirect futureDirect = peerDHT.peer().sendDirect(futurePeerConnection).object(payLoad).sign().start();
-//        futureDirect.addListener(new BaseFutureListener<BaseFuture>() {
-//            @Override
-//            public void operationComplete(BaseFuture future) throws Exception {
-//                if (futureDirect.isSuccess()) {
-//                    log.debug("sendMessage completed");
-//                }
-//                else {
-//                    log.error("sendData failed with Reason " + futureDirect.failedReason());
-//                }
-//            }
-//
-//            @Override
-//            public void exceptionCaught(Throwable t) throws Exception {
-//                log.error("Exception at sendData " + t.toString());
-//            }
-//        });
-//
-//        return futureDirect;
-//    }
-//
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -353,79 +174,5 @@ public class TomP2PNode implements ClientNode {
         });
     }
 
-    private void setupTimerForStoreAddress() {
-        timerForStoreAddress = new Timer();
-        timerForStoreAddress.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                if (storedPeerAddress != null && peerDHT != null && !storedPeerAddress.equals(peerDHT.peerAddress()))
-                    try {
-                        storeAddress();
-                    } catch (NetworkException e) {
-                        e.printStackTrace();
-                    }
-            }
-        }, STORE_ADDRESS_PERIOD, STORE_ADDRESS_PERIOD);
-    }
 
-    private void setupTimerForIPCheck() {
-        timerForIPCheck = new Timer();
-        timerForIPCheck.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                if (storedPeerAddress != null && peerDHT != null && !storedPeerAddress.equals(peerDHT.peerAddress()))
-                    try {
-                        storeAddress();
-                    } catch (NetworkException e) {
-                        e.printStackTrace();
-                    }
-            }
-        }, IP_CHECK_PERIOD, IP_CHECK_PERIOD);
-    }
-
-    private void storeAddress() throws NetworkException {
-        try {
-            Number160 locationKey = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
-            Data data = new Data(new TomP2PPeer(peerDHT.peerAddress()));
-            // We set a short time-to-live to make getAddress checks fail fast in case if the offerer is offline and to support cheap offerbook state updates
-            data.ttlSeconds(ADDRESS_TTL);
-            log.debug("storePeerAddress " + peerDHT.peerAddress().toString());
-            FuturePut futurePut = putDomainProtectedData(locationKey, data);
-            futurePut.addListener(new BaseFutureListener<BaseFuture>() {
-                @Override
-                public void operationComplete(BaseFuture future) throws Exception {
-                    if (future.isSuccess()) {
-                        storedPeerAddress = peerDHT.peerAddress();
-                        log.debug("storedPeerAddress = " + storedPeerAddress);
-                    }
-                    else {
-                        log.error("storedPeerAddress not successful");
-                        throw new NetworkException("Storing address was not successful. Reason: " + future.failedReason());
-                    }
-                }
-
-                @Override
-                public void exceptionCaught(Throwable t) throws Exception {
-                    log.error("Exception at storedPeerAddress " + t.toString());
-                    throw new NetworkException("Exception at storeAddress.", t);
-                }
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-            log.error("Exception at storePeerAddress " + e.toString());
-            throw new NetworkException("Exception at storeAddress.", e);
-        }
-    }
-
-
-    private void removeAddress() {
-        try {
-            Number160 locationKey = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
-            Data data = new Data(new TomP2PPeer(peerDHT.peerAddress()));
-            removeFromDataMap(locationKey, data).awaitUninterruptibly(2000); // give it max. 2 sec. to remove the address at shut down
-        } catch (IOException e) {
-            e.printStackTrace();
-            log.error("Exception at removeAddress " + e.toString());
-        }
-    }
 }
