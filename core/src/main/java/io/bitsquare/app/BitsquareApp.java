@@ -17,19 +17,19 @@
 
 package io.bitsquare.app;
 
-import io.bitsquare.user.AccountSettings;
+import io.bitsquare.common.viewfx.view.CachingViewLoader;
+import io.bitsquare.common.viewfx.view.View;
+import io.bitsquare.common.viewfx.view.ViewLoader;
+import io.bitsquare.common.viewfx.view.guice.InjectorViewFactory;
 import io.bitsquare.gui.SystemTray;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.persistence.Persistence;
+import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
-import io.bitsquare.common.viewfx.view.CachingViewLoader;
-import io.bitsquare.common.viewfx.view.View;
-import io.bitsquare.common.viewfx.view.ViewLoader;
-import io.bitsquare.common.viewfx.view.guice.InjectorViewFactory;
 
 import com.google.common.base.Throwables;
 
@@ -109,8 +109,11 @@ public class BitsquareApp extends Application {
 
         // configure the system tray
 
-        SystemTray systemTray = new SystemTray(primaryStage, this::stop);
-        primaryStage.setOnCloseRequest(e -> stop());
+        SystemTray.create(primaryStage, this::stop);
+        primaryStage.setOnCloseRequest(e -> {
+            e.consume();
+            stop();
+        });
         scene.setOnKeyReleased(keyEvent -> {
             // For now we exit when closing/quit the app.
             // Later we will only hide the window (systemTray.hideStage()) and use the exit item in the system tray for

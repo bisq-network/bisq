@@ -72,11 +72,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class TomP2PNode implements ClientNode {
     private static final Logger log = LoggerFactory.getLogger(TomP2PNode.class);
+    private static final int IP_CHECK_PERIOD = 2 * 60 * 1000;           // Cheap call if nothing changes, so set it short to 2 min.
+    private static final int STORE_ADDRESS_PERIOD = 5 * 60 * 1000;      // Save every 5 min.
+    private static final int ADDRESS_TTL = STORE_ADDRESS_PERIOD * 2;    // TTL 10 min.
 
     private KeyPair keyPair;
     private PeerAddress storedPeerAddress;
     private PeerDHT peerDHT;
     private BootstrappedPeerBuilder bootstrappedPeerBuilder;
+    private Timer timerForStoreAddress;
+    private Timer timerForIPCheck;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -119,6 +124,7 @@ public class TomP2PNode implements ClientNode {
                 if (peerDHT != null) {
                     TomP2PNode.this.peerDHT = peerDHT;
                     setupTimerForIPCheck();
+                    setupTimerForStoreAddress();
                     setupReplyHandler(messageBroker);
                     try {
                         storeAddress();
@@ -143,6 +149,44 @@ public class TomP2PNode implements ClientNode {
         return bootstrapStateSubject.asObservable();
     }
 
+    void shutDown() {
+        timerForIPCheck.cancel();
+        timerForStoreAddress.cancel();
+        removeAddress();
+    }
+
+
+    @Override
+    public ConnectionType getConnectionType() {
+        BootstrapState bootstrapState = bootstrappedPeerBuilder.getBootstrapState().get();
+        switch (bootstrapState) {
+            case DISCOVERY_DIRECT_SUCCEEDED:
+                return ConnectionType.DIRECT;
+            case DISCOVERY_MANUAL_PORT_FORWARDING_SUCCEEDED:
+                return ConnectionType.MANUAL_PORT_FORWARDING;
+            case DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED:
+                return ConnectionType.AUTO_PORT_FORWARDING;
+            case RELAY_SUCCEEDED:
+                return ConnectionType.RELAY;
+            default:
+                throw new BitsquareException("Invalid bootstrap state: %s", bootstrapState);
+        }
+    }
+
+    @Override
+    public Node getAddress() {
+        PeerAddress peerAddress = peerDHT.peerBean().serverPeerAddress();
+        return Node.at(
+                peerDHT.peerID().toString(),
+                peerAddress.inetAddress().getHostAddress(),
+                peerAddress.peerSocketAddress().tcpPort());
+    }
+
+    @Override
+    public Node getBootstrapNodeAddress() {
+        return bootstrappedPeerBuilder.getBootstrapNode();
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Generic DHT methods
@@ -306,26 +350,44 @@ public class TomP2PNode implements ClientNode {
         });
     }
 
-    private void setupTimerForIPCheck() {
-        Timer timer = new Timer();
-        long checkIfIPChangedPeriod = 600 * 1000;
-        timer.scheduleAtFixedRate(new TimerTask() {
+    private void setupTimerForStoreAddress() {
+        timerForStoreAddress = new Timer();
+        timerForStoreAddress.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                if (storedPeerAddress != null && peerDHT != null
-                        && !storedPeerAddress.equals(peerDHT.peerAddress()))
+                if (storedPeerAddress != null && peerDHT != null && !storedPeerAddress.equals(peerDHT.peerAddress()))
                     try {
                         storeAddress();
                     } catch (NetworkException e) {
                         e.printStackTrace();
                     }
             }
-        }, checkIfIPChangedPeriod, checkIfIPChangedPeriod);
+        }, STORE_ADDRESS_PERIOD, STORE_ADDRESS_PERIOD);
+    }
+
+    private void setupTimerForIPCheck() {
+        timerForIPCheck = new Timer();
+        timerForIPCheck.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (storedPeerAddress != null && peerDHT != null && !storedPeerAddress.equals(peerDHT.peerAddress()))
+                    try {
+                        storeAddress();
+                    } catch (NetworkException e) {
+                        e.printStackTrace();
+                    }
+            }
+        }, IP_CHECK_PERIOD, IP_CHECK_PERIOD);
     }
 
     private void storeAddress() throws NetworkException {
         try {
-            FuturePut futurePut = saveAddress();
+            Number160 locationKey = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
+            Data data = new Data(new TomP2PPeer(peerDHT.peerAddress()));
+            // We set a short time-to-live to make getAddress checks fail fast in case if the offerer is offline and to support cheap offerbook state updates
+            data.ttlSeconds(ADDRESS_TTL);
+            log.debug("storePeerAddress " + peerDHT.peerAddress().toString());
+            FuturePut futurePut = putDomainProtectedData(locationKey, data);
             futurePut.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
@@ -335,8 +397,7 @@ public class TomP2PNode implements ClientNode {
                     }
                     else {
                         log.error("storedPeerAddress not successful");
-                        throw new NetworkException("Storing address was not successful. Reason: "
-                                + future.failedReason());
+                        throw new NetworkException("Storing address was not successful. Reason: " + future.failedReason());
                     }
                 }
 
@@ -353,41 +414,15 @@ public class TomP2PNode implements ClientNode {
         }
     }
 
-    private FuturePut saveAddress() throws IOException {
-        Number160 locationKey = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
-        Data data = new Data(new TomP2PPeer(peerDHT.peerAddress()));
-        log.debug("storePeerAddress " + peerDHT.peerAddress().toString());
-        return putDomainProtectedData(locationKey, data);
-    }
 
-    @Override
-    public ConnectionType getConnectionType() {
-        BootstrapState bootstrapState = bootstrappedPeerBuilder.getBootstrapState().get();
-        switch (bootstrapState) {
-            case DISCOVERY_DIRECT_SUCCEEDED:
-                return ConnectionType.DIRECT;
-            case DISCOVERY_MANUAL_PORT_FORWARDING_SUCCEEDED:
-                return ConnectionType.MANUAL_PORT_FORWARDING;
-            case DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED:
-                return ConnectionType.AUTO_PORT_FORWARDING;
-            case RELAY_SUCCEEDED:
-                return ConnectionType.RELAY;
-            default:
-                throw new BitsquareException("Invalid bootstrap state: %s", bootstrapState);
+    private void removeAddress() {
+        try {
+            Number160 locationKey = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
+            Data data = new Data(new TomP2PPeer(peerDHT.peerAddress()));
+            removeFromDataMap(locationKey, data).awaitUninterruptibly(2000); // give it max. 2 sec. to remove the address at shut down
+        } catch (IOException e) {
+            e.printStackTrace();
+            log.error("Exception at removeAddress " + e.toString());
         }
-    }
-
-    @Override
-    public Node getAddress() {
-        PeerAddress peerAddress = peerDHT.peerBean().serverPeerAddress();
-        return Node.at(
-                peerDHT.peerID().toString(),
-                peerAddress.inetAddress().getHostAddress(),
-                peerAddress.peerSocketAddress().tcpPort());
-    }
-
-    @Override
-    public Node getBootstrapNodeAddress() {
-        return bootstrappedPeerBuilder.getBootstrapNode();
     }
 }

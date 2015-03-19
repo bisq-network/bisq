@@ -38,5 +38,5 @@ public interface TradeMessageService extends MessageBroker {
 
     void removeMessageHandler(MessageHandler listener);
 
-    void getPeerAddress(PublicKey messagePublicKey, GetPeerAddressListener getPeerAddressListener);
+    void findPeerAddress(PublicKey messagePublicKey, GetPeerAddressListener getPeerAddressListener);
 }

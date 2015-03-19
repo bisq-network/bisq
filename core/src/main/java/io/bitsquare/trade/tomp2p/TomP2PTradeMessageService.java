@@ -75,15 +75,16 @@ public class TomP2PTradeMessageService implements TradeMessageService {
     // Find peer address by publicKey
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void getPeerAddress(PublicKey publicKey, GetPeerAddressListener listener) {
+    public void findPeerAddress(PublicKey publicKey, GetPeerAddressListener listener) {
         final Number160 locationKey = Utils.makeSHAHash(publicKey.getEncoded());
         FutureGet futureGet = tomP2PNode.getDomainProtectedData(locationKey, publicKey);
-
+        log.trace("findPeerAddress called");
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture baseFuture) throws Exception {
                 if (baseFuture.isSuccess() && futureGet.data() != null) {
                     final Peer peer = (Peer) futureGet.data().object();
+                    log.trace("Peer found in DHT. Peer = " + peer);
                     executor.execute(() -> listener.onResult(peer));
                 }
                 else {

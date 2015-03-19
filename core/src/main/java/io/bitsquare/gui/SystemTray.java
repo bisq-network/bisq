@@ -48,10 +48,16 @@ public class SystemTray {
 
     private static final String SHOW_WINDOW_LABEL = "Show exchange window";
     private static final String HIDE_WINDOW_LABEL = "Hide exchange window";
+    private static SystemTray systemTray;
 
     private final Stage stage;
     private final Runnable onExit;
     private final MenuItem toggleShowHideItem = new MenuItem(HIDE_WINDOW_LABEL);
+
+
+    public static void create(Stage stage, Runnable onExit) {
+        systemTray = new SystemTray(stage, onExit);
+    }
 
     public SystemTray(Stage stage, Runnable onExit) {
         this.stage = stage;
@@ -126,4 +132,5 @@ public class SystemTray {
         stage.hide();
         toggleShowHideItem.setLabel(SHOW_WINDOW_LABEL);
     }
+
 }

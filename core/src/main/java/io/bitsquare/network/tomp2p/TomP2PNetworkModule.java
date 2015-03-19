@@ -64,6 +64,8 @@ public class TomP2PNetworkModule extends NetworkModule {
     protected void doClose(Injector injector) {
         super.doClose(injector);
 
+        // First shut down TomP2PNode to remove address from DHT
+        injector.getInstance(TomP2PNode.class).shutDown();
         injector.getInstance(BootstrappedPeerBuilder.class).shutDown();
     }
 }
