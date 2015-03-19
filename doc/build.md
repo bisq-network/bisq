@@ -18,9 +18,9 @@ What follows is explained in detail in the sections below, but for those who kno
     $ cd bitsquare
     $ mvn package    
 
-When the build completes, you will find an excutable jar: `gui/target/shaded.jar`. 
+When the build completes, you will find an executable jar: `core/target/shaded.jar`. 
 To run it use:
-    $ java -jar gui/target/shaded.jar
+    $ java -jar core/target/shaded.jar
 
 To build the binary needs a bit more preparation as we use [UpdateFX](https://github.com/vinumeris/updatefx) for automatic updates.
 You can find more information in the build scripts under package.
@@ -62,10 +62,10 @@ Bitsquare uses maven as a build system.
 
 ### 3. Run
 
-When the build completes, you will find an excutable jar: `gui/target/shaded.jar`. 
+When the build completes, you will find an executable jar: `core/target/shaded.jar`. 
 To run it use:
 
-    $ java -jar gui/target/shaded.jar
+    $ java -jar core/target/shaded.jar
 
 Problems?
 ---------
