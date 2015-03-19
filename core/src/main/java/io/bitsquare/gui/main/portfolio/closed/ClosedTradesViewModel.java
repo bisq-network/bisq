@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.portfolio.closed;
 
-import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
 import io.bitsquare.common.viewfx.model.ViewModel;
+import io.bitsquare.gui.util.BSFormatter;
 
 import com.google.inject.Inject;
 

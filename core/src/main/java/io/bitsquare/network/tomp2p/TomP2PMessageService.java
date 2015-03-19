@@ -18,24 +18,17 @@
 package io.bitsquare.network.tomp2p;
 
 import io.bitsquare.network.Message;
+import io.bitsquare.network.MessageHandler;
+import io.bitsquare.network.MessageService;
 import io.bitsquare.network.Peer;
-import io.bitsquare.network.TradeMessageService;
-import io.bitsquare.trade.handlers.MessageHandler;
-import io.bitsquare.trade.listeners.GetPeerAddressListener;
-import io.bitsquare.trade.listeners.SendMessageListener;
-
-import java.security.PublicKey;
+import io.bitsquare.network.listener.SendMessageListener;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 
-import net.tomp2p.dht.FutureGet;
 import net.tomp2p.futures.BaseFuture;
-import net.tomp2p.futures.BaseFutureAdapter;
 import net.tomp2p.futures.BaseFutureListener;
 import net.tomp2p.futures.FutureDirect;
-import net.tomp2p.peers.Number160;
-import net.tomp2p.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * That way we limit the dependency of the TomP2P library only to that class (and it's sub components).
  * <p/>
  */
-public class TomP2PMessageService implements TradeMessageService {
+public class TomP2PMessageService implements MessageService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PMessageService.class);
 
     private final TomP2PNode tomP2PNode;
@@ -64,39 +57,17 @@ public class TomP2PMessageService implements TradeMessageService {
         this.tomP2PNode = tomP2PNode;
     }
 
+    @Override
     public void setExecutor(Executor executor) {
         this.executor = executor;
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Find peer address by publicKey
+    // Messages
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void findPeerAddress(PublicKey publicKey, GetPeerAddressListener listener) {
-        final Number160 locationKey = Utils.makeSHAHash(publicKey.getEncoded());
-        FutureGet futureGet = tomP2PNode.getDomainProtectedData(locationKey, publicKey);
-        log.trace("findPeerAddress called");
-        futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
-            @Override
-            public void operationComplete(BaseFuture baseFuture) throws Exception {
-                if (baseFuture.isSuccess() && futureGet.data() != null) {
-                    final Peer peer = (Peer) futureGet.data().object();
-                    log.trace("Peer found in DHT. Peer = " + peer);
-                    executor.execute(() -> listener.onResult(peer));
-                }
-                else {
-                    log.error("getPeerAddress failed. failedReason = " + baseFuture.failedReason());
-                    executor.execute(listener::onFailed);
-                }
-            }
-        });
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Trade messages
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
+    @Override
     public void sendMessage(Peer peer, Message message, SendMessageListener listener) {
         if (!(peer instanceof TomP2PPeer)) {
             throw new IllegalArgumentException("peer must be of type TomP2PPeer");
@@ -126,11 +97,13 @@ public class TomP2PMessageService implements TradeMessageService {
     // Event Listeners
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     public void addMessageHandler(MessageHandler listener) {
         if (!messageHandlers.add(listener))
             throw new RuntimeException("Add listener did not change list. Probably listener has been already added.");
     }
 
+    @Override
     public void removeMessageHandler(MessageHandler listener) {
         if (!messageHandlers.remove(listener))
             throw new RuntimeException("Try to remove listener which was never added.");
@@ -142,8 +115,8 @@ public class TomP2PMessageService implements TradeMessageService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleMessage(Object message, Peer sender) {
-        if (message instanceof Message && sender instanceof TomP2PPeer) {
+    public void handleMessage(Message message, Peer sender) {
+        if (sender instanceof TomP2PPeer) {
             executor.execute(() -> messageHandlers.stream().forEach(e -> e.handleMessage((Message) message, sender)));
         }
     }

@@ -21,8 +21,8 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.network.Message;
+import io.bitsquare.network.MessageHandler;
 import io.bitsquare.network.Peer;
-import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress;
 import io.bitsquare.trade.protocol.availability.tasks.ProcessReportOfferAvailabilityMessage;
@@ -55,7 +55,7 @@ public class CheckOfferAvailabilityProtocol {
     }
 
     public void cleanup() {
-        model.tradeMessageService.removeMessageHandler(messageHandler);
+        model.messageService.removeMessageHandler(messageHandler);
     }
 
 
@@ -64,7 +64,7 @@ public class CheckOfferAvailabilityProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void checkOfferAvailability() {
-        model.tradeMessageService.addMessageHandler(messageHandler);
+        model.messageService.addMessageHandler(messageHandler);
 
         taskRunner = new TaskRunner<>(model,
                 () -> {

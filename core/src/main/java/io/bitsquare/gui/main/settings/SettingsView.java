@@ -17,17 +17,17 @@
 
 package io.bitsquare.gui.main.settings;
 
-import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.main.MainView;
-import io.bitsquare.gui.main.settings.application.PreferencesView;
-import io.bitsquare.gui.main.settings.network.NetworkSettingsView;
-import io.bitsquare.user.Preferences;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
 import io.bitsquare.common.viewfx.view.CachingViewLoader;
 import io.bitsquare.common.viewfx.view.FxmlView;
 import io.bitsquare.common.viewfx.view.View;
 import io.bitsquare.common.viewfx.view.ViewLoader;
+import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.settings.application.PreferencesView;
+import io.bitsquare.gui.main.settings.network.NetworkSettingsView;
+import io.bitsquare.user.Preferences;
 
 import javax.inject.Inject;
 

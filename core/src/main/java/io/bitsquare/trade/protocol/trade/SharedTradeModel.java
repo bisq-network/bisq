@@ -22,9 +22,9 @@ import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.taskrunner.SharedTaskModel;
 import io.bitsquare.crypto.SignatureService;
+import io.bitsquare.network.MessageService;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.network.TradeMessageService;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 
 import java.io.Serializable;
@@ -38,7 +38,7 @@ public class SharedTradeModel extends SharedTaskModel implements Serializable {
 
     // provided
     transient public final Offer offer;
-    transient public final TradeMessageService tradeMessageService;
+    transient public final MessageService messageService;
     transient public final WalletService walletService;
     transient public final BlockChainService blockChainService;
     transient public final SignatureService signatureService;
@@ -53,13 +53,13 @@ public class SharedTradeModel extends SharedTaskModel implements Serializable {
     transient private TradeMessage tradeMessage;
 
     protected SharedTradeModel(Offer offer,
-                               TradeMessageService tradeMessageService,
+                               MessageService messageService,
                                WalletService walletService,
                                BlockChainService blockChainService,
                                SignatureService signatureService,
                                Persistence persistence) {
         this.offer = offer;
-        this.tradeMessageService = tradeMessageService;
+        this.messageService = messageService;
         this.walletService = walletService;
         this.blockChainService = blockChainService;
         this.signatureService = signatureService;

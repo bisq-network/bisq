@@ -17,13 +17,13 @@
 
 package io.bitsquare.gui.main.portfolio.closed;
 
+import io.bitsquare.common.viewfx.model.Activatable;
+import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
-import io.bitsquare.common.viewfx.model.Activatable;
-import io.bitsquare.common.viewfx.model.DataModel;
 
 import com.google.inject.Inject;
 

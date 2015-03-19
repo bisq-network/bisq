@@ -18,6 +18,13 @@
 package io.bitsquare.gui.main.account.settings;
 
 import io.bitsquare.BitsquareException;
+import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.common.viewfx.view.CachingViewLoader;
+import io.bitsquare.common.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.View;
+import io.bitsquare.common.viewfx.view.ViewLoader;
+import io.bitsquare.common.viewfx.view.ViewPath;
+import io.bitsquare.common.viewfx.view.Wizard;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
@@ -27,13 +34,6 @@ import io.bitsquare.gui.main.account.content.registration.RegistrationView;
 import io.bitsquare.gui.main.account.content.restrictions.RestrictionsView;
 import io.bitsquare.gui.main.account.content.seedwords.SeedWordsView;
 import io.bitsquare.gui.util.Colors;
-import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
-import io.bitsquare.common.viewfx.view.CachingViewLoader;
-import io.bitsquare.common.viewfx.view.FxmlView;
-import io.bitsquare.common.viewfx.view.View;
-import io.bitsquare.common.viewfx.view.ViewLoader;
-import io.bitsquare.common.viewfx.view.ViewPath;
-import io.bitsquare.common.viewfx.view.Wizard;
 
 import javax.inject.Inject;
 

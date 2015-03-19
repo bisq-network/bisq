@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.trade;
 
-import io.bitsquare.gui.Navigation;
 import io.bitsquare.common.viewfx.view.FxmlView;
 import io.bitsquare.common.viewfx.view.ViewLoader;
+import io.bitsquare.gui.Navigation;
 
 import javax.inject.Inject;
 

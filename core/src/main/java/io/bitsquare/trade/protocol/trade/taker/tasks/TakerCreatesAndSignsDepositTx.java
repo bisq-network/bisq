@@ -62,7 +62,7 @@ public class TakerCreatesAndSignsDepositTx extends Task<SellerAsTakerModel> {
             Trade.State state = Trade.State.FAULT;
             state.setErrorMessage(errorMessage);
             model.trade.setState(state);
-            
+
             failed(e);
         }
     }

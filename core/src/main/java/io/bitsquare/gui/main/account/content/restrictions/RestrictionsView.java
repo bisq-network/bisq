@@ -18,18 +18,18 @@
 package io.bitsquare.gui.main.account.content.restrictions;
 
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.gui.main.account.arbitrator.browser.ArbitratorBrowserView;
-import io.bitsquare.gui.main.help.Help;
-import io.bitsquare.gui.main.help.HelpId;
-import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.locale.Country;
-import io.bitsquare.locale.Region;
 import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
 import io.bitsquare.common.viewfx.view.CachingViewLoader;
 import io.bitsquare.common.viewfx.view.FxmlView;
 import io.bitsquare.common.viewfx.view.View;
 import io.bitsquare.common.viewfx.view.ViewLoader;
 import io.bitsquare.common.viewfx.view.Wizard;
+import io.bitsquare.gui.main.account.arbitrator.browser.ArbitratorBrowserView;
+import io.bitsquare.gui.main.help.Help;
+import io.bitsquare.gui.main.help.HelpId;
+import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.locale.Country;
+import io.bitsquare.locale.Region;
 
 import java.util.Locale;
 

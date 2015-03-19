@@ -15,11 +15,20 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.handlers;
+package io.bitsquare.network;
 
-import io.bitsquare.network.Message;
-import io.bitsquare.network.Peer;
 
-public interface MessageHandler {
-    void handleMessage(Message message, Peer sender);
+import io.bitsquare.network.listener.SendMessageListener;
+
+import java.util.concurrent.Executor;
+
+public interface MessageService extends MessageHandler {
+
+    void setExecutor(Executor executor);
+
+    void sendMessage(Peer peer, Message message, SendMessageListener listener);
+
+    void addMessageHandler(MessageHandler listener);
+
+    void removeMessageHandler(MessageHandler listener);
 }

@@ -34,7 +34,7 @@ import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.offer.tomp2p.TomP2POfferBookService;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.network.TradeMessageService;
+import io.bitsquare.network.MessageService;
 import io.bitsquare.network.tomp2p.TomP2PMessageService;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
@@ -74,7 +74,7 @@ public class PlaceOfferProtocolTest {
     private static final Logger log = LoggerFactory.getLogger(PlaceOfferProtocolTest.class);
 
     private WalletService walletService;
-    private TradeMessageService tradeMessageService;
+    private MessageService messageService;
     private OfferBookService offerBookService;
     private final File dir = new File("./temp");
     private final static String OFFER_ID = "offerID";
@@ -96,9 +96,9 @@ public class PlaceOfferProtocolTest {
         user.applyPersistedUser(null);
         bootstrappedPeerBuilder = new BootstrappedPeerBuilder(Node.DEFAULT_PORT, false, bootstrapNode, "<unspecified>");
         tomP2PNode = new TomP2PNode(bootstrappedPeerBuilder);
-        tradeMessageService = new TomP2PMessageService(tomP2PNode);
+        messageService = new TomP2PMessageService(tomP2PNode);
 
-        Observable<BootstrapState> messageObservable = tomP2PNode.bootstrap(user.getMessageKeyPair(), tradeMessageService);
+        Observable<BootstrapState> messageObservable = tomP2PNode.bootstrap(user.getMessageKeyPair(), messageService);
         messageObservable.publish();
         messageObservable.subscribe(
                 state -> log.trace("state changed: " + state),

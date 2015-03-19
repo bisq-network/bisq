@@ -18,6 +18,11 @@
 package io.bitsquare.gui.main;
 
 import io.bitsquare.BitsquareException;
+import io.bitsquare.common.viewfx.view.CachingViewLoader;
+import io.bitsquare.common.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.InitializableView;
+import io.bitsquare.common.viewfx.view.View;
+import io.bitsquare.common.viewfx.view.ViewLoader;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
@@ -32,11 +37,6 @@ import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.main.trade.BuyView;
 import io.bitsquare.gui.main.trade.SellView;
 import io.bitsquare.gui.util.Transitions;
-import io.bitsquare.common.viewfx.view.CachingViewLoader;
-import io.bitsquare.common.viewfx.view.FxmlView;
-import io.bitsquare.common.viewfx.view.InitializableView;
-import io.bitsquare.common.viewfx.view.View;
-import io.bitsquare.common.viewfx.view.ViewLoader;
 
 import javax.inject.Inject;
 import javax.inject.Named;

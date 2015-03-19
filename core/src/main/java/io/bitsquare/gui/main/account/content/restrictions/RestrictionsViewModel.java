@@ -18,10 +18,10 @@
 package io.bitsquare.gui.main.account.content.restrictions;
 
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.locale.Country;
-import io.bitsquare.locale.Region;
 import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
 import io.bitsquare.common.viewfx.model.ViewModel;
+import io.bitsquare.locale.Country;
+import io.bitsquare.locale.Region;
 
 import com.google.inject.Inject;
 

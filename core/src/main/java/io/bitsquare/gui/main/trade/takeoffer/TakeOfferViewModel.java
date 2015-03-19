@@ -150,7 +150,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         applyOfferState(offer.stateProperty().get());
     }
 
-   private void applyOfferState(Offer.State state) {
+    private void applyOfferState(Offer.State state) {
         log.debug("offer state = " + state);
 
         switch (state) {

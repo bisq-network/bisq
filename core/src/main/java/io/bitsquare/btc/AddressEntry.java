@@ -31,7 +31,7 @@ import java.util.Arrays;
  */
 public class AddressEntry implements Serializable {
     private static final long serialVersionUID = 5501603992599920416L;
-    
+
     private final String offerId;
     private final AddressContext addressContext;
     private transient DeterministicKey keyPair;

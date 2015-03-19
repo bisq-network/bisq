@@ -17,18 +17,18 @@
 
 package io.bitsquare.gui.main.account.arbitrator.browser;
 
-import io.bitsquare.user.AccountSettings;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorMessageService;
 import io.bitsquare.arbitration.listeners.ArbitratorListener;
-import io.bitsquare.gui.main.account.arbitrator.profile.ArbitratorProfileView;
-import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.persistence.Persistence;
 import io.bitsquare.common.viewfx.view.ActivatableView;
 import io.bitsquare.common.viewfx.view.CachingViewLoader;
 import io.bitsquare.common.viewfx.view.FxmlView;
 import io.bitsquare.common.viewfx.view.View;
 import io.bitsquare.common.viewfx.view.ViewLoader;
+import io.bitsquare.gui.main.account.arbitrator.profile.ArbitratorProfileView;
+import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.persistence.Persistence;
+import io.bitsquare.user.AccountSettings;
 
 import java.util.ArrayList;
 import java.util.List;

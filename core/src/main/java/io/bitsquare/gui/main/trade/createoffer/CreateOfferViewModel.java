@@ -18,14 +18,14 @@
 package io.bitsquare.gui.main.trade.createoffer;
 
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
+import io.bitsquare.common.viewfx.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.offer.Direction;
-import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
-import io.bitsquare.common.viewfx.model.ViewModel;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;

@@ -22,11 +22,11 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.common.viewfx.view.FxmlView;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.util.Utilities;
-import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
-import io.bitsquare.common.viewfx.view.FxmlView;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;

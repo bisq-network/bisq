@@ -18,9 +18,9 @@
 package io.bitsquare.trade.protocol.trade.taker;
 
 import io.bitsquare.network.Message;
+import io.bitsquare.network.MessageHandler;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.protocol.trade.messages.BankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositPaymentMessage;
@@ -68,7 +68,7 @@ public class SellerAsTakerProtocol {
         log.debug("New SellerAsTakerProtocol " + this);
         this.model = model;
         messageHandler = this::handleMessage;
-        model.tradeMessageService.addMessageHandler(messageHandler);
+        model.messageService.addMessageHandler(messageHandler);
     }
 
 
@@ -78,7 +78,7 @@ public class SellerAsTakerProtocol {
 
     public void cleanup() {
         log.debug("cleanup " + this);
-        model.tradeMessageService.removeMessageHandler(messageHandler);
+        model.messageService.removeMessageHandler(messageHandler);
     }
 
     public void takeAvailableOffer() {

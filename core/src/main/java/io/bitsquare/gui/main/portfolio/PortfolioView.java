@@ -17,18 +17,18 @@
 
 package io.bitsquare.gui.main.portfolio;
 
-import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.main.MainView;
-import io.bitsquare.gui.main.portfolio.closed.ClosedTradesView;
-import io.bitsquare.gui.main.portfolio.offer.OffersView;
-import io.bitsquare.gui.main.portfolio.pending.PendingTradesView;
-import io.bitsquare.trade.TradeManager;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
 import io.bitsquare.common.viewfx.view.CachingViewLoader;
 import io.bitsquare.common.viewfx.view.FxmlView;
 import io.bitsquare.common.viewfx.view.View;
 import io.bitsquare.common.viewfx.view.ViewLoader;
+import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.portfolio.closed.ClosedTradesView;
+import io.bitsquare.gui.main.portfolio.offer.OffersView;
+import io.bitsquare.gui.main.portfolio.pending.PendingTradesView;
+import io.bitsquare.trade.TradeManager;
 
 import javax.inject.Inject;
 

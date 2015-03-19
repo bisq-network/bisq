@@ -21,7 +21,6 @@ import io.bitsquare.trade.protocol.trade.messages.OfferMessage;
 
 import java.io.Serializable;
 
-// That msg is used to ping the offerer if he is online and if the offer is still available
 public class RequestIsOfferAvailableMessage extends OfferMessage implements Serializable {
     private static final long serialVersionUID = 4630151440192191798L;
 

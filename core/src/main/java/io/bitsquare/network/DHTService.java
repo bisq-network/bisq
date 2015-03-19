@@ -17,23 +17,15 @@
 
 package io.bitsquare.network;
 
-import io.bitsquare.trade.handlers.MessageHandler;
-import io.bitsquare.trade.listeners.GetPeerAddressListener;
-import io.bitsquare.trade.listeners.SendMessageListener;
+
+import io.bitsquare.network.listener.GetPeerAddressListener;
 
 import java.security.PublicKey;
 
 import java.util.concurrent.Executor;
 
-public interface TradeMessageService extends MessageBroker {
-
+public interface DHTService {
     void setExecutor(Executor executor);
-
-    void sendMessage(Peer peer, Message message, SendMessageListener listener);
-
-    void addMessageHandler(MessageHandler listener);
-
-    void removeMessageHandler(MessageHandler listener);
 
     void findPeerAddress(PublicKey messagePublicKey, GetPeerAddressListener getPeerAddressListener);
 }

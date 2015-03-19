@@ -20,9 +20,9 @@ package io.bitsquare.trade.protocol.trade.offerer.models;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
+import io.bitsquare.network.MessageService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.network.TradeMessageService;
 import io.bitsquare.trade.protocol.trade.SharedTradeModel;
 import io.bitsquare.user.User;
 
@@ -43,14 +43,14 @@ public class BuyerAsOffererModel extends SharedTradeModel implements Serializabl
     private String takeOfferFeeTxId;
 
     public BuyerAsOffererModel(Trade trade,
-                               TradeMessageService tradeMessageService,
+                               MessageService messageService,
                                WalletService walletService,
                                BlockChainService blockChainService,
                                SignatureService signatureService,
                                User user,
                                Persistence persistence) {
         super(trade.getOffer(),
-                tradeMessageService,
+                messageService,
                 walletService,
                 blockChainService,
                 signatureService,

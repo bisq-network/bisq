@@ -18,10 +18,10 @@
 package io.bitsquare.gui.main.account.content.registration;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.locale.BSResources;
 import io.bitsquare.common.viewfx.model.ViewModel;
 import io.bitsquare.common.viewfx.model.WithDataModel;
+import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.BSResources;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;

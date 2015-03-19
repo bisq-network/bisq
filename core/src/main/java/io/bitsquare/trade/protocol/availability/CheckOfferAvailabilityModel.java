@@ -18,9 +18,10 @@
 package io.bitsquare.trade.protocol.availability;
 
 import io.bitsquare.common.taskrunner.SharedTaskModel;
+import io.bitsquare.network.DHTService;
+import io.bitsquare.network.MessageService;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.network.TradeMessageService;
 import io.bitsquare.trade.protocol.trade.messages.OfferMessage;
 
 import org.slf4j.Logger;
@@ -30,14 +31,16 @@ public class CheckOfferAvailabilityModel extends SharedTaskModel {
     private static final Logger log = LoggerFactory.getLogger(CheckOfferAvailabilityModel.class);
 
     public final Offer offer;
-    public final TradeMessageService tradeMessageService;
+    public final MessageService messageService;
+    public final DHTService dhtService;
 
     private Peer peer;
     private OfferMessage message;
 
-    public CheckOfferAvailabilityModel(Offer offer, TradeMessageService tradeMessageService) {
+    public CheckOfferAvailabilityModel(Offer offer, MessageService messageService, DHTService dhtService) {
         this.offer = offer;
-        this.tradeMessageService = tradeMessageService;
+        this.messageService = messageService;
+        this.dhtService = dhtService;
     }
 
     public Peer getPeer() {

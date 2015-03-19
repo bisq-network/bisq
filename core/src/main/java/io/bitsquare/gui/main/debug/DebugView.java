@@ -29,6 +29,7 @@ import io.bitsquare.trade.protocol.placeoffer.tasks.BroadcastCreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.ValidateOffer;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererProtocol;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateAndSignPayoutTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateOffererDepositTxInputs;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestDepositTxInputsMessage;
@@ -38,7 +39,6 @@ import io.bitsquare.trade.protocol.trade.offerer.tasks.SendBankTransferStartedMe
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendDepositTxIdToTaker;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SetupListenerForBlockChainConfirmation;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SignAndPublishDepositTx;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateAndSignPayoutTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyAndSignContract;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakeOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakerAccount;

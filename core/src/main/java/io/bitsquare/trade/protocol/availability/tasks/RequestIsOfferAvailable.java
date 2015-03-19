@@ -19,8 +19,8 @@ package io.bitsquare.trade.protocol.availability.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.network.listener.SendMessageListener;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityModel;
 import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
 
@@ -37,7 +37,7 @@ public class RequestIsOfferAvailable extends Task<CheckOfferAvailabilityModel> {
     @Override
     protected void doRun() {
         try {
-            model.tradeMessageService.sendMessage(model.getPeer(), new RequestIsOfferAvailableMessage(model.offer.getId()),
+            model.messageService.sendMessage(model.getPeer(), new RequestIsOfferAvailableMessage(model.offer.getId()),
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {

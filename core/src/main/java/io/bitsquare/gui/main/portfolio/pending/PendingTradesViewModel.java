@@ -18,12 +18,12 @@
 package io.bitsquare.gui.main.portfolio.pending;
 
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
+import io.bitsquare.common.viewfx.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
-import io.bitsquare.common.viewfx.model.ViewModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;

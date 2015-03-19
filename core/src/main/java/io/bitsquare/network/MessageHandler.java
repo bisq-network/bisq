@@ -17,9 +17,6 @@
 
 package io.bitsquare.network;
 
-/**
- * Interface for the object handling incoming messages.
- */
-public interface MessageBroker {
-    void handleMessage(Object message, Peer sender);
+public interface MessageHandler {
+    void handleMessage(Message message, Peer sender);
 }

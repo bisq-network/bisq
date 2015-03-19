@@ -18,14 +18,15 @@
 package io.bitsquare.trade.protocol.trade.offerer;
 
 import io.bitsquare.network.Message;
+import io.bitsquare.network.MessageHandler;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.handlers.MessageHandler;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestOffererPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateAndSignPayoutTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateOffererDepositTxInputs;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestDepositTxInputsMessage;
@@ -35,7 +36,6 @@ import io.bitsquare.trade.protocol.trade.offerer.tasks.SendBankTransferStartedMe
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendDepositTxIdToTaker;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SetupListenerForBlockChainConfirmation;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SignAndPublishDepositTx;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateAndSignPayoutTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyAndSignContract;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakeOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakerAccount;
@@ -67,7 +67,7 @@ public class BuyerAsOffererProtocol {
         this.model = model;
         messageHandler = this::handleMessage;
 
-        model.tradeMessageService.addMessageHandler(messageHandler);
+        model.messageService.addMessageHandler(messageHandler);
     }
 
 
@@ -77,11 +77,11 @@ public class BuyerAsOffererProtocol {
 
     public void cleanup() {
         log.debug("cleanup " + this);
-        
+
         // tradeMessageService and transactionConfidence use CopyOnWriteArrayList as listeners, but be safe and delay remove a bit.
         Platform.runLater(() -> {
-            model.tradeMessageService.removeMessageHandler(messageHandler);
-            
+            model.messageService.removeMessageHandler(messageHandler);
+
             if (transactionConfidence != null) {
                 if (!transactionConfidence.removeEventListener(transactionConfidenceListener))
                     throw new RuntimeException("Remove transactionConfidenceListener failed at BuyerAsOffererProtocol.");
@@ -180,7 +180,7 @@ public class BuyerAsOffererProtocol {
         BuyerAsOffererTaskRunner<BuyerAsOffererModel> taskRunner = new BuyerAsOffererTaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handlePayoutTxPublishedMessage completed");
-                   
+
                     // we are done!
                     model.onComplete();
                 },

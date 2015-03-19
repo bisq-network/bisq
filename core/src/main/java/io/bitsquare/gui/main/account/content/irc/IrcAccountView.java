@@ -17,15 +17,15 @@
 
 package io.bitsquare.gui.main.account.content.irc;
 
+import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.common.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.Wizard;
 import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.util.Utilities;
-import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
-import io.bitsquare.common.viewfx.view.FxmlView;
-import io.bitsquare.common.viewfx.view.Wizard;
 
 import java.util.Currency;
 

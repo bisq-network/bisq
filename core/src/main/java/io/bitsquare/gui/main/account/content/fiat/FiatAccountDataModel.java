@@ -17,7 +17,8 @@
 
 package io.bitsquare.gui.main.account.content.fiat;
 
-import io.bitsquare.user.AccountSettings;
+import io.bitsquare.common.viewfx.model.Activatable;
+import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.locale.Country;
@@ -25,9 +26,8 @@ import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.Region;
 import io.bitsquare.persistence.Persistence;
+import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
-import io.bitsquare.common.viewfx.model.Activatable;
-import io.bitsquare.common.viewfx.model.DataModel;
 
 import com.google.inject.Inject;
 

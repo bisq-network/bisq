@@ -23,16 +23,17 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.fiat.FiatAccount;
+import io.bitsquare.network.DHTService;
 import io.bitsquare.network.Message;
+import io.bitsquare.network.MessageService;
 import io.bitsquare.network.Peer;
-import io.bitsquare.network.TradeMessageService;
+import io.bitsquare.network.listener.SendMessageListener;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.handlers.TradeResultHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
-import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityModel;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityProtocol;
 import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
@@ -70,7 +71,8 @@ public class TradeManager {
     private final User user;
     private final AccountSettings accountSettings;
     private final Persistence persistence;
-    private final TradeMessageService tradeMessageService;
+    private final MessageService messageService;
+    private final DHTService dhtService;
     private final BlockChainService blockChainService;
     private final WalletService walletService;
     private final SignatureService signatureService;
@@ -93,13 +95,14 @@ public class TradeManager {
 
     @Inject
     public TradeManager(User user, AccountSettings accountSettings, Persistence persistence,
-                        TradeMessageService tradeMessageService, BlockChainService blockChainService,
+                        MessageService messageService, DHTService dhtService, BlockChainService blockChainService,
                         WalletService walletService, SignatureService signatureService,
                         OfferBookService offerBookService) {
         this.user = user;
         this.accountSettings = accountSettings;
         this.persistence = persistence;
-        this.tradeMessageService = tradeMessageService;
+        this.messageService = messageService;
+        this.dhtService = dhtService;
         this.blockChainService = blockChainService;
         this.walletService = walletService;
         this.signatureService = signatureService;
@@ -120,7 +123,7 @@ public class TradeManager {
             closedTrades.putAll((Map<String, Trade>) closedTradesObject);
         }
 
-        tradeMessageService.addMessageHandler(this::handleMessage);
+        messageService.addMessageHandler(this::handleMessage);
     }
 
     // When all services are initialized we create the protocols for our open offers and persisted not completed pendingTrades
@@ -148,7 +151,8 @@ public class TradeManager {
         if (!checkOfferAvailabilityProtocolMap.containsKey(offer.getId())) {
             CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(
                     offer,
-                    tradeMessageService);
+                    messageService,
+                    dhtService);
 
             CheckOfferAvailabilityProtocol protocol = new CheckOfferAvailabilityProtocol(model,
                     () -> disposeCheckOfferAvailabilityRequest(offer),
@@ -211,7 +215,7 @@ public class TradeManager {
     }
 
     public void requestTakeOffer(Coin amount, Offer offer, TradeResultHandler tradeResultHandler) {
-        CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(offer, tradeMessageService);
+        CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(offer, messageService, dhtService);
         CheckOfferAvailabilityProtocol protocol = new CheckOfferAvailabilityProtocol(model,
                 () -> {
                     disposeCheckOfferAvailabilityRequest(offer);
@@ -255,7 +259,7 @@ public class TradeManager {
         SellerAsTakerModel model = new SellerAsTakerModel(
                 trade,
                 peer,
-                tradeMessageService,
+                messageService,
                 walletService,
                 blockChainService,
                 signatureService,
@@ -323,7 +327,7 @@ public class TradeManager {
             checkNotNull(offerId);
 
             ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(offerId, isOfferOpen(offerId));
-            tradeMessageService.sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
+            messageService.sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
                 @Override
                 public void handleResult() {
                     // Offerer does not do anything at that moment. Peer might only watch the offer and does nto start a trade.
@@ -396,7 +400,7 @@ public class TradeManager {
 
         BuyerAsOffererModel model = new BuyerAsOffererModel(
                 trade,
-                tradeMessageService,
+                messageService,
                 walletService,
                 blockChainService,
                 signatureService,
@@ -418,7 +422,7 @@ public class TradeManager {
                             () -> log.debug("remove offer was successful"),
                             (message) -> log.error(message),
                             false);
-                    
+
                     // after we have published the deposit tx we add that trade to the pendingTrades
                     if (pendingTrades.containsKey(trade.getId()))
                         log.error("That must never happen: Trades contains already an trade with the ID " + trade.getId());

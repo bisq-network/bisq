@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.settings.application;
 
-import io.bitsquare.user.Preferences;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
+import io.bitsquare.user.Preferences;
 
 import com.google.inject.Inject;
 

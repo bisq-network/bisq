@@ -28,5 +28,5 @@ public interface ClientNode {
 
     Node getBootstrapNodeAddress();
 
-    public Observable<BootstrapState> bootstrap(KeyPair keyPair, MessageBroker messageBroker);
+    public Observable<BootstrapState> bootstrap(KeyPair keyPair, MessageHandler messageHandler);
 }

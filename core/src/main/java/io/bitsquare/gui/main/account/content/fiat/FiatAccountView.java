@@ -17,6 +17,9 @@
 
 package io.bitsquare.gui.main.account.content.fiat;
 
+import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
+import io.bitsquare.common.viewfx.view.FxmlView;
+import io.bitsquare.common.viewfx.view.Wizard;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.gui.OverlayManager;
@@ -28,9 +31,6 @@ import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
-import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
-import io.bitsquare.common.viewfx.view.FxmlView;
-import io.bitsquare.common.viewfx.view.Wizard;
 
 import java.util.ArrayList;
 import java.util.Currency;

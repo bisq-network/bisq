@@ -17,6 +17,10 @@
 
 package io.bitsquare.gui.main.trade.offerbook;
 
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.common.viewfx.model.Activatable;
+import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
@@ -24,13 +28,9 @@ import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBook;
-import io.bitsquare.user.Preferences;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
-import io.bitsquare.common.handlers.ErrorMessageHandler;
-import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.common.viewfx.model.Activatable;
-import io.bitsquare.common.viewfx.model.DataModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;

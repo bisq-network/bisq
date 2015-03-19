@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.portfolio.closed;
 
-import io.bitsquare.gui.components.Popups;
 import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
 import io.bitsquare.common.viewfx.view.FxmlView;
+import io.bitsquare.gui.components.Popups;
 
 import javax.inject.Inject;
 

@@ -17,6 +17,9 @@
 
 package io.bitsquare.gui.main.trade;
 
+import io.bitsquare.common.viewfx.view.ActivatableView;
+import io.bitsquare.common.viewfx.view.View;
+import io.bitsquare.common.viewfx.view.ViewLoader;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
@@ -26,9 +29,6 @@ import io.bitsquare.gui.main.trade.offerbook.OfferBookView;
 import io.bitsquare.gui.main.trade.takeoffer.TakeOfferView;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.common.viewfx.view.ActivatableView;
-import io.bitsquare.common.viewfx.view.View;
-import io.bitsquare.common.viewfx.view.ViewLoader;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;

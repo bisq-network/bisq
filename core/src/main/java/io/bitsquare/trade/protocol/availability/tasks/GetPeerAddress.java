@@ -20,8 +20,8 @@ package io.bitsquare.trade.protocol.availability.tasks;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.network.Peer;
+import io.bitsquare.network.listener.GetPeerAddressListener;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.trade.listeners.GetPeerAddressListener;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityModel;
 
 import org.slf4j.Logger;
@@ -39,7 +39,7 @@ public class GetPeerAddress extends Task<CheckOfferAvailabilityModel> {
     @Override
     protected void doRun() {
         try {
-            model.tradeMessageService.findPeerAddress(model.offer.getMessagePublicKey(), new GetPeerAddressListener() {
+            model.dhtService.findPeerAddress(model.offer.getMessagePublicKey(), new GetPeerAddressListener() {
                 @Override
                 public void onResult(Peer peer) {
                     model.setPeer(peer);

@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.main.account;
 
-import io.bitsquare.user.User;
 import io.bitsquare.common.viewfx.model.ViewModel;
+import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 

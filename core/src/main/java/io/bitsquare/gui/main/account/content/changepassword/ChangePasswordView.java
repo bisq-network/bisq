@@ -17,11 +17,11 @@
 
 package io.bitsquare.gui.main.account.content.changepassword;
 
-import io.bitsquare.gui.main.help.Help;
-import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.common.viewfx.view.FxmlView;
 import io.bitsquare.common.viewfx.view.InitializableView;
 import io.bitsquare.common.viewfx.view.Wizard;
+import io.bitsquare.gui.main.help.Help;
+import io.bitsquare.gui.main.help.HelpId;
 
 import javax.inject.Inject;
 

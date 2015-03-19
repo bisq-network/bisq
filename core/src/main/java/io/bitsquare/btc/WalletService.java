@@ -294,7 +294,7 @@ public class WalletService {
     public AddressEntry getAddressEntry(String offerId) {
         log.trace("getAddressEntry called with offerId " + offerId);
         Optional<AddressEntry> addressEntry = getAddressEntryList().stream().filter(e -> offerId.equals(e.getOfferId())).findFirst();
-       
+
         if (addressEntry.isPresent())
             return addressEntry.get();
         else

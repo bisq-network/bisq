@@ -55,7 +55,7 @@ public class BroadcastTakeOfferFeeTx extends Task<SellerAsTakerModel> {
                         @Override
                         public void onFailure(@NotNull Throwable t) {
                             model.trade.setState(Trade.State.TAKE_OFFER_FEE_PUBLISH_FAILED);
-                            
+
                             failed(t);
                         }
                     });

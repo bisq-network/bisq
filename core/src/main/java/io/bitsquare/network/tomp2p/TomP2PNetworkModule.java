@@ -19,9 +19,10 @@ package io.bitsquare.network.tomp2p;
 
 import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.ClientNode;
+import io.bitsquare.network.DHTService;
+import io.bitsquare.network.MessageService;
 import io.bitsquare.network.NetworkModule;
 import io.bitsquare.network.Node;
-import io.bitsquare.network.TradeMessageService;
 
 import com.google.inject.Injector;
 import com.google.inject.Provider;
@@ -51,7 +52,8 @@ public class TomP2PNetworkModule extends NetworkModule {
     protected void doConfigure() {
         bind(ClientNode.class).to(TomP2PNode.class).in(Singleton.class);
         bind(TomP2PNode.class).in(Singleton.class);
-        bind(TradeMessageService.class).toProvider(TomP2PTradeMessageServiceProvider.class).in(Singleton.class);
+        bind(MessageService.class).toProvider(TomP2PMessageServiceProvider.class).in(Singleton.class);
+        bind(DHTService.class).toProvider(TomP2PDHTServiceProvider.class).in(Singleton.class);
 
         bind(int.class).annotatedWith(Names.named(Node.PORT_KEY)).toInstance(env.getProperty(Node.PORT_KEY, int.class, Node.DEFAULT_PORT));
         bind(boolean.class).annotatedWith(Names.named(USE_MANUAL_PORT_FORWARDING_KEY)).toInstance(
@@ -76,16 +78,31 @@ public class TomP2PNetworkModule extends NetworkModule {
         injector.getInstance(BootstrappedPeerBuilder.class).shutDown();
     }
 }
-class TomP2PTradeMessageServiceProvider implements Provider<TradeMessageService> {
-    private final TradeMessageService tradeMessageService;
+
+class TomP2PMessageServiceProvider implements Provider<MessageService> {
+    private final MessageService messageService;
 
     @Inject
-    public TomP2PTradeMessageServiceProvider(TomP2PNode tomP2PNode) {
-        tradeMessageService = new TomP2PMessageService(tomP2PNode);
-        tradeMessageService.setExecutor(Platform::runLater);
+    public TomP2PMessageServiceProvider(TomP2PNode tomP2PNode) {
+        messageService = new TomP2PMessageService(tomP2PNode);
+        messageService.setExecutor(Platform::runLater);
     }
 
-    public TradeMessageService get() {
-        return tradeMessageService;
+    public MessageService get() {
+        return messageService;
+    }
+}
+
+class TomP2PDHTServiceProvider implements Provider<DHTService> {
+    private final DHTService dhtService;
+
+    @Inject
+    public TomP2PDHTServiceProvider(TomP2PNode tomP2PNode) {
+        dhtService = new TomP2PDHTService(tomP2PNode);
+        dhtService.setExecutor(Platform::runLater);
+    }
+
+    public DHTService get() {
+        return dhtService;
     }
 }

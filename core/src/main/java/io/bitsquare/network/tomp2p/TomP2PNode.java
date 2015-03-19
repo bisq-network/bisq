@@ -21,7 +21,8 @@ import io.bitsquare.BitsquareException;
 import io.bitsquare.network.BootstrapState;
 import io.bitsquare.network.ClientNode;
 import io.bitsquare.network.ConnectionType;
-import io.bitsquare.network.MessageBroker;
+import io.bitsquare.network.Message;
+import io.bitsquare.network.MessageHandler;
 import io.bitsquare.network.NetworkException;
 import io.bitsquare.network.Node;
 
@@ -104,7 +105,7 @@ public class TomP2PNode implements ClientNode {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Observable<BootstrapState> bootstrap(KeyPair keyPair, MessageBroker messageBroker) {
+    public Observable<BootstrapState> bootstrap(KeyPair keyPair, MessageHandler messageHandler) {
         checkNotNull(keyPair, "keyPair must not be null.");
 
         this.keyPair = keyPair;
@@ -125,7 +126,7 @@ public class TomP2PNode implements ClientNode {
                     TomP2PNode.this.peerDHT = peerDHT;
                     setupTimerForIPCheck();
                     setupTimerForStoreAddress();
-                    setupReplyHandler(messageBroker);
+                    setupReplyHandler(messageHandler);
                     try {
                         storeAddress();
                     } catch (NetworkException e) {
@@ -186,7 +187,7 @@ public class TomP2PNode implements ClientNode {
     public Node getBootstrapNodeAddress() {
         return bootstrappedPeerBuilder.getBootstrapNode();
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Generic DHT methods
@@ -333,14 +334,16 @@ public class TomP2PNode implements ClientNode {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setupReplyHandler(MessageBroker messageBroker) {
+    private void setupReplyHandler(MessageHandler messageHandler) {
         peerDHT.peer().objectDataReply((sender, request) -> {
             log.debug("handleMessage peerAddress " + sender);
             log.debug("handleMessage message " + request);
 
             if (!sender.equals(peerDHT.peer().peerAddress())) {
-                if (messageBroker != null)
-                    messageBroker.handleMessage(request, new TomP2PPeer(sender));
+                if (request instanceof Message)
+                    messageHandler.handleMessage((Message) request, new TomP2PPeer(sender));
+                else
+                    throw new RuntimeException("We got an object which is not type of Message. That must never happen. Request object = " + request);
             }
             else {
                 throw new RuntimeException("Received msg from myself. That must never happen.");
