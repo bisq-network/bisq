@@ -29,10 +29,10 @@ import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.p2p.BaseP2PService;
 import io.bitsquare.p2p.BootstrapState;
 import io.bitsquare.p2p.ClientNode;
 import io.bitsquare.p2p.MessageService;
-import io.bitsquare.p2p.BaseP2PService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -160,7 +160,7 @@ class MainViewModel implements ViewModel {
 
         // Set executor for all P2PServices
         BaseP2PService.setUserThread(Platform::runLater);
-        
+
         Observable<BootstrapState> bootstrapStateAsObservable = clientNode.bootstrap(user.getP2pSigKeyPair());
         bootstrapStateAsObservable.publish();
         bootstrapStateAsObservable.subscribe(
@@ -356,7 +356,7 @@ class MainViewModel implements ViewModel {
     private void addMockArbitrator() {
         if (accountSettings.getAcceptedArbitrators().isEmpty() && user.getP2pSigKeyPair() != null) {
             byte[] pubKey = new ECKey().getPubKey();
-            String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePubKey());
+            String p2pSigPubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getP2PSigPubKey());
             List<Locale> languages = new ArrayList<>();
             languages.add(LanguageUtil.getDefaultLanguageLocale());
             List<Arbitrator.METHOD> arbitrationMethods = new ArrayList<>();
@@ -366,7 +366,7 @@ class MainViewModel implements ViewModel {
             idVerifications.add(Arbitrator.ID_VERIFICATION.GOV_ID);
 
             Arbitrator arbitrator = new Arbitrator(pubKey,
-                    messagePubKeyAsHex,
+                    p2pSigPubKeyAsHex,
                     "Manfred Karrer",
                     Arbitrator.ID_TYPE.REAL_LIFE_ID,
                     languages,

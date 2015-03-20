@@ -86,7 +86,7 @@ public class SellerAsTakerModel extends SharedTradeModel implements Serializable
         taker.addressEntry = walletService.getAddressEntry(id);
         taker.fiatAccount = user.getBankAccount(offer.getBankAccountId());
         taker.accountId = user.getAccountId();
-        taker.messagePubKey = user.getMessagePubKey();
+        taker.p2pSigPubKey = user.getP2PSigPubKey();
         taker.pubKey = taker.addressEntry.getPubKey();
     }
 

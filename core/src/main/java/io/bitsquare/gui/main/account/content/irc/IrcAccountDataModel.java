@@ -124,7 +124,7 @@ class IrcAccountDataModel implements Activatable, DataModel {
     private void addMockArbitrator() {
         if (accountSettings.getAcceptedArbitrators().isEmpty() && user.getP2pSigKeyPair() != null) {
             byte[] pubKey = new ECKey().getPubKey();
-            String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePubKey());
+            String p2pSigPubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getP2PSigPubKey());
             List<Locale> languages = new ArrayList<>();
             languages.add(LanguageUtil.getDefaultLanguageLocale());
             List<Arbitrator.METHOD> arbitrationMethods = new ArrayList<>();
@@ -134,7 +134,7 @@ class IrcAccountDataModel implements Activatable, DataModel {
             idVerifications.add(Arbitrator.ID_VERIFICATION.GOV_ID);
 
             Arbitrator arbitrator = new Arbitrator(pubKey,
-                    messagePubKeyAsHex,
+                    p2pSigPubKeyAsHex,
                     "Manfred Karrer",
                     Arbitrator.ID_TYPE.REAL_LIFE_ID,
                     languages,

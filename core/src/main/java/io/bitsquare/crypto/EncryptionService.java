@@ -19,6 +19,9 @@ package io.bitsquare.crypto;
 
 import io.bitsquare.util.Utilities;
 
+import java.io.Serializable;
+
+import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
@@ -30,8 +33,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
-public class EncryptionService {
+public class EncryptionService<T> {
     private static final Logger log = LoggerFactory.getLogger(EncryptionService.class);
 
     @Inject
@@ -51,38 +57,73 @@ public class EncryptionService {
         return keyPair;
     }
 
-    public byte[] encryptObject(PublicKey publicKey, Object object) {
+    public Tuple encryptObject(PublicKey publicKey, Object object) {
         return encrypt(publicKey, Utilities.objectToBytArray(object));
     }
 
-    public Object decryptObject(PrivateKey privateKey, byte[] cipherMessage) {
-        return Utilities.byteArrayToObject(decrypt(privateKey, cipherMessage));
+    public T decryptToObject(PrivateKey privateKey, Tuple tuple) {
+        return (T) Utilities.byteArrayToObject(decrypt(privateKey, tuple));
     }
 
-    public byte[] encrypt(PublicKey publicKey, byte[] data) {
-        byte[] cipherData = null;
+    public Tuple encrypt(PublicKey publicKey, byte[] payload) {
+        byte[] encryptedPayload = null;
+        byte[] encryptedKey = null;
         try {
-            Cipher cipher = Cipher.getInstance("RSA");
+            // Create symmetric key and 
+            KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+            keyGenerator.init(256);
+            SecretKey secretKey = keyGenerator.generateKey();
+
+            // Encrypt secretKey with asymmetric key
+            Cipher cipher = Cipher.getInstance("RSA/NONE/PKCS1Padding");
             cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-            cipherData = cipher.doFinal(data);
+            encryptedKey = cipher.doFinal(secretKey.getEncoded());
+
+            // Encrypt payload with symmetric key
+            SecretKeySpec keySpec = new SecretKeySpec(secretKey.getEncoded(), "AES");
+            cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, keySpec);
+            encryptedPayload = cipher.doFinal(payload);
         } catch (Exception e) {
             e.printStackTrace();
             log.error("Exception at encrypt " + e.getMessage());
         }
-        return cipherData;
+        return new Tuple(encryptedKey, encryptedPayload);
     }
 
-    public byte[] decrypt(PrivateKey privateKey, byte[] cipherText) {
-        byte[] data = null;
+    public byte[] decrypt(PrivateKey privateKey, Tuple tuple) {
+        byte[] encryptedPayload = tuple.encryptedPayload;
+        byte[] encryptedKey = tuple.encryptedKey;
+
+        byte[] payload = null;
         try {
-            Cipher cipher = Cipher.getInstance("RSA");
+            // Decrypt secretKey key with asymmetric key
+            Cipher cipher = Cipher.getInstance("RSA/NONE/PKCS1Padding");
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
-            data = cipher.doFinal(cipherText);
+            byte[] secretKey = cipher.doFinal(encryptedKey);
+
+            // Decrypt payload with symmetric key
+            Key key = new SecretKeySpec(secretKey, "AES");
+            cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, key);
+            payload = cipher.doFinal(encryptedPayload);
         } catch (Exception e) {
             e.printStackTrace();
             log.error("Exception at decrypt " + e.getMessage());
         }
-        return data;
+        return payload;
     }
 
+    public class Tuple implements Serializable {
+        private static final long serialVersionUID = -8709538217388076762L;
+
+        public final byte[] encryptedKey;
+        public final byte[] encryptedPayload;
+
+        public Tuple(byte[] encryptedKey, byte[] encryptedPayload) {
+            this.encryptedKey = encryptedKey;
+            this.encryptedPayload = encryptedPayload;
+        }
+    }
 }
+

@@ -20,7 +20,7 @@ package io.bitsquare.p2p.tomp2p;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.offer.OfferBookService;
-import io.bitsquare.p2p.MailboxMessage;
+import io.bitsquare.p2p.EncryptedMailboxMessage;
 import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.user.User;
 
@@ -69,7 +69,7 @@ public class TomP2PMailboxService extends TomP2PDHTService implements MailboxSer
     }
 
     @Override
-    public void addMessage(PublicKey publicKey, MailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler) {
+    public void addMessage(PublicKey publicKey, EncryptedMailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler) {
         try {
             final Data data = new Data(message);
             data.ttlSeconds(TTL);
@@ -101,7 +101,7 @@ public class TomP2PMailboxService extends TomP2PDHTService implements MailboxSer
     }
 
     @Override
-    public void removeMessage(PublicKey publicKey, MailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler) {
+    public void removeMessage(PublicKey publicKey, EncryptedMailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler) {
         try {
             final Data data = new Data(message);
             log.trace("Remove message from DHT requested. Removed data: [locationKey: " + getLocationKey(publicKey) +
@@ -141,13 +141,13 @@ public class TomP2PMailboxService extends TomP2PDHTService implements MailboxSer
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
                     final Map<Number640, Data> dataMap = futureGet.dataMap();
-                    List<MailboxMessage> messages = new ArrayList<>();
+                    List<EncryptedMailboxMessage> messages = new ArrayList<>();
                     if (dataMap != null) {
                         for (Data messageData : dataMap.values()) {
                             try {
                                 Object messageDataObject = messageData.object();
-                                if (messageDataObject instanceof MailboxMessage) {
-                                    messages.add((MailboxMessage) messageDataObject);
+                                if (messageDataObject instanceof EncryptedMailboxMessage) {
+                                    messages.add((EncryptedMailboxMessage) messageDataObject);
                                 }
                             } catch (ClassNotFoundException | IOException e) {
                                 e.printStackTrace();
@@ -183,6 +183,6 @@ public class TomP2PMailboxService extends TomP2PDHTService implements MailboxSer
     }
 
     public interface MailboxMessagesResultHandler {
-        void handleResult(List<MailboxMessage> messages);
+        void handleResult(List<EncryptedMailboxMessage> messages);
     }
 }

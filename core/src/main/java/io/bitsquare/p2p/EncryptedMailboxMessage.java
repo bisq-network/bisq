@@ -17,7 +17,27 @@
 
 package io.bitsquare.p2p;
 
+import io.bitsquare.crypto.EncryptionService;
+
 import java.io.Serializable;
 
-public interface MailboxMessage extends Message, Serializable {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/*
+    Stores a message in encrypted form, so it never leaves the client in plain text.
+ */
+public class EncryptedMailboxMessage implements MailboxMessage, Serializable {
+    private static final long serialVersionUID = -3111178895546299769L;
+    private static final Logger log = LoggerFactory.getLogger(EncryptedMailboxMessage.class);
+
+    private EncryptionService.Tuple tuple;
+
+    public EncryptedMailboxMessage(EncryptionService.Tuple tuple) {
+        this.tuple = tuple;
+    }
+
+    public EncryptionService.Tuple getTuple() {
+        return tuple;
+    }
 }

@@ -21,5 +21,5 @@ package io.bitsquare.common.handlers;
  * For reporting a description message and throwable
  */
 public interface FaultHandler {
-    void handleFault(String message, Throwable throwable);
+    void handleFault(String errorMessage, Throwable throwable);
 }

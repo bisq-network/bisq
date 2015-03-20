@@ -17,11 +17,16 @@
 
 package io.bitsquare.p2p.tomp2p;
 
+import io.bitsquare.crypto.EncryptionService;
+import io.bitsquare.p2p.EncryptedMailboxMessage;
+import io.bitsquare.p2p.MailboxMessage;
+import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.p2p.listener.SendMessageListener;
+import io.bitsquare.user.User;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -38,6 +43,9 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
     private static final Logger log = LoggerFactory.getLogger(TomP2PMessageService.class);
 
     private final CopyOnWriteArrayList<MessageHandler> messageHandlers = new CopyOnWriteArrayList<>();
+    private MailboxService mailboxService;
+    private User user;
+    private EncryptionService<MailboxMessage> encryptionService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -45,8 +53,11 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TomP2PMessageService(TomP2PNode tomP2PNode) {
+    public TomP2PMessageService(TomP2PNode tomP2PNode, MailboxService mailboxService, User user, EncryptionService encryptionService) {
         super(tomP2PNode);
+        this.mailboxService = mailboxService;
+        this.user = user;
+        this.encryptionService = encryptionService;
     }
 
 
@@ -75,17 +86,43 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
                     executor.execute(listener::handleResult);
                 }
                 else {
-                    log.error("sendMessage failed with reason " + futureDirect.failedReason());
-                    executor.execute(listener::handleFault);
+                    if (message instanceof MailboxMessage) {
+                        sendMailboxMessage((MailboxMessage) message, listener);
+                    }
+                    else {
+                        log.error("sendMessage failed with reason " + futureDirect.failedReason());
+                        executor.execute(listener::handleFault);
+                    }
                 }
             }
 
             @Override
             public void exceptionCaught(Throwable t) throws Exception {
-                log.error("Exception at sendMessage " + t.toString());
-                executor.execute(listener::handleFault);
+                if (message instanceof MailboxMessage) {
+                    sendMailboxMessage((MailboxMessage) message, listener);
+                }
+                else {
+                    log.error("sendMessage failed with exception " + t.getMessage());
+                    executor.execute(listener::handleFault);
+                }
             }
         });
+    }
+
+    private void sendMailboxMessage(MailboxMessage message, SendMessageListener listener) {
+        EncryptionService.Tuple tuple = encryptionService.encryptObject(user.getP2pEncryptKeyPair().getPublic(), message);
+        
+        EncryptedMailboxMessage encrypted = new EncryptedMailboxMessage(tuple);
+        mailboxService.addMessage(user.getP2PSigPubKey(), encrypted,
+                () -> {
+                    log.debug("Message successfully added to peers mailbox.");
+                    executor.execute(listener::handleResult);
+                },
+                (errorMessage, throwable) -> {
+                    log.error("Message failed to  add to peers mailbox.");
+                    executor.execute(listener::handleFault);
+                }
+        );
     }
 
     @Override

@@ -46,7 +46,7 @@ public class CreateAndSignContract extends Task<SellerAsTakerModel> {
                 model.offerer.fiatAccount,
                 model.taker.fiatAccount,
                 model.offer.getMessagePublicKey(),
-                model.taker.messagePubKey);
+                model.taker.p2pSigPubKey);
         String contractAsJson = Utilities.objectToJson(contract);
         String signature = model.signatureService.signMessage(model.taker.registrationKeyPair, contractAsJson);
 

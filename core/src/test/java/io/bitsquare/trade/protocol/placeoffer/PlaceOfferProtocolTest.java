@@ -96,7 +96,7 @@ public class PlaceOfferProtocolTest {
         user.applyPersistedUser(null);
         bootstrappedPeerBuilder = new BootstrappedPeerBuilder(Node.DEFAULT_PORT, false, bootstrapNode, "<unspecified>");
         tomP2PNode = new TomP2PNode(bootstrappedPeerBuilder);
-        messageService = new TomP2PMessageService(tomP2PNode);
+        messageService = new TomP2PMessageService(tomP2PNode, null, null, null);
 
         Observable<BootstrapState> messageObservable = tomP2PNode.bootstrap(user.getP2pSigKeyPair());
         messageObservable.publish();

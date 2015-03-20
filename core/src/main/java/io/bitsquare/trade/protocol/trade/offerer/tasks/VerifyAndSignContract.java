@@ -46,8 +46,8 @@ public class VerifyAndSignContract extends Task<BuyerAsOffererModel> {
                 model.taker.accountId,
                 model.offerer.fiatAccount,
                 model.taker.fiatAccount,
-                model.offerer.messagePubKey,
-                model.taker.messagePublicKey);
+                model.offerer.p2pSigPubKey,
+                model.taker.p2pSigPublicKey);
         String contractAsJson = Utilities.objectToJson(contract);
         String signature = model.signatureService.signMessage(model.offerer.registrationKeyPair, contractAsJson);
 

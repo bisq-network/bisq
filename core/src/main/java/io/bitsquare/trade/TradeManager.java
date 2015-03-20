@@ -164,7 +164,7 @@ public class TradeManager {
     }
 
     public boolean isMyOffer(Offer offer) {
-        return offer.getMessagePublicKey().equals(user.getMessagePubKey());
+        return offer.getMessagePublicKey().equals(user.getP2PSigPubKey());
     }
 
 
@@ -206,7 +206,7 @@ public class TradeManager {
 
         FiatAccount currentFiatAccount = user.getCurrentBankAccount().get();
         Offer offer = new Offer(id,
-                user.getMessagePubKey(),
+                user.getP2PSigPubKey(),
                 direction,
                 price.getValue(),
                 amount,

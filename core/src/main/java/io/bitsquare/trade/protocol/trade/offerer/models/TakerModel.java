@@ -37,7 +37,7 @@ public class TakerModel implements Serializable {
     public Peer peer;
     public String accountId;
     public FiatAccount fiatAccount;
-    public PublicKey messagePublicKey;
+    public PublicKey p2pSigPublicKey;
     public String contractAsJson;//TODO only write access now, missing impl.
     public String contractSignature;
     public Coin payoutAmount;

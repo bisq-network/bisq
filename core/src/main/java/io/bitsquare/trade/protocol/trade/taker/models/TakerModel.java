@@ -38,7 +38,7 @@ public class TakerModel implements Serializable {
     // Declared transient as they will be provided in any case at construction time
     transient public FiatAccount fiatAccount;
     transient public String accountId;
-    transient public PublicKey messagePubKey;
+    transient public PublicKey p2pSigPubKey;
     transient public byte[] registrationPubKey; // TODO not read yet, missing impl.
     transient public DeterministicKey registrationKeyPair;
     transient public AddressEntry addressEntry;

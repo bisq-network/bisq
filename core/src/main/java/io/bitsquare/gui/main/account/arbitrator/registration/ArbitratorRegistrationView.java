@@ -370,14 +370,14 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
 
     private Arbitrator getEditedArbitrator() {
         byte[] pubKey = walletService.getArbitratorDepositAddressEntry().getPubKey();
-        String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePubKey());
+        String p2pSigPubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getP2PSigPubKey());
         String name = nameTextField.getText();
         Coin fee = formatter.parseToCoin(arbitrationFeeTextField.getText());
         String webUrl = webPageTextField.getText();
         String description = descriptionTextArea.getText();
 
         return new Arbitrator(pubKey,
-                messagePubKeyAsHex,
+                p2pSigPubKeyAsHex,
                 name,
                 idType,
                 languageList,

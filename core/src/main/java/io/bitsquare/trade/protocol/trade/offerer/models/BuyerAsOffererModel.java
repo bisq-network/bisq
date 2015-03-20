@@ -37,7 +37,7 @@ public class BuyerAsOffererModel extends SharedTradeModel implements Serializabl
     private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererModel.class);
 
     transient public final Trade trade;
-    public final MailboxService mailboxService;
+    transient public final MailboxService mailboxService;
     public final TakerModel taker;
     public final OffererModel offerer;
 
@@ -82,7 +82,7 @@ public class BuyerAsOffererModel extends SharedTradeModel implements Serializabl
         offerer.addressEntry = walletService.getAddressEntry(id);
         offerer.fiatAccount = user.getBankAccount(offer.getBankAccountId());
         offerer.accountId = user.getAccountId();
-        offerer.messagePubKey = user.getMessagePubKey();
+        offerer.p2pSigPubKey = user.getP2PSigPubKey();
         offerer.pubKey = offerer.addressEntry.getPubKey();
         log.debug("BuyerAsOffererModel addressEntry " + offerer.addressEntry);
     }

@@ -24,9 +24,9 @@ import io.bitsquare.p2p.tomp2p.TomP2PMailboxService;
 import java.security.PublicKey;
 
 public interface MailboxService {
-    void addMessage(PublicKey publicKey, MailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler);
+    void addMessage(PublicKey publicKey, EncryptedMailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler);
 
-    void removeMessage(PublicKey publicKey, MailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler);
+    void removeMessage(PublicKey publicKey, EncryptedMailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler);
 
     void getMessages(PublicKey publicKey, TomP2PMailboxService.MailboxMessagesResultHandler resultHandler);
 }

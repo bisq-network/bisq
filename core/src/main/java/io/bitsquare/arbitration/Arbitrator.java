@@ -31,7 +31,7 @@ public class Arbitrator implements Serializable {
     private String id;
     private String pubKeyAsHex;
     private byte[] pubKey;
-    private String messagePubKeyAsHex;
+    private String p2pSigPubKeyAsHex;
     private String name;
     private ID_TYPE idType;
     private List<Locale> languages;
@@ -48,7 +48,7 @@ public class Arbitrator implements Serializable {
     }
 
     public Arbitrator(byte[] pubKey,
-                      String messagePubKeyAsHex,
+                      String p2pSigPubKeyAsHex,
                       String name,
                       ID_TYPE idType,
                       List<Locale> languages,
@@ -59,7 +59,7 @@ public class Arbitrator implements Serializable {
                       String webUrl,
                       String description) {
         this.pubKey = pubKey;
-        this.messagePubKeyAsHex = messagePubKeyAsHex;
+        this.p2pSigPubKeyAsHex = p2pSigPubKeyAsHex;
         this.name = name;
         this.idType = idType;
         this.languages = languages;
@@ -76,7 +76,7 @@ public class Arbitrator implements Serializable {
 
     public void applyPersistedArbitrator(Arbitrator persistedArbitrator) {
         this.pubKeyAsHex = persistedArbitrator.getPubKeyAsHex();
-        this.messagePubKeyAsHex = persistedArbitrator.getPubKeyAsHex();
+        this.p2pSigPubKeyAsHex = persistedArbitrator.getPubKeyAsHex();
         this.name = persistedArbitrator.getName();
         this.idType = persistedArbitrator.getIdType();
         this.languages = persistedArbitrator.getLanguages();
@@ -126,8 +126,8 @@ public class Arbitrator implements Serializable {
         return pubKey;
     }
 
-    public String getMessagePubKeyAsHex() {
-        return messagePubKeyAsHex;
+    public String getP2pSigPubKeyAsHex() {
+        return p2pSigPubKeyAsHex;
     }
 
 

@@ -17,11 +17,13 @@
 
 package io.bitsquare.trade.protocol.trade.messages;
 
+import io.bitsquare.p2p.MailboxMessage;
+
 import org.bitcoinj.core.Coin;
 
 import java.io.Serializable;
 
-public class BankTransferStartedMessage extends TradeMessage implements Serializable {
+public class BankTransferStartedMessage extends TradeMessage implements MailboxMessage, Serializable {
     private static final long serialVersionUID = -3479634129543632523L;
 
     public final byte[] offererSignature;

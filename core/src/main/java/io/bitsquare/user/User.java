@@ -175,7 +175,7 @@ public class User implements Serializable {
         return p2pSigKeyPair;
     }
 
-    public PublicKey getMessagePubKey() {
+    public PublicKey getP2PSigPubKey() {
         return p2pSigKeyPair.getPublic();
     }
 
