@@ -50,8 +50,4 @@ public class ProcessPayoutTxPublishedMessage extends Task<BuyerAsOffererModel> {
             failed(t);
         }
     }
-
-    @Override
-    protected void updateStateOnFault() {
-    }
 }

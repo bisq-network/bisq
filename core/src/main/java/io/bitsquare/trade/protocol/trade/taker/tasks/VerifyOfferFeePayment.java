@@ -40,8 +40,4 @@ public class VerifyOfferFeePayment extends Task<SellerAsTakerModel> {
         }*/
         complete();
     }
-
-    @Override
-    protected void updateStateOnFault() {
-    }
 }

@@ -42,9 +42,4 @@ public class AddOfferToRemoteOfferBook extends Task<PlaceOfferModel> {
                     failed(throwable);
                 });
     }
-
-    @Override
-    protected void updateStateOnFault() {
-        // do nothing
-    }
 }

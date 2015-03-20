@@ -52,9 +52,4 @@ public class ProcessRequestDepositTxInputsMessage extends Task<BuyerAsOffererMod
             failed(t);
         }
     }
-
-    @Override
-    protected void updateStateOnFault() {
-        // do nothing
-    }
 }

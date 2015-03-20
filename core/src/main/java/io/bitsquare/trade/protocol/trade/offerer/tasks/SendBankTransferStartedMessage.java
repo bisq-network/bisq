@@ -35,27 +35,27 @@ public class SendBankTransferStartedMessage extends Task<BuyerAsOffererModel> {
 
     @Override
     protected void doRun() {
-        BankTransferStartedMessage tradeMessage = new BankTransferStartedMessage(
-                model.id,
-                model.offerer.payoutTxSignature,
-                model.offerer.payoutAmount,
-                model.taker.payoutAmount,
-                model.offerer.addressEntry.getAddressString());
-        model.messageService.sendMessage(model.taker.peer, tradeMessage, new SendMessageListener() {
-            @Override
-            public void handleResult() {
-                log.trace("Sending BankTransferInitedMessage succeeded.");
-                complete();
-            }
+        try {
+            BankTransferStartedMessage tradeMessage = new BankTransferStartedMessage(
+                    model.id,
+                    model.offerer.payoutTxSignature,
+                    model.offerer.payoutAmount,
+                    model.taker.payoutAmount,
+                    model.offerer.addressEntry.getAddressString());
+            model.messageService.sendMessage(model.taker.peer, tradeMessage, new SendMessageListener() {
+                @Override
+                public void handleResult() {
+                    log.trace("Sending BankTransferInitedMessage succeeded.");
+                    complete();
+                }
 
-            @Override
-            public void handleFault() {
-                failed("Sending BankTransferInitedMessage failed.");
-            }
-        });
-    }
-
-    @Override
-    protected void updateStateOnFault() {
+                @Override
+                public void handleFault() {
+                    failed("Sending BankTransferInitedMessage failed.");
+                }
+            });
+        } catch (Throwable t) {
+            failed("Sending BankTransferInitedMessage failed.");
+        }
     }
 }

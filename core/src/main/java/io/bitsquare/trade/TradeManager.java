@@ -27,6 +27,7 @@ import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.p2p.AddressService;
+import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
@@ -72,6 +73,7 @@ public class TradeManager {
     private final AccountSettings accountSettings;
     private final Persistence persistence;
     private final MessageService messageService;
+    private MailboxService mailboxService;
     private final AddressService addressService;
     private final BlockChainService blockChainService;
     private final WalletService walletService;
@@ -95,13 +97,14 @@ public class TradeManager {
 
     @Inject
     public TradeManager(User user, AccountSettings accountSettings, Persistence persistence,
-                        MessageService messageService, AddressService addressService, BlockChainService blockChainService,
+                        MessageService messageService, MailboxService mailboxService, AddressService addressService, BlockChainService blockChainService,
                         WalletService walletService, SignatureService signatureService,
                         OfferBookService offerBookService) {
         this.user = user;
         this.accountSettings = accountSettings;
         this.persistence = persistence;
         this.messageService = messageService;
+        this.mailboxService = mailboxService;
         this.addressService = addressService;
         this.blockChainService = blockChainService;
         this.walletService = walletService;
@@ -428,6 +431,7 @@ public class TradeManager {
         BuyerAsOffererModel model = new BuyerAsOffererModel(
                 trade,
                 messageService,
+                mailboxService,
                 walletService,
                 blockChainService,
                 signatureService,

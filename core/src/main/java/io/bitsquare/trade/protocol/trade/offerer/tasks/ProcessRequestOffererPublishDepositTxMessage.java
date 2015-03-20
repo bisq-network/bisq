@@ -56,8 +56,4 @@ public class ProcessRequestOffererPublishDepositTxMessage extends Task<BuyerAsOf
             failed(t);
         }
     }
-
-    @Override
-    protected void updateStateOnFault() {
-    }
 }

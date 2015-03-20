@@ -51,9 +51,6 @@ public abstract class Task<T extends SharedTaskModel> {
 
     abstract protected void doRun() throws WalletException, TransactionVerificationException, SigningException;
 
-    protected void updateStateOnFault() {
-    }
-
     private void interceptBeforeRun() {
         if (getClass() == taskToInterceptBeforeRun)
             throw new InterceptTaskException("Task intercepted before run got executed. Task = " + getClass().getSimpleName());
@@ -96,7 +93,6 @@ public abstract class Task<T extends SharedTaskModel> {
     }
 
     protected void failed() {
-        updateStateOnFault();
         taskHandler.handleErrorMessage(errorMessage);
     }
 

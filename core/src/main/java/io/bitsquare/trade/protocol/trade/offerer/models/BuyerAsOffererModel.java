@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.trade.offerer.models;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
+import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
@@ -36,6 +37,7 @@ public class BuyerAsOffererModel extends SharedTradeModel implements Serializabl
     private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererModel.class);
 
     transient public final Trade trade;
+    public final MailboxService mailboxService;
     public final TakerModel taker;
     public final OffererModel offerer;
 
@@ -44,6 +46,7 @@ public class BuyerAsOffererModel extends SharedTradeModel implements Serializabl
 
     public BuyerAsOffererModel(Trade trade,
                                MessageService messageService,
+                               MailboxService mailboxService,
                                WalletService walletService,
                                BlockChainService blockChainService,
                                SignatureService signatureService,
@@ -57,6 +60,7 @@ public class BuyerAsOffererModel extends SharedTradeModel implements Serializabl
                 persistence);
 
         this.trade = trade;
+        this.mailboxService = mailboxService;
 
         Serializable serializable = persistence.read(this, "BuyerAsOffererModel_" + id);
         if (serializable instanceof BuyerAsOffererModel) {

@@ -58,8 +58,4 @@ public class VerifyAndSignContract extends Task<BuyerAsOffererModel> {
 
         complete();
     }
-
-    @Override
-    protected void updateStateOnFault() {
-    }
 }

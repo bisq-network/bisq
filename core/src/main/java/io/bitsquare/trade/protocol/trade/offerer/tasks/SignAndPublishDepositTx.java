@@ -73,8 +73,4 @@ public class SignAndPublishDepositTx extends Task<BuyerAsOffererModel> {
             failed(e);
         }
     }
-
-    @Override
-    protected void updateStateOnFault() {
-    }
 }

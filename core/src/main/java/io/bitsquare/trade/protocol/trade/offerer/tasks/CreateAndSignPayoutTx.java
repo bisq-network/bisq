@@ -61,9 +61,5 @@ public class CreateAndSignPayoutTx extends Task<BuyerAsOffererModel> {
             failed(e);
         }
     }
-
-    @Override
-    protected void updateStateOnFault() {
-    }
 }
 

@@ -64,8 +64,4 @@ public class SetupListenerForBlockChainConfirmation extends Task<BuyerAsOffererM
         if (!transactionConfidence.removeEventListener(transactionConfidenceListener))
             throw new RuntimeException("Remove transactionConfidenceListener failed at SetupListenerForBlockChainConfirmation.");
     }
-
-    @Override
-    protected void updateStateOnFault() {
-    }
 }

@@ -41,9 +41,4 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
             failed(e);
         }
     }
-
-    @Override
-    protected void updateStateOnFault() {
-        // do nothing
-    }
 }

@@ -50,8 +50,4 @@ public class CreateOffererDepositTxInputs extends Task<BuyerAsOffererModel> {
             failed(e);
         }
     }
-
-    @Override
-    protected void updateStateOnFault() {
-    }
 }

@@ -79,12 +79,14 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                                                 log.error("addOffer failed");
                                                 addOfferFailed = true;
                                                 failed(throwable);
+                                                updateStateOnFault();
                                             });
                                 },
                                 (message, throwable) -> {
                                     log.error("removeOffer failed");
                                     removeOfferFailed = true;
                                     failed(throwable);
+                                    updateStateOnFault();
                                 });
                     }
                 }
@@ -92,15 +94,17 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                 @Override
                 public void onFailure(@NotNull Throwable t) {
                     failed(t);
+                    updateStateOnFault();
                 }
             });
         }
         else {
             failed("Not enough balance for placing the offer.");
+            updateStateOnFault();
         }
     }
 
-    protected void updateStateOnFault() {
+    private void updateStateOnFault() {
         if (!removeOfferFailed && !addOfferFailed) {
             // If broadcast fails we need to remove offer from offerbook
             model.offerBookService.removeOffer(model.offer,

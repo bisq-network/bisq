@@ -56,8 +56,4 @@ public class RequestDepositPayment extends Task<BuyerAsOffererModel> {
             }
         });
     }
-
-    @Override
-    protected void updateStateOnFault() {
-    }
 }
