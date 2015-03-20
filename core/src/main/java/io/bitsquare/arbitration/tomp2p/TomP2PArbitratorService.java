@@ -22,6 +22,7 @@ import io.bitsquare.arbitration.ArbitratorService;
 import io.bitsquare.arbitration.listeners.ArbitratorListener;
 import io.bitsquare.p2p.tomp2p.TomP2PDHTService;
 import io.bitsquare.p2p.tomp2p.TomP2PNode;
+import io.bitsquare.user.User;
 
 import java.io.IOException;
 
@@ -56,8 +57,8 @@ public class TomP2PArbitratorService extends TomP2PDHTService implements Arbitra
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TomP2PArbitratorService(TomP2PNode tomP2PNode) {
-        super(tomP2PNode);
+    public TomP2PArbitratorService(TomP2PNode tomP2PNode, User user) {
+        super(tomP2PNode, user);
     }
 
 
@@ -70,7 +71,7 @@ public class TomP2PArbitratorService extends TomP2PDHTService implements Arbitra
         try {
             final Data arbitratorData = new Data(arbitrator);
 
-            FuturePut addFuture = addProtectedData(locationKey, arbitratorData);
+            FuturePut addFuture = addProtectedDataToMap(locationKey, arbitratorData);
             addFuture.addListener(new BaseFutureAdapter<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
@@ -104,7 +105,7 @@ public class TomP2PArbitratorService extends TomP2PDHTService implements Arbitra
     public void removeArbitrator(Arbitrator arbitrator) throws IOException {
         Number160 locationKey = Number160.createHash(ARBITRATORS_ROOT);
         final Data arbitratorData = new Data(arbitrator);
-        FutureRemove removeFuture = removeFromDataMap(locationKey, arbitratorData);
+        FutureRemove removeFuture = removeProtectedDataFromMap(locationKey, arbitratorData);
         removeFuture.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
@@ -135,7 +136,7 @@ public class TomP2PArbitratorService extends TomP2PDHTService implements Arbitra
 
     public void getArbitrators(Locale languageLocale) {
         Number160 locationKey = Number160.createHash(ARBITRATORS_ROOT);
-        FutureGet futureGet = getDataMap(locationKey);
+        FutureGet futureGet = getMap(locationKey);
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {

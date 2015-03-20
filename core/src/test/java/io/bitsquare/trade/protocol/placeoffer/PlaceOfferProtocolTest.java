@@ -108,7 +108,7 @@ public class PlaceOfferProtocolTest {
                 () -> {
                     log.trace("message completed");
 
-                    offerBookService = new TomP2POfferBookService(tomP2PNode);
+                    offerBookService = new TomP2POfferBookService(tomP2PNode, user);
                     offerBookService.setExecutor(Threading.SAME_THREAD);
                 }
         );

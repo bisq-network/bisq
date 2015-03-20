@@ -18,7 +18,9 @@
 package io.bitsquare.p2p.tomp2p;
 
 import io.bitsquare.p2p.DHTService;
+import io.bitsquare.user.User;
 
+import java.security.KeyPair;
 import java.security.PublicKey;
 
 import javax.inject.Inject;
@@ -26,14 +28,18 @@ import javax.inject.Inject;
 import net.tomp2p.dht.FutureGet;
 import net.tomp2p.dht.FuturePut;
 import net.tomp2p.dht.FutureRemove;
+import net.tomp2p.dht.StorageLayer;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.storage.Data;
+import net.tomp2p.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TomP2PDHTService extends TomP2PService implements DHTService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PDHTService.class);
+    private final KeyPair keyPair;
+    private final Number160 pubKeyHashForMyDomain;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -41,135 +47,184 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TomP2PDHTService(TomP2PNode tomP2PNode) {
+    public TomP2PDHTService(TomP2PNode tomP2PNode, User user) {
         super(tomP2PNode);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // DHT methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // TODO remove all security features for the moment. There are some problems with a "wrong signature!" msg in
-    // the logs
-    @Override
-    public FuturePut putDomainProtectedData(Number160 locationKey, Data data) {
-        log.trace("putDomainProtectedData");
-        return peerDHT.put(locationKey).data(data).start();
+        keyPair = user.getMessageKeyPair();
+        pubKeyHashForMyDomain = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
     }
 
     @Override
+    public void bootstrapCompleted() {
+        super.bootstrapCompleted();
+
+        StorageLayer.ProtectionEnable protectionDomainEnable = StorageLayer.ProtectionEnable.ALL;
+        StorageLayer.ProtectionMode protectionDomainMode = StorageLayer.ProtectionMode.MASTER_PUBLIC_KEY;
+        StorageLayer.ProtectionEnable protectionEntryEnable = StorageLayer.ProtectionEnable.ALL;
+        StorageLayer.ProtectionMode protectionEntryMode = StorageLayer.ProtectionMode.MASTER_PUBLIC_KEY;
+
+        peerDHT.storageLayer().protection(protectionDomainEnable, protectionDomainMode, protectionEntryEnable, protectionEntryMode);
+    }
+
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Put/Get: Public access. Used for offerbook invalidation timestamp
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Store data to given location key.
+     * Write access: Anyone with locationKey
+     *
+     * @param locationKey
+     * @param data
+     * @return
+     */
     public FuturePut putData(Number160 locationKey, Data data) {
         log.trace("putData");
         return peerDHT.put(locationKey).data(data).start();
     }
+    // No protection, everybody can read.
 
-    @Override
-    public FutureGet getDomainProtectedData(Number160 locationKey, PublicKey publicKey) {
-        log.trace("getDomainProtectedData");
-        return peerDHT.get(locationKey).start();
-    }
-
-    @Override
+    /**
+     * Get data for given locationKey
+     * Read access: Anyone with locationKey
+     * 
+     * @param locationKey
+     * @return
+     */
     public FutureGet getData(Number160 locationKey) {
-        //log.trace("getData");
+        log.trace("getData");
         return peerDHT.get(locationKey).start();
     }
+    
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Put/Get: Domain protected, entry protected. Used for storing address.
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public FuturePut addProtectedData(Number160 locationKey, Data data) {
-        log.trace("addProtectedData");
-        return peerDHT.add(locationKey).data(data).start();
+    /**
+     * Store data to given location key and my domain.
+     * Write access: Anybody who has pubKey if domain is not used before. KeyPair owner of pubKey can overwrite and reserve that domain.
+     *        We save early an entry so we have that domain reserved and nobody else can use it.
+     *        Additionally we use entry protection, so domain owner is data owner.
+     *
+     * @param locationKey
+     * @param data
+     * @return
+     */
+    public FuturePut putDataToMyProtectedDomain(Number160 locationKey, Data data) {
+        log.trace("putDataToMyProtectedDomain");
+        data.protectEntry(keyPair).sign();
+        return peerDHT.put(locationKey).data(data).sign().protectDomain().domainKey(pubKeyHashForMyDomain).start();
     }
 
-    @Override
-    public FutureRemove removeFromDataMap(Number160 locationKey, Data data) {
+    /**
+     * Read data for given location and publicKey of that domain.
+     * Read access: Anyone who has publicKey
+     *
+     * @param locationKey
+     * @param publicKey
+     * @return
+     */
+    public FutureGet getDataOfProtectedDomain(Number160 locationKey, PublicKey publicKey) {
+        log.trace("getDataOfProtectedDomain");
+        final Number160 pubKeyHashOfDomainOwner = Utils.makeSHAHash(publicKey.getEncoded());
+        return peerDHT.get(locationKey).domainKey(pubKeyHashOfDomainOwner).start();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Add/remove/get from map: Entry protected, no domain protection. Used for offerbook and arbitrators
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Add data to a map. For the entry contentKey of data is used (internally).
+     * Write access: Anyone can add entries. But nobody can overwrite an existing entry as it is protected by data protection.
+     * 
+     * @param locationKey
+     * @param data
+     * @return
+     */
+    public FuturePut addProtectedDataToMap(Number160 locationKey, Data data) {
+        log.trace("addProtectedDataToMap");
+        data.protectEntry(keyPair).sign();
+        log.trace("addProtectedDataToMap with contentKey " + data.hash().toString());
+        return peerDHT.add(locationKey).data(data).sign().start();
+    }
+
+    /**
+     * Remove entry from map for given locationKey. ContentKey of data is used for removing the entry.
+     * Access: Only the owner of the data entry can remove it, as it was written with entry protection.
+     * 
+     * @param locationKey
+     * @param data
+     * @return
+     */
+    public FutureRemove removeProtectedDataFromMap(Number160 locationKey, Data data) {
+        log.trace("removeProtectedDataFromMap");
         Number160 contentKey = data.hash();
-        log.trace("removeFromDataMap with contentKey " + contentKey.toString());
-        return peerDHT.remove(locationKey).contentKey(contentKey).start();
+        log.trace("removeProtectedDataFromMap with contentKey " + contentKey.toString());
+        return peerDHT.remove(locationKey).contentKey(contentKey).sign().start();
     }
 
-    @Override
-    public FutureGet getDataMap(Number160 locationKey) {
-        log.trace("getDataMap");
+    /**
+     * Get map for given locationKey with all entries.
+     * Access: Everybody can read.
+     * 
+     * @param locationKey
+     * @return
+     */
+    public FutureGet getMap(Number160 locationKey) {
+        log.trace("getMap");
         return peerDHT.get(locationKey).all().start();
     }
 
 
-//
-//    public FuturePut putDomainProtectedData(Number160 locationKey, Data data) {
-//        log.trace("putDomainProtectedData");
-//        data.protectEntry(keyPair);
-//        final Number160 ownerKeyHash = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
-//        return peerDHT.put(locationKey).data(data).keyPair(keyPair).domainKey(ownerKeyHash).protectDomain().start();
-//    }
-//
-//    // No protection, everybody can write.
-//    public FuturePut putData(Number160 locationKey, Data data) {
-//        log.trace("putData");
-//        return peerDHT.put(locationKey).data(data).start();
-//    }
-//
-//    // Not public readable. Only users with the public key of the peer who stored the data can read that data
-//    public FutureGet getDomainProtectedData(Number160 locationKey, PublicKey publicKey) {
-//        log.trace("getDomainProtectedData");
-//        final Number160 ownerKeyHash = Utils.makeSHAHash(publicKey.getEncoded());
-//        return peerDHT.get(locationKey).domainKey(ownerKeyHash).start();
-//    }
-//
-//    // No protection, everybody can read.
-//    public FutureGet getData(Number160 locationKey) {
-//        log.trace("getData");
-//        return peerDHT.get(locationKey).start();
-//    }
-//
-//    // No domain protection, but entry protection
-//    public FuturePut addProtectedData(Number160 locationKey, Data data) {
-//        log.trace("addProtectedData");
-//        data.protectEntry(keyPair);
-//        log.trace("addProtectedData with contentKey " + data.hash().toString());
-//        return peerDHT.add(locationKey).data(data).keyPair(keyPair).start();
-//    }
-//
-//    // No domain protection, but entry protection
-//    public FutureRemove removeFromDataMap(Number160 locationKey, Data data) {
-//        log.trace("removeFromDataMap");
-//        Number160 contentKey = data.hash();
-//        log.trace("removeFromDataMap with contentKey " + contentKey.toString());
-//        return peerDHT.remove(locationKey).contentKey(contentKey).keyPair(keyPair).start();
-//    }
-//
-//    // Public readable
-//    public FutureGet getDataMap(Number160 locationKey) {
-//        log.trace("getDataMap");
-//        return peerDHT.get(locationKey).all().start();
-//    }
 
-    // Send signed payLoad to peer
-//    public FutureDirect sendData(PeerAddress peerAddress, Object payLoad) {
-//        // use 30 seconds as max idle time before connection get closed
-//        FuturePeerConnection futurePeerConnection = peerDHT.peer().createPeerConnection(peerAddress, 30000);
-//        FutureDirect futureDirect = peerDHT.peer().sendDirect(futurePeerConnection).object(payLoad).sign().start();
-//        futureDirect.addListener(new BaseFutureListener<BaseFuture>() {
-//            @Override
-//            public void operationComplete(BaseFuture future) throws Exception {
-//                if (futureDirect.isSuccess()) {
-//                    log.debug("sendMessage completed");
-//                }
-//                else {
-//                    log.error("sendData failed with Reason " + futureDirect.failedReason());
-//                }
-//            }
-//
-//            @Override
-//            public void exceptionCaught(Throwable t) throws Exception {
-//                log.error("Exception at sendData " + t.toString());
-//            }
-//        });
-//
-//        return futureDirect;
-//    }
-//
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Add/remove/get from map: Domain protection, no data protection. Used for mailbox. For getting privacy we use encryption (not part of DHT infrastructure)
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Add data to a map. For the entry contentKey of data is used (internally).
+     * Write access: Anyone can add entries. But nobody expect the domain owner can overwrite/remove an existing entry as it is protected by the domain owner.
+     *
+     * @param locationKey
+     * @param data
+     * @return
+     */
+    public FuturePut addDataToMapOfProtectedDomain(Number160 locationKey, Data data, PublicKey publicKey) {
+        log.trace("addDataToMapOfProtectedDomain");
+        log.trace("addDataToMapOfProtectedDomain with contentKey " + data.hash().toString());
+        final Number160 pubKeyHashOfDomainOwner = Utils.makeSHAHash(publicKey.getEncoded());
+        return peerDHT.add(locationKey).data(data).protectDomain().domainKey(pubKeyHashOfDomainOwner).start();
+    }
+
+    /**
+     * Remove entry from map for given locationKey. ContentKey of data is used for removing the entry.
+     * Access: Only the owner of the data entry can remove it, as it was written with entry protection.
+     *
+     * @param locationKey
+     * @param data
+     * @return
+     */
+    public FutureRemove removeDataFromMapOfMyProtectedDomain(Number160 locationKey, Data data) {
+        log.trace("removeDataFromMapOfMyProtectedDomain");
+        Number160 contentKey = data.hash();
+        log.trace("removeDataFromMapOfMyProtectedDomain with contentKey " + contentKey.toString());
+        return peerDHT.remove(locationKey).contentKey(contentKey).protectDomain().sign().domainKey(pubKeyHashForMyDomain).start();
+    }
+
+    /**
+     * Get map for given locationKey with all entries.
+     * Access: Everybody can read.
+     *
+     * @param locationKey
+     * @return
+     */
+    public FutureGet getDataFromMapOfMyProtectedDomain(Number160 locationKey) {
+        log.trace("getDataFromMapOfMyProtectedDomain");
+        return peerDHT.get(locationKey).all().domainKey(pubKeyHashForMyDomain).start();
+    }
 
 
 }

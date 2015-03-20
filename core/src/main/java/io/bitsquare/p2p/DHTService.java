@@ -27,17 +27,17 @@ import net.tomp2p.storage.Data;
 
 public interface DHTService extends P2PService {
 
-    FuturePut putDomainProtectedData(Number160 locationKey, Data data);
-
     FuturePut putData(Number160 locationKey, Data data);
-
-    FutureGet getDomainProtectedData(Number160 locationKey, PublicKey publicKey);
 
     FutureGet getData(Number160 locationKey);
 
-    FuturePut addProtectedData(Number160 locationKey, Data data);
+    FuturePut putDataToMyProtectedDomain(Number160 locationKey, Data data);
 
-    FutureRemove removeFromDataMap(Number160 locationKey, Data data);
+    FutureGet getDataOfProtectedDomain(Number160 locationKey, PublicKey publicKey);
 
-    FutureGet getDataMap(Number160 locationKey);
+    FuturePut addProtectedDataToMap(Number160 locationKey, Data data);
+
+    FutureRemove removeProtectedDataFromMap(Number160 locationKey, Data data);
+
+    FutureGet getMap(Number160 locationKey);
 }

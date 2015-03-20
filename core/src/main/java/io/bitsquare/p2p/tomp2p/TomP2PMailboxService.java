@@ -15,26 +15,27 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer.tomp2p;
+package io.bitsquare.p2p.tomp2p;
 
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
-import io.bitsquare.p2p.tomp2p.TomP2PDHTService;
-import io.bitsquare.p2p.tomp2p.TomP2PNode;
+import io.bitsquare.p2p.AddressService;
+import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.Peer;
+import io.bitsquare.p2p.listener.GetPeerAddressListener;
 import io.bitsquare.user.User;
 
 import java.io.IOException;
+
+import java.security.PublicKey;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
-
-import javafx.beans.property.LongProperty;
-import javafx.beans.property.SimpleLongProperty;
 
 import net.tomp2p.dht.FutureGet;
 import net.tomp2p.dht.FuturePut;
@@ -45,28 +46,50 @@ import net.tomp2p.futures.BaseFutureListener;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.Number640;
 import net.tomp2p.storage.Data;
+import net.tomp2p.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TomP2POfferBookService extends TomP2PDHTService implements OfferBookService {
+public class TomP2PMailboxService extends TomP2PDHTService implements AddressService {
+    private static final Logger log = LoggerFactory.getLogger(TomP2PMailboxService.class);
 
-    private static final Logger log = LoggerFactory.getLogger(TomP2POfferBookService.class);
 
-    private final List<Listener> offerRepositoryListeners = new ArrayList<>();
-    private final LongProperty invalidationTimestamp = new SimpleLongProperty(0);
+    private final List<OfferBookService.Listener> offerRepositoryListeners = new ArrayList<>();
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TomP2POfferBookService(TomP2PNode tomP2PNode, User user) {
+    public TomP2PMailboxService(TomP2PNode tomP2PNode, User user) {
         super(tomP2PNode, user);
     }
 
     @Override
-    public void addOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler) {
-        Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
+    public void bootstrapCompleted() {
+        super.bootstrapCompleted();
+    }
+
+    @Override
+    public void shutDown() {
+        super.shutDown();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Find peer address by publicKey
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // public void findPeerAddress(PublicKey publicKey, GetPeerAddressListener listener) {
+    //     final Number160 locationKey = Utils.makeSHAHash(publicKey.getEncoded());
+
+    public void saveMessage(PublicKey publicKey, Message message, ResultHandler resultHandler, FaultHandler faultHandler) {
+        final Number160 locationKey = Utils.makeSHAHash(publicKey.getEncoded());
+
+        // Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
         try {
-            final Data offerData = new Data(offer);
+            final Data offerData = new Data(message);
 
             // the offer is default 30 days valid
             int defaultOfferTTL = 30 * 24 * 60 * 60;
@@ -93,7 +116,6 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
                                 }
                             });
 
-                            writeInvalidationTimestampToDHT(offer.getCurrency().getCurrencyCode());
                             log.trace("Add offer to DHT was successful. Added data: [locationKey: " + locationKey +
                                     ", value: " + offerData + "]");
                         });
@@ -141,7 +163,6 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
                                 faultHandler.handleFault("Remove offer from DHT failed. Error: " + e.getMessage(), e);
                             }
                         });
-                        writeInvalidationTimestampToDHT(offer.getCurrency().getCurrencyCode());
                     });
                 }
 
@@ -203,91 +224,33 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
     }
 
     @Override
-    public void addListener(Listener listener) {
-        offerRepositoryListeners.add(listener);
-    }
-
-    @Override
-    public void removeListener(Listener listener) {
-        offerRepositoryListeners.remove(listener);
-    }
-
-    /*
-     * We store the timestamp of any change of the offer list (add, remove offer) and we poll
-     * in intervals for changes. If we detect a change we request the offer list from the DHT.
-     * Polling should be replaced by a push based solution later.
-     */
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Polling
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void writeInvalidationTimestampToDHT(String currencyCode) {
-        invalidationTimestamp.set(System.currentTimeMillis());
-        try {
-            FuturePut putFuture = putData(getInvalidatedLocationKey(currencyCode),
-                    new Data(invalidationTimestamp.get()));
-            putFuture.addListener(new BaseFutureListener<BaseFuture>() {
-                @Override
-                public void operationComplete(BaseFuture future) throws Exception {
-                    if (future.isSuccess())
-                        log.trace("Update invalidationTimestamp to DHT was successful. TimeStamp=" +
-                                invalidationTimestamp.get());
-                    else
-                        log.error("Update invalidationTimestamp to DHT failed with reason:" + putFuture.failedReason());
-                }
-
-                @Override
-                public void exceptionCaught(Throwable t) throws Exception {
-                    log.error("Update invalidationTimestamp to DHT failed with exception:" + t.getMessage());
-                }
-            });
-        } catch (IOException e) {
-            log.error("Update invalidationTimestamp to DHT failed with exception:" + e.getMessage());
-        }
-    }
-
-    public LongProperty invalidationTimestampProperty() {
-        return invalidationTimestamp;
-    }
-
-    public void requestInvalidationTimeStampFromDHT(String currencyCode) {
-        FutureGet futureGet = getData(getInvalidatedLocationKey(currencyCode));
-        futureGet.addListener(new BaseFutureListener<BaseFuture>() {
+    public void findPeerAddress(PublicKey publicKey, GetPeerAddressListener listener) {
+        final Number160 locationKey = Utils.makeSHAHash(publicKey.getEncoded());
+        FutureGet futureGet = getDataOfProtectedDomain(locationKey, publicKey);
+        log.trace("findPeerAddress called");
+        futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
-            public void operationComplete(BaseFuture future) throws Exception {
-                if (future.isSuccess()) {
-                    Data data = futureGet.data();
-                    if (data != null && data.object() instanceof Long) {
-                        final Object object = data.object();
-                        executor.execute(() -> {
-                            Long timeStamp = (Long) object;
-                            //log.trace("Get invalidationTimestamp from DHT was successful. TimeStamp=" + timeStamp);
-                            invalidationTimestamp.set(timeStamp);
-                        });
-                    }
-                    else if (data != null) {
-                        log.error("Get invalidationTimestamp from DHT failed. Data = " + data);
-                    }
-                }
-                else if (futureGet.data() == null) {
-                    // OK as nothing is set at the moment
-                    // log.trace("Get invalidationTimestamp from DHT returns null. That is ok for the startup.");
+            public void operationComplete(BaseFuture baseFuture) throws Exception {
+                if (baseFuture.isSuccess() && futureGet.data() != null) {
+                    final Peer peer = (Peer) futureGet.data().object();
+                    log.trace("Peer found in DHT. Peer = " + peer);
+                    executor.execute(() -> listener.onResult(peer));
                 }
                 else {
-                    log.error("Get invalidationTimestamp from DHT failed with reason:" + futureGet.failedReason());
+                    log.error("getPeerAddress failed. failedReason = " + baseFuture.failedReason());
+                    executor.execute(listener::onFailed);
                 }
-            }
-
-            @Override
-            public void exceptionCaught(Throwable t) throws Exception {
-                log.error("Get invalidationTimestamp from DHT failed with exception:" + t.getMessage());
-                t.printStackTrace();
             }
         });
     }
 
-    private Number160 getInvalidatedLocationKey(String currencyCode) {
-        return Number160.createHash(currencyCode + "lastChangeTimestamp");
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private Number160 getLocationKey(String currencyCode) {
+        return Number160.createHash(currencyCode + "mailbox");
     }
+
 }

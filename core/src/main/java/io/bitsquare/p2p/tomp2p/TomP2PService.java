@@ -17,16 +17,12 @@
 
 package io.bitsquare.p2p.tomp2p;
 
-import io.bitsquare.p2p.BootstrapState;
 import io.bitsquare.p2p.BaseP2PService;
 
 import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import rx.Observable;
-import rx.Subscriber;
 
 
 /**
@@ -39,8 +35,6 @@ import rx.Subscriber;
 public class TomP2PService extends BaseP2PService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PService.class);
 
-    private final Subscriber<BootstrapState> subscriber;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -48,25 +42,9 @@ public class TomP2PService extends BaseP2PService {
 
     @Inject
     public TomP2PService(TomP2PNode tomP2PNode) {
-        Observable<BootstrapState> bootstrapStateAsObservable = tomP2PNode.getBootstrapStateAsObservable();
-        subscriber = new Subscriber<BootstrapState>() {
-            @Override
-            public void onCompleted() {
-                executor.execute(() -> {
-                    peerDHT = tomP2PNode.getPeerDHT();
-                    subscriber.unsubscribe();
-                    bootstrapCompleted();
-                });
-            }
-
-            @Override
-            public void onError(Throwable throwable) {
-            }
-
-            @Override
-            public void onNext(BootstrapState bootstrapState) {
-            }
-        };
-        bootstrapStateAsObservable.subscribe(subscriber);
+        tomP2PNode.addResultHandler(() -> {
+            peerDHT = tomP2PNode.getPeerDHT();
+            bootstrapCompleted();
+        });
     }
 }

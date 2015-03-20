@@ -64,7 +64,7 @@ public class TomP2PAddressService extends TomP2PDHTService implements AddressSer
 
     @Inject
     public TomP2PAddressService(TomP2PNode tomP2PNode, User user) {
-        super(tomP2PNode);
+        super(tomP2PNode, user);
 
         locationKey = Utils.makeSHAHash(user.getMessageKeyPair().getPublic().getEncoded());
     }
@@ -93,7 +93,7 @@ public class TomP2PAddressService extends TomP2PDHTService implements AddressSer
     @Override
     public void findPeerAddress(PublicKey publicKey, GetPeerAddressListener listener) {
         final Number160 locationKey = Utils.makeSHAHash(publicKey.getEncoded());
-        FutureGet futureGet = getDomainProtectedData(locationKey, publicKey);
+        FutureGet futureGet = getDataOfProtectedDomain(locationKey, publicKey);
         log.trace("findPeerAddress called");
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
@@ -144,7 +144,7 @@ public class TomP2PAddressService extends TomP2PDHTService implements AddressSer
             // We set a short time-to-live to make getAddress checks fail fast in case if the offerer is offline and to support cheap offerbook state updates
             data.ttlSeconds(ADDRESS_TTL);
             log.debug("storePeerAddress " + peerDHT.peerAddress().toString());
-            FuturePut futurePut = putDomainProtectedData(locationKey, data);
+            FuturePut futurePut = putDataToMyProtectedDomain(locationKey, data);
             futurePut.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
@@ -173,7 +173,7 @@ public class TomP2PAddressService extends TomP2PDHTService implements AddressSer
     private void removeAddress() {
         try {
             Data data = new Data(new TomP2PPeer(peerDHT.peerAddress()));
-            removeFromDataMap(locationKey, data).awaitUninterruptibly(1000);
+            removeProtectedDataFromMap(locationKey, data).awaitUninterruptibly(1000);
         } catch (IOException e) {
             e.printStackTrace();
             log.error("Exception at removeAddress " + e.toString());

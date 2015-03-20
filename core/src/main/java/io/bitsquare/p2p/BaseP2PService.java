@@ -29,11 +29,12 @@ public class BaseP2PService implements P2PService {
         BaseP2PService.userThread = userThread;
     }
 
-    protected Executor executor = userThread;
+    protected Executor executor;
     protected PeerDHT peerDHT;
 
     @Override
     public void bootstrapCompleted() {
+        this.executor = BaseP2PService.userThread;
     }
 
     @Override

@@ -18,6 +18,7 @@
 package io.bitsquare.p2p.tomp2p;
 
 import io.bitsquare.BitsquareException;
+import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.BootstrapState;
 import io.bitsquare.p2p.ClientNode;
 import io.bitsquare.p2p.ConnectionType;
@@ -28,6 +29,9 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.security.KeyPair;
+
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.annotation.Nullable;
 
@@ -51,6 +55,7 @@ public class TomP2PNode implements ClientNode {
     private PeerDHT peerDHT;
     private BootstrappedPeerBuilder bootstrappedPeerBuilder;
     private final Subject<BootstrapState, BootstrapState> bootstrapStateSubject;
+    private List<ResultHandler> resultHandlers = new CopyOnWriteArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -89,6 +94,7 @@ public class TomP2PNode implements ClientNode {
             public void onSuccess(@Nullable PeerDHT peerDHT) {
                 if (peerDHT != null) {
                     TomP2PNode.this.peerDHT = peerDHT;
+                    resultHandlers.stream().forEach(e -> e.handleResult());
                     bootstrapStateSubject.onCompleted();
                 }
                 else {
@@ -104,10 +110,6 @@ public class TomP2PNode implements ClientNode {
             }
         });
 
-        return bootstrapStateSubject.asObservable();
-    }
-
-    public Observable<BootstrapState> getBootstrapStateAsObservable() {
         return bootstrapStateSubject.asObservable();
     }
 
@@ -144,5 +146,13 @@ public class TomP2PNode implements ClientNode {
     @Override
     public Node getBootstrapNodeAddress() {
         return bootstrappedPeerBuilder.getBootstrapNode();
+    }
+
+    public void addResultHandler(ResultHandler resultHandler) {
+        resultHandlers.add(resultHandler);
+    }
+
+    public void removeResultHandler(ResultHandler resultHandler) {
+        resultHandlers.remove(resultHandler);
     }
 }
