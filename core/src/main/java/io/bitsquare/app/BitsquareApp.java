@@ -26,6 +26,7 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.p2p.tomp2p.TomP2PService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
@@ -39,6 +40,7 @@ import com.google.inject.Injector;
 import java.io.IOException;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.*;
 import javafx.scene.image.*;
 import javafx.scene.input.*;
@@ -72,10 +74,11 @@ public class BitsquareApp extends Application {
         this.primaryStage = primaryStage;
 
         log.trace("BitsquareApp.start");
+        TomP2PService.setUserThread(Platform::runLater);
+        
         bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
         injector = Guice.createInjector(bitsquareAppModule);
         injector.getInstance(InjectorViewFactory.class).setInjector(injector);
-
 
         // route uncaught exceptions to a user-facing dialog
 

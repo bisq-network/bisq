@@ -38,7 +38,7 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
     private static final Logger log = LoggerFactory.getLogger(TomP2PMessageService.class);
 
     private final CopyOnWriteArrayList<MessageHandler> messageHandlers = new CopyOnWriteArrayList<>();
-
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -47,6 +47,12 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
     @Inject
     public TomP2PMessageService(TomP2PNode tomP2PNode) {
         super(tomP2PNode);
+    }
+
+
+    @Override
+    public void bootstrapCompleted() {
+        setupReplyHandler();
     }
 
 
@@ -92,17 +98,29 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
         if (!messageHandlers.remove(listener))
             throw new IllegalArgumentException("Try to remove listener which was never added.");
     }
-
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // MessageHandler implementation
+    // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public void handleMessage(Message message, Peer sender) {
-        if (sender instanceof TomP2PPeer)
-            executor.execute(() -> messageHandlers.stream().forEach(e -> e.handleMessage((Message) message, sender)));
-        else
-            throw new IllegalArgumentException("Peer must be of type TomP2PPeer");
+    private void setupReplyHandler() {
+        peerDHT.peer().objectDataReply((sender, message) -> {
+            log.debug("handleMessage peerAddress " + sender);
+            log.debug("handleMessage message " + message);
+
+            if (!sender.equals(peerDHT.peer().peerAddress())) {
+                if (message instanceof Message)
+                    executor.execute(() -> messageHandlers.stream().forEach(e -> e.handleMessage((Message) message, new TomP2PPeer(sender))));
+                else
+                    throw new RuntimeException("We got an object which is not type of Message. That must never happen. Request object = " + message);
+            }
+            else {
+                throw new RuntimeException("Received msg from myself. That must never happen.");
+            }
+
+            return true;
+        });
     }
+
 }

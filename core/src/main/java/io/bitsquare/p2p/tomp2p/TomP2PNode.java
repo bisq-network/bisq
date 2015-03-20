@@ -21,8 +21,6 @@ import io.bitsquare.BitsquareException;
 import io.bitsquare.p2p.BootstrapState;
 import io.bitsquare.p2p.ClientNode;
 import io.bitsquare.p2p.ConnectionType;
-import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Node;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -77,9 +75,8 @@ public class TomP2PNode implements ClientNode {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Observable<BootstrapState> bootstrap(KeyPair keyPair, MessageHandler messageHandler) {
+    public Observable<BootstrapState> bootstrap(KeyPair keyPair) {
         bootstrappedPeerBuilder.setKeyPair(keyPair);
-
 
         bootstrappedPeerBuilder.getBootstrapState().addListener((ov, oldValue, newValue) -> {
             log.debug("BootstrapState changed " + newValue);
@@ -92,7 +89,6 @@ public class TomP2PNode implements ClientNode {
             public void onSuccess(@Nullable PeerDHT peerDHT) {
                 if (peerDHT != null) {
                     TomP2PNode.this.peerDHT = peerDHT;
-                    setupReplyHandler(messageHandler);
                     bootstrapStateSubject.onCompleted();
                 }
                 else {
@@ -149,30 +145,4 @@ public class TomP2PNode implements ClientNode {
     public Node getBootstrapNodeAddress() {
         return bootstrappedPeerBuilder.getBootstrapNode();
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void setupReplyHandler(MessageHandler messageHandler) {
-        peerDHT.peer().objectDataReply((sender, request) -> {
-            log.debug("handleMessage peerAddress " + sender);
-            log.debug("handleMessage message " + request);
-
-            if (!sender.equals(peerDHT.peer().peerAddress())) {
-                if (request instanceof Message)
-                    messageHandler.handleMessage((Message) request, new TomP2PPeer(sender));
-                else
-                    throw new RuntimeException("We got an object which is not type of Message. That must never happen. Request object = " + request);
-            }
-            else {
-                throw new RuntimeException("Received msg from myself. That must never happen.");
-            }
-
-            return true;
-        });
-    }
-
-
 }

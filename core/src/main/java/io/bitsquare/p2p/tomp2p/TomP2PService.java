@@ -24,8 +24,6 @@ import java.util.concurrent.Executor;
 
 import javax.inject.Inject;
 
-import javafx.application.Platform;
-
 import net.tomp2p.dht.PeerDHT;
 
 import org.slf4j.Logger;
@@ -45,9 +43,16 @@ import rx.Subscriber;
 public class TomP2PService implements P2PService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PService.class);
 
+    private static Executor userThread;
+
+    // Set to Platform::runLater from app to get all callbacks on the userThread
+    public static void setUserThread(Executor userThread) {
+        TomP2PService.userThread = userThread;
+    }
+
     private final Subscriber<BootstrapState> subscriber;
 
-    protected Executor executor = Platform::runLater;
+    protected Executor executor = userThread;
     protected PeerDHT peerDHT;
 
 

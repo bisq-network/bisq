@@ -64,15 +64,14 @@ public class Trade implements Serializable {
 
     private final Offer offer;
     private final Date date;
+    private State state;
+    private Coin tradeAmount;
     private Contract contract;
     private String contractAsJson;
     private String takerContractSignature;
     private String offererContractSignature;
     private Transaction depositTx;
     private Transaction payoutTx;
-
-    private Coin tradeAmount;
-    private State state;
 
     // For changing values we use properties to get binding support in the UI (table)
     // When serialized those transient properties are not instantiated, so we instantiate them in the getters at first
@@ -210,5 +209,21 @@ public class Trade implements Serializable {
             _state = new SimpleObjectProperty<>(state);
 
         return _state;
+    }
+
+    @Override
+    public String toString() {
+        return "Trade{" +
+                "offer=" + offer +
+                ", date=" + date +
+                ", state=" + state +
+                ", tradeAmount=" + tradeAmount +
+                ", contract=" + contract +
+                ", contractAsJson='" + contractAsJson + '\'' +
+                ", takerContractSignature='" + takerContractSignature + '\'' +
+                ", offererContractSignature='" + offererContractSignature + '\'' +
+                ", depositTx=" + depositTx +
+                ", payoutTx=" + payoutTx +
+                '}';
     }
 }

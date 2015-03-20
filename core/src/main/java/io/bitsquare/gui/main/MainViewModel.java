@@ -157,7 +157,7 @@ class MainViewModel implements ViewModel {
                 error -> log.error(error.toString()),
                 () -> Platform.runLater(() -> setBitcoinNetworkSyncProgress(1.0)));
 
-        Observable<BootstrapState> bootstrapStateAsObservable = clientNode.bootstrap(user.getMessageKeyPair(), messageService);
+        Observable<BootstrapState> bootstrapStateAsObservable = clientNode.bootstrap(user.getMessageKeyPair());
         bootstrapStateAsObservable.publish();
         bootstrapStateAsObservable.subscribe(
                 state -> Platform.runLater(() -> setBootstrapState(state)),
