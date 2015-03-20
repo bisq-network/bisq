@@ -33,6 +33,8 @@ public interface DHTService extends P2PService {
 
     FuturePut putDataToMyProtectedDomain(Number160 locationKey, Data data);
 
+    FutureRemove removeDataFromMyProtectedDomain(Number160 locationKey);
+
     FutureGet getDataOfProtectedDomain(Number160 locationKey, PublicKey publicKey);
 
     FuturePut addProtectedDataToMap(Number160 locationKey, Data data);

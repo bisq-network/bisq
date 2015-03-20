@@ -171,13 +171,8 @@ public class TomP2PAddressService extends TomP2PDHTService implements AddressSer
     }
 
     private void removeAddress() {
-        try {
-            Data data = new Data(new TomP2PPeer(peerDHT.peerAddress()));
-            removeProtectedDataFromMap(locationKey, data).awaitUninterruptibly(1000);
-        } catch (IOException e) {
-            e.printStackTrace();
-            log.error("Exception at removeAddress " + e.toString());
-        }
+        boolean success = removeDataFromMyProtectedDomain(locationKey).awaitUninterruptibly(1000);
+        log.debug("removeDataFromMyProtectedDomain success=" + success);
     }
 
 }

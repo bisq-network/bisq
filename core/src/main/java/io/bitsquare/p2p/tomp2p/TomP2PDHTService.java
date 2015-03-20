@@ -65,10 +65,12 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
         peerDHT.storageLayer().protection(protectionDomainEnable, protectionDomainMode, protectionEntryEnable, protectionEntryMode);
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Put/Get: Public access. Used for offerbook invalidation timestamp
+    // Put/Get: Public access. 
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Use case: Used for offerbook invalidation timestamp. Everybody can write that data.
 
     /**
      * Store data to given location key.
@@ -87,7 +89,7 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
     /**
      * Get data for given locationKey
      * Read access: Anyone with locationKey
-     * 
+     *
      * @param locationKey
      * @return
      */
@@ -95,17 +97,19 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
         log.trace("getData");
         return peerDHT.get(locationKey).start();
     }
-    
-    
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Put/Get: Domain protected, entry protected. Used for storing address.
+    // Put/Get: Domain protected, entry protected. 
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Use case: Used for storing address. Only domain owner can write and change that data. Data protection gives additional protection (is it needed?)
 
     /**
      * Store data to given location key and my domain.
      * Write access: Anybody who has pubKey if domain is not used before. KeyPair owner of pubKey can overwrite and reserve that domain.
-     *        We save early an entry so we have that domain reserved and nobody else can use it.
-     *        Additionally we use entry protection, so domain owner is data owner.
+     * We save early an entry so we have that domain reserved and nobody else can use it.
+     * Additionally we use entry protection, so domain owner is data owner.
      *
      * @param locationKey
      * @param data
@@ -113,8 +117,20 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
      */
     public FuturePut putDataToMyProtectedDomain(Number160 locationKey, Data data) {
         log.trace("putDataToMyProtectedDomain");
-        data.protectEntry(keyPair).sign();
-        return peerDHT.put(locationKey).data(data).sign().protectDomain().domainKey(pubKeyHashForMyDomain).start();
+        data.protectEntry(keyPair);
+        return peerDHT.put(locationKey).data(data).protectDomain().domainKey(pubKeyHashForMyDomain).start();
+    }
+
+    /**
+     * Removes data for given location and my domain.
+     * Access: Domain owner only can remove
+     *
+     * @param locationKey
+     * @return
+     */
+    public FutureRemove removeDataFromMyProtectedDomain(Number160 locationKey) {
+        log.trace("removeDataOfProtectedDomain");
+        return peerDHT.remove(locationKey).domainKey(pubKeyHashForMyDomain).keyPair(keyPair).start();
     }
 
     /**
@@ -133,28 +149,30 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Add/remove/get from map: Entry protected, no domain protection. Used for offerbook and arbitrators
+    // Add/remove/get from map: Entry protected, no domain protection. 
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Use case: Used for offerbook and arbitrators. Everybody can add entries, but those entries are data protected so only the owner can remove it.
 
     /**
      * Add data to a map. For the entry contentKey of data is used (internally).
      * Write access: Anyone can add entries. But nobody can overwrite an existing entry as it is protected by data protection.
-     * 
+     *
      * @param locationKey
      * @param data
      * @return
      */
     public FuturePut addProtectedDataToMap(Number160 locationKey, Data data) {
         log.trace("addProtectedDataToMap");
-        data.protectEntry(keyPair).sign();
+        data.protectEntry(keyPair);
         log.trace("addProtectedDataToMap with contentKey " + data.hash().toString());
-        return peerDHT.add(locationKey).data(data).sign().start();
+        return peerDHT.add(locationKey).data(data).keyPair(keyPair).start();
     }
 
     /**
      * Remove entry from map for given locationKey. ContentKey of data is used for removing the entry.
      * Access: Only the owner of the data entry can remove it, as it was written with entry protection.
-     * 
+     *
      * @param locationKey
      * @param data
      * @return
@@ -163,13 +181,13 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
         log.trace("removeProtectedDataFromMap");
         Number160 contentKey = data.hash();
         log.trace("removeProtectedDataFromMap with contentKey " + contentKey.toString());
-        return peerDHT.remove(locationKey).contentKey(contentKey).sign().start();
+        return peerDHT.remove(locationKey).contentKey(contentKey).keyPair(keyPair).start();
     }
 
     /**
      * Get map for given locationKey with all entries.
      * Access: Everybody can read.
-     * 
+     *
      * @param locationKey
      * @return
      */
@@ -179,10 +197,13 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
     }
 
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Add/remove/get from map: Domain protection, no data protection. 
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Add/remove/get from map: Domain protection, no data protection. Used for mailbox. For getting privacy we use encryption (not part of DHT infrastructure)
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Use case: Used for mailbox. Everybody can add message entries to ones mailbox, but only mailbox owner (domain owner) can remove entries.
+    // For protecting privacy we use encryption for the messages (not part of DHT infrastructure), so everybody can read the messages but only domain owner 
+    // can decrypt it.
 
     /**
      * Add data to a map. For the entry contentKey of data is used (internally).
@@ -196,7 +217,8 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
         log.trace("addDataToMapOfProtectedDomain");
         log.trace("addDataToMapOfProtectedDomain with contentKey " + data.hash().toString());
         final Number160 pubKeyHashOfDomainOwner = Utils.makeSHAHash(publicKey.getEncoded());
-        return peerDHT.add(locationKey).data(data).protectDomain().domainKey(pubKeyHashOfDomainOwner).start();
+        return peerDHT.add(locationKey).protectDomain().domainKey(pubKeyHashOfDomainOwner).keyPair(keyPair)
+                .data(data).protectDomain().domainKey(pubKeyHashOfDomainOwner).keyPair(keyPair).start();
     }
 
     /**
@@ -211,7 +233,7 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
         log.trace("removeDataFromMapOfMyProtectedDomain");
         Number160 contentKey = data.hash();
         log.trace("removeDataFromMapOfMyProtectedDomain with contentKey " + contentKey.toString());
-        return peerDHT.remove(locationKey).contentKey(contentKey).protectDomain().sign().domainKey(pubKeyHashForMyDomain).start();
+        return peerDHT.remove(locationKey).contentKey(contentKey).domainKey(pubKeyHashForMyDomain).keyPair(keyPair).start();
     }
 
     /**
