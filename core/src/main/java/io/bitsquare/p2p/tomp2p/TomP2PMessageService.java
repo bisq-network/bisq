@@ -38,7 +38,7 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
     private static final Logger log = LoggerFactory.getLogger(TomP2PMessageService.class);
 
     private final CopyOnWriteArrayList<MessageHandler> messageHandlers = new CopyOnWriteArrayList<>();
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -52,6 +52,7 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
 
     @Override
     public void bootstrapCompleted() {
+        super.bootstrapCompleted();
         setupReplyHandler();
     }
 
@@ -98,7 +99,7 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
         if (!messageHandlers.remove(listener))
             throw new IllegalArgumentException("Try to remove listener which was never added.");
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
 
 public class TomP2PAddressService extends TomP2PDHTService implements AddressService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PAddressService.class);
-    
+
     private static final int IP_CHECK_PERIOD = 2 * 60 * 1000;           // Cheap call if nothing changes, so set it short to 2 min.
     private static final int STORE_ADDRESS_PERIOD = 5 * 60 * 1000;      // Save every 5 min.
     private static final int ADDRESS_TTL = STORE_ADDRESS_PERIOD * 2;    // TTL 10 min.
@@ -71,6 +71,7 @@ public class TomP2PAddressService extends TomP2PDHTService implements AddressSer
 
     @Override
     public void bootstrapCompleted() {
+        super.bootstrapCompleted();
         setupTimerForIPCheck();
         setupTimerForStoreAddress();
         storeAddress();

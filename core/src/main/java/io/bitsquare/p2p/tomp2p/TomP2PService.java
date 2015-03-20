@@ -18,7 +18,7 @@
 package io.bitsquare.p2p.tomp2p;
 
 import io.bitsquare.p2p.BootstrapState;
-import io.bitsquare.p2p.P2PService;
+import io.bitsquare.p2p.BaseP2PService;
 
 import javax.inject.Inject;
 
@@ -36,7 +36,7 @@ import rx.Subscriber;
  * That way we limit the dependency of the TomP2P library only to that class (and it's sub components).
  * <p/>
  */
-public class TomP2PService extends P2PService {
+public class TomP2PService extends BaseP2PService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PService.class);
 
     private final Subscriber<BootstrapState> subscriber;

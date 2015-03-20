@@ -19,10 +19,29 @@ package io.bitsquare.p2p;
 
 import java.util.concurrent.Executor;
 
-public interface P2PService   {
-    void bootstrapCompleted();
+import net.tomp2p.dht.PeerDHT;
 
-    void setExecutor(Executor executor);
+public class BaseP2PService implements P2PService {
 
-    void shutDown();
+    private static Executor userThread;
+
+    public static void setUserThread(Executor userThread) {
+        BaseP2PService.userThread = userThread;
+    }
+
+    protected Executor executor = userThread;
+    protected PeerDHT peerDHT;
+
+    @Override
+    public void bootstrapCompleted() {
+    }
+
+    @Override
+    public void setExecutor(Executor executor) {
+        this.executor = executor;
+    }
+
+    @Override
+    public void shutDown() {
+    }
 }
