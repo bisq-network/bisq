@@ -32,6 +32,7 @@ import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.p2p.BootstrapState;
 import io.bitsquare.p2p.ClientNode;
 import io.bitsquare.p2p.MessageService;
+import io.bitsquare.p2p.P2PService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -157,6 +158,9 @@ class MainViewModel implements ViewModel {
                 error -> log.error(error.toString()),
                 () -> Platform.runLater(() -> setBitcoinNetworkSyncProgress(1.0)));
 
+        // Set executor for all P2PServices
+        P2PService.setUserThread(Platform::runLater);
+        
         Observable<BootstrapState> bootstrapStateAsObservable = clientNode.bootstrap(user.getMessageKeyPair());
         bootstrapStateAsObservable.publish();
         bootstrapStateAsObservable.subscribe(

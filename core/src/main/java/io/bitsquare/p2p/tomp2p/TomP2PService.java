@@ -20,11 +20,7 @@ package io.bitsquare.p2p.tomp2p;
 import io.bitsquare.p2p.BootstrapState;
 import io.bitsquare.p2p.P2PService;
 
-import java.util.concurrent.Executor;
-
 import javax.inject.Inject;
-
-import net.tomp2p.dht.PeerDHT;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,20 +36,10 @@ import rx.Subscriber;
  * That way we limit the dependency of the TomP2P library only to that class (and it's sub components).
  * <p/>
  */
-public class TomP2PService implements P2PService {
+public class TomP2PService extends P2PService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PService.class);
 
-    private static Executor userThread;
-
-    // Set to Platform::runLater from app to get all callbacks on the userThread
-    public static void setUserThread(Executor userThread) {
-        TomP2PService.userThread = userThread;
-    }
-
     private final Subscriber<BootstrapState> subscriber;
-
-    protected Executor executor = userThread;
-    protected PeerDHT peerDHT;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -83,19 +69,4 @@ public class TomP2PService implements P2PService {
         };
         bootstrapStateAsObservable.subscribe(subscriber);
     }
-
-    @Override
-    public void bootstrapCompleted() {
-
-    }
-
-    @Override
-    public void setExecutor(Executor executor) {
-        this.executor = executor;
-    }
-
-    @Override
-    public void shutDown() {
-    }
-
 }

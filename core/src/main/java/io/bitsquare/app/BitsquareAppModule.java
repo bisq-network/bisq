@@ -23,7 +23,7 @@ import io.bitsquare.arbitration.tomp2p.TomP2PArbitratorModule;
 import io.bitsquare.btc.BitcoinModule;
 import io.bitsquare.crypto.CryptoModule;
 import io.bitsquare.gui.GuiModule;
-import io.bitsquare.p2p.NetworkModule;
+import io.bitsquare.p2p.P2PModule;
 import io.bitsquare.p2p.tomp2p.TomP2PModule;
 import io.bitsquare.offer.OfferModule;
 import io.bitsquare.offer.tomp2p.TomP2POfferModule;
@@ -80,7 +80,7 @@ class BitsquareAppModule extends BitsquareModule {
         return new TomP2PArbitratorModule(env);
     }
 
-    protected NetworkModule networkModule() {
+    protected P2PModule networkModule() {
         return new TomP2PModule(env);
     }
 

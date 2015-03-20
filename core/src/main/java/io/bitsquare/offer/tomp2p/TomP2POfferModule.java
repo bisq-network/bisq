@@ -31,8 +31,7 @@ public class TomP2POfferModule extends OfferModule {
     }
 
     @Override
-    protected void configure() {
-        super.configure();
+    protected void doConfigure() {
         bind(OfferBookService.class).to(TomP2POfferBookService.class).in(Singleton.class);
     }
 }

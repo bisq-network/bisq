@@ -21,9 +21,9 @@ import io.bitsquare.BitsquareModule;
 
 import org.springframework.core.env.Environment;
 
-public abstract class NetworkModule extends BitsquareModule {
+public abstract class P2PModule extends BitsquareModule {
 
-    protected NetworkModule(Environment env) {
+    protected P2PModule(Environment env) {
         super(env);
     }
 

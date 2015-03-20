@@ -21,7 +21,7 @@ import io.bitsquare.p2p.AddressService;
 import io.bitsquare.p2p.BootstrapNodes;
 import io.bitsquare.p2p.ClientNode;
 import io.bitsquare.p2p.MessageService;
-import io.bitsquare.p2p.NetworkModule;
+import io.bitsquare.p2p.P2PModule;
 import io.bitsquare.p2p.Node;
 
 import com.google.inject.Injector;
@@ -32,7 +32,7 @@ import org.springframework.core.env.Environment;
 
 import static io.bitsquare.p2p.tomp2p.BootstrappedPeerBuilder.*;
 
-public class TomP2PModule extends NetworkModule {
+public class TomP2PModule extends P2PModule {
     public static final String BOOTSTRAP_NODE_NAME_KEY = "bootstrap.node.name";
     public static final String BOOTSTRAP_NODE_IP_KEY = "bootstrap.node.ip";
     public static final String BOOTSTRAP_NODE_PORT_KEY = "bootstrap.node.port";
@@ -69,8 +69,6 @@ public class TomP2PModule extends NetworkModule {
 
     @Override
     protected void doClose(Injector injector) {
-        super.doClose(injector);
-
         // First shut down AddressService to remove address from DHT
         injector.getInstance(AddressService.class).shutDown();
         injector.getInstance(BootstrappedPeerBuilder.class).shutDown();
