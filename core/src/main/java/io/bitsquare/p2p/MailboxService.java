@@ -15,24 +15,18 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.crypto;
+package io.bitsquare.p2p;
 
-import io.bitsquare.BitsquareModule;
+import io.bitsquare.common.handlers.FaultHandler;
+import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.p2p.tomp2p.TomP2PMailboxService;
 
-import com.google.inject.Singleton;
+import java.security.PublicKey;
 
-import org.springframework.core.env.Environment;
+public interface MailboxService {
+    void addMessage(PublicKey publicKey, MailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler);
 
-public class CryptoModule extends BitsquareModule {
+    void removeMessage(PublicKey publicKey, MailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler);
 
-    public CryptoModule(Environment env) {
-        super(env);
-    }
-
-    @Override
-    protected void configure() {
-        bind(SignatureService.class).in(Singleton.class);
-        bind(HashService.class).in(Singleton.class);
-        bind(EncryptionService.class).in(Singleton.class);
-    }
+    void getMessages(PublicKey publicKey, TomP2PMailboxService.MailboxMessagesResultHandler resultHandler);
 }

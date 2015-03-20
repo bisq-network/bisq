@@ -49,7 +49,7 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
     @Inject
     public TomP2PDHTService(TomP2PNode tomP2PNode, User user) {
         super(tomP2PNode);
-        keyPair = user.getMessageKeyPair();
+        keyPair = user.getP2pSigKeyPair();
         pubKeyHashForMyDomain = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
     }
 

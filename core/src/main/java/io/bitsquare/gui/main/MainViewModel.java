@@ -161,7 +161,7 @@ class MainViewModel implements ViewModel {
         // Set executor for all P2PServices
         BaseP2PService.setUserThread(Platform::runLater);
         
-        Observable<BootstrapState> bootstrapStateAsObservable = clientNode.bootstrap(user.getMessageKeyPair());
+        Observable<BootstrapState> bootstrapStateAsObservable = clientNode.bootstrap(user.getP2pSigKeyPair());
         bootstrapStateAsObservable.publish();
         bootstrapStateAsObservable.subscribe(
                 state -> Platform.runLater(() -> setBootstrapState(state)),
@@ -354,7 +354,7 @@ class MainViewModel implements ViewModel {
     }
 
     private void addMockArbitrator() {
-        if (accountSettings.getAcceptedArbitrators().isEmpty() && user.getMessageKeyPair() != null) {
+        if (accountSettings.getAcceptedArbitrators().isEmpty() && user.getP2pSigKeyPair() != null) {
             byte[] pubKey = new ECKey().getPubKey();
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePubKey());
             List<Locale> languages = new ArrayList<>();

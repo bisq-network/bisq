@@ -15,24 +15,27 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.crypto;
+package io.bitsquare.p2p;
 
-import io.bitsquare.BitsquareModule;
+import java.io.Serializable;
 
-import com.google.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.springframework.core.env.Environment;
+/*
+    Stores a message in encrypted form, so it never leaves the client in plain text.
+ */
+public class MailboxMessage implements Message, Serializable {
+    private static final long serialVersionUID = -3111178895546299769L;
+    private static final Logger log = LoggerFactory.getLogger(MailboxMessage.class);
 
-public class CryptoModule extends BitsquareModule {
+    private byte[] cipherMessage;
 
-    public CryptoModule(Environment env) {
-        super(env);
+    public MailboxMessage(byte[] cipherMessage) {
+        this.cipherMessage = cipherMessage;
     }
 
-    @Override
-    protected void configure() {
-        bind(SignatureService.class).in(Singleton.class);
-        bind(HashService.class).in(Singleton.class);
-        bind(EncryptionService.class).in(Singleton.class);
+    public byte[] getCipherMessage() {
+        return cipherMessage;
     }
 }

@@ -66,7 +66,7 @@ public class TomP2PAddressService extends TomP2PDHTService implements AddressSer
     public TomP2PAddressService(TomP2PNode tomP2PNode, User user) {
         super(tomP2PNode, user);
 
-        locationKey = Utils.makeSHAHash(user.getMessageKeyPair().getPublic().getEncoded());
+        locationKey = Utils.makeSHAHash(user.getP2pSigKeyPair().getPublic().getEncoded());
     }
 
     @Override

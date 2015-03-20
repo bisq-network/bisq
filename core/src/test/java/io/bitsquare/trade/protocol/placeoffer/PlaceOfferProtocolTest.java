@@ -98,7 +98,7 @@ public class PlaceOfferProtocolTest {
         tomP2PNode = new TomP2PNode(bootstrappedPeerBuilder);
         messageService = new TomP2PMessageService(tomP2PNode);
 
-        Observable<BootstrapState> messageObservable = tomP2PNode.bootstrap(user.getMessageKeyPair());
+        Observable<BootstrapState> messageObservable = tomP2PNode.bootstrap(user.getP2pSigKeyPair());
         messageObservable.publish();
         messageObservable.subscribe(
                 state -> log.trace("state changed: " + state),

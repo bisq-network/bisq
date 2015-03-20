@@ -50,8 +50,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TomP2POfferBookService extends TomP2PDHTService implements OfferBookService {
-
     private static final Logger log = LoggerFactory.getLogger(TomP2POfferBookService.class);
+    private static final int TTL = 30 * 24 * 60 * 60;   // the offer is default 30 days valid
 
     private final List<Listener> offerRepositoryListeners = new ArrayList<>();
     private final LongProperty invalidationTimestamp = new SimpleLongProperty(0);
@@ -67,10 +67,7 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
         try {
             final Data offerData = new Data(offer);
-
-            // the offer is default 30 days valid
-            int defaultOfferTTL = 30 * 24 * 60 * 60;
-            offerData.ttlSeconds(defaultOfferTTL);
+            offerData.ttlSeconds(TTL);
             log.trace("Add offer to DHT requested. Added data: [locationKey: " + locationKey +
                     ", hash: " + offerData.hash().toString() + "]");
             FuturePut futurePut = addProtectedDataToMap(locationKey, offerData);

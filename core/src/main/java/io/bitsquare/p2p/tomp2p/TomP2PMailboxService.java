@@ -19,12 +19,9 @@ package io.bitsquare.p2p.tomp2p;
 
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
-import io.bitsquare.p2p.AddressService;
-import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.Peer;
-import io.bitsquare.p2p.listener.GetPeerAddressListener;
+import io.bitsquare.p2p.MailboxMessage;
+import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.user.User;
 
 import java.io.IOException;
@@ -46,20 +43,15 @@ import net.tomp2p.futures.BaseFutureListener;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.Number640;
 import net.tomp2p.storage.Data;
-import net.tomp2p.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TomP2PMailboxService extends TomP2PDHTService implements AddressService {
+public class TomP2PMailboxService extends TomP2PDHTService implements MailboxService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PMailboxService.class);
-
+    private static final int TTL = 15 * 24 * 60 * 60;    // the message is default 15 days valid, as a max trade period might be about 2 weeks.
 
     private final List<OfferBookService.Listener> offerRepositoryListeners = new ArrayList<>();
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
     public TomP2PMailboxService(TomP2PNode tomP2PNode, User user) {
@@ -76,69 +68,45 @@ public class TomP2PMailboxService extends TomP2PDHTService implements AddressSer
         super.shutDown();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Find peer address by publicKey
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // public void findPeerAddress(PublicKey publicKey, GetPeerAddressListener listener) {
-    //     final Number160 locationKey = Utils.makeSHAHash(publicKey.getEncoded());
-
-    public void saveMessage(PublicKey publicKey, Message message, ResultHandler resultHandler, FaultHandler faultHandler) {
-        final Number160 locationKey = Utils.makeSHAHash(publicKey.getEncoded());
-
-        // Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
+    @Override
+    public void addMessage(PublicKey publicKey, MailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler) {
         try {
-            final Data offerData = new Data(message);
+            final Data data = new Data(message);
+            data.ttlSeconds(TTL);
+            log.trace("Add message to DHT requested. Added data: [locationKey: " + getLocationKey(publicKey) +
+                    ", hash: " + data.hash().toString() + "]");
 
-            // the offer is default 30 days valid
-            int defaultOfferTTL = 30 * 24 * 60 * 60;
-            offerData.ttlSeconds(defaultOfferTTL);
-            log.trace("Add offer to DHT requested. Added data: [locationKey: " + locationKey +
-                    ", hash: " + offerData.hash().toString() + "]");
-            FuturePut futurePut = addProtectedDataToMap(locationKey, offerData);
+            FuturePut futurePut = addDataToMapOfProtectedDomain(getLocationKey(publicKey), data, publicKey);
             futurePut.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
                     if (future.isSuccess()) {
                         executor.execute(() -> {
                             resultHandler.handleResult();
-                            offerRepositoryListeners.stream().forEach(listener -> {
-                                try {
-                                    Object offerDataObject = offerData.object();
-                                    if (offerDataObject instanceof Offer) {
-                                        log.info("Added offer to DHT with ID: " + offerDataObject);
-                                        listener.onOfferAdded((Offer) offerDataObject);
-                                    }
-                                } catch (ClassNotFoundException | IOException e) {
-                                    e.printStackTrace();
-                                    log.error("Add offer to DHT failed: " + e.getMessage());
-                                }
-                            });
 
-                            log.trace("Add offer to DHT was successful. Added data: [locationKey: " + locationKey +
-                                    ", value: " + offerData + "]");
+                            log.trace("Add message to mailbox was successful. Added data: [locationKey: " + getLocationKey(publicKey) +
+                                    ", value: " + data + "]");
                         });
                     }
                 }
 
                 @Override
                 public void exceptionCaught(Throwable ex) throws Exception {
-                    executor.execute(() -> faultHandler.handleFault("Failed to add offer to DHT", ex));
+                    executor.execute(() -> faultHandler.handleFault("Add message to mailbox failed.", ex));
                 }
             });
         } catch (IOException ex) {
-            executor.execute(() -> faultHandler.handleFault("Failed to add offer to DHT", ex));
+            executor.execute(() -> faultHandler.handleFault("Add message to mailbox failed.", ex));
         }
     }
 
-    public void removeOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler) {
-        Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
+    @Override
+    public void removeMessage(PublicKey publicKey, MailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler) {
         try {
-            final Data offerData = new Data(offer);
-            log.trace("Remove offer from DHT requested. Removed data: [locationKey: " + locationKey +
-                    ", hash: " + offerData.hash().toString() + "]");
-            FutureRemove futureRemove = removeProtectedDataFromMap(locationKey, offerData);
+            final Data data = new Data(message);
+            log.trace("Remove message from DHT requested. Removed data: [locationKey: " + getLocationKey(publicKey) +
+                    ", hash: " + data.hash().toString() + "]");
+            FutureRemove futureRemove = removeDataFromMapOfMyProtectedDomain(getLocationKey(publicKey), data);
             futureRemove.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
@@ -148,97 +116,58 @@ public class TomP2PMailboxService extends TomP2PDHTService implements AddressSer
                     log.trace("isRemoved? " + futureRemove.isRemoved());
                     executor.execute(() -> {
                         resultHandler.handleResult();
-                        offerRepositoryListeners.stream().forEach(listener -> {
-                            try {
-                                Object offerDataObject = offerData.object();
-                                if (offerDataObject instanceof Offer) {
-                                    log.trace("Remove offer from DHT was successful. Removed data: [key: " +
-                                            locationKey + ", " +
-                                            "offer: " + offerDataObject + "]");
-                                    listener.onOfferRemoved((Offer) offerDataObject);
-                                }
-                            } catch (ClassNotFoundException | IOException e) {
-                                e.printStackTrace();
-                                log.error("Remove offer from DHT failed. Error: " + e.getMessage());
-                                faultHandler.handleFault("Remove offer from DHT failed. Error: " + e.getMessage(), e);
-                            }
-                        });
                     });
                 }
 
                 @Override
                 public void exceptionCaught(Throwable t) throws Exception {
-                    log.error("Remove offer from DHT failed. Error: " + t.getMessage());
-                    faultHandler.handleFault("Remove offer from DHT failed. Error: " + t.getMessage(), t);
+                    log.error("Remove message from DHT failed. Error: " + t.getMessage());
+                    faultHandler.handleFault("Remove message from DHT failed. Error: " + t.getMessage(), t);
                 }
             });
         } catch (IOException e) {
             e.printStackTrace();
-            log.error("Remove offer from DHT failed. Error: " + e.getMessage());
-            faultHandler.handleFault("Remove offer from DHT failed. Error: " + e.getMessage(), e);
+            log.error("Remove message from DHT failed. Error: " + e.getMessage());
+            faultHandler.handleFault("Remove message from DHT failed. Error: " + e.getMessage(), e);
         }
     }
 
-    public void getOffers(String currencyCode) {
-        Number160 locationKey = Number160.createHash(currencyCode);
-        log.trace("Get offers from DHT requested for locationKey: " + locationKey);
-        FutureGet futureGet = getMap(locationKey);
+    @Override
+    public void getMessages(PublicKey publicKey, MailboxMessagesResultHandler resultHandler) {
+        log.trace("Get messages from DHT requested for locationKey: " + getLocationKey(publicKey));
+        FutureGet futureGet = getDataFromMapOfMyProtectedDomain(getLocationKey(publicKey));
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
                     final Map<Number640, Data> dataMap = futureGet.dataMap();
-                    final List<Offer> offers = new ArrayList<>();
+                    List<MailboxMessage> messages = new ArrayList<>();
                     if (dataMap != null) {
-                        for (Data offerData : dataMap.values()) {
+                        for (Data messageData : dataMap.values()) {
                             try {
-                                Object offerDataObject = offerData.object();
-                                if (offerDataObject instanceof Offer) {
-                                    offers.add((Offer) offerDataObject);
+                                Object messageDataObject = messageData.object();
+                                if (messageDataObject instanceof MailboxMessage) {
+                                    messages.add((MailboxMessage) messageDataObject);
                                 }
                             } catch (ClassNotFoundException | IOException e) {
                                 e.printStackTrace();
                             }
                         }
-
-                        executor.execute(() -> offerRepositoryListeners.stream().forEach(listener ->
-                                listener.onOffersReceived(offers)));
+                        executor.execute(() -> resultHandler.handleResult(messages));
                     }
 
-                    log.trace("Get offers from DHT was successful. Stored data: [key: " + locationKey
+                    log.trace("Get messages from DHT was successful. Stored data: [key: " + getLocationKey(publicKey)
                             + ", values: " + futureGet.dataMap() + "]");
                 }
                 else {
                     final Map<Number640, Data> dataMap = futureGet.dataMap();
                     if (dataMap == null || dataMap.size() == 0) {
-                        log.trace("Get offers from DHT delivered empty dataMap.");
-                        executor.execute(() -> offerRepositoryListeners.stream().forEach(listener ->
-                                listener.onOffersReceived(new ArrayList<>())));
+                        log.trace("Get messages from DHT delivered empty dataMap.");
+                        executor.execute(() -> resultHandler.handleResult(new ArrayList<>()));
                     }
                     else {
-                        log.error("Get offers from DHT  was not successful with reason:" + future.failedReason());
+                        log.error("Get messages from DHT  was not successful with reason:" + future.failedReason());
                     }
-                }
-            }
-        });
-    }
-
-    @Override
-    public void findPeerAddress(PublicKey publicKey, GetPeerAddressListener listener) {
-        final Number160 locationKey = Utils.makeSHAHash(publicKey.getEncoded());
-        FutureGet futureGet = getDataOfProtectedDomain(locationKey, publicKey);
-        log.trace("findPeerAddress called");
-        futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
-            @Override
-            public void operationComplete(BaseFuture baseFuture) throws Exception {
-                if (baseFuture.isSuccess() && futureGet.data() != null) {
-                    final Peer peer = (Peer) futureGet.data().object();
-                    log.trace("Peer found in DHT. Peer = " + peer);
-                    executor.execute(() -> listener.onResult(peer));
-                }
-                else {
-                    log.error("getPeerAddress failed. failedReason = " + baseFuture.failedReason());
-                    executor.execute(listener::onFailed);
                 }
             }
         });
@@ -249,8 +178,11 @@ public class TomP2PMailboxService extends TomP2PDHTService implements AddressSer
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Number160 getLocationKey(String currencyCode) {
-        return Number160.createHash(currencyCode + "mailbox");
+    private Number160 getLocationKey(PublicKey publicKey) {
+        return Number160.createHash("mailbox" + publicKey.hashCode());
     }
 
+    public interface MailboxMessagesResultHandler {
+        void handleResult(List<MailboxMessage> messages);
+    }
 }

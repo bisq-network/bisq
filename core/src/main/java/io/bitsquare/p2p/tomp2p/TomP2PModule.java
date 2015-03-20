@@ -20,9 +20,10 @@ package io.bitsquare.p2p.tomp2p;
 import io.bitsquare.p2p.AddressService;
 import io.bitsquare.p2p.BootstrapNodes;
 import io.bitsquare.p2p.ClientNode;
+import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.MessageService;
-import io.bitsquare.p2p.P2PModule;
 import io.bitsquare.p2p.Node;
+import io.bitsquare.p2p.P2PModule;
 
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -53,7 +54,8 @@ public class TomP2PModule extends P2PModule {
         
         bind(AddressService.class).to(TomP2PAddressService.class).in(Singleton.class);
         bind(MessageService.class).to(TomP2PMessageService.class).in(Singleton.class);
-
+        bind(MailboxService.class).to(TomP2PMailboxService.class).in(Singleton.class);
+        
         bind(int.class).annotatedWith(Names.named(Node.PORT_KEY)).toInstance(env.getProperty(Node.PORT_KEY, int.class, Node.DEFAULT_PORT));
         bind(boolean.class).annotatedWith(Names.named(USE_MANUAL_PORT_FORWARDING_KEY)).toInstance(
                 env.getProperty(USE_MANUAL_PORT_FORWARDING_KEY, boolean.class, false));

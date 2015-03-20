@@ -17,6 +17,7 @@
 
 package io.bitsquare.user;
 
+import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.util.DSAKeyUtil;
 
@@ -29,6 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nullable;
+
+import javax.inject.Inject;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -43,7 +46,8 @@ import javafx.collections.ObservableList;
 public class User implements Serializable {
     private static final long serialVersionUID = 7409078808248518638L;
 
-    private KeyPair messageKeyPair;
+    private KeyPair p2pSigKeyPair;
+    private KeyPair p2pEncryptKeyPair;
     private String accountID;
 
     // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is
@@ -53,8 +57,11 @@ public class User implements Serializable {
 
     private final transient ObservableList<FiatAccount> fiatAccounts = FXCollections.observableArrayList();
     private final transient ObjectProperty<FiatAccount> currentBankAccount = new SimpleObjectProperty<>();
+    transient private EncryptionService encryptionService;
 
-    public User() {
+    @Inject
+    public User(EncryptionService encryptionService) {
+        this.encryptionService = encryptionService;
         // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is
         // only temporary
         fiatAccounts.addListener((ListChangeListener<FiatAccount>) change -> _fiatAccounts = new ArrayList<>(fiatAccounts));
@@ -62,6 +69,9 @@ public class User implements Serializable {
         currentBankAccount.addListener((ov) -> _currentFiatAccount = currentBankAccount.get());
     }
 
+    // for unit tests
+    public User() {
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public Methods
@@ -71,13 +81,14 @@ public class User implements Serializable {
         if (persistedUser != null) {
             fiatAccounts.setAll(persistedUser.getSerializedBankAccounts());
             setCurrentBankAccount(persistedUser.getSerializedCurrentBankAccount());
-            messageKeyPair = persistedUser.getMessageKeyPair();
+            p2pSigKeyPair = persistedUser.getP2pSigKeyPair();
+            p2pEncryptKeyPair = persistedUser.getP2pEncryptKeyPair();
             accountID = persistedUser.getAccountId();
         }
         else {
             // First time
-            // TODO use separate thread. DSAKeyUtil.getKeyPair() runs in same thread now
-            messageKeyPair = DSAKeyUtil.generateKeyPair();
+            p2pSigKeyPair = DSAKeyUtil.generateKeyPair();
+            p2pEncryptKeyPair = encryptionService.getKeyPair();
         }
     }
 
@@ -160,12 +171,12 @@ public class User implements Serializable {
         return null;
     }
 
-    public KeyPair getMessageKeyPair() {
-        return messageKeyPair;
+    public KeyPair getP2pSigKeyPair() {
+        return p2pSigKeyPair;
     }
 
     public PublicKey getMessagePubKey() {
-        return messageKeyPair.getPublic();
+        return p2pSigKeyPair.getPublic();
     }
 
     public ObjectProperty<FiatAccount> currentBankAccountProperty() {
@@ -181,4 +192,7 @@ public class User implements Serializable {
         return _currentFiatAccount;
     }
 
+    public KeyPair getP2pEncryptKeyPair() {
+        return p2pEncryptKeyPair;
+    }
 }
