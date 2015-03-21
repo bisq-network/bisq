@@ -471,8 +471,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     if (model.isMyOffer(offer)) {
                                         iconView.setId("image-remove");
                                         title = "Remove";
-                                        button.setOnAction(event -> model.cancelOpenOffer(item
-                                                .getOffer()));
+                                        button.setOnAction(event -> model.cancelOpenOffer(item.getOffer()));
                                     }
                                     else {
                                         if (offer.getDirection() == Direction.SELL)
@@ -484,8 +483,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     }
 
                                     //TODO remove listener
-                                    item.bankAccountCountryProperty().addListener((ov, o, n) ->
-                                            verifyIfTradable(item));
+                                    item.bankAccountCountryProperty().addListener((ov, o, n) -> verifyIfTradable(item));
                                     verifyIfTradable(item);
 
                                     button.setText(title);

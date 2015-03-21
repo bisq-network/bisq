@@ -61,7 +61,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ListChangeListener;
-import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 import javafx.util.StringConverter;
 
@@ -103,7 +102,6 @@ class MainViewModel implements ViewModel {
     private final User user;
     private final WalletService walletService;
     private final ClientNode clientNode;
-    private MessageService messageService;
     private ArbitratorService arbitratorService;
     private final TradeManager tradeManager;
     private UpdateProcess updateProcess;
@@ -119,7 +117,6 @@ class MainViewModel implements ViewModel {
         this.user = user;
         this.walletService = walletService;
         this.clientNode = clientNode;
-        this.messageService = messageService;
         this.arbitratorService = arbitratorService;
         this.tradeManager = tradeManager;
         this.updateProcess = updateProcess;
@@ -210,8 +207,7 @@ class MainViewModel implements ViewModel {
     private void onAllServicesInitialized() {
         log.trace("backend completed");
 
-        tradeManager.getPendingTrades().addListener(
-                (MapChangeListener<String, Trade>) change -> updateNumPendingTrades());
+        tradeManager.getPendingTrades().addListener((ListChangeListener<Trade>) change -> updateNumPendingTrades());
         updateNumPendingTrades();
         showAppScreen.set(true);
 
@@ -333,9 +329,12 @@ class MainViewModel implements ViewModel {
     }
 
     private void updateNumPendingTrades() {
-        int numPendingTrades = tradeManager.getPendingTrades().size();
+        long numPendingTrades = tradeManager.getPendingTrades().size();
         if (numPendingTrades > 0)
             numPendingTradesAsString.set(String.valueOf(numPendingTrades));
+        if (numPendingTrades > 9)
+            numPendingTradesAsString.set("*");
+
         showPendingTradesNotification.set(numPendingTrades > 0);
     }
 

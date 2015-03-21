@@ -87,6 +87,7 @@ lower gradient color on tab: dddddd
 
 #nav-alert-label {
     -fx-font-weight: bold;
+    -fx-alignment: center;
     -fx-font-size: 11;
     -fx-text-fill: white;
 }

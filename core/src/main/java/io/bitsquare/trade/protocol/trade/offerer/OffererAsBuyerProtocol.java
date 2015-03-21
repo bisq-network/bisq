@@ -133,7 +133,7 @@ public class OffererAsBuyerProtocol {
         checkTradeId(model.id, tradeMessage);
         model.setTradeMessage(tradeMessage);
         model.trade.setTradingPeer(taker);
-
+        
         TaskRunner<OffererAsBuyerModel> taskRunner = new TaskRunner<>(model,
                 () -> log.debug("taskRunner at handleTakeOfferFeePayedMessage completed"),
                 (errorMessage) -> handleTaskRunnerFault(errorMessage));

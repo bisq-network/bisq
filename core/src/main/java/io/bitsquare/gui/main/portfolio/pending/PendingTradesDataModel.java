@@ -37,6 +37,8 @@ import com.google.common.util.concurrent.FutureCallback;
 
 import com.google.inject.Inject;
 
+import java.util.stream.Collectors;
+
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -45,7 +47,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
-import javafx.collections.MapChangeListener;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 import org.jetbrains.annotations.NotNull;
@@ -67,7 +69,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
     private Trade closedTrade;
 
     private final ChangeListener<Trade.ProcessState> tradeStateChangeListener;
-    private final MapChangeListener<String, Trade> mapChangeListener;
+    private final ListChangeListener<Trade> tradesListChangeListener;
 
     final StringProperty txId = new SimpleStringProperty();
     final ObjectProperty<Trade.ProcessState> tradeState = new SimpleObjectProperty<>();
@@ -80,49 +82,14 @@ class PendingTradesDataModel implements Activatable, DataModel {
         this.user = user;
 
         tradeStateChangeListener = (ov, oldValue, newValue) -> tradeState.set(newValue);
-
-        mapChangeListener = change -> {
-            if (change.wasAdded()) {
-                list.add(new PendingTradesListItem(change.getValueAdded()));
-                if (list.size() == 1) {
-                    selectTrade(list.get(0));
-                    selectedIndex.set(0);
-                }
-            }
-            else if (change.wasRemoved()) {
-                closedTrade = change.getValueRemoved();
-                if (list.size() == 0) {
-                    selectTrade(null);
-                    selectedIndex.set(-1);
-                }
-            }
-
-            sortList();
-        };
+        tradesListChangeListener = change -> applyList();
     }
 
     @Override
     public void activate() {
-        list.clear();
-        // transform trades to list of PendingTradesListItems and keep it updated
-        tradeManager.getPendingTrades().values().stream().forEach(e -> list.add(new PendingTradesListItem(e)));
-        tradeManager.getPendingTrades().addListener(mapChangeListener);
+        applyList();
+        tradeManager.getPendingTrades().addListener(tradesListChangeListener);
 
-        // we sort by date, earliest first
-        sortList();
-
-        // select either currentPendingTrade or first in the list
-        /*if (tradeManager.getCurrentPendingTrade() != null) {
-            for (int i = 0; i < list.size(); i++) {
-                PendingTradesListItem item = list.get(i);
-                if (tradeManager.getCurrentPendingTrade().getId().equals(item.getTrade().getId())) {
-                    selectedIndex.set(i);
-                    selectTrade(item);
-                    break;
-                }
-            }
-        }
-        else */
         if (list.size() > 0) {
             selectTrade(list.get(0));
             selectedIndex.set(0);
@@ -131,11 +98,17 @@ class PendingTradesDataModel implements Activatable, DataModel {
 
     @Override
     public void deactivate() {
-        tradeManager.getPendingTrades().removeListener(mapChangeListener);
-
+        tradeManager.getPendingTrades().removeListener(tradesListChangeListener);
         cleanUpSelectedTrade();
     }
 
+    private void applyList() {
+        list.clear();
+        list.addAll(tradeManager.getPendingTrades().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
+
+        // we sort by date, earliest first
+        list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
+    }
 
     void selectTrade(PendingTradesListItem item) {
         // clean up previous selectedItem
@@ -280,10 +253,6 @@ class PendingTradesDataModel implements Activatable, DataModel {
         if (selectedItem != null) {
             selectedItem.getTrade().processStateProperty().removeListener(tradeStateChangeListener);
         }
-    }
-
-    private void sortList() {
-        list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
     }
 
 }

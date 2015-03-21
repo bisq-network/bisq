@@ -41,6 +41,7 @@
             <TableColumn text="Price" fx:id="priceColumn" minWidth="100" sortable="false"/>
             <TableColumn text="Trade amount in EUR" fx:id="volumeColumn" minWidth="130" sortable="false"/>
             <TableColumn text="Trade type" fx:id="directionColumn" minWidth="80" sortable="false"/>
+            <TableColumn text="State" fx:id="stateColumn" minWidth="80" sortable="false"/>
         </columns>
     </TableView>
 

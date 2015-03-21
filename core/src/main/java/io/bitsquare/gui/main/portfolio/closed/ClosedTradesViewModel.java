@@ -65,4 +65,24 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
         return formatter.formatDateTime(item.getTrade().getDate());
     }
 
+    String getState(ClosedTradesListItem item) {
+        if (item != null && item.getTrade() != null) {
+            switch (item.getTrade().getLifeCycleState()) {
+                case CANCELED:
+                    return "Canceled";
+                case COMPLETED:
+                    return "Completed";
+                case FAILED:
+                    return "Failed";
+                case OPEN_OFFER:
+                case PENDING:
+                    throw new RuntimeException("Wrong state: " + item.getTrade().getLifeCycleState());
+            }
+            return "Undefined";
+        }
+        else {
+            return "";
+        }
+    }
+
 }

@@ -44,8 +44,8 @@ class OffersViewModel extends ActivatableWithDataModel<OffersDataModel> implemen
     }
 
 
-    void removeOpenOffer(Offer offer) {
-        dataModel.removeOpenOffer(offer,
+    void cancelOpenOffer(Offer offer) {
+        dataModel.cancelOpenOffer(offer,
                 () -> {
                     // visual feedback?
                     log.debug("Remove offer was successful");

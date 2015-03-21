@@ -27,8 +27,10 @@ import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 
+import java.util.stream.Collectors;
+
 import javafx.collections.FXCollections;
-import javafx.collections.MapChangeListener;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 class ClosedTradesDataModel implements Activatable, DataModel {
@@ -37,36 +39,25 @@ class ClosedTradesDataModel implements Activatable, DataModel {
     private final User user;
 
     private final ObservableList<ClosedTradesListItem> list = FXCollections.observableArrayList();
-    private final MapChangeListener<String, Trade> mapChangeListener;
-
+    private final ListChangeListener<Trade> tradesListChangeListener;
 
     @Inject
     public ClosedTradesDataModel(TradeManager tradeManager, User user) {
         this.tradeManager = tradeManager;
         this.user = user;
 
-        this.mapChangeListener = change -> {
-            if (change.wasAdded())
-                list.add(new ClosedTradesListItem(change.getValueAdded()));
-            else if (change.wasRemoved())
-                list.removeIf(e -> e.getTrade().getId().equals(change.getValueRemoved().getId()));
-        };
+        tradesListChangeListener = change -> applyList();
     }
 
     @Override
     public void activate() {
-        list.clear();
-        tradeManager.getClosedTrades().values().stream()
-                .forEach(e -> list.add(new ClosedTradesListItem(e)));
-        tradeManager.getClosedTrades().addListener(mapChangeListener);
-
-        // We sort by date, earliest first
-        list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
+        applyList();
+        tradeManager.getClosedTrades().addListener(tradesListChangeListener);
     }
 
     @Override
     public void deactivate() {
-        tradeManager.getClosedTrades().removeListener(mapChangeListener);
+        tradeManager.getClosedTrades().removeListener(tradesListChangeListener);
     }
 
     public ObservableList<ClosedTradesListItem> getList() {
@@ -76,6 +67,15 @@ class ClosedTradesDataModel implements Activatable, DataModel {
     public Direction getDirection(Offer offer) {
         return offer.getP2PSigPubKey().equals(user.getP2PSigPubKey()) ?
                 offer.getDirection() : offer.getMirroredDirection();
+    }
+
+    private void applyList() {
+        list.clear();
+
+        list.addAll(tradeManager.getClosedTrades().stream().map(ClosedTradesListItem::new).collect(Collectors.toList()));
+
+        // we sort by date, earliest first
+        list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
     }
 
 }

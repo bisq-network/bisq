@@ -32,7 +32,7 @@ import com.google.inject.Inject;
 import java.util.stream.Collectors;
 
 import javafx.collections.FXCollections;
-import javafx.collections.MapChangeListener;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 import org.slf4j.Logger;
@@ -45,40 +45,29 @@ class OffersDataModel implements Activatable, DataModel {
     private final User user;
 
     private final ObservableList<OfferListItem> list = FXCollections.observableArrayList();
-    private final MapChangeListener<String, Trade> offerMapChangeListener;
-
+    private final ListChangeListener<Trade> tradesListChangeListener;
 
     @Inject
     public OffersDataModel(TradeManager tradeManager, User user) {
         this.tradeManager = tradeManager;
         this.user = user;
 
-        this.offerMapChangeListener = change -> {
-            if (change.wasAdded())
-                list.add(new OfferListItem(change.getValueAdded()));
-            else if (change.wasRemoved())
-                list.removeIf(e -> e.getOffer().getId().equals(change.getValueRemoved().getId()));
-        };
+        tradesListChangeListener = change -> applyList();
     }
 
     @Override
     public void activate() {
-        list.clear();
-        list.addAll(tradeManager.getOpenOfferTrades().values().stream().map(OfferListItem::new).collect(Collectors.toList()));
-
-        // we sort by date, earliest first
-        list.sort((o1, o2) -> o2.getOffer().getCreationDate().compareTo(o1.getOffer().getCreationDate()));
-
-        tradeManager.getOpenOfferTrades().addListener(offerMapChangeListener);
+        applyList();
+        tradeManager.getOpenOfferTrades().addListener(tradesListChangeListener);
     }
 
     @Override
     public void deactivate() {
-        tradeManager.getOpenOfferTrades().removeListener(offerMapChangeListener);
+        tradeManager.getOpenOfferTrades().removeListener(tradesListChangeListener);
     }
 
-    void removeOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        tradeManager.removeOpenOffer(offer, resultHandler, errorMessageHandler);
+    void cancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        tradeManager.cancelOpenOffer(offer, resultHandler, errorMessageHandler);
     }
 
 
@@ -89,5 +78,14 @@ class OffersDataModel implements Activatable, DataModel {
     public Direction getDirection(Offer offer) {
         return offer.getP2PSigPubKey().equals(user.getP2PSigPubKey()) ?
                 offer.getDirection() : offer.getMirroredDirection();
+    }
+
+    private void applyList() {
+        list.clear();
+
+        list.addAll(tradeManager.getOpenOfferTrades().stream().map(OfferListItem::new).collect(Collectors.toList()));
+
+        // we sort by date, earliest first
+        list.sort((o1, o2) -> o2.getOffer().getCreationDate().compareTo(o1.getOffer().getCreationDate()));
     }
 }

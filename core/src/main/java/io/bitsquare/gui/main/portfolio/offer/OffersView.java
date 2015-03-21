@@ -63,8 +63,8 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
         table.setItems(model.getList());
     }
 
-    private void removeOpenOffer(Offer offer) {
-        model.removeOpenOffer(offer);
+    private void cancelOpenOffer(Offer offer) {
+        model.cancelOpenOffer(offer);
     }
 
     private void openOfferDetails(OfferListItem item) {
@@ -233,7 +233,7 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
                                 super.updateItem(item, empty);
 
                                 if (item != null) {
-                                    button.setOnAction(event -> removeOpenOffer(item.getOffer()));
+                                    button.setOnAction(event -> cancelOpenOffer(item.getOffer()));
                                     setGraphic(button);
                                 }
                                 else {

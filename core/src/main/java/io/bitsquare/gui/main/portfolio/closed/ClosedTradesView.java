@@ -34,7 +34,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<GridPane, ClosedTr
 
     @FXML TableView<ClosedTradesListItem> table;
     @FXML TableColumn<ClosedTradesListItem, ClosedTradesListItem> priceColumn, amountColumn, volumeColumn,
-            directionColumn, dateColumn, tradeIdColumn;
+            directionColumn, dateColumn, tradeIdColumn, stateColumn;
 
     @Inject
     public ClosedTradesView(ClosedTradesViewModel model) {
@@ -49,6 +49,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<GridPane, ClosedTr
         setPriceColumnCellFactory();
         setVolumeColumnCellFactory();
         setDateColumnCellFactory();
+        setStateColumnCellFactory();
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPlaceholder(new Label("No closed trades available"));
@@ -113,6 +114,28 @@ public class ClosedTradesView extends ActivatableViewAndModel<GridPane, ClosedTr
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(model.getDate(item));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setStateColumnCellFactory() {
+        stateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        stateColumn.setCellFactory(
+                new Callback<TableColumn<ClosedTradesListItem, ClosedTradesListItem>, TableCell<ClosedTradesListItem,
+                        ClosedTradesListItem>>() {
+                    @Override
+                    public TableCell<ClosedTradesListItem, ClosedTradesListItem> call(
+                            TableColumn<ClosedTradesListItem, ClosedTradesListItem> column) {
+                        return new TableCell<ClosedTradesListItem, ClosedTradesListItem>() {
+                            @Override
+                            public void updateItem(final ClosedTradesListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(model.getState(item));
                                 else
                                     setText("");
                             }
