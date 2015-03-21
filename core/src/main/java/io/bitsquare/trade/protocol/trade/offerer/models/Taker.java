@@ -17,12 +17,12 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.models;
 
-import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.fiat.FiatAccount;
+import io.bitsquare.p2p.Peer;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
-import org.bitcoinj.crypto.DeterministicKey;
 
 import java.io.Serializable;
 
@@ -30,22 +30,20 @@ import java.security.PublicKey;
 
 import java.util.List;
 
-public class OffererModel implements Serializable {
-    private static final long serialVersionUID = -1845177552607819927L;
-
-    // Those fields are set at constructor but not declared as final because constructor is not called in case model gets created from a persisted model
-    // Declared transient as they will be provided in any case at construction time
-    transient public FiatAccount fiatAccount;
-    transient public String accountId;
-    transient public PublicKey p2pSigPubKey;
-    transient public byte[] registrationPubKey;
-    transient public DeterministicKey registrationKeyPair;
-    transient public AddressEntry addressEntry;
-    transient public byte[] pubKey;
+public class Taker implements Serializable {
+    private static final long serialVersionUID = 2660909397210346486L;
 
     // written by tasks
-    public byte[] payoutTxSignature;
+    public Peer peer;
+    public String accountId;
+    public FiatAccount fiatAccount;
+    public PublicKey p2pSigPublicKey;
+    public PublicKey p2pEncryptPubKey;
+    public String contractAsJson;//TODO only write access now, missing impl.
+    public String contractSignature;
     public Coin payoutAmount;
+    public Transaction preparedDepositTx;
     public List<TransactionOutput> connectedOutputsForAllInputs;
-    public List<TransactionOutput> outputs; // used to verify amounts with change outputs
+    public String payoutAddressString;
+    public byte[] pubKey;
 }

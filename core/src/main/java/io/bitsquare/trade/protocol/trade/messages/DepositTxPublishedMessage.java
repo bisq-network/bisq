@@ -17,11 +17,13 @@
 
 package io.bitsquare.trade.protocol.trade.messages;
 
+import io.bitsquare.p2p.MailboxMessage;
+
 import org.bitcoinj.core.Transaction;
 
 import java.io.Serializable;
 
-public class DepositTxPublishedMessage extends TradeMessage implements Serializable {
+public class DepositTxPublishedMessage extends TradeMessage implements MailboxMessage, Serializable {
     private static final long serialVersionUID = -1532231540167406581L;
 
     public final Transaction depositTx;

@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.protocol.trade.messages.RequestOffererPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
+import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +28,10 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.*;
 import static io.bitsquare.util.Validator.*;
 
-public class ProcessRequestOffererPublishDepositTxMessage extends Task<BuyerAsOffererModel> {
+public class ProcessRequestOffererPublishDepositTxMessage extends Task<OffererAsBuyerModel> {
     private static final Logger log = LoggerFactory.getLogger(ProcessRequestOffererPublishDepositTxMessage.class);
 
-    public ProcessRequestOffererPublishDepositTxMessage(TaskRunner taskHandler, BuyerAsOffererModel model) {
+    public ProcessRequestOffererPublishDepositTxMessage(TaskRunner taskHandler, OffererAsBuyerModel model) {
         super(taskHandler, model);
     }
 

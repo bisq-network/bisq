@@ -21,17 +21,17 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
+import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 
 import org.bitcoinj.core.Coin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CreateOffererDepositTxInputs extends Task<BuyerAsOffererModel> {
+public class CreateOffererDepositTxInputs extends Task<OffererAsBuyerModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateOffererDepositTxInputs.class);
 
-    public CreateOffererDepositTxInputs(TaskRunner taskHandler, BuyerAsOffererModel model) {
+    public CreateOffererDepositTxInputs(TaskRunner taskHandler, OffererAsBuyerModel model) {
         super(taskHandler, model);
     }
 

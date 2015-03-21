@@ -17,38 +17,31 @@
 
 package io.bitsquare.trade.protocol.trade.taker.models;
 
-import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.fiat.FiatAccount;
+import io.bitsquare.p2p.Peer;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
-import org.bitcoinj.crypto.DeterministicKey;
 
 import java.io.Serializable;
 
-import java.security.PublicKey;
-
 import java.util.List;
 
-public class TakerModel implements Serializable {
-    private static long serialVersionUID = -4041809885931756860L;
+public class Offerer implements Serializable {
+    private static final long serialVersionUID = 1582902150121576205L;
 
     // Those fields are set at constructor but not declared as final because constructor is not called in case model gets created from a persisted model
     // Declared transient as they will be provided in any case at construction time
-    transient public FiatAccount fiatAccount;
-    transient public String accountId;
-    transient public PublicKey p2pSigPubKey;
-    transient public PublicKey p2pEncryptPublicKey;
-    transient public byte[] registrationPubKey; // TODO not read yet, missing impl.
-    transient public DeterministicKey registrationKeyPair;
-    transient public AddressEntry addressEntry;
-    transient public byte[] pubKey;
+    public Peer peer;
 
     // written by tasks
+    public byte[] pubKey;
+    public Coin payoutAmount;
+    public String payoutAddressString;
     public List<TransactionOutput> connectedOutputsForAllInputs;
     public List<TransactionOutput> outputs;
-    public Coin payoutAmount;
-    public Transaction preparedDepositTx;
+    public byte[] signature;
+    public FiatAccount fiatAccount;
+    public String accountId;
 
 }

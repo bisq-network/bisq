@@ -45,10 +45,10 @@ import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailable
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererProtocol;
-import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
-import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerProtocol;
-import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
+import io.bitsquare.trade.protocol.trade.offerer.OffererAsBuyerProtocol;
+import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
+import io.bitsquare.trade.protocol.trade.taker.TakerAsSellerProtocol;
+import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
 
@@ -86,8 +86,8 @@ public class TradeManager {
     private EncryptionService<MailboxMessage> encryptionService;
     private final OfferBookService offerBookService;
 
-    private final Map<String, SellerAsTakerProtocol> sellerAsTakerProtocolMap = new HashMap<>();
-    private final Map<String, BuyerAsOffererProtocol> buyerAcceptsOfferProtocolMap = new HashMap<>();
+    private final Map<String, TakerAsSellerProtocol> takerAsSellerProtocolMap = new HashMap<>();
+    private final Map<String, OffererAsBuyerProtocol> offererAsBuyerProtocolMap = new HashMap<>();
     private final Map<String, CheckOfferAvailabilityProtocol> checkOfferAvailabilityProtocolMap = new HashMap<>();
 
     private final ObservableMap<String, Offer> openOffers = FXCollections.observableHashMap();
@@ -144,7 +144,7 @@ public class TradeManager {
     // BuyerAcceptsOfferProtocol listens for take offer requests, so we need to instantiate it early.
     public void onAllServicesInitialized() {
         for (Map.Entry<String, Offer> entry : openOffers.entrySet()) {
-            createBuyerAcceptsOfferProtocol(entry.getValue());
+            createOffererAsBuyerProtocol(entry.getValue());
         }
         for (Map.Entry<String, Trade> entry : pendingTrades.entrySet()) {
             Trade trade = entry.getValue();
@@ -154,7 +154,7 @@ public class TradeManager {
             else {
                 Offer offer = trade.getOffer();
                 if (isMyOffer(offer)) {
-                    createBuyerAcceptsOfferProtocol(offer);
+                    createOffererAsBuyerProtocol(offer);
                 }
                 else {
                     CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(offer, messageService, addressService);
@@ -163,7 +163,7 @@ public class TradeManager {
                                 disposeCheckOfferAvailabilityRequest(offer);
                                 // TODO need to check that trade hijacking is not possible (taking trades form other peers)
                                 if (offer.getState() == Offer.State.AVAILABLE || offer.getState() == Offer.State.RESERVED) {
-                                    createSellerAsTakerProtocol(trade, model.getPeer());
+                                    createTakerAsSellerProtocol(trade, model.getPeer());
                                 }
                             },
                             (errorMessage) -> disposeCheckOfferAvailabilityRequest(offer));
@@ -174,8 +174,8 @@ public class TradeManager {
         }
 
         mailboxService.getAllMessages(user.getP2PSigPubKey(),
-                (messages) -> {
-                    decryptMailboxMessages(messages);
+                (encryptedMailboxMessages) -> {
+                    decryptMailboxMessages(encryptedMailboxMessages);
                     emptyMailbox();
                 });
 
@@ -222,7 +222,7 @@ public class TradeManager {
                 (transaction) -> {
                     openOffers.put(offer.getId(), offer);
                     persistOpenOffers();
-                    createBuyerAcceptsOfferProtocol(offer);
+                    createOffererAsBuyerProtocol(offer);
                     resultHandler.handleResult(transaction);
                 },
                 (message) -> errorMessageHandler.handleErrorMessage(message)
@@ -286,14 +286,14 @@ public class TradeManager {
 
     public void onFiatPaymentStarted(String tradeId) {
         // TODO remove if check when persistence is impl.
-        if (buyerAcceptsOfferProtocolMap.containsKey(tradeId)) {
-            buyerAcceptsOfferProtocolMap.get(tradeId).onFiatPaymentStarted();
+        if (offererAsBuyerProtocolMap.containsKey(tradeId)) {
+            offererAsBuyerProtocolMap.get(tradeId).onFiatPaymentStarted();
             persistPendingTrades();
         }
     }
 
     public void onFiatPaymentReceived(String tradeId) {
-        sellerAsTakerProtocolMap.get(tradeId).onFiatPaymentReceived();
+        takerAsSellerProtocolMap.get(tradeId).onFiatPaymentReceived();
     }
 
     public void onWithdrawAtTradeCompleted(Trade trade) {
@@ -377,9 +377,9 @@ public class TradeManager {
                         openOffers.remove(offerId);
                         disposeCheckOfferAvailabilityRequest(offer);
                         persistOpenOffers();
-                        if (removeFromBuyerAcceptsOfferProtocolMap && buyerAcceptsOfferProtocolMap.containsKey(offerId)) {
-                            buyerAcceptsOfferProtocolMap.get(offerId).cleanup();
-                            buyerAcceptsOfferProtocolMap.remove(offerId);
+                        if (removeFromBuyerAcceptsOfferProtocolMap && offererAsBuyerProtocolMap.containsKey(offerId)) {
+                            offererAsBuyerProtocolMap.get(offerId).cleanup();
+                            offererAsBuyerProtocolMap.remove(offerId);
                         }
 
                         resultHandler.handleResult();
@@ -415,7 +415,7 @@ public class TradeManager {
         Trade trade = createTrade(offer);
         trade.setTradeAmount(amount);
 
-        SellerAsTakerProtocol sellerTakesOfferProtocol = createSellerAsTakerProtocol(trade, peer);
+        TakerAsSellerProtocol sellerTakesOfferProtocol = createTakerAsSellerProtocol(trade, peer);
         sellerTakesOfferProtocol.takeAvailableOffer();
         return trade;
     }
@@ -433,7 +433,7 @@ public class TradeManager {
         return trade;
     }
 
-    private SellerAsTakerProtocol createSellerAsTakerProtocol(Trade trade, Peer peer) {
+    private TakerAsSellerProtocol createTakerAsSellerProtocol(Trade trade, Peer peer) {
         trade.stateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("trade state = " + newValue);
             switch (newValue) {
@@ -457,7 +457,7 @@ public class TradeManager {
             }
         });
 
-        SellerAsTakerModel model = new SellerAsTakerModel(
+        TakerAsSellerModel model = new TakerAsSellerModel(
                 trade,
                 peer,
                 messageService,
@@ -468,17 +468,17 @@ public class TradeManager {
                 user,
                 persistence);
 
-        SellerAsTakerProtocol sellerTakesOfferProtocol = new SellerAsTakerProtocol(model);
-        sellerAsTakerProtocolMap.put(trade.getId(), sellerTakesOfferProtocol);
+        TakerAsSellerProtocol protocol = new TakerAsSellerProtocol(model);
+        takerAsSellerProtocolMap.put(trade.getId(), protocol);
 
         if (mailboxMessages.containsKey(trade.getId()))
-            sellerTakesOfferProtocol.setMailboxMessage(mailboxMessages.get(trade.getId()));
+            protocol.setMailboxMessage(mailboxMessages.get(trade.getId()));
 
-        return sellerTakesOfferProtocol;
+        return protocol;
     }
 
 
-    private void createBuyerAcceptsOfferProtocol(Offer offer) {
+    private void createOffererAsBuyerProtocol(Offer offer) {
         Trade trade;
         if (pendingTrades.containsKey(offer.getId())) {
             trade = pendingTrades.get(offer.getId());
@@ -489,7 +489,7 @@ public class TradeManager {
             // don't save it in pendingTrades. It is only a potential trade
         }
 
-        BuyerAsOffererModel model = new BuyerAsOffererModel(
+        OffererAsBuyerModel model = new OffererAsBuyerModel(
                 trade,
                 messageService,
                 mailboxService,
@@ -531,7 +531,7 @@ public class TradeManager {
                 case MESSAGE_SENDING_FAILED:
                 case FAULT:
                     closeTrade(trade);
-                    buyerAcceptsOfferProtocolMap.get(trade.getId()).cleanup();
+                    offererAsBuyerProtocolMap.get(trade.getId()).cleanup();
                     break;
                 default:
                     log.warn("Unhandled trade state: " + newValue);
@@ -539,8 +539,11 @@ public class TradeManager {
             }
         });
 
-        BuyerAsOffererProtocol buyerAcceptsOfferProtocol = new BuyerAsOffererProtocol(model);
-        buyerAcceptsOfferProtocolMap.put(offer.getId(), buyerAcceptsOfferProtocol);
+        OffererAsBuyerProtocol protocol = new OffererAsBuyerProtocol(model);
+        offererAsBuyerProtocolMap.put(offer.getId(), protocol);
+        if (mailboxMessages.containsKey(trade.getId()))
+            protocol.setMailboxMessage(mailboxMessages.get(trade.getId()));
+
     }
 
     private void closeTrade(Trade trade) {
@@ -549,13 +552,13 @@ public class TradeManager {
             persistPendingTrades();
         }
 
-        if (sellerAsTakerProtocolMap.containsKey(trade.getId())) {
-            sellerAsTakerProtocolMap.get(trade.getId()).cleanup();
-            sellerAsTakerProtocolMap.remove(trade.getId());
+        if (takerAsSellerProtocolMap.containsKey(trade.getId())) {
+            takerAsSellerProtocolMap.get(trade.getId()).cleanup();
+            takerAsSellerProtocolMap.remove(trade.getId());
         }
-        else if (buyerAcceptsOfferProtocolMap.containsKey(trade.getId())) {
-            buyerAcceptsOfferProtocolMap.get(trade.getId()).cleanup();
-            buyerAcceptsOfferProtocolMap.remove(trade.getId());
+        else if (offererAsBuyerProtocolMap.containsKey(trade.getId())) {
+            offererAsBuyerProtocolMap.get(trade.getId()).cleanup();
+            offererAsBuyerProtocolMap.remove(trade.getId());
         }
 
         if (!closedTrades.containsKey(trade.getId())) {
@@ -572,21 +575,25 @@ public class TradeManager {
     private void decryptMailboxMessages(List<EncryptedMailboxMessage> encryptedMailboxMessages) {
         log.trace("applyMailboxMessage encryptedMailboxMessage.size=" + encryptedMailboxMessages.size());
         for (EncryptedMailboxMessage encrypted : encryptedMailboxMessages) {
-            MailboxMessage mailboxMessage = null;
             try {
-                mailboxMessage = encryptionService.decryptToObject(user.getP2pEncryptPrivateKey(), encrypted.getEncryptionPackage());
+                MailboxMessage mailboxMessage = encryptionService.decryptToObject(user.getP2pEncryptPrivateKey(), encrypted.getEncryptionPackage());
+
+                if (mailboxMessage instanceof TradeMessage) {
+                    String tradeId = ((TradeMessage) mailboxMessage).tradeId;
+                    mailboxMessages.put(tradeId, mailboxMessage);
+                    log.trace("mailboxMessage with tradeID " + tradeId);
+                    if (takerAsSellerProtocolMap.containsKey(tradeId)) {
+                        takerAsSellerProtocolMap.get(tradeId).setMailboxMessage(encrypted);
+                        log.trace("sellerAsTakerProtocolMap exist with tradeID " + tradeId);
+                    }
+                    if (offererAsBuyerProtocolMap.containsKey(tradeId)) {
+                        offererAsBuyerProtocolMap.get(tradeId).setMailboxMessage(encrypted);
+                        log.trace("buyerAcceptsOfferProtocolMap exist with tradeID " + tradeId);
+                    }
+                }
             } catch (Throwable e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
-            }
-            if (mailboxMessage instanceof TradeMessage) {
-                String tradeId = ((TradeMessage) mailboxMessage).tradeId;
-                mailboxMessages.put(tradeId, mailboxMessage);
-                log.trace("mailboxMessage with tradeID " + tradeId);
-                if (sellerAsTakerProtocolMap.containsKey(tradeId)) {
-                    sellerAsTakerProtocolMap.get(tradeId).setMailboxMessage(encrypted);
-                    log.trace("sellerAsTakerProtocolMap exist with tradeID " + tradeId);
-                }
             }
         }
     }

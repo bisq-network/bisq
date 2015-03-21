@@ -22,18 +22,17 @@ import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
-import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.messages.RequestDepositPaymentMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestTakerDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
+import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 import io.bitsquare.trade.protocol.trade.taker.tasks.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessFiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRequestDepositPaymentMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRequestTakerDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendPayoutTxToOfferer;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendRequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendSignedTakerDepositTx;
@@ -53,11 +52,11 @@ import org.slf4j.LoggerFactory;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
-public class SellerAsTakerProtocol {
-    private static final Logger log = LoggerFactory.getLogger(SellerAsTakerProtocol.class);
+public class TakerAsSellerProtocol {
+    private static final Logger log = LoggerFactory.getLogger(TakerAsSellerProtocol.class);
     private static final int TIMEOUT_DELAY = 10000;
 
-    private final SellerAsTakerModel model;
+    private final TakerAsSellerModel model;
     private final MessageHandler messageHandler;
     private AnimationTimer timeoutTimer;
 
@@ -66,7 +65,7 @@ public class SellerAsTakerProtocol {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SellerAsTakerProtocol(SellerAsTakerModel model) {
+    public TakerAsSellerProtocol(TakerAsSellerModel model) {
         log.debug("New SellerAsTakerProtocol " + this);
         this.model = model;
         messageHandler = this::handleMessage;
@@ -93,11 +92,14 @@ public class SellerAsTakerProtocol {
             if (mailboxMessage instanceof FiatTransferStartedMessage) {
                 handleFiatTransferStartedMessage((FiatTransferStartedMessage) mailboxMessage);
             }
+            else if (mailboxMessage instanceof DepositTxPublishedMessage) {
+                handleDepositTxPublishedMessage((DepositTxPublishedMessage) mailboxMessage);
+            }
         }
     }
 
     public void takeAvailableOffer() {
-        TaskRunner<SellerAsTakerModel> taskRunner = new TaskRunner<>(model,
+        TaskRunner<TakerAsSellerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("taskRunner at takeAvailableOffer completed");
                 },
@@ -118,10 +120,10 @@ public class SellerAsTakerProtocol {
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handleRequestDepositPaymentMessage(RequestDepositPaymentMessage tradeMessage) {
+    private void handleRequestTakerDepositPaymentMessage(RequestTakerDepositPaymentMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        TaskRunner<SellerAsTakerModel> taskRunner = new TaskRunner<>(model,
+        TaskRunner<TakerAsSellerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("taskRunner at handleTakerDepositPaymentRequestMessage completed");
                 },
@@ -130,7 +132,7 @@ public class SellerAsTakerProtocol {
                 }
         );
         taskRunner.addTasks(
-                ProcessRequestDepositPaymentMessage.class,
+                ProcessRequestTakerDepositPaymentMessage.class,
                 VerifyOffererAccount.class,
                 CreateAndSignContract.class,
                 TakerCreatesAndSignsDepositTx.class,
@@ -142,7 +144,7 @@ public class SellerAsTakerProtocol {
     private void handleDepositTxPublishedMessage(DepositTxPublishedMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        TaskRunner<SellerAsTakerModel> taskRunner = new TaskRunner<>(model,
+        TaskRunner<TakerAsSellerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("taskRunner at handleDepositTxPublishedMessage completed");
                 },
@@ -160,10 +162,9 @@ public class SellerAsTakerProtocol {
     private void handleFiatTransferStartedMessage(FiatTransferStartedMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        TaskRunner<SellerAsTakerModel> taskRunner = new TaskRunner<>(model,
+        TaskRunner<TakerAsSellerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("taskRunner at handleFiatTransferStartedMessage completed");
-                    model.trade.setState(Trade.State.FIAT_PAYMENT_STARTED);
                 },
                 (errorMessage) -> {
                     log.error(errorMessage);
@@ -173,13 +174,14 @@ public class SellerAsTakerProtocol {
         taskRunner.run();
     }
 
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Called from UI
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     public void onFiatPaymentReceived() {
-        TaskRunner<SellerAsTakerModel> taskRunner = new TaskRunner<>(model,
+        TaskRunner<TakerAsSellerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("taskRunner at handleFiatReceivedUIEvent completed");
 
@@ -209,8 +211,8 @@ public class SellerAsTakerProtocol {
             nonEmptyStringOf(tradeMessage.tradeId);
 
             if (tradeMessage.tradeId.equals(model.id)) {
-                if (tradeMessage instanceof RequestDepositPaymentMessage) {
-                    handleRequestDepositPaymentMessage((RequestDepositPaymentMessage) tradeMessage);
+                if (tradeMessage instanceof RequestTakerDepositPaymentMessage) {
+                    handleRequestTakerDepositPaymentMessage((RequestTakerDepositPaymentMessage) tradeMessage);
                 }
                 else if (tradeMessage instanceof DepositTxPublishedMessage) {
                     handleDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);

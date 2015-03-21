@@ -21,16 +21,16 @@ import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
+import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 import io.bitsquare.util.Utilities;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VerifyAndSignContract extends Task<BuyerAsOffererModel> {
+public class VerifyAndSignContract extends Task<OffererAsBuyerModel> {
     private static final Logger log = LoggerFactory.getLogger(VerifyAndSignContract.class);
 
-    public VerifyAndSignContract(TaskRunner taskHandler, BuyerAsOffererModel model) {
+    public VerifyAndSignContract(TaskRunner taskHandler, OffererAsBuyerModel model) {
         super(taskHandler, model);
     }
 

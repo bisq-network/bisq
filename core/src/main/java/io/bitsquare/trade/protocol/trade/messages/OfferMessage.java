@@ -21,7 +21,7 @@ import io.bitsquare.p2p.Message;
 
 import java.io.Serializable;
 
-public class OfferMessage implements Message, Serializable {
+public abstract class OfferMessage implements Message, Serializable {
     private static final long serialVersionUID = -89035992124170905L;
 
     public String offerId;

@@ -18,6 +18,7 @@
 package io.bitsquare.trade.protocol.trade.offerer;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
@@ -26,15 +27,15 @@ import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestOffererPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
+import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateAndSignPayoutTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateOffererDepositTxInputs;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestOffererPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.RequestDepositPayment;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.RequestTakerDepositPayment;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendBankTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.SendDepositTxIdToTaker;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.SendDepositTxToTaker;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SetupListenerForBlockChainConfirmation;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SignAndPublishDepositTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyAndSignContract;
@@ -50,10 +51,10 @@ import org.slf4j.LoggerFactory;
 
 import static io.bitsquare.util.Validator.*;
 
-public class BuyerAsOffererProtocol {
-    private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererProtocol.class);
+public class OffererAsBuyerProtocol {
+    private static final Logger log = LoggerFactory.getLogger(OffererAsBuyerProtocol.class);
 
-    private final BuyerAsOffererModel model;
+    private final OffererAsBuyerModel model;
     private final MessageHandler messageHandler;
 
     private TransactionConfidence.Listener transactionConfidenceListener;
@@ -63,7 +64,7 @@ public class BuyerAsOffererProtocol {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BuyerAsOffererProtocol(BuyerAsOffererModel model) {
+    public OffererAsBuyerProtocol(OffererAsBuyerModel model) {
         log.debug("New BuyerAsOffererProtocol " + this);
         this.model = model;
         messageHandler = this::handleMessage;
@@ -76,6 +77,17 @@ public class BuyerAsOffererProtocol {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void setMailboxMessage(MailboxMessage mailboxMessage) {
+        log.debug("setMailboxMessage " + mailboxMessage);
+        // Might be called twice, so check that its only processed once
+        if (model.mailboxMessage == null) {
+            model.mailboxMessage = mailboxMessage;
+            if (mailboxMessage instanceof PayoutTxPublishedMessage) {
+                handlePayoutTxPublishedMessage((PayoutTxPublishedMessage) mailboxMessage);
+            }
+        }
+    }
+    
     public void cleanup() {
         log.debug("cleanup " + this);
 
@@ -99,7 +111,7 @@ public class BuyerAsOffererProtocol {
         model.setTradeMessage(tradeMessage);
         model.taker.peer = taker;
 
-        TaskRunner<BuyerAsOffererModel> taskRunner = new TaskRunner<>(model,
+        TaskRunner<OffererAsBuyerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleTakeOfferFeePayedMessage completed");
                 },
@@ -110,7 +122,7 @@ public class BuyerAsOffererProtocol {
         taskRunner.addTasks(
                 ProcessRequestDepositTxInputsMessage.class,
                 CreateOffererDepositTxInputs.class,
-                RequestDepositPayment.class
+                RequestTakerDepositPayment.class
         );
         taskRunner.run();
     }
@@ -118,7 +130,7 @@ public class BuyerAsOffererProtocol {
     private void handleRequestOffererPublishDepositTxMessage(RequestOffererPublishDepositTxMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        TaskRunner<BuyerAsOffererModel> taskRunner = new TaskRunner<>(model,
+        TaskRunner<OffererAsBuyerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("taskRunner at handleRequestOffererPublishDepositTxMessage completed");
                     transactionConfidenceListener = (tx, reason) -> {
@@ -142,7 +154,7 @@ public class BuyerAsOffererProtocol {
                 VerifyAndSignContract.class,
                 SignAndPublishDepositTx.class,
                 SetupListenerForBlockChainConfirmation.class,
-                SendDepositTxIdToTaker.class
+                SendDepositTxToTaker.class
         );
         taskRunner.run();
     }
@@ -154,7 +166,7 @@ public class BuyerAsOffererProtocol {
 
     // User clicked the "bank transfer started" button
     public void onFiatPaymentStarted() {
-        TaskRunner<BuyerAsOffererModel> taskRunner = new TaskRunner<>(model,
+        TaskRunner<OffererAsBuyerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleBankTransferStartedUIEvent completed");
                 },
@@ -178,7 +190,7 @@ public class BuyerAsOffererProtocol {
     private void handlePayoutTxPublishedMessage(PayoutTxPublishedMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
-        TaskRunner<BuyerAsOffererModel> taskRunner = new TaskRunner<>(model,
+        TaskRunner<OffererAsBuyerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handlePayoutTxPublishedMessage completed");
 

@@ -21,7 +21,7 @@ import io.bitsquare.p2p.Message;
 
 import java.io.Serializable;
 
-public class TradeMessage implements Message, Serializable {
+public abstract class TradeMessage implements Message, Serializable {
     private static final long serialVersionUID = 7572470983485004081L;
 
     public String tradeId;

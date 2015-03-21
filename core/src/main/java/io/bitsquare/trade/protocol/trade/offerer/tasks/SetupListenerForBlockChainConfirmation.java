@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
+import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
@@ -30,13 +30,13 @@ import javafx.application.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SetupListenerForBlockChainConfirmation extends Task<BuyerAsOffererModel> {
+public class SetupListenerForBlockChainConfirmation extends Task<OffererAsBuyerModel> {
     private static final Logger log = LoggerFactory.getLogger(SetupListenerForBlockChainConfirmation.class);
 
     private TransactionConfidence.Listener transactionConfidenceListener;
     private TransactionConfidence transactionConfidence;
 
-    public SetupListenerForBlockChainConfirmation(TaskRunner taskHandler, BuyerAsOffererModel model) {
+    public SetupListenerForBlockChainConfirmation(TaskRunner taskHandler, OffererAsBuyerModel model) {
         super(taskHandler, model);
     }
 

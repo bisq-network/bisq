@@ -21,15 +21,15 @@ import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.protocol.trade.messages.RequestOffererPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
+import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendSignedTakerDepositTx extends Task<SellerAsTakerModel> {
+public class SendSignedTakerDepositTx extends Task<TakerAsSellerModel> {
     private static final Logger log = LoggerFactory.getLogger(SendSignedTakerDepositTx.class);
 
-    public SendSignedTakerDepositTx(TaskRunner taskHandler, SellerAsTakerModel model) {
+    public SendSignedTakerDepositTx(TaskRunner taskHandler, TakerAsSellerModel model) {
         super(taskHandler, model);
     }
 

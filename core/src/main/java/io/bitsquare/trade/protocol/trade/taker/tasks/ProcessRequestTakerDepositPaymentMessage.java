@@ -19,8 +19,8 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.protocol.trade.messages.RequestDepositPaymentMessage;
-import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
+import io.bitsquare.trade.protocol.trade.messages.RequestTakerDepositPaymentMessage;
+import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +28,10 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.*;
 import static io.bitsquare.util.Validator.*;
 
-public class ProcessRequestDepositPaymentMessage extends Task<SellerAsTakerModel> {
-    private static final Logger log = LoggerFactory.getLogger(ProcessRequestDepositPaymentMessage.class);
+public class ProcessRequestTakerDepositPaymentMessage extends Task<TakerAsSellerModel> {
+    private static final Logger log = LoggerFactory.getLogger(ProcessRequestTakerDepositPaymentMessage.class);
 
-    public ProcessRequestDepositPaymentMessage(TaskRunner taskHandler, SellerAsTakerModel model) {
+    public ProcessRequestTakerDepositPaymentMessage(TaskRunner taskHandler, TakerAsSellerModel model) {
         super(taskHandler, model);
     }
 
@@ -39,7 +39,7 @@ public class ProcessRequestDepositPaymentMessage extends Task<SellerAsTakerModel
     protected void doRun() {
         try {
             checkTradeId(model.id, model.getTradeMessage());
-            RequestDepositPaymentMessage message = (RequestDepositPaymentMessage) model.getTradeMessage();
+            RequestTakerDepositPaymentMessage message = (RequestTakerDepositPaymentMessage) model.getTradeMessage();
 
             model.offerer.connectedOutputsForAllInputs = checkNotNull(message.offererConnectedOutputsForAllInputs);
             checkArgument(message.offererConnectedOutputsForAllInputs.size() > 0);

@@ -20,33 +20,39 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
-import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
+import io.bitsquare.trade.protocol.trade.messages.RequestTakerDepositPaymentMessage;
+import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendDepositTxIdToTaker extends Task<BuyerAsOffererModel> {
-    private static final Logger log = LoggerFactory.getLogger(SendDepositTxIdToTaker.class);
+public class RequestTakerDepositPayment extends Task<OffererAsBuyerModel> {
+    private static final Logger log = LoggerFactory.getLogger(RequestTakerDepositPayment.class);
 
-    public SendDepositTxIdToTaker(TaskRunner taskHandler, BuyerAsOffererModel model) {
+    public RequestTakerDepositPayment(TaskRunner taskHandler, OffererAsBuyerModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void doRun() {
-        DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(model.id, model.trade.getDepositTx());
+        RequestTakerDepositPaymentMessage tradeMessage = new RequestTakerDepositPaymentMessage(
+                model.id,
+                model.offerer.connectedOutputsForAllInputs,
+                model.offerer.outputs,
+                model.offerer.pubKey,
+                model.offerer.fiatAccount,
+                model.offerer.accountId);
 
         model.messageService.sendMessage(model.taker.peer, tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
-                log.trace("DepositTxPublishedMessage successfully arrived at peer");
+                log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");
                 complete();
             }
 
             @Override
             public void handleFault() {
-                failed("Sending DepositTxPublishedMessage failed.");
+                failed();
             }
         });
     }

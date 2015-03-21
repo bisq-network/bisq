@@ -19,15 +19,15 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
+import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VerifyOffererAccount extends Task<SellerAsTakerModel> {
+public class VerifyOffererAccount extends Task<TakerAsSellerModel> {
     private static final Logger log = LoggerFactory.getLogger(VerifyOffererAccount.class);
 
-    public VerifyOffererAccount(TaskRunner taskHandler, SellerAsTakerModel model) {
+    public VerifyOffererAccount(TaskRunner taskHandler, TakerAsSellerModel model) {
         super(taskHandler, model);
     }
 

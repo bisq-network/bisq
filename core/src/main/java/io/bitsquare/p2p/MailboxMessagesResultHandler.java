@@ -20,5 +20,5 @@ package io.bitsquare.p2p;
 import java.util.List;
 
 public interface MailboxMessagesResultHandler {
-    void handleResult(List<EncryptedMailboxMessage> messages);
+    void handleResult(List<EncryptedMailboxMessage> encryptedMailboxMessages);
 }

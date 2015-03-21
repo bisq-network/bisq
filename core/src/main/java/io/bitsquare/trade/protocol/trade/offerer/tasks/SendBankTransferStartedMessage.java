@@ -22,15 +22,15 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
+import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendBankTransferStartedMessage extends Task<BuyerAsOffererModel> {
+public class SendBankTransferStartedMessage extends Task<OffererAsBuyerModel> {
     private static final Logger log = LoggerFactory.getLogger(SendBankTransferStartedMessage.class);
 
-    public SendBankTransferStartedMessage(TaskRunner taskHandler, BuyerAsOffererModel model) {
+    public SendBankTransferStartedMessage(TaskRunner taskHandler, OffererAsBuyerModel model) {
         super(taskHandler, model);
     }
 

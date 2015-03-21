@@ -19,8 +19,9 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
+import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +29,10 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.*;
 
-public class ProcessFiatTransferStartedMessage extends Task<SellerAsTakerModel> {
+public class ProcessFiatTransferStartedMessage extends Task<TakerAsSellerModel> {
     private static final Logger log = LoggerFactory.getLogger(ProcessFiatTransferStartedMessage.class);
 
-    public ProcessFiatTransferStartedMessage(TaskRunner taskHandler, SellerAsTakerModel model) {
+    public ProcessFiatTransferStartedMessage(TaskRunner taskHandler, TakerAsSellerModel model) {
         super(taskHandler, model);
     }
 
@@ -45,9 +46,11 @@ public class ProcessFiatTransferStartedMessage extends Task<SellerAsTakerModel> 
             model.offerer.payoutAmount = positiveCoinOf(nonZeroCoinOf(message.offererPayoutAmount));
             model.taker.payoutAmount = positiveCoinOf(nonZeroCoinOf(message.takerPayoutAmount));
             model.offerer.payoutAddressString = nonEmptyStringOf(message.offererPayoutAddress);
+            model.trade.setState(Trade.State.FIAT_PAYMENT_STARTED);
 
             complete();
         } catch (Throwable t) {
+            model.trade.setState(Trade.State.FAULT);
             failed(t);
         }
     }

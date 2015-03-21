@@ -22,17 +22,17 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
-import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
+import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
 import javafx.application.Platform;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendRequestDepositTxInputsMessage extends Task<SellerAsTakerModel> {
+public class SendRequestDepositTxInputsMessage extends Task<TakerAsSellerModel> {
     private static final Logger log = LoggerFactory.getLogger(SendRequestDepositTxInputsMessage.class);
 
-    public SendRequestDepositTxInputsMessage(TaskRunner taskHandler, SellerAsTakerModel model) {
+    public SendRequestDepositTxInputsMessage(TaskRunner taskHandler, TakerAsSellerModel model) {
         super(taskHandler, model);
     }
 

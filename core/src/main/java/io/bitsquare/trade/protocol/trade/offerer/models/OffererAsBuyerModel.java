@@ -32,18 +32,18 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BuyerAsOffererModel extends SharedTradeModel implements Serializable {
+public class OffererAsBuyerModel extends SharedTradeModel implements Serializable {
     private static final long serialVersionUID = 5000457153390911569L;
-    private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererModel.class);
+    private static final Logger log = LoggerFactory.getLogger(OffererAsBuyerModel.class);
 
     transient public final Trade trade;
-    public final TakerModel taker;
-    public final OffererModel offerer;
+    public final Taker taker;
+    public final Offerer offerer;
 
     // written by tasks
     private String takeOfferFeeTxId;
 
-    public BuyerAsOffererModel(Trade trade,
+    public OffererAsBuyerModel(Trade trade,
                                MessageService messageService,
                                MailboxService mailboxService,
                                WalletService walletService,
@@ -62,8 +62,8 @@ public class BuyerAsOffererModel extends SharedTradeModel implements Serializabl
         this.trade = trade;
 
         Serializable serializable = persistence.read(this, "BuyerAsOffererModel_" + id);
-        if (serializable instanceof BuyerAsOffererModel) {
-            BuyerAsOffererModel persistedModel = (BuyerAsOffererModel) serializable;
+        if (serializable instanceof OffererAsBuyerModel) {
+            OffererAsBuyerModel persistedModel = (OffererAsBuyerModel) serializable;
             log.debug("Model reconstructed form persisted model.");
 
             setTakeOfferFeeTxId(persistedModel.takeOfferFeeTxId);
@@ -72,8 +72,8 @@ public class BuyerAsOffererModel extends SharedTradeModel implements Serializabl
             offerer = persistedModel.offerer;
         }
         else {
-            taker = new TakerModel();
-            offerer = new OffererModel();
+            taker = new Taker();
+            offerer = new Offerer();
         }
 
         offerer.registrationPubKey = walletService.getRegistrationAddressEntry().getPubKey();

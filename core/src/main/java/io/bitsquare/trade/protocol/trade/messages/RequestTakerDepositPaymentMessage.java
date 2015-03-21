@@ -25,7 +25,7 @@ import java.io.Serializable;
 
 import java.util.List;
 
-public class RequestDepositPaymentMessage extends TradeMessage implements Serializable {
+public class RequestTakerDepositPaymentMessage extends TradeMessage implements Serializable {
     private static final long serialVersionUID = -3988720410493712913L;
 
     public final List<TransactionOutput> offererConnectedOutputsForAllInputs;
@@ -34,12 +34,12 @@ public class RequestDepositPaymentMessage extends TradeMessage implements Serial
     public final FiatAccount offererFiatAccount;
     public final String offererAccountId;
 
-    public RequestDepositPaymentMessage(String tradeId,
-                                        List<TransactionOutput> offererConnectedOutputsForAllInputs,
-                                        List<TransactionOutput> offererOutputs,
-                                        byte[] offererPubKey,
-                                        FiatAccount offererFiatAccount,
-                                        String offererAccountId) {
+    public RequestTakerDepositPaymentMessage(String tradeId,
+                                             List<TransactionOutput> offererConnectedOutputsForAllInputs,
+                                             List<TransactionOutput> offererOutputs,
+                                             byte[] offererPubKey,
+                                             FiatAccount offererFiatAccount,
+                                             String offererAccountId) {
         this.tradeId = tradeId;
         this.offererConnectedOutputsForAllInputs = offererConnectedOutputsForAllInputs;
         this.offererOutputs = offererOutputs;

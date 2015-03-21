@@ -35,19 +35,19 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SellerAsTakerModel extends SharedTradeModel implements Serializable {
+public class TakerAsSellerModel extends SharedTradeModel implements Serializable {
     private static final long serialVersionUID = -963501132927618376L;
-    private static final Logger log = LoggerFactory.getLogger(SellerAsTakerModel.class);
+    private static final Logger log = LoggerFactory.getLogger(TakerAsSellerModel.class);
 
     public final Trade trade;
-    public final TakerModel taker;
-    public final OffererModel offerer;
+    public final Taker taker;
+    public final Offerer offerer;
 
     // written by tasks
     private Transaction takeOfferFeeTx;
     private Transaction payoutTx;
 
-    public SellerAsTakerModel(Trade trade,
+    public TakerAsSellerModel(Trade trade,
                               Peer offererPeer,
                               MessageService messageService,
                               MailboxService mailboxService,
@@ -67,8 +67,8 @@ public class SellerAsTakerModel extends SharedTradeModel implements Serializable
         this.trade = trade;
 
         Serializable serializable = persistence.read(this, "SellerAsTakerModel_" + id);
-        if (serializable instanceof SellerAsTakerModel) {
-            SellerAsTakerModel persistedModel = (SellerAsTakerModel) serializable;
+        if (serializable instanceof TakerAsSellerModel) {
+            TakerAsSellerModel persistedModel = (TakerAsSellerModel) serializable;
             log.debug("Model reconstructed form persisted model.");
 
             setTakeOfferFeeTx(persistedModel.getTakeOfferFeeTx());
@@ -78,8 +78,8 @@ public class SellerAsTakerModel extends SharedTradeModel implements Serializable
             offerer = persistedModel.offerer;
         }
         else {
-            taker = new TakerModel();
-            offerer = new OffererModel();
+            taker = new Taker();
+            offerer = new Offerer();
         }
 
         offerer.peer = offererPeer;
