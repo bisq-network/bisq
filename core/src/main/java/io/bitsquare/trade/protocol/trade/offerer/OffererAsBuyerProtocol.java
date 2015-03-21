@@ -22,6 +22,10 @@ import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
+import io.bitsquare.p2p.listener.SendMessageListener;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
+import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestOffererPublishDepositTxMessage;
@@ -96,13 +100,42 @@ public class OffererAsBuyerProtocol {
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // OpenOffer requests
+    private void handleRequestIsOfferAvailableMessage(RequestIsOfferAvailableMessage tradeMessage, Peer sender) {
+        try {
+            checkTradeId(model.id, tradeMessage);
+
+            // We don't store anything in the model as we might be in a trade process and receive that request from another peer who wants to take the offer
+            // at the same time
+            boolean isOfferOpen = model.trade.getLifeCycleState() == Trade.LifeCycleState.OPEN_OFFER;
+            ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(model.id, isOfferOpen);
+            model.messageService.sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
+                @Override
+                public void handleResult() {
+                    // Offerer does not do anything at that moment. Peer might only watch the offer and does not start a trade.
+                    log.trace("ReportOfferAvailabilityMessage successfully arrived at peer");
+                }
+
+                @Override
+                public void handleFault() {
+                    log.warn("Sending ReportOfferAvailabilityMessage failed.");
+                }
+            });
+        } catch (Throwable t) {
+            // We don't handle the error as we might be in a trade process with another trader
+            t.printStackTrace();
+            log.warn("Exception at handleRequestIsOfferAvailableMessage " + t.getMessage());
+        }
+    }
+
+    // Trade started
     private void handleRequestDepositTxInputsMessage(RequestDepositTxInputsMessage tradeMessage, Peer taker) {
         checkTradeId(model.id, tradeMessage);
         model.setTradeMessage(tradeMessage);
         model.trade.setTradingPeer(taker);
 
         TaskRunner<OffererAsBuyerModel> taskRunner = new TaskRunner<>(model,
-                () -> log.debug("sequence at handleTakeOfferFeePayedMessage completed"),
+                () -> log.debug("taskRunner at handleTakeOfferFeePayedMessage completed"),
                 (errorMessage) -> handleTaskRunnerFault(errorMessage));
         taskRunner.addTasks(
                 ProcessRequestDepositTxInputsMessage.class,
@@ -137,7 +170,7 @@ public class OffererAsBuyerProtocol {
     // User clicked the "bank transfer started" button
     public void onFiatPaymentStarted() {
         TaskRunner<OffererAsBuyerModel> taskRunner = new TaskRunner<>(model,
-                () -> log.debug("sequence at handleBankTransferStartedUIEvent completed"),
+                () -> log.debug("taskRunner at handleBankTransferStartedUIEvent completed"),
                 (errorMessage) -> handleTaskRunnerFault(errorMessage));
         taskRunner.addTasks(
                 CreateAndSignPayoutTx.class,
@@ -157,7 +190,7 @@ public class OffererAsBuyerProtocol {
 
         TaskRunner<OffererAsBuyerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
-                    log.debug("sequence at handlePayoutTxPublishedMessage completed");
+                    log.debug("taskRunner at handlePayoutTxPublishedMessage completed");
                     // we are done!
                     model.onComplete();
                 },
@@ -179,10 +212,12 @@ public class OffererAsBuyerProtocol {
             nonEmptyStringOf(tradeMessage.tradeId);
 
             if (tradeMessage.tradeId.equals(model.id)) {
-                if (tradeMessage instanceof RequestDepositTxInputsMessage) {
+                if (tradeMessage instanceof RequestIsOfferAvailableMessage) {
+                    handleRequestIsOfferAvailableMessage((RequestIsOfferAvailableMessage) tradeMessage, sender);
+                }
+                else if (tradeMessage instanceof RequestDepositTxInputsMessage) {
                     handleRequestDepositTxInputsMessage((RequestDepositTxInputsMessage) tradeMessage, sender);
                 }
-
                 else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage) {
                     handleRequestOffererPublishDepositTxMessage((RequestOffererPublishDepositTxMessage) tradeMessage);
                 }

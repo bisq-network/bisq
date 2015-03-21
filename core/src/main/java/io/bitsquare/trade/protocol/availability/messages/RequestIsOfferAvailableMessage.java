@@ -17,15 +17,15 @@
 
 package io.bitsquare.trade.protocol.availability.messages;
 
-import io.bitsquare.trade.protocol.trade.messages.OfferMessage;
+import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 
 import java.io.Serializable;
 
-public class RequestIsOfferAvailableMessage extends OfferMessage implements Serializable {
+public class RequestIsOfferAvailableMessage extends TradeMessage implements Serializable {
     private static final long serialVersionUID = 4630151440192191798L;
 
-    public RequestIsOfferAvailableMessage(String offerId) {
-        super.offerId = offerId;
+    public RequestIsOfferAvailableMessage(String tradeId) {
+        super.tradeId = tradeId;
     }
 
 

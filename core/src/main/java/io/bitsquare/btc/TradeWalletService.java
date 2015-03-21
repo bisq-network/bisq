@@ -33,6 +33,7 @@ import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.Utils;
+import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.core.Wallet;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.kits.WalletAppKit;
@@ -375,23 +376,17 @@ public class TradeWalletService {
         Futures.addCallback(broadcastComplete, callback);
     }
 
-    // Returns local transaction which has a different state as the serialized depositTx we get from the offerer
-    public Transaction takerCommitsDepositTx(Transaction depositTx) throws WalletException {
+    // Returns local transaction which has a different state as the serialized publishedOffererDepositTx we get from the offerer
+    public Transaction takerCommitsDepositTx(Transaction publishedOffererDepositTx) throws VerificationException {
         log.trace("takerCommitsDepositTx called");
-        log.trace("depositTx " + depositTx.toString());
+        log.trace("publishedOffererDepositTx " + publishedOffererDepositTx.toString());
 
         // We need to recreate the tx we get a null pointer otherwise
-        Transaction localDepositTx = new Transaction(params, depositTx.bitcoinSerialize());
+        Transaction depositTx = new Transaction(params, publishedOffererDepositTx.bitcoinSerialize());
+        log.trace("depositTx " + depositTx.toString());
 
-        try {
-            // TODO check if that is correct
-            wallet.receivePending(depositTx, null, true);
-        } catch (Throwable t) {
-            log.error(t.getMessage());
-            t.printStackTrace();
-            throw new WalletException(t);
-        }
-        return localDepositTx;
+        wallet.receivePending(depositTx, null, true);
+        return depositTx;
     }
 
     public byte[] offererCreatesAndSignsPayoutTx(Transaction depositTx,

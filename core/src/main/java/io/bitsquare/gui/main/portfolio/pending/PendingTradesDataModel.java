@@ -112,7 +112,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
         sortList();
 
         // select either currentPendingTrade or first in the list
-        if (tradeManager.getCurrentPendingTrade() != null) {
+        /*if (tradeManager.getCurrentPendingTrade() != null) {
             for (int i = 0; i < list.size(); i++) {
                 PendingTradesListItem item = list.get(i);
                 if (tradeManager.getCurrentPendingTrade().getId().equals(item.getTrade().getId())) {
@@ -122,7 +122,8 @@ class PendingTradesDataModel implements Activatable, DataModel {
                 }
             }
         }
-        else if (list.size() > 0) {
+        else */
+        if (list.size() > 0) {
             selectTrade(list.get(0));
             selectedIndex.set(0);
         }

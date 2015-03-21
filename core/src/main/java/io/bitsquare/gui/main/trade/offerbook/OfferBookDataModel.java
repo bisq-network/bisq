@@ -113,8 +113,8 @@ class OfferBookDataModel implements Activatable, DataModel {
         btcCode.unbind();
     }
 
-    void removeOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        tradeManager.removeOpenOffer(offer, resultHandler, errorMessageHandler);
+    void cancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        tradeManager.cancelOpenOffer(offer, resultHandler, errorMessageHandler);
     }
 
     void calculateVolume() {

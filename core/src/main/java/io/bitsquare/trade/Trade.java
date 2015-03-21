@@ -46,7 +46,7 @@ public class Trade implements Serializable {
         COMPLETED,
         FAILED
     }
-    
+
     public static enum ProcessState {
         INIT,
         TAKE_OFFER_FEE_PUBLISH_FAILED,
@@ -74,6 +74,8 @@ public class Trade implements Serializable {
     private final Offer offer;
     private final Date date;
     private ProcessState processState;
+    private LifeCycleState lifeCycleState;
+
     private Coin tradeAmount;
     private Contract contract;
     private String contractAsJson;
@@ -88,7 +90,8 @@ public class Trade implements Serializable {
     // access. Only use the accessor not the private field.
     transient private ObjectProperty<Coin> _tradeAmount;
     transient private ObjectProperty<Fiat> _tradeVolume;
-    transient private ObjectProperty<ProcessState> _state;
+    transient private ObjectProperty<ProcessState> _processState;
+    transient private ObjectProperty<LifeCycleState> _lifeCycleState;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -154,6 +157,10 @@ public class Trade implements Serializable {
         processStateProperty().set(processState);
     }
 
+    public void setLifeCycleState(LifeCycleState lifeCycleState) {
+        this.lifeCycleState = lifeCycleState;
+        lifeCycleStateProperty().set(lifeCycleState);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -181,6 +188,10 @@ public class Trade implements Serializable {
 
     public ProcessState getProcessState() {
         return processState;
+    }
+
+    public LifeCycleState getLifeCycleState() {
+        return lifeCycleState;
     }
 
     public Coin getSecurityDeposit() {
@@ -224,10 +235,17 @@ public class Trade implements Serializable {
     }
 
     public ObjectProperty<ProcessState> processStateProperty() {
-        if (_state == null)
-            _state = new SimpleObjectProperty<>(processState);
+        if (_processState == null)
+            _processState = new SimpleObjectProperty<>(processState);
 
-        return _state;
+        return _processState;
+    }
+
+    public ObjectProperty<LifeCycleState> lifeCycleStateProperty() {
+        if (_lifeCycleState == null)
+            _lifeCycleState = new SimpleObjectProperty<>(lifeCycleState);
+
+        return _lifeCycleState;
     }
 
     @Override
