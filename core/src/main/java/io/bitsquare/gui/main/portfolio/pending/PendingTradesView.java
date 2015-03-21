@@ -356,6 +356,7 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
         setSummaryControlsVisible(false);
 
         processBar.reset();
+        log.debug("applyTakerState "+state);
 
         if (state != null) {
             switch (state) {

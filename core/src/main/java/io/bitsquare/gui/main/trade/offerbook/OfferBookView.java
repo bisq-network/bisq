@@ -127,6 +127,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         // for irc demo
         showAdvancedSettingsButton.setVisible(false);
         showAdvancedSettingsButton.setManaged(false);
+        
+        //TODO temp for testing
+
+        amountTextField.setText("1");
+        priceTextField.setText("1");
+        volumeTextField.setText("1");
     }
 
     @Override

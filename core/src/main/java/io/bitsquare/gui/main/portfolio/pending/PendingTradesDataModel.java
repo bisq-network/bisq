@@ -20,7 +20,6 @@ package io.bitsquare.gui.main.portfolio.pending;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.offer.Direction;
@@ -33,7 +32,6 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence;
 
 import com.google.common.util.concurrent.FutureCallback;
 
@@ -68,7 +66,6 @@ class PendingTradesDataModel implements Activatable, DataModel {
     private boolean isOfferer;
     private Trade closedTrade;
 
-    private TxConfidenceListener txConfidenceListener;
     private final ChangeListener<Trade.State> tradeStateChangeListener;
     private final MapChangeListener<String, Trade> mapChangeListener;
 
@@ -155,15 +152,6 @@ class PendingTradesDataModel implements Activatable, DataModel {
 
             if (trade.getDepositTx() != null)
                 txId.set(trade.getDepositTx().getHashAsString());
-
-            txConfidenceListener = new TxConfidenceListener(txId.get()) {
-                @Override
-                public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                    updateConfidence(confidence);
-                }
-            };
-            walletService.addTxConfidenceListener(txConfidenceListener);
-            updateConfidence(walletService.getConfidenceForTxId(txId.get()));
         }
         else {
             txId.set(null);
@@ -176,7 +164,6 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     void fiatPaymentReceived() {
-        getTrade().setState(Trade.State.FIAT_PAYMENT_RECEIVED);
         tradeManager.onFiatPaymentReceived(getTrade().getId());
     }
 
@@ -287,26 +274,11 @@ class PendingTradesDataModel implements Activatable, DataModel {
             return getTrade().getSecurityDeposit();
     }
 
-    private void updateConfidence(TransactionConfidence confidence) {
-        log.trace("updateConfidence confidence " + confidence);
-        log.trace("updateConfidence getTrade().getState() " + getTrade().getState());
-        if (confidence != null &&
-                confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING
-                && getTrade().getState() == Trade.State.DEPOSIT_PUBLISHED) {
-            // only set it once when actual state is DEPOSIT_PUBLISHED, and remove listener afterwards
-            getTrade().setState(Trade.State.DEPOSIT_CONFIRMED);
-            walletService.removeTxConfidenceListener(txConfidenceListener);
-            txConfidenceListener = null;
-        }
-    }
 
     private void cleanUpSelectedTrade() {
         if (selectedItem != null) {
             selectedItem.getTrade().stateProperty().removeListener(tradeStateChangeListener);
         }
-
-        if (txConfidenceListener != null)
-            walletService.removeTxConfidenceListener(txConfidenceListener);
     }
 
     private void sortList() {

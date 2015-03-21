@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.availability;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
@@ -64,6 +65,9 @@ public class CheckOfferAvailabilityProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void checkOfferAvailability() {
+        // reset
+        model.offer.setState(Offer.State.UNKNOWN);
+        
         model.messageService.addMessageHandler(messageHandler);
 
         taskRunner = new TaskRunner<>(model,

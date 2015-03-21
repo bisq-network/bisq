@@ -22,10 +22,12 @@ import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestTakerDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.SetupListenerForBlockChainConfirmation;
 import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 import io.bitsquare.trade.protocol.trade.taker.tasks.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
@@ -154,7 +156,8 @@ public class TakerAsSellerProtocol {
         );
         taskRunner.addTasks(
                 ProcessDepositTxPublishedMessage.class,
-                TakerCommitDepositTx.class
+                TakerCommitDepositTx.class,
+                SetupListenerForBlockChainConfirmation.class
         );
         taskRunner.run();
     }
@@ -181,6 +184,8 @@ public class TakerAsSellerProtocol {
 
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     public void onFiatPaymentReceived() {
+        model.trade.setState(Trade.State.FIAT_PAYMENT_RECEIVED);
+        
         TaskRunner<TakerAsSellerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("taskRunner at handleFiatReceivedUIEvent completed");

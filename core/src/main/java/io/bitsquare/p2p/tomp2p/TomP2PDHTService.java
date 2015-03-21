@@ -94,7 +94,7 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
      * @return
      */
     public FutureGet getData(Number160 locationKey) {
-        log.trace("getData");
+        //log.trace("getData");
         return peerDHT.get(locationKey).start();
     }
 
