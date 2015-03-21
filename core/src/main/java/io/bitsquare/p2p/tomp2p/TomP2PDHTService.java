@@ -247,6 +247,18 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
         log.trace("getDataFromMapOfMyProtectedDomain");
         return peerDHT.get(locationKey).all().domainKey(pubKeyHashForMyDomain).start();
     }
+    
+    /**
+     * Remove all data from map for given locationKey.
+     * Access: Only the domain owner.
+     *
+     * @param locationKey
+     * @return
+     */
+    public FutureRemove removeAllDataFromMapOfMyProtectedDomain(Number160 locationKey) {
+        log.trace("getDataFromMapOfMyProtectedDomain");
+        return peerDHT.remove(locationKey).domainKey(pubKeyHashForMyDomain).keyPair(keyPair).all().domainKey(pubKeyHashForMyDomain).keyPair(keyPair).start();
+    }
 
 
 }

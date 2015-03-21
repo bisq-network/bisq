@@ -40,6 +40,7 @@ public class SendSignedTakerDepositTx extends Task<SellerAsTakerModel> {
                 model.taker.fiatAccount,
                 model.taker.accountId,
                 model.taker.p2pSigPubKey,
+                model.taker.p2pEncryptPublicKey,
                 model.trade.getContractAsJson(),
                 model.trade.getTakerContractSignature(),
                 model.taker.addressEntry.getAddressString(),

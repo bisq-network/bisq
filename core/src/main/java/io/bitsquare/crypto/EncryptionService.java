@@ -19,11 +19,11 @@ package io.bitsquare.crypto;
 
 import io.bitsquare.util.Utilities;
 
-import java.io.Serializable;
-
+import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
@@ -32,98 +32,82 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 public class EncryptionService<T> {
     private static final Logger log = LoggerFactory.getLogger(EncryptionService.class);
+    private static final String ALGO_SYM = "AES";
+    private static final String CIPHER_SYM = "AES";
+    private static final String ALGO_ASYM = "RSA";
+    private static final String CIPHER_ASYM = "RSA/ECB/PKCS1Padding";
+    private static final int KEY_SIZE_SYM = 128;
+    private static final int KEY_SIZE_ASYM = 1024;
 
     @Inject
     public EncryptionService() {
     }
 
-    public KeyPair getKeyPair() {
-        KeyPair keyPair = null;
-        try {
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-            keyPairGenerator.initialize(1024);
-            keyPair = keyPairGenerator.genKeyPair();
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error("Exception at init " + e.getMessage());
-        }
-        return keyPair;
+    public KeyPair getKeyPair() throws NoSuchAlgorithmException {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ALGO_ASYM);
+        keyPairGenerator.initialize(KEY_SIZE_ASYM);
+        return keyPairGenerator.genKeyPair();
     }
 
-    public Tuple encryptObject(PublicKey publicKey, Object object) {
+    public EncryptionPackage encryptObject(PublicKey publicKey, Object object) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException,
+            NoSuchAlgorithmException, NoSuchPaddingException {
         return encrypt(publicKey, Utilities.objectToBytArray(object));
     }
 
-    public T decryptToObject(PrivateKey privateKey, Tuple tuple) {
-        return (T) Utilities.byteArrayToObject(decrypt(privateKey, tuple));
+    public T decryptToObject(PrivateKey privateKey, EncryptionPackage encryptionPackage) throws IllegalBlockSizeException, InvalidKeyException,
+            BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException {
+        return (T) Utilities.byteArrayToObject(decrypt(privateKey, encryptionPackage));
     }
 
-    public Tuple encrypt(PublicKey publicKey, byte[] payload) {
-        byte[] encryptedPayload = null;
-        byte[] encryptedKey = null;
-        try {
-            // Create symmetric key and 
-            KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-            keyGenerator.init(256);
-            SecretKey secretKey = keyGenerator.generateKey();
+    public EncryptionPackage encrypt(PublicKey publicKey, byte[] payload) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
+            BadPaddingException, IllegalBlockSizeException {
+        // Create symmetric key and 
+        KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGO_SYM);
+        keyGenerator.init(KEY_SIZE_SYM);
+        SecretKey secretKey = keyGenerator.generateKey();
 
-            // Encrypt secretKey with asymmetric key
-            Cipher cipher = Cipher.getInstance("RSA/NONE/PKCS1Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-            encryptedKey = cipher.doFinal(secretKey.getEncoded());
+        // Encrypt secretKey with asymmetric key
+        Cipher cipherAsym = Cipher.getInstance(CIPHER_ASYM);
+        cipherAsym.init(Cipher.ENCRYPT_MODE, publicKey);
+        log.debug("encrypt secret key length: " + secretKey.getEncoded().length);
+        byte[] encryptedKey = cipherAsym.doFinal(secretKey.getEncoded());
 
-            // Encrypt payload with symmetric key
-            SecretKeySpec keySpec = new SecretKeySpec(secretKey.getEncoded(), "AES");
-            cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, keySpec);
-            encryptedPayload = cipher.doFinal(payload);
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error("Exception at encrypt " + e.getMessage());
-        }
-        return new Tuple(encryptedKey, encryptedPayload);
+        // Encrypt payload with symmetric key
+        SecretKeySpec keySpec = new SecretKeySpec(secretKey.getEncoded(), ALGO_SYM);
+        Cipher cipherSym = Cipher.getInstance(CIPHER_SYM);
+        cipherSym.init(Cipher.ENCRYPT_MODE, keySpec);
+        log.debug("encrypt payload length: " + payload.length);
+        byte[] encryptedPayload = cipherSym.doFinal(payload);
+        return new EncryptionPackage(encryptedKey, encryptedPayload);
     }
 
-    public byte[] decrypt(PrivateKey privateKey, Tuple tuple) {
-        byte[] encryptedPayload = tuple.encryptedPayload;
-        byte[] encryptedKey = tuple.encryptedKey;
+    public byte[] decrypt(PrivateKey privateKey, EncryptionPackage encryptionPackage) throws NoSuchPaddingException, NoSuchAlgorithmException,
+            InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        byte[] encryptedPayload = encryptionPackage.encryptedPayload;
+        byte[] encryptedKey = encryptionPackage.encryptedKey;
 
-        byte[] payload = null;
-        try {
-            // Decrypt secretKey key with asymmetric key
-            Cipher cipher = Cipher.getInstance("RSA/NONE/PKCS1Padding");
-            cipher.init(Cipher.DECRYPT_MODE, privateKey);
-            byte[] secretKey = cipher.doFinal(encryptedKey);
-
-            // Decrypt payload with symmetric key
-            Key key = new SecretKeySpec(secretKey, "AES");
-            cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            cipher.init(Cipher.DECRYPT_MODE, key);
-            payload = cipher.doFinal(encryptedPayload);
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error("Exception at decrypt " + e.getMessage());
-        }
+        // Decrypt secretKey key with asymmetric key
+        Cipher cipherAsym = Cipher.getInstance(CIPHER_ASYM);
+        cipherAsym.init(Cipher.DECRYPT_MODE, privateKey);
+        byte[] secretKey = cipherAsym.doFinal(encryptedKey);
+        log.debug("decrypt secret key length: " + secretKey.length);
+        // Decrypt payload with symmetric key
+        Key key = new SecretKeySpec(secretKey, ALGO_SYM);
+        Cipher cipherSym = Cipher.getInstance(CIPHER_SYM);
+        cipherSym.init(Cipher.DECRYPT_MODE, key);
+        byte[] payload = cipherSym.doFinal(encryptedPayload);
+        log.debug("decrypt payload length: " + payload.length);
         return payload;
-    }
-
-    public class Tuple implements Serializable {
-        private static final long serialVersionUID = -8709538217388076762L;
-
-        public final byte[] encryptedKey;
-        public final byte[] encryptedPayload;
-
-        public Tuple(byte[] encryptedKey, byte[] encryptedPayload) {
-            this.encryptedKey = encryptedKey;
-            this.encryptedPayload = encryptedPayload;
-        }
     }
 }
 

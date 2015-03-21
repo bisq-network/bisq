@@ -19,14 +19,14 @@ package io.bitsquare.p2p;
 
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.p2p.tomp2p.TomP2PMailboxService;
 
 import java.security.PublicKey;
 
 public interface MailboxService {
-    void addMessage(PublicKey publicKey, EncryptedMailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler);
+    void addMessage(PublicKey p2pSigPubKey, EncryptedMailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler);
+    
+    void getAllMessages(PublicKey p2pSigPubKey, MailboxMessagesResultHandler resultHandler);
 
-    void removeMessage(PublicKey publicKey, EncryptedMailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler);
+    void removeAllMessages(PublicKey p2pSigPubKey, ResultHandler resultHandler, FaultHandler faultHandler);
 
-    void getMessages(PublicKey publicKey, TomP2PMailboxService.MailboxMessagesResultHandler resultHandler);
 }

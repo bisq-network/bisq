@@ -471,14 +471,14 @@ public class WalletService {
         return tradeWalletService;
     }
 
-    public void payRegistrationFee(String stringifiedBankAccounts, FutureCallback<Transaction> callback) throws
+    public void payRegistrationFee(String stringifiedFiatAccounts, FutureCallback<Transaction> callback) throws
             InsufficientMoneyException {
         log.debug("payRegistrationFee");
-        log.trace("stringifiedBankAccounts " + stringifiedBankAccounts);
+        log.trace("stringifiedFiatAccounts " + stringifiedFiatAccounts);
 
         Transaction tx = new Transaction(params);
 
-        byte[] data = signatureService.digestMessageWithSignature(getRegistrationAddressEntry().getKeyPair(), stringifiedBankAccounts);
+        byte[] data = signatureService.digestMessageWithSignature(getRegistrationAddressEntry().getKeyPair(), stringifiedFiatAccounts);
         tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, new ScriptBuilder().op(OP_RETURN).data(data).build());
 
         // We don't take a fee at the moment

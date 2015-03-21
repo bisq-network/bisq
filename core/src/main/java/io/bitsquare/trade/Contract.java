@@ -40,8 +40,8 @@ public class Contract implements Serializable {
     private final String takerAccountID;
     private final FiatAccount offererFiatAccount;
     private final FiatAccount takerFiatAccount;
-    private final String offererMessagePublicKeyAsString;
-    private final String takerMessagePublicKeyAsString;
+    private final String offererP2PSigPubKeyAsString;
+    private final String takerP2PSigPubKeyAsString;
 
     public Contract(Offer offer,
                     Coin tradeAmount,
@@ -50,8 +50,8 @@ public class Contract implements Serializable {
                     String takerAccountID,
                     FiatAccount offererFiatAccount,
                     FiatAccount takerFiatAccount,
-                    PublicKey offererMessagePublicKey,
-                    PublicKey takerMessagePublicKey) {
+                    PublicKey offererP2PSigPubKey,
+                    PublicKey takerP2PSigPubKey) {
         this.offer = offer;
         this.tradeAmount = tradeAmount;
         this.takeOfferFeeTxID = takeOfferFeeTxID;
@@ -59,8 +59,8 @@ public class Contract implements Serializable {
         this.takerAccountID = takerAccountID;
         this.offererFiatAccount = offererFiatAccount;
         this.takerFiatAccount = takerFiatAccount;
-        this.offererMessagePublicKeyAsString = DSAKeyUtil.getHexStringFromPublicKey(offererMessagePublicKey);
-        this.takerMessagePublicKeyAsString = DSAKeyUtil.getHexStringFromPublicKey(takerMessagePublicKey);
+        this.offererP2PSigPubKeyAsString = DSAKeyUtil.getHexStringFromPublicKey(offererP2PSigPubKey);
+        this.takerP2PSigPubKeyAsString = DSAKeyUtil.getHexStringFromPublicKey(takerP2PSigPubKey);
     }
 
 
@@ -97,11 +97,11 @@ public class Contract implements Serializable {
     }
 
     public String getTakerMessagePublicKey() {
-        return takerMessagePublicKeyAsString;
+        return takerP2PSigPubKeyAsString;
     }
 
     public String getOffererMessagePublicKey() {
-        return offererMessagePublicKeyAsString;
+        return offererP2PSigPubKeyAsString;
     }
 
     @Override
@@ -114,8 +114,8 @@ public class Contract implements Serializable {
                 ", takerAccountID='" + takerAccountID + '\'' +
                 ", offererBankAccount=" + offererFiatAccount +
                 ", takerBankAccount=" + takerFiatAccount +
-                ", takerMessagePublicKeyAsString=" + takerMessagePublicKeyAsString +
-                ", offererMessagePublicKeyAsString=" + offererMessagePublicKeyAsString +
+                ", takerP2PSigPubKeyAsString=" + takerP2PSigPubKeyAsString +
+                ", offererP2PSigPubKeyAsString=" + offererP2PSigPubKeyAsString +
                 '}';
     }
 }

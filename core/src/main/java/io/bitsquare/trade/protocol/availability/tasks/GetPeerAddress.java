@@ -39,7 +39,7 @@ public class GetPeerAddress extends Task<CheckOfferAvailabilityModel> {
     @Override
     protected void doRun() {
         try {
-            model.addressService.findPeerAddress(model.offer.getMessagePublicKey(), new GetPeerAddressListener() {
+            model.addressService.findPeerAddress(model.offer.getP2PSigPubKey(), new GetPeerAddressListener() {
                 @Override
                 public void onResult(Peer peer) {
                     model.setPeer(peer);

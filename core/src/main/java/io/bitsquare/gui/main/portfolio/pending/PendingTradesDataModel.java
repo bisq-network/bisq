@@ -146,7 +146,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
         selectedItem = item;
 
         if (selectedItem != null) {
-            isOfferer = getTrade().getOffer().getMessagePublicKey().equals(user.getP2PSigPubKey());
+            isOfferer = getTrade().getOffer().getP2PSigPubKey().equals(user.getP2PSigPubKey());
 
             Trade trade = getTrade();
             trade.stateProperty().addListener(tradeStateChangeListener);
@@ -172,7 +172,6 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     void fiatPaymentStarted() {
-        getTrade().setState(Trade.State.FIAT_PAYMENT_STARTED);
         tradeManager.onFiatPaymentStarted(getTrade().getId());
     }
 
@@ -209,7 +208,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
             log.error(e.getMessage());
         }
 
-        tradeManager.closeTrade(getTrade());
+        tradeManager.onWithdrawAtTradeCompleted(getTrade());
 
 /*
         Action response = Popups.openConfirmPopup(
@@ -269,7 +268,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     public Direction getDirection(Offer offer) {
-        return offer.getMessagePublicKey().equals(user.getP2PSigPubKey()) ?
+        return offer.getP2PSigPubKey().equals(user.getP2PSigPubKey()) ?
                 offer.getDirection() : offer.getMirroredDirection();
     }
 

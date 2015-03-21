@@ -45,7 +45,7 @@ import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakerAccount;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerProtocol;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateTakeOfferFeeTx;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessBankTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessFiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRequestDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendPayoutTxToOfferer;
@@ -135,7 +135,7 @@ public class DebugView extends InitializableView {
                         ProcessDepositTxPublishedMessage.class,
                         TakerCommitDepositTx.class,
 
-                        ProcessBankTransferStartedMessage.class,
+                        ProcessFiatTransferStartedMessage.class,
 
                         SignAndPublishPayoutTx.class,
                         VerifyOfferFeePayment.class,

@@ -33,7 +33,8 @@ public class RequestOffererPublishDepositTxMessage extends TradeMessage implemen
 
     public final FiatAccount takerFiatAccount;
     public final String takerAccountId;
-    public final PublicKey takerMessagePublicKey;
+    public final PublicKey takerP2PSigPublicKey;
+    public final PublicKey takerP2PEncryptPublicKey;
     public final String takerContractAsJson;
     public final String takerContractSignature;
     public final String takerPayoutAddressString;
@@ -44,7 +45,8 @@ public class RequestOffererPublishDepositTxMessage extends TradeMessage implemen
     public RequestOffererPublishDepositTxMessage(String tradeId,
                                                  FiatAccount takerFiatAccount,
                                                  String takerAccountId,
-                                                 PublicKey takerMessagePublicKey,
+                                                 PublicKey takerP2PSigPublicKey,
+                                                 PublicKey takerP2PEncryptPublicKey,
                                                  String takerContractAsJson,
                                                  String takerContractSignature,
                                                  String takerPayoutAddressString,
@@ -54,7 +56,8 @@ public class RequestOffererPublishDepositTxMessage extends TradeMessage implemen
         this.tradeId = tradeId;
         this.takerFiatAccount = takerFiatAccount;
         this.takerAccountId = takerAccountId;
-        this.takerMessagePublicKey = takerMessagePublicKey;
+        this.takerP2PSigPublicKey = takerP2PSigPublicKey;
+        this.takerP2PEncryptPublicKey = takerP2PEncryptPublicKey;
         this.takerContractAsJson = takerContractAsJson;
         this.takerContractSignature = takerContractSignature;
         this.takerPayoutAddressString = takerPayoutAddressString;

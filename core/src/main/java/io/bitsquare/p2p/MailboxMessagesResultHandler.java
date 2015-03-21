@@ -17,18 +17,8 @@
 
 package io.bitsquare.p2p;
 
+import java.util.List;
 
-import io.bitsquare.p2p.listener.SendMessageListener;
-
-import java.security.PublicKey;
-
-public interface MessageService extends P2PService {
-
-    void sendMessage(Peer peer, Message message, SendMessageListener listener);
-
-    void sendMessage(Peer peer, Message message, PublicKey p2pSigPubKey, PublicKey p2pEncryptPubKey, SendMessageListener listener);
-
-    void addMessageHandler(MessageHandler listener);
-
-    void removeMessageHandler(MessageHandler listener);
+public interface MailboxMessagesResultHandler {
+    void handleResult(List<EncryptedMailboxMessage> messages);
 }

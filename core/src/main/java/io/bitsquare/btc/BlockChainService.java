@@ -69,7 +69,7 @@ public class BlockChainService {
     }
 
     @SuppressWarnings("SameReturnValue")
-    private boolean isBankAccountBlacklisted(FiatAccount fiatAccount) {
+    private boolean isFiatAccountBlacklisted(FiatAccount fiatAccount) {
         // TODO check if accountID is on blacklist
         return false;
     }

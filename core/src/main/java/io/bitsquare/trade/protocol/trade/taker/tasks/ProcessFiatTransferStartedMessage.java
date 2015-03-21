@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.protocol.trade.messages.BankTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 
 import org.slf4j.Logger;
@@ -28,10 +28,10 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.*;
 
-public class ProcessBankTransferStartedMessage extends Task<SellerAsTakerModel> {
-    private static final Logger log = LoggerFactory.getLogger(ProcessBankTransferStartedMessage.class);
+public class ProcessFiatTransferStartedMessage extends Task<SellerAsTakerModel> {
+    private static final Logger log = LoggerFactory.getLogger(ProcessFiatTransferStartedMessage.class);
 
-    public ProcessBankTransferStartedMessage(TaskRunner taskHandler, SellerAsTakerModel model) {
+    public ProcessFiatTransferStartedMessage(TaskRunner taskHandler, SellerAsTakerModel model) {
         super(taskHandler, model);
     }
 
@@ -39,7 +39,7 @@ public class ProcessBankTransferStartedMessage extends Task<SellerAsTakerModel> 
     protected void doRun() {
         try {
             checkTradeId(model.id, model.getTradeMessage());
-            BankTransferStartedMessage message = (BankTransferStartedMessage) model.getTradeMessage();
+            FiatTransferStartedMessage message = (FiatTransferStartedMessage) model.getTradeMessage();
 
             model.offerer.signature = checkNotNull(message.offererSignature);
             model.offerer.payoutAmount = positiveCoinOf(nonZeroCoinOf(message.offererPayoutAmount));

@@ -24,6 +24,8 @@ import io.bitsquare.util.DSAKeyUtil;
 import java.io.Serializable;
 
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 
 import java.util.ArrayList;
@@ -39,12 +41,16 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * The User is persisted locally.
  * It must never be transmitted over the wire (messageKeyPair contains private key!).
  */
 public class User implements Serializable {
     private static final long serialVersionUID = 7409078808248518638L;
+    private static final Logger log = LoggerFactory.getLogger(User.class);
 
     private KeyPair p2pSigKeyPair;
     private KeyPair p2pEncryptKeyPair;
@@ -87,8 +93,13 @@ public class User implements Serializable {
         }
         else {
             // First time
-            p2pSigKeyPair = DSAKeyUtil.generateKeyPair();
-            p2pEncryptKeyPair = encryptionService.getKeyPair();
+            p2pSigKeyPair = DSAKeyUtil.generateDSAKeyPair();
+            try {
+                p2pEncryptKeyPair = encryptionService.getKeyPair();
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
+            }
         }
     }
 
@@ -179,6 +190,10 @@ public class User implements Serializable {
         return p2pSigKeyPair.getPublic();
     }
 
+    public PublicKey getP2PEncryptPubKey() {
+        return p2pEncryptKeyPair.getPublic();
+    }
+
     public ObjectProperty<FiatAccount> currentBankAccountProperty() {
         return currentBankAccount;
     }
@@ -192,7 +207,11 @@ public class User implements Serializable {
         return _currentFiatAccount;
     }
 
-    public KeyPair getP2pEncryptKeyPair() {
+    public PrivateKey getP2pEncryptPrivateKey() {
+        return p2pEncryptKeyPair.getPrivate();
+    }
+
+    KeyPair getP2pEncryptKeyPair() {
         return p2pEncryptKeyPair;
     }
 }

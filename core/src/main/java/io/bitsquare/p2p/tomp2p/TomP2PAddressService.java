@@ -91,9 +91,9 @@ public class TomP2PAddressService extends TomP2PDHTService implements AddressSer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void findPeerAddress(PublicKey publicKey, GetPeerAddressListener listener) {
-        final Number160 locationKey = Utils.makeSHAHash(publicKey.getEncoded());
-        FutureGet futureGet = getDataOfProtectedDomain(locationKey, publicKey);
+    public void findPeerAddress(PublicKey p2pSigPubKey, GetPeerAddressListener listener) {
+        final Number160 locationKey = Utils.makeSHAHash(p2pSigPubKey.getEncoded());
+        FutureGet futureGet = getDataOfProtectedDomain(locationKey, p2pSigPubKey);
         log.trace("findPeerAddress called");
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override

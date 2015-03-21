@@ -18,20 +18,21 @@
 package io.bitsquare.trade.protocol.trade.taker;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.messages.BankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.taker.models.SellerAsTakerModel;
 import io.bitsquare.trade.protocol.trade.taker.tasks.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateTakeOfferFeeTx;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessBankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessDepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessFiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRequestDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendPayoutTxToOfferer;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendRequestDepositTxInputsMessage;
@@ -70,6 +71,8 @@ public class SellerAsTakerProtocol {
         this.model = model;
         messageHandler = this::handleMessage;
         model.messageService.addMessageHandler(messageHandler);
+
+
     }
 
 
@@ -80,6 +83,17 @@ public class SellerAsTakerProtocol {
     public void cleanup() {
         log.debug("cleanup " + this);
         model.messageService.removeMessageHandler(messageHandler);
+    }
+
+    public void setMailboxMessage(MailboxMessage mailboxMessage) {
+        log.debug("setMailboxMessage " + mailboxMessage);
+        // Might be called twice, so check that its only processed once
+        if (model.mailboxMessage == null) {
+            model.mailboxMessage = mailboxMessage;
+            if (mailboxMessage instanceof FiatTransferStartedMessage) {
+                handleFiatTransferStartedMessage((FiatTransferStartedMessage) mailboxMessage);
+            }
+        }
     }
 
     public void takeAvailableOffer() {
@@ -99,7 +113,7 @@ public class SellerAsTakerProtocol {
         taskRunner.run();
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -143,19 +157,19 @@ public class SellerAsTakerProtocol {
         taskRunner.run();
     }
 
-    private void handleBankTransferStartedMessage(BankTransferStartedMessage tradeMessage) {
+    private void handleFiatTransferStartedMessage(FiatTransferStartedMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
         TaskRunner<SellerAsTakerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
-                    log.debug("taskRunner at handleBankTransferInitedMessage completed");
+                    log.debug("taskRunner at handleFiatTransferStartedMessage completed");
                     model.trade.setState(Trade.State.FIAT_PAYMENT_STARTED);
                 },
                 (errorMessage) -> {
                     log.error(errorMessage);
                 }
         );
-        taskRunner.addTasks(ProcessBankTransferStartedMessage.class);
+        taskRunner.addTasks(ProcessFiatTransferStartedMessage.class);
         taskRunner.run();
     }
 
@@ -201,8 +215,8 @@ public class SellerAsTakerProtocol {
                 else if (tradeMessage instanceof DepositTxPublishedMessage) {
                     handleDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
                 }
-                else if (tradeMessage instanceof BankTransferStartedMessage) {
-                    handleBankTransferStartedMessage((BankTransferStartedMessage) tradeMessage);
+                else if (tradeMessage instanceof FiatTransferStartedMessage) {
+                    handleFiatTransferStartedMessage((FiatTransferStartedMessage) tradeMessage);
                 }
                 else {
                     log.error("Incoming message not supported. " + tradeMessage);

@@ -97,7 +97,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
     @Override
     public void deactivate() {
         btcCode.unbind();
-        tradeManager.cancelGetOfferAvailableStateRequest(offer);
+        tradeManager.cancelCheckOfferAvailabilityRequest(offer);
     }
 
     void initWithData(Coin amount, Offer offer) {

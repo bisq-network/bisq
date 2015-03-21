@@ -74,7 +74,7 @@ class ClosedTradesDataModel implements Activatable, DataModel {
     }
 
     public Direction getDirection(Offer offer) {
-        return offer.getMessagePublicKey().equals(user.getP2PSigPubKey()) ?
+        return offer.getP2PSigPubKey().equals(user.getP2PSigPubKey()) ?
                 offer.getDirection() : offer.getMirroredDirection();
     }
 

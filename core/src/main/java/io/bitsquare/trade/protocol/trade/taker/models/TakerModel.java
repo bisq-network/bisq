@@ -39,6 +39,7 @@ public class TakerModel implements Serializable {
     transient public FiatAccount fiatAccount;
     transient public String accountId;
     transient public PublicKey p2pSigPubKey;
+    transient public PublicKey p2pEncryptPublicKey;
     transient public byte[] registrationPubKey; // TODO not read yet, missing impl.
     transient public DeterministicKey registrationKeyPair;
     transient public AddressEntry addressEntry;

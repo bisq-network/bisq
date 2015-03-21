@@ -17,6 +17,7 @@
 
 package io.bitsquare.p2p.tomp2p;
 
+import io.bitsquare.crypto.EncryptionPackage;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.p2p.EncryptedMailboxMessage;
 import io.bitsquare.p2p.MailboxMessage;
@@ -27,6 +28,8 @@ import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.user.User;
+
+import java.security.PublicKey;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -53,7 +56,7 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TomP2PMessageService(TomP2PNode tomP2PNode, MailboxService mailboxService, User user, EncryptionService encryptionService) {
+    public TomP2PMessageService(TomP2PNode tomP2PNode, MailboxService mailboxService, User user, EncryptionService<MailboxMessage> encryptionService) {
         super(tomP2PNode);
         this.mailboxService = mailboxService;
         this.user = user;
@@ -74,6 +77,12 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
 
     @Override
     public void sendMessage(Peer peer, Message message, SendMessageListener listener) {
+        sendMessage(peer, message, null, null, listener);
+    }
+
+    @Override
+    public void sendMessage(Peer peer, Message message, PublicKey p2pSigPubKey, PublicKey p2pEncryptPubKey,
+                            SendMessageListener listener) {
         if (!(peer instanceof TomP2PPeer))
             throw new IllegalArgumentException("Peer must be of type TomP2PPeer");
 
@@ -86,8 +95,9 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
                     executor.execute(listener::handleResult);
                 }
                 else {
-                    if (message instanceof MailboxMessage) {
-                        sendMailboxMessage((MailboxMessage) message, listener);
+                    if (p2pSigPubKey != null && p2pEncryptPubKey != null) {
+                        log.info("sendMessage failed. We will try to send the message to the mailbox. Fault reason:  " + futureDirect.failedReason());
+                        sendMailboxMessage(p2pSigPubKey, p2pEncryptPubKey, (MailboxMessage) message, listener);
                     }
                     else {
                         log.error("sendMessage failed with reason " + futureDirect.failedReason());
@@ -98,8 +108,9 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
 
             @Override
             public void exceptionCaught(Throwable t) throws Exception {
-                if (message instanceof MailboxMessage) {
-                    sendMailboxMessage((MailboxMessage) message, listener);
+                if (p2pSigPubKey != null && p2pEncryptPubKey != null) {
+                    log.info("sendMessage failed with exception. We will try to send the message to the mailbox. Exception: " + t.getMessage());
+                    sendMailboxMessage(p2pSigPubKey, p2pEncryptPubKey, (MailboxMessage) message, listener);
                 }
                 else {
                     log.error("sendMessage failed with exception " + t.getMessage());
@@ -109,11 +120,18 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
         });
     }
 
-    private void sendMailboxMessage(MailboxMessage message, SendMessageListener listener) {
-        EncryptionService.Tuple tuple = encryptionService.encryptObject(user.getP2pEncryptKeyPair().getPublic(), message);
-        
-        EncryptedMailboxMessage encrypted = new EncryptedMailboxMessage(tuple);
-        mailboxService.addMessage(user.getP2PSigPubKey(), encrypted,
+    private void sendMailboxMessage(PublicKey p2pSigPubKey, PublicKey p2pEncryptPubKey, MailboxMessage message, SendMessageListener listener) {
+        EncryptionPackage encryptionPackage = null;
+        try {
+            encryptionPackage = encryptionService.encryptObject(p2pEncryptPubKey, message);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            log.error(t.getMessage());
+            executor.execute(listener::handleFault);
+        }
+        EncryptedMailboxMessage encrypted = new EncryptedMailboxMessage(encryptionPackage);
+        mailboxService.addMessage(p2pSigPubKey,
+                encrypted,
                 () -> {
                     log.debug("Message successfully added to peers mailbox.");
                     executor.execute(listener::handleResult);

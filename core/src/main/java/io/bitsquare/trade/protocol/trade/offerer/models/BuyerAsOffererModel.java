@@ -37,7 +37,6 @@ public class BuyerAsOffererModel extends SharedTradeModel implements Serializabl
     private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererModel.class);
 
     transient public final Trade trade;
-    transient public final MailboxService mailboxService;
     public final TakerModel taker;
     public final OffererModel offerer;
 
@@ -54,13 +53,13 @@ public class BuyerAsOffererModel extends SharedTradeModel implements Serializabl
                                Persistence persistence) {
         super(trade.getOffer(),
                 messageService,
+                mailboxService,
                 walletService,
                 blockChainService,
                 signatureService,
                 persistence);
 
         this.trade = trade;
-        this.mailboxService = mailboxService;
 
         Serializable serializable = persistence.read(this, "BuyerAsOffererModel_" + id);
         if (serializable instanceof BuyerAsOffererModel) {

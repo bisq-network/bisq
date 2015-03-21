@@ -154,7 +154,7 @@ class RestrictionsDataModel implements Activatable, DataModel {
     private void addMockArbitrator() {
         if (accountSettings.getAcceptedArbitrators().isEmpty() && user.getP2pSigKeyPair() != null) {
             byte[] pubKey = new ECKey().getPubKey();
-            String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getP2PSigPubKey());
+            String p2pSigPubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getP2PSigPubKey());
             List<Locale> languages = new ArrayList<>();
             languages.add(LanguageUtil.getDefaultLanguageLocale());
             List<Arbitrator.METHOD> arbitrationMethods = new ArrayList<>();
@@ -166,7 +166,7 @@ class RestrictionsDataModel implements Activatable, DataModel {
             // TODO use very small sec. dposit to make testing in testnet less expensive
             // Revert later to 0.1 BTC again
             Arbitrator arbitrator = new Arbitrator(pubKey,
-                    messagePubKeyAsHex,
+                    p2pSigPubKeyAsHex,
                     "Manfred Karrer",
                     Arbitrator.ID_TYPE.REAL_LIFE_ID,
                     languages,

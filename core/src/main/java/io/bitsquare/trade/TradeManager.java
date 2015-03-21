@@ -21,12 +21,15 @@ import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.p2p.AddressService;
+import io.bitsquare.p2p.EncryptedMailboxMessage;
+import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageService;
@@ -41,6 +44,7 @@ import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailability
 import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
+import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererProtocol;
 import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerProtocol;
@@ -54,6 +58,7 @@ import org.bitcoinj.utils.Fiat;
 import java.io.Serializable;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -78,6 +83,7 @@ public class TradeManager {
     private final BlockChainService blockChainService;
     private final WalletService walletService;
     private final SignatureService signatureService;
+    private EncryptionService<MailboxMessage> encryptionService;
     private final OfferBookService offerBookService;
 
     private final Map<String, SellerAsTakerProtocol> sellerAsTakerProtocolMap = new HashMap<>();
@@ -87,6 +93,7 @@ public class TradeManager {
     private final ObservableMap<String, Offer> openOffers = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> pendingTrades = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> closedTrades = FXCollections.observableHashMap();
+    private final Map<String, MailboxMessage> mailboxMessages = new HashMap<>();
 
     private Trade currentPendingTrade;
 
@@ -98,7 +105,7 @@ public class TradeManager {
     @Inject
     public TradeManager(User user, AccountSettings accountSettings, Persistence persistence,
                         MessageService messageService, MailboxService mailboxService, AddressService addressService, BlockChainService blockChainService,
-                        WalletService walletService, SignatureService signatureService,
+                        WalletService walletService, SignatureService signatureService, EncryptionService<MailboxMessage> encryptionService,
                         OfferBookService offerBookService) {
         this.user = user;
         this.accountSettings = accountSettings;
@@ -109,6 +116,7 @@ public class TradeManager {
         this.blockChainService = blockChainService;
         this.walletService = walletService;
         this.signatureService = signatureService;
+        this.encryptionService = encryptionService;
         this.offerBookService = offerBookService;
 
         Serializable openOffersObject = persistence.read(this, "openOffers");
@@ -125,9 +133,12 @@ public class TradeManager {
         if (closedTradesObject instanceof Map<?, ?>) {
             closedTrades.putAll((Map<String, Trade>) closedTradesObject);
         }
-
-        messageService.addMessageHandler(this::handleMessage);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     // When all services are initialized we create the protocols for our open offers and persisted not completed pendingTrades
     // BuyerAcceptsOfferProtocol listens for take offer requests, so we need to instantiate it early.
@@ -161,40 +172,24 @@ public class TradeManager {
                 }
             }
         }
+
+        mailboxService.getAllMessages(user.getP2PSigPubKey(),
+                (messages) -> {
+                    decryptMailboxMessages(messages);
+                    emptyMailbox();
+                });
+
+        messageService.addMessageHandler(this::handleMessage);
     }
 
     public boolean isMyOffer(Offer offer) {
-        return offer.getMessagePublicKey().equals(user.getP2PSigPubKey());
+        return offer.getP2PSigPubKey().equals(user.getP2PSigPubKey());
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Called from UI
+    // Offer
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void checkOfferAvailability(Offer offer) {
-        offer.setState(Offer.State.UNKNOWN);
-        if (!checkOfferAvailabilityProtocolMap.containsKey(offer.getId())) {
-            CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(
-                    offer,
-                    messageService,
-                    addressService);
-
-            CheckOfferAvailabilityProtocol protocol = new CheckOfferAvailabilityProtocol(model,
-                    () -> disposeCheckOfferAvailabilityRequest(offer),
-                    (errorMessage) -> disposeCheckOfferAvailabilityRequest(offer));
-            checkOfferAvailabilityProtocolMap.put(offer.getId(), protocol);
-            protocol.checkOfferAvailability();
-        }
-        else {
-            log.error("That should never happen: onCheckOfferAvailability already called for offer with ID:" + offer.getId());
-        }
-    }
-
-    // When closing take offer view, we are not interested in the onCheckOfferAvailability result anymore, so remove from the map
-    public void cancelGetOfferAvailableStateRequest(Offer offer) {
-        disposeCheckOfferAvailabilityRequest(offer);
-    }
 
     public void placeOffer(String id,
                            Direction direction,
@@ -240,6 +235,35 @@ public class TradeManager {
         removeOpenOffer(offer, resultHandler, errorMessageHandler, true);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Take offer
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void checkOfferAvailability(Offer offer) {
+        offer.setState(Offer.State.UNKNOWN);
+        if (!checkOfferAvailabilityProtocolMap.containsKey(offer.getId())) {
+            CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(
+                    offer,
+                    messageService,
+                    addressService);
+
+            CheckOfferAvailabilityProtocol protocol = new CheckOfferAvailabilityProtocol(model,
+                    () -> disposeCheckOfferAvailabilityRequest(offer),
+                    (errorMessage) -> disposeCheckOfferAvailabilityRequest(offer));
+            checkOfferAvailabilityProtocolMap.put(offer.getId(), protocol);
+            protocol.checkOfferAvailability();
+        }
+        else {
+            log.error("That should never happen: onCheckOfferAvailability already called for offer with ID:" + offer.getId());
+        }
+    }
+
+    // When closing take offer view, we are not interested in the onCheckOfferAvailability result anymore, so remove from the map
+    public void cancelCheckOfferAvailabilityRequest(Offer offer) {
+        disposeCheckOfferAvailabilityRequest(offer);
+    }
+
     public void requestTakeOffer(Coin amount, Offer offer, TradeResultHandler tradeResultHandler) {
         CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(offer, messageService, addressService);
         CheckOfferAvailabilityProtocol protocol = new CheckOfferAvailabilityProtocol(model,
@@ -255,12 +279,157 @@ public class TradeManager {
         protocol.checkOfferAvailability();
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Trade
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onFiatPaymentStarted(String tradeId) {
+        // TODO remove if check when persistence is impl.
+        if (buyerAcceptsOfferProtocolMap.containsKey(tradeId)) {
+            buyerAcceptsOfferProtocolMap.get(tradeId).onFiatPaymentStarted();
+            persistPendingTrades();
+        }
+    }
+
+    public void onFiatPaymentReceived(String tradeId) {
+        sellerAsTakerProtocolMap.get(tradeId).onFiatPaymentReceived();
+    }
+
+    public void onWithdrawAtTradeCompleted(Trade trade) {
+        closeTrade(trade);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Called from Offerbook when offer gets removed from DHT
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onOfferRemovedFromRemoteOfferBook(Offer offer) {
+        disposeCheckOfferAvailabilityRequest(offer);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Message handler
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Offerer handles those requests
+    private void handleMessage(Message message, Peer sender) {
+        if (message instanceof RequestIsOfferAvailableMessage) {
+            String offerId = ((RequestIsOfferAvailableMessage) message).offerId;
+            checkNotNull(offerId);
+
+            ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(offerId, isOfferOpen(offerId));
+            messageService.sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
+                @Override
+                public void handleResult() {
+                    // Offerer does not do anything at that moment. Peer might only watch the offer and does nto start a trade.
+                    log.trace("ReportOfferAvailabilityMessage successfully arrived at peer");
+                }
+
+                @Override
+                public void handleFault() {
+                    log.warn("Sending ReportOfferAvailabilityMessage failed.");
+                }
+            });
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public ObservableMap<String, Offer> getOpenOffers() {
+        return openOffers;
+    }
+
+    public ObservableMap<String, Trade> getPendingTrades() {
+        return pendingTrades;
+    }
+
+    public ObservableMap<String, Trade> getClosedTrades() {
+        return closedTrades;
+    }
+
+    public Trade getCurrentPendingTrade() {
+        return currentPendingTrade;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Offer
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void removeOpenOffer(Offer offer,
+                                 ResultHandler resultHandler,
+                                 ErrorMessageHandler errorMessageHandler,
+                                 boolean removeFromBuyerAcceptsOfferProtocolMap) {
+        String offerId = offer.getId();
+        offerBookService.removeOffer(offer,
+                () -> {
+                    if (openOffers.containsKey(offerId)) {
+                        openOffers.remove(offerId);
+                        disposeCheckOfferAvailabilityRequest(offer);
+                        persistOpenOffers();
+                        if (removeFromBuyerAcceptsOfferProtocolMap && buyerAcceptsOfferProtocolMap.containsKey(offerId)) {
+                            buyerAcceptsOfferProtocolMap.get(offerId).cleanup();
+                            buyerAcceptsOfferProtocolMap.remove(offerId);
+                        }
+
+                        resultHandler.handleResult();
+                    }
+                    else {
+                        log.error("Locally stored offers does not contain the offer with the ID " + offerId);
+                        errorMessageHandler.handleErrorMessage("Locally stored offers does not contain the offer with the ID " + offerId);
+                    }
+                },
+                (message, throwable) -> errorMessageHandler.handleErrorMessage(message));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Take offer
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void disposeCheckOfferAvailabilityRequest(Offer offer) {
+        if (checkOfferAvailabilityProtocolMap.containsKey(offer.getId())) {
+            CheckOfferAvailabilityProtocol protocol = checkOfferAvailabilityProtocolMap.get(offer.getId());
+            protocol.cancel();
+            protocol.cleanup();
+            checkOfferAvailabilityProtocolMap.remove(offer.getId());
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Trade
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private Trade takeAvailableOffer(Coin amount, Offer offer, Peer peer) {
         Trade trade = createTrade(offer);
         trade.setTradeAmount(amount);
 
         SellerAsTakerProtocol sellerTakesOfferProtocol = createSellerAsTakerProtocol(trade, peer);
         sellerTakesOfferProtocol.takeAvailableOffer();
+        return trade;
+    }
+
+    private Trade createTrade(Offer offer) {
+        if (pendingTrades.containsKey(offer.getId()))
+            log.error("That must never happen: Trades contains already an trade with the ID " + offer.getId());
+
+        Trade trade = new Trade(offer);
+        pendingTrades.put(offer.getId(), trade);
+        persistPendingTrades();
+
+        currentPendingTrade = trade;
+
         return trade;
     }
 
@@ -292,6 +461,7 @@ public class TradeManager {
                 trade,
                 peer,
                 messageService,
+                mailboxService,
                 walletService,
                 blockChainService,
                 signatureService,
@@ -300,122 +470,13 @@ public class TradeManager {
 
         SellerAsTakerProtocol sellerTakesOfferProtocol = new SellerAsTakerProtocol(model);
         sellerAsTakerProtocolMap.put(trade.getId(), sellerTakesOfferProtocol);
+
+        if (mailboxMessages.containsKey(trade.getId()))
+            sellerTakesOfferProtocol.setMailboxMessage(mailboxMessages.get(trade.getId()));
+
         return sellerTakesOfferProtocol;
     }
 
-    public void onFiatPaymentStarted(String tradeId) {
-        // TODO remove if check when persistence is impl.
-        if (buyerAcceptsOfferProtocolMap.containsKey(tradeId)) {
-            buyerAcceptsOfferProtocolMap.get(tradeId).onFiatPaymentStarted();
-            persistPendingTrades();
-        }
-    }
-
-    public void onFiatPaymentReceived(String tradeId) {
-        sellerAsTakerProtocolMap.get(tradeId).onFiatPaymentReceived();
-    }
-
-    public void closeTrade(Trade trade) {
-        if (pendingTrades.containsKey(trade.getId())) {
-            pendingTrades.remove(trade.getId());
-            persistPendingTrades();
-        }
-
-        if (sellerAsTakerProtocolMap.containsKey(trade.getId())) {
-            sellerAsTakerProtocolMap.get(trade.getId()).cleanup();
-            sellerAsTakerProtocolMap.remove(trade.getId());
-        }
-        else if (buyerAcceptsOfferProtocolMap.containsKey(trade.getId())) {
-            buyerAcceptsOfferProtocolMap.get(trade.getId()).cleanup();
-            buyerAcceptsOfferProtocolMap.remove(trade.getId());
-        }
-
-        if (!closedTrades.containsKey(trade.getId())) {
-            closedTrades.put(trade.getId(), trade);
-            persistClosedTrades();
-        }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Called from Offerbook when offer gets removed from DHT
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void onOfferRemovedFromRemoteOfferBook(Offer offer) {
-        disposeCheckOfferAvailabilityRequest(offer);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Process new tradeMessages
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // Offerer handles those requests
-    private void handleMessage(Message message, Peer sender) {
-        if (message instanceof RequestIsOfferAvailableMessage) {
-            String offerId = ((RequestIsOfferAvailableMessage) message).offerId;
-            checkNotNull(offerId);
-
-            ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(offerId, isOfferOpen(offerId));
-            messageService.sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
-                @Override
-                public void handleResult() {
-                    // Offerer does not do anything at that moment. Peer might only watch the offer and does nto start a trade.
-                    log.trace("ReportOfferAvailabilityMessage successfully arrived at peer");
-                }
-
-                @Override
-                public void handleFault() {
-                    log.warn("Sending ReportOfferAvailabilityMessage failed.");
-                }
-            });
-        }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    private void removeOpenOffer(Offer offer,
-                                 ResultHandler resultHandler,
-                                 ErrorMessageHandler errorMessageHandler,
-                                 boolean removeFromBuyerAcceptsOfferProtocolMap) {
-        String offerId = offer.getId();
-        offerBookService.removeOffer(offer,
-                () -> {
-                    if (openOffers.containsKey(offerId)) {
-                        openOffers.remove(offerId);
-                        disposeCheckOfferAvailabilityRequest(offer);
-                        persistOpenOffers();
-                        if (removeFromBuyerAcceptsOfferProtocolMap && buyerAcceptsOfferProtocolMap.containsKey(offerId)) {
-                            buyerAcceptsOfferProtocolMap.get(offerId).cleanup();
-                            buyerAcceptsOfferProtocolMap.remove(offerId);
-                        }
-
-                        resultHandler.handleResult();
-                    }
-                    else {
-                        log.error("Locally stored offers does not contain the offer with the ID " + offerId);
-                        errorMessageHandler.handleErrorMessage("Locally stored offers does not contain the offer with the ID " + offerId);
-                    }
-                },
-                (message, throwable) -> errorMessageHandler.handleErrorMessage(message));
-    }
-
-    private Trade createTrade(Offer offer) {
-        if (pendingTrades.containsKey(offer.getId()))
-            log.error("That must never happen: Trades contains already an trade with the ID " + offer.getId());
-
-        Trade trade = new Trade(offer);
-        pendingTrades.put(offer.getId(), trade);
-        persistPendingTrades();
-
-        currentPendingTrade = trade;
-
-        return trade;
-    }
 
     private void createBuyerAcceptsOfferProtocol(Offer offer) {
         Trade trade;
@@ -482,13 +543,63 @@ public class TradeManager {
         buyerAcceptsOfferProtocolMap.put(offer.getId(), buyerAcceptsOfferProtocol);
     }
 
-    private void disposeCheckOfferAvailabilityRequest(Offer offer) {
-        if (checkOfferAvailabilityProtocolMap.containsKey(offer.getId())) {
-            CheckOfferAvailabilityProtocol protocol = checkOfferAvailabilityProtocolMap.get(offer.getId());
-            protocol.cancel();
-            protocol.cleanup();
-            checkOfferAvailabilityProtocolMap.remove(offer.getId());
+    private void closeTrade(Trade trade) {
+        if (pendingTrades.containsKey(trade.getId())) {
+            pendingTrades.remove(trade.getId());
+            persistPendingTrades();
         }
+
+        if (sellerAsTakerProtocolMap.containsKey(trade.getId())) {
+            sellerAsTakerProtocolMap.get(trade.getId()).cleanup();
+            sellerAsTakerProtocolMap.remove(trade.getId());
+        }
+        else if (buyerAcceptsOfferProtocolMap.containsKey(trade.getId())) {
+            buyerAcceptsOfferProtocolMap.get(trade.getId()).cleanup();
+            buyerAcceptsOfferProtocolMap.remove(trade.getId());
+        }
+
+        if (!closedTrades.containsKey(trade.getId())) {
+            closedTrades.put(trade.getId(), trade);
+            persistClosedTrades();
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Mailbox
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void decryptMailboxMessages(List<EncryptedMailboxMessage> encryptedMailboxMessages) {
+        log.trace("applyMailboxMessage encryptedMailboxMessage.size=" + encryptedMailboxMessages.size());
+        for (EncryptedMailboxMessage encrypted : encryptedMailboxMessages) {
+            MailboxMessage mailboxMessage = null;
+            try {
+                mailboxMessage = encryptionService.decryptToObject(user.getP2pEncryptPrivateKey(), encrypted.getEncryptionPackage());
+            } catch (Throwable e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
+            }
+            if (mailboxMessage instanceof TradeMessage) {
+                String tradeId = ((TradeMessage) mailboxMessage).tradeId;
+                mailboxMessages.put(tradeId, mailboxMessage);
+                log.trace("mailboxMessage with tradeID " + tradeId);
+                if (sellerAsTakerProtocolMap.containsKey(tradeId)) {
+                    sellerAsTakerProtocolMap.get(tradeId).setMailboxMessage(encrypted);
+                    log.trace("sellerAsTakerProtocolMap exist with tradeID " + tradeId);
+                }
+            }
+        }
+    }
+
+    private void emptyMailbox() {
+        mailboxService.removeAllMessages(user.getP2PSigPubKey(),
+                () -> {
+                    log.debug("All mailbox entries removed");
+                },
+                (errorMessage, fault) -> {
+                    log.error(errorMessage);
+                    log.error(fault.getMessage());
+                });
     }
 
     boolean isOfferOpen(String offerId) {
@@ -497,31 +608,6 @@ public class TradeManager {
                 && (openOffers.get(offerId).getState() == Offer.State.UNKNOWN
                 || openOffers.get(offerId).getState() == Offer.State.AVAILABLE);
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public ObservableMap<String, Offer> getOpenOffers() {
-        return openOffers;
-    }
-
-    public ObservableMap<String, Trade> getPendingTrades() {
-        return pendingTrades;
-    }
-
-    public ObservableMap<String, Trade> getClosedTrades() {
-        return closedTrades;
-    }
-
-    public Trade getCurrentPendingTrade() {
-        return currentPendingTrade;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void persistOpenOffers() {
         persistence.write(this, "openOffers", (Map<String, Offer>) new HashMap<>(openOffers));

@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.trade.taker.models;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
+import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.persistence.Persistence;
@@ -49,6 +50,7 @@ public class SellerAsTakerModel extends SharedTradeModel implements Serializable
     public SellerAsTakerModel(Trade trade,
                               Peer offererPeer,
                               MessageService messageService,
+                              MailboxService mailboxService,
                               WalletService walletService,
                               BlockChainService blockChainService,
                               SignatureService signatureService,
@@ -56,6 +58,7 @@ public class SellerAsTakerModel extends SharedTradeModel implements Serializable
                               Persistence persistence) {
         super(trade.getOffer(),
                 messageService,
+                mailboxService,
                 walletService,
                 blockChainService,
                 signatureService,
@@ -87,6 +90,7 @@ public class SellerAsTakerModel extends SharedTradeModel implements Serializable
         taker.fiatAccount = user.getBankAccount(offer.getBankAccountId());
         taker.accountId = user.getAccountId();
         taker.p2pSigPubKey = user.getP2PSigPubKey();
+        taker.p2pEncryptPublicKey = user.getP2PEncryptPubKey();
         taker.pubKey = taker.addressEntry.getPubKey();
     }
 

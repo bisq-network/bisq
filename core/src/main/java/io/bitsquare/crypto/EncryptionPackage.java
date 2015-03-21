@@ -15,29 +15,18 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.p2p;
-
-import io.bitsquare.crypto.EncryptionPackage;
+package io.bitsquare.crypto;
 
 import java.io.Serializable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+public class EncryptionPackage implements Serializable {
+    private static final long serialVersionUID = -8709538217388076762L;
 
-/*
-    Stores a message in encrypted form, so it never leaves the client in plain text.
- */
-public class EncryptedMailboxMessage implements MailboxMessage, Serializable {
-    private static final long serialVersionUID = -3111178895546299769L;
-    private static final Logger log = LoggerFactory.getLogger(EncryptedMailboxMessage.class);
+    public final byte[] encryptedKey;
+    public final byte[] encryptedPayload;
 
-    private EncryptionPackage encryptionPackage;
-
-    public EncryptedMailboxMessage(EncryptionPackage encryptionPackage) {
-        this.encryptionPackage = encryptionPackage;
-    }
-
-    public EncryptionPackage getEncryptionPackage() {
-        return encryptionPackage;
+    public EncryptionPackage(byte[] encryptedKey, byte[] encryptedPayload) {
+        this.encryptedKey = encryptedKey;
+        this.encryptedPayload = encryptedPayload;
     }
 }

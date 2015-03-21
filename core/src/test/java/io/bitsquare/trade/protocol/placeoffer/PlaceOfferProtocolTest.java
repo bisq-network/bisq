@@ -296,7 +296,7 @@ public class PlaceOfferProtocolTest {
 
     private Offer getOffer() {
         return new Offer(OFFER_ID,
-                DSAKeyUtil.generateKeyPair().getPublic(),
+                DSAKeyUtil.generateDSAKeyPair().getPublic(),
                 Direction.BUY,
                 100L,
                 Coin.CENT,

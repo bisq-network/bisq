@@ -70,7 +70,7 @@ public class Offer implements Serializable {
     private final Coin amount;
     private final Coin minAmount;
     //TODO use hex string
-    private final PublicKey messagePublicKey;
+    private final PublicKey p2pSigPubKey;
     private final FiatAccountType fiatAccountType;
     private final Country bankAccountCountry;
 
@@ -94,7 +94,7 @@ public class Offer implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Offer(String id,
-                 PublicKey messagePublicKey,
+                 PublicKey p2pSigPubKey,
                  Direction direction,
                  long fiatPrice,
                  Coin amount,
@@ -108,7 +108,7 @@ public class Offer implements Serializable {
                  List<Country> acceptedCountries,
                  List<Locale> acceptedLanguageLocales) {
         this.id = id;
-        this.messagePublicKey = messagePublicKey;
+        this.p2pSigPubKey = p2pSigPubKey;
         this.direction = direction;
         this.fiatPrice = fiatPrice;
         this.amount = amount;
@@ -221,8 +221,8 @@ public class Offer implements Serializable {
         return bankAccountUID;
     }
 
-    public PublicKey getMessagePublicKey() {
-        return messagePublicKey;
+    public PublicKey getP2PSigPubKey() {
+        return p2pSigPubKey;
     }
 
     public Date getCreationDate() {
@@ -250,7 +250,7 @@ public class Offer implements Serializable {
         checkNotNull(getCurrency(), "Currency is null");
         checkNotNull(getDirection(), "Direction is null");
         checkNotNull(getId(), "Id is null");
-        checkNotNull(getMessagePublicKey(), "MessagePublicKey is null");
+        checkNotNull(getP2PSigPubKey(), "p2pSigPubKey is null");
         checkNotNull(getMinAmount(), "MinAmount is null");
         checkNotNull(getPrice(), "Price is null");
 
@@ -277,7 +277,7 @@ public class Offer implements Serializable {
                 ", fiatPrice=" + fiatPrice +
                 ", amount=" + amount +
                 ", minAmount=" + minAmount +
-                ", messagePublicKey=" + messagePublicKey +
+                ", p2pSigPubKey=" + p2pSigPubKey +
                 ", fiatAccountType=" + fiatAccountType +
                 ", bankAccountCountry=" + bankAccountCountry +
                 ", securityDeposit=" + securityDeposit +

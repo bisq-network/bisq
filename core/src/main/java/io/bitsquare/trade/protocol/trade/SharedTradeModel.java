@@ -22,8 +22,10 @@ import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.taskrunner.SharedTaskModel;
 import io.bitsquare.crypto.SignatureService;
-import io.bitsquare.p2p.MessageService;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.p2p.MailboxMessage;
+import io.bitsquare.p2p.MailboxService;
+import io.bitsquare.p2p.MessageService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 
@@ -39,10 +41,13 @@ public class SharedTradeModel extends SharedTaskModel implements Serializable {
     // provided
     transient public final Offer offer;
     transient public final MessageService messageService;
+    transient public final MailboxService mailboxService;
     transient public final WalletService walletService;
     transient public final BlockChainService blockChainService;
     transient public final SignatureService signatureService;
     transient protected final Persistence persistence;
+
+    transient public MailboxMessage mailboxMessage;
 
     // derived
     transient public final String id;
@@ -54,12 +59,14 @@ public class SharedTradeModel extends SharedTaskModel implements Serializable {
 
     protected SharedTradeModel(Offer offer,
                                MessageService messageService,
+                               MailboxService mailboxService,
                                WalletService walletService,
                                BlockChainService blockChainService,
                                SignatureService signatureService,
                                Persistence persistence) {
         this.offer = offer;
         this.messageService = messageService;
+        this.mailboxService = mailboxService;
         this.walletService = walletService;
         this.blockChainService = blockChainService;
         this.signatureService = signatureService;

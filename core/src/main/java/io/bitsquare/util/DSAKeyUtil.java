@@ -36,7 +36,7 @@ public class DSAKeyUtil {
         return Utils.HEX.encode(x509EncodedKeySpec.getEncoded());
     }
 
-    public static KeyPair generateKeyPair() {
+    public static KeyPair generateDSAKeyPair() {
         try {
             final KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA");
             keyGen.initialize(1024);

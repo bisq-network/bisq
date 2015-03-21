@@ -20,7 +20,8 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
-import io.bitsquare.trade.protocol.trade.messages.BankTransferStartedMessage;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.models.BuyerAsOffererModel;
 
 import org.slf4j.Logger;
@@ -36,26 +37,32 @@ public class SendBankTransferStartedMessage extends Task<BuyerAsOffererModel> {
     @Override
     protected void doRun() {
         try {
-            BankTransferStartedMessage tradeMessage = new BankTransferStartedMessage(
-                    model.id,
+            FiatTransferStartedMessage tradeMessage = new FiatTransferStartedMessage(model.id,
                     model.offerer.payoutTxSignature,
                     model.offerer.payoutAmount,
                     model.taker.payoutAmount,
                     model.offerer.addressEntry.getAddressString());
-            model.messageService.sendMessage(model.taker.peer, tradeMessage, new SendMessageListener() {
-                @Override
-                public void handleResult() {
-                    log.trace("Sending BankTransferInitedMessage succeeded.");
-                    complete();
-                }
 
-                @Override
-                public void handleFault() {
-                    failed("Sending BankTransferInitedMessage failed.");
-                }
-            });
+            model.messageService.sendMessage(model.taker.peer, tradeMessage,
+                    model.taker.p2pSigPublicKey,
+                    model.taker.p2pEncryptPubKey,
+                    new SendMessageListener() {
+                        @Override
+                        public void handleResult() {
+                            log.trace("Sending BankTransferInitedMessage succeeded.");
+                            model.trade.setState(Trade.State.FIAT_PAYMENT_STARTED);
+                            complete();
+                        }
+
+                        @Override
+                        public void handleFault() {
+                            failed("Sending BankTransferInitedMessage failed.");
+                            model.trade.setState(Trade.State.FAULT);
+                        }
+                    });
         } catch (Throwable t) {
             failed("Sending BankTransferInitedMessage failed.");
+            model.trade.setState(Trade.State.FAULT);
         }
     }
 }

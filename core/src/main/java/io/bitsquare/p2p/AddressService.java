@@ -23,5 +23,5 @@ import io.bitsquare.p2p.listener.GetPeerAddressListener;
 import java.security.PublicKey;
 
 public interface AddressService extends DHTService{
-    void findPeerAddress(PublicKey messagePublicKey, GetPeerAddressListener getPeerAddressListener);
+    void findPeerAddress(PublicKey p2pSigPubKey, GetPeerAddressListener getPeerAddressListener);
 }
