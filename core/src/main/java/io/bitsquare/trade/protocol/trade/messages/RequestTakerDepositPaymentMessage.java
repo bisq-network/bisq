@@ -23,6 +23,8 @@ import org.bitcoinj.core.TransactionOutput;
 
 import java.io.Serializable;
 
+import java.security.PublicKey;
+
 import java.util.List;
 
 public class RequestTakerDepositPaymentMessage extends TradeMessage implements Serializable {
@@ -30,20 +32,28 @@ public class RequestTakerDepositPaymentMessage extends TradeMessage implements S
 
     public final List<TransactionOutput> offererConnectedOutputsForAllInputs;
     public final List<TransactionOutput> offererOutputs;
-    public final byte[] offererPubKey;
+    public final byte[] offererTradeWalletPubKey;
+    public final PublicKey offererP2PSigPublicKey;
+    public final PublicKey offererP2PEncryptPublicKey;
+
+
     public final FiatAccount offererFiatAccount;
     public final String offererAccountId;
 
     public RequestTakerDepositPaymentMessage(String tradeId,
                                              List<TransactionOutput> offererConnectedOutputsForAllInputs,
                                              List<TransactionOutput> offererOutputs,
-                                             byte[] offererPubKey,
+                                             byte[] offererTradeWalletPubKey,
+                                             PublicKey offererP2PSigPublicKey,
+                                             PublicKey offererP2PEncryptPublicKey,
                                              FiatAccount offererFiatAccount,
                                              String offererAccountId) {
+        this.offererP2PSigPublicKey = offererP2PSigPublicKey;
+        this.offererP2PEncryptPublicKey = offererP2PEncryptPublicKey;
         this.tradeId = tradeId;
         this.offererConnectedOutputsForAllInputs = offererConnectedOutputsForAllInputs;
         this.offererOutputs = offererOutputs;
-        this.offererPubKey = offererPubKey;
+        this.offererTradeWalletPubKey = offererTradeWalletPubKey;
         this.offererFiatAccount = offererFiatAccount;
         this.offererAccountId = offererAccountId;
     }

@@ -583,11 +583,11 @@ public class TradeManager {
                     mailboxMessages.put(tradeId, mailboxMessage);
                     log.trace("mailboxMessage with tradeID " + tradeId);
                     if (takerAsSellerProtocolMap.containsKey(tradeId)) {
-                        takerAsSellerProtocolMap.get(tradeId).setMailboxMessage(encrypted);
+                        takerAsSellerProtocolMap.get(tradeId).setMailboxMessage(mailboxMessage);
                         log.trace("sellerAsTakerProtocolMap exist with tradeID " + tradeId);
                     }
                     if (offererAsBuyerProtocolMap.containsKey(tradeId)) {
-                        offererAsBuyerProtocolMap.get(tradeId).setMailboxMessage(encrypted);
+                        offererAsBuyerProtocolMap.get(tradeId).setMailboxMessage(mailboxMessage);
                         log.trace("buyerAcceptsOfferProtocolMap exist with tradeID " + tradeId);
                     }
                 }

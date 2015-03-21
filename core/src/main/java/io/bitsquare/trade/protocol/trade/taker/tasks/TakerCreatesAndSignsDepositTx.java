@@ -48,8 +48,8 @@ public class TakerCreatesAndSignsDepositTx extends Task<TakerAsSellerModel> {
                     model.offerer.connectedOutputsForAllInputs,
                     model.offerer.outputs,
                     model.taker.addressEntry,
-                    model.offerer.pubKey,
-                    model.taker.pubKey,
+                    model.offerer.tradeWalletPubKey,
+                    model.taker.tradeWalletPubKey,
                     model.arbitratorPubKey);
 
 

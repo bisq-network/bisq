@@ -50,8 +50,8 @@ public class SignAndPublishDepositTx extends Task<OffererAsBuyerModel> {
                     model.taker.connectedOutputsForAllInputs,
                     model.offerer.outputs,
                     offererInputAmount,
-                    model.offerer.pubKey,
-                    model.taker.pubKey,
+                    model.offerer.tradeWalletPubKey,
+                    model.taker.tradeWalletPubKey,
                     model.arbitratorPubKey,
                     new FutureCallback<Transaction>() {
                         @Override

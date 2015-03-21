@@ -48,8 +48,8 @@ public class SignAndPublishPayoutTx extends Task<TakerAsSellerModel> {
                     model.taker.payoutAmount,
                     model.offerer.payoutAddressString,
                     model.taker.addressEntry,
-                    model.offerer.pubKey,
-                    model.taker.pubKey,
+                    model.offerer.tradeWalletPubKey,
+                    model.taker.tradeWalletPubKey,
                     model.arbitratorPubKey,
                     new FutureCallback<Transaction>() {
                         @Override

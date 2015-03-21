@@ -25,6 +25,8 @@ import org.bitcoinj.core.TransactionOutput;
 
 import java.io.Serializable;
 
+import java.security.PublicKey;
+
 import java.util.List;
 
 public class Offerer implements Serializable {
@@ -35,7 +37,7 @@ public class Offerer implements Serializable {
     public Peer peer;
 
     // written by tasks
-    public byte[] pubKey;
+    public byte[] tradeWalletPubKey;
     public Coin payoutAmount;
     public String payoutAddressString;
     public List<TransactionOutput> connectedOutputsForAllInputs;
@@ -43,5 +45,7 @@ public class Offerer implements Serializable {
     public byte[] signature;
     public FiatAccount fiatAccount;
     public String accountId;
+    public PublicKey p2pSigPublicKey;
+    public PublicKey p2pEncryptPubKey;
 
 }

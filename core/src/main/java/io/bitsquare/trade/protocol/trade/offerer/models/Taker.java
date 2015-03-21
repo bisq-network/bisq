@@ -45,5 +45,5 @@ public class Taker implements Serializable {
     public Transaction preparedDepositTx;
     public List<TransactionOutput> connectedOutputsForAllInputs;
     public String payoutAddressString;
-    public byte[] pubKey;
+    public byte[] tradeWalletPubKey;
 }

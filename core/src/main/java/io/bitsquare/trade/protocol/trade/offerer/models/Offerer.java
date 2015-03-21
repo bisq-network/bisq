@@ -38,10 +38,11 @@ public class Offerer implements Serializable {
     transient public FiatAccount fiatAccount;
     transient public String accountId;
     transient public PublicKey p2pSigPubKey;
+    transient public PublicKey p2pEncryptPubKey;
     transient public byte[] registrationPubKey;
     transient public DeterministicKey registrationKeyPair;
     transient public AddressEntry addressEntry;
-    transient public byte[] pubKey;
+    transient public byte[] tradeWalletPubKey;
 
     // written by tasks
     public byte[] payoutTxSignature;

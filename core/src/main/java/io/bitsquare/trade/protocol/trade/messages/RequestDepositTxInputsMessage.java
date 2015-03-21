@@ -26,12 +26,12 @@ public class RequestDepositTxInputsMessage extends TradeMessage implements Seria
 
     public final Coin tradeAmount;
     public final String takeOfferFeeTxId;
-    public final byte[] takerPubKey;
+    public final byte[] takerTradeWalletPubKey;
 
-    public RequestDepositTxInputsMessage(String tradeId, String takeOfferFeeTxId, Coin tradeAmount, byte[] takerPubKey) {
+    public RequestDepositTxInputsMessage(String tradeId, String takeOfferFeeTxId, Coin tradeAmount, byte[] takerTradeWalletPubKey) {
         this.tradeId = tradeId;
         this.takeOfferFeeTxId = takeOfferFeeTxId;
         this.tradeAmount = tradeAmount;
-        this.takerPubKey = takerPubKey;
+        this.takerTradeWalletPubKey = takerTradeWalletPubKey;
     }
 }

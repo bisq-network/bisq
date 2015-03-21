@@ -43,7 +43,7 @@ public class Taker implements Serializable {
     transient public byte[] registrationPubKey; // TODO not read yet, missing impl.
     transient public DeterministicKey registrationKeyPair;
     transient public AddressEntry addressEntry;
-    transient public byte[] pubKey;
+    transient public byte[] tradeWalletPubKey;
 
     // written by tasks
     public List<TransactionOutput> connectedOutputsForAllInputs;

@@ -44,7 +44,9 @@ public class ProcessRequestTakerDepositPaymentMessage extends Task<TakerAsSeller
             model.offerer.connectedOutputsForAllInputs = checkNotNull(message.offererConnectedOutputsForAllInputs);
             checkArgument(message.offererConnectedOutputsForAllInputs.size() > 0);
             model.offerer.outputs = checkNotNull(message.offererOutputs);
-            model.offerer.pubKey = checkNotNull(message.offererPubKey);
+            model.offerer.tradeWalletPubKey = checkNotNull(message.offererTradeWalletPubKey);
+            model.offerer.p2pSigPublicKey = checkNotNull(message.offererP2PSigPublicKey);
+            model.offerer.p2pEncryptPubKey = checkNotNull(message.offererP2PEncryptPublicKey);
             model.offerer.fiatAccount = checkNotNull(message.offererFiatAccount);
             model.offerer.accountId = nonEmptyStringOf(message.offererAccountId);
 

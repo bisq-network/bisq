@@ -91,7 +91,7 @@ public class TakerAsSellerModel extends SharedTradeModel implements Serializable
         taker.accountId = user.getAccountId();
         taker.p2pSigPubKey = user.getP2PSigPubKey();
         taker.p2pEncryptPublicKey = user.getP2PEncryptPubKey();
-        taker.pubKey = taker.addressEntry.getPubKey();
+        taker.tradeWalletPubKey = taker.addressEntry.getPubKey();
     }
 
     // Get called form taskRunner after each completed task

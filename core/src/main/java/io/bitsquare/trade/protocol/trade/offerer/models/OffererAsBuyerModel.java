@@ -82,7 +82,8 @@ public class OffererAsBuyerModel extends SharedTradeModel implements Serializabl
         offerer.fiatAccount = user.getBankAccount(offer.getBankAccountId());
         offerer.accountId = user.getAccountId();
         offerer.p2pSigPubKey = user.getP2PSigPubKey();
-        offerer.pubKey = offerer.addressEntry.getPubKey();
+        offerer.p2pEncryptPubKey = user.getP2PEncryptPubKey();
+        offerer.tradeWalletPubKey = offerer.addressEntry.getPubKey();
         log.debug("BuyerAsOffererModel addressEntry " + offerer.addressEntry);
     }
 

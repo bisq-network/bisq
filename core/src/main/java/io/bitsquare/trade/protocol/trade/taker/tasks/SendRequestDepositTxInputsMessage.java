@@ -44,7 +44,7 @@ public class SendRequestDepositTxInputsMessage extends Task<TakerAsSellerModel> 
                 model.id,
                 model.getTakeOfferFeeTx().getHashAsString(),
                 model.trade.getTradeAmount(),
-                model.taker.pubKey
+                model.taker.tradeWalletPubKey
         );
 
         model.messageService.sendMessage(model.offerer.peer, msg, new SendMessageListener() {

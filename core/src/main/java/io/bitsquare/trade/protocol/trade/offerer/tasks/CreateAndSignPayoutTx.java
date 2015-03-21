@@ -48,8 +48,8 @@ public class CreateAndSignPayoutTx extends Task<OffererAsBuyerModel> {
                     takerPayoutAmount,
                     model.offerer.addressEntry,
                     model.taker.payoutAddressString,
-                    model.offerer.pubKey,
-                    model.taker.pubKey,
+                    model.offerer.tradeWalletPubKey,
+                    model.taker.tradeWalletPubKey,
                     model.arbitratorPubKey);
 
             model.offerer.payoutTxSignature = offererPayoutTxSignature;

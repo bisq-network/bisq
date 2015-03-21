@@ -39,7 +39,9 @@ public class RequestTakerDepositPayment extends Task<OffererAsBuyerModel> {
                 model.id,
                 model.offerer.connectedOutputsForAllInputs,
                 model.offerer.outputs,
-                model.offerer.pubKey,
+                model.offerer.tradeWalletPubKey,
+                model.offerer.p2pSigPubKey,
+                model.offerer.p2pEncryptPubKey,
                 model.offerer.fiatAccount,
                 model.offerer.accountId);
 
