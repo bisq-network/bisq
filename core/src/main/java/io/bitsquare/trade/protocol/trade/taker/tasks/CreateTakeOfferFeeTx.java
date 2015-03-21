@@ -40,13 +40,13 @@ public class CreateTakeOfferFeeTx extends Task<TakerAsSellerModel> {
             Transaction createTakeOfferFeeTx = model.tradeWalletService.createTakeOfferFeeTx(model.taker.addressEntry);
 
             model.setTakeOfferFeeTx(createTakeOfferFeeTx);
-            model.trade.setState(Trade.State.TAKE_OFFER_FEE_TX_CREATED);
+            model.trade.setProcessState(Trade.ProcessState.TAKE_OFFER_FEE_TX_CREATED);
 
             complete();
         } catch (Exception e) {
             appendToErrorMessage(e.getMessage());
 
-            model.trade.setState(Trade.State.FAULT);
+            model.trade.setProcessState(Trade.ProcessState.FAULT);
 
             failed(e);
         }

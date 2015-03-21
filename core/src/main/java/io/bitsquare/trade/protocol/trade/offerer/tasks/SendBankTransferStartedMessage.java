@@ -43,26 +43,26 @@ public class SendBankTransferStartedMessage extends Task<OffererAsBuyerModel> {
                     model.taker.payoutAmount,
                     model.offerer.addressEntry.getAddressString());
 
-            model.messageService.sendMessage(model.taker.peer, tradeMessage,
+            model.messageService.sendMessage(model.trade.getTradingPeer(), tradeMessage,
                     model.taker.p2pSigPublicKey,
                     model.taker.p2pEncryptPubKey,
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {
                             log.trace("Sending BankTransferInitedMessage succeeded.");
-                            model.trade.setState(Trade.State.FIAT_PAYMENT_STARTED);
+                            model.trade.setProcessState(Trade.ProcessState.FIAT_PAYMENT_STARTED);
                             complete();
                         }
 
                         @Override
                         public void handleFault() {
                             failed("Sending BankTransferInitedMessage failed.");
-                            model.trade.setState(Trade.State.FAULT);
+                            model.trade.setProcessState(Trade.ProcessState.FAULT);
                         }
                     });
         } catch (Throwable t) {
             failed("Sending BankTransferInitedMessage failed.");
-            model.trade.setState(Trade.State.FAULT);
+            model.trade.setProcessState(Trade.ProcessState.FAULT);
         }
     }
 }

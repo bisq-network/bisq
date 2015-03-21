@@ -90,7 +90,7 @@ public class TradeManager {
     private final Map<String, OffererAsBuyerProtocol> offererAsBuyerProtocolMap = new HashMap<>();
     private final Map<String, CheckOfferAvailabilityProtocol> checkOfferAvailabilityProtocolMap = new HashMap<>();
 
-    private final ObservableMap<String, Offer> openOffers = FXCollections.observableHashMap();
+    private final ObservableMap<String, Trade> openOfferTrades = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> pendingTrades = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> closedTrades = FXCollections.observableHashMap();
     private final Map<String, MailboxMessage> mailboxMessages = new HashMap<>();
@@ -119,9 +119,9 @@ public class TradeManager {
         this.encryptionService = encryptionService;
         this.offerBookService = offerBookService;
 
-        Serializable openOffersObject = persistence.read(this, "openOffers");
-        if (openOffersObject instanceof Map<?, ?>) {
-            openOffers.putAll((Map<String, Offer>) openOffersObject);
+        Serializable openOfferTradesObject = persistence.read(this, "openOfferTrades");
+        if (openOfferTradesObject instanceof Map<?, ?>) {
+            openOfferTrades.putAll((Map<String, Trade>) openOfferTradesObject);
         }
 
         Serializable pendingTradesObject = persistence.read(this, "pendingTrades");
@@ -143,33 +143,19 @@ public class TradeManager {
     // When all services are initialized we create the protocols for our open offers and persisted not completed pendingTrades
     // BuyerAcceptsOfferProtocol listens for take offer requests, so we need to instantiate it early.
     public void onAllServicesInitialized() {
-        for (Map.Entry<String, Offer> entry : openOffers.entrySet()) {
+        for (Map.Entry<String, Trade> entry : openOfferTrades.entrySet()) {
             createOffererAsBuyerProtocol(entry.getValue());
         }
         for (Map.Entry<String, Trade> entry : pendingTrades.entrySet()) {
+            // We continue an interrupted trade.
+            // TODO if the peer has changed its IP address, we need to make another findPeer request. At the moment we use the peer stored in trade to
+            // continue the trade, but that might fail.
             Trade trade = entry.getValue();
-            if (trade.getState() == Trade.State.FAULT) {
-                closeTrade(trade);
+            if (isMyOffer(trade.getOffer())) {
+                createOffererAsBuyerProtocol(trade);
             }
             else {
-                Offer offer = trade.getOffer();
-                if (isMyOffer(offer)) {
-                    createOffererAsBuyerProtocol(offer);
-                }
-                else {
-                    CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(offer, messageService, addressService);
-                    CheckOfferAvailabilityProtocol protocol = new CheckOfferAvailabilityProtocol(model,
-                            () -> {
-                                disposeCheckOfferAvailabilityRequest(offer);
-                                // TODO need to check that trade hijacking is not possible (taking trades form other peers)
-                                if (offer.getState() == Offer.State.AVAILABLE || offer.getState() == Offer.State.RESERVED) {
-                                    createTakerAsSellerProtocol(trade, model.getPeer());
-                                }
-                            },
-                            (errorMessage) -> disposeCheckOfferAvailabilityRequest(offer));
-                    checkOfferAvailabilityProtocolMap.put(offer.getId(), protocol);
-                    protocol.checkOfferAvailability();
-                }
+                createTakerAsSellerProtocol(trade);
             }
         }
 
@@ -220,9 +206,10 @@ public class TradeManager {
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 model,
                 (transaction) -> {
-                    openOffers.put(offer.getId(), offer);
+                    Trade trade = new Trade(offer);
+                    openOfferTrades.put(trade.getId(), trade);
                     persistOpenOffers();
-                    createOffererAsBuyerProtocol(offer);
+                    createOffererAsBuyerProtocol(trade);
                     resultHandler.handleResult(transaction);
                 },
                 (message) -> errorMessageHandler.handleErrorMessage(message)
@@ -340,8 +327,8 @@ public class TradeManager {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableMap<String, Offer> getOpenOffers() {
-        return openOffers;
+    public ObservableMap<String, Trade> getOpenOfferTrades() {
+        return openOfferTrades;
     }
 
     public ObservableMap<String, Trade> getPendingTrades() {
@@ -372,8 +359,8 @@ public class TradeManager {
         String offerId = offer.getId();
         offerBookService.removeOffer(offer,
                 () -> {
-                    if (openOffers.containsKey(offerId)) {
-                        openOffers.remove(offerId);
+                    if (openOfferTrades.containsKey(offerId)) {
+                        openOfferTrades.remove(offerId);
                         disposeCheckOfferAvailabilityRequest(offer);
                         persistOpenOffers();
                         if (removeFromBuyerAcceptsOfferProtocolMap && offererAsBuyerProtocolMap.containsKey(offerId)) {
@@ -413,8 +400,9 @@ public class TradeManager {
     private Trade takeAvailableOffer(Coin amount, Offer offer, Peer peer) {
         Trade trade = createTrade(offer);
         trade.setTradeAmount(amount);
+        trade.setTradingPeer(peer);
 
-        TakerAsSellerProtocol sellerTakesOfferProtocol = createTakerAsSellerProtocol(trade, peer);
+        TakerAsSellerProtocol sellerTakesOfferProtocol = createTakerAsSellerProtocol(trade);
         sellerTakesOfferProtocol.takeAvailableOffer();
         return trade;
     }
@@ -432,11 +420,11 @@ public class TradeManager {
         return trade;
     }
 
-    private TakerAsSellerProtocol createTakerAsSellerProtocol(Trade trade, Peer peer) {
-        trade.stateProperty().addListener((ov, oldValue, newValue) -> {
+    private TakerAsSellerProtocol createTakerAsSellerProtocol(Trade trade) {
+        trade.processStateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("trade state = " + newValue);
             switch (newValue) {
-                case OPEN:
+                case INIT:
                     break;
                 case TAKE_OFFER_FEE_TX_CREATED:
                 case DEPOSIT_PUBLISHED:
@@ -458,7 +446,6 @@ public class TradeManager {
 
         TakerAsSellerModel model = new TakerAsSellerModel(
                 trade,
-                peer,
                 messageService,
                 mailboxService,
                 walletService,
@@ -478,17 +465,7 @@ public class TradeManager {
     }
 
 
-    private void createOffererAsBuyerProtocol(Offer offer) {
-        Trade trade;
-        if (pendingTrades.containsKey(offer.getId())) {
-            trade = pendingTrades.get(offer.getId());
-            currentPendingTrade = trade;
-        }
-        else {
-            trade = new Trade(offer);
-            // don't save it in pendingTrades. It is only a potential trade
-        }
-
+    private void createOffererAsBuyerProtocol(Trade trade) {
         OffererAsBuyerModel model = new OffererAsBuyerModel(
                 trade,
                 messageService,
@@ -501,16 +478,16 @@ public class TradeManager {
 
 
         // TODO check, remove listener
-        trade.stateProperty().addListener((ov, oldValue, newValue) -> {
+        trade.processStateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("trade state = " + newValue);
             switch (newValue) {
-                case OPEN:
+                case INIT:
                     break;
                 case TAKE_OFFER_FEE_TX_CREATED:
                     persistPendingTrades();
                     break;
                 case DEPOSIT_PUBLISHED:
-                    removeOpenOffer(offer,
+                    removeOpenOffer(trade.getOffer(),
                             () -> log.debug("remove offer was successful"),
                             (message) -> log.error(message),
                             false);
@@ -531,7 +508,6 @@ public class TradeManager {
                 case MESSAGE_SENDING_FAILED:
                 case FAULT:
                     closeTrade(trade);
-                    offererAsBuyerProtocolMap.get(trade.getId()).cleanup();
                     break;
                 default:
                     log.warn("Unhandled trade state: " + newValue);
@@ -540,7 +516,7 @@ public class TradeManager {
         });
 
         OffererAsBuyerProtocol protocol = new OffererAsBuyerProtocol(model);
-        offererAsBuyerProtocolMap.put(offer.getId(), protocol);
+        offererAsBuyerProtocolMap.put(trade.getId(), protocol);
         if (mailboxMessages.containsKey(trade.getId())) {
             log.debug("OffererAsBuyerProtocol setMailboxMessage " + trade.getId());
             protocol.setMailboxMessage(mailboxMessages.get(trade.getId()));
@@ -612,13 +588,13 @@ public class TradeManager {
     }
 
     boolean isOfferOpen(String offerId) {
-        return openOffers.containsKey(offerId)
-                && (openOffers.get(offerId).getState() == Offer.State.UNKNOWN
-                || openOffers.get(offerId).getState() == Offer.State.AVAILABLE);
+        return openOfferTrades.containsKey(offerId)
+                && (openOfferTrades.get(offerId).getOffer().getState() == Offer.State.UNKNOWN
+                || openOfferTrades.get(offerId).getOffer().getState() == Offer.State.AVAILABLE);
     }
 
     private void persistOpenOffers() {
-        persistence.write(this, "openOffers", (Map<String, Offer>) new HashMap<>(openOffers));
+        persistence.write(this, "openOfferTrades", (Map<String, Trade>) new HashMap<>(openOfferTrades));
     }
 
     private void persistPendingTrades() {

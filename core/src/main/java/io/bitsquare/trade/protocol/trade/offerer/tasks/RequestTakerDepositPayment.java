@@ -45,7 +45,7 @@ public class RequestTakerDepositPayment extends Task<OffererAsBuyerModel> {
                 model.offerer.fiatAccount,
                 model.offerer.accountId);
 
-        model.messageService.sendMessage(model.taker.peer, tradeMessage, new SendMessageListener() {
+        model.messageService.sendMessage(model.trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");

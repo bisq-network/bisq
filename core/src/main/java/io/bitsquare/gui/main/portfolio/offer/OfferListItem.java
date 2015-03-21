@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.portfolio.offer;
 
 import io.bitsquare.offer.Offer;
+import io.bitsquare.trade.Trade;
 
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.
@@ -26,8 +27,8 @@ class OfferListItem {
 
     private final Offer offer;
 
-    public OfferListItem(Offer offer) {
-        this.offer = offer;
+    public OfferListItem(Trade trade) {
+        this.offer = trade.getOffer();
     }
 
     public Offer getOffer() {

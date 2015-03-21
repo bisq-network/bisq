@@ -18,7 +18,6 @@
 package io.bitsquare.trade.protocol.trade.offerer.models;
 
 import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.p2p.Peer;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -34,7 +33,6 @@ public class Taker implements Serializable {
     private static final long serialVersionUID = 2660909397210346486L;
 
     // written by tasks
-    public Peer peer;
     public String accountId;
     public FiatAccount fiatAccount;
     public PublicKey p2pSigPublicKey;

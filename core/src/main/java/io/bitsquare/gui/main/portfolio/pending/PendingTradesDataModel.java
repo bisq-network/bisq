@@ -66,11 +66,11 @@ class PendingTradesDataModel implements Activatable, DataModel {
     private boolean isOfferer;
     private Trade closedTrade;
 
-    private final ChangeListener<Trade.State> tradeStateChangeListener;
+    private final ChangeListener<Trade.ProcessState> tradeStateChangeListener;
     private final MapChangeListener<String, Trade> mapChangeListener;
 
     final StringProperty txId = new SimpleStringProperty();
-    final ObjectProperty<Trade.State> tradeState = new SimpleObjectProperty<>();
+    final ObjectProperty<Trade.ProcessState> tradeState = new SimpleObjectProperty<>();
     final IntegerProperty selectedIndex = new SimpleIntegerProperty(-1);
 
     @Inject
@@ -146,9 +146,9 @@ class PendingTradesDataModel implements Activatable, DataModel {
             isOfferer = getTrade().getOffer().getP2PSigPubKey().equals(user.getP2PSigPubKey());
 
             Trade trade = getTrade();
-            trade.stateProperty().addListener(tradeStateChangeListener);
-            tradeState.set(trade.stateProperty().get());
-            log.trace("selectTrade trade.stateProperty().get() " + trade.stateProperty().get());
+            trade.processStateProperty().addListener(tradeStateChangeListener);
+            tradeState.set(trade.processStateProperty().get());
+            log.trace("selectTrade trade.stateProperty().get() " + trade.processStateProperty().get());
 
             if (trade.getDepositTx() != null)
                 txId.set(trade.getDepositTx().getHashAsString());
@@ -277,7 +277,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
 
     private void cleanUpSelectedTrade() {
         if (selectedItem != null) {
-            selectedItem.getTrade().stateProperty().removeListener(tradeStateChangeListener);
+            selectedItem.getTrade().processStateProperty().removeListener(tradeStateChangeListener);
         }
     }
 

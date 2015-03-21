@@ -18,6 +18,7 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.offer.Offer;
+import io.bitsquare.p2p.Peer;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -38,8 +39,16 @@ public class Trade implements Serializable {
     // Enum
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static enum State {
-        OPEN,
+    public static enum LifeCycleState {
+        OPEN_OFFER,
+        CANCELED,
+        PENDING,
+        COMPLETED,
+        FAILED
+    }
+    
+    public static enum ProcessState {
+        INIT,
         TAKE_OFFER_FEE_PUBLISH_FAILED,
         TAKE_OFFER_FEE_TX_CREATED,
         DEPOSIT_PUBLISHED,
@@ -64,7 +73,7 @@ public class Trade implements Serializable {
 
     private final Offer offer;
     private final Date date;
-    private State state;
+    private ProcessState processState;
     private Coin tradeAmount;
     private Contract contract;
     private String contractAsJson;
@@ -72,13 +81,14 @@ public class Trade implements Serializable {
     private String offererContractSignature;
     private Transaction depositTx;
     private Transaction payoutTx;
+    private Peer tradingPeer;
 
     // For changing values we use properties to get binding support in the UI (table)
     // When serialized those transient properties are not instantiated, so we instantiate them in the getters at first
     // access. Only use the accessor not the private field.
     transient private ObjectProperty<Coin> _tradeAmount;
     transient private ObjectProperty<Fiat> _tradeVolume;
-    transient private ObjectProperty<State> _state;
+    transient private ObjectProperty<ProcessState> _state;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -89,13 +99,17 @@ public class Trade implements Serializable {
         this.offer = offer;
         date = new Date();
 
-        setState(State.OPEN);
+        setProcessState(ProcessState.INIT);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setTradingPeer(Peer tradingPeer) {
+        this.tradingPeer = tradingPeer;
+    }
 
     public void setTakerContractSignature(String takerSignature) {
         this.takerContractSignature = takerSignature;
@@ -135,9 +149,9 @@ public class Trade implements Serializable {
         this.payoutTx = tx;
     }
 
-    public void setState(State state) {
-        this.state = state;
-        stateProperty().set(state);
+    public void setProcessState(ProcessState processState) {
+        this.processState = processState;
+        processStateProperty().set(processState);
     }
 
 
@@ -165,8 +179,8 @@ public class Trade implements Serializable {
         return payoutTx;
     }
 
-    public State getState() {
-        return state;
+    public ProcessState getProcessState() {
+        return processState;
     }
 
     public Coin getSecurityDeposit() {
@@ -189,6 +203,11 @@ public class Trade implements Serializable {
         return date;
     }
 
+    public Peer getTradingPeer() {
+        return tradingPeer;
+    }
+
+
     // When serialized those transient properties are not instantiated, so we need to instantiate them at first access
     public ObjectProperty<Coin> tradeAmountProperty() {
         if (_tradeAmount == null)
@@ -204,9 +223,9 @@ public class Trade implements Serializable {
         return _tradeVolume;
     }
 
-    public ObjectProperty<State> stateProperty() {
+    public ObjectProperty<ProcessState> processStateProperty() {
         if (_state == null)
-            _state = new SimpleObjectProperty<>(state);
+            _state = new SimpleObjectProperty<>(processState);
 
         return _state;
     }
@@ -216,7 +235,7 @@ public class Trade implements Serializable {
         return "Trade{" +
                 "offer=" + offer +
                 ", date=" + date +
-                ", state=" + state +
+                ", state=" + processState +
                 ", tradeAmount=" + tradeAmount +
                 ", contract=" + contract +
                 ", contractAsJson='" + contractAsJson + '\'' +

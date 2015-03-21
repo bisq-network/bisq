@@ -27,7 +27,7 @@ import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestTakerDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.SetupListenerForBlockChainConfirmation;
+import io.bitsquare.trade.protocol.trade.taker.tasks.SetupListenerForBlockChainConfirmation;
 import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 import io.bitsquare.trade.protocol.trade.taker.tasks.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
@@ -43,11 +43,6 @@ import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCommitDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCreatesAndSignsDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOffererAccount;
-import io.bitsquare.util.Utilities;
-
-import java.util.function.Function;
-
-import javafx.animation.AnimationTimer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,11 +51,9 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
 public class TakerAsSellerProtocol {
     private static final Logger log = LoggerFactory.getLogger(TakerAsSellerProtocol.class);
-    private static final int TIMEOUT_DELAY = 10000;
 
     private final TakerAsSellerModel model;
     private final MessageHandler messageHandler;
-    private AnimationTimer timeoutTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -72,8 +65,6 @@ public class TakerAsSellerProtocol {
         this.model = model;
         messageHandler = this::handleMessage;
         model.messageService.addMessageHandler(messageHandler);
-
-
     }
 
 
@@ -105,10 +96,8 @@ public class TakerAsSellerProtocol {
                 () -> {
                     log.debug("taskRunner at takeAvailableOffer completed");
                 },
-                (errorMessage) -> {
-                    log.error(errorMessage);
-                }
-        );
+                (errorMessage) -> handleTaskRunnerFault(errorMessage));
+
         taskRunner.addTasks(
                 CreateTakeOfferFeeTx.class,
                 BroadcastTakeOfferFeeTx.class,
@@ -129,10 +118,8 @@ public class TakerAsSellerProtocol {
                 () -> {
                     log.debug("taskRunner at handleTakerDepositPaymentRequestMessage completed");
                 },
-                (errorMessage) -> {
-                    log.error(errorMessage);
-                }
-        );
+                (errorMessage) -> handleTaskRunnerFault(errorMessage));
+
         taskRunner.addTasks(
                 ProcessRequestTakerDepositPaymentMessage.class,
                 VerifyOffererAccount.class,
@@ -150,10 +137,8 @@ public class TakerAsSellerProtocol {
                 () -> {
                     log.debug("taskRunner at handleDepositTxPublishedMessage completed");
                 },
-                (errorMessage) -> {
-                    log.error(errorMessage);
-                }
-        );
+                (errorMessage) -> handleTaskRunnerFault(errorMessage));
+
         taskRunner.addTasks(
                 ProcessDepositTxPublishedMessage.class,
                 TakerCommitDepositTx.class,
@@ -169,23 +154,21 @@ public class TakerAsSellerProtocol {
                 () -> {
                     log.debug("taskRunner at handleFiatTransferStartedMessage completed");
                 },
-                (errorMessage) -> {
-                    log.error(errorMessage);
-                }
-        );
+                (errorMessage) -> handleTaskRunnerFault(errorMessage));
+
         taskRunner.addTasks(ProcessFiatTransferStartedMessage.class);
         taskRunner.run();
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Called from UI
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     public void onFiatPaymentReceived() {
-        model.trade.setState(Trade.State.FIAT_PAYMENT_RECEIVED);
-        
+        model.trade.setProcessState(Trade.ProcessState.FIAT_PAYMENT_RECEIVED);
+
         TaskRunner<TakerAsSellerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("taskRunner at handleFiatReceivedUIEvent completed");
@@ -193,10 +176,8 @@ public class TakerAsSellerProtocol {
                     // we are done!
                     model.onComplete();
                 },
-                (errorMessage) -> {
-                    log.error(errorMessage);
-                }
-        );
+                (errorMessage) -> handleTaskRunnerFault(errorMessage));
+
         taskRunner.addTasks(
                 SignAndPublishPayoutTx.class,
                 VerifyOfferFeePayment.class,
@@ -232,22 +213,8 @@ public class TakerAsSellerProtocol {
         }
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Timeout
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void startTimeout(Function<AnimationTimer, Void> callback) {
-        stopTimeout();
-        timeoutTimer = Utilities.setTimeout(TIMEOUT_DELAY, callback);
-        timeoutTimer.start();
-    }
-
-    private void stopTimeout() {
-        if (timeoutTimer != null) {
-            timeoutTimer.stop();
-            timeoutTimer = null;
-        }
+    private void handleTaskRunnerFault(String errorMessage) {
+        cleanup();
     }
 
 }

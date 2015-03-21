@@ -23,6 +23,7 @@ import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 
@@ -44,7 +45,7 @@ class OffersDataModel implements Activatable, DataModel {
     private final User user;
 
     private final ObservableList<OfferListItem> list = FXCollections.observableArrayList();
-    private final MapChangeListener<String, Offer> offerMapChangeListener;
+    private final MapChangeListener<String, Trade> offerMapChangeListener;
 
 
     @Inject
@@ -63,17 +64,17 @@ class OffersDataModel implements Activatable, DataModel {
     @Override
     public void activate() {
         list.clear();
-        list.addAll(tradeManager.getOpenOffers().values().stream().map(OfferListItem::new).collect(Collectors.toList()));
+        list.addAll(tradeManager.getOpenOfferTrades().values().stream().map(OfferListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getOffer().getCreationDate().compareTo(o1.getOffer().getCreationDate()));
 
-        tradeManager.getOpenOffers().addListener(offerMapChangeListener);
+        tradeManager.getOpenOfferTrades().addListener(offerMapChangeListener);
     }
 
     @Override
     public void deactivate() {
-        tradeManager.getOpenOffers().removeListener(offerMapChangeListener);
+        tradeManager.getOpenOfferTrades().removeListener(offerMapChangeListener);
     }
 
     void removeOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {

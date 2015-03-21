@@ -181,6 +181,7 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
     @FXML
     void onPaymentStarted() {
         model.fiatPaymentStarted();
+        confirmPaymentReceiptButton.setDisable(true);
     }
 
     @FXML

@@ -59,9 +59,9 @@ public class TakerCreatesAndSignsDepositTx extends Task<TakerAsSellerModel> {
 
             complete();
         } catch (Exception e) {
-            Trade.State state = Trade.State.FAULT;
-            state.setErrorMessage(errorMessage);
-            model.trade.setState(state);
+            Trade.ProcessState processState = Trade.ProcessState.FAULT;
+            processState.setErrorMessage(errorMessage);
+            model.trade.setProcessState(processState);
 
             failed(e);
         }

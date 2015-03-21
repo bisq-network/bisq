@@ -48,7 +48,7 @@ public class SetupListenerForBlockChainConfirmation extends Task<OffererAsBuyerM
             public void onConfidenceChanged(Transaction tx, ChangeReason reason) {
                 log.trace("onConfidenceChanged " + tx.getConfidence());
                 if (reason == ChangeReason.TYPE && tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
-                    model.trade.setState(Trade.State.DEPOSIT_CONFIRMED);
+                    model.trade.setProcessState(Trade.ProcessState.DEPOSIT_CONFIRMED);
 
                     // transactionConfidence use CopyOnWriteArrayList as listeners, but be safe and delay remove a bit.
                     Platform.runLater(() -> removeEventListener());
@@ -62,6 +62,6 @@ public class SetupListenerForBlockChainConfirmation extends Task<OffererAsBuyerM
 
     private void removeEventListener() {
         if (!transactionConfidence.removeEventListener(transactionConfidenceListener))
-            throw new RuntimeException("Remove transactionConfidenceListener failed at SetupListenerForBlockChainConfirmation.");
+            log.error("Remove transactionConfidenceListener failed at SetupListenerForBlockChainConfirmation.");
     }
 }

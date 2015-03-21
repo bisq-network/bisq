@@ -22,7 +22,6 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.MessageService;
-import io.bitsquare.p2p.Peer;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.SharedTradeModel;
@@ -48,7 +47,6 @@ public class TakerAsSellerModel extends SharedTradeModel implements Serializable
     private Transaction payoutTx;
 
     public TakerAsSellerModel(Trade trade,
-                              Peer offererPeer,
                               MessageService messageService,
                               MailboxService mailboxService,
                               WalletService walletService,
@@ -81,8 +79,6 @@ public class TakerAsSellerModel extends SharedTradeModel implements Serializable
             taker = new Taker();
             offerer = new Offerer();
         }
-
-        offerer.peer = offererPeer;
 
         taker.registrationPubKey = walletService.getRegistrationAddressEntry().getPubKey();
         taker.registrationKeyPair = walletService.getRegistrationAddressEntry().getKeyPair();

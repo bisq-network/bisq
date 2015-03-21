@@ -218,10 +218,10 @@ class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataM
 
 
     private void updateState() {
-        Trade.State tradeState = dataModel.tradeState.get();
-        log.trace("tradeState " + tradeState);
-        if (tradeState != null) {
-            switch (tradeState) {
+        Trade.ProcessState tradeProcessState = dataModel.tradeState.get();
+        log.trace("tradeState " + tradeProcessState);
+        if (tradeProcessState != null) {
+            switch (tradeProcessState) {
                 case DEPOSIT_PUBLISHED:
                     state.set(dataModel.isOfferer() ? State.OFFERER_BUYER_WAIT_TX_CONF : State.TAKER_SELLER_WAIT_TX_CONF);
                     break;
@@ -240,7 +240,7 @@ class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataM
                     // TODO error states not implemented yet
                     break;
                 default:
-                    log.warn("unhandled state " + tradeState);
+                    log.warn("unhandled state " + tradeProcessState);
                     break;
             }
         }

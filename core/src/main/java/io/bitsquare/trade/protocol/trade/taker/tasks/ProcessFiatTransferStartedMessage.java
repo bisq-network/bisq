@@ -46,11 +46,11 @@ public class ProcessFiatTransferStartedMessage extends Task<TakerAsSellerModel> 
             model.offerer.payoutAmount = positiveCoinOf(nonZeroCoinOf(message.offererPayoutAmount));
             model.taker.payoutAmount = positiveCoinOf(nonZeroCoinOf(message.takerPayoutAmount));
             model.offerer.payoutAddressString = nonEmptyStringOf(message.offererPayoutAddress);
-            model.trade.setState(Trade.State.FIAT_PAYMENT_STARTED);
+            model.trade.setProcessState(Trade.ProcessState.FIAT_PAYMENT_STARTED);
 
             complete();
         } catch (Throwable t) {
-            model.trade.setState(Trade.State.FAULT);
+            model.trade.setProcessState(Trade.ProcessState.FAULT);
             failed(t);
         }
     }

@@ -47,14 +47,14 @@ public class BroadcastTakeOfferFeeTx extends Task<TakerAsSellerModel> {
                         public void onSuccess(Transaction transaction) {
                             log.debug("Take offer fee published successfully. Transaction ID = " + transaction.getHashAsString());
 
-                            model.trade.setState(Trade.State.TAKE_OFFER_FEE_PUBLISHED);
+                            model.trade.setProcessState(Trade.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
 
                             complete();
                         }
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
-                            model.trade.setState(Trade.State.TAKE_OFFER_FEE_PUBLISH_FAILED);
+                            model.trade.setProcessState(Trade.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
 
                             failed(t);
                         }
@@ -63,7 +63,7 @@ public class BroadcastTakeOfferFeeTx extends Task<TakerAsSellerModel> {
             appendToErrorMessage("Take offer fee payment failed. Maybe your network connection was lost. Please try again.");
             appendToErrorMessage(e.getMessage());
 
-            model.trade.setState(Trade.State.FAULT);
+            model.trade.setProcessState(Trade.ProcessState.FAULT);
 
             failed(e);
         }

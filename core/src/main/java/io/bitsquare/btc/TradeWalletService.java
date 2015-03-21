@@ -375,12 +375,13 @@ public class TradeWalletService {
         Futures.addCallback(broadcastComplete, callback);
     }
 
-    public void takerCommitsDepositTx(Transaction depositTx) throws WalletException {
+    // Returns local transaction which has a different state as the serialized depositTx we get from the offerer
+    public Transaction takerCommitsDepositTx(Transaction depositTx) throws WalletException {
         log.trace("takerCommitsDepositTx called");
         log.trace("depositTx " + depositTx.toString());
 
         // We need to recreate the tx we get a null pointer otherwise
-        depositTx = new Transaction(params, depositTx.bitcoinSerialize());
+        Transaction localDepositTx = new Transaction(params, depositTx.bitcoinSerialize());
 
         try {
             // TODO check if that is correct
@@ -390,6 +391,7 @@ public class TradeWalletService {
             t.printStackTrace();
             throw new WalletException(t);
         }
+        return localDepositTx;
     }
 
     public byte[] offererCreatesAndSignsPayoutTx(Transaction depositTx,

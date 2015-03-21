@@ -59,7 +59,7 @@ public class SignAndPublishDepositTx extends Task<OffererAsBuyerModel> {
                             log.trace("offererSignAndPublishTx succeeded " + transaction);
 
                             model.trade.setDepositTx(transaction);
-                            model.trade.setState(Trade.State.DEPOSIT_PUBLISHED);
+                            model.trade.setProcessState(Trade.ProcessState.DEPOSIT_PUBLISHED);
 
                             complete();
                         }

@@ -47,7 +47,7 @@ public class SendRequestDepositTxInputsMessage extends Task<TakerAsSellerModel> 
                 model.taker.tradeWalletPubKey
         );
 
-        model.messageService.sendMessage(model.offerer.peer, msg, new SendMessageListener() {
+        model.messageService.sendMessage(model.trade.getTradingPeer(), msg, new SendMessageListener() {
             @Override
             public void handleResult() {
                 log.trace("Sending TakeOfferFeePayedMessage succeeded.");
@@ -67,7 +67,7 @@ public class SendRequestDepositTxInputsMessage extends Task<TakerAsSellerModel> 
                             "connection. " +
                             "We persisted the state of the trade, please try again later or cancel that trade.");
 
-                    model.trade.setState(Trade.State.MESSAGE_SENDING_FAILED);
+                    model.trade.setProcessState(Trade.ProcessState.MESSAGE_SENDING_FAILED);
 
                     failed();
                 }

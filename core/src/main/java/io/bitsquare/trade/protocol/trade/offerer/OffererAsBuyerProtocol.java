@@ -22,7 +22,6 @@ import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
-import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestOffererPublishDepositTxMessage;
@@ -42,8 +41,6 @@ import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyAndSignContract;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakeOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakerAccount;
 
-import org.bitcoinj.core.TransactionConfidence;
-
 import javafx.application.Platform;
 
 import org.slf4j.Logger;
@@ -57,8 +54,6 @@ public class OffererAsBuyerProtocol {
     private final OffererAsBuyerModel model;
     private final MessageHandler messageHandler;
 
-    private TransactionConfidence.Listener transactionConfidenceListener;
-    private TransactionConfidence transactionConfidence;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -87,18 +82,13 @@ public class OffererAsBuyerProtocol {
             }
         }
     }
-    
+
     public void cleanup() {
         log.debug("cleanup " + this);
 
         // tradeMessageService and transactionConfidence use CopyOnWriteArrayList as listeners, but be safe and delay remove a bit.
         Platform.runLater(() -> {
             model.messageService.removeMessageHandler(messageHandler);
-
-            if (transactionConfidence != null) {
-                if (!transactionConfidence.removeEventListener(transactionConfidenceListener))
-                    throw new RuntimeException("Remove transactionConfidenceListener failed at BuyerAsOffererProtocol.");
-            }
         });
     }
 
@@ -109,16 +99,11 @@ public class OffererAsBuyerProtocol {
     private void handleRequestDepositTxInputsMessage(RequestDepositTxInputsMessage tradeMessage, Peer taker) {
         checkTradeId(model.id, tradeMessage);
         model.setTradeMessage(tradeMessage);
-        model.taker.peer = taker;
+        model.trade.setTradingPeer(taker);
 
         TaskRunner<OffererAsBuyerModel> taskRunner = new TaskRunner<>(model,
-                () -> {
-                    log.debug("sequence at handleTakeOfferFeePayedMessage completed");
-                },
-                (errorMessage) -> {
-                    log.error(errorMessage);
-                }
-        );
+                () -> log.debug("sequence at handleTakeOfferFeePayedMessage completed"),
+                (errorMessage) -> handleTaskRunnerFault(errorMessage));
         taskRunner.addTasks(
                 ProcessRequestDepositTxInputsMessage.class,
                 CreateOffererDepositTxInputs.class,
@@ -131,23 +116,8 @@ public class OffererAsBuyerProtocol {
         model.setTradeMessage(tradeMessage);
 
         TaskRunner<OffererAsBuyerModel> taskRunner = new TaskRunner<>(model,
-                () -> {
-                    log.debug("taskRunner at handleRequestOffererPublishDepositTxMessage completed");
-                    transactionConfidenceListener = (tx, reason) -> {
-                        log.trace("onConfidenceChanged " + tx.getConfidence());
-                        if (reason == TransactionConfidence.Listener.ChangeReason.TYPE && tx.getConfidence().getConfidenceType() == TransactionConfidence
-                                .ConfidenceType.BUILDING) {
-
-                            model.trade.setState(Trade.State.DEPOSIT_CONFIRMED);
-                        }
-                    };
-                    transactionConfidence = model.trade.getDepositTx().getConfidence();
-                    transactionConfidence.addEventListener(transactionConfidenceListener);
-                },
-                (errorMessage) -> {
-                    log.error(errorMessage);
-                }
-        );
+                () -> log.debug("taskRunner at handleRequestOffererPublishDepositTxMessage completed"),
+                (errorMessage) -> handleTaskRunnerFault(errorMessage));
         taskRunner.addTasks(
                 ProcessRequestOffererPublishDepositTxMessage.class,
                 VerifyTakerAccount.class,
@@ -167,13 +137,8 @@ public class OffererAsBuyerProtocol {
     // User clicked the "bank transfer started" button
     public void onFiatPaymentStarted() {
         TaskRunner<OffererAsBuyerModel> taskRunner = new TaskRunner<>(model,
-                () -> {
-                    log.debug("sequence at handleBankTransferStartedUIEvent completed");
-                },
-                (errorMessage) -> {
-                    log.error(errorMessage);
-                }
-        );
+                () -> log.debug("sequence at handleBankTransferStartedUIEvent completed"),
+                (errorMessage) -> handleTaskRunnerFault(errorMessage));
         taskRunner.addTasks(
                 CreateAndSignPayoutTx.class,
                 VerifyTakeOfferFeePayment.class,
@@ -193,14 +158,11 @@ public class OffererAsBuyerProtocol {
         TaskRunner<OffererAsBuyerModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handlePayoutTxPublishedMessage completed");
-
                     // we are done!
                     model.onComplete();
                 },
-                (errorMessage) -> {
-                    log.error(errorMessage);
-                }
-        );
+                (errorMessage) -> handleTaskRunnerFault(errorMessage));
+
         taskRunner.addTasks(ProcessPayoutTxPublishedMessage.class);
         taskRunner.run();
     }
@@ -232,5 +194,9 @@ public class OffererAsBuyerProtocol {
                 }
             }
         }
+    }
+
+    private void handleTaskRunnerFault(String errorMessage) {
+        cleanup();
     }
 }

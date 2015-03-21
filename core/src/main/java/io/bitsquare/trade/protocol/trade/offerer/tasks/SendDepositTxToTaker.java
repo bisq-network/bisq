@@ -37,7 +37,7 @@ public class SendDepositTxToTaker extends Task<OffererAsBuyerModel> {
     protected void doRun() {
         DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(model.id, model.trade.getDepositTx());
 
-        model.messageService.sendMessage(model.taker.peer, tradeMessage, new SendMessageListener() {
+        model.messageService.sendMessage(model.trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 log.trace("DepositTxPublishedMessage successfully arrived at peer");

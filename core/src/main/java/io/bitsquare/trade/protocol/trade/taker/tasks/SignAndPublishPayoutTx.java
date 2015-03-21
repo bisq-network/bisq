@@ -55,7 +55,7 @@ public class SignAndPublishPayoutTx extends Task<TakerAsSellerModel> {
                         @Override
                         public void onSuccess(Transaction transaction) {
                             model.setPayoutTx(transaction);
-                            model.trade.setState(Trade.State.PAYOUT_PUBLISHED);
+                            model.trade.setProcessState(Trade.ProcessState.PAYOUT_PUBLISHED);
 
                             complete();
                         }

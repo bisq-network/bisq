@@ -18,7 +18,6 @@
 package io.bitsquare.trade.protocol.trade.taker.models;
 
 import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.p2p.Peer;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionOutput;
@@ -31,10 +30,6 @@ import java.util.List;
 
 public class Offerer implements Serializable {
     private static final long serialVersionUID = 1582902150121576205L;
-
-    // Those fields are set at constructor but not declared as final because constructor is not called in case model gets created from a persisted model
-    // Declared transient as they will be provided in any case at construction time
-    public Peer peer;
 
     // written by tasks
     public byte[] tradeWalletPubKey;

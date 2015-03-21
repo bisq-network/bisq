@@ -43,7 +43,7 @@ public class ProcessDepositTxPublishedMessage extends Task<TakerAsSellerModel> {
 
             DepositTxPublishedMessage message = (DepositTxPublishedMessage) model.getTradeMessage();
             model.trade.setDepositTx(checkNotNull(message.depositTx));
-            model.trade.setState(Trade.State.DEPOSIT_PUBLISHED);
+            model.trade.setProcessState(Trade.ProcessState.DEPOSIT_PUBLISHED);
 
             complete();
         } catch (Throwable t) {

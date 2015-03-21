@@ -49,7 +49,7 @@ public class SendSignedTakerDepositTx extends Task<TakerAsSellerModel> {
                 model.taker.outputs
         );
 
-        model.messageService.sendMessage(model.offerer.peer, tradeMessage, new SendMessageListener() {
+        model.messageService.sendMessage(model.trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 complete();

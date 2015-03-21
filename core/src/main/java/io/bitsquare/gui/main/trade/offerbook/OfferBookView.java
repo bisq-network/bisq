@@ -127,12 +127,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         // for irc demo
         showAdvancedSettingsButton.setVisible(false);
         showAdvancedSettingsButton.setManaged(false);
-        
-        //TODO temp for testing
-
-        amountTextField.setText("1");
-        priceTextField.setText("1");
-        volumeTextField.setText("1");
     }
 
     @Override
@@ -150,6 +144,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         priceColumn.setSortType((model.getDirection() == Direction.BUY) ?
                 TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
         table.sort();
+
+        //TODO temp for testing
+        amountTextField.setText("1");
+        priceTextField.setText("300");
+        volumeTextField.setText("300");
     }
 
     @Override

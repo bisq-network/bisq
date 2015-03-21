@@ -21,6 +21,8 @@ import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
+import org.bitcoinj.core.Transaction;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +36,10 @@ public class TakerCommitDepositTx extends Task<TakerAsSellerModel> {
     @Override
     protected void doRun() {
         try {
-            model.tradeWalletService.takerCommitsDepositTx(model.trade.getDepositTx());
-
+            // We need to put the tx into our wallet to have a fully setup tx
+            Transaction localDepositTx = model.tradeWalletService.takerCommitsDepositTx(model.trade.getDepositTx());
+            model.trade.setDepositTx(localDepositTx);
+            
             complete();
         } catch (Throwable t) {
             failed(t);

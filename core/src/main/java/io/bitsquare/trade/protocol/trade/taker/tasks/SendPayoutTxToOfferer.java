@@ -36,7 +36,7 @@ public class SendPayoutTxToOfferer extends Task<TakerAsSellerModel> {
     @Override
     protected void doRun() {
         PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(model.id, model.getPayoutTx());
-        model.messageService.sendMessage(model.offerer.peer, 
+        model.messageService.sendMessage(model.trade.getTradingPeer(), 
                 tradeMessage,
                 model.offerer.p2pSigPublicKey,
                 model.offerer.p2pEncryptPubKey,

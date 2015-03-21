@@ -208,14 +208,14 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         isTakeOfferSpinnerVisible.set(true);
 
         dataModel.takeOffer((trade) -> {
-            trade.stateProperty().addListener((ov, oldValue, newValue) -> {
+            trade.processStateProperty().addListener((ov, oldValue, newValue) -> {
                 log.debug("trade state = " + newValue);
                 String msg = "";
                 if (newValue.getErrorMessage() != null)
                     msg = "\nError message: " + newValue.getErrorMessage();
 
                 switch (newValue) {
-                    case OPEN:
+                    case INIT:
                         break;
                     case TAKE_OFFER_FEE_TX_CREATED:
                         break;
