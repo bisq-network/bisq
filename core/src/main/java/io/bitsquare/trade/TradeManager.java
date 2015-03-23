@@ -378,7 +378,9 @@ public class TradeManager {
         persistPendingTrades();
 
         TakerAsSellerProtocol sellerTakesOfferProtocol = createTakerAsSellerProtocol(trade);
+        //trade.setProtocol(sellerTakesOfferProtocol);
         sellerTakesOfferProtocol.takeAvailableOffer();
+
         return trade;
     }
 

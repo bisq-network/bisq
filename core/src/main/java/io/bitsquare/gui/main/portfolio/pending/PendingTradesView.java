@@ -280,7 +280,7 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
     private void applyOffererState(PendingTradesViewModel.State state) {
         setPaymentsControlsVisible(false);
         setSummaryControlsVisible(false);
-
+        log.debug("applyOffererState " + state);
         processBar.reset();
 
         if (state != null) {
@@ -357,7 +357,7 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
         setSummaryControlsVisible(false);
 
         processBar.reset();
-        log.debug("applyTakerState "+state);
+        log.debug("applyTakerState " + state);
 
         if (state != null) {
             switch (state) {
@@ -506,7 +506,7 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
         if (visible)
             Platform.runLater(() -> {
                 withdrawAddressTextField.requestFocus();
-                
+
                 // delay it once more as it does not get applied at first runLater
                 Platform.runLater(() -> scrollPane.setVvalue(scrollPane.getVmax()));
             });

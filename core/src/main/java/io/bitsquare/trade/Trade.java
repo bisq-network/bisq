@@ -22,8 +22,15 @@ import io.bitsquare.p2p.Peer;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.utils.Fiat;
 
+import com.google.common.base.Throwables;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+
+import java.io.IOException;
 import java.io.Serializable;
 
 import java.util.Date;
@@ -31,8 +38,12 @@ import java.util.Date;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class Trade implements Serializable {
     private static final long serialVersionUID = -8275323072940974077L;
+    private static final Logger log = LoggerFactory.getLogger(Trade.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -84,6 +95,7 @@ public class Trade implements Serializable {
     private Transaction depositTx;
     private Transaction payoutTx;
     private Peer tradingPeer;
+    private int depthInBlocks = 0;
 
     // For changing values we use properties to get binding support in the UI (table)
     // When serialized those transient properties are not instantiated, so we instantiate them in the getters at first
@@ -103,6 +115,43 @@ public class Trade implements Serializable {
         date = new Date();
 
         setProcessState(ProcessState.INIT);
+        log.debug("Trade ");
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+        log.debug("Trade writeObject");
+        out.defaultWriteObject();
+        log.debug("Trade writeObject");
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        log.debug("Trade readObject");
+        in.defaultReadObject();
+        //TODO cannot call yet as persistence need to be refactored first. cann be called only after bitcoinJ is initialized as serialized tx objects throw 
+        // exceptions
+        //setConfidenceListener();
+        log.debug("Trade readObject");
+    }
+
+    private void setConfidenceListener() {
+       // log.debug("setConfidenceListener called. depthInBlocks=" + depthInBlocks + " / depositTx != null ? " + (depositTx.toString() != null));
+        if (depositTx != null && depthInBlocks == 0) {
+            TransactionConfidence transactionConfidence = depositTx.getConfidence();
+            ListenableFuture<TransactionConfidence> future = transactionConfidence.getDepthFuture(1);
+            Futures.addCallback(future, new FutureCallback<TransactionConfidence>() {
+                @Override
+                public void onSuccess(TransactionConfidence result) {
+                    setProcessState(Trade.ProcessState.DEPOSIT_CONFIRMED);
+                }
+
+                @Override
+                public void onFailure(Throwable t) {
+                    t.printStackTrace();
+                    log.error(t.getMessage());
+                    Throwables.propagate(t);
+                }
+            });
+        }
     }
 
 
@@ -146,6 +195,7 @@ public class Trade implements Serializable {
 
     public void setDepositTx(Transaction tx) {
         this.depositTx = tx;
+        setConfidenceListener();
     }
 
     public void setPayoutTx(Transaction tx) {

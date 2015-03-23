@@ -108,6 +108,11 @@ class PendingTradesDataModel implements Activatable, DataModel {
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
+
+        if (list.size() > 0) {
+            selectTrade(list.get(0));
+            selectedIndex.set(0);
+        }
     }
 
     void selectTrade(PendingTradesListItem item) {

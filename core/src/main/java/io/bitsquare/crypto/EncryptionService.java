@@ -40,6 +40,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+// TODO consider to use SealedObject
 public class EncryptionService<T> {
     private static final Logger log = LoggerFactory.getLogger(EncryptionService.class);
     private static final String ALGO_SYM = "AES";

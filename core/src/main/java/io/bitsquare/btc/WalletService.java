@@ -27,7 +27,7 @@ import org.bitcoinj.core.AbstractWalletEventListener;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.DownloadListener;
+import org.bitcoinj.core.DownloadProgressTracker;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
@@ -54,7 +54,6 @@ import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -420,7 +419,7 @@ public class WalletService {
         return wallet != null ? getBalance(wallet.calculateAllSpendCandidates(true), address) : Coin.ZERO;
     }
 
-    private Coin getBalance(LinkedList<TransactionOutput> transactionOutputs, Address address) {
+    private Coin getBalance(List<TransactionOutput> transactionOutputs, Address address) {
         Coin balance = Coin.ZERO;
         for (TransactionOutput transactionOutput : transactionOutputs) {
             if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
@@ -560,7 +559,7 @@ public class WalletService {
     // Inner classes
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static class ObservableDownloadListener extends DownloadListener {
+    private static class ObservableDownloadListener extends DownloadProgressTracker {
 
         private final Subject<Double, Double> subject = BehaviorSubject.create(0d);
 

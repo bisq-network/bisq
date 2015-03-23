@@ -86,13 +86,17 @@
             <id>repository.tomp2p.net</id>
             <url>http://tomp2p.net/dev/mvn</url>
         </repository>
+        <repository>
+            <id>partnerdemo.artifactoryonline.com</id>
+            <url>http://partnerdemo.artifactoryonline.com/partnerdemo/libs-snapshots-local</url>
+        </repository>
     </repositories>
 
     <dependencies>
         <dependency>
             <groupId>org.bitcoinj</groupId>
             <artifactId>bitcoinj-core</artifactId>
-            <version>0.12.2</version>
+            <version>0.13.d13665c-SNAPSHOT</version>
         </dependency>
         <!-- <dependency>
              <groupId>org.slf4j</groupId>

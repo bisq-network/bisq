@@ -112,7 +112,7 @@ public class TradeWalletService {
     }
 
     public void broadcastCreateOfferFeeTx(Transaction createOfferFeeTx, FutureCallback<Transaction> callback) {
-        ListenableFuture<Transaction> future = walletAppKit.peerGroup().broadcastTransaction(createOfferFeeTx);
+        ListenableFuture<Transaction> future = walletAppKit.peerGroup().broadcastTransaction(createOfferFeeTx).future();
         Futures.addCallback(future, callback);
     }
 
@@ -133,7 +133,7 @@ public class TradeWalletService {
     }
 
     public void broadcastTakeOfferFeeTx(Transaction takeOfferFeeTx, FutureCallback<Transaction> callback) throws InsufficientMoneyException {
-        ListenableFuture<Transaction> future = walletAppKit.peerGroup().broadcastTransaction(takeOfferFeeTx);
+        ListenableFuture<Transaction> future = walletAppKit.peerGroup().broadcastTransaction(takeOfferFeeTx).future();
         Futures.addCallback(future, callback);
     }
 
@@ -372,7 +372,7 @@ public class TradeWalletService {
 
         // Broadcast depositTx
         printTxWithInputs("depositTx", depositTx);
-        ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(depositTx);
+        ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(depositTx).future();
         Futures.addCallback(broadcastComplete, callback);
     }
 
@@ -488,7 +488,7 @@ public class TradeWalletService {
 
         printTxWithInputs("payoutTx", payoutTx);
 
-        ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(payoutTx);
+        ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(payoutTx).future();
         Futures.addCallback(broadcastComplete, callback);
     }
 

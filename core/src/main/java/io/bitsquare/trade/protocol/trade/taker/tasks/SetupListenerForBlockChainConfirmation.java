@@ -22,10 +22,12 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
-import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 
-import javafx.application.Platform;
+import com.google.common.base.Throwables;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,40 +35,28 @@ import org.slf4j.LoggerFactory;
 public class SetupListenerForBlockChainConfirmation extends Task<TakerAsSellerModel> {
     private static final Logger log = LoggerFactory.getLogger(SetupListenerForBlockChainConfirmation.class);
 
-    private TransactionConfidence.Listener transactionConfidenceListener;
-    private TransactionConfidence transactionConfidence;
-
     public SetupListenerForBlockChainConfirmation(TaskRunner taskHandler, TakerAsSellerModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void doRun() {
-        try {
-            transactionConfidence = model.trade.getDepositTx().getConfidence();
-            transactionConfidenceListener = new TransactionConfidence.Listener() {
-                @Override
-                public void onConfidenceChanged(Transaction tx, ChangeReason reason) {
-                    log.trace("onConfidenceChanged " + tx.getConfidence());
-                    if (reason == ChangeReason.TYPE && tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
-                        model.trade.setProcessState(Trade.ProcessState.DEPOSIT_CONFIRMED);
+        TransactionConfidence transactionConfidence = model.trade.getDepositTx().getConfidence();
+        ListenableFuture<TransactionConfidence> future = transactionConfidence.getDepthFuture(1);
+        Futures.addCallback(future, new FutureCallback<TransactionConfidence>() {
+            @Override
+            public void onSuccess(TransactionConfidence result) {
+                model.trade.setProcessState(Trade.ProcessState.DEPOSIT_CONFIRMED);
+            }
 
-                        // transactionConfidence use CopyOnWriteArrayList as listeners, but be safe and delay remove a bit.
-                        Platform.runLater(() -> removeEventListener());
-                    }
-                }
-            };
-            transactionConfidence.addEventListener(transactionConfidenceListener);
+            @Override
+            public void onFailure(Throwable t) {
+                t.printStackTrace();
+                log.error(t.getMessage());
+                Throwables.propagate(t);
+            }
+        });
 
-            complete();
-        } catch (Throwable t) {
-            t.printStackTrace();
-            log.error(t.getMessage());
-        }
-    }
-
-    private void removeEventListener() {
-        if (!transactionConfidence.removeEventListener(transactionConfidenceListener))
-            log.error("Remove transactionConfidenceListener failed at SetupListenerForBlockChainConfirmation.");
+        complete();
     }
 }
