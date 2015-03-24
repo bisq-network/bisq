@@ -95,7 +95,6 @@ class FiatAccountDataModel implements Activatable, DataModel {
                 primaryID.get(),
                 secondaryID.get());
         user.addFiatAccount(fiatAccount);
-        saveUser();
         allFiatAccounts.setAll(user.fiatAccountsObservableList());
         countryNotInAcceptedCountriesList.set(!accountSettings.getAcceptedCountries().contains(country.get()));
         reset();
@@ -103,7 +102,6 @@ class FiatAccountDataModel implements Activatable, DataModel {
 
     void removeBankAccount() {
         user.removeFiatAccount(user.currentFiatAccountProperty().get());
-        saveUser();
         allFiatAccounts.setAll(user.fiatAccountsObservableList());
         reset();
     }
@@ -112,13 +110,11 @@ class FiatAccountDataModel implements Activatable, DataModel {
     // already added it before
     void addCountryToAcceptedCountriesList() {
         accountSettings.addAcceptedCountry(country.get());
-        saveSettings();
         countryNotInAcceptedCountriesList.set(false);
     }
 
     void selectBankAccount(FiatAccount fiatAccount) {
         user.setCurrentFiatAccount(fiatAccount);
-        persistence.write(user);
 
         if (fiatAccount != null) {
             title.set(fiatAccount.getNameOfBank());
@@ -176,13 +172,5 @@ class FiatAccountDataModel implements Activatable, DataModel {
         type.set(null);
         country.set(null);
         currency.set(null);
-    }
-
-    private void saveUser() {
-        persistence.write(user);
-    }
-
-    private void saveSettings() {
-        persistence.write(accountSettings);
     }
 }

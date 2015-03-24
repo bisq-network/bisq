@@ -17,17 +17,10 @@
 
 package io.bitsquare.trade.protocol.placeoffer;
 
-import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.crypto.EncryptionService;
-import io.bitsquare.fiat.FiatAccountType;
-import io.bitsquare.locale.CountryUtil;
-import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.offer.Direction;
-import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.offer.tomp2p.TomP2POfferBookService;
 import io.bitsquare.p2p.BootstrapState;
@@ -40,16 +33,11 @@ import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Address;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Threading;
 
 import java.io.File;
 import java.io.IOException;
 
-import java.security.NoSuchAlgorithmException;
-
-import java.util.Arrays;
-import java.util.Currency;
 import java.util.concurrent.CountDownLatch;
 
 import org.junit.After;
@@ -301,7 +289,7 @@ public class PlaceOfferProtocolTest {
                 faultHandler);
     }*/
 
-    private Offer getOffer() throws NoSuchAlgorithmException {
+/*    private Offer getOffer() throws NoSuchAlgorithmException {
         return new Offer(OFFER_ID,
                 new EncryptionService().getGeneratedDSAKeyPair().getPublic(),
                 Direction.BUY,
@@ -317,5 +305,5 @@ public class PlaceOfferProtocolTest {
                 Arrays.asList(CountryUtil.getDefaultCountry()),
                 Arrays.asList(LanguageUtil.getDefaultLanguageLocale())
         );
-    }
+    }*/
 }

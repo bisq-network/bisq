@@ -18,9 +18,7 @@
 package io.bitsquare.gui.main;
 
 import io.bitsquare.app.UpdateProcess;
-import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorService;
-import io.bitsquare.arbitration.Reputation;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.viewfx.model.ViewModel;
@@ -28,27 +26,18 @@ import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CountryUtil;
-import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.p2p.BaseP2PService;
 import io.bitsquare.p2p.BootstrapState;
 import io.bitsquare.p2p.ClientNode;
-import io.bitsquare.p2p.MessageService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
-import io.bitsquare.util.Utilities;
-
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
 
 import com.google.inject.Inject;
 
-import java.util.ArrayList;
 import java.util.Currency;
-import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.TimeoutException;
 
 import javafx.application.Platform;
@@ -110,8 +99,8 @@ class MainViewModel implements ViewModel {
     private AccountSettings accountSettings;
 
     @Inject
-    public MainViewModel(User user, WalletService walletService, ClientNode clientNode, MessageService messageService,
-                         ArbitratorService arbitratorService,
+    public MainViewModel(User user, WalletService walletService, ClientNode clientNode,
+                         ArbitratorService arbitratorService, 
                          TradeManager tradeManager, BitcoinNetwork bitcoinNetwork, UpdateProcess updateProcess,
                          BSFormatter formatter, Persistence persistence, AccountSettings accountSettings) {
         this.user = user;
@@ -129,7 +118,6 @@ class MainViewModel implements ViewModel {
         updateProcess.state.addListener((observableValue, oldValue, newValue) -> applyUpdateState(newValue));
         applyUpdateState(updateProcess.state.get());
 
-        user.currentFiatAccountProperty().addListener((observable, oldValue, newValue) -> persistence.write(user));
         currentBankAccount.bind(user.currentFiatAccountProperty());
         user.fiatAccountsObservableList().addListener((ListChangeListener<FiatAccount>) change -> {
             bankAccountsComboBoxDisable.set(change.getList().isEmpty());
@@ -212,11 +200,6 @@ class MainViewModel implements ViewModel {
         showAppScreen.set(true);
 
         // For alpha version
-        // uses messageService, so don't call it before backend is ready
-        if (accountSettings.getAcceptedArbitrators().isEmpty())
-            accountSettings.addAcceptedArbitrator(getMockArbitrator());
-
-        // For alpha version
         if (!user.isRegistered()) {
             FiatAccount fiatAccount = new FiatAccount(FiatAccountType.IRC,
                     Currency.getInstance("EUR"),
@@ -226,8 +209,6 @@ class MainViewModel implements ViewModel {
                     "Demo (E.g. IBAN) ",
                     "Demo (E.g. BIC) ");
             user.addFiatAccount(fiatAccount);
-            persistence.write(user);
-
             user.setAccountID(walletService.getRegistrationAddressEntry().toString());
         }
 
@@ -351,30 +332,4 @@ class MainViewModel implements ViewModel {
         }
     }
 
-    private Arbitrator getMockArbitrator() {
-        byte[] pubKey = new ECKey().getPubKey();
-        String p2pSigPubKeyAsHex = Utilities.getHexStringFromPublicKey(user.getP2PSigPubKey());
-        List<Locale> languages = new ArrayList<>();
-        languages.add(LanguageUtil.getDefaultLanguageLocale());
-        List<Arbitrator.METHOD> arbitrationMethods = new ArrayList<>();
-        arbitrationMethods.add(Arbitrator.METHOD.TLS_NOTARY);
-        List<Arbitrator.ID_VERIFICATION> idVerifications = new ArrayList<>();
-        idVerifications.add(Arbitrator.ID_VERIFICATION.PASSPORT);
-        idVerifications.add(Arbitrator.ID_VERIFICATION.GOV_ID);
-
-        Arbitrator arbitrator = new Arbitrator(pubKey,
-                p2pSigPubKeyAsHex,
-                "Manfred Karrer",
-                Arbitrator.ID_TYPE.REAL_LIFE_ID,
-                languages,
-                new Reputation(),
-                Coin.parseCoin("0.1"),
-                arbitrationMethods,
-                idVerifications,
-                "https://bitsquare.io",
-                "Bla bla...");
-
-        arbitratorService.addArbitrator(arbitrator);
-        return arbitrator;
-    }
 }

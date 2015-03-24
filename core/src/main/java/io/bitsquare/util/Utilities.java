@@ -295,7 +295,7 @@ public class Utilities {
         return animationTimer;
     }
 
-    public static String getHexStringFromPublicKey(PublicKey publicKey) {
+    public static String getHexFromPubKey(PublicKey publicKey) {
         final X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
         return Utils.HEX.encode(x509EncodedKeySpec.getEncoded());
     }

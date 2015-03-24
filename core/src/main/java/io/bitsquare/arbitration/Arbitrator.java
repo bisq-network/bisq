@@ -17,78 +17,126 @@
 
 package io.bitsquare.arbitration;
 
+import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.persistence.Storage;
+import io.bitsquare.user.User;
+
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
 
 import java.io.Serializable;
 
+import java.security.PublicKey;
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-public class Arbitrator implements Serializable {
-    private static final long serialVersionUID = -2625059604136756635L;
+import javax.inject.Inject;
 
+public class Arbitrator implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Enums
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public enum ID_TYPE {
+        REAL_LIFE_ID,
+        NICKNAME,
+        COMPANY
+    }
+
+    public enum METHOD {
+        TLS_NOTARY,
+        SKYPE_SCREEN_SHARING,
+        SMART_PHONE_VIDEO_CHAT,
+        REQUIRE_REAL_ID,
+        BANK_STATEMENT,
+        OTHER
+    }
+
+    public enum ID_VERIFICATION {
+        PASSPORT,
+        GOV_ID,
+        UTILITY_BILLS,
+        FACEBOOK,
+        GOOGLE_PLUS,
+        TWITTER,
+        PGP,
+        BTC_OTC,
+        OTHER
+    }
+
+
+    transient private Storage<Arbitrator> storage;
+    transient private boolean saveOnEveryUpdate;
+
+    // Persisted fields
     private String id;
-    private String pubKeyAsHex;
     private byte[] pubKey;
-    private String p2pSigPubKeyAsHex;
+    private PublicKey p2pSigPubKey;
     private String name;
+    private Reputation reputation;
+
+    // editable
     private ID_TYPE idType;
     private List<Locale> languages;
-    private Reputation reputation;
     private Coin fee;
     private List<METHOD> arbitrationMethods;
     private List<ID_VERIFICATION> idVerifications;
-
     private String webUrl;
-
     private String description;
 
-    public Arbitrator() {
+
+    @Inject
+    public Arbitrator(Storage<Arbitrator> storage, User user) {
+        this.storage = storage;
+
+        Arbitrator persisted = storage.getPersisted(this);
+        if (persisted != null) {
+            //TODO for mock arbitrator
+            id = persisted.getName();
+
+            this.pubKey = persisted.getPubKey();
+            this.p2pSigPubKey = persisted.getP2pSigPubKey();
+            this.name = persisted.getName();
+            this.idType = persisted.getIdType();
+            this.languages = persisted.getLanguages();
+            this.reputation = persisted.getReputation();
+            this.fee = persisted.getFee();
+            this.arbitrationMethods = persisted.getArbitrationMethods();
+            this.idVerifications = persisted.getIdVerifications();
+            this.webUrl = persisted.getWebUrl();
+            this.description = persisted.getDescription();
+        }
+        else {
+            // Mock
+            id = "Manfred Karrer";
+            this.pubKey = new ECKey().getPubKey();
+            this.p2pSigPubKey = user.getP2PSigPubKey();
+            this.name = "Manfred Karrer";
+            this.idType = Arbitrator.ID_TYPE.REAL_LIFE_ID;
+            this.languages = Arrays.asList(LanguageUtil.getDefaultLanguageLocale());
+            this.reputation = new Reputation();
+            this.fee = Coin.parseCoin("0.1");
+            this.arbitrationMethods = Arrays.asList(Arbitrator.METHOD.TLS_NOTARY);
+            this.idVerifications = Arrays.asList(ID_VERIFICATION.PASSPORT);
+            this.webUrl = "https://bitsquare.io";
+            this.description = "Bla bla...";
+            doSave();
+        }
     }
 
-    public Arbitrator(byte[] pubKey,
-                      String p2pSigPubKeyAsHex,
-                      String name,
-                      ID_TYPE idType,
-                      List<Locale> languages,
-                      Reputation reputation,
-                      Coin fee,
-                      List<METHOD> arbitrationMethods,
-                      List<ID_VERIFICATION> idVerifications,
-                      String webUrl,
-                      String description) {
-        this.pubKey = pubKey;
-        this.p2pSigPubKeyAsHex = p2pSigPubKeyAsHex;
-        this.name = name;
-        this.idType = idType;
-        this.languages = languages;
-        this.reputation = reputation;
-        this.fee = fee;
-        this.arbitrationMethods = arbitrationMethods;
-        this.idVerifications = idVerifications;
-        this.webUrl = webUrl;
-        this.description = description;
-
-        //TODO for mock arbitrator
-        id = name;
+    public void save() {
+        if (saveOnEveryUpdate)
+            doSave();
     }
 
-    public void applyPersistedArbitrator(Arbitrator persistedArbitrator) {
-        this.pubKeyAsHex = persistedArbitrator.getPubKeyAsHex();
-        this.p2pSigPubKeyAsHex = persistedArbitrator.getPubKeyAsHex();
-        this.name = persistedArbitrator.getName();
-        this.idType = persistedArbitrator.getIdType();
-        this.languages = persistedArbitrator.getLanguages();
-        this.reputation = persistedArbitrator.getReputation();
-        this.fee = persistedArbitrator.getFee();
-        this.arbitrationMethods = persistedArbitrator.getArbitrationMethods();
-        this.idVerifications = persistedArbitrator.getIdVerifications();
-        this.webUrl = persistedArbitrator.getWebUrl();
-        this.description = persistedArbitrator.getDescription();
-
-        //TODO for mock arbitrator
-        id = name;
+    private void doSave() {
+        storage.save();
     }
 
     @Override
@@ -114,20 +162,48 @@ public class Arbitrator implements Serializable {
         return id != null && id.equals(other.getId());
     }
 
-    public String getId() {
-        return id;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setSaveOnEveryUpdate(boolean saveOnEveryUpdate) {
+        this.saveOnEveryUpdate = saveOnEveryUpdate;
     }
 
-    public String getPubKeyAsHex() {
-        return pubKeyAsHex;
+    public void setDescription(String description) {
+        this.description = description;
+        doSave();
     }
 
-    public byte[] getPubKey() {
-        return pubKey;
+    public void setIdType(ID_TYPE idType) {
+        this.idType = idType;
+        doSave();
     }
 
-    public String getP2pSigPubKeyAsHex() {
-        return p2pSigPubKeyAsHex;
+    public void setLanguages(List<Locale> languages) {
+        this.languages = languages;
+        doSave();
+    }
+
+    public void setFee(Coin fee) {
+        this.fee = fee;
+        doSave();
+    }
+
+    public void setArbitrationMethods(List<METHOD> arbitrationMethods) {
+        this.arbitrationMethods = arbitrationMethods;
+        doSave();
+    }
+
+    public void setIdVerifications(List<ID_VERIFICATION> idVerifications) {
+        this.idVerifications = idVerifications;
+        doSave();
+    }
+
+    public void setWebUrl(String webUrl) {
+        this.webUrl = webUrl;
+        doSave();
     }
 
 
@@ -135,6 +211,17 @@ public class Arbitrator implements Serializable {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public String getId() {
+        return id;
+    }
+
+    public byte[] getPubKey() {
+        return pubKey;
+    }
+
+    public PublicKey getP2pSigPubKey() {
+        return p2pSigPubKey;
+    }
 
     public String getName() {
         return name;
@@ -170,37 +257,5 @@ public class Arbitrator implements Serializable {
 
     public String getDescription() {
         return description;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Enums
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public enum ID_TYPE {
-        REAL_LIFE_ID,
-        NICKNAME,
-        COMPANY
-    }
-
-    public enum METHOD {
-        TLS_NOTARY,
-        SKYPE_SCREEN_SHARING,
-        SMART_PHONE_VIDEO_CHAT,
-        REQUIRE_REAL_ID,
-        BANK_STATEMENT,
-        OTHER
-    }
-
-    public enum ID_VERIFICATION {
-        PASSPORT,
-        GOV_ID,
-        UTILITY_BILLS,
-        FACEBOOK,
-        GOOGLE_PLUS,
-        TWITTER,
-        PGP,
-        BTC_OTC,
-        OTHER
     }
 }

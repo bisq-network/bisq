@@ -23,7 +23,10 @@ import io.bitsquare.util.FileUtil;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InvalidClassException;
 import java.io.Serializable;
+
+import java.nio.file.Paths;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -65,12 +68,28 @@ public class Storage<T extends Serializable> {
     public T getPersisted(T serializable) {
         this.serializable = serializable;
         storageFile = new File(dir, serializable.getClass().getSimpleName() + ".ser");
-        
+
         if (storageFile == null)
             throw new RuntimeException("storageFile = null. Call init before using read/write.");
 
         try {
-            return (T) FileUtil.read(storageFile);
+            T persistedObject = (T) FileUtil.read(storageFile);
+
+            // If we did not get any exception we can be sure the data are consistent so we make a backup 
+            FileUtil.backupFile(storageFile, new File(Paths.get(dir.getAbsolutePath(), "backups").toString()),
+                    serializable.getClass().getSimpleName() + ".ser");
+            return persistedObject;
+        } catch (InvalidClassException e) {
+            log.error("Version of persisted class has changed. We cannot read the persisted data anymore. We make a backup and remove the inconsistent file.");
+            try {
+                // In case the persisted data have been critical (keys) we keep a backup which might be used for recovery
+                FileUtil.removeAndBackupFile(storageFile, new File(Paths.get(dir.getAbsolutePath(), "inconsistent").toString()),
+                        serializable.getClass().getSimpleName() + ".ser");
+            } catch (IOException e1) {
+                e1.printStackTrace();
+                log.error(e1.getMessage());
+                // We swallow Exception if backup fails
+            }
         } catch (FileNotFoundException e) {
             log.info("File not available. That is OK for the first run.");
         } catch (IOException | ClassNotFoundException e) {

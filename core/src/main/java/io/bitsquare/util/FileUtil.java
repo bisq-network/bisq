@@ -20,6 +20,8 @@ package io.bitsquare.util;
 import org.bitcoinj.core.Utils;
 import org.bitcoinj.utils.Threading;
 
+import com.google.common.io.Files;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -43,9 +45,9 @@ public class FileUtil {
         FileOutputStream fileOutputStream = null;
         ObjectOutputStream objectOutputStream = null;
         try {
-            if (!dir.exists()) 
+            if (!dir.exists())
                 dir.mkdir();
-            
+
             tempFile = File.createTempFile("temp", null, dir);
 
             // Don't use auto closeable resources in try() as we would need too many try/catch clauses (for tempFile)
@@ -116,5 +118,19 @@ public class FileUtil {
         } finally {
             lock.unlock();
         }
+    }
+
+    public static void removeAndBackupFile(File storageFile, File dir, String name) throws IOException {
+        if (!dir.exists())
+            dir.mkdir();
+
+        writeTempFileToFile(storageFile, new File(dir, name));
+    }
+
+    public static void backupFile(File storageFile, File dir, String name) throws IOException {
+        if (!dir.exists())
+            dir.mkdir();
+
+        Files.copy(storageFile, new File(dir, name));
     }
 }

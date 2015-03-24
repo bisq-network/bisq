@@ -69,7 +69,6 @@ class RestrictionsDataModel implements Activatable, DataModel {
 
     @Override
     public void deactivate() {
-        // no-op
     }
 
     ObservableList<Country> getAllCountriesFor(Region selectedRegion) {
@@ -90,14 +89,12 @@ class RestrictionsDataModel implements Activatable, DataModel {
     void removeLanguage(Locale locale) {
         languageList.remove(locale);
         accountSettings.removeAcceptedLanguageLocale(locale);
-        saveSettings();
     }
 
     void addCountry(Country country) {
         if (!countryList.contains(country) && country != null) {
             countryList.add(country);
             accountSettings.addAcceptedCountry(country);
-            saveSettings();
         }
     }
 
@@ -106,24 +103,16 @@ class RestrictionsDataModel implements Activatable, DataModel {
         // In addAcceptedCountry there is a check to no add duplicates, so it works correctly for now
         CountryUtil.getAllEuroCountries().stream().forEach(accountSettings::addAcceptedCountry);
         countryList.setAll(accountSettings.getAcceptedCountries());
-        saveSettings();
         return countryList;
     }
 
     void removeCountry(Country country) {
         countryList.remove(country);
         accountSettings.removeAcceptedCountry(country);
-        saveSettings();
     }
 
     void removeArbitrator(Arbitrator arbitrator) {
         arbitratorList.remove(arbitrator);
         accountSettings.removeAcceptedArbitrator(arbitrator);
-        saveSettings();
-    }
-
-
-    private void saveSettings() {
-        persistence.write(accountSettings);
     }
 }

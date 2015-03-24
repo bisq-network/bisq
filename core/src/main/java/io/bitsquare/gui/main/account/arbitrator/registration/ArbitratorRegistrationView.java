@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.account.arbitrator.registration;
 
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorService;
-import io.bitsquare.arbitration.Reputation;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.viewfx.view.ActivatableView;
 import io.bitsquare.common.viewfx.view.FxmlView;
@@ -27,7 +26,6 @@ import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
 
@@ -79,18 +77,17 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
     private List<Locale> languageList = new ArrayList<>();
     private List<Arbitrator.METHOD> methodList = new ArrayList<>();
     private List<Arbitrator.ID_VERIFICATION> idVerificationList = new ArrayList<>();
-    private Arbitrator arbitrator = new Arbitrator();
 
-    private final Persistence persistence;
+    private final Arbitrator arbitrator;
     private final WalletService walletService;
     private final ArbitratorService messageService;
     private final User user;
     private final BSFormatter formatter;
 
     @Inject
-    private ArbitratorRegistrationView(Persistence persistence, WalletService walletService,
+    private ArbitratorRegistrationView(Arbitrator arbitrator, WalletService walletService,
                                        ArbitratorService messageService, User user, BSFormatter formatter) {
-        this.persistence = persistence;
+        this.arbitrator = arbitrator;
         this.walletService = walletService;
         this.messageService = messageService;
         this.user = user;
@@ -101,15 +98,7 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
     public void initialize() {
         accordion.setExpandedPane(profileTitledPane);
 
-        Arbitrator persistedArbitrator = (Arbitrator) persistence.read(arbitrator);
-        if (persistedArbitrator != null) {
-            arbitrator.applyPersistedArbitrator(persistedArbitrator);
             applyArbitrator();
-        }
-        else {
-            languageList.add(LanguageUtil.getDefaultLanguageLocale());
-            languagesTextField.setText(formatter.languageLocalesToString(languageList));
-        }
 
         languageComboBox.setItems(FXCollections.observableArrayList(LanguageUtil.getAllLanguageLocales()));
         languageComboBox.setConverter(new StringConverter<Locale>() {
@@ -255,17 +244,23 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
 
     @FXML
     public void onSaveProfile() {
-        arbitrator = getEditedArbitrator();
-        if (arbitrator != null) {
-            persistence.write(arbitrator);
+        arbitrator.setSaveOnEveryUpdate(false);
+        arbitrator.setWebUrl(webPageTextField.getText());
+        arbitrator.setFee(formatter.parseToCoin(arbitrationFeeTextField.getText()));
+        arbitrator.setIdType(idType);
+        arbitrator.setIdVerifications(idVerificationList);
+        arbitrator.setLanguages(languageList);
+        arbitrator.setArbitrationMethods(methodList);
 
-            if (isEditMode) {
-                close();
-            }
-            else {
-                setupPaySecurityDepositScreen();
-                accordion.setExpandedPane(paySecurityDepositTitledPane);
-            }
+        arbitrator.setSaveOnEveryUpdate(true);
+        arbitrator.save();
+
+        if (isEditMode) {
+            close();
+        }
+        else {
+            setupPaySecurityDepositScreen();
+            accordion.setExpandedPane(paySecurityDepositTitledPane);
         }
 
         messageService.addArbitrator(arbitrator);
@@ -364,27 +359,6 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
             methodList = arbitrator.getArbitrationMethods();
             idVerificationList = arbitrator.getIdVerifications();
         }
-    }
-
-    private Arbitrator getEditedArbitrator() {
-        byte[] pubKey = walletService.getArbitratorDepositAddressEntry().getPubKey();
-        String p2pSigPubKeyAsHex = Utilities.getHexStringFromPublicKey(user.getP2PSigPubKey());
-        String name = nameTextField.getText();
-        Coin fee = formatter.parseToCoin(arbitrationFeeTextField.getText());
-        String webUrl = webPageTextField.getText();
-        String description = descriptionTextArea.getText();
-
-        return new Arbitrator(pubKey,
-                p2pSigPubKeyAsHex,
-                name,
-                idType,
-                languageList,
-                new Reputation(),
-                fee,
-                methodList,
-                idVerificationList,
-                webUrl,
-                description);
     }
 
     private void close() {

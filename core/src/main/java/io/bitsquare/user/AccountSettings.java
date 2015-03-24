@@ -45,13 +45,12 @@ public class AccountSettings implements Serializable {
     private List<Country> acceptedCountryLocales = new ArrayList<>();
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AccountSettings(Storage<AccountSettings> storage) {
+    public AccountSettings(Storage<AccountSettings> storage, Arbitrator defaultArbitrator) {
         this.storage = storage;
 
         AccountSettings persisted = storage.getPersisted(this);
@@ -63,7 +62,7 @@ public class AccountSettings implements Serializable {
         else {
             acceptedLanguageLocales = Arrays.asList(LanguageUtil.getDefaultLanguageLocale(), LanguageUtil.getEnglishLanguageLocale());
             acceptedCountryLocales = Arrays.asList(CountryUtil.getDefaultCountry());
-            acceptedArbitrators = new ArrayList<>();
+            acceptedArbitrators = Arrays.asList(defaultArbitrator);
         }
     }
 

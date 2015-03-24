@@ -122,7 +122,6 @@ public class ArbitratorBrowserView extends ActivatableView<Pane, Void> implement
     @FXML
     public void onSelect() {
         accountSettings.addAcceptedArbitrator(currentArbitrator);
-        persistence.write(accountSettings);
     }
 
     @FXML

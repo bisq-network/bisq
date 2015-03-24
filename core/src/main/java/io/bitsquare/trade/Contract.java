@@ -59,8 +59,8 @@ public class Contract implements Serializable {
         this.takerAccountID = takerAccountID;
         this.offererFiatAccount = offererFiatAccount;
         this.takerFiatAccount = takerFiatAccount;
-        this.offererP2PSigPubKeyAsString = Utilities.getHexStringFromPublicKey(offererP2PSigPubKey);
-        this.takerP2PSigPubKeyAsString = Utilities.getHexStringFromPublicKey(takerP2PSigPubKey);
+        this.offererP2PSigPubKeyAsString = Utilities.getHexFromPubKey(offererP2PSigPubKey);
+        this.takerP2PSigPubKeyAsString = Utilities.getHexFromPubKey(takerP2PSigPubKey);
     }
 
 

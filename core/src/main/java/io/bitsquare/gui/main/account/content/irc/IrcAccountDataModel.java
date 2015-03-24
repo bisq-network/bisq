@@ -84,7 +84,6 @@ class IrcAccountDataModel implements Activatable, DataModel {
                 "irc",
                 "irc");
         user.addFiatAccount(fiatAccount);
-        saveUser();
         allFiatAccounts.setAll(user.fiatAccountsObservableList());
         reset();
     }
@@ -102,9 +101,5 @@ class IrcAccountDataModel implements Activatable, DataModel {
 
         type.set(null);
         currency.set(null);
-    }
-
-    private void saveUser() {
-        persistence.write(user);
     }
 }
