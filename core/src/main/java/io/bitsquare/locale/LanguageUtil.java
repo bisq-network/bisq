@@ -38,7 +38,10 @@ public class LanguageUtil {
     }
 
     public static Locale getDefaultLanguageLocale() {
-        return new Locale(Locale.getDefault().getLanguage(), "");
+        if (Locale.getDefault() != null)
+            return new Locale(Locale.getDefault().getLanguage(), "");
+        else
+            return getEnglishLanguageLocale();
     }
 
     public static Locale getEnglishLanguageLocale() {

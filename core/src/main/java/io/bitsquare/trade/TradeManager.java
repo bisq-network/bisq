@@ -174,7 +174,7 @@ public class TradeManager {
                            TransactionResultHandler resultHandler,
                            ErrorMessageHandler errorMessageHandler) {
 
-        FiatAccount currentFiatAccount = user.getCurrentBankAccount().get();
+        FiatAccount currentFiatAccount = user.currentFiatAccountProperty().get();
         Offer offer = new Offer(id,
                 user.getP2PSigPubKey(),
                 direction,
@@ -184,7 +184,7 @@ public class TradeManager {
                 currentFiatAccount.getFiatAccountType(),
                 currentFiatAccount.getCurrency(),
                 currentFiatAccount.getCountry(),
-                currentFiatAccount.getUid(),
+                currentFiatAccount.getId(),
                 accountSettings.getAcceptedArbitrators(),
                 accountSettings.getSecurityDeposit(),
                 accountSettings.getAcceptedCountries(),

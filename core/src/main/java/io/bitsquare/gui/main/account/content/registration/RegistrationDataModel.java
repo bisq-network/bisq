@@ -91,7 +91,6 @@ class RegistrationDataModel implements DataModel {
                     if (getAddressEntry() != null)
                         user.setAccountID(getAddressEntry().toString());
 
-                    persistence.write(user.getClass().getName(), user);
                     payFeeSuccess.set(true);
                 }
             }

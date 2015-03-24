@@ -17,7 +17,7 @@
 
 package io.bitsquare.user;
 
-import io.bitsquare.persistence.Persistence;
+import io.bitsquare.persistence.Storage;
 
 import org.bitcoinj.utils.MonetaryFormat;
 
@@ -33,23 +33,31 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class Preferences implements Serializable {
-    private static final long serialVersionUID = 7995048077355006861L;
+    private static final long serialVersionUID = 1L;
+    transient private static final Logger log = LoggerFactory.getLogger(Preferences.class);
 
-    // deactivate mBit for now as most screens are not supporting it yet
-    private List<String> btcDenominations = Arrays.asList(MonetaryFormat.CODE_BTC/*, MonetaryFormat.CODE_MBTC*/);
+    // Deactivate mBit for now as most screens are not supporting it yet
+    transient private static final List<String> BTC_DENOMINATIONS = Arrays.asList(MonetaryFormat.CODE_BTC/*, MonetaryFormat.CODE_MBTC*/);
 
+    public static List<String> getBtcDenominations() {
+        return BTC_DENOMINATIONS;
+    }
 
-    // Needed for persistence as Property objects are transient (not serializable)
-    // Will be probably removed when we have another persistence solution in place
-    private String btcDenominationString = MonetaryFormat.CODE_BTC;
-    private Boolean useAnimationsBoolean = true;
-    private Boolean useEffectsBoolean = true;
+    transient private final Storage<Preferences> storage;
 
-    final transient StringProperty btcDenomination = new SimpleStringProperty(btcDenominationString);
-    final transient BooleanProperty useAnimations = new SimpleBooleanProperty(useAnimationsBoolean);
-    final transient BooleanProperty useEffects = new SimpleBooleanProperty(useEffectsBoolean);
-    private Persistence persistence;
+    // Persisted fields
+    private String _btcDenomination = MonetaryFormat.CODE_BTC;
+    private Boolean _useAnimations = true;
+    private Boolean _useEffects = true;
+
+    // Observable wrappers
+    transient private final StringProperty btcDenomination = new SimpleStringProperty(_btcDenomination);
+    transient private final BooleanProperty useAnimations = new SimpleBooleanProperty(_useAnimations);
+    transient private final BooleanProperty useEffects = new SimpleBooleanProperty(_useEffects);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -57,105 +65,74 @@ public class Preferences implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Preferences(Persistence persistence) {
-        this.persistence = persistence;
+    public Preferences(Storage<Preferences> storage) {
+        this.storage = storage;
 
-        applyPersistedSettings();
+        Preferences persisted = storage.getPersisted(this);
+        if (persisted != null) {
+            setBtcDenomination(persisted._btcDenomination);
+            setUseAnimations(persisted._useAnimations);
+            setUseEffects(persisted._useEffects);
+        }
+
+        // Use that to guarantee update of the serializable field and to make a storage update in case of a change
+        btcDenomination.addListener((ov) -> {
+            _btcDenomination = btcDenomination.get();
+            storage.save();
+        });
+        useAnimations.addListener((ov) -> {
+            _useAnimations = useAnimations.get();
+            storage.save();
+        });
+        useEffects.addListener((ov) -> {
+            _useEffects = useEffects.get();
+            storage.save();
+        });
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public API
+    // Setter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void applyPersistedSettings() {
-        Object data = persistence.read(this, "btcDenomination");
-        if (data instanceof String) {
-            btcDenominationString = (String) data;
-            this.btcDenomination.set(btcDenominationString);
-        }
+    public void setBtcDenomination(String btcDenomination) {
+        this.btcDenomination.set(btcDenomination);
+    }
 
-        data = persistence.read(this, "useEffects");
-        if (data instanceof Boolean) {
-            useEffectsBoolean = (Boolean) data;
-            this.useEffects.set(useEffectsBoolean);
-        }
+    public void setUseAnimations(boolean useAnimations) {
+        this.useAnimations.set(useAnimations);
+    }
 
-        data = persistence.read(this, "useAnimations");
-        if (data instanceof Boolean) {
-            useAnimationsBoolean = (Boolean) data;
-            this.useAnimations.set(useAnimationsBoolean);
-        }
+    public void setUseEffects(boolean useEffects) {
+        this.useEffects.set(useEffects);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters/Getters
+    // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public List<String> getBtcDenominations() {
-        return btcDenominations;
-    }
-
-    // btcDenomination
     public String getBtcDenomination() {
         return btcDenomination.get();
+    }
+
+    public boolean getUseEffects() {
+        return useEffects.get();
+    }
+
+    public boolean getUseAnimations() {
+        return useAnimations.get();
     }
 
     public StringProperty btcDenominationProperty() {
         return btcDenomination;
     }
 
-    public void setBtcDenomination(String btcDenomination) {
-        persistence.write(this, "btcDenomination", btcDenomination);
-        btcDenominationString = btcDenomination;
-        this.btcDenomination.set(btcDenomination);
-    }
-
-    // for persistence
-    public String getBtcDenominationString() {
-        return btcDenominationString;
-    }
-
-
-    // useAnimations
-    public boolean getUseAnimations() {
-        return useAnimations.get();
-    }
-
     public BooleanProperty useAnimationsProperty() {
         return useAnimations;
-    }
-
-    public void setUseAnimations(boolean useAnimations) {
-        persistence.write(this, "useAnimations", useAnimations);
-        useAnimationsBoolean = useAnimations;
-        this.useAnimations.set(useAnimations);
-    }
-
-    // for persistence
-    public boolean getUseAnimationsBooleanBoolean() {
-        return useAnimationsBoolean;
-    }
-
-    // useEffects
-    public boolean getUseEffects() {
-        return useEffects.get();
     }
 
     public BooleanProperty useEffectsProperty() {
         return useEffects;
     }
-
-    public void setUseEffects(boolean useEffects) {
-        persistence.write(this, "useEffects", useEffects);
-        useEffectsBoolean = useEffects;
-        this.useEffects.set(useEffects);
-    }
-
-    // for persistence
-    public boolean getUseEffectsBoolean() {
-        return useEffectsBoolean;
-    }
-
 }

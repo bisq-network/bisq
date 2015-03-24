@@ -105,10 +105,21 @@
             <version>1.1.2</version>
         </dependency>
         <dependency>
+            <groupId>org.bitcoinj</groupId>
+            <artifactId>bitcoinj-core</artifactId>
+            <version>0.13.d13665c-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>net.tomp2p</groupId>
             <artifactId>tomp2p-all</artifactId>
             <version>5.0-Beta3</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>16.0.1</version>
+        </dependency>
+
         <dependency>
             <groupId>io.reactivex</groupId>
             <artifactId>rxjava</artifactId>

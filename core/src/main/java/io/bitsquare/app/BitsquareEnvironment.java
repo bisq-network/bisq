@@ -22,6 +22,7 @@ import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.persistence.Persistence;
+import io.bitsquare.persistence.Storage;
 import io.bitsquare.util.Utilities;
 import io.bitsquare.util.spring.JOptCommandLinePropertySource;
 
@@ -134,9 +135,11 @@ public class BitsquareEnvironment extends StandardEnvironment {
             setProperty(WalletService.DIR_KEY, appDataDir);
             setProperty(WalletService.PREFIX_KEY, appName);
 
-            setProperty(Persistence.DIR_KEY, appDataDir);
+            setProperty(Storage.DIR_KEY,  Paths.get(appDataDir, "db").toString());
+            
+            setProperty(Persistence.DIR_KEY,  appDataDir);
             setProperty(Persistence.PREFIX_KEY, appName + "_pref");
-
+            
             setProperty(MainView.TITLE_KEY, appName);
         }});
     }

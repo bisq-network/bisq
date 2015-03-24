@@ -76,12 +76,12 @@ public class BSFormatter {
 
     @Inject
     public BSFormatter(User user) {
-        if (user.currentBankAccountProperty().get() == null)
+        if (user.currentFiatAccountProperty().get() == null)
             setFiatCurrencyCode(CurrencyUtil.getDefaultCurrency().getCurrencyCode());
-        else if (user.currentBankAccountProperty().get() != null)
-            setFiatCurrencyCode(user.currentBankAccountProperty().get().getCurrency().getCurrencyCode());
+        else if (user.currentFiatAccountProperty().get() != null)
+            setFiatCurrencyCode(user.currentFiatAccountProperty().get().getCurrency().getCurrencyCode());
 
-        user.currentBankAccountProperty().addListener((ov, oldValue, newValue) -> {
+        user.currentFiatAccountProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue != null)
                 setFiatCurrencyCode(newValue.getCurrency().getCurrencyCode());
         });

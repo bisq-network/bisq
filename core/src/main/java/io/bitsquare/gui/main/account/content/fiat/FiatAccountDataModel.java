@@ -77,7 +77,7 @@ class FiatAccountDataModel implements Activatable, DataModel {
 
     @Override
     public void activate() {
-        allFiatAccounts.setAll(user.getFiatAccounts());
+        allFiatAccounts.setAll(user.fiatAccountsObservableList());
     }
 
     @Override
@@ -94,17 +94,17 @@ class FiatAccountDataModel implements Activatable, DataModel {
                 holderName.get(),
                 primaryID.get(),
                 secondaryID.get());
-        user.setBankAccount(fiatAccount);
+        user.addFiatAccount(fiatAccount);
         saveUser();
-        allFiatAccounts.setAll(user.getFiatAccounts());
+        allFiatAccounts.setAll(user.fiatAccountsObservableList());
         countryNotInAcceptedCountriesList.set(!accountSettings.getAcceptedCountries().contains(country.get()));
         reset();
     }
 
     void removeBankAccount() {
-        user.removeCurrentBankAccount();
+        user.removeFiatAccount(user.currentFiatAccountProperty().get());
         saveUser();
-        allFiatAccounts.setAll(user.getFiatAccounts());
+        allFiatAccounts.setAll(user.fiatAccountsObservableList());
         reset();
     }
 
@@ -117,7 +117,7 @@ class FiatAccountDataModel implements Activatable, DataModel {
     }
 
     void selectBankAccount(FiatAccount fiatAccount) {
-        user.setCurrentBankAccount(fiatAccount);
+        user.setCurrentFiatAccount(fiatAccount);
         persistence.write(user);
 
         if (fiatAccount != null) {

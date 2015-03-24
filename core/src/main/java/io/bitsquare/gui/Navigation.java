@@ -21,7 +21,7 @@ import io.bitsquare.common.viewfx.view.View;
 import io.bitsquare.common.viewfx.view.ViewPath;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.trade.BuyView;
-import io.bitsquare.persistence.Persistence;
+import io.bitsquare.persistence.Storage;
 
 import com.google.inject.Inject;
 
@@ -31,28 +31,46 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class Navigation {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    private static final String CURRENT_PATH_KEY = "currentPath";
+public class Navigation implements Serializable {
+    private static final long serialVersionUID = 1L;
+    transient private static final Logger log = LoggerFactory.getLogger(Navigation.class);
 
-    private static final ViewPath DEFAULT_VIEW_PATH = ViewPath.to(MainView.class, BuyView.class);
+    transient private static final ViewPath DEFAULT_VIEW_PATH = ViewPath.to(MainView.class, BuyView.class);
+
+
+    public interface Listener {
+        void onNavigationRequested(ViewPath path);
+    }
 
     // New listeners can be added during iteration so we use CopyOnWriteArrayList to
     // prevent invalid array modification
-    private final List<Listener> listeners = new CopyOnWriteArrayList<>();
-
-    private final Persistence persistence;
-
-    private ViewPath currentPath;
-
+    transient private final List<Listener> listeners = new CopyOnWriteArrayList<>();
+    transient private final Storage<Navigation> storage;
+    transient private ViewPath currentPath;
     // Used for returning to the last important view. After setup is done we want to
     // return to the last opened view (e.g. sell/buy)
-    private ViewPath returnPath;
+    transient private ViewPath returnPath;
+
+    // Persisted fields
+    private ViewPath previousPath;
 
 
     @Inject
-    public Navigation(Persistence persistence) {
-        this.persistence = persistence;
+    public Navigation(Storage<Navigation> storage) {
+        this.storage = storage;
+
+        Navigation persisted = storage.getPersisted(this);
+        if (persisted != null) {
+            previousPath = persisted.getPreviousPath();
+        }
+        else
+            previousPath = DEFAULT_VIEW_PATH;
+
+        // need to be null initially and not DEFAULT_VIEW_PATH to navigate through all items
+        currentPath = null;
     }
 
     public void navigateTo(Class<? extends View>... viewClasses) {
@@ -84,21 +102,16 @@ public class Navigation {
         }
 
         currentPath = newPath;
-        persistence.write(this, CURRENT_PATH_KEY, (List<? extends Serializable>) currentPath);
+        previousPath = currentPath;
+        storage.save();
         listeners.stream().forEach((e) -> e.onNavigationRequested(currentPath));
     }
 
-    public void navigateToLastOpenView() {
-        ViewPath lastPath = (ViewPath) persistence.read(this, CURRENT_PATH_KEY);
+    public void navigateToPreviousVisitedView() {
+        if (previousPath == null || previousPath.size() == 0)
+            previousPath = DEFAULT_VIEW_PATH;
 
-        if (lastPath == null || lastPath.size() == 0)
-            lastPath = DEFAULT_VIEW_PATH;
-
-        navigateTo(lastPath);
-    }
-
-    public static interface Listener {
-        void onNavigationRequested(ViewPath path);
+        navigateTo(previousPath);
     }
 
     public void addListener(Listener listener) {
@@ -119,5 +132,9 @@ public class Navigation {
 
     public void setReturnPath(ViewPath returnPath) {
         this.returnPath = returnPath;
+    }
+
+    private ViewPath getPreviousPath() {
+        return previousPath;
     }
 }

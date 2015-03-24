@@ -83,7 +83,7 @@ public class TakerAsSellerModel extends SharedTradeModel implements Serializable
         taker.registrationPubKey = walletService.getRegistrationAddressEntry().getPubKey();
         taker.registrationKeyPair = walletService.getRegistrationAddressEntry().getKeyPair();
         taker.addressEntry = walletService.getAddressEntry(id);
-        taker.fiatAccount = user.getBankAccount(offer.getBankAccountId());
+        taker.fiatAccount = user.getFiatAccount(offer.getBankAccountId());
         taker.accountId = user.getAccountId();
         taker.p2pSigPubKey = user.getP2PSigPubKey();
         taker.p2pEncryptPublicKey = user.getP2PEncryptPubKey();

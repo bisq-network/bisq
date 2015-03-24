@@ -96,36 +96,23 @@ public class Persistence {
     }
 
     // Map
-    public void write(String key, Map<String, ? extends Serializable> value) {
-        write(key, (Serializable) value);
-    }
-
-    public void write(Object classInstance, String propertyKey, Map<String, ? extends Serializable> value) {
-        write(classInstance.getClass().getName() + "." + propertyKey, value);
-    }
-
-    public void write(Object classInstance, Map<String, ? extends Serializable> value) {
-        write(classInstance.getClass().getName(), value);
-    }
-
-    // List
-    public void write(String key, List<? extends Serializable> value) {
-        write(key, (Serializable) value);
-    }
-
     public void write(Object classInstance, String propertyKey, List<? extends Serializable> value) {
         write(classInstance.getClass().getName() + "." + propertyKey, value);
     }
-
-    public void write(Object classInstance, List<? extends Serializable> value) {
-        write(classInstance.getClass().getName(), value);
-    }
-
-    // Serializable
     public void write(Object classInstance, String propertyKey, Serializable value) {
         write(classInstance.getClass().getName() + "." + propertyKey, value);
     }
 
+    // not used outside
+    public void write(String key, Map<String, ? extends Serializable> value) {
+        write(key, (Serializable) value);
+    }
+    public void write(String key, List<? extends Serializable> value) {
+        write(key, (Serializable) value);
+    }
+
+
+    // Serializable
     public void remove(Object classInstance, String propertyKey) {
         try {
             lock.lock();
@@ -136,9 +123,6 @@ public class Persistence {
         }
     }
 
-    public void write(Object classInstance, Serializable value) {
-        write(classInstance.getClass().getName(), value);
-    }
 
     public void write(Serializable classInstance) {
         write(classInstance.getClass().getName(), classInstance);
@@ -311,4 +295,5 @@ public class Persistence {
             throw new IOException("Failed to rename " + tempFile + " to " + file);
         }
     }
+
 }

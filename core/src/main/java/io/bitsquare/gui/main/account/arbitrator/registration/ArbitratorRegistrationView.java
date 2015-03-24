@@ -29,7 +29,6 @@ import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
-import io.bitsquare.util.DSAKeyUtil;
 import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -369,7 +368,7 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
 
     private Arbitrator getEditedArbitrator() {
         byte[] pubKey = walletService.getArbitratorDepositAddressEntry().getPubKey();
-        String p2pSigPubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getP2PSigPubKey());
+        String p2pSigPubKeyAsHex = Utilities.getHexStringFromPublicKey(user.getP2PSigPubKey());
         String name = nameTextField.getText();
         Coin fee = formatter.parseToCoin(arbitrationFeeTextField.getText());
         String webUrl = webPageTextField.getText();

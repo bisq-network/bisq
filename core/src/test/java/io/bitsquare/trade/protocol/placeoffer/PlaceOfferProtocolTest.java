@@ -18,26 +18,26 @@
 package io.bitsquare.trade.protocol.placeoffer;
 
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.crypto.EncryptionService;
+import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.p2p.BootstrapState;
-import io.bitsquare.p2p.Node;
-import io.bitsquare.p2p.tomp2p.BootstrappedPeerBuilder;
-import io.bitsquare.p2p.tomp2p.TomP2PNode;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.offer.tomp2p.TomP2POfferBookService;
-import io.bitsquare.persistence.Persistence;
+import io.bitsquare.p2p.BootstrapState;
 import io.bitsquare.p2p.MessageService;
+import io.bitsquare.p2p.Node;
+import io.bitsquare.p2p.tomp2p.BootstrappedPeerBuilder;
 import io.bitsquare.p2p.tomp2p.TomP2PMessageService;
+import io.bitsquare.p2p.tomp2p.TomP2PNode;
+import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
-import io.bitsquare.util.DSAKeyUtil;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -45,6 +45,8 @@ import org.bitcoinj.utils.Threading;
 
 import java.io.File;
 import java.io.IOException;
+
+import java.security.NoSuchAlgorithmException;
 
 import java.util.Arrays;
 import java.util.Currency;
@@ -93,7 +95,11 @@ public class PlaceOfferProtocolTest {
         // messageService
         Node bootstrapNode = Node.at("localhost", "127.0.0.1");
         User user = new User();
-        user.applyPersistedUser(null);
+      /*  try {
+            user.initPersistedObject();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }*/
         bootstrappedPeerBuilder = new BootstrappedPeerBuilder(Node.DEFAULT_PORT, false, bootstrapNode, "<unspecified>");
         tomP2PNode = new TomP2PNode(bootstrappedPeerBuilder);
         messageService = new TomP2PMessageService(tomP2PNode, null, null, null);
@@ -119,6 +125,7 @@ public class PlaceOfferProtocolTest {
                 new FeePolicy(BitcoinNetwork.REGTEST),
                 null,
                 persistence,
+                null,
                 new UserAgent("", ""),
                 dir,
                 "Tests"
@@ -294,9 +301,9 @@ public class PlaceOfferProtocolTest {
                 faultHandler);
     }*/
 
-    private Offer getOffer() {
+    private Offer getOffer() throws NoSuchAlgorithmException {
         return new Offer(OFFER_ID,
-                DSAKeyUtil.generateDSAKeyPair().getPublic(),
+                new EncryptionService().getGeneratedDSAKeyPair().getPublic(),
                 Direction.BUY,
                 100L,
                 Coin.CENT,

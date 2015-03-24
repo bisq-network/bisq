@@ -19,19 +19,28 @@ package io.bitsquare.user;
 
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.locale.Country;
+import io.bitsquare.locale.CountryUtil;
+import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.persistence.Storage;
 
 import org.bitcoinj.core.Coin;
 
 import java.io.Serializable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.OptionalLong;
 
-public class AccountSettings implements Serializable {
-    private static final long serialVersionUID = 7995048077355006861L;
+import javax.inject.Inject;
 
+public class AccountSettings implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    transient private Storage<AccountSettings> storage;
+
+    // Persisted fields
     private List<Locale> acceptedLanguageLocales = new ArrayList<>();
     private List<Country> acceptedCountryLocales = new ArrayList<>();
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
@@ -41,7 +50,21 @@ public class AccountSettings implements Serializable {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AccountSettings() {
+    @Inject
+    public AccountSettings(Storage<AccountSettings> storage) {
+        this.storage = storage;
+
+        AccountSettings persisted = storage.getPersisted(this);
+        if (persisted != null) {
+            acceptedLanguageLocales = persisted.getAcceptedLanguageLocales();
+            acceptedCountryLocales = persisted.getAcceptedCountries();
+            acceptedArbitrators = persisted.getAcceptedArbitrators();
+        }
+        else {
+            acceptedLanguageLocales = Arrays.asList(LanguageUtil.getDefaultLanguageLocale(), LanguageUtil.getEnglishLanguageLocale());
+            acceptedCountryLocales = Arrays.asList(CountryUtil.getDefaultCountry());
+            acceptedArbitrators = new ArrayList<>();
+        }
     }
 
 
@@ -49,17 +72,11 @@ public class AccountSettings implements Serializable {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void applyPersistedAccountSettings(AccountSettings persistedSettings) {
-        if (persistedSettings != null) {
-            acceptedLanguageLocales = persistedSettings.getAcceptedLanguageLocales();
-            acceptedCountryLocales = persistedSettings.getAcceptedCountries();
-            acceptedArbitrators = persistedSettings.getAcceptedArbitrators();
-        }
-    }
 
     public void addAcceptedLanguageLocale(Locale locale) {
         if (!acceptedLanguageLocales.contains(locale)) {
             acceptedLanguageLocales.add(locale);
+            storage.save();
         }
     }
 
@@ -70,6 +87,7 @@ public class AccountSettings implements Serializable {
     public void addAcceptedCountry(Country locale) {
         if (!acceptedCountryLocales.contains(locale)) {
             acceptedCountryLocales.add(locale);
+            storage.save();
         }
     }
 
@@ -80,16 +98,18 @@ public class AccountSettings implements Serializable {
     public void addAcceptedArbitrator(Arbitrator arbitrator) {
         if (!acceptedArbitrators.contains(arbitrator)) {
             acceptedArbitrators.add(arbitrator);
+            storage.save();
         }
     }
 
     public void removeAcceptedArbitrator(Arbitrator item) {
         acceptedArbitrators.remove(item);
+        storage.save();
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters/Getters
+    // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public List<Arbitrator> getAcceptedArbitrators() {

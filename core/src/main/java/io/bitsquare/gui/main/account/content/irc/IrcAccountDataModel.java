@@ -17,30 +17,20 @@
 
 package io.bitsquare.gui.main.account.content.irc;
 
-import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorService;
-import io.bitsquare.arbitration.Reputation;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
-import io.bitsquare.util.DSAKeyUtil;
-
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
 
 import com.google.inject.Inject;
 
-import java.util.ArrayList;
 import java.util.Currency;
-import java.util.List;
-import java.util.Locale;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -73,14 +63,11 @@ class IrcAccountDataModel implements Activatable, DataModel {
         this.user = user;
         this.accountSettings = accountSettings;
         this.messageService = messageService;
-
-        if (accountSettings.getAcceptedArbitrators().isEmpty())
-            addMockArbitrator();
     }
 
     @Override
     public void activate() {
-        allFiatAccounts.setAll(user.getFiatAccounts());
+        allFiatAccounts.setAll(user.fiatAccountsObservableList());
     }
 
     @Override
@@ -96,9 +83,9 @@ class IrcAccountDataModel implements Activatable, DataModel {
                 nickName.get(),
                 "irc",
                 "irc");
-        user.setBankAccount(fiatAccount);
+        user.addFiatAccount(fiatAccount);
         saveUser();
-        allFiatAccounts.setAll(user.getFiatAccounts());
+        allFiatAccounts.setAll(user.fiatAccountsObservableList());
         reset();
     }
 
@@ -119,36 +106,5 @@ class IrcAccountDataModel implements Activatable, DataModel {
 
     private void saveUser() {
         persistence.write(user);
-    }
-
-    private void addMockArbitrator() {
-        if (accountSettings.getAcceptedArbitrators().isEmpty() && user.getP2pSigKeyPair() != null) {
-            byte[] pubKey = new ECKey().getPubKey();
-            String p2pSigPubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getP2PSigPubKey());
-            List<Locale> languages = new ArrayList<>();
-            languages.add(LanguageUtil.getDefaultLanguageLocale());
-            List<Arbitrator.METHOD> arbitrationMethods = new ArrayList<>();
-            arbitrationMethods.add(Arbitrator.METHOD.TLS_NOTARY);
-            List<Arbitrator.ID_VERIFICATION> idVerifications = new ArrayList<>();
-            idVerifications.add(Arbitrator.ID_VERIFICATION.PASSPORT);
-            idVerifications.add(Arbitrator.ID_VERIFICATION.GOV_ID);
-
-            Arbitrator arbitrator = new Arbitrator(pubKey,
-                    p2pSigPubKeyAsHex,
-                    "Manfred Karrer",
-                    Arbitrator.ID_TYPE.REAL_LIFE_ID,
-                    languages,
-                    new Reputation(),
-                    Coin.parseCoin("0.001"),
-                    arbitrationMethods,
-                    idVerifications,
-                    "https://bitsquare.io/",
-                    "Bla bla...");
-
-            accountSettings.addAcceptedArbitrator(arbitrator);
-            persistence.write(accountSettings);
-
-            messageService.addArbitrator(arbitrator);
-        }
     }
 }

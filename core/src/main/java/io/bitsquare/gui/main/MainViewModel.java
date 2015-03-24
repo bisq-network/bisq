@@ -38,7 +38,7 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
-import io.bitsquare.util.DSAKeyUtil;
+import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
@@ -129,14 +129,14 @@ class MainViewModel implements ViewModel {
         updateProcess.state.addListener((observableValue, oldValue, newValue) -> applyUpdateState(newValue));
         applyUpdateState(updateProcess.state.get());
 
-        user.getCurrentBankAccount().addListener((observable, oldValue, newValue) -> persistence.write(user));
-        currentBankAccount.bind(user.currentBankAccountProperty());
-        user.getFiatAccounts().addListener((ListChangeListener<FiatAccount>) change -> {
+        user.currentFiatAccountProperty().addListener((observable, oldValue, newValue) -> persistence.write(user));
+        currentBankAccount.bind(user.currentFiatAccountProperty());
+        user.fiatAccountsObservableList().addListener((ListChangeListener<FiatAccount>) change -> {
             bankAccountsComboBoxDisable.set(change.getList().isEmpty());
             bankAccountsComboBoxPrompt.set(change.getList().isEmpty() ? "No accounts" : "");
         });
-        bankAccountsComboBoxDisable.set(user.getFiatAccounts().isEmpty());
-        bankAccountsComboBoxPrompt.set(user.getFiatAccounts().isEmpty() ? "No accounts" : "");
+        bankAccountsComboBoxDisable.set(user.fiatAccountsObservableList().isEmpty());
+        bankAccountsComboBoxPrompt.set(user.fiatAccountsObservableList().isEmpty() ? "No accounts" : "");
     }
 
     public void restart() {
@@ -214,7 +214,7 @@ class MainViewModel implements ViewModel {
         // For alpha version
         // uses messageService, so don't call it before backend is ready
         if (accountSettings.getAcceptedArbitrators().isEmpty())
-            addMockArbitrator();
+            accountSettings.addAcceptedArbitrator(getMockArbitrator());
 
         // For alpha version
         if (!user.isRegistered()) {
@@ -225,11 +225,10 @@ class MainViewModel implements ViewModel {
                     "Demo (Account holder name)",
                     "Demo (E.g. IBAN) ",
                     "Demo (E.g. BIC) ");
-            user.setBankAccount(fiatAccount);
+            user.addFiatAccount(fiatAccount);
             persistence.write(user);
 
             user.setAccountID(walletService.getRegistrationAddressEntry().toString());
-            persistence.write(user.getClass().getName(), user);
         }
 
         tradeManager.onAllServicesInitialized();
@@ -321,11 +320,11 @@ class MainViewModel implements ViewModel {
     }
 
     public ObservableList<FiatAccount> getBankAccounts() {
-        return user.getFiatAccounts();
+        return user.fiatAccountsObservableList();
     }
 
     public void setCurrentBankAccount(FiatAccount currentFiatAccount) {
-        user.setCurrentBankAccount(currentFiatAccount);
+        user.setCurrentFiatAccount(currentFiatAccount);
     }
 
     private void updateNumPendingTrades() {
@@ -352,34 +351,30 @@ class MainViewModel implements ViewModel {
         }
     }
 
-    private void addMockArbitrator() {
-        if (accountSettings.getAcceptedArbitrators().isEmpty() && user.getP2pSigKeyPair() != null) {
-            byte[] pubKey = new ECKey().getPubKey();
-            String p2pSigPubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getP2PSigPubKey());
-            List<Locale> languages = new ArrayList<>();
-            languages.add(LanguageUtil.getDefaultLanguageLocale());
-            List<Arbitrator.METHOD> arbitrationMethods = new ArrayList<>();
-            arbitrationMethods.add(Arbitrator.METHOD.TLS_NOTARY);
-            List<Arbitrator.ID_VERIFICATION> idVerifications = new ArrayList<>();
-            idVerifications.add(Arbitrator.ID_VERIFICATION.PASSPORT);
-            idVerifications.add(Arbitrator.ID_VERIFICATION.GOV_ID);
+    private Arbitrator getMockArbitrator() {
+        byte[] pubKey = new ECKey().getPubKey();
+        String p2pSigPubKeyAsHex = Utilities.getHexStringFromPublicKey(user.getP2PSigPubKey());
+        List<Locale> languages = new ArrayList<>();
+        languages.add(LanguageUtil.getDefaultLanguageLocale());
+        List<Arbitrator.METHOD> arbitrationMethods = new ArrayList<>();
+        arbitrationMethods.add(Arbitrator.METHOD.TLS_NOTARY);
+        List<Arbitrator.ID_VERIFICATION> idVerifications = new ArrayList<>();
+        idVerifications.add(Arbitrator.ID_VERIFICATION.PASSPORT);
+        idVerifications.add(Arbitrator.ID_VERIFICATION.GOV_ID);
 
-            Arbitrator arbitrator = new Arbitrator(pubKey,
-                    p2pSigPubKeyAsHex,
-                    "Manfred Karrer",
-                    Arbitrator.ID_TYPE.REAL_LIFE_ID,
-                    languages,
-                    new Reputation(),
-                    Coin.parseCoin("0.1"),
-                    arbitrationMethods,
-                    idVerifications,
-                    "https://bitsquare.io",
-                    "Bla bla...");
+        Arbitrator arbitrator = new Arbitrator(pubKey,
+                p2pSigPubKeyAsHex,
+                "Manfred Karrer",
+                Arbitrator.ID_TYPE.REAL_LIFE_ID,
+                languages,
+                new Reputation(),
+                Coin.parseCoin("0.1"),
+                arbitrationMethods,
+                idVerifications,
+                "https://bitsquare.io",
+                "Bla bla...");
 
-            accountSettings.addAcceptedArbitrator(arbitrator);
-            persistence.write(accountSettings);
-
-            arbitratorService.addArbitrator(arbitrator);
-        }
+        arbitratorService.addArbitrator(arbitrator);
+        return arbitrator;
     }
 }

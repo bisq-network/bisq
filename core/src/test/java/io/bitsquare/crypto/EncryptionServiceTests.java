@@ -36,7 +36,7 @@ public class EncryptionServiceTests {
     @Test
     public void testEncryptionWithMailboxMessage() throws Exception {
         EncryptionService<MailboxMessage> encryptionService = new EncryptionService<>();
-        KeyPair p2pEncryptKeyPair = encryptionService.getKeyPair();
+        KeyPair p2pEncryptKeyPair = encryptionService.getGeneratedRSAKeyPair();
 
         TestMessage message = new TestMessage("test");
         EncryptionPackage encryptionPackage = encryptionService.encryptObject(p2pEncryptKeyPair.getPublic(), message);
@@ -47,7 +47,7 @@ public class EncryptionServiceTests {
     @Test
     public void testEncryptionWithInteger() throws Exception {
         EncryptionService<Integer> encryptionService = new EncryptionService<>();
-        KeyPair p2pEncryptKeyPair = encryptionService.getKeyPair();
+        KeyPair p2pEncryptKeyPair = encryptionService.getGeneratedRSAKeyPair();
         int data = 1234;
         EncryptionPackage encryptionPackage = encryptionService.encryptObject(p2pEncryptKeyPair.getPublic(), data);
         Integer result = encryptionService.decryptToObject(p2pEncryptKeyPair.getPrivate(), encryptionPackage);
@@ -57,7 +57,7 @@ public class EncryptionServiceTests {
     @Test
     public void testEncryptionWithBytes() throws Exception {
         EncryptionService encryptionService = new EncryptionService();
-        KeyPair p2pEncryptKeyPair = encryptionService.getKeyPair();
+        KeyPair p2pEncryptKeyPair = encryptionService.getGeneratedRSAKeyPair();
 
         byte[] data = new byte[]{0x00, 0x01, 0x02, 0x03, 0x04};
         EncryptionPackage encryptionPackage = encryptionService.encrypt(p2pEncryptKeyPair.getPublic(), data);
@@ -68,7 +68,7 @@ public class EncryptionServiceTests {
     @Test
     public void testEncryptionWithLargeData() throws Exception {
         EncryptionService encryptionService = new EncryptionService();
-        KeyPair p2pEncryptKeyPair = encryptionService.getKeyPair();
+        KeyPair p2pEncryptKeyPair = encryptionService.getGeneratedRSAKeyPair();
 
         byte[] data = new byte[2000];
         new Random().nextBytes(data);

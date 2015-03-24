@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.account.content.restrictions;
 
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorService;
-import io.bitsquare.arbitration.Reputation;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.locale.Country;
@@ -29,15 +28,9 @@ import io.bitsquare.locale.Region;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
-import io.bitsquare.util.DSAKeyUtil;
-
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
 
 import com.google.inject.Inject;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
 import javafx.collections.FXCollections;
@@ -65,28 +58,12 @@ class RestrictionsDataModel implements Activatable, DataModel {
         this.accountSettings = accountSettings;
         this.persistence = persistence;
         this.messageService = messageService;
-
-        AccountSettings persistedAccountSettings = (AccountSettings) persistence.read(accountSettings);
-        if (persistedAccountSettings != null) {
-            accountSettings.applyPersistedAccountSettings(persistedAccountSettings);
-        }
-        else {
-            if (Locale.getDefault() != null) {
-                addLanguage(LanguageUtil.getDefaultLanguageLocale());
-                addCountry(CountryUtil.getDefaultCountry());
-            }
-
-            // Add english as default as well
-            addLanguage(LanguageUtil.getEnglishLanguageLocale());
-        }
-
-        addMockArbitrator();
     }
 
     @Override
     public void activate() {
-        languageList.setAll(accountSettings.getAcceptedLanguageLocales());
         countryList.setAll(accountSettings.getAcceptedCountries());
+        languageList.setAll(accountSettings.getAcceptedLanguageLocales());
         arbitratorList.setAll(accountSettings.getAcceptedArbitrators());
     }
 
@@ -148,40 +125,5 @@ class RestrictionsDataModel implements Activatable, DataModel {
 
     private void saveSettings() {
         persistence.write(accountSettings);
-    }
-
-    // TODO Remove mock later
-    private void addMockArbitrator() {
-        if (accountSettings.getAcceptedArbitrators().isEmpty() && user.getP2pSigKeyPair() != null) {
-            byte[] pubKey = new ECKey().getPubKey();
-            String p2pSigPubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getP2PSigPubKey());
-            List<Locale> languages = new ArrayList<>();
-            languages.add(LanguageUtil.getDefaultLanguageLocale());
-            List<Arbitrator.METHOD> arbitrationMethods = new ArrayList<>();
-            arbitrationMethods.add(Arbitrator.METHOD.TLS_NOTARY);
-            List<Arbitrator.ID_VERIFICATION> idVerifications = new ArrayList<>();
-            idVerifications.add(Arbitrator.ID_VERIFICATION.PASSPORT);
-            idVerifications.add(Arbitrator.ID_VERIFICATION.GOV_ID);
-
-            // TODO use very small sec. dposit to make testing in testnet less expensive
-            // Revert later to 0.1 BTC again
-            Arbitrator arbitrator = new Arbitrator(pubKey,
-                    p2pSigPubKeyAsHex,
-                    "Manfred Karrer",
-                    Arbitrator.ID_TYPE.REAL_LIFE_ID,
-                    languages,
-                    new Reputation(),
-                    Coin.parseCoin("0.001"),
-                    arbitrationMethods,
-                    idVerifications,
-                    "http://bitsquare.io/",
-                    "Bla bla...");
-
-            arbitratorList.add(arbitrator);
-            accountSettings.addAcceptedArbitrator(arbitrator);
-            persistence.write(accountSettings);
-
-            messageService.addArbitrator(arbitrator);
-        }
     }
 }

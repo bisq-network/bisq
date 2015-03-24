@@ -17,12 +17,20 @@
 
 package io.bitsquare.common.viewfx.view;
 
+import java.io.Serializable;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 
-public class ViewPath extends ArrayList<Class<? extends View>> {
+public class ViewPath extends ArrayList<Class<? extends View>> implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     public ViewPath() {
+    }
+
+    public ViewPath(Collection<? extends Class<? extends View>> c) {
+        super(c);
     }
 
     public static ViewPath to(Class<? extends View>... elements) {

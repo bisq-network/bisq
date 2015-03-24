@@ -36,7 +36,6 @@ import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.Wallet;
 import org.bitcoinj.core.WalletEventListener;
-import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
@@ -50,7 +49,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.Service;
 
 import java.io.File;
-import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -97,12 +95,13 @@ public class WalletService {
     private final File walletDir;
     private final String walletPrefix;
     private final UserAgent userAgent;
+    private final BitcoinNetwork bitcoinNetwork;
 
     private WalletAppKit walletAppKit;
     private Wallet wallet;
     private AddressEntry registrationAddressEntry;
     private AddressEntry arbitratorDepositAddressEntry;
-    private List<AddressEntry> addressEntryList = new ArrayList<>();
+    private AddressEntryList addressEntryList;
 
     private TradeWalletService tradeWalletService;
 
@@ -112,8 +111,10 @@ public class WalletService {
 
     @Inject
     public WalletService(BitcoinNetwork bitcoinNetwork, FeePolicy feePolicy, SignatureService signatureService,
-                         Persistence persistence, UserAgent userAgent,
+                         Persistence persistence, AddressEntryList addressEntryList, UserAgent userAgent,
                          @Named(DIR_KEY) File walletDir, @Named(PREFIX_KEY) String walletPrefix) {
+        this.bitcoinNetwork = bitcoinNetwork;
+        this.addressEntryList = addressEntryList;
         this.params = bitcoinNetwork.getParameters();
         this.feePolicy = feePolicy;
         this.signatureService = signatureService;
@@ -204,23 +205,8 @@ public class WalletService {
         wallet = walletAppKit.wallet();
         wallet.addEventListener(walletEventListener);
 
-        Serializable serializable = persistence.read(this, "addressEntryList");
-        if (serializable instanceof List<?>) {
-            List<AddressEntry> persistedAddressEntryList = (List<AddressEntry>) serializable;
-            for (AddressEntry persistedAddressEntry : persistedAddressEntryList) {
-                persistedAddressEntry.setDeterministicKey((DeterministicKey) wallet.findKeyFromPubHash(persistedAddressEntry.getPubKeyHash()));
-            }
-            addressEntryList = persistedAddressEntryList;
-            registrationAddressEntry = addressEntryList.get(0);
-        }
-        else {
-            // First time
-            DeterministicKey registrationKey = wallet.currentReceiveKey();
-            registrationAddressEntry = new AddressEntry(registrationKey, params,
-                    AddressEntry.AddressContext.REGISTRATION_FEE);
-            addressEntryList.add(registrationAddressEntry);
-            saveAddressInfoList();
-        }
+        addressEntryList.init(wallet);
+        registrationAddressEntry = addressEntryList.getRegistrationAddressEntry();
     }
 
     public void shutDown() {
@@ -285,7 +271,7 @@ public class WalletService {
 
     public AddressEntry getArbitratorDepositAddressEntry() {
         if (arbitratorDepositAddressEntry == null)
-            arbitratorDepositAddressEntry = getNewAddressEntry(AddressEntry.AddressContext.ARBITRATOR_DEPOSIT, null);
+            arbitratorDepositAddressEntry = addressEntryList.getNewAddressEntry(AddressEntry.Context.ARBITRATOR_DEPOSIT, null);
 
         return arbitratorDepositAddressEntry;
     }
@@ -297,22 +283,13 @@ public class WalletService {
         if (addressEntry.isPresent())
             return addressEntry.get();
         else
-            return getNewAddressEntry(AddressEntry.AddressContext.TRADE, offerId);
+            return addressEntryList.getNewAddressEntry(AddressEntry.Context.TRADE, offerId);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Create new AddressInfo objects
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private AddressEntry getNewAddressEntry(AddressEntry.AddressContext addressContext, String offerId) {
-        log.trace("getNewAddressEntry called with offerId " + offerId);
-        DeterministicKey key = wallet.freshReceiveKey();
-        AddressEntry addressEntry = new AddressEntry(key, params, addressContext, offerId);
-        addressEntryList.add(addressEntry);
-        saveAddressInfoList();
-        return addressEntry;
-    }
 
     private Optional<AddressEntry> getAddressEntryByAddressString(String address) {
         return getAddressEntryList().stream().filter(e -> address.equals(e.getAddressString())).findFirst();
@@ -540,10 +517,6 @@ public class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void saveAddressInfoList() {
-        persistence.write(this, "addressEntryList", addressEntryList);
-    }
 
     private static void printTxWithInputs(String tracePrefix, Transaction tx) {
         log.trace(tracePrefix + ": " + tx.toString());

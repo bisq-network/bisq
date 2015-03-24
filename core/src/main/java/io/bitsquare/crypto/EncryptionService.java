@@ -54,7 +54,13 @@ public class EncryptionService<T> {
     public EncryptionService() {
     }
 
-    public KeyPair getKeyPair() throws NoSuchAlgorithmException {
+    public KeyPair getGeneratedDSAKeyPair() throws NoSuchAlgorithmException {
+        final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("DSA");
+        keyPairGenerator.initialize(1024);
+        return keyPairGenerator.genKeyPair();
+    }
+
+    public KeyPair getGeneratedRSAKeyPair() throws NoSuchAlgorithmException {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ALGO_ASYM);
         keyPairGenerator.initialize(KEY_SIZE_ASYM);
         return keyPairGenerator.genKeyPair();

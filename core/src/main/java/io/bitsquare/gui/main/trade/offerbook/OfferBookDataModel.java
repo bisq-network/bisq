@@ -99,17 +99,17 @@ class OfferBookDataModel implements Activatable, DataModel {
         volumeAsFiat.set(null);
 
         offerBook.addClient();
-        user.currentBankAccountProperty().addListener(bankAccountChangeListener);
+        user.currentFiatAccountProperty().addListener(bankAccountChangeListener);
         btcCode.bind(preferences.btcDenominationProperty());
 
-        setBankAccount(user.getCurrentBankAccount().get());
+        setBankAccount(user.currentFiatAccountProperty().get());
         applyFilter();
     }
 
     @Override
     public void deactivate() {
         offerBook.removeClient();
-        user.currentBankAccountProperty().removeListener(bankAccountChangeListener);
+        user.currentFiatAccountProperty().removeListener(bankAccountChangeListener);
         btcCode.unbind();
     }
 
@@ -149,7 +149,7 @@ class OfferBookDataModel implements Activatable, DataModel {
 
     boolean isTradable(Offer offer) {
         // if user has not registered yet we display all
-        FiatAccount currentFiatAccount = user.getCurrentBankAccount().get();
+        FiatAccount currentFiatAccount = user.currentFiatAccountProperty().get();
         if (currentFiatAccount == null)
             return true;
 
@@ -159,7 +159,7 @@ class OfferBookDataModel implements Activatable, DataModel {
         if (!countryResult)
             restrictionsInfo.set("This offer requires that the payments account resides in one of those countries:\n" +
                     formatter.countryLocalesToString(offer.getAcceptedCountries()) +
-                    "\n\nThe country of your payments account (" + user.getCurrentBankAccount().get().getCountry()
+                    "\n\nThe country of your payments account (" + user.currentFiatAccountProperty().get().getCountry()
                     .getName() +
                     ") is not included in that list." +
                     "\n\n Do you want to edit your preferences now?");

@@ -28,6 +28,7 @@ import io.bitsquare.p2p.tomp2p.TomP2PModule;
 import io.bitsquare.offer.OfferModule;
 import io.bitsquare.offer.tomp2p.TomP2POfferModule;
 import io.bitsquare.persistence.Persistence;
+import io.bitsquare.persistence.Storage;
 import io.bitsquare.trade.TradeModule;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.Preferences;
@@ -59,6 +60,9 @@ class BitsquareAppModule extends BitsquareModule {
         bind(Preferences.class).in(Singleton.class);
         bind(AccountSettings.class).in(Singleton.class);
 
+        File storageDir = new File(env.getRequiredProperty(Storage.DIR_KEY));
+        bind(File.class).annotatedWith(named(Storage.DIR_KEY)).toInstance(storageDir);
+        
         File persistenceDir = new File(env.getRequiredProperty(Persistence.DIR_KEY));
         bind(File.class).annotatedWith(named(Persistence.DIR_KEY)).toInstance(persistenceDir);
         bindConstant().annotatedWith(named(Persistence.PREFIX_KEY)).to(env.getRequiredProperty(Persistence.PREFIX_KEY));

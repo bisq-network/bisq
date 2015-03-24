@@ -17,6 +17,8 @@
 
 package io.bitsquare.util;
 
+import org.bitcoinj.core.Utils;
+
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -34,6 +36,9 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import java.net.URI;
+
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
 
 import java.util.function.Function;
 
@@ -288,5 +293,10 @@ public class Utilities {
         };
         animationTimer.start();
         return animationTimer;
+    }
+
+    public static String getHexStringFromPublicKey(PublicKey publicKey) {
+        final X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
+        return Utils.HEX.encode(x509EncodedKeySpec.getEncoded());
     }
 }

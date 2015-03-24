@@ -33,20 +33,20 @@ public class AddressEntry implements Serializable {
     private static final long serialVersionUID = 5501603992599920416L;
 
     private final String offerId;
-    private final AddressContext addressContext;
+    private final Context context;
     private transient DeterministicKey keyPair;
     private final byte[] pubKey;
     private final byte[] pubKeyHash;
     private final NetworkParameters params;
 
-    public AddressEntry(DeterministicKey keyPair, NetworkParameters params, @SuppressWarnings("SameParameterValue") AddressContext addressContext) {
-        this(keyPair, params, addressContext, null);
+    public AddressEntry(DeterministicKey keyPair, NetworkParameters params, @SuppressWarnings("SameParameterValue") Context context) {
+        this(keyPair, params, context, null);
     }
 
-    public AddressEntry(DeterministicKey keyPair, NetworkParameters params, AddressContext addressContext, String offerId) {
+    public AddressEntry(DeterministicKey keyPair, NetworkParameters params, Context context, String offerId) {
         this.keyPair = keyPair;
         this.params = params;
-        this.addressContext = addressContext;
+        this.context = context;
         this.offerId = offerId;
 
         pubKey = keyPair.getPubKey();
@@ -57,8 +57,8 @@ public class AddressEntry implements Serializable {
         return offerId;
     }
 
-    public AddressContext getAddressContext() {
-        return addressContext;
+    public Context getContext() {
+        return context;
     }
 
     public String getAddressString() {
@@ -85,7 +85,7 @@ public class AddressEntry implements Serializable {
         return pubKey;
     }
 
-    public static enum AddressContext {
+    public static enum Context {
         REGISTRATION_FEE,
         TRADE,
         ARBITRATOR_DEPOSIT
@@ -95,7 +95,7 @@ public class AddressEntry implements Serializable {
     public String toString() {
         return "AddressEntry{" +
                 "offerId='" + offerId +
-                ", addressContext=" + addressContext +
+                ", addressContext=" + context +
                 ", keyPair=" + keyPair +
                 ", pubKey=" + Arrays.toString(pubKey) +
                 ", pubKeyHash=" + Arrays.toString(pubKeyHash) +

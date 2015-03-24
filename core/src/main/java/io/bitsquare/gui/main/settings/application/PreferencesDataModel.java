@@ -50,7 +50,7 @@ class PreferencesDataModel implements Activatable, DataModel {
     public PreferencesDataModel(Preferences preferences) {
         this.preferences = preferences;
 
-        btcDenominations = FXCollections.observableArrayList(preferences.getBtcDenominations());
+        btcDenominations = FXCollections.observableArrayList(Preferences.getBtcDenominations());
         btcDenominationListener = (ov, oldValue, newValue) -> preferences.setBtcDenomination(newValue);
         useAnimationsListener = (ov, oldValue, newValue) -> preferences.setUseAnimations(newValue);
         useEffectsListener = (ov, oldValue, newValue) -> preferences.setUseEffects(newValue);

@@ -27,8 +27,6 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.user.AccountSettings;
-import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
 
 import com.google.common.base.Throwables;
@@ -72,11 +70,11 @@ public class BitsquareApp extends Application {
         this.primaryStage = primaryStage;
 
         log.trace("BitsquareApp.start");
-        
+
         bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
         injector = Guice.createInjector(bitsquareAppModule);
         injector.getInstance(InjectorViewFactory.class).setInjector(injector);
-
+        
         // route uncaught exceptions to a user-facing dialog
 
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) ->
@@ -84,16 +82,9 @@ public class BitsquareApp extends Application {
 
         // load and apply any stored settings
 
-        User user = injector.getInstance(User.class);
-        AccountSettings accountSettings = injector.getInstance(AccountSettings.class);
+
         Persistence persistence = injector.getInstance(Persistence.class);
         persistence.init();
-
-        User persistedUser = (User) persistence.read(user);
-        user.applyPersistedUser(persistedUser);
-
-        accountSettings.applyPersistedAccountSettings((AccountSettings) persistence
-                .read(accountSettings.getClass().getName()));
 
         // load the main view and create the main scene
 

@@ -154,7 +154,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             if (newValue) {
                 bankAccountComboBoxHolder.getChildren().setAll(createBankAccountComboBox());
 
-                navigation.navigateToLastOpenView();
+                navigation.navigateToPreviousVisitedView();
 
                 transitions.fadeOutAndRemove(splashScreen, 1500);
             }

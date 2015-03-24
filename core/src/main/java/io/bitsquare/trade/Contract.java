@@ -19,7 +19,7 @@ package io.bitsquare.trade;
 
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.util.DSAKeyUtil;
+import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
@@ -59,8 +59,8 @@ public class Contract implements Serializable {
         this.takerAccountID = takerAccountID;
         this.offererFiatAccount = offererFiatAccount;
         this.takerFiatAccount = takerFiatAccount;
-        this.offererP2PSigPubKeyAsString = DSAKeyUtil.getHexStringFromPublicKey(offererP2PSigPubKey);
-        this.takerP2PSigPubKeyAsString = DSAKeyUtil.getHexStringFromPublicKey(takerP2PSigPubKey);
+        this.offererP2PSigPubKeyAsString = Utilities.getHexStringFromPublicKey(offererP2PSigPubKey);
+        this.takerP2PSigPubKeyAsString = Utilities.getHexStringFromPublicKey(takerP2PSigPubKey);
     }
 
 

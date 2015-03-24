@@ -88,7 +88,7 @@ public class FiatAccount implements Serializable {
     }
 
     // we use the accountTitle as unique id
-    public String getUid() {
+    public String getId() {
         return nameOfBank;
     }
 
@@ -112,7 +112,7 @@ public class FiatAccount implements Serializable {
         if (obj == this) return true;
 
         final FiatAccount other = (FiatAccount) obj;
-        return nameOfBank.equals(other.getUid());
+        return nameOfBank.equals(other.getId());
     }
 
     @Override

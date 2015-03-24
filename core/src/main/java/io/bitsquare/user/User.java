@@ -19,7 +19,8 @@ package io.bitsquare.user;
 
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.util.DSAKeyUtil;
+import io.bitsquare.gui.components.Popups;
+import io.bitsquare.persistence.Storage;
 
 import java.io.Serializable;
 
@@ -49,78 +50,95 @@ import org.slf4j.LoggerFactory;
  * It must never be transmitted over the wire (messageKeyPair contains private key!).
  */
 public class User implements Serializable {
-    private static final long serialVersionUID = 7409078808248518638L;
-    private static final Logger log = LoggerFactory.getLogger(User.class);
+    private static final long serialVersionUID = 1L;
+    transient private static final Logger log = LoggerFactory.getLogger(User.class);
 
+    transient private Storage<User> storage;
+    transient private EncryptionService encryptionService;
+
+    // Persisted fields
     private KeyPair p2pSigKeyPair;
     private KeyPair p2pEncryptKeyPair;
     private String accountID;
-
-    // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is
-    // only temporary
     private List<FiatAccount> _fiatAccounts = new ArrayList<>();
     private FiatAccount _currentFiatAccount;
 
-    private final transient ObservableList<FiatAccount> fiatAccounts = FXCollections.observableArrayList();
-    private final transient ObjectProperty<FiatAccount> currentBankAccount = new SimpleObjectProperty<>();
-    transient private EncryptionService encryptionService;
+    // Observable wrappers
+    transient private final ObservableList<FiatAccount> fiatAccounts = FXCollections.observableArrayList();
+    transient private final ObjectProperty<FiatAccount> currentFiatAccount = new SimpleObjectProperty<>();
 
     @Inject
-    public User(EncryptionService encryptionService) {
+    public User(Storage<User> storage, EncryptionService encryptionService) {
+        this.storage = storage;
         this.encryptionService = encryptionService;
-        // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is
-        // only temporary
-        fiatAccounts.addListener((ListChangeListener<FiatAccount>) change -> _fiatAccounts = new ArrayList<>(fiatAccounts));
 
-        currentBankAccount.addListener((ov) -> _currentFiatAccount = currentBankAccount.get());
+        User persisted = storage.getPersisted(this);
+        if (persisted != null) {
+            p2pSigKeyPair = persisted.getP2pSigKeyPair();
+            p2pEncryptKeyPair = persisted.getP2pEncryptKeyPair();
+            accountID = persisted.getAccountId();
+
+            _fiatAccounts = new ArrayList<>(persisted.getFiatAccounts());
+            fiatAccounts.setAll(_fiatAccounts);
+
+            _currentFiatAccount = persisted.getCurrentFiatAccount();
+            currentFiatAccount.set(_currentFiatAccount);
+        }
+        else {
+            // First time we create key pairs
+            try {
+                p2pSigKeyPair = encryptionService.getGeneratedDSAKeyPair();
+                p2pEncryptKeyPair = encryptionService.getGeneratedRSAKeyPair();
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
+                Popups.openExceptionPopup(e);
+            }
+        }
+        storage.save();
+        // Use that to guarantee update of the serializable field and to make a storage update in case of a change
+        fiatAccounts.addListener((ListChangeListener<FiatAccount>) change -> {
+            _fiatAccounts = new ArrayList<>(fiatAccounts);
+            storage.save();
+        });
+        currentFiatAccount.addListener((ov) -> {
+            _currentFiatAccount = currentFiatAccount.get();
+            storage.save();
+        });
     }
 
     // for unit tests
     public User() {
     }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void applyPersistedUser(User persistedUser) {
-        if (persistedUser != null) {
-            fiatAccounts.setAll(persistedUser.getSerializedBankAccounts());
-            setCurrentBankAccount(persistedUser.getSerializedCurrentBankAccount());
-            p2pSigKeyPair = persistedUser.getP2pSigKeyPair();
-            p2pEncryptKeyPair = persistedUser.getP2pEncryptKeyPair();
-            accountID = persistedUser.getAccountId();
-        }
-        else {
-            // First time
-            p2pSigKeyPair = DSAKeyUtil.generateDSAKeyPair();
-            try {
-                p2pEncryptKeyPair = encryptionService.getKeyPair();
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-                log.error(e.getMessage());
-            }
-        }
-    }
-
-    public void setBankAccount(FiatAccount fiatAccount) {
-        // We use the account title as hashCode
-        // In case we edit an existing we replace it in the list
+    /**
+     * @param fiatAccount
+     * @return If a Fiat Account with the same name already exists we return false. We use the account title as hashCode.
+     */
+    public boolean addFiatAccount(FiatAccount fiatAccount) {
         if (fiatAccounts.contains(fiatAccount))
-            fiatAccounts.remove(fiatAccount);
+            return false;
 
         fiatAccounts.add(fiatAccount);
-        setCurrentBankAccount(fiatAccount);
+        setCurrentFiatAccount(fiatAccount);
+        return true;
     }
 
-    public void removeCurrentBankAccount() {
-        if (currentBankAccount.get() != null)
-            fiatAccounts.remove(currentBankAccount.get());
+    // In case we edit an existing we remove the existing first
+    public void removeFiatAccount(FiatAccount fiatAccount) {
+        fiatAccounts.remove(fiatAccount);
 
-        if (fiatAccounts.isEmpty())
-            setCurrentBankAccount(null);
-        else
-            setCurrentBankAccount(fiatAccounts.get(0));
+        if (_currentFiatAccount.equals(fiatAccount)) {
+            if (fiatAccounts.isEmpty())
+                setCurrentFiatAccount(null);
+            else
+                setCurrentFiatAccount(fiatAccounts.get(0));
+        }
     }
 
 
@@ -132,11 +150,13 @@ public class User implements Serializable {
     // Public key from the input for the registration payment tx (or address) will be used
     public void setAccountID(String accountID) {
         this.accountID = accountID;
+        storage.save();
     }
 
-    public void setCurrentBankAccount(@Nullable FiatAccount fiatAccount) {
-        currentBankAccount.set(fiatAccount);
+    public void setCurrentFiatAccount(@Nullable FiatAccount fiatAccount) {
+        currentFiatAccount.set(fiatAccount);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -144,7 +164,6 @@ public class User implements Serializable {
 
     // TODO just a first attempt, refine when working on the embedded data for the reg. tx
     public String getStringifiedBankAccounts() {
-        // TODO use steam API
         String bankAccountUIDs = "";
         for (int i = 0; i < fiatAccounts.size(); i++) {
             FiatAccount fiatAccount = fiatAccounts.get(i);
@@ -165,17 +184,9 @@ public class User implements Serializable {
         return getAccountId() != null;
     }
 
-    public ObservableList<FiatAccount> getFiatAccounts() {
-        return fiatAccounts;
-    }
-
-    public ObjectProperty<FiatAccount> getCurrentBankAccount() {
-        return currentBankAccount;
-    }
-
-    public FiatAccount getBankAccount(String bankAccountId) {
-        for (final FiatAccount fiatAccount : fiatAccounts) {
-            if (fiatAccount.getUid().equals(bankAccountId)) {
+    public FiatAccount getFiatAccount(String fiatAccountId) {
+        for (FiatAccount fiatAccount : fiatAccounts) {
+            if (fiatAccount.getId().equals(fiatAccountId)) {
                 return fiatAccount;
             }
         }
@@ -194,24 +205,28 @@ public class User implements Serializable {
         return p2pEncryptKeyPair.getPublic();
     }
 
-    public ObjectProperty<FiatAccount> currentBankAccountProperty() {
-        return currentBankAccount;
-    }
-
-    // Used for serialisation (ObservableList cannot be serialized) 
-    List<FiatAccount> getSerializedBankAccounts() {
-        return _fiatAccounts;
-    }
-
-    FiatAccount getSerializedCurrentBankAccount() {
-        return _currentFiatAccount;
-    }
-
     public PrivateKey getP2pEncryptPrivateKey() {
         return p2pEncryptKeyPair.getPrivate();
     }
 
-    KeyPair getP2pEncryptKeyPair() {
+    private KeyPair getP2pEncryptKeyPair() {
         return p2pEncryptKeyPair;
     }
+
+    private List<FiatAccount> getFiatAccounts() {
+        return _fiatAccounts;
+    }
+
+    private FiatAccount getCurrentFiatAccount() {
+        return _currentFiatAccount;
+    }
+
+    public ObjectProperty<FiatAccount> currentFiatAccountProperty() {
+        return currentFiatAccount;
+    }
+
+    public ObservableList<FiatAccount> fiatAccountsObservableList() {
+        return fiatAccounts;
+    }
+
 }

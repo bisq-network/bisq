@@ -127,7 +127,7 @@ public class WithdrawalListItem {
 
 
     public final String getLabel() {
-        switch (addressEntry.getAddressContext()) {
+        switch (addressEntry.getContext()) {
             case REGISTRATION_FEE:
                 return "Registration fee";
             case TRADE:
