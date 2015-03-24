@@ -20,7 +20,7 @@ package io.bitsquare.user;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.gui.components.Popups;
-import io.bitsquare.persistence.Storage;
+import io.bitsquare.storage.Storage;
 
 import java.io.Serializable;
 
@@ -72,7 +72,7 @@ public class User implements Serializable {
         this.storage = storage;
         this.encryptionService = encryptionService;
 
-        User persisted = storage.getPersisted(this);
+        User persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
             p2pSigKeyPair = persisted.getP2pSigKeyPair();
             p2pEncryptKeyPair = persisted.getP2pEncryptKeyPair();

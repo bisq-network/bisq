@@ -17,7 +17,7 @@
 
 package io.bitsquare.btc;
 
-import io.bitsquare.persistence.Storage;
+import io.bitsquare.storage.Storage;
 
 import org.bitcoinj.core.Wallet;
 import org.bitcoinj.crypto.DeterministicKey;
@@ -48,7 +48,7 @@ public class AddressEntryList extends ArrayList<AddressEntry> implements Seriali
     public void init(Wallet wallet) {
         this.wallet = wallet;
 
-        AddressEntryList persisted = storage.getPersisted(this);
+        AddressEntryList persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
             for (AddressEntry addressEntry : persisted) {
                 addressEntry.setDeterministicKey((DeterministicKey) wallet.findKeyFromPubHash(addressEntry.getPubKeyHash()));

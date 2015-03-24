@@ -24,7 +24,6 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.handlers.TradeResultHandler;
 import io.bitsquare.user.Preferences;
@@ -58,7 +57,6 @@ class TakeOfferDataModel implements Activatable, DataModel {
     private final TradeManager tradeManager;
     private final WalletService walletService;
     private final Preferences preferences;
-    private final Persistence persistence;
 
     private Offer offer;
     private AddressEntry addressEntry;
@@ -78,12 +76,10 @@ class TakeOfferDataModel implements Activatable, DataModel {
     @Inject
     public TakeOfferDataModel(TradeManager tradeManager,
                               WalletService walletService,
-                              Preferences preferences,
-                              Persistence persistence) {
+                              Preferences preferences) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
         this.preferences = preferences;
-        this.persistence = persistence;
 
         offerFeeAsCoin.set(FeePolicy.CREATE_OFFER_FEE);
         networkFeeAsCoin.set(FeePolicy.TX_FEE);
@@ -174,16 +170,12 @@ class TakeOfferDataModel implements Activatable, DataModel {
         return true;
     }
 
-    Boolean displaySecurityDepositInfo() {
-        Object securityDepositInfoDisplayedObject = persistence.read("displaySecurityDepositInfo");
-        if (securityDepositInfoDisplayedObject instanceof Boolean)
-            return (Boolean) securityDepositInfoDisplayedObject;
-        else
-            return true;
+    Boolean getDisplaySecurityDepositInfo() {
+        return preferences.getDisplaySecurityDepositInfo();
     }
 
     void securityDepositInfoDisplayed() {
-        persistence.write("displaySecurityDepositInfo", false);
+        preferences.setDisplaySecurityDepositInfo(false);
     }
 
 

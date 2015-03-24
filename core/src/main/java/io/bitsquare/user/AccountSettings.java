@@ -21,7 +21,7 @@ import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.persistence.Storage;
+import io.bitsquare.storage.Storage;
 
 import org.bitcoinj.core.Coin;
 
@@ -44,6 +44,7 @@ public class AccountSettings implements Serializable {
     private List<Locale> acceptedLanguageLocales = new ArrayList<>();
     private List<Country> acceptedCountryLocales = new ArrayList<>();
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
+   
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -53,7 +54,7 @@ public class AccountSettings implements Serializable {
     public AccountSettings(Storage<AccountSettings> storage, Arbitrator defaultArbitrator) {
         this.storage = storage;
 
-        AccountSettings persisted = storage.getPersisted(this);
+        AccountSettings persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
             acceptedLanguageLocales = persisted.getAcceptedLanguageLocales();
             acceptedCountryLocales = persisted.getAcceptedCountries();
@@ -106,7 +107,7 @@ public class AccountSettings implements Serializable {
         storage.save();
     }
 
-
+   
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////

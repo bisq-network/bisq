@@ -28,7 +28,6 @@ import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
 import io.bitsquare.offer.Direction;
-import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.Preferences;
@@ -72,8 +71,6 @@ class CreateOfferDataModel implements Activatable, DataModel {
     private final WalletService walletService;
     private final AccountSettings accountSettings;
     private Preferences preferences;
-    private final User user;
-    private final Persistence persistence;
     private final BSFormatter formatter;
 
     private final String offerId;
@@ -110,14 +107,12 @@ class CreateOfferDataModel implements Activatable, DataModel {
     // non private for testing
     @Inject
     public CreateOfferDataModel(TradeManager tradeManager, WalletService walletService, AccountSettings accountSettings,
-                                Preferences preferences, User user, Persistence persistence,
+                                Preferences preferences, User user,
                                 BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
         this.accountSettings = accountSettings;
         this.preferences = preferences;
-        this.user = user;
-        this.persistence = persistence;
         this.formatter = formatter;
         this.offerId = UUID.randomUUID().toString();
 
@@ -231,7 +226,7 @@ class CreateOfferDataModel implements Activatable, DataModel {
     }
 
     void securityDepositInfoDisplayed() {
-        persistence.write("displaySecurityDepositInfo", false);
+        preferences.setDisplaySecurityDepositInfo(false);
     }
 
 
@@ -255,15 +250,6 @@ class CreateOfferDataModel implements Activatable, DataModel {
         return offerId;
     }
 
-    Boolean displaySecurityDepositInfo() {
-        Object securityDepositInfoDisplayedObject = persistence.read("displaySecurityDepositInfo");
-        if (securityDepositInfoDisplayedObject instanceof Boolean)
-            return (Boolean) securityDepositInfoDisplayedObject;
-        else
-            return true;
-    }
-
-
     private void updateBalance(@NotNull Coin balance) {
         isWalletFunded.set(totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0);
     }
@@ -280,5 +266,9 @@ class CreateOfferDataModel implements Activatable, DataModel {
 
             fiatCode.set(fiatAccount.getCurrency().getCurrencyCode());
         }
+    }
+
+    public Boolean getDisplaySecurityDepositInfo() {
+        return preferences.getDisplaySecurityDepositInfo();
     }
 }

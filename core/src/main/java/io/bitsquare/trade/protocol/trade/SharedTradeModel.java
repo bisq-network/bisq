@@ -26,7 +26,6 @@ import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.MessageService;
-import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 
 import java.io.Serializable;
@@ -45,7 +44,6 @@ public class SharedTradeModel extends SharedTaskModel implements Serializable {
     transient public final WalletService walletService;
     transient public final BlockChainService blockChainService;
     transient public final SignatureService signatureService;
-    transient protected final Persistence persistence;
 
     transient public MailboxMessage mailboxMessage;
 
@@ -62,15 +60,13 @@ public class SharedTradeModel extends SharedTaskModel implements Serializable {
                                MailboxService mailboxService,
                                WalletService walletService,
                                BlockChainService blockChainService,
-                               SignatureService signatureService,
-                               Persistence persistence) {
+                               SignatureService signatureService) {
         this.offer = offer;
         this.messageService = messageService;
         this.mailboxService = mailboxService;
         this.walletService = walletService;
         this.blockChainService = blockChainService;
         this.signatureService = signatureService;
-        this.persistence = persistence;
 
         id = offer.getId();
         tradeWalletService = walletService.getTradeWalletService();

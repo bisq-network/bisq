@@ -21,7 +21,6 @@ import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.crypto.SignatureService;
-import io.bitsquare.persistence.Persistence;
 
 import org.bitcoinj.core.AbstractWalletEventListener;
 import org.bitcoinj.core.Address;
@@ -91,11 +90,9 @@ public class WalletService {
     private final NetworkParameters params;
     private final FeePolicy feePolicy;
     private final SignatureService signatureService;
-    private final Persistence persistence;
     private final File walletDir;
     private final String walletPrefix;
     private final UserAgent userAgent;
-    private final BitcoinNetwork bitcoinNetwork;
 
     private WalletAppKit walletAppKit;
     private Wallet wallet;
@@ -111,14 +108,12 @@ public class WalletService {
 
     @Inject
     public WalletService(BitcoinNetwork bitcoinNetwork, FeePolicy feePolicy, SignatureService signatureService,
-                         Persistence persistence, AddressEntryList addressEntryList, UserAgent userAgent,
+                         AddressEntryList addressEntryList, UserAgent userAgent,
                          @Named(DIR_KEY) File walletDir, @Named(PREFIX_KEY) String walletPrefix) {
-        this.bitcoinNetwork = bitcoinNetwork;
         this.addressEntryList = addressEntryList;
         this.params = bitcoinNetwork.getParameters();
         this.feePolicy = feePolicy;
         this.signatureService = signatureService;
-        this.persistence = persistence;
         this.walletDir = walletDir;
         this.walletPrefix = walletPrefix;
         this.userAgent = userAgent;

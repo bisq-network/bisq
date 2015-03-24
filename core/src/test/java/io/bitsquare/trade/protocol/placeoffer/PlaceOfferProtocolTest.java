@@ -17,37 +17,20 @@
 
 package io.bitsquare.trade.protocol.placeoffer;
 
-import io.bitsquare.btc.BitcoinNetwork;
-import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.offer.OfferBookService;
-import io.bitsquare.offer.tomp2p.TomP2POfferBookService;
-import io.bitsquare.p2p.BootstrapState;
 import io.bitsquare.p2p.MessageService;
-import io.bitsquare.p2p.Node;
 import io.bitsquare.p2p.tomp2p.BootstrappedPeerBuilder;
-import io.bitsquare.p2p.tomp2p.TomP2PMessageService;
 import io.bitsquare.p2p.tomp2p.TomP2PNode;
-import io.bitsquare.persistence.Persistence;
-import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Address;
-import org.bitcoinj.utils.Threading;
 
 import java.io.File;
-import java.io.IOException;
 
-import java.util.concurrent.CountDownLatch;
-
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Ignore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import rx.Observable;
 
 /**
  * That test is ignored for automated testing as it needs custom setup.
@@ -72,22 +55,19 @@ public class PlaceOfferProtocolTest {
     private TomP2PNode tomP2PNode;
     private BootstrappedPeerBuilder bootstrappedPeerBuilder;
 
-    @Before
+   /* @Before
     public void setup() throws InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         dir.mkdirs();
 
-        Persistence persistence = new Persistence(dir, "prefs");
-        persistence.init();
-
         // messageService
         Node bootstrapNode = Node.at("localhost", "127.0.0.1");
         User user = new User();
-      /*  try {
+      *//*  try {
             user.initPersistedObject();
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
-        }*/
+        }*//*
         bootstrappedPeerBuilder = new BootstrappedPeerBuilder(Node.DEFAULT_PORT, false, bootstrapNode, "<unspecified>");
         tomP2PNode = new TomP2PNode(bootstrappedPeerBuilder);
         messageService = new TomP2PMessageService(tomP2PNode, null, null, null);
@@ -153,7 +133,7 @@ public class PlaceOfferProtocolTest {
     public void shutDown() throws IOException, InterruptedException {
         walletService.shutDown();
         bootstrappedPeerBuilder.shutDown();
-    }
+    }*/
 
 /*    @Test
     public void validateOfferTest() throws InterruptedException {

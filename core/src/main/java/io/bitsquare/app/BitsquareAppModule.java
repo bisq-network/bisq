@@ -23,12 +23,11 @@ import io.bitsquare.arbitration.tomp2p.TomP2PArbitratorModule;
 import io.bitsquare.btc.BitcoinModule;
 import io.bitsquare.crypto.CryptoModule;
 import io.bitsquare.gui.GuiModule;
-import io.bitsquare.p2p.P2PModule;
-import io.bitsquare.p2p.tomp2p.TomP2PModule;
 import io.bitsquare.offer.OfferModule;
 import io.bitsquare.offer.tomp2p.TomP2POfferModule;
-import io.bitsquare.persistence.Persistence;
-import io.bitsquare.persistence.Storage;
+import io.bitsquare.p2p.P2PModule;
+import io.bitsquare.p2p.tomp2p.TomP2PModule;
+import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradeModule;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.Preferences;
@@ -63,14 +62,9 @@ class BitsquareAppModule extends BitsquareModule {
         File storageDir = new File(env.getRequiredProperty(Storage.DIR_KEY));
         bind(File.class).annotatedWith(named(Storage.DIR_KEY)).toInstance(storageDir);
         
-        File persistenceDir = new File(env.getRequiredProperty(Persistence.DIR_KEY));
-        bind(File.class).annotatedWith(named(Persistence.DIR_KEY)).toInstance(persistenceDir);
-        bindConstant().annotatedWith(named(Persistence.PREFIX_KEY)).to(env.getRequiredProperty(Persistence.PREFIX_KEY));
-        bind(Persistence.class).in(Singleton.class);
-
         bind(Environment.class).toInstance(env);
         bind(UpdateProcess.class).in(Singleton.class);
-
+        
         install(networkModule());
         install(bitcoinModule());
         install(cryptoModule());

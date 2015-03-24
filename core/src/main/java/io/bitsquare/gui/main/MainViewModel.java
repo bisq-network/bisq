@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main;
 
 import io.bitsquare.app.UpdateProcess;
-import io.bitsquare.arbitration.ArbitratorService;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.viewfx.model.ViewModel;
@@ -29,10 +28,8 @@ import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.p2p.BaseP2PService;
 import io.bitsquare.p2p.BootstrapState;
 import io.bitsquare.p2p.ClientNode;
-import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
@@ -91,27 +88,20 @@ class MainViewModel implements ViewModel {
     private final User user;
     private final WalletService walletService;
     private final ClientNode clientNode;
-    private ArbitratorService arbitratorService;
     private final TradeManager tradeManager;
     private UpdateProcess updateProcess;
     private final BSFormatter formatter;
-    private Persistence persistence;
-    private AccountSettings accountSettings;
 
     @Inject
     public MainViewModel(User user, WalletService walletService, ClientNode clientNode,
-                         ArbitratorService arbitratorService, 
                          TradeManager tradeManager, BitcoinNetwork bitcoinNetwork, UpdateProcess updateProcess,
-                         BSFormatter formatter, Persistence persistence, AccountSettings accountSettings) {
+                         BSFormatter formatter) {
         this.user = user;
         this.walletService = walletService;
         this.clientNode = clientNode;
-        this.arbitratorService = arbitratorService;
         this.tradeManager = tradeManager;
         this.updateProcess = updateProcess;
         this.formatter = formatter;
-        this.persistence = persistence;
-        this.accountSettings = accountSettings;
 
         bitcoinNetworkAsString = bitcoinNetwork.toString();
 

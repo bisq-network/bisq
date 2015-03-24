@@ -250,8 +250,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         return formatter;
     }
 
-    Boolean displaySecurityDepositInfo() {
-        return dataModel.displaySecurityDepositInfo();
+    Boolean getDisplaySecurityDepositInfo() {
+        return dataModel.getDisplaySecurityDepositInfo();
     }
 
     private void setupListeners() {

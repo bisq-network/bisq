@@ -319,7 +319,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void setupPaymentScreen() {
         // TODO deactivate for testing the moment
-       /* if (model.displaySecurityDepositInfo()) {
+       /* if (model.getDisplaySecurityDepositInfo()) {
             overlayManager.blurContent();
             List<Action> actions = new ArrayList<>();
             actions.add(new AbstractAction(BSResources.get("shared.close")) {

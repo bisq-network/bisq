@@ -68,9 +68,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private final String title;
 
     @Inject
-    public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, OverlayManager
-            overlayManager,
-                    Transitions transitions, @Named(MainView.TITLE_KEY) String title) {
+    public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, OverlayManager overlayManager, Transitions transitions,
+                    @Named(MainView.TITLE_KEY) String title) {
         super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;

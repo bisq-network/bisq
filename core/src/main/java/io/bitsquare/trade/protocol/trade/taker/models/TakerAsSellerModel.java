@@ -22,13 +22,14 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.MessageService;
-import io.bitsquare.persistence.Persistence;
+import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.SharedTradeModel;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Transaction;
 
+import java.io.File;
 import java.io.Serializable;
 
 import org.slf4j.Logger;
@@ -36,9 +37,11 @@ import org.slf4j.LoggerFactory;
 
 public class TakerAsSellerModel extends SharedTradeModel implements Serializable {
     private static final long serialVersionUID = -963501132927618376L;
-    private static final Logger log = LoggerFactory.getLogger(TakerAsSellerModel.class);
+    transient private static final Logger log = LoggerFactory.getLogger(TakerAsSellerModel.class);
 
-    public final Trade trade;
+    transient private Storage<TakerAsSellerModel> storage;
+    transient public final Trade trade;
+
     public final Taker taker;
     public final Offerer offerer;
 
@@ -52,28 +55,27 @@ public class TakerAsSellerModel extends SharedTradeModel implements Serializable
                               WalletService walletService,
                               BlockChainService blockChainService,
                               SignatureService signatureService,
-                              User user,
-                              Persistence persistence) {
+                              User user, 
+                              File storageDir) {
         super(trade.getOffer(),
                 messageService,
                 mailboxService,
                 walletService,
                 blockChainService,
-                signatureService,
-                persistence);
+                signatureService);
 
         this.trade = trade;
+        this.storage = new Storage<>(storageDir);
 
-        Serializable serializable = persistence.read(this, "SellerAsTakerModel_" + id);
-        if (serializable instanceof TakerAsSellerModel) {
-            TakerAsSellerModel persistedModel = (TakerAsSellerModel) serializable;
-            log.debug("Model reconstructed form persisted model.");
+        TakerAsSellerModel persisted = storage.initAndGetPersisted(this, getClass().getSimpleName() + id);
+        if (persisted != null) {
+            log.debug("Model reconstructed from persisted model.");
 
-            setTakeOfferFeeTx(persistedModel.getTakeOfferFeeTx());
-            setPayoutTx(persistedModel.payoutTx);
+            setTakeOfferFeeTx(persisted.getTakeOfferFeeTx());
+            setPayoutTx(persisted.payoutTx);
 
-            taker = persistedModel.taker;
-            offerer = persistedModel.offerer;
+            taker = persisted.taker;
+            offerer = persisted.offerer;
         }
         else {
             taker = new Taker();
@@ -93,13 +95,13 @@ public class TakerAsSellerModel extends SharedTradeModel implements Serializable
     // Get called form taskRunner after each completed task
     @Override
     public void persist() {
-        persistence.write(this, "SellerAsTakerModel_" + id, this);
+        storage.save();
     }
 
     @Override
     public void onComplete() {
         // Just in case of successful completion we delete our persisted object
-        persistence.remove(this, "SellerAsTakerModel_" + id);
+        storage.remove();
     }
 
 

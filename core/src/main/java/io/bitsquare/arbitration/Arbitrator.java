@@ -18,7 +18,7 @@
 package io.bitsquare.arbitration;
 
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.persistence.Storage;
+import io.bitsquare.storage.Storage;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;
@@ -95,7 +95,7 @@ public class Arbitrator implements Serializable {
     public Arbitrator(Storage<Arbitrator> storage, User user) {
         this.storage = storage;
 
-        Arbitrator persisted = storage.getPersisted(this);
+        Arbitrator persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
             //TODO for mock arbitrator
             id = persisted.getName();

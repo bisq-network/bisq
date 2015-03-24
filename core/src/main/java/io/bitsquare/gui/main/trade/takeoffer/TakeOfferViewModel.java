@@ -359,8 +359,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return paymentLabel;
     }
 
-    Boolean displaySecurityDepositInfo() {
-        return dataModel.displaySecurityDepositInfo();
+    Boolean getDisplaySecurityDepositInfo() {
+        return dataModel.getDisplaySecurityDepositInfo();
     }
 
 

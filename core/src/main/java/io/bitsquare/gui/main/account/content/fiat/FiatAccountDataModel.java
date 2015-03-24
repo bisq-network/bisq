@@ -25,7 +25,6 @@ import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.Region;
-import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
 
@@ -46,7 +45,6 @@ class FiatAccountDataModel implements Activatable, DataModel {
 
     private final User user;
     private final AccountSettings accountSettings;
-    private final Persistence persistence;
 
     final StringProperty title = new SimpleStringProperty();
     final StringProperty holderName = new SimpleStringProperty();
@@ -68,8 +66,7 @@ class FiatAccountDataModel implements Activatable, DataModel {
 
 
     @Inject
-    public FiatAccountDataModel(User user, Persistence persistence, AccountSettings accountSettings) {
-        this.persistence = persistence;
+    public FiatAccountDataModel(User user, AccountSettings accountSettings) {
         this.user = user;
         this.accountSettings = accountSettings;
     }

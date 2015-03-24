@@ -22,7 +22,6 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.common.viewfx.model.DataModel;
-import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;
@@ -50,7 +49,6 @@ class RegistrationDataModel implements DataModel {
 
     private final WalletService walletService;
     private final User user;
-    private final Persistence persistence;
 
     private String transactionId;
     private AddressEntry addressEntry;
@@ -61,11 +59,10 @@ class RegistrationDataModel implements DataModel {
 
 
     @Inject
-    public RegistrationDataModel(WalletService walletService, User user, Persistence persistence) {
+    public RegistrationDataModel(WalletService walletService, User user) {
 
         this.walletService = walletService;
         this.user = user;
-        this.persistence = persistence;
 
         if (walletService != null && walletService.getWallet() != null) {
             addressEntry = walletService.getRegistrationAddressEntry();

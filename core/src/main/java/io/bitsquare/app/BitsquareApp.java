@@ -26,7 +26,6 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.persistence.Persistence;
 import io.bitsquare.util.Utilities;
 
 import com.google.common.base.Throwables;
@@ -74,20 +73,13 @@ public class BitsquareApp extends Application {
         bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
         injector = Guice.createInjector(bitsquareAppModule);
         injector.getInstance(InjectorViewFactory.class).setInjector(injector);
-        
+       
         // route uncaught exceptions to a user-facing dialog
-
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) ->
                 Popups.handleUncaughtExceptions(Throwables.getRootCause(throwable)));
 
-        // load and apply any stored settings
-
-
-        Persistence persistence = injector.getInstance(Persistence.class);
-        persistence.init();
 
         // load the main view and create the main scene
-
         log.trace("viewLoader.load(MainView.class)");
         CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
         View view = viewLoader.load(MainView.class);

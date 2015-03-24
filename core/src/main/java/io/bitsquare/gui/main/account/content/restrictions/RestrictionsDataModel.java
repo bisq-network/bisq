@@ -18,16 +18,13 @@
 package io.bitsquare.gui.main.account.content.restrictions;
 
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.arbitration.ArbitratorService;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.Region;
-import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.AccountSettings;
-import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 
@@ -38,10 +35,7 @@ import javafx.collections.ObservableList;
 
 class RestrictionsDataModel implements Activatable, DataModel {
 
-    private final User user;
     private final AccountSettings accountSettings;
-    private final Persistence persistence;
-    private final ArbitratorService messageService;
 
     final ObservableList<Locale> languageList = FXCollections.observableArrayList();
     final ObservableList<Country> countryList = FXCollections.observableArrayList();
@@ -52,12 +46,8 @@ class RestrictionsDataModel implements Activatable, DataModel {
 
 
     @Inject
-    public RestrictionsDataModel(User user, AccountSettings accountSettings, Persistence persistence,
-                                 ArbitratorService messageService) {
-        this.user = user;
+    public RestrictionsDataModel(AccountSettings accountSettings) {
         this.accountSettings = accountSettings;
-        this.persistence = persistence;
-        this.messageService = messageService;
     }
 
     @Override

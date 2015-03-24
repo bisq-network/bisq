@@ -27,7 +27,6 @@ import io.bitsquare.common.viewfx.view.View;
 import io.bitsquare.common.viewfx.view.ViewLoader;
 import io.bitsquare.gui.main.account.arbitrator.profile.ArbitratorProfileView;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.AccountSettings;
 
 import java.util.ArrayList;
@@ -54,15 +53,13 @@ public class ArbitratorBrowserView extends ActivatableView<Pane, Void> implement
 
     private final ViewLoader viewLoader;
     private final AccountSettings accountSettings;
-    private final Persistence persistence;
     private final ArbitratorService messageService;
 
     @Inject
-    public ArbitratorBrowserView(CachingViewLoader viewLoader, AccountSettings accountSettings, Persistence persistence,
+    public ArbitratorBrowserView(CachingViewLoader viewLoader, AccountSettings accountSettings, 
                                  ArbitratorService messageService) {
         this.viewLoader = viewLoader;
         this.accountSettings = accountSettings;
-        this.persistence = persistence;
         this.messageService = messageService;
     }
 

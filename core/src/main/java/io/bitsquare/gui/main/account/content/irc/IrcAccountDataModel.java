@@ -17,15 +17,12 @@
 
 package io.bitsquare.gui.main.account.content.irc;
 
-import io.bitsquare.arbitration.ArbitratorService;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.persistence.Persistence;
-import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
@@ -42,9 +39,6 @@ import javafx.collections.ObservableList;
 class IrcAccountDataModel implements Activatable, DataModel {
 
     private final User user;
-    private final AccountSettings accountSettings;
-    private final ArbitratorService messageService;
-    private final Persistence persistence;
 
     final StringProperty nickName = new SimpleStringProperty();
     final ObjectProperty<FiatAccountType> type = new SimpleObjectProperty<>();
@@ -57,12 +51,8 @@ class IrcAccountDataModel implements Activatable, DataModel {
 
 
     @Inject
-    public IrcAccountDataModel(User user, Persistence persistence, AccountSettings accountSettings,
-                               ArbitratorService messageService) {
-        this.persistence = persistence;
+    public IrcAccountDataModel(User user) {
         this.user = user;
-        this.accountSettings = accountSettings;
-        this.messageService = messageService;
     }
 
     @Override

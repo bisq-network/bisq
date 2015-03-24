@@ -21,7 +21,7 @@ import io.bitsquare.common.viewfx.view.View;
 import io.bitsquare.common.viewfx.view.ViewPath;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.trade.BuyView;
-import io.bitsquare.persistence.Storage;
+import io.bitsquare.storage.Storage;
 
 import com.google.inject.Inject;
 
@@ -62,7 +62,7 @@ public class Navigation implements Serializable {
     public Navigation(Storage<Navigation> storage) {
         this.storage = storage;
 
-        Navigation persisted = storage.getPersisted(this);
+        Navigation persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
             previousPath = persisted.getPreviousPath();
         }

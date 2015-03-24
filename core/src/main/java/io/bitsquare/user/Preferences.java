@@ -17,7 +17,7 @@
 
 package io.bitsquare.user;
 
-import io.bitsquare.persistence.Storage;
+import io.bitsquare.storage.Storage;
 
 import org.bitcoinj.utils.MonetaryFormat;
 
@@ -53,12 +53,12 @@ public class Preferences implements Serializable {
     private String _btcDenomination = MonetaryFormat.CODE_BTC;
     private Boolean _useAnimations = true;
     private Boolean _useEffects = true;
+    private Boolean displaySecurityDepositInfo = true;
 
     // Observable wrappers
     transient private final StringProperty btcDenomination = new SimpleStringProperty(_btcDenomination);
     transient private final BooleanProperty useAnimations = new SimpleBooleanProperty(_useAnimations);
     transient private final BooleanProperty useEffects = new SimpleBooleanProperty(_useEffects);
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -68,11 +68,12 @@ public class Preferences implements Serializable {
     public Preferences(Storage<Preferences> storage) {
         this.storage = storage;
 
-        Preferences persisted = storage.getPersisted(this);
+        Preferences persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
             setBtcDenomination(persisted._btcDenomination);
             setUseAnimations(persisted._useAnimations);
             setUseEffects(persisted._useEffects);
+            displaySecurityDepositInfo = persisted.getDisplaySecurityDepositInfo();
         }
 
         // Use that to guarantee update of the serializable field and to make a storage update in case of a change
@@ -107,6 +108,11 @@ public class Preferences implements Serializable {
         this.useEffects.set(useEffects);
     }
 
+    public void setDisplaySecurityDepositInfo(Boolean displaySecurityDepositInfo) {
+        this.displaySecurityDepositInfo = displaySecurityDepositInfo;
+        storage.save();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -124,6 +130,10 @@ public class Preferences implements Serializable {
         return useAnimations.get();
     }
 
+    public Boolean getDisplaySecurityDepositInfo() {
+        return displaySecurityDepositInfo;
+    }
+
     public StringProperty btcDenominationProperty() {
         return btcDenomination;
     }
@@ -135,4 +145,6 @@ public class Preferences implements Serializable {
     public BooleanProperty useEffectsProperty() {
         return useEffects;
     }
+
+
 }
