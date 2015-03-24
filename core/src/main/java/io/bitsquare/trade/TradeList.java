@@ -31,20 +31,20 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TradesList extends ArrayList<Trade> implements Serializable {
+public class TradeList extends ArrayList<Trade> implements Serializable {
     private static final long serialVersionUID = 1L;
-    private static final Logger log = LoggerFactory.getLogger(TradesList.class);
+    transient private static final Logger log = LoggerFactory.getLogger(TradeList.class);
 
-    transient final private Storage<TradesList> storage;
+    transient final private Storage<TradeList> storage;
     transient private ObservableList<Trade> observableList;
 
     @Inject
-    public TradesList(Storage<TradesList> storage) {
+    public TradeList(Storage<TradeList> storage) {
         this.storage = storage;
 
-        TradesList persisted = storage.initAndGetPersisted(this);
+        TradeList persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
-            addAll(persisted);
+            this.addAll(persisted);
             observableList = FXCollections.observableArrayList(this);
         }
         else {
@@ -55,6 +55,7 @@ public class TradesList extends ArrayList<Trade> implements Serializable {
     @Override
     public boolean add(Trade trade) {
         boolean result = super.add(trade);
+        observableList.add(trade);
         storage.save();
         return result;
     }
@@ -62,6 +63,7 @@ public class TradesList extends ArrayList<Trade> implements Serializable {
     @Override
     public boolean remove(Object trade) {
         boolean result = super.remove(trade);
+        observableList.remove(trade);
         storage.save();
         return result;
     }
@@ -69,4 +71,5 @@ public class TradesList extends ArrayList<Trade> implements Serializable {
     public ObservableList<Trade> getObservableList() {
         return observableList;
     }
+
 }

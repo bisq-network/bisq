@@ -84,9 +84,9 @@ public class TradeManager {
     private final Map<String, OffererAsBuyerProtocol> offererAsBuyerProtocolMap = new HashMap<>();
     private final Map<String, CheckOfferAvailabilityProtocol> checkOfferAvailabilityProtocolMap = new HashMap<>();
 
-    private final TradesList openOfferTrades;
-    private final TradesList pendingTrades;
-    private final TradesList closedTrades;
+    private final TradeList openOfferTrades;
+    private final TradeList pendingTrades;
+    private final TradeList closedTrades;
     private final Map<String, MailboxMessage> mailboxMessages = new HashMap<>();
 
 
@@ -95,7 +95,7 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeManager(User user, AccountSettings accountSettings, TradesList openOfferTrades, TradesList pendingTrades, TradesList closedTrades,
+    public TradeManager(User user, AccountSettings accountSettings, TradeList openOfferTrades, TradeList pendingTrades, TradeList closedTrades,
                         MessageService messageService, MailboxService mailboxService, AddressService addressService, BlockChainService blockChainService,
                         WalletService walletService, SignatureService signatureService, EncryptionService<MailboxMessage> encryptionService,
                         OfferBookService offerBookService, @Named("storage.dir") File storageDir) {

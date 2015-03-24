@@ -79,8 +79,10 @@ public class TomP2PAddressService extends TomP2PDHTService implements AddressSer
 
     @Override
     public void shutDown() {
-        timerForIPCheck.cancel();
-        timerForStoreAddress.cancel();
+        if (timerForIPCheck != null)
+            timerForIPCheck.cancel();
+        if (timerForStoreAddress != null)
+            timerForStoreAddress.cancel();
         removeAddress();
         super.shutDown();
     }
