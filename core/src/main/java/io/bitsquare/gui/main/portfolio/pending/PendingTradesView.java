@@ -297,6 +297,7 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
                 case OFFERER_BUYER_START_PAYMENT:
                     processBar.setSelectedIndex(1);
 
+                    paymentStartedButton.setDisable(false);
                     setPaymentsControlsVisible(true);
 
                     statusTextField.setText("Deposit transaction has at least one block chain confirmation. " +

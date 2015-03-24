@@ -174,14 +174,20 @@ public class FileManager<T> {
         }
     }
 
-    public void removeFile(T serializable) {
-        storageFile.delete();
+    public void removeFile(String fileName) {
+        File file = new File(dir, fileName);
+        boolean result = file.delete();
+        if (!result)
+            log.warn("Could not delete file: " + file.toString());
 
         File backupDir = new File(Paths.get(dir.getAbsolutePath(), "backup").toString());
         if (backupDir.exists()) {
-            File backupFile = new File(backupDir, serializable.getClass().getSimpleName());
-            if (backupFile.exists())
-                backupFile.delete();
+            File backupFile = new File(Paths.get(dir.getAbsolutePath(), "backup", fileName).toString());
+            if (backupFile.exists()) {
+                result = backupFile.delete();
+                if (!result)
+                    log.warn("Could not delete backupFile: " + file.toString());
+            }
         }
     }
 
@@ -203,20 +209,22 @@ public class FileManager<T> {
         }
     }
 
-    public void removeAndBackupFile(File storageFile, File dir, String name) throws IOException {
+    public void removeAndBackupFile(String fileName) throws IOException {
         File corruptedBackupDir = new File(Paths.get(dir.getAbsolutePath(), "corrupted").toString());
         if (!corruptedBackupDir.exists())
             corruptedBackupDir.mkdir();
 
-        renameTempFileToFile(storageFile, new File(corruptedBackupDir, serializable.getClass().getSimpleName()));
+        File corruptedFile = new File(Paths.get(dir.getAbsolutePath(), "corrupted", fileName).toString());
+        renameTempFileToFile(storageFile, corruptedFile);
     }
 
-    public void backupFile(T serializable) throws IOException {
+    public void backupFile(String fileName) throws IOException {
         File backupDir = new File(Paths.get(dir.getAbsolutePath(), "backup").toString());
         if (!backupDir.exists())
             backupDir.mkdir();
 
-        Files.copy(storageFile, new File(backupDir, serializable.getClass().getSimpleName()));
+        File backupFile = new File(Paths.get(dir.getAbsolutePath(), "backup", fileName).toString());
+        Files.copy(storageFile, backupFile);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -25,8 +25,6 @@ import java.io.IOException;
 import java.io.InvalidClassException;
 import java.io.Serializable;
 
-import java.nio.file.Paths;
-
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
@@ -60,6 +58,7 @@ public class Storage<T extends Serializable> {
     private FileManager<T> fileManager;
     private File storageFile;
     private T serializable;
+    private String fileName;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -77,6 +76,7 @@ public class Storage<T extends Serializable> {
 
     public T initAndGetPersisted(T serializable, String fileName) {
         this.serializable = serializable;
+        this.fileName = fileName;
         storageFile = new File(dir, fileName);
         fileManager = new FileManager<>(dir, storageFile, 500, TimeUnit.MILLISECONDS);
 
@@ -91,8 +91,8 @@ public class Storage<T extends Serializable> {
         fileManager.saveLater(serializable);
     }
 
-    public void remove() {
-        fileManager.removeFile(serializable);
+    public void remove(String fileName) {
+        fileManager.removeFile(fileName);
     }
 
 
@@ -113,7 +113,7 @@ public class Storage<T extends Serializable> {
 
             // If we did not get any exception we can be sure the data are consistent so we make a backup 
             now = System.currentTimeMillis();
-            fileManager.backupFile(serializable);
+            fileManager.backupFile(fileName);
             log.info("Backup {} completed in {}msec", serializable.getClass().getSimpleName(), System.currentTimeMillis() - now);
 
             return persistedObject;
@@ -121,8 +121,7 @@ public class Storage<T extends Serializable> {
             log.error("Version of persisted class has changed. We cannot read the persisted data anymore. We make a backup and remove the inconsistent file.");
             try {
                 // In case the persisted data have been critical (keys) we keep a backup which might be used for recovery
-                fileManager.removeAndBackupFile(storageFile, new File(Paths.get(dir.getAbsolutePath(), "inconsistent").toString()),
-                        serializable.getClass().getSimpleName());
+                fileManager.removeAndBackupFile(fileName);
             } catch (IOException e1) {
                 e1.printStackTrace();
                 log.error(e1.getMessage());

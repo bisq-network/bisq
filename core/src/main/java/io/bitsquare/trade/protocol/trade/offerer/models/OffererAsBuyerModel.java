@@ -39,7 +39,7 @@ public class OffererAsBuyerModel extends SharedTradeModel implements Serializabl
 
     transient private Storage<OffererAsBuyerModel> storage;
     transient public final Trade trade;
-    
+
     public final Taker taker;
     public final Offerer offerer;
 
@@ -63,8 +63,8 @@ public class OffererAsBuyerModel extends SharedTradeModel implements Serializabl
 
         this.trade = trade;
         this.storage = new Storage<>(storageDir);
-        
-        OffererAsBuyerModel persisted = storage.initAndGetPersisted(this, getClass().getSimpleName() + id);
+
+        OffererAsBuyerModel persisted = storage.initAndGetPersisted(this, getFileName());
         if (persisted != null) {
             log.debug("Model reconstructed form persisted model.");
 
@@ -98,7 +98,7 @@ public class OffererAsBuyerModel extends SharedTradeModel implements Serializabl
     @Override
     public void onComplete() {
         // Just in case of successful completion we delete our persisted object
-        storage.remove();
+        storage.remove(getFileName());
     }
 
     public String getTakeOfferFeeTxId() {
@@ -107,5 +107,9 @@ public class OffererAsBuyerModel extends SharedTradeModel implements Serializabl
 
     public void setTakeOfferFeeTxId(String takeOfferFeeTxId) {
         this.takeOfferFeeTxId = takeOfferFeeTxId;
+    }
+
+    private String getFileName() {
+        return getClass().getSimpleName() + "_" + id;
     }
 }

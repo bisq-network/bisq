@@ -19,8 +19,7 @@ package io.bitsquare.trade;
 
 import io.bitsquare.storage.Storage;
 
-import com.google.inject.Inject;
-
+import java.io.File;
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -38,11 +37,10 @@ public class TradeList extends ArrayList<Trade> implements Serializable {
     transient final private Storage<TradeList> storage;
     transient private ObservableList<Trade> observableList;
 
-    @Inject
-    public TradeList(Storage<TradeList> storage) {
-        this.storage = storage;
+    public TradeList(File storageDir, String fileName) {
+        this.storage = new Storage<>(storageDir);
 
-        TradeList persisted = storage.initAndGetPersisted(this);
+        TradeList persisted = storage.initAndGetPersisted(this, fileName);
         if (persisted != null) {
             this.addAll(persisted);
             observableList = FXCollections.observableArrayList(this);

@@ -55,7 +55,7 @@ public class TakerAsSellerModel extends SharedTradeModel implements Serializable
                               WalletService walletService,
                               BlockChainService blockChainService,
                               SignatureService signatureService,
-                              User user, 
+                              User user,
                               File storageDir) {
         super(trade.getOffer(),
                 messageService,
@@ -67,7 +67,7 @@ public class TakerAsSellerModel extends SharedTradeModel implements Serializable
         this.trade = trade;
         this.storage = new Storage<>(storageDir);
 
-        TakerAsSellerModel persisted = storage.initAndGetPersisted(this, getClass().getSimpleName() + id);
+        TakerAsSellerModel persisted = storage.initAndGetPersisted(this, getFileName());
         if (persisted != null) {
             log.debug("Model reconstructed from persisted model.");
 
@@ -101,9 +101,8 @@ public class TakerAsSellerModel extends SharedTradeModel implements Serializable
     @Override
     public void onComplete() {
         // Just in case of successful completion we delete our persisted object
-        storage.remove();
+        storage.remove(getFileName());
     }
-
 
     public Transaction getTakeOfferFeeTx() {
         return takeOfferFeeTx;
@@ -120,4 +119,9 @@ public class TakerAsSellerModel extends SharedTradeModel implements Serializable
     public void setPayoutTx(Transaction payoutTx) {
         this.payoutTx = payoutTx;
     }
+
+    private String getFileName() {
+        return getClass().getSimpleName() + "_" + id;
+    }
+
 }

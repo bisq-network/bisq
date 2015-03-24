@@ -95,15 +95,12 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeManager(User user, AccountSettings accountSettings, TradeList openOfferTrades, TradeList pendingTrades, TradeList closedTrades,
+    public TradeManager(User user, AccountSettings accountSettings,
                         MessageService messageService, MailboxService mailboxService, AddressService addressService, BlockChainService blockChainService,
                         WalletService walletService, SignatureService signatureService, EncryptionService<MailboxMessage> encryptionService,
                         OfferBookService offerBookService, @Named("storage.dir") File storageDir) {
         this.user = user;
         this.accountSettings = accountSettings;
-        this.openOfferTrades = openOfferTrades;
-        this.pendingTrades = pendingTrades;
-        this.closedTrades = closedTrades;
         this.messageService = messageService;
         this.mailboxService = mailboxService;
         this.addressService = addressService;
@@ -113,6 +110,10 @@ public class TradeManager {
         this.encryptionService = encryptionService;
         this.offerBookService = offerBookService;
         this.storageDir = storageDir;
+
+        this.openOfferTrades = new TradeList(storageDir, "OpenOfferTrades");
+        this.pendingTrades = new TradeList(storageDir, "PendingTrades");
+        this.closedTrades = new TradeList(storageDir, "ClosedTrades");
     }
 
 
