@@ -30,7 +30,6 @@ import java.io.Serializable;
 
 import java.security.PublicKey;
 
-import java.util.Currency;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -60,7 +59,7 @@ public class Offer implements Serializable {
 
     // key attributes for lookup
     private final Direction direction;
-    private final Currency currency;
+    private final String currencyCode;
     private final String id;
     private final Date creationDate;
 
@@ -100,7 +99,7 @@ public class Offer implements Serializable {
                  Coin amount,
                  Coin minAmount,
                  FiatAccountType fiatAccountType,
-                 Currency currency,
+                 String currencyCode,
                  Country bankAccountCountry,
                  String bankAccountUID,
                  List<Arbitrator> arbitrators,
@@ -114,7 +113,7 @@ public class Offer implements Serializable {
         this.amount = amount;
         this.minAmount = minAmount;
         this.fiatAccountType = fiatAccountType;
-        this.currency = currency;
+        this.currencyCode = currencyCode;
         this.bankAccountCountry = bankAccountCountry;
         this.bankAccountUID = bankAccountUID;
         this.arbitrators = arbitrators;
@@ -150,7 +149,7 @@ public class Offer implements Serializable {
     }
 
     public Fiat getPrice() {
-        return Fiat.valueOf(currency.getCurrencyCode(), fiatPrice);
+        return Fiat.valueOf(currencyCode, fiatPrice);
     }
 
     public Coin getAmount() {
@@ -173,8 +172,8 @@ public class Offer implements Serializable {
         return fiatAccountType;
     }
 
-    public Currency getCurrency() {
-        return currency;
+    public String getCurrencyCode() {
+        return currencyCode;
     }
 
     public Country getBankAccountCountry() {
@@ -191,7 +190,7 @@ public class Offer implements Serializable {
 
     public Fiat getVolumeByAmount(Coin amount) {
         if (fiatPrice != 0 && amount != null && !amount.isZero())
-            return new ExchangeRate(Fiat.valueOf(currency.getCurrencyCode(), fiatPrice)).coinToFiat(amount);
+            return new ExchangeRate(Fiat.valueOf(currencyCode, fiatPrice)).coinToFiat(amount);
         else
             return null;
     }
@@ -246,7 +245,7 @@ public class Offer implements Serializable {
         checkNotNull(getBankAccountId(), "BankAccountId is null");
         checkNotNull(getSecurityDeposit(), "SecurityDeposit is null");
         checkNotNull(getCreationDate(), "CreationDate is null");
-        checkNotNull(getCurrency(), "Currency is null");
+        checkNotNull(getCurrencyCode(), "Currency is null");
         checkNotNull(getDirection(), "Direction is null");
         checkNotNull(getId(), "Id is null");
         checkNotNull(getP2PSigPubKey(), "p2pSigPubKey is null");
@@ -271,7 +270,7 @@ public class Offer implements Serializable {
                 "id='" + id + '\'' +
                 ", state=" + state +
                 ", direction=" + direction +
-                ", currency=" + currency +
+                ", currency=" + currencyCode +
                 ", creationDate=" + creationDate +
                 ", fiatPrice=" + fiatPrice +
                 ", amount=" + amount +

@@ -65,7 +65,7 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
     @Override
     public void addOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler) {
         log.debug("addOffer " + offer);
-        Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
+        Number160 locationKey = Number160.createHash(offer.getCurrencyCode());
         try {
             final Data offerData = new Data(offer);
             offerData.ttlSeconds(TTL);
@@ -91,7 +91,7 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
                                 }
                             });
 
-                            writeInvalidationTimestampToDHT(offer.getCurrency().getCurrencyCode());
+                            writeInvalidationTimestampToDHT(offer.getCurrencyCode());
                             log.trace("Add offer to DHT was successful. Added data: [locationKey: " + locationKey +
                                     ", value: " + offerData + "]");
                         });
@@ -110,7 +110,7 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
 
     public void removeOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler) {
         log.debug("removeOffer " + offer);
-        Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
+        Number160 locationKey = Number160.createHash(offer.getCurrencyCode());
         try {
             final Data offerData = new Data(offer);
             log.trace("Remove offer from DHT requested. Removed data: [locationKey: " + locationKey +
@@ -140,7 +140,7 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
                                 faultHandler.handleFault("Remove offer from DHT failed. Error: " + e.getMessage(), e);
                             }
                         });
-                        writeInvalidationTimestampToDHT(offer.getCurrency().getCurrencyCode());
+                        writeInvalidationTimestampToDHT(offer.getCurrencyCode());
                     });
                 }
 

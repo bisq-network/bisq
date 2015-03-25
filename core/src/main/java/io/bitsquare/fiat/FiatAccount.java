@@ -21,7 +21,6 @@ import io.bitsquare.locale.Country;
 
 import java.io.Serializable;
 
-import java.util.Currency;
 import java.util.Objects;
 
 import javax.annotation.concurrent.Immutable;
@@ -40,17 +39,17 @@ public class FiatAccount implements Serializable {
     // The main currency if account support multiple currencies.
     // The user can create multiple bank accounts with same bank account but other currency if his bank account
     // support that.
-    private final Currency currency;
+    private final String currencyCode;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public FiatAccount(FiatAccountType fiatAccountType, Currency currency, Country country, String nameOfBank,
+    public FiatAccount(FiatAccountType fiatAccountType, String currencyCode, Country country, String nameOfBank,
                        String accountHolderName, String accountPrimaryID, String accountSecondaryID) {
         this.fiatAccountType = fiatAccountType;
-        this.currency = currency;
+        this.currencyCode = currencyCode;
         this.country = country;
         this.nameOfBank = nameOfBank;
         this.accountHolderName = accountHolderName;
@@ -79,8 +78,8 @@ public class FiatAccount implements Serializable {
         return fiatAccountType;
     }
 
-    public Currency getCurrency() {
-        return currency;
+    public String getCurrencyCode() {
+        return currencyCode;
     }
 
     public Country getCountry() {
@@ -123,7 +122,7 @@ public class FiatAccount implements Serializable {
                 ", accountSecondaryID='" + accountSecondaryID + '\'' +
                 ", accountHolderName='" + accountHolderName + '\'' +
                 ", country=" + country +
-                ", currency=" + currency +
+                ", currency=" + currencyCode +
                 ", accountTitle='" + nameOfBank + '\'' +
                 '}';
     }

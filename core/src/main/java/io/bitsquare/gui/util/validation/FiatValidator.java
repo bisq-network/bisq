@@ -40,13 +40,13 @@ public final class FiatValidator extends NumberValidator {
     public FiatValidator(User user) {
         if (user != null) {
             if (user.currentFiatAccountProperty().get() == null)
-                setFiatCurrencyCode(CurrencyUtil.getDefaultCurrency().getCurrencyCode());
+                setFiatCurrencyCode(CurrencyUtil.getDefaultCurrencyAsCode());
             else if (user.currentFiatAccountProperty().get() != null)
-                setFiatCurrencyCode(user.currentFiatAccountProperty().get().getCurrency().getCurrencyCode());
+                setFiatCurrencyCode(user.currentFiatAccountProperty().get().getCurrencyCode());
 
             user.currentFiatAccountProperty().addListener((ov, oldValue, newValue) -> {
                 if (newValue != null)
-                    setFiatCurrencyCode(newValue.getCurrency().getCurrencyCode());
+                    setFiatCurrencyCode(newValue.getCurrencyCode());
             });
         }
     }

@@ -244,15 +244,12 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
 
     @FXML
     public void onSaveProfile() {
-        arbitrator.setSaveOnEveryUpdate(false);
         arbitrator.setWebUrl(webPageTextField.getText());
         arbitrator.setFee(formatter.parseToCoin(arbitrationFeeTextField.getText()));
         arbitrator.setIdType(idType);
         arbitrator.setIdVerifications(idVerificationList);
        // arbitrator.setLanguages(languageList);
         arbitrator.setArbitrationMethods(methodList);
-
-        arbitrator.setSaveOnEveryUpdate(true);
         arbitrator.save();
 
         if (isEditMode) {

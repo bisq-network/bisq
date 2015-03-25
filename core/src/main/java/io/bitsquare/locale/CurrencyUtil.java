@@ -21,10 +21,23 @@ import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class CurrencyUtil {
 
-    public static List<Currency> getAllCurrencies() {
+    public static List<String> getAllCurrencyCodes() {
+        return getAllCurrencies().stream().map(e -> e.getCurrencyCode()).collect(Collectors.toList());
+    }
+
+    public static String getDefaultCurrencyAsCode() {
+        return getDefaultCurrency().getCurrencyCode();
+    }
+
+    public static String getDisplayName(String currencyCode) {
+        return Currency.getInstance(currencyCode).getDisplayName();
+    }
+
+    private static List<Currency> getAllCurrencies() {
         final ArrayList<Currency> mainCurrencies = new ArrayList<>();
         mainCurrencies.add(Currency.getInstance("EUR"));
         mainCurrencies.add(Currency.getInstance("USD"));
@@ -52,9 +65,11 @@ public class CurrencyUtil {
         return resultList;
     }
 
-    public static Currency getDefaultCurrency() {
+    private static Currency getDefaultCurrency() {
         // TODO Only display EUR for the moment
         return Currency.getInstance("EUR");
         // return Currency.getInstance(Locale.getDefault());
     }
+
+
 }

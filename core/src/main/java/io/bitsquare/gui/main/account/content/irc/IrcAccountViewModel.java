@@ -23,10 +23,9 @@ import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.CurrencyUtil;
 
 import com.google.inject.Inject;
-
-import java.util.Currency;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -42,10 +41,9 @@ class IrcAccountViewModel extends ActivatableWithDataModel<IrcAccountDataModel> 
     private final InputValidator nickNameValidator;
 
     final StringProperty ircNickName = new SimpleStringProperty();
+    final StringProperty currencyCode = new SimpleStringProperty();
     final BooleanProperty saveButtonDisable = new SimpleBooleanProperty(true);
     final ObjectProperty<FiatAccountType> type = new SimpleObjectProperty<>();
-    final ObjectProperty<Currency> currency = new SimpleObjectProperty<>();
-
 
     @Inject
     public IrcAccountViewModel(IrcAccountDataModel dataModel, BankAccountNumberValidator nickNameValidator) {
@@ -55,7 +53,7 @@ class IrcAccountViewModel extends ActivatableWithDataModel<IrcAccountDataModel> 
         // input
         ircNickName.bindBidirectional(dataModel.nickName);
         type.bindBidirectional(dataModel.type);
-        currency.bindBidirectional(dataModel.currency);
+        currencyCode.bindBidirectional(dataModel.currencyCode);
 
         dataModel.nickName.addListener((ov, oldValue, newValue) -> validateInput());
     }
@@ -87,15 +85,15 @@ class IrcAccountViewModel extends ActivatableWithDataModel<IrcAccountDataModel> 
         return fiatAccountType != null ? BSResources.get(fiatAccountType.toString()) : "";
     }
 
-    StringConverter<Currency> getCurrencyConverter() {
-        return new StringConverter<Currency>() {
+    StringConverter<String> getCurrencyConverter() {
+        return new StringConverter<String>() {
             @Override
-            public String toString(Currency currency) {
-                return currency.getCurrencyCode() + " (" + currency.getDisplayName() + ")";
+            public String toString(String currencyCode) {
+                return currencyCode + " (" + CurrencyUtil.getDisplayName(currencyCode) + ")";
             }
 
             @Override
-            public Currency fromString(String s) {
+            public String fromString(String s) {
                 return null;
             }
         };
@@ -106,8 +104,8 @@ class IrcAccountViewModel extends ActivatableWithDataModel<IrcAccountDataModel> 
         return dataModel.allTypes;
     }
 
-    ObservableList<Currency> getAllCurrencies() {
-        return dataModel.allCurrencies;
+    ObservableList<String> getAllCurrencyCodes() {
+        return dataModel.allCurrencyCodes;
     }
 
     InputValidator getNickNameValidator() {
@@ -120,15 +118,15 @@ class IrcAccountViewModel extends ActivatableWithDataModel<IrcAccountDataModel> 
         validateInput();
     }
 
-    void setCurrency(Currency currency) {
-        dataModel.setCurrency(currency);
+    void setCurrencyCode(String currencyCode) {
+        dataModel.setCurrencyCode(currencyCode);
         validateInput();
     }
 
 
     private InputValidator.ValidationResult validateInput() {
         InputValidator.ValidationResult result = nickNameValidator.validate(dataModel.nickName.get());
-        if (dataModel.currency.get() == null)
+        if (dataModel.currencyCode.get() == null)
             result = new InputValidator.ValidationResult(false,
                     "You have not selected a currency");
         if (result.isValid) {

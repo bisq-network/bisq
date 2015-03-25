@@ -245,12 +245,12 @@ class OfferBookDataModel implements Activatable, DataModel {
 
     private void setBankAccount(FiatAccount fiatAccount) {
         if (fiatAccount != null) {
-            fiatCode.set(fiatAccount.getCurrency().getCurrencyCode());
+            fiatCode.set(fiatAccount.getCurrencyCode());
             bankAccountCountry.set(fiatAccount.getCountry());
             sortedItems.stream().forEach(e -> e.setBankAccountCountry(fiatAccount.getCountry()));
         }
         else {
-            fiatCode.set(CurrencyUtil.getDefaultCurrency().getCurrencyCode());
+            fiatCode.set(CurrencyUtil.getDefaultCurrencyAsCode());
         }
     }
 

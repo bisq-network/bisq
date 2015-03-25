@@ -34,7 +34,6 @@ import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 
-import java.util.Currency;
 import java.util.concurrent.TimeoutException;
 
 import javafx.application.Platform;
@@ -192,7 +191,7 @@ class MainViewModel implements ViewModel {
         // For alpha version
         if (!user.isRegistered()) {
             FiatAccount fiatAccount = new FiatAccount(FiatAccountType.IRC,
-                    Currency.getInstance("EUR"),
+                    "EUR",
                     CountryUtil.getDefaultCountry(),
                     "Demo (Name of bank)",
                     "Demo (Account holder name)",

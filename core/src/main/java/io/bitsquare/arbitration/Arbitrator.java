@@ -31,6 +31,7 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -71,7 +72,6 @@ public class Arbitrator implements Serializable {
 
 
     transient private Storage<Arbitrator> storage;
-    transient private boolean saveOnEveryUpdate;
 
     // Persisted fields
     private String id;
@@ -82,9 +82,8 @@ public class Arbitrator implements Serializable {
 
     // editable
     private ID_TYPE idType;
-    // TODO languages breaks something in serialisation with TomP2P when uing Locale. cannot remove an offer
     private List<String> languages;
-    
+
     private Coin fee;
     private List<METHOD> arbitrationMethods;
     private List<ID_VERIFICATION> idVerifications;
@@ -99,46 +98,42 @@ public class Arbitrator implements Serializable {
         Arbitrator persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
             //TODO for mock arbitrator
-            id = persisted.getName();
 
-            this.pubKey = persisted.getPubKey();
-            this.p2pSigPubKey = persisted.getP2pSigPubKey();
-            this.name = persisted.getName();
-            this.idType = persisted.getIdType();
-            this.languages = persisted.getLanguages();
-            this.reputation = persisted.getReputation();
-            this.fee = persisted.getFee();
-            this.arbitrationMethods = persisted.getArbitrationMethods();
-            this.idVerifications = persisted.getIdVerifications();
-            this.webUrl = persisted.getWebUrl();
-            this.description = persisted.getDescription();
+            id = persisted.getId();
+            pubKey = persisted.getPubKey();
+            p2pSigPubKey = persisted.getP2pSigPubKey();
+            name = persisted.getName();
+            idType = persisted.getIdType();
+            languages = persisted.getLanguages();
+            reputation = persisted.getReputation();
+            fee = persisted.getFee();
+            arbitrationMethods = persisted.getArbitrationMethods();
+            idVerifications = persisted.getIdVerifications();
+            webUrl = persisted.getWebUrl();
+            description = persisted.getDescription();
         }
         else {
             // Mock
-            id = "Manfred Karrer";
-            this.pubKey = new ECKey().getPubKey();
-            this.p2pSigPubKey = user.getP2PSigPubKey();
-            this.name = "Manfred Karrer";
-            this.idType = Arbitrator.ID_TYPE.REAL_LIFE_ID;
-            this.languages = Arrays.asList(LanguageUtil.getDefaultLanguageLocale().getISO3Language());
-            this.reputation = new Reputation();
-            this.fee = Coin.parseCoin("0.1");
-            this.arbitrationMethods = Arrays.asList(Arbitrator.METHOD.TLS_NOTARY);
-            this.idVerifications = Arrays.asList(ID_VERIFICATION.PASSPORT);
-            this.webUrl = "https://bitsquare.io";
-            this.description = "Bla bla...";
-            doSave();
+            id = UUID.randomUUID().toString();
+            pubKey = new ECKey().getPubKey();
+            p2pSigPubKey = user.getP2PSigPubKey();
+            name = "Mr. Default";
+            idType = Arbitrator.ID_TYPE.REAL_LIFE_ID;
+            languages = Arrays.asList(LanguageUtil.getDefaultLanguageLocale().getISO3Language());
+            reputation = new Reputation();
+            fee = Coin.parseCoin("0.1");
+            arbitrationMethods = Arrays.asList(Arbitrator.METHOD.TLS_NOTARY);
+            idVerifications = Arrays.asList(ID_VERIFICATION.PASSPORT);
+            webUrl = "https://bitsquare.io";
+            description = "Bla bla...";
+            save();
         }
     }
 
     public void save() {
-        if (saveOnEveryUpdate)
-            doSave();
-    }
-
-    private void doSave() {
         storage.save();
     }
+
 
     @Override
     public int hashCode() {
@@ -168,43 +163,39 @@ public class Arbitrator implements Serializable {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setSaveOnEveryUpdate(boolean saveOnEveryUpdate) {
-        this.saveOnEveryUpdate = saveOnEveryUpdate;
-    }
-
     public void setDescription(String description) {
         this.description = description;
-        doSave();
+        save();
     }
 
     public void setIdType(ID_TYPE idType) {
         this.idType = idType;
-        doSave();
+        save();
     }
 
     public void setLanguages(List<String> languages) {
         this.languages = languages;
-        doSave();
+        save();
     }
 
     public void setFee(Coin fee) {
         this.fee = fee;
-        doSave();
+        save();
     }
 
     public void setArbitrationMethods(List<METHOD> arbitrationMethods) {
         this.arbitrationMethods = arbitrationMethods;
-        doSave();
+        save();
     }
 
     public void setIdVerifications(List<ID_VERIFICATION> idVerifications) {
         this.idVerifications = idVerifications;
-        doSave();
+        save();
     }
 
     public void setWebUrl(String webUrl) {
         this.webUrl = webUrl;
-        doSave();
+        save();
     }
 
 

@@ -25,9 +25,8 @@ import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.util.Utilities;
-
-import java.util.Currency;
 
 import javax.inject.Inject;
 
@@ -47,7 +46,7 @@ public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccount
     @FXML InputTextField ircNickNameTextField;
     @FXML Button saveButton;
     @FXML ComboBox<FiatAccountType> typesComboBox;
-    @FXML ComboBox<Currency> currencyComboBox;
+    @FXML ComboBox<String> currencyComboBox;
 
     private Wizard wizard;
 
@@ -87,25 +86,25 @@ public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccount
         });
         typesComboBox.getSelectionModel().select(0);
 
-        currencyComboBox.setItems(model.getAllCurrencies());
+        currencyComboBox.setItems(model.getAllCurrencyCodes());
         currencyComboBox.setConverter(model.getCurrencyConverter());
         // we use a custom cell for deactivating non EUR items, later we use the standard cell and the StringConverter
-        currencyComboBox.setCellFactory(new Callback<ListView<Currency>, ListCell<Currency>>() {
+        currencyComboBox.setCellFactory(new Callback<ListView<String>, ListCell<String>>() {
             @Override
-            public ListCell<Currency> call(ListView<Currency> p) {
-                return new ListCell<Currency>() {
+            public ListCell<String> call(ListView<String> p) {
+                return new ListCell<String>() {
 
                     @Override
-                    protected void updateItem(Currency currency, boolean empty) {
-                        super.updateItem(currency, empty);
+                    protected void updateItem(String currencyCode, boolean empty) {
+                        super.updateItem(currencyCode, empty);
 
-                        if (currency == null || empty) {
+                        if (currencyCode == null || empty) {
                             setGraphic(null);
                         }
                         else {
-                            setText(currency.getCurrencyCode() + " (" + currency.getDisplayName() + ")");
+                            setText(currencyCode+ " (" + CurrencyUtil.getDisplayName(currencyCode) + ")");
 
-                            if (!currency.getCurrencyCode().equals("EUR")) {
+                            if (!currencyCode.equals("EUR")) {
                                 setOpacity(0.3);
                                 setDisable(true);
                             }
@@ -146,7 +145,7 @@ public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccount
 
     @FXML
     void onSelectCurrency() {
-        model.setCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
+        model.setCurrencyCode(currencyComboBox.getSelectionModel().getSelectedItem());
     }
 
     @FXML
@@ -180,7 +179,7 @@ public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccount
                 typesComboBox.getSelectionModel().clearSelection();
         });
 
-        model.currency.addListener((ov, oldValue, newValue) -> {
+        model.currencyCode.addListener((ov, oldValue, newValue) -> {
             if (newValue != null)
                 currencyComboBox.getSelectionModel().select(currencyComboBox.getItems().indexOf(newValue));
             else

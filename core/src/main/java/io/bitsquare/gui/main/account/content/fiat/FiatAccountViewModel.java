@@ -25,11 +25,10 @@ import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.Region;
 
 import com.google.inject.Inject;
-
-import java.util.Currency;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -52,11 +51,11 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
     final StringProperty primaryIDPrompt = new SimpleStringProperty();
     final StringProperty secondaryIDPrompt = new SimpleStringProperty();
     final StringProperty selectionPrompt = new SimpleStringProperty();
+    final StringProperty currencyCode = new SimpleStringProperty();
     final BooleanProperty selectionDisable = new SimpleBooleanProperty();
     final BooleanProperty saveButtonDisable = new SimpleBooleanProperty(true);
     final ObjectProperty<FiatAccountType> type = new SimpleObjectProperty<>();
     final ObjectProperty<Country> country = new SimpleObjectProperty<>();
-    final ObjectProperty<Currency> currency = new SimpleObjectProperty<>();
 
 
     @Inject
@@ -71,7 +70,7 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
         secondaryID.bindBidirectional(dataModel.secondaryID);
         type.bindBidirectional(dataModel.type);
         country.bindBidirectional(dataModel.country);
-        currency.bindBidirectional(dataModel.currency);
+        currencyCode.bindBidirectional(dataModel.currencyCode);
 
         primaryIDPrompt.bind(dataModel.primaryIDPrompt);
         secondaryIDPrompt.bind(dataModel.secondaryIDPrompt);
@@ -141,17 +140,17 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
         };
     }
 
-    StringConverter<Currency> getCurrencyConverter() {
-        return new StringConverter<Currency>() {
+    StringConverter<String> getCurrencyConverter() {
+        return new StringConverter<String>() {
 
             @Override
-            public String toString(Currency currency) {
-                return currency.getCurrencyCode() + " (" + currency.getDisplayName() + ")";
+            public String toString(String currencyCode) {
+                return currencyCode+ " (" + CurrencyUtil.getDisplayName(currencyCode) + ")";
             }
 
 
             @Override
-            public Currency fromString(String s) {
+            public String fromString(String s) {
                 return null;
             }
         };
@@ -194,8 +193,8 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
         return dataModel.allFiatAccounts;
     }
 
-    ObservableList<Currency> getAllCurrencies() {
-        return dataModel.allCurrencies;
+    ObservableList<String> getAllCurrencyCodes() {
+        return dataModel.allCurrencyCodes;
     }
 
     ObservableList<Region> getAllRegions() {
@@ -225,8 +224,8 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
         validateInput();
     }
 
-    void setCurrency(Currency currency) {
-        dataModel.setCurrency(currency);
+    void setCurrencyCode(String currencyCode) {
+        dataModel.setCurrencyCode(currencyCode);
         validateInput();
     }
 
@@ -251,7 +250,7 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
                 if (result.isValid) {
                     result = bankAccountNumberValidator.validate(dataModel.secondaryID.get());
                     if (result.isValid) {
-                        if (dataModel.currency.get() == null)
+                        if (dataModel.currencyCode.get() == null)
                             result = new InputValidator.ValidationResult(false,
                                     "You have not selected a currency");
                         if (result.isValid) {

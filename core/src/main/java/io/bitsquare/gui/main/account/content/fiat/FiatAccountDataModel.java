@@ -30,8 +30,6 @@ import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 
-import java.util.Currency;
-
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -52,16 +50,16 @@ class FiatAccountDataModel implements Activatable, DataModel {
     final StringProperty secondaryID = new SimpleStringProperty();
     final StringProperty primaryIDPrompt = new SimpleStringProperty();
     final StringProperty secondaryIDPrompt = new SimpleStringProperty();
+    final StringProperty currencyCode = new SimpleStringProperty();
     final BooleanProperty countryNotInAcceptedCountriesList = new SimpleBooleanProperty();
     final ObjectProperty<FiatAccountType> type = new SimpleObjectProperty<>();
     final ObjectProperty<Country> country = new SimpleObjectProperty<>();
-    final ObjectProperty<Currency> currency = new SimpleObjectProperty<>();
 
     final ObservableList<FiatAccountType> allTypes = FXCollections.observableArrayList(FiatAccountType
             .getAllBankAccountTypes());
     final ObservableList<FiatAccount> allFiatAccounts = FXCollections.observableArrayList();
-    final ObservableList<Currency> allCurrencies = FXCollections.observableArrayList(CurrencyUtil
-            .getAllCurrencies());
+    final ObservableList<String> allCurrencyCodes = FXCollections.observableArrayList(CurrencyUtil
+            .getAllCurrencyCodes());
     final ObservableList<Region> allRegions = FXCollections.observableArrayList(CountryUtil.getAllRegions());
 
 
@@ -85,7 +83,7 @@ class FiatAccountDataModel implements Activatable, DataModel {
 
     void saveBankAccount() {
         FiatAccount fiatAccount = new FiatAccount(type.get(),
-                currency.get(),
+                currencyCode.get(),
                 country.get(),
                 title.get(),
                 holderName.get(),
@@ -123,7 +121,7 @@ class FiatAccountDataModel implements Activatable, DataModel {
 
             type.set(fiatAccount.getFiatAccountType());
             country.set(fiatAccount.getCountry());
-            currency.set(fiatAccount.getCurrency());
+            currencyCode.set(fiatAccount.getCurrencyCode());
         }
         else {
             reset();
@@ -153,8 +151,8 @@ class FiatAccountDataModel implements Activatable, DataModel {
         this.country.set(country);
     }
 
-    void setCurrency(Currency currency) {
-        this.currency.set(currency);
+    void setCurrencyCode(String currencyCode) {
+        this.currencyCode.set(currencyCode);
     }
 
 
@@ -168,6 +166,6 @@ class FiatAccountDataModel implements Activatable, DataModel {
 
         type.set(null);
         country.set(null);
-        currency.set(null);
+        currencyCode.set(null);
     }
 }

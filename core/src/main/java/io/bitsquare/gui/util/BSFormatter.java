@@ -67,7 +67,7 @@ public class BSFormatter {
     // no way to remove grouping separator). It seems to be not optimal for user input formatting.
     private MonetaryFormat coinFormat = MonetaryFormat.BTC.repeatOptionalDecimals(2, 2);
 
-    private String currencyCode = CurrencyUtil.getDefaultCurrency().getCurrencyCode();
+    private String currencyCode = CurrencyUtil.getDefaultCurrencyAsCode();
 
     // format is like: 1,00  never more then 2 decimals
     private final MonetaryFormat fiatFormat = MonetaryFormat.FIAT.repeatOptionalDecimals(0, 0).code(0, currencyCode);
@@ -76,13 +76,13 @@ public class BSFormatter {
     @Inject
     public BSFormatter(User user) {
         if (user.currentFiatAccountProperty().get() == null)
-            setFiatCurrencyCode(CurrencyUtil.getDefaultCurrency().getCurrencyCode());
+            setFiatCurrencyCode(CurrencyUtil.getDefaultCurrencyAsCode());
         else if (user.currentFiatAccountProperty().get() != null)
-            setFiatCurrencyCode(user.currentFiatAccountProperty().get().getCurrency().getCurrencyCode());
+            setFiatCurrencyCode(user.currentFiatAccountProperty().get().getCurrencyCode());
 
         user.currentFiatAccountProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue != null)
-                setFiatCurrencyCode(newValue.getCurrency().getCurrencyCode());
+                setFiatCurrencyCode(newValue.getCurrencyCode());
         });
     }
 

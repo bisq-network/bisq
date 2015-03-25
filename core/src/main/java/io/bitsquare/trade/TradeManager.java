@@ -170,7 +170,7 @@ public class TradeManager {
                 amount,
                 minAmount,
                 currentFiatAccount.getFiatAccountType(),
-                currentFiatAccount.getCurrency(),
+                currentFiatAccount.getCurrencyCode(),
                 currentFiatAccount.getCountry(),
                 currentFiatAccount.getId(),
                 accountSettings.getAcceptedArbitrators(),

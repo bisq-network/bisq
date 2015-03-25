@@ -27,8 +27,6 @@ import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 
-import java.util.Currency;
-
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -41,12 +39,12 @@ class IrcAccountDataModel implements Activatable, DataModel {
     private final User user;
 
     final StringProperty nickName = new SimpleStringProperty();
+    final StringProperty currencyCode = new SimpleStringProperty();
     final ObjectProperty<FiatAccountType> type = new SimpleObjectProperty<>();
-    final ObjectProperty<Currency> currency = new SimpleObjectProperty<>();
 
     final ObservableList<FiatAccountType> allTypes =
             FXCollections.observableArrayList(FiatAccountType.getAllBankAccountTypes());
-    final ObservableList<Currency> allCurrencies = FXCollections.observableArrayList(CurrencyUtil.getAllCurrencies());
+    final ObservableList<String> allCurrencyCodes = FXCollections.observableArrayList(CurrencyUtil.getAllCurrencyCodes());
     final ObservableList<FiatAccount> allFiatAccounts = FXCollections.observableArrayList();
 
 
@@ -67,7 +65,7 @@ class IrcAccountDataModel implements Activatable, DataModel {
 
     void saveBankAccount() {
         FiatAccount fiatAccount = new FiatAccount(type.get(),
-                currency.get(),
+                currencyCode.get(),
                 CountryUtil.getDefaultCountry(),
                 nickName.get(),
                 nickName.get(),
@@ -82,14 +80,14 @@ class IrcAccountDataModel implements Activatable, DataModel {
         this.type.set(type);
     }
 
-    void setCurrency(Currency currency) {
-        this.currency.set(currency);
+    void setCurrencyCode(String currencyCode) {
+        this.currencyCode.set(currencyCode);
     }
 
     private void reset() {
         nickName.set(null);
 
         type.set(null);
-        currency.set(null);
+        currencyCode.set(null);
     }
 }

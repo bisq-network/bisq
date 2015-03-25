@@ -33,7 +33,6 @@ import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
 
 import java.util.ArrayList;
-import java.util.Currency;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -60,7 +59,7 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
     @FXML Button saveButton, completedButton, removeBankAccountButton;
     @FXML ComboBox<FiatAccount> selectionComboBox;
     @FXML ComboBox<FiatAccountType> typesComboBox;
-    @FXML ComboBox<Currency> currencyComboBox;
+    @FXML ComboBox<String> currencyComboBox;
 
     private Wizard wizard;
 
@@ -77,7 +76,7 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
         typesComboBox.setItems(model.getAllTypes());
         typesComboBox.setConverter(model.getTypesConverter());
         selectionComboBox.setConverter(model.getSelectionConverter());
-        currencyComboBox.setItems(model.getAllCurrencies());
+        currencyComboBox.setItems(model.getAllCurrencyCodes());
         currencyComboBox.setConverter(model.getCurrencyConverter());
         regionComboBox.setItems(model.getAllRegions());
         regionComboBox.setConverter(model.getRegionConverter());
@@ -120,7 +119,7 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
 
     @FXML
     void onSelectCurrency() {
-        model.setCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
+        model.setCurrencyCode(currencyComboBox.getSelectionModel().getSelectedItem());
     }
 
     @FXML
@@ -179,7 +178,7 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
                 typesComboBox.getSelectionModel().clearSelection();
         });
 
-        model.currency.addListener((ov, oldValue, newValue) -> {
+        model.currencyCode.addListener((ov, oldValue, newValue) -> {
             if (newValue != null)
                 currencyComboBox.getSelectionModel().select(currencyComboBox.getItems().indexOf(newValue));
             else

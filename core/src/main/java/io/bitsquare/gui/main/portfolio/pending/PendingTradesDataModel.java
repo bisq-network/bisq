@@ -229,7 +229,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     String getCurrencyCode() {
-        return selectedItem.getTrade().getOffer().getCurrency().getCurrencyCode();
+        return selectedItem.getTrade().getOffer().getCurrencyCode();
     }
 
     public Offer.Direction getDirection(Offer offer) {

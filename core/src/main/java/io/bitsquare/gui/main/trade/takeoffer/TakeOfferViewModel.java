@@ -24,6 +24,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.offer.Offer;
 
 import org.bitcoinj.core.Address;
@@ -120,7 +121,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         directionLabel = direction == Offer.Direction.BUY ?
                 BSResources.get("shared.buy") : BSResources.get("shared.sell");
 
-        fiatCode = offer.getCurrency().getCurrencyCode();
+        fiatCode = offer.getCurrencyCode();
         if (!dataModel.isMinAmountLessOrEqualAmount()) {
             amountValidationResult.set(new InputValidator.ValidationResult(false,
                     BSResources.get("takeOffer.validation.amountSmallerThanMinAmount")));
@@ -142,7 +143,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         acceptedLanguages = formatter.languageLocalesToString(offer.getAcceptedLanguageLocales());
         acceptedArbitrators = formatter.arbitratorsToString(offer.getArbitrators());
         bankAccountType = BSResources.get(offer.getFiatAccountType().toString());
-        bankAccountCurrency = BSResources.get(offer.getCurrency().getDisplayName());
+        bankAccountCurrency = BSResources.get(CurrencyUtil.getDisplayName(offer.getCurrencyCode()));
         bankAccountCounty = BSResources.get(offer.getBankAccountCountry().getName());
 
         offer.stateProperty().addListener((ov, oldValue, newValue) -> applyOfferState(newValue));
