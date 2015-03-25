@@ -31,7 +31,7 @@ public class BSFormatterTest {
 
     @Test
     public void testParseToBtc() {
-        BSFormatter formatter = new BSFormatter(new User());
+        BSFormatter formatter = new BSFormatter(new User(), null);
         formatter.useMilliBitFormat(false);
         assertEquals(Coin.ZERO, formatter.parseToCoin("0"));
         assertEquals(Coin.COIN, formatter.parseToCoin("1"));
@@ -64,7 +64,7 @@ public class BSFormatterTest {
 
     @Test
     public void testFormatCoin() {
-        BSFormatter formatter = new BSFormatter(new User());
+        BSFormatter formatter = new BSFormatter(new User(), null);
         formatter.useMilliBitFormat(false);
         assertEquals("1.00", formatter.formatCoin(Coin.COIN));
         assertEquals("1.0120", formatter.formatCoin(Coin.parseCoin("1.012")));
@@ -97,7 +97,7 @@ public class BSFormatterTest {
 
     @Test
     public void testFormatCoinWithCode() {
-        BSFormatter formatter = new BSFormatter(new User());
+        BSFormatter formatter = new BSFormatter(new User(), null);
         formatter.useMilliBitFormat(false);
         assertEquals("1.00 BTC", formatter.formatCoinWithCode(Coin.COIN));
         assertEquals("1.01 BTC", formatter.formatCoinWithCode(Coin.parseCoin("1.01")));
@@ -132,7 +132,7 @@ public class BSFormatterTest {
 
     @Test
     public void testParseToBtcWith4Decimals() {
-        BSFormatter formatter = new BSFormatter(new User());
+        BSFormatter formatter = new BSFormatter(new User(), null);
         formatter.useMilliBitFormat(false);
         assertEquals(Coin.parseCoin("0"), formatter.parseToCoinWith4Decimals("0"));
         assertEquals(Coin.parseCoin("0"), formatter.parseToCoinWith4Decimals(null));
@@ -143,7 +143,7 @@ public class BSFormatterTest {
 
     @Test
     public void testHasBtcValidDecimals() {
-        BSFormatter formatter = new BSFormatter(new User());
+        BSFormatter formatter = new BSFormatter(new User(), null);
         formatter.useMilliBitFormat(false);
         formatter.setLocale(Locale.GERMAN);
         assertTrue(formatter.hasBtcValidDecimals(null));
@@ -159,7 +159,7 @@ public class BSFormatterTest {
 
     @Test
     public void testParseToFiatWith2Decimals() {
-        BSFormatter formatter = new BSFormatter(new User());
+        BSFormatter formatter = new BSFormatter(new User(), null);
         formatter.useMilliBitFormat(false);
         formatter.setLocale(Locale.GERMAN);
         assertEquals("0", formatter.parseToFiatWith2Decimals("0").toPlainString());
@@ -172,7 +172,7 @@ public class BSFormatterTest {
 
     @Test
     public void testHasFiatValidDecimals() {
-        BSFormatter formatter = new BSFormatter(new User());
+        BSFormatter formatter = new BSFormatter(new User(), null);
         formatter.useMilliBitFormat(false);
         formatter.setLocale(Locale.GERMAN);
         assertTrue(formatter.hasFiatValidDecimals(null));

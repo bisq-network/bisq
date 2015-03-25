@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade;
 
+import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
@@ -37,6 +38,7 @@ public class SharedTradeModel extends SharedTaskModel implements Serializable {
     private static final long serialVersionUID = -2523252022571497157L;
     protected static final Logger log = LoggerFactory.getLogger(SharedTradeModel.class);
 
+    transient public MailboxMessage mailboxMessage;
     // provided
     transient public final Offer offer;
     transient public final MessageService messageService;
@@ -45,12 +47,12 @@ public class SharedTradeModel extends SharedTaskModel implements Serializable {
     transient public final BlockChainService blockChainService;
     transient public final SignatureService signatureService;
 
-    transient public MailboxMessage mailboxMessage;
-
     // derived
     transient public final String id;
     transient public final TradeWalletService tradeWalletService;
-    transient public final byte[] arbitratorPubKey;
+
+    // get set async when arbitrators are loaded from arbitratorService
+    transient public byte[] arbitratorPubKey;
 
     // data written/read by tasks
     transient private TradeMessage tradeMessage;
@@ -60,7 +62,8 @@ public class SharedTradeModel extends SharedTaskModel implements Serializable {
                                MailboxService mailboxService,
                                WalletService walletService,
                                BlockChainService blockChainService,
-                               SignatureService signatureService) {
+                               SignatureService signatureService,
+                               ArbitrationRepository arbitrationRepository) {
         this.offer = offer;
         this.messageService = messageService;
         this.mailboxService = mailboxService;
@@ -70,9 +73,7 @@ public class SharedTradeModel extends SharedTaskModel implements Serializable {
 
         id = offer.getId();
         tradeWalletService = walletService.getTradeWalletService();
-        //TODO use default arbitrator for now
-
-        arbitratorPubKey = offer.getArbitrators().get(0).getPubKey();
+        arbitratorPubKey = arbitrationRepository.getDefaultArbitrator().getPubKey();
     }
 
     public void setTradeMessage(TradeMessage tradeMessage) {

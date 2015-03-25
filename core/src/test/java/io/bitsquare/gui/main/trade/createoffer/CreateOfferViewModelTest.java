@@ -41,10 +41,10 @@ public class CreateOfferViewModelTest {
 
     @Before
     public void setup() {
-        BSFormatter formatter = new BSFormatter(new User());
+        BSFormatter formatter = new BSFormatter(new User(), null);
         formatter.setLocale(Locale.US);
         formatter.setFiatCurrencyCode("USD");
-        model = new CreateOfferDataModel(null, null, null, null, null, formatter);
+        model = new CreateOfferDataModel(null, null, null, null, null, null, formatter);
 
         presenter = new CreateOfferViewModel(model, new FiatValidator(null), new BtcValidator(), formatter);
     }

@@ -17,6 +17,7 @@
 
 package io.bitsquare.user;
 
+import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CountryUtil;
@@ -31,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.OptionalLong;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -50,7 +52,7 @@ public class AccountSettings implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AccountSettings(Storage<AccountSettings> storage, Arbitrator defaultArbitrator) {
+    public AccountSettings(Storage<AccountSettings> storage,  ArbitrationRepository arbitrationRepository) {
         this.storage = storage;
 
         AccountSettings persisted = storage.initAndGetPersisted(this);
@@ -62,7 +64,7 @@ public class AccountSettings implements Serializable {
         else {
             acceptedLanguageLocaleCodes = Arrays.asList(LanguageUtil.getDefaultLanguageLocaleAsCode(), LanguageUtil.getEnglishLanguageLocaleCode());
             acceptedCountryLocales = Arrays.asList(CountryUtil.getDefaultCountry());
-            acceptedArbitrators = Arrays.asList(defaultArbitrator);
+            acceptedArbitrators = Arrays.asList(arbitrationRepository.getDefaultArbitrator());
         }
     }
 
@@ -113,6 +115,10 @@ public class AccountSettings implements Serializable {
 
     public List<Arbitrator> getAcceptedArbitrators() {
         return acceptedArbitrators;
+    }
+
+    public List<String> getAcceptedArbitratorIds() {
+        return acceptedArbitrators.stream().map(e -> e.getId()).collect(Collectors.toList());
     }
 
     public List<String> getAcceptedLanguageLocaleCodes() {

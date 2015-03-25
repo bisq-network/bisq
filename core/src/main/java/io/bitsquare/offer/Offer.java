@@ -17,7 +17,6 @@
 
 package io.bitsquare.offer;
 
-import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.locale.Country;
@@ -76,7 +75,7 @@ public class Offer implements Serializable {
     private final List<Country> acceptedCountries;
     private final List<String> acceptedLanguageCodes;
     private final String bankAccountUID;
-    private final List<Arbitrator> arbitrators;
+    private final List<String> arbitratorIds;
 
     // Mutable property. Has to be set before offer is save in DHT as it changes the objects hash!
     private String offerFeePaymentTxID;
@@ -101,7 +100,7 @@ public class Offer implements Serializable {
                  String currencyCode,
                  Country bankAccountCountry,
                  String bankAccountUID,
-                 List<Arbitrator> arbitrators,
+                 List<String> arbitratorIds,
                  Coin securityDeposit,
                  List<Country> acceptedCountries,
                  List<String> acceptedLanguageCodes) {
@@ -115,7 +114,7 @@ public class Offer implements Serializable {
         this.currencyCode = currencyCode;
         this.bankAccountCountry = bankAccountCountry;
         this.bankAccountUID = bankAccountUID;
-        this.arbitrators = arbitrators;
+        this.arbitratorIds = arbitratorIds;
         this.securityDeposit = securityDeposit;
         this.acceptedCountries = acceptedCountries;
 
@@ -206,8 +205,8 @@ public class Offer implements Serializable {
         return offerFeePaymentTxID;
     }
 
-    public List<Arbitrator> getArbitrators() {
-        return arbitrators;
+    public List<String> getArbitratorIds() {
+        return arbitratorIds;
     }
 
     public Coin getSecurityDeposit() {
@@ -240,7 +239,7 @@ public class Offer implements Serializable {
         checkNotNull(getAcceptedCountries(), "AcceptedCountries is null");
         checkNotNull(getAcceptedLanguageCodes(), "AcceptedLanguageLocales is null");
         checkNotNull(getAmount(), "Amount is null");
-        checkNotNull(getArbitrators(), "Arbitrator is null");
+        checkNotNull(getArbitratorIds(), "Arbitrator is null");
         checkNotNull(getBankAccountId(), "BankAccountId is null");
         checkNotNull(getSecurityDeposit(), "SecurityDeposit is null");
         checkNotNull(getCreationDate(), "CreationDate is null");
@@ -280,7 +279,7 @@ public class Offer implements Serializable {
                 ", acceptedCountries=" + acceptedCountries +
                 ", acceptedLanguageLocales=" + acceptedLanguageCodes +
                 ", bankAccountUID='" + bankAccountUID + '\'' +
-                ", arbitrators=" + arbitrators +
+                ", arbitrators=" + arbitratorIds +
                 ", offerFeePaymentTxID='" + offerFeePaymentTxID + '\'' +
                 '}';
     }

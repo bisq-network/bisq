@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.util;
 
+import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
@@ -72,10 +73,12 @@ public class BSFormatter {
 
     // format is like: 1,00  never more then 2 decimals
     private final MonetaryFormat fiatFormat = MonetaryFormat.FIAT.repeatOptionalDecimals(0, 0).code(0, currencyCode);
+    private ArbitrationRepository arbitrationRepository;
 
 
     @Inject
-    public BSFormatter(User user) {
+    public BSFormatter(User user, ArbitrationRepository arbitrationRepository) {
+        this.arbitrationRepository = arbitrationRepository;
         if (user.currentFiatAccountProperty().get() == null)
             setFiatCurrencyCode(CurrencyUtil.getDefaultCurrencyAsCode());
         else if (user.currentFiatAccountProperty().get() != null)
@@ -313,8 +316,12 @@ public class BSFormatter {
         return countries.stream().map(Country::getName).collect(Collectors.joining(", "));
     }
 
-    public String arbitratorsToString(List<Arbitrator> arbitrators) {
-        return arbitrators.stream().map(Arbitrator::getName).collect(Collectors.joining(", "));
+    public String arbitratorsToNames(List<Arbitrator> arbitrators) {
+        return arbitrators.stream().map(e -> e.getName()).collect(Collectors.joining(", "));
+    }
+
+    public String arbitratorIdsToNames(List<String> ids) {
+        return ids.stream().map(e -> arbitrationRepository.getArbitratorsMap().get(e).getName()).collect(Collectors.joining(", "));
     }
 
     public String languageCodesToString(List<String> languageLocales) {

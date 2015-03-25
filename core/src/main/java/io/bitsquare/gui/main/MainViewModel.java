@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main;
 
 import io.bitsquare.app.UpdateProcess;
+import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.viewfx.model.ViewModel;
@@ -86,17 +87,19 @@ class MainViewModel implements ViewModel {
 
     private final User user;
     private final WalletService walletService;
+    private ArbitrationRepository arbitrationRepository;
     private final ClientNode clientNode;
     private final TradeManager tradeManager;
     private UpdateProcess updateProcess;
     private final BSFormatter formatter;
 
     @Inject
-    public MainViewModel(User user, WalletService walletService, ClientNode clientNode,
+    public MainViewModel(User user, WalletService walletService, ArbitrationRepository arbitrationRepository, ClientNode clientNode,
                          TradeManager tradeManager, BitcoinNetwork bitcoinNetwork, UpdateProcess updateProcess,
                          BSFormatter formatter) {
         this.user = user;
         this.walletService = walletService;
+        this.arbitrationRepository = arbitrationRepository;
         this.clientNode = clientNode;
         this.tradeManager = tradeManager;
         this.updateProcess = updateProcess;
@@ -201,6 +204,10 @@ class MainViewModel implements ViewModel {
             user.setAccountID(walletService.getRegistrationAddressEntry().toString());
         }
 
+        // Load all arbitrators in background. Any class requiring a loaded list of arbitrators need to register itself as listener to handle the async 
+        // operation.
+        log.debug("loadAllArbitrators");
+        arbitrationRepository.loadAllArbitrators();
         tradeManager.onAllServicesInitialized();
     }
 

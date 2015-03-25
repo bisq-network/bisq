@@ -63,7 +63,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private String bankAccountCounty;
     private String acceptedCountries;
     private String acceptedLanguages;
-    private String acceptedArbitrators;
+    private String acceptedArbitratorIds;
     private String addressAsString;
     private String paymentLabel;
 
@@ -141,7 +141,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         acceptedCountries = formatter.countryLocalesToString(offer.getAcceptedCountries());
         acceptedLanguages = formatter.languageCodesToString(offer.getAcceptedLanguageCodes());
-        acceptedArbitrators = formatter.arbitratorsToString(offer.getArbitrators());
+        acceptedArbitratorIds = formatter.arbitratorIdsToNames(offer.getArbitratorIds());
         bankAccountType = BSResources.get(offer.getFiatAccountType().toString());
         bankAccountCurrency = BSResources.get(CurrencyUtil.getDisplayName(offer.getCurrencyCode()));
         bankAccountCounty = BSResources.get(offer.getBankAccountCountry().getName());
@@ -347,8 +347,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return acceptedLanguages;
     }
 
-    String getAcceptedArbitrators() {
-        return acceptedArbitrators;
+    String getAcceptedArbitratorIds() {
+        return acceptedArbitratorIds;
     }
 
     String getAddressAsString() {

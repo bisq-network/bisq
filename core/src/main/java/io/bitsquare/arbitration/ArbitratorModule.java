@@ -19,6 +19,8 @@ package io.bitsquare.arbitration;
 
 import io.bitsquare.BitsquareModule;
 
+import com.google.inject.Singleton;
+
 import org.springframework.core.env.Environment;
 
 public abstract class ArbitratorModule extends BitsquareModule {
@@ -29,6 +31,8 @@ public abstract class ArbitratorModule extends BitsquareModule {
 
     @Override
     protected final void configure() {
+        bind(ArbitrationRepository.class).in(Singleton.class);
+
         doConfigure();
     }
 

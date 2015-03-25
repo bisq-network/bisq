@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.models;
 
+import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
@@ -52,6 +53,7 @@ public class OffererAsBuyerModel extends SharedTradeModel implements Serializabl
                                WalletService walletService,
                                BlockChainService blockChainService,
                                SignatureService signatureService,
+                               ArbitrationRepository arbitrationRepository,
                                User user,
                                File storageDir) {
         super(trade.getOffer(),
@@ -59,7 +61,8 @@ public class OffererAsBuyerModel extends SharedTradeModel implements Serializabl
                 mailboxService,
                 walletService,
                 blockChainService,
-                signatureService);
+                signatureService,
+                arbitrationRepository);
 
         this.trade = trade;
         this.storage = new Storage<>(storageDir);

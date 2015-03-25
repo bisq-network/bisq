@@ -76,18 +76,19 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
     private List<Arbitrator.METHOD> methodList = new ArrayList<>();
     private List<Arbitrator.ID_VERIFICATION> idVerificationList = new ArrayList<>();
 
-    private final Arbitrator arbitrator;
+    // TODO not set
+    private Arbitrator arbitrator;
+
     private final WalletService walletService;
-    private final ArbitratorService messageService;
+    private final ArbitratorService arbitratorService;
     private final BSFormatter formatter;
 
 
     @Inject
-    private ArbitratorRegistrationView(Arbitrator arbitrator, WalletService walletService,
-                                       ArbitratorService messageService, BSFormatter formatter) {
-        this.arbitrator = arbitrator;
+    private ArbitratorRegistrationView(WalletService walletService,
+                                       ArbitratorService arbitratorService, BSFormatter formatter) {
         this.walletService = walletService;
-        this.messageService = messageService;
+        this.arbitratorService = arbitratorService;
         this.formatter = formatter;
     }
 
@@ -257,7 +258,11 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
             accordion.setExpandedPane(paySecurityDepositTitledPane);
         }
 
-        messageService.addArbitrator(arbitrator);
+        arbitratorService.addArbitrator(arbitrator,
+                () -> {
+                   // log.debug("arbitrator added successfully " + arbitratorService.getAllArbitrators().size());
+                },
+                (errorMessage -> log.error(errorMessage)));
     }
 
     @FXML

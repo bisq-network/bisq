@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade;
 
+import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
@@ -80,6 +81,7 @@ public class TradeManager {
     private final SignatureService signatureService;
     private EncryptionService<MailboxMessage> encryptionService;
     private final OfferBookService offerBookService;
+    private ArbitrationRepository arbitrationRepository;
     private File storageDir;
 
     private final Map<String, CheckOfferAvailabilityProtocol> checkOfferAvailabilityProtocolMap = new HashMap<>();
@@ -97,7 +99,7 @@ public class TradeManager {
     public TradeManager(User user, AccountSettings accountSettings,
                         MessageService messageService, MailboxService mailboxService, AddressService addressService, BlockChainService blockChainService,
                         WalletService walletService, SignatureService signatureService, EncryptionService<MailboxMessage> encryptionService,
-                        OfferBookService offerBookService, @Named("storage.dir") File storageDir) {
+                        OfferBookService offerBookService, ArbitrationRepository arbitrationRepository, @Named("storage.dir") File storageDir) {
         this.user = user;
         this.accountSettings = accountSettings;
         this.messageService = messageService;
@@ -108,6 +110,7 @@ public class TradeManager {
         this.signatureService = signatureService;
         this.encryptionService = encryptionService;
         this.offerBookService = offerBookService;
+        this.arbitrationRepository = arbitrationRepository;
         this.storageDir = storageDir;
 
         this.openOfferTrades = new TradeList<>(storageDir, "OpenOfferTrades");
@@ -173,7 +176,7 @@ public class TradeManager {
                 currentFiatAccount.getCurrencyCode(),
                 currentFiatAccount.getCountry(),
                 currentFiatAccount.getId(),
-                accountSettings.getAcceptedArbitrators(),
+                accountSettings.getAcceptedArbitratorIds(),
                 accountSettings.getSecurityDeposit(),
                 accountSettings.getAcceptedCountries(),
                 accountSettings.getAcceptedLanguageLocaleCodes());
@@ -184,7 +187,7 @@ public class TradeManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         PlaceOfferModel model = new PlaceOfferModel(offer, walletService, offerBookService);
 
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
@@ -398,6 +401,7 @@ public class TradeManager {
                 walletService,
                 blockChainService,
                 signatureService,
+                arbitrationRepository,
                 user,
                 storageDir);
 
@@ -413,6 +417,7 @@ public class TradeManager {
                 walletService,
                 blockChainService,
                 signatureService,
+                arbitrationRepository,
                 user,
                 storageDir);
 

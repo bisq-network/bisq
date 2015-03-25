@@ -18,14 +18,32 @@
 package io.bitsquare.arbitration;
 
 
-import io.bitsquare.arbitration.listeners.ArbitratorListener;
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.DHTService;
 
+import java.util.Map;
+
 public interface ArbitratorService extends DHTService {
-    void addArbitrator(Arbitrator arbitrator);
 
-    void addArbitratorListener(ArbitratorListener listener);
+    void addListener(Listener listener);
 
-    void getArbitrators(String defaultLanguageLocaleCode);
+    void removeListener(Listener listener);
+
+    void addArbitrator(Arbitrator arbitrator, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler);
+
+    void loadAllArbitrators(ArbitratorMapResultHandler resultHandler, ErrorMessageHandler errorMessageHandler);
+
+    interface Listener {
+        void onArbitratorAdded(Arbitrator arbitrator);
+
+        void onAllArbitratorsLoaded(Map<String, Arbitrator> arbitratorsMap);
+
+        void onArbitratorRemoved(Arbitrator arbitrator);
+    }
+
+    interface ArbitratorMapResultHandler {
+        void handleResult(Map<String, Arbitrator> arbitratorsMap);
+    }
 }
 

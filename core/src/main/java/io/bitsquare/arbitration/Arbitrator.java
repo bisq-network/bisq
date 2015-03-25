@@ -17,23 +17,16 @@
 
 package io.bitsquare.arbitration;
 
-import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
 
 import java.io.Serializable;
 
 import java.security.PublicKey;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
-
-import javax.inject.Inject;
 
 public class Arbitrator implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -83,22 +76,41 @@ public class Arbitrator implements Serializable {
     // editable
     private ID_TYPE idType;
     private List<String> languageCodes;
-
     private Coin fee;
     private List<METHOD> arbitrationMethods;
     private List<ID_VERIFICATION> idVerifications;
     private String webUrl;
     private String description;
 
-
-    @Inject
-    public Arbitrator(Storage<Arbitrator> storage, User user) {
+    public Arbitrator(Storage<Arbitrator> storage,
+                      String id,
+                      byte[] pubKey,
+                      PublicKey p2pSigPubKey,
+                      String name,
+                      Reputation reputation,
+                      ID_TYPE idType,
+                      List<String> languageCodes,
+                      Coin fee,
+                      List<METHOD> arbitrationMethods,
+                      List<ID_VERIFICATION> idVerifications,
+                      String webUrl,
+                      String description) {
         this.storage = storage;
+        this.id = id;
+        this.pubKey = pubKey;
+        this.p2pSigPubKey = p2pSigPubKey;
+        this.name = name;
+        this.reputation = reputation;
+        this.idType = idType;
+        this.languageCodes = languageCodes;
+        this.fee = fee;
+        this.arbitrationMethods = arbitrationMethods;
+        this.idVerifications = idVerifications;
+        this.webUrl = webUrl;
+        this.description = description;
 
         Arbitrator persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
-            //TODO for mock arbitrator
-
             id = persisted.getId();
             pubKey = persisted.getPubKey();
             p2pSigPubKey = persisted.getP2pSigPubKey();
@@ -113,19 +125,8 @@ public class Arbitrator implements Serializable {
             description = persisted.getDescription();
         }
         else {
-            // Mock
-            id = UUID.randomUUID().toString();
-            pubKey = new ECKey().getPubKey();
-            p2pSigPubKey = user.getP2PSigPubKey();
-            name = "Mr. Default";
-            idType = Arbitrator.ID_TYPE.REAL_LIFE_ID;
-            languageCodes = Arrays.asList(LanguageUtil.getDefaultLanguageLocaleAsCode());
-            reputation = new Reputation();
-            fee = Coin.parseCoin("0.1");
-            arbitrationMethods = Arrays.asList(Arbitrator.METHOD.TLS_NOTARY);
-            idVerifications = Arrays.asList(ID_VERIFICATION.PASSPORT);
-            webUrl = "https://bitsquare.io";
-            description = "Bla bla...";
+            // TODO mock
+
             save();
         }
     }

@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.trade.createoffer;
 
 import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.arbitration.ArbitratorService;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
@@ -68,6 +69,7 @@ class CreateOfferDataModel implements Activatable, DataModel {
 
     private final TradeManager tradeManager;
     private final WalletService walletService;
+    private ArbitratorService arbitratorService;
     private final AccountSettings accountSettings;
     private Preferences preferences;
     private final BSFormatter formatter;
@@ -105,11 +107,11 @@ class CreateOfferDataModel implements Activatable, DataModel {
 
     // non private for testing
     @Inject
-    public CreateOfferDataModel(TradeManager tradeManager, WalletService walletService, AccountSettings accountSettings,
-                                Preferences preferences, User user,
-                                BSFormatter formatter) {
+    public CreateOfferDataModel(TradeManager tradeManager, WalletService walletService, ArbitratorService arbitratorService,
+                                AccountSettings accountSettings, Preferences preferences, User user, BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
+        this.arbitratorService = arbitratorService;
         this.accountSettings = accountSettings;
         this.preferences = preferences;
         this.formatter = formatter;

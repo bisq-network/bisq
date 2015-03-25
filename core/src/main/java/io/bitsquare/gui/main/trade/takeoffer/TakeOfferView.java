@@ -142,7 +142,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         bankAccountCountyTextField.setText(model.getBankAccountCounty());
         acceptedCountriesTextField.setText(model.getAcceptedCountries());
         acceptedLanguagesTextField.setText(model.getAcceptedLanguages());
-        acceptedArbitratorsTextField.setText(model.getAcceptedArbitrators());
+        acceptedArbitratorsTextField.setText(model.getAcceptedArbitratorIds());
 
         showCheckAvailabilityScreen();
     }

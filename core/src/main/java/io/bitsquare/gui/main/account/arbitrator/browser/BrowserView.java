@@ -19,18 +19,17 @@ package io.bitsquare.gui.main.account.arbitrator.browser;
 
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorService;
-import io.bitsquare.arbitration.listeners.ArbitratorListener;
 import io.bitsquare.common.viewfx.view.ActivatableView;
 import io.bitsquare.common.viewfx.view.CachingViewLoader;
 import io.bitsquare.common.viewfx.view.FxmlView;
 import io.bitsquare.common.viewfx.view.View;
 import io.bitsquare.common.viewfx.view.ViewLoader;
 import io.bitsquare.gui.main.account.arbitrator.profile.ArbitratorProfileView;
-import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.user.AccountSettings;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -40,7 +39,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 @FxmlView
-public class ArbitratorBrowserView extends ActivatableView<Pane, Void> implements ArbitratorListener {
+public class BrowserView extends ActivatableView<Pane, Void> implements ArbitratorService.Listener {
 
     @FXML Button prevButton, nextButton, selectButton, closeButton;
     @FXML Pane arbitratorProfile;
@@ -53,20 +52,21 @@ public class ArbitratorBrowserView extends ActivatableView<Pane, Void> implement
 
     private final ViewLoader viewLoader;
     private final AccountSettings accountSettings;
-    private final ArbitratorService messageService;
+    private final ArbitratorService arbitratorService;
 
     @Inject
-    public ArbitratorBrowserView(CachingViewLoader viewLoader, AccountSettings accountSettings, 
-                                 ArbitratorService messageService) {
+    public BrowserView(CachingViewLoader viewLoader, AccountSettings accountSettings,
+                       ArbitratorService arbitratorService) {
         this.viewLoader = viewLoader;
         this.accountSettings = accountSettings;
-        this.messageService = messageService;
+        this.arbitratorService = arbitratorService;
     }
 
     @Override
     public void initialize() {
-        messageService.addArbitratorListener(this);
-        messageService.getArbitrators(LanguageUtil.getDefaultLanguageLocaleAsCode());
+        arbitratorService.addListener(this);
+       /* arbitratorService.loadAllArbitrators(() -> log.debug("Arbitrators successful loaded " + arbitratorService.getAllArbitrators().size()),
+                (errorMessage -> log.error(errorMessage)));*/
 
         View view = viewLoader.load(ArbitratorProfileView.class);
         root.getChildren().set(0, view.getRoot());
@@ -80,7 +80,12 @@ public class ArbitratorBrowserView extends ActivatableView<Pane, Void> implement
     }
 
     @Override
-    public void onArbitratorsReceived(List<Arbitrator> arbitrators) {
+    public void onAllArbitratorsLoaded(Map<String, Arbitrator> arbitratorsMap) {
+        
+    }
+/*
+    @Override
+    public void onAllArbitratorsLoaded(List<Arbitrator> arbitrators) {
         allArbitrators.clear();
         allArbitrators.addAll(arbitrators);
 
@@ -90,7 +95,7 @@ public class ArbitratorBrowserView extends ActivatableView<Pane, Void> implement
             arbitratorProfileView.applyArbitrator(currentArbitrator);
             checkButtonState();
         }
-    }
+    }*/
 
     @Override
     public void onArbitratorRemoved(Arbitrator arbitrator) {

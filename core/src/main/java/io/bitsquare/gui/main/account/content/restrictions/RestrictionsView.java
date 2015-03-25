@@ -24,7 +24,7 @@ import io.bitsquare.common.viewfx.view.FxmlView;
 import io.bitsquare.common.viewfx.view.View;
 import io.bitsquare.common.viewfx.view.ViewLoader;
 import io.bitsquare.common.viewfx.view.Wizard;
-import io.bitsquare.gui.main.account.arbitrator.browser.ArbitratorBrowserView;
+import io.bitsquare.gui.main.account.arbitrator.browser.BrowserView;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.util.ImageUtil;
@@ -121,7 +121,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
 
     @FXML
     private void onOpenArbitratorScreen() {
-        View view = viewLoader.load(ArbitratorBrowserView.class);
+        View view = viewLoader.load(BrowserView.class);
         showStage(view);
     }
 
@@ -161,7 +161,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
         Scene scene = new Scene((Parent) view.getRoot(), 800, 600);
         stage.setScene(scene);
         stage.setOnHidden(windowEvent -> {
-            if (view instanceof ArbitratorBrowserView)
+            if (view instanceof BrowserView)
                 updateArbitratorList();
         });
         stage.show();
