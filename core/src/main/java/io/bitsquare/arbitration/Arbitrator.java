@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class Arbitrator implements Serializable {
+    // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
 
 
@@ -108,33 +109,11 @@ public class Arbitrator implements Serializable {
         this.idVerifications = idVerifications;
         this.webUrl = webUrl;
         this.description = description;
-
-        Arbitrator persisted = storage.initAndGetPersisted(this);
-        if (persisted != null) {
-            id = persisted.getId();
-            pubKey = persisted.getPubKey();
-            p2pSigPubKey = persisted.getP2pSigPubKey();
-            name = persisted.getName();
-            idType = persisted.getIdType();
-            languageCodes = persisted.getLanguageCodes();
-            reputation = persisted.getReputation();
-            fee = persisted.getFee();
-            arbitrationMethods = persisted.getArbitrationMethods();
-            idVerifications = persisted.getIdVerifications();
-            webUrl = persisted.getWebUrl();
-            description = persisted.getDescription();
-        }
-        else {
-            // TODO mock
-
-            save();
-        }
     }
 
     public void save() {
         storage.save();
     }
-
 
     @Override
     public int hashCode() {

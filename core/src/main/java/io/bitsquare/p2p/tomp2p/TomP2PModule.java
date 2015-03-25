@@ -49,13 +49,13 @@ public class TomP2PModule extends P2PModule {
         // Used both ClientNode and TomP2PNode for injection
         bind(ClientNode.class).to(TomP2PNode.class).in(Singleton.class);
         bind(TomP2PNode.class).in(Singleton.class);
-        
+
         bind(BootstrappedPeerBuilder.class).in(Singleton.class);
-        
+
         bind(AddressService.class).to(TomP2PAddressService.class).in(Singleton.class);
         bind(MessageService.class).to(TomP2PMessageService.class).in(Singleton.class);
         bind(MailboxService.class).to(TomP2PMailboxService.class).in(Singleton.class);
-        
+
         bind(int.class).annotatedWith(Names.named(Node.PORT_KEY)).toInstance(env.getProperty(Node.PORT_KEY, int.class, Node.DEFAULT_PORT));
         bind(boolean.class).annotatedWith(Names.named(USE_MANUAL_PORT_FORWARDING_KEY)).toInstance(
                 env.getProperty(USE_MANUAL_PORT_FORWARDING_KEY, boolean.class, false));

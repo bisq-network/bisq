@@ -23,13 +23,17 @@ import org.bitcoinj.core.Transaction;
 
 import java.io.Serializable;
 
+import javax.annotation.concurrent.Immutable;
+
+@Immutable
 public class PayoutTxPublishedMessage extends TradeMessage implements MailboxMessage, Serializable {
-    private static final long serialVersionUID = 1288653559218403873L;
+    // That object is sent over the wire, so we need to take care of version compatibility.
+    private static final long serialVersionUID = 1L;
 
     public final Transaction payoutTx;
 
     public PayoutTxPublishedMessage(String tradeId, Transaction payoutTx) {
-        this.tradeId = tradeId;
+        super(tradeId);
         this.payoutTx = payoutTx;
     }
 

@@ -50,7 +50,9 @@ import org.slf4j.LoggerFactory;
  * It must never be transmitted over the wire (messageKeyPair contains private key!).
  */
 public class User implements Serializable {
+    // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
+
     transient private static final Logger log = LoggerFactory.getLogger(User.class);
 
     transient private Storage<User> storage;
@@ -60,12 +62,12 @@ public class User implements Serializable {
     private KeyPair p2pSigKeyPair;
     private KeyPair p2pEncryptKeyPair;
     private String accountID;
-    private List<FiatAccount> _fiatAccounts = new ArrayList<>();
-    private FiatAccount _currentFiatAccount;
+    private List<FiatAccount> fiatAccounts = new ArrayList<>();
+    private FiatAccount currentFiatAccount;
 
     // Observable wrappers
-    transient private final ObservableList<FiatAccount> fiatAccounts = FXCollections.observableArrayList();
-    transient private final ObjectProperty<FiatAccount> currentFiatAccount = new SimpleObjectProperty<>();
+    transient private ObservableList<FiatAccount> fiatAccountsObservableList = FXCollections.observableArrayList(fiatAccounts);
+    transient private ObjectProperty<FiatAccount> currentFiatAccountProperty = new SimpleObjectProperty<>(currentFiatAccount);
 
     @Inject
     public User(Storage<User> storage, EncryptionService encryptionService) {
@@ -78,11 +80,11 @@ public class User implements Serializable {
             p2pEncryptKeyPair = persisted.getP2pEncryptKeyPair();
             accountID = persisted.getAccountId();
 
-            _fiatAccounts = new ArrayList<>(persisted.getFiatAccounts());
-            fiatAccounts.setAll(_fiatAccounts);
+            fiatAccounts = new ArrayList<>(persisted.getFiatAccounts());
+            fiatAccountsObservableList.setAll(fiatAccounts);
 
-            _currentFiatAccount = persisted.getCurrentFiatAccount();
-            currentFiatAccount.set(_currentFiatAccount);
+            currentFiatAccount = persisted.getCurrentFiatAccount();
+            currentFiatAccountProperty.set(currentFiatAccount);
         }
         else {
             // First time we create key pairs
@@ -97,12 +99,12 @@ public class User implements Serializable {
         }
         storage.save();
         // Use that to guarantee update of the serializable field and to make a storage update in case of a change
-        fiatAccounts.addListener((ListChangeListener<FiatAccount>) change -> {
-            _fiatAccounts = new ArrayList<>(fiatAccounts);
+        fiatAccountsObservableList.addListener((ListChangeListener<FiatAccount>) change -> {
+            fiatAccounts = new ArrayList<>(fiatAccountsObservableList);
             storage.save();
         });
-        currentFiatAccount.addListener((ov) -> {
-            _currentFiatAccount = currentFiatAccount.get();
+        currentFiatAccountProperty.addListener((ov) -> {
+            currentFiatAccount = currentFiatAccountProperty.get();
             storage.save();
         });
     }
@@ -110,7 +112,7 @@ public class User implements Serializable {
     // for unit tests
     public User() {
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public Methods
@@ -121,23 +123,23 @@ public class User implements Serializable {
      * @return If a Fiat Account with the same name already exists we return false. We use the account title as hashCode.
      */
     public boolean addFiatAccount(FiatAccount fiatAccount) {
-        if (fiatAccounts.contains(fiatAccount))
+        if (fiatAccountsObservableList.contains(fiatAccount))
             return false;
 
-        fiatAccounts.add(fiatAccount);
-        setCurrentFiatAccount(fiatAccount);
+        fiatAccountsObservableList.add(fiatAccount);
+        setCurrentFiatAccountProperty(fiatAccount);
         return true;
     }
 
     // In case we edit an existing we remove the existing first
     public void removeFiatAccount(FiatAccount fiatAccount) {
-        fiatAccounts.remove(fiatAccount);
+        fiatAccountsObservableList.remove(fiatAccount);
 
-        if (_currentFiatAccount.equals(fiatAccount)) {
-            if (fiatAccounts.isEmpty())
-                setCurrentFiatAccount(null);
+        if (currentFiatAccount.equals(fiatAccount)) {
+            if (fiatAccountsObservableList.isEmpty())
+                setCurrentFiatAccountProperty(null);
             else
-                setCurrentFiatAccount(fiatAccounts.get(0));
+                setCurrentFiatAccountProperty(fiatAccountsObservableList.get(0));
         }
     }
 
@@ -153,8 +155,8 @@ public class User implements Serializable {
         storage.save();
     }
 
-    public void setCurrentFiatAccount(@Nullable FiatAccount fiatAccount) {
-        currentFiatAccount.set(fiatAccount);
+    public void setCurrentFiatAccountProperty(@Nullable FiatAccount fiatAccount) {
+        currentFiatAccountProperty.set(fiatAccount);
     }
 
 
@@ -165,15 +167,25 @@ public class User implements Serializable {
     // TODO just a first attempt, refine when working on the embedded data for the reg. tx
     public String getStringifiedBankAccounts() {
         String bankAccountUIDs = "";
-        for (int i = 0; i < fiatAccounts.size(); i++) {
-            FiatAccount fiatAccount = fiatAccounts.get(i);
+        for (int i = 0; i < fiatAccountsObservableList.size(); i++) {
+            FiatAccount fiatAccount = fiatAccountsObservableList.get(i);
             bankAccountUIDs += fiatAccount.toString();
 
-            if (i < fiatAccounts.size() - 1) {
+            if (i < fiatAccountsObservableList.size() - 1) {
                 bankAccountUIDs += ", ";
             }
         }
         return bankAccountUIDs;
+    }
+
+
+    public FiatAccount getFiatAccount(String fiatAccountId) {
+        for (FiatAccount fiatAccount : fiatAccountsObservableList) {
+            if (fiatAccount.getId().equals(fiatAccountId)) {
+                return fiatAccount;
+            }
+        }
+        return null;
     }
 
     public String getAccountId() {
@@ -182,15 +194,6 @@ public class User implements Serializable {
 
     public boolean isRegistered() {
         return getAccountId() != null;
-    }
-
-    public FiatAccount getFiatAccount(String fiatAccountId) {
-        for (FiatAccount fiatAccount : fiatAccounts) {
-            if (fiatAccount.getId().equals(fiatAccountId)) {
-                return fiatAccount;
-            }
-        }
-        return null;
     }
 
     public KeyPair getP2pSigKeyPair() {
@@ -214,19 +217,19 @@ public class User implements Serializable {
     }
 
     private List<FiatAccount> getFiatAccounts() {
-        return _fiatAccounts;
+        return fiatAccounts;
     }
 
     private FiatAccount getCurrentFiatAccount() {
-        return _currentFiatAccount;
-    }
-
-    public ObjectProperty<FiatAccount> currentFiatAccountProperty() {
         return currentFiatAccount;
     }
 
+    public ObjectProperty<FiatAccount> currentFiatAccountPropertyProperty() {
+        return currentFiatAccountProperty;
+    }
+
     public ObservableList<FiatAccount> fiatAccountsObservableList() {
-        return fiatAccounts;
+        return fiatAccountsObservableList;
     }
 
 }

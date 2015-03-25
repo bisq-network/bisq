@@ -61,10 +61,10 @@ class BitsquareAppModule extends BitsquareModule {
 
         File storageDir = new File(env.getRequiredProperty(Storage.DIR_KEY));
         bind(File.class).annotatedWith(named(Storage.DIR_KEY)).toInstance(storageDir);
-        
+
         bind(Environment.class).toInstance(env);
         bind(UpdateProcess.class).in(Singleton.class);
-        
+
         install(networkModule());
         install(bitcoinModule());
         install(cryptoModule());

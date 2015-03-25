@@ -30,11 +30,10 @@ public abstract class OfferModule extends BitsquareModule {
     }
 
     @Override
-    protected final void configure()
-    {
+    protected final void configure() {
         bind(OfferBook.class).in(Singleton.class);
         bind(OfferBook.class).in(Singleton.class);
-        
+
         doConfigure();
     }
 

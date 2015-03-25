@@ -67,7 +67,7 @@ public class CheckOfferAvailabilityProtocol {
     public void checkOfferAvailability() {
         // reset
         model.offer.setState(Offer.State.UNKNOWN);
-        
+
         model.messageService.addMessageHandler(messageHandler);
 
         taskRunner = new TaskRunner<>(model,

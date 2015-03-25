@@ -25,7 +25,8 @@ import java.io.Serializable;
  * Reputation for Arbitrators
  */
 public class Reputation implements Serializable {
-    private static final long serialVersionUID = -3073174320050879490L;
+    // That object is sent over the wire, so we need to take care of version compatibility.
+    private static final long serialVersionUID = 1L;
 
     //TODO
     public Reputation() {

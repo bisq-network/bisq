@@ -66,17 +66,17 @@ public class EncryptionService<T> {
         return keyPairGenerator.genKeyPair();
     }
 
-    public EncryptionPackage encryptObject(PublicKey publicKey, Object object) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException,
+    public Bucket encryptObject(PublicKey publicKey, Object object) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException,
             NoSuchAlgorithmException, NoSuchPaddingException {
         return encrypt(publicKey, Utilities.objectToBytArray(object));
     }
 
-    public T decryptToObject(PrivateKey privateKey, EncryptionPackage encryptionPackage) throws IllegalBlockSizeException, InvalidKeyException,
+    public T decryptToObject(PrivateKey privateKey, Bucket bucket) throws IllegalBlockSizeException, InvalidKeyException,
             BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException {
-        return (T) Utilities.byteArrayToObject(decrypt(privateKey, encryptionPackage));
+        return (T) Utilities.byteArrayToObject(decrypt(privateKey, bucket));
     }
 
-    public EncryptionPackage encrypt(PublicKey publicKey, byte[] payload) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
+    public Bucket encrypt(PublicKey publicKey, byte[] payload) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
             BadPaddingException, IllegalBlockSizeException {
         // Create symmetric key and 
         KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGO_SYM);
@@ -95,13 +95,13 @@ public class EncryptionService<T> {
         cipherSym.init(Cipher.ENCRYPT_MODE, keySpec);
         log.debug("encrypt payload length: " + payload.length);
         byte[] encryptedPayload = cipherSym.doFinal(payload);
-        return new EncryptionPackage(encryptedKey, encryptedPayload);
+        return new Bucket(encryptedKey, encryptedPayload);
     }
 
-    public byte[] decrypt(PrivateKey privateKey, EncryptionPackage encryptionPackage) throws NoSuchPaddingException, NoSuchAlgorithmException,
+    public byte[] decrypt(PrivateKey privateKey, Bucket bucket) throws NoSuchPaddingException, NoSuchAlgorithmException,
             InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        byte[] encryptedPayload = encryptionPackage.encryptedPayload;
-        byte[] encryptedKey = encryptionPackage.encryptedKey;
+        byte[] encryptedPayload = bucket.encryptedPayload;
+        byte[] encryptedKey = bucket.encryptedKey;
 
         // Decrypt secretKey key with asymmetric key
         Cipher cipherAsym = Cipher.getInstance(CIPHER_ASYM);

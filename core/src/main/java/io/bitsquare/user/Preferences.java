@@ -37,7 +37,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Preferences implements Serializable {
+    // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
+
     transient private static final Logger log = LoggerFactory.getLogger(Preferences.class);
 
     // Deactivate mBit for now as most screens are not supporting it yet
@@ -50,15 +52,15 @@ public class Preferences implements Serializable {
     transient private final Storage<Preferences> storage;
 
     // Persisted fields
-    private String _btcDenomination = MonetaryFormat.CODE_BTC;
-    private Boolean _useAnimations = true;
-    private Boolean _useEffects = true;
+    private String btcDenomination = MonetaryFormat.CODE_BTC;
+    private Boolean useAnimations = true;
+    private Boolean useEffects = true;
     private Boolean displaySecurityDepositInfo = true;
 
     // Observable wrappers
-    transient private final StringProperty btcDenomination = new SimpleStringProperty(_btcDenomination);
-    transient private final BooleanProperty useAnimations = new SimpleBooleanProperty(_useAnimations);
-    transient private final BooleanProperty useEffects = new SimpleBooleanProperty(_useEffects);
+    transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
+    transient private final BooleanProperty useAnimationsProperty = new SimpleBooleanProperty(useAnimations);
+    transient private final BooleanProperty useEffectsProperty = new SimpleBooleanProperty(useEffects);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -70,23 +72,23 @@ public class Preferences implements Serializable {
 
         Preferences persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
-            setBtcDenomination(persisted._btcDenomination);
-            setUseAnimations(persisted._useAnimations);
-            setUseEffects(persisted._useEffects);
+            setBtcDenomination(persisted.btcDenomination);
+            setUseAnimations(persisted.useAnimations);
+            setUseEffects(persisted.useEffects);
             displaySecurityDepositInfo = persisted.getDisplaySecurityDepositInfo();
         }
 
         // Use that to guarantee update of the serializable field and to make a storage update in case of a change
-        btcDenomination.addListener((ov) -> {
-            _btcDenomination = btcDenomination.get();
+        btcDenominationProperty.addListener((ov) -> {
+            btcDenomination = btcDenominationProperty.get();
             storage.save();
         });
-        useAnimations.addListener((ov) -> {
-            _useAnimations = useAnimations.get();
+        useAnimationsProperty.addListener((ov) -> {
+            useAnimations = useAnimationsProperty.get();
             storage.save();
         });
-        useEffects.addListener((ov) -> {
-            _useEffects = useEffects.get();
+        useEffectsProperty.addListener((ov) -> {
+            useEffects = useEffectsProperty.get();
             storage.save();
         });
     }
@@ -96,16 +98,16 @@ public class Preferences implements Serializable {
     // Setter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setBtcDenomination(String btcDenomination) {
-        this.btcDenomination.set(btcDenomination);
+    public void setBtcDenomination(String btcDenominationProperty) {
+        this.btcDenominationProperty.set(btcDenominationProperty);
     }
 
-    public void setUseAnimations(boolean useAnimations) {
-        this.useAnimations.set(useAnimations);
+    public void setUseAnimations(boolean useAnimationsProperty) {
+        this.useAnimationsProperty.set(useAnimationsProperty);
     }
 
-    public void setUseEffects(boolean useEffects) {
-        this.useEffects.set(useEffects);
+    public void setUseEffects(boolean useEffectsProperty) {
+        this.useEffectsProperty.set(useEffectsProperty);
     }
 
     public void setDisplaySecurityDepositInfo(Boolean displaySecurityDepositInfo) {
@@ -119,15 +121,15 @@ public class Preferences implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String getBtcDenomination() {
-        return btcDenomination.get();
+        return btcDenominationProperty.get();
     }
 
     public boolean getUseEffects() {
-        return useEffects.get();
+        return useEffectsProperty.get();
     }
 
     public boolean getUseAnimations() {
-        return useAnimations.get();
+        return useAnimationsProperty.get();
     }
 
     public Boolean getDisplaySecurityDepositInfo() {
@@ -135,15 +137,15 @@ public class Preferences implements Serializable {
     }
 
     public StringProperty btcDenominationProperty() {
-        return btcDenomination;
+        return btcDenominationProperty;
     }
 
     public BooleanProperty useAnimationsProperty() {
-        return useAnimations;
+        return useAnimationsProperty;
     }
 
-    public BooleanProperty useEffectsProperty() {
-        return useEffects;
+    public BooleanProperty useEffectsPropertyProperty() {
+        return useEffectsProperty;
     }
 
 

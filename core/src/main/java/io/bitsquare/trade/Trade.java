@@ -32,6 +32,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.io.IOException;
 import java.io.Serializable;
 
 import java.util.Date;
@@ -43,15 +44,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Trade implements Serializable {
-    protected static final long serialVersionUID = 1;
-    protected static final Logger log = LoggerFactory.getLogger(Trade.class);
+    // That object is saved to disc. We need to take care of changes to not break deserialization.
+    private static final long serialVersionUID = 1L;
+
+    transient protected static final Logger log = LoggerFactory.getLogger(Trade.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static enum LifeCycleState {
+    public enum LifeCycleState {
         OPEN_OFFER,
         CANCELED,
         PENDING,
@@ -59,7 +62,7 @@ public class Trade implements Serializable {
         FAILED
     }
 
-    public static enum ProcessState {
+    public enum ProcessState {
         INIT,
         TAKE_OFFER_FEE_PUBLISH_FAILED,
         TAKE_OFFER_FEE_TX_CREATED,
@@ -105,10 +108,10 @@ public class Trade implements Serializable {
     // For changing values we use properties to get binding support in the UI (table)
     // When serialized those transient properties are not instantiated, so we instantiate them in the getters at first
     // access. Only use the accessor not the protected field.
-    transient protected ObjectProperty<Coin> _tradeAmount;
-    transient protected ObjectProperty<Fiat> _tradeVolume;
-    transient protected ObjectProperty<ProcessState> _processState;
-    transient protected ObjectProperty<LifeCycleState> _lifeCycleState;
+    transient protected ObjectProperty<Coin> tradeAmountProperty;
+    transient protected ObjectProperty<Fiat> tradeVolumeProperty;
+    transient protected ObjectProperty<ProcessState> processStateProperty;
+    transient protected ObjectProperty<LifeCycleState> lifeCycleStateProperty;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -123,10 +126,26 @@ public class Trade implements Serializable {
         log.debug("Trade ");
     }
 
+    // Serialized object does not create our transient objects
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        tradeAmountProperty = new SimpleObjectProperty<>(tradeAmount);
+        tradeVolumeProperty = new SimpleObjectProperty<>(getTradeVolume());
+        processStateProperty = new SimpleObjectProperty<>(processState);
+        lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Methods
+    // Protocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void setProtocol(Protocol protocol) {
+        this.protocol = protocol;
+
+        if (mailboxMessage != null)
+            protocol.setMailboxMessage(mailboxMessage);
+    }
 
     public void disposeProtocol() {
         if (protocol != null)
@@ -140,18 +159,10 @@ public class Trade implements Serializable {
             protocol.setMailboxMessage(mailboxMessage);
     }
 
-    public void setProtocol(Protocol protocol) {
-        this.protocol = protocol;
-
-        if (mailboxMessage != null)
-            protocol.setMailboxMessage(mailboxMessage);
-    }
-    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     public void setTradingPeer(Peer tradingPeer) {
         this.tradingPeer = tradingPeer;
@@ -205,6 +216,7 @@ public class Trade implements Serializable {
         this.lifeCycleState = lifeCycleState;
         lifeCycleStateProperty().set(lifeCycleState);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -262,34 +274,20 @@ public class Trade implements Serializable {
         return tradingPeer;
     }
 
-
-    // When serialized those transient properties are not instantiated, so we need to instantiate them at first access
     public ObjectProperty<Coin> tradeAmountProperty() {
-        if (_tradeAmount == null)
-            _tradeAmount = new SimpleObjectProperty<>(tradeAmount);
-
-        return _tradeAmount;
+        return tradeAmountProperty;
     }
 
     public ObjectProperty<Fiat> tradeVolumeProperty() {
-        if (_tradeVolume == null)
-            _tradeVolume = new SimpleObjectProperty<>(getTradeVolume());
-
-        return _tradeVolume;
+        return tradeVolumeProperty;
     }
 
     public ObjectProperty<ProcessState> processStateProperty() {
-        if (_processState == null)
-            _processState = new SimpleObjectProperty<>(processState);
-
-        return _processState;
+        return processStateProperty;
     }
 
     public ObjectProperty<LifeCycleState> lifeCycleStateProperty() {
-        if (_lifeCycleState == null)
-            _lifeCycleState = new SimpleObjectProperty<>(lifeCycleState);
-
-        return _lifeCycleState;
+        return lifeCycleStateProperty;
     }
 
 

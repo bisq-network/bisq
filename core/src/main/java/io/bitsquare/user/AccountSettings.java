@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 public class AccountSettings implements Serializable {
+    // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
     transient private Storage<AccountSettings> storage;
@@ -52,7 +53,7 @@ public class AccountSettings implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AccountSettings(Storage<AccountSettings> storage,  ArbitrationRepository arbitrationRepository) {
+    public AccountSettings(Storage<AccountSettings> storage, ArbitrationRepository arbitrationRepository) {
         this.storage = storage;
 
         AccountSettings persisted = storage.initAndGetPersisted(this);

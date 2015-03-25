@@ -25,6 +25,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
+import java.io.IOException;
 import java.io.Serializable;
 
 import java.security.PublicKey;
@@ -41,7 +42,8 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.*;
 
 public class Offer implements Serializable {
-    private static final long serialVersionUID = -971164804305475826L;
+    // That object is sent over the wire, so we need to take care of version compatibility.
+    private static final long serialVersionUID = 1L;
     private transient static final Logger log = LoggerFactory.getLogger(Offer.class);
 
     public enum Direction {BUY, SELL}
@@ -55,10 +57,11 @@ public class Offer implements Serializable {
         FAULT
     }
 
+
     // key attributes for lookup
+    private final String id;
     private final Direction direction;
     private final String currencyCode;
-    private final String id;
     private final Date creationDate;
 
     //TODO check with latest bitcoinJ version
@@ -66,7 +69,6 @@ public class Offer implements Serializable {
     private final long fiatPrice;
     private final Coin amount;
     private final Coin minAmount;
-    //TODO use hex string
     private final PublicKey p2pSigPubKey;
     private final FiatAccountType fiatAccountType;
     private final Country bankAccountCountry;
@@ -79,11 +81,11 @@ public class Offer implements Serializable {
 
     // Mutable property. Has to be set before offer is save in DHT as it changes the objects hash!
     private String offerFeePaymentTxID;
-    private State state;
+    private State state = State.UNKNOWN;
 
     // Those state properties are transient and only used at runtime! 
     // don't access directly as it might be null; use getStateProperty() which creates an object if not instantiated
-    transient private ObjectProperty<State> stateProperty = new SimpleObjectProperty<>(State.UNKNOWN);
+    transient private ObjectProperty<State> stateProperty = new SimpleObjectProperty<>(state);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -124,6 +126,54 @@ public class Offer implements Serializable {
         setState(State.UNKNOWN);
     }
 
+    // Serialized object does not create our transient objects
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        stateProperty = new SimpleObjectProperty<>(state);
+    }
+
+    public void validate() throws Exception {
+        checkNotNull(getAcceptedCountries(), "AcceptedCountries is null");
+        checkNotNull(getAcceptedLanguageCodes(), "AcceptedLanguageLocales is null");
+        checkNotNull(getAmount(), "Amount is null");
+        checkNotNull(getArbitratorIds(), "Arbitrator is null");
+        checkNotNull(getBankAccountId(), "BankAccountId is null");
+        checkNotNull(getSecurityDeposit(), "SecurityDeposit is null");
+        checkNotNull(getCreationDate(), "CreationDate is null");
+        checkNotNull(getCurrencyCode(), "Currency is null");
+        checkNotNull(getDirection(), "Direction is null");
+        checkNotNull(getId(), "Id is null");
+        checkNotNull(getP2PSigPubKey(), "p2pSigPubKey is null");
+        checkNotNull(getMinAmount(), "MinAmount is null");
+        checkNotNull(getPrice(), "Price is null");
+
+        checkArgument(getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0, "MinAmount is less then " + Restrictions.MIN_TRADE_AMOUNT
+                .toFriendlyString());
+        checkArgument(getAmount().compareTo(Restrictions.MAX_TRADE_AMOUNT) <= 0, "Amount is larger then " + Restrictions.MAX_TRADE_AMOUNT.toFriendlyString());
+        checkArgument(getAmount().compareTo(getMinAmount()) >= 0, "MinAmount is larger then Amount");
+
+        checkArgument(getSecurityDeposit().compareTo(Restrictions.MIN_SECURITY_DEPOSIT) >= 0,
+                "SecurityDeposit is less then " + Restrictions.MIN_SECURITY_DEPOSIT.toFriendlyString());
+
+        checkArgument(getPrice().isPositive(), "Price is not a positive value");
+        // TODO check upper and lower bounds for fiat
+    }
+
+    public Fiat getVolumeByAmount(Coin amount) {
+        if (fiatPrice != 0 && amount != null && !amount.isZero())
+            return new ExchangeRate(Fiat.valueOf(currencyCode, fiatPrice)).coinToFiat(amount);
+        else
+            return null;
+    }
+
+    public Fiat getOfferVolume() {
+        return getVolumeByAmount(amount);
+    }
+
+    public Fiat getMinOfferVolume() {
+        return getVolumeByAmount(minAmount);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
@@ -137,6 +187,7 @@ public class Offer implements Serializable {
     public void setOfferFeePaymentTxID(String offerFeePaymentTxID) {
         this.offerFeePaymentTxID = offerFeePaymentTxID;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -186,21 +237,6 @@ public class Offer implements Serializable {
         return acceptedLanguageCodes;
     }
 
-    public Fiat getVolumeByAmount(Coin amount) {
-        if (fiatPrice != 0 && amount != null && !amount.isZero())
-            return new ExchangeRate(Fiat.valueOf(currencyCode, fiatPrice)).coinToFiat(amount);
-        else
-            return null;
-    }
-
-    public Fiat getOfferVolume() {
-        return getVolumeByAmount(amount);
-    }
-
-    public Fiat getMinOfferVolume() {
-        return getVolumeByAmount(minAmount);
-    }
-
     public String getOfferFeePaymentTxID() {
         return offerFeePaymentTxID;
     }
@@ -230,57 +266,30 @@ public class Offer implements Serializable {
     }
 
     public ObjectProperty<State> stateProperty() {
-        if (stateProperty == null)
-            stateProperty = new SimpleObjectProperty<>(state);
         return stateProperty;
-    }
-
-    public void validate() throws Exception {
-        checkNotNull(getAcceptedCountries(), "AcceptedCountries is null");
-        checkNotNull(getAcceptedLanguageCodes(), "AcceptedLanguageLocales is null");
-        checkNotNull(getAmount(), "Amount is null");
-        checkNotNull(getArbitratorIds(), "Arbitrator is null");
-        checkNotNull(getBankAccountId(), "BankAccountId is null");
-        checkNotNull(getSecurityDeposit(), "SecurityDeposit is null");
-        checkNotNull(getCreationDate(), "CreationDate is null");
-        checkNotNull(getCurrencyCode(), "Currency is null");
-        checkNotNull(getDirection(), "Direction is null");
-        checkNotNull(getId(), "Id is null");
-        checkNotNull(getP2PSigPubKey(), "p2pSigPubKey is null");
-        checkNotNull(getMinAmount(), "MinAmount is null");
-        checkNotNull(getPrice(), "Price is null");
-
-        checkArgument(getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0, "MinAmount is less then " + Restrictions.MIN_TRADE_AMOUNT
-                .toFriendlyString());
-        checkArgument(getAmount().compareTo(Restrictions.MAX_TRADE_AMOUNT) <= 0, "Amount is larger then " + Restrictions.MAX_TRADE_AMOUNT.toFriendlyString());
-        checkArgument(getAmount().compareTo(getMinAmount()) >= 0, "MinAmount is larger then Amount");
-
-        checkArgument(getSecurityDeposit().compareTo(Restrictions.MIN_SECURITY_DEPOSIT) >= 0,
-                "SecurityDeposit is less then " + Restrictions.MIN_SECURITY_DEPOSIT.toFriendlyString());
-
-        checkArgument(getPrice().isPositive(), "Price is not a positive value");
-        // TODO check upper and lower bounds for fiat
     }
 
     @Override
     public String toString() {
         return "Offer{" +
                 "id='" + id + '\'' +
-                ", state=" + state +
                 ", direction=" + direction +
-                ", currency=" + currencyCode +
+                ", currencyCode='" + currencyCode + '\'' +
                 ", creationDate=" + creationDate +
                 ", fiatPrice=" + fiatPrice +
                 ", amount=" + amount +
                 ", minAmount=" + minAmount +
+                ", p2pSigPubKey=" + p2pSigPubKey +
                 ", fiatAccountType=" + fiatAccountType +
                 ", bankAccountCountry=" + bankAccountCountry +
                 ", securityDeposit=" + securityDeposit +
                 ", acceptedCountries=" + acceptedCountries +
-                ", acceptedLanguageLocales=" + acceptedLanguageCodes +
+                ", acceptedLanguageCodes=" + acceptedLanguageCodes +
                 ", bankAccountUID='" + bankAccountUID + '\'' +
-                ", arbitrators=" + arbitratorIds +
+                ", arbitratorIds=" + arbitratorIds +
                 ", offerFeePaymentTxID='" + offerFeePaymentTxID + '\'' +
+                ", state=" + state +
+                ", stateProperty=" + stateProperty +
                 '}';
     }
 }

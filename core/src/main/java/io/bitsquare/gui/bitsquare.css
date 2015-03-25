@@ -159,7 +159,6 @@ textfield */
     -fx-progress-color: dimgrey;
 }
 
-
 /*******************************************************************************
  *                                                                             *
  * Table                                                                     *
@@ -185,6 +184,7 @@ textfield */
 .table-view:focused {
     /*-fx-background-color: transparent;*/
 }
+
 .table-view:focused {
     -fx-background-color: -fx-box-border, -fx-control-inner-background;
     -fx-background-insets: 0, 1;
@@ -231,7 +231,6 @@ textfield */
     -fx-fill: black;
 }
 
-
 /*******************************************************************************
  *                                                                             *
  * Icons                                                                     *
@@ -250,7 +249,6 @@ textfield */
 #clickable-icon:hover {
     -fx-text-fill: #666666;
 }
-
 
 /*******************************************************************************
  *                                                                             *
@@ -274,7 +272,6 @@ textfield */
     -fx-background-color: transparent;
 }
 
-
 #form-header-text {
     -fx-font-weight: bold;
     -fx-font-size: 14;
@@ -283,6 +280,7 @@ textfield */
 #form-title {
     -fx-font-weight: bold;
 }
+
 /* scroll-pane */
 
 .scroll-pane {

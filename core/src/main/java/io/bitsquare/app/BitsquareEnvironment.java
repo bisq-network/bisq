@@ -134,8 +134,8 @@ public class BitsquareEnvironment extends StandardEnvironment {
             setProperty(WalletService.DIR_KEY, appDataDir);
             setProperty(WalletService.PREFIX_KEY, appName);
 
-            setProperty(Storage.DIR_KEY,  Paths.get(appDataDir, "db").toString());
-            
+            setProperty(Storage.DIR_KEY, Paths.get(appDataDir, "db").toString());
+
             setProperty(MainView.TITLE_KEY, appName);
         }});
     }

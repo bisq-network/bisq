@@ -23,6 +23,8 @@ import com.google.common.base.Objects;
 
 import java.io.Serializable;
 
+import javax.annotation.concurrent.Immutable;
+
 import net.tomp2p.peers.PeerAddress;
 
 /**
@@ -30,9 +32,10 @@ import net.tomp2p.peers.PeerAddress;
  *
  * @author Chris Beams
  */
+@Immutable
 public class TomP2PPeer implements Peer, Serializable {
-
-    private static final long serialVersionUID = -2022551056208230853L;
+    // That object is sent over the wire, so we need to take care of version compatibility.
+    private static final long serialVersionUID = 1L;
 
     private final PeerAddress peerAddress;
 

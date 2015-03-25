@@ -17,7 +17,7 @@
 
 package io.bitsquare.p2p;
 
-import io.bitsquare.crypto.EncryptionPackage;
+import io.bitsquare.crypto.Bucket;
 
 import java.io.Serializable;
 
@@ -31,13 +31,13 @@ public class EncryptedMailboxMessage implements MailboxMessage, Serializable {
     private static final long serialVersionUID = -3111178895546299769L;
     private static final Logger log = LoggerFactory.getLogger(EncryptedMailboxMessage.class);
 
-    private EncryptionPackage encryptionPackage;
+    private Bucket bucket;
 
-    public EncryptedMailboxMessage(EncryptionPackage encryptionPackage) {
-        this.encryptionPackage = encryptionPackage;
+    public EncryptedMailboxMessage(Bucket bucket) {
+        this.bucket = bucket;
     }
 
-    public EncryptionPackage getEncryptionPackage() {
-        return encryptionPackage;
+    public Bucket getBucket() {
+        return bucket;
     }
 }

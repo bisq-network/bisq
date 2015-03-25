@@ -133,9 +133,9 @@ class CreateOfferDataModel implements Activatable, DataModel {
         }
 
         if (user != null) {
-            user.currentFiatAccountProperty().addListener((ov, oldValue, newValue) -> applyBankAccount(newValue));
+            user.currentFiatAccountPropertyProperty().addListener((ov, oldValue, newValue) -> applyBankAccount(newValue));
 
-            applyBankAccount(user.currentFiatAccountProperty().get());
+            applyBankAccount(user.currentFiatAccountPropertyProperty().get());
         }
 
         if (accountSettings != null)

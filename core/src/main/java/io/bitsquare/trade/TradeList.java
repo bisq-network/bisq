@@ -31,11 +31,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TradeList<T> extends ArrayList<T> implements Serializable {
+    // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
+
     transient private static final Logger log = LoggerFactory.getLogger(TradeList.class);
 
     transient final private Storage<TradeList> storage;
     transient private ObservableList<T> observableList;
+    
+    // Superclass is ArrayList, which will be persisted
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public TradeList(File storageDir, String fileName) {
         this.storage = new Storage<>(storageDir);
@@ -43,11 +51,8 @@ public class TradeList<T> extends ArrayList<T> implements Serializable {
         TradeList persisted = storage.initAndGetPersisted(this, fileName);
         if (persisted != null) {
             this.addAll(persisted);
-            observableList = FXCollections.observableArrayList(this);
         }
-        else {
-            observableList = FXCollections.observableArrayList(this);
-        }
+        observableList = FXCollections.observableArrayList(this);
     }
 
     @Override

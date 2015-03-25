@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ArbitrationRepository implements Serializable {
+    // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
     transient private static final Logger log = LoggerFactory.getLogger(ArbitrationRepository.class);
 
@@ -90,13 +91,6 @@ public class ArbitrationRepository implements Serializable {
         arbitratorsObservableMap.addListener((MapChangeListener<String, Arbitrator>) change -> storage.save());
         allArbitratorsSynced = false;
     }
-
-   /* private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-
-        allArbitratorsObservableList = FXCollections.observableArrayList(allArbitrators);
-    }
-*/
 
     // Is called when all services are ready
     public void loadAllArbitrators() {

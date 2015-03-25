@@ -18,10 +18,10 @@
 package io.bitsquare.trade.protocol.availability;
 
 import io.bitsquare.common.taskrunner.SharedTaskModel;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.AddressService;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
-import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.protocol.trade.messages.OfferMessage;
 
 import org.slf4j.Logger;

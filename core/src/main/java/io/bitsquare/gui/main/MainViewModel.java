@@ -110,7 +110,7 @@ class MainViewModel implements ViewModel {
         updateProcess.state.addListener((observableValue, oldValue, newValue) -> applyUpdateState(newValue));
         applyUpdateState(updateProcess.state.get());
 
-        currentBankAccount.bind(user.currentFiatAccountProperty());
+        currentBankAccount.bind(user.currentFiatAccountPropertyProperty());
         user.fiatAccountsObservableList().addListener((ListChangeListener<FiatAccount>) change -> {
             bankAccountsComboBoxDisable.set(change.getList().isEmpty());
             bankAccountsComboBoxPrompt.set(change.getList().isEmpty() ? "No accounts" : "");
@@ -301,7 +301,7 @@ class MainViewModel implements ViewModel {
     }
 
     public void setCurrentBankAccount(FiatAccount currentFiatAccount) {
-        user.setCurrentFiatAccount(currentFiatAccount);
+        user.setCurrentFiatAccountProperty(currentFiatAccount);
     }
 
     private void updateNumPendingTrades() {

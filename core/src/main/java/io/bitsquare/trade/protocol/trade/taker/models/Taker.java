@@ -32,7 +32,8 @@ import java.security.PublicKey;
 import java.util.List;
 
 public class Taker implements Serializable {
-    private static long serialVersionUID = -4041809885931756860L;
+    // That object is saved to disc. We need to take care of changes to not break deserialization.
+    private static final long serialVersionUID = 1L;
 
     // Those fields are set at constructor but not declared as final because constructor is not called in case model gets created from a persisted model
     // Declared transient as they will be provided in any case at construction time

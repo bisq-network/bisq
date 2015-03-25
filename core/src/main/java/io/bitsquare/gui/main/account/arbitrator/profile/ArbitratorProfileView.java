@@ -59,7 +59,7 @@ public class ArbitratorProfileView extends AbstractView {
             nameLabel.setText(name);
 
             nameTextField.setText(arbitrator.getName());
-          //  languagesTextField.setText(formatter.languageLocalesToString(arbitrator.getLanguages()));
+            //  languagesTextField.setText(formatter.languageLocalesToString(arbitrator.getLanguages()));
             reputationTextField.setText(arbitrator.getReputation().toString());
             feeTextField.setText(String.valueOf(arbitrator.getFee() + " BTC"));
             methodsTextField.setText(formatter.arbitrationMethodsToString(arbitrator.getArbitrationMethods()));

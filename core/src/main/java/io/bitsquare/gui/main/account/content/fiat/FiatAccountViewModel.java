@@ -145,7 +145,7 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
 
             @Override
             public String toString(String currencyCode) {
-                return currencyCode+ " (" + CurrencyUtil.getDisplayName(currencyCode) + ")";
+                return currencyCode + " (" + CurrencyUtil.getDisplayName(currencyCode) + ")";
             }
 
 

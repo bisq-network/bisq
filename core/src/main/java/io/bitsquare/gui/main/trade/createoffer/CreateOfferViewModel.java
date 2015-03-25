@@ -316,9 +316,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 .languageCodesToString(dataModel.acceptedLanguageCodes)));
 
 
-        dataModel.acceptedArbitrators.addListener((Observable o) -> 
-            acceptedArbitrators.set(formatter.arbitratorsToNames(dataModel.acceptedArbitrators)));
-        
+        dataModel.acceptedArbitrators.addListener((Observable o) ->
+                acceptedArbitrators.set(formatter.arbitratorsToNames(dataModel.acceptedArbitrators)));
+
     }
 
     private void setupBindings() {

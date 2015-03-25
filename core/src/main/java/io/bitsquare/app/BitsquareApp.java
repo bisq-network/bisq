@@ -73,7 +73,7 @@ public class BitsquareApp extends Application {
         bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
         injector = Guice.createInjector(bitsquareAppModule);
         injector.getInstance(InjectorViewFactory.class).setInjector(injector);
-       
+
         // route uncaught exceptions to a user-facing dialog
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) ->
                 Popups.handleUncaughtExceptions(Throwables.getRootCause(throwable)));

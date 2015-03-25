@@ -21,8 +21,12 @@ import java.io.Serializable;
 
 import java.util.Objects;
 
+import javax.annotation.concurrent.Immutable;
+
+@Immutable
 public class Country implements Serializable {
-    private static final long serialVersionUID = -5930294199097793187L;
+    // That object is sent over the wire, so we need to take care of version compatibility.
+    private static final long serialVersionUID = 1L;
 
     private final String code;
     private final String name;

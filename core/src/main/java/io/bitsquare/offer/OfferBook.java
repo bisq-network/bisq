@@ -150,14 +150,14 @@ public class OfferBook {
 
     private void addListeners() {
         log.debug("addListeners ");
-        user.currentFiatAccountProperty().addListener(bankAccountChangeListener);
+        user.currentFiatAccountPropertyProperty().addListener(bankAccountChangeListener);
         offerBookService.addListener(offerBookServiceListener);
         offerBookService.invalidationTimestampProperty().addListener(invalidationListener);
     }
 
     private void removeListeners() {
         log.debug("removeListeners ");
-        user.currentFiatAccountProperty().removeListener(bankAccountChangeListener);
+        user.currentFiatAccountPropertyProperty().removeListener(bankAccountChangeListener);
         offerBookService.removeListener(offerBookServiceListener);
         offerBookService.invalidationTimestampProperty().removeListener(invalidationListener);
     }
@@ -180,7 +180,7 @@ public class OfferBook {
     // TODO Just temporary, will be removed later when we have a push solution
     private void startPolling() {
         addListeners();
-        setBankAccount(user.currentFiatAccountProperty().get());
+        setBankAccount(user.currentFiatAccountPropertyProperty().get());
         pollingTimer = Utilities.setInterval(POLLING_INTERVAL, (animationTimer) -> {
             offerBookService.requestInvalidationTimeStampFromDHT(fiatCode);
             return null;

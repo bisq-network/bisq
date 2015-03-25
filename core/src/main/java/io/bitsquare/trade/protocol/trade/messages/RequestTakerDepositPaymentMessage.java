@@ -27,16 +27,18 @@ import java.security.PublicKey;
 
 import java.util.List;
 
+import javax.annotation.concurrent.Immutable;
+
+@Immutable
 public class RequestTakerDepositPaymentMessage extends TradeMessage implements Serializable {
-    private static final long serialVersionUID = -3988720410493712913L;
+    // That object is sent over the wire, so we need to take care of version compatibility.
+    private static final long serialVersionUID = 1L;
 
     public final List<TransactionOutput> offererConnectedOutputsForAllInputs;
     public final List<TransactionOutput> offererOutputs;
     public final byte[] offererTradeWalletPubKey;
     public final PublicKey offererP2PSigPublicKey;
     public final PublicKey offererP2PEncryptPublicKey;
-
-
     public final FiatAccount offererFiatAccount;
     public final String offererAccountId;
 
@@ -48,9 +50,9 @@ public class RequestTakerDepositPaymentMessage extends TradeMessage implements S
                                              PublicKey offererP2PEncryptPublicKey,
                                              FiatAccount offererFiatAccount,
                                              String offererAccountId) {
+        super(tradeId);
         this.offererP2PSigPublicKey = offererP2PSigPublicKey;
         this.offererP2PEncryptPublicKey = offererP2PEncryptPublicKey;
-        this.tradeId = tradeId;
         this.offererConnectedOutputsForAllInputs = offererConnectedOutputsForAllInputs;
         this.offererOutputs = offererOutputs;
         this.offererTradeWalletPubKey = offererTradeWalletPubKey;

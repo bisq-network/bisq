@@ -81,7 +81,7 @@ public class BrowserView extends ActivatableView<Pane, Void> implements Arbitrat
 
     @Override
     public void onAllArbitratorsLoaded(Map<String, Arbitrator> arbitratorsMap) {
-        
+
     }
 /*
     @Override

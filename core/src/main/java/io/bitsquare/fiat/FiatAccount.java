@@ -27,7 +27,8 @@ import javax.annotation.concurrent.Immutable;
 
 @Immutable
 public class FiatAccount implements Serializable {
-    private static final long serialVersionUID = 1792577576443221268L;
+    // That object is saved to disc. We need to take care of changes to not break deserialization.
+    private static final long serialVersionUID = 1L;
 
     private final FiatAccountType fiatAccountType;
     private final String accountPrimaryID;  // like IBAN

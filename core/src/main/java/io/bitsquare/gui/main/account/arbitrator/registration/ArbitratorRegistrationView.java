@@ -260,7 +260,7 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
 
         arbitratorService.addArbitrator(arbitrator,
                 () -> {
-                   // log.debug("arbitrator added successfully " + arbitratorService.getAllArbitrators().size());
+                    // log.debug("arbitrator added successfully " + arbitratorService.getAllArbitrators().size());
                 },
                 (errorMessage -> log.error(errorMessage)));
     }

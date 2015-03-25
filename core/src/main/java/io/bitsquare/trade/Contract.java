@@ -27,11 +27,12 @@ import java.io.Serializable;
 
 import java.security.PublicKey;
 
-//TODO flatten down?
-// TODO The relation Offer, Trade and Contract need to be reviewed and might be changed
+import javax.annotation.concurrent.Immutable;
 
+@Immutable
 public class Contract implements Serializable {
-    private static final long serialVersionUID = 71472356206100158L;
+    // That object is sent over the wire, so we need to take care of version compatibility.
+    private static final long serialVersionUID = 1L;
 
     private final Offer offer;
     private final String takeOfferFeeTxID;

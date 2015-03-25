@@ -17,7 +17,7 @@
 
 package io.bitsquare.p2p.tomp2p;
 
-import io.bitsquare.crypto.EncryptionPackage;
+import io.bitsquare.crypto.Bucket;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.p2p.EncryptedMailboxMessage;
 import io.bitsquare.p2p.MailboxMessage;
@@ -121,15 +121,15 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
     }
 
     private void sendMailboxMessage(PublicKey p2pSigPubKey, PublicKey p2pEncryptPubKey, MailboxMessage message, SendMessageListener listener) {
-        EncryptionPackage encryptionPackage = null;
+        Bucket bucket = null;
         try {
-            encryptionPackage = encryptionService.encryptObject(p2pEncryptPubKey, message);
+            bucket = encryptionService.encryptObject(p2pEncryptPubKey, message);
         } catch (Throwable t) {
             t.printStackTrace();
             log.error(t.getMessage());
             executor.execute(listener::handleFault);
         }
-        EncryptedMailboxMessage encrypted = new EncryptedMailboxMessage(encryptionPackage);
+        EncryptedMailboxMessage encrypted = new EncryptedMailboxMessage(bucket);
         mailboxService.addMessage(p2pSigPubKey,
                 encrypted,
                 () -> {

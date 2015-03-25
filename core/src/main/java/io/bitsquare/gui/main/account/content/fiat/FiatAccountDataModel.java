@@ -96,7 +96,7 @@ class FiatAccountDataModel implements Activatable, DataModel {
     }
 
     void removeBankAccount() {
-        user.removeFiatAccount(user.currentFiatAccountProperty().get());
+        user.removeFiatAccount(user.currentFiatAccountPropertyProperty().get());
         allFiatAccounts.setAll(user.fiatAccountsObservableList());
         reset();
     }
@@ -109,7 +109,7 @@ class FiatAccountDataModel implements Activatable, DataModel {
     }
 
     void selectBankAccount(FiatAccount fiatAccount) {
-        user.setCurrentFiatAccount(fiatAccount);
+        user.setCurrentFiatAccountProperty(fiatAccount);
 
         if (fiatAccount != null) {
             title.set(fiatAccount.getNameOfBank());

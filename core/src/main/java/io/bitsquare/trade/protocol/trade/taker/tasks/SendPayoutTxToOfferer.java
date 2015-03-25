@@ -36,21 +36,21 @@ public class SendPayoutTxToOfferer extends Task<TakerAsSellerModel> {
     @Override
     protected void doRun() {
         PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(model.id, model.getPayoutTx());
-        model.messageService.sendMessage(model.trade.getTradingPeer(), 
+        model.messageService.sendMessage(model.trade.getTradingPeer(),
                 tradeMessage,
                 model.offerer.p2pSigPublicKey,
                 model.offerer.p2pEncryptPubKey,
                 new SendMessageListener() {
-            @Override
-            public void handleResult() {
-                log.trace("PayoutTxPublishedMessage successfully arrived at peer");
-                complete();
-            }
+                    @Override
+                    public void handleResult() {
+                        log.trace("PayoutTxPublishedMessage successfully arrived at peer");
+                        complete();
+                    }
 
-            @Override
-            public void handleFault() {
-                failed("Sending PayoutTxPublishedMessage failed.");
-            }
-        });
+                    @Override
+                    public void handleFault() {
+                        failed("Sending PayoutTxPublishedMessage failed.");
+                    }
+                });
     }
 }

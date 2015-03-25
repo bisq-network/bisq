@@ -19,13 +19,17 @@ package io.bitsquare.crypto;
 
 import java.io.Serializable;
 
-public class EncryptionPackage implements Serializable {
-    private static final long serialVersionUID = -8709538217388076762L;
+import javax.annotation.concurrent.Immutable;
+
+@Immutable
+public class Bucket implements Serializable {
+    // That object is sent over the wire, so we need to take care of version compatibility.
+    private static final long serialVersionUID = 1L;
 
     public final byte[] encryptedKey;
     public final byte[] encryptedPayload;
 
-    public EncryptionPackage(byte[] encryptedKey, byte[] encryptedPayload) {
+    public Bucket(byte[] encryptedKey, byte[] encryptedPayload) {
         this.encryptedKey = encryptedKey;
         this.encryptedPayload = encryptedPayload;
     }

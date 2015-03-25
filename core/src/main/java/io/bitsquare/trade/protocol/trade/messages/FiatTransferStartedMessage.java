@@ -23,8 +23,12 @@ import org.bitcoinj.core.Coin;
 
 import java.io.Serializable;
 
+import javax.annotation.concurrent.Immutable;
+
+@Immutable
 public class FiatTransferStartedMessage extends TradeMessage implements MailboxMessage, Serializable {
-    private static final long serialVersionUID = -3479634129543632523L;
+    // That object is sent over the wire, so we need to take care of version compatibility.
+    private static final long serialVersionUID = 1L;
 
     public final byte[] offererSignature;
     public final Coin offererPayoutAmount;
@@ -36,7 +40,7 @@ public class FiatTransferStartedMessage extends TradeMessage implements MailboxM
                                       Coin offererPayoutAmount,
                                       Coin takerPayoutAmount,
                                       String offererPayoutAddress) {
-        this.tradeId = tradeId;
+        super(tradeId);
         this.offererSignature = offererSignature;
         this.offererPayoutAmount = offererPayoutAmount;
         this.takerPayoutAmount = takerPayoutAmount;

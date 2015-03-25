@@ -35,7 +35,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class OffererAsBuyerModel extends SharedTradeModel implements Serializable {
-    private static final long serialVersionUID = 5000457153390911569L;
+    // That object is saved to disc. We need to take care of changes to not break deserialization.
+    private static final long serialVersionUID = 1L;
+
     transient private static final Logger log = LoggerFactory.getLogger(OffererAsBuyerModel.class);
 
     transient private Storage<OffererAsBuyerModel> storage;

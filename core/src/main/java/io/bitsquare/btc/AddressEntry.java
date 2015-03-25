@@ -28,7 +28,8 @@ import java.io.Serializable;
  * Registration, trade and arbiter deposit.
  */
 public class AddressEntry implements Serializable {
-    private static final long serialVersionUID = 5501603992599920416L;
+    // That object is saved to disc. We need to take care of changes to not break deserialization.
+    private static final long serialVersionUID = 1L;
 
     private final String offerId;
     private final Context context;

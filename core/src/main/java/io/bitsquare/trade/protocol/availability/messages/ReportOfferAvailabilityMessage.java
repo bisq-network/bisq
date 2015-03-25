@@ -22,12 +22,13 @@ import io.bitsquare.trade.protocol.trade.messages.OfferMessage;
 import java.io.Serializable;
 
 public class ReportOfferAvailabilityMessage extends OfferMessage implements Serializable {
-    private static final long serialVersionUID = 6177387534187739018L;
+    // That object is sent over the wire, so we need to take care of version compatibility.
+    private static final long serialVersionUID = 1L;
 
     public final boolean isOfferOpen;
 
     public ReportOfferAvailabilityMessage(String offerId, boolean isOfferOpen) {
-        super.offerId = offerId;
+        super(offerId);
         this.isOfferOpen = isOfferOpen;
     }
 }

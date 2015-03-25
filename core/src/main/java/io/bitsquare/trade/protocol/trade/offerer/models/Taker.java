@@ -30,7 +30,8 @@ import java.security.PublicKey;
 import java.util.List;
 
 public class Taker implements Serializable {
-    private static final long serialVersionUID = 2660909397210346486L;
+    // That object is saved to disc. We need to take care of changes to not break deserialization.
+    private static final long serialVersionUID = 1L;
 
     // written by tasks
     public String accountId;

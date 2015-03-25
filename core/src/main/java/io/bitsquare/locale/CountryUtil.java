@@ -86,7 +86,7 @@ public class CountryUtil {
         return new Country(locale.getCountry(), locale.getDisplayCountry(), region);
     }
 
-    
+
     private static List<Country> getAllCountries() {
         final List<Country> allCountries = new ArrayList<>();
         for (final Locale locale : getAllCountryLocales()) {

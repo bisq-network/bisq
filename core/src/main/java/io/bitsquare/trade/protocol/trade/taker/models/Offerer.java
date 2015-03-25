@@ -29,7 +29,8 @@ import java.security.PublicKey;
 import java.util.List;
 
 public class Offerer implements Serializable {
-    private static final long serialVersionUID = 1582902150121576205L;
+    // That object is saved to disc. We need to take care of changes to not break deserialization.
+    private static final long serialVersionUID = 1L;
 
     // written by tasks
     public byte[] tradeWalletPubKey;

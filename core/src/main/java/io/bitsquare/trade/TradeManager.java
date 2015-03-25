@@ -165,7 +165,7 @@ public class TradeManager {
                            TransactionResultHandler resultHandler,
                            ErrorMessageHandler errorMessageHandler) {
 
-        FiatAccount currentFiatAccount = user.currentFiatAccountProperty().get();
+        FiatAccount currentFiatAccount = user.currentFiatAccountPropertyProperty().get();
         Offer offer = new Offer(id,
                 user.getP2PSigPubKey(),
                 direction,
@@ -469,7 +469,7 @@ public class TradeManager {
         log.trace("applyMailboxMessage encryptedMailboxMessage.size=" + encryptedMailboxMessages.size());
         for (EncryptedMailboxMessage encrypted : encryptedMailboxMessages) {
             try {
-                MailboxMessage mailboxMessage = encryptionService.decryptToObject(user.getP2pEncryptPrivateKey(), encrypted.getEncryptionPackage());
+                MailboxMessage mailboxMessage = encryptionService.decryptToObject(user.getP2pEncryptPrivateKey(), encrypted.getBucket());
 
                 if (mailboxMessage instanceof TradeMessage) {
                     String tradeId = ((TradeMessage) mailboxMessage).tradeId;

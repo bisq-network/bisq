@@ -102,7 +102,7 @@ public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccount
                             setGraphic(null);
                         }
                         else {
-                            setText(currencyCode+ " (" + CurrencyUtil.getDisplayName(currencyCode) + ")");
+                            setText(currencyCode + " (" + CurrencyUtil.getDisplayName(currencyCode) + ")");
 
                             if (!currencyCode.equals("EUR")) {
                                 setOpacity(0.3);

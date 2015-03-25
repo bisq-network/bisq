@@ -21,8 +21,16 @@ import io.bitsquare.p2p.Message;
 
 import java.io.Serializable;
 
-public abstract class TradeMessage implements Message, Serializable {
-    private static final long serialVersionUID = 7572470983485004081L;
+import javax.annotation.concurrent.Immutable;
 
-    public String tradeId;
+@Immutable
+public abstract class TradeMessage implements Message, Serializable {
+    // That object is sent over the wire, so we need to take care of version compatibility.
+    private static final long serialVersionUID = 1L;
+
+    public final String tradeId;
+
+    public TradeMessage(String tradeId) {
+        this.tradeId = tradeId;
+    }
 }

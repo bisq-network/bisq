@@ -19,7 +19,7 @@ package io.bitsquare.p2p;
 
 import java.util.concurrent.Executor;
 
-public interface P2PService   {
+public interface P2PService {
     void bootstrapCompleted();
 
     void setExecutor(Executor executor);

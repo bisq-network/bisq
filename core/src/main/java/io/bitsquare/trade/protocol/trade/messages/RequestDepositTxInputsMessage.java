@@ -21,15 +21,19 @@ import org.bitcoinj.core.Coin;
 
 import java.io.Serializable;
 
+import javax.annotation.concurrent.Immutable;
+
+@Immutable
 public class RequestDepositTxInputsMessage extends TradeMessage implements Serializable {
-    private static final long serialVersionUID = -5057935061275354312L;
+    // That object is sent over the wire, so we need to take care of version compatibility.
+    private static final long serialVersionUID = 1L;
 
     public final Coin tradeAmount;
     public final String takeOfferFeeTxId;
     public final byte[] takerTradeWalletPubKey;
 
     public RequestDepositTxInputsMessage(String tradeId, String takeOfferFeeTxId, Coin tradeAmount, byte[] takerTradeWalletPubKey) {
-        this.tradeId = tradeId;
+        super(tradeId);
         this.takeOfferFeeTxId = takeOfferFeeTxId;
         this.tradeAmount = tradeAmount;
         this.takerTradeWalletPubKey = takerTradeWalletPubKey;

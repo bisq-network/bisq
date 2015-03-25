@@ -35,7 +35,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SharedTradeModel extends SharedTaskModel implements Serializable {
-    private static final long serialVersionUID = -2523252022571497157L;
+    // That object is saved to disc. We need to take care of changes to not break deserialization.
+    private static final long serialVersionUID = 1L;
+
     protected static final Logger log = LoggerFactory.getLogger(SharedTradeModel.class);
 
     transient public MailboxMessage mailboxMessage;

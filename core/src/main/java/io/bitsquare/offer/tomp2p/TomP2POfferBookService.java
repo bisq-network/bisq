@@ -179,7 +179,7 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
-                                    
+
                                     offers.add((Offer) offerDataObject);
                                 }
                             } catch (ClassNotFoundException | IOException e) {
