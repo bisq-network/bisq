@@ -20,7 +20,6 @@ package io.bitsquare.gui.main.account.content.irc;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.user.User;
@@ -40,10 +39,10 @@ class IrcAccountDataModel implements Activatable, DataModel {
 
     final StringProperty nickName = new SimpleStringProperty();
     final StringProperty currencyCode = new SimpleStringProperty();
-    final ObjectProperty<FiatAccountType> type = new SimpleObjectProperty<>();
+    final ObjectProperty<FiatAccount.Type> type = new SimpleObjectProperty<>();
 
-    final ObservableList<FiatAccountType> allTypes =
-            FXCollections.observableArrayList(FiatAccountType.getAllBankAccountTypes());
+    final ObservableList<FiatAccount.Type> allTypes =
+            FXCollections.observableArrayList(FiatAccount.Type.getAllBankAccountTypes());
     final ObservableList<String> allCurrencyCodes = FXCollections.observableArrayList(CurrencyUtil.getAllCurrencyCodes());
     final ObservableList<FiatAccount> allFiatAccounts = FXCollections.observableArrayList();
 
@@ -76,7 +75,7 @@ class IrcAccountDataModel implements Activatable, DataModel {
         reset();
     }
 
-    void setType(FiatAccountType type) {
+    void setType(FiatAccount.Type type) {
         this.type.set(type);
     }
 

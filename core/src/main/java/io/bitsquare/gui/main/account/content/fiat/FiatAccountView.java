@@ -21,7 +21,6 @@ import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
 import io.bitsquare.common.viewfx.view.FxmlView;
 import io.bitsquare.common.viewfx.view.Wizard;
 import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
@@ -58,7 +57,7 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
     @FXML InputTextField nameOfBankTextField, holderNameTextField, primaryIDTextField, secondaryIDTextField;
     @FXML Button saveButton, completedButton, removeBankAccountButton;
     @FXML ComboBox<FiatAccount> selectionComboBox;
-    @FXML ComboBox<FiatAccountType> typesComboBox;
+    @FXML ComboBox<FiatAccount.Type> typesComboBox;
     @FXML ComboBox<String> currencyComboBox;
 
     private Wizard wizard;
@@ -187,9 +186,9 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
 
         model.country.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                int regionIndex = regionComboBox.getItems().indexOf(newValue.getRegion());
+                int regionIndex = regionComboBox.getItems().indexOf(newValue.region);
                 if (regionIndex >= 0 && regionIndex < regionComboBox.getItems().size())
-                    regionComboBox.getSelectionModel().select(regionComboBox.getItems().indexOf(newValue.getRegion()));
+                    regionComboBox.getSelectionModel().select(regionComboBox.getItems().indexOf(newValue.region));
 
                 int countryIndex = countryComboBox.getItems().indexOf(newValue);
                 if (countryIndex >= 0 && countryIndex < countryComboBox.getItems().size())

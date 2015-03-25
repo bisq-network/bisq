@@ -42,11 +42,11 @@ public final class OptionalFiatValidator extends NumberValidator {
             if (user.currentFiatAccountPropertyProperty().get() == null)
                 setFiatCurrencyCode(CurrencyUtil.getDefaultCurrencyAsCode());
             else if (user.currentFiatAccountPropertyProperty().get() != null)
-                setFiatCurrencyCode(user.currentFiatAccountPropertyProperty().get().getCurrencyCode());
+                setFiatCurrencyCode(user.currentFiatAccountPropertyProperty().get().currencyCode);
 
             user.currentFiatAccountPropertyProperty().addListener((ov, oldValue, newValue) -> {
                 if (newValue != null)
-                    setFiatCurrencyCode(newValue.getCurrencyCode());
+                    setFiatCurrencyCode(newValue.currencyCode);
             });
         }
     }

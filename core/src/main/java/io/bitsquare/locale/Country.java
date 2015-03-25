@@ -19,8 +19,6 @@ package io.bitsquare.locale;
 
 import java.io.Serializable;
 
-import java.util.Objects;
-
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
@@ -28,9 +26,9 @@ public class Country implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
 
-    private final String code;
-    private final String name;
-    private final Region region;
+    public final String code;
+    public final String name;
+    public final Region region;
 
     public Country(String code, String name, Region region) {
         this.code = code;
@@ -38,40 +36,33 @@ public class Country implements Serializable {
         this.region = region;
     }
 
-    public String getCode() {
-        return code;
-    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-    public String getName() {
-        return name;
-    }
+        Country country = (Country) o;
 
-    public Region getRegion() {
-        return region;
+        if (code != null ? !code.equals(country.code) : country.code != null) return false;
+        if (name != null ? !name.equals(country.name) : country.name != null) return false;
+        return !(region != null ? !region.equals(country.region) : country.region != null);
+
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(code);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof Country)) {
-            return false;
-        }
-        if (obj == this) {
-            return true;
-        }
-
-        final Country other = (Country) obj;
-        return code.equals(other.getCode());
+        int result = code != null ? code.hashCode() : 0;
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (region != null ? region.hashCode() : 0);
+        return result;
     }
 
     @Override
     public String toString() {
-        return "code='" + code + '\'' +
+        return "Country{" +
+                "code='" + code + '\'' +
                 ", name='" + name + '\'' +
-                ", getRegion='" + region;
+                ", region=" + region +
+                '}';
     }
 }

@@ -21,79 +21,69 @@ import io.bitsquare.locale.Country;
 
 import java.io.Serializable;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
 public class FiatAccount implements Serializable {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
+    // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
 
-    private final FiatAccountType fiatAccountType;
-    private final String accountPrimaryID;  // like IBAN
-    private final String accountSecondaryID; // like BIC
-    private final String accountHolderName;
-    private final Country country;     // where bank is registered
-    private final String nameOfBank;
+    public enum Type {
+        IRC("", ""),
+        SEPA("IBAN", "BIC"),
+        WIRE("primary ID", "secondary ID"),
+        INTERNATIONAL("primary ID", "secondary ID"),
+        OK_PAY("primary ID", "secondary ID"),
+        NET_TELLER("primary ID", "secondary ID"),
+        PERFECT_MONEY("primary ID", "secondary ID");
+
+        public final String primaryId;
+        public final String secondaryId;
+
+        Type(String primaryId, String secondaryId) {
+            this.primaryId = primaryId;
+            this.secondaryId = secondaryId;
+        }
+
+        public static ArrayList<Type> getAllBankAccountTypes() {
+            return new ArrayList<>(Arrays.asList(Type.values()));
+        }
+    }
+
+    public final String id;
+    public final String nameOfBank;
+    public final Type type;
+    public final Country country;     // where bank is registered
+    public final String accountPrimaryID;  // like IBAN
+    public final String accountSecondaryID; // like BIC
+    public final String accountHolderName;
+
 
     // The main currency if account support multiple currencies.
     // The user can create multiple bank accounts with same bank account but other currency if his bank account
     // support that.
-    private final String currencyCode;
+    public final String currencyCode;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public FiatAccount(FiatAccountType fiatAccountType, String currencyCode, Country country, String nameOfBank,
+    public FiatAccount(Type type, String currencyCode, Country country, String nameOfBank,
                        String accountHolderName, String accountPrimaryID, String accountSecondaryID) {
-        this.fiatAccountType = fiatAccountType;
+        this.type = type;
         this.currencyCode = currencyCode;
         this.country = country;
         this.nameOfBank = nameOfBank;
         this.accountHolderName = accountHolderName;
         this.accountPrimaryID = accountPrimaryID;
         this.accountSecondaryID = accountSecondaryID;
-    }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters/Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public String getAccountPrimaryID() {
-        return accountPrimaryID;
-    }
-
-    public String getAccountSecondaryID() {
-        return accountSecondaryID;
-    }
-
-    public String getAccountHolderName() {
-        return accountHolderName;
-    }
-
-    public FiatAccountType getFiatAccountType() {
-        return fiatAccountType;
-    }
-
-    public String getCurrencyCode() {
-        return currencyCode;
-    }
-
-    public Country getCountry() {
-        return country;
-    }
-
-    // we use the accountTitle as unique id
-    public String getId() {
-        return nameOfBank;
-    }
-
-    public String getNameOfBank() {
-        return nameOfBank;
+        id = nameOfBank;
     }
 
 
@@ -103,7 +93,7 @@ public class FiatAccount implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(nameOfBank);
+        return Objects.hashCode(id);
     }
 
     @Override
@@ -112,19 +102,20 @@ public class FiatAccount implements Serializable {
         if (obj == this) return true;
 
         final FiatAccount other = (FiatAccount) obj;
-        return nameOfBank.equals(other.getId());
+        return id.equals(other.id);
     }
 
     @Override
     public String toString() {
-        return "BankAccount{" +
-                "bankAccountType=" + fiatAccountType +
+        return "FiatAccount{" +
+                "id='" + id + '\'' +
+                ", nameOfBank='" + nameOfBank + '\'' +
+                ", type=" + type +
+                ", country=" + country +
                 ", accountPrimaryID='" + accountPrimaryID + '\'' +
                 ", accountSecondaryID='" + accountSecondaryID + '\'' +
                 ", accountHolderName='" + accountHolderName + '\'' +
-                ", country=" + country +
-                ", currency=" + currencyCode +
-                ", accountTitle='" + nameOfBank + '\'' +
+                ", currencyCode='" + currencyCode + '\'' +
                 '}';
     }
 }

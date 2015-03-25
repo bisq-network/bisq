@@ -137,8 +137,8 @@ public class OfferBook {
     private void setBankAccount(FiatAccount fiatAccount) {
         log.debug("setBankAccount " + fiatAccount);
         if (fiatAccount != null) {
-            country = fiatAccount.getCountry();
-            fiatCode = fiatAccount.getCurrencyCode();
+            country = fiatAccount.country;
+            fiatCode = fiatAccount.currencyCode;
 
             // TODO check why that was used (probably just for update triggering, if so refactor that)
             //offerBookListItems.stream().forEach(e -> e.setBankAccountCountry(country));

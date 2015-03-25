@@ -50,10 +50,10 @@ public class ImageUtil {
 
     public static ImageView getCountryIconImageView(Country country) {
         try {
-            return ImageUtil.getImageViewByUrl("/images/countries/" + country.getCode().toLowerCase() + ".png");
+            return ImageUtil.getImageViewByUrl("/images/countries/" + country.code.toLowerCase() + ".png");
         } catch (Exception e) {
-            log.error("Country icon not found URL = /images/countries/" + country.getCode().toLowerCase() +
-                    ".png / country name = " + country.getName());
+            log.error("Country icon not found URL = /images/countries/" + country.code.toLowerCase() +
+                    ".png / country name = " + country.name);
             return null;
         }
     }

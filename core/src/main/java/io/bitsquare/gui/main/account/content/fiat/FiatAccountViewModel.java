@@ -20,7 +20,6 @@ package io.bitsquare.gui.main.account.content.fiat;
 import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
 import io.bitsquare.common.viewfx.model.ViewModel;
 import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
@@ -54,7 +53,7 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
     final StringProperty currencyCode = new SimpleStringProperty();
     final BooleanProperty selectionDisable = new SimpleBooleanProperty();
     final BooleanProperty saveButtonDisable = new SimpleBooleanProperty(true);
-    final ObjectProperty<FiatAccountType> type = new SimpleObjectProperty<>();
+    final ObjectProperty<FiatAccount.Type> type = new SimpleObjectProperty<>();
     final ObjectProperty<Country> country = new SimpleObjectProperty<>();
 
 
@@ -112,15 +111,15 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
     }
 
 
-    StringConverter<FiatAccountType> getTypesConverter() {
-        return new StringConverter<FiatAccountType>() {
+    StringConverter<FiatAccount.Type> getTypesConverter() {
+        return new StringConverter<FiatAccount.Type>() {
             @Override
-            public String toString(FiatAccountType TypeInfo) {
+            public String toString(FiatAccount.Type TypeInfo) {
                 return BSResources.get(TypeInfo.toString());
             }
 
             @Override
-            public FiatAccountType fromString(String s) {
+            public FiatAccount.Type fromString(String s) {
                 return null;
             }
         };
@@ -130,7 +129,7 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
         return new StringConverter<FiatAccount>() {
             @Override
             public String toString(FiatAccount fiatAccount) {
-                return fiatAccount.getNameOfBank();
+                return fiatAccount.nameOfBank;
             }
 
             @Override
@@ -160,7 +159,7 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
         return new StringConverter<io.bitsquare.locale.Region>() {
             @Override
             public String toString(io.bitsquare.locale.Region region) {
-                return region.getName();
+                return region.name;
             }
 
             @Override
@@ -174,7 +173,7 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
         return new StringConverter<Country>() {
             @Override
             public String toString(Country country) {
-                return country.getName();
+                return country.name;
             }
 
             @Override
@@ -185,7 +184,7 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
     }
 
 
-    ObservableList<FiatAccountType> getAllTypes() {
+    ObservableList<FiatAccount.Type> getAllTypes() {
         return dataModel.allTypes;
     }
 
@@ -214,7 +213,7 @@ class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel
     }
 
 
-    void setType(FiatAccountType type) {
+    void setType(FiatAccount.Type type) {
         dataModel.setType(type);
         validateInput();
     }

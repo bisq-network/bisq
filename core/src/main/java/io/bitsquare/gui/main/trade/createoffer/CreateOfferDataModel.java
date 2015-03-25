@@ -261,11 +261,11 @@ class CreateOfferDataModel implements Activatable, DataModel {
 
     private void applyBankAccount(FiatAccount fiatAccount) {
         if (fiatAccount != null) {
-            bankAccountType.set(fiatAccount.getFiatAccountType().toString());
-            bankAccountCurrency.set(fiatAccount.getCurrencyCode());
-            bankAccountCounty.set(fiatAccount.getCountry().getName());
+            bankAccountType.set(fiatAccount.type.toString());
+            bankAccountCurrency.set(fiatAccount.currencyCode);
+            bankAccountCounty.set(fiatAccount.country.name);
 
-            fiatCode.set(fiatAccount.getCurrencyCode());
+            fiatCode.set(fiatAccount.currencyCode);
         }
     }
 

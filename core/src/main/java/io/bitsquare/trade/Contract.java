@@ -34,15 +34,15 @@ public class Contract implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
 
-    private final Offer offer;
-    private final String takeOfferFeeTxID;
-    private final Coin tradeAmount;
-    private final String offererAccountID;
-    private final String takerAccountID;
-    private final FiatAccount offererFiatAccount;
-    private final FiatAccount takerFiatAccount;
-    private final String offererP2PSigPubKeyAsString;
-    private final String takerP2PSigPubKeyAsString;
+    public final Offer offer;
+    public final String takeOfferFeeTxID;
+    public final Coin tradeAmount;
+    public final String offererAccountID;
+    public final String takerAccountID;
+    public final FiatAccount offererFiatAccount;
+    public final FiatAccount takerFiatAccount;
+    public final String offererP2PSigPubKeyAsString;
+    public final String takerP2PSigPubKeyAsString;
 
     public Contract(Offer offer,
                     Coin tradeAmount,
@@ -64,47 +64,6 @@ public class Contract implements Serializable {
         this.takerP2PSigPubKeyAsString = Utilities.getHexFromPubKey(takerP2PSigPubKey);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public Offer getOffer() {
-        return offer;
-    }
-
-    public String getTakeOfferFeeTxID() {
-        return takeOfferFeeTxID;
-    }
-
-    public Coin getTradeAmount() {
-        return tradeAmount;
-    }
-
-    public String getOffererAccountID() {
-        return offererAccountID;
-    }
-
-    public String getTakerAccountID() {
-        return takerAccountID;
-    }
-
-    public FiatAccount getOffererFiatAccount() {
-        return offererFiatAccount;
-    }
-
-    public FiatAccount getTakerFiatAccount() {
-        return takerFiatAccount;
-    }
-
-    public String getTakerMessagePublicKey() {
-        return takerP2PSigPubKeyAsString;
-    }
-
-    public String getOffererMessagePublicKey() {
-        return offererP2PSigPubKeyAsString;
-    }
-
     @Override
     public String toString() {
         return "Contract{" +
@@ -113,10 +72,10 @@ public class Contract implements Serializable {
                 ", tradeAmount=" + tradeAmount +
                 ", offererAccountID='" + offererAccountID + '\'' +
                 ", takerAccountID='" + takerAccountID + '\'' +
-                ", offererBankAccount=" + offererFiatAccount +
-                ", takerBankAccount=" + takerFiatAccount +
-                ", takerP2PSigPubKeyAsString=" + takerP2PSigPubKeyAsString +
-                ", offererP2PSigPubKeyAsString=" + offererP2PSigPubKeyAsString +
+                ", offererFiatAccount=" + offererFiatAccount +
+                ", takerFiatAccount=" + takerFiatAccount +
+                ", offererP2PSigPubKeyAsString='" + offererP2PSigPubKeyAsString + '\'' +
+                ", takerP2PSigPubKeyAsString='" + takerP2PSigPubKeyAsString + '\'' +
                 '}';
     }
 }

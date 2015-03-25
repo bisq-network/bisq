@@ -68,13 +68,13 @@ public class Arbitrator implements Serializable {
     transient private Storage<Arbitrator> storage;
 
     // Persisted fields
-    private String id;
-    private byte[] pubKey;
-    private PublicKey p2pSigPubKey;
-    private String name;
-    private Reputation reputation;
+    private final String id;
+    private final byte[] pubKey;
+    private final PublicKey p2pSigPubKey;
+    private final String name;
+    private final Reputation reputation;
 
-    // editable
+    // Mutable
     private ID_TYPE idType;
     private List<String> languageCodes;
     private Coin fee;
@@ -137,6 +137,8 @@ public class Arbitrator implements Serializable {
         Arbitrator other = (Arbitrator) obj;
         return id != null && id.equals(other.getId());
     }
+    
+    
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

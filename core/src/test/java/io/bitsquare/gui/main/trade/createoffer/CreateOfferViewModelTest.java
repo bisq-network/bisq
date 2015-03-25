@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.trade.createoffer;
 
-import io.bitsquare.fiat.FiatAccountType;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
@@ -97,10 +97,10 @@ public class CreateOfferViewModelTest {
         assertEquals(Fiat.valueOf("USD", 9999900), model.volumeAsFiat.get());
 
 
-        model.bankAccountType.set(FiatAccountType.SEPA.toString());
+        model.bankAccountType.set(FiatAccount.Type.SEPA.toString());
         assertEquals("Sepa", presenter.bankAccountType.get());
 
-        model.bankAccountType.set(FiatAccountType.WIRE.toString());
+        model.bankAccountType.set(FiatAccount.Type.WIRE.toString());
         assertEquals("Wire", presenter.bankAccountType.get());
 
 

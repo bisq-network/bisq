@@ -82,11 +82,11 @@ public class BSFormatter {
         if (user.currentFiatAccountPropertyProperty().get() == null)
             setFiatCurrencyCode(CurrencyUtil.getDefaultCurrencyAsCode());
         else if (user.currentFiatAccountPropertyProperty().get() != null)
-            setFiatCurrencyCode(user.currentFiatAccountPropertyProperty().get().getCurrencyCode());
+            setFiatCurrencyCode(user.currentFiatAccountPropertyProperty().get().currencyCode);
 
         user.currentFiatAccountPropertyProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue != null)
-                setFiatCurrencyCode(newValue.getCurrencyCode());
+                setFiatCurrencyCode(newValue.currencyCode);
         });
     }
 
@@ -313,7 +313,7 @@ public class BSFormatter {
     }
 
     public String countryLocalesToString(List<Country> countries) {
-        return countries.stream().map(Country::getName).collect(Collectors.joining(", "));
+        return countries.stream().map(e-> e.name).collect(Collectors.joining(", "));
     }
 
     public String arbitratorsToNames(List<Arbitrator> arbitrators) {

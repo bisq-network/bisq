@@ -586,7 +586,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     Country country = offerBookListItem.getOffer().getBankAccountCountry();
                                     hBox.getChildren().add(ImageUtil.getCountryIconImageView(offerBookListItem
                                             .getOffer().getBankAccountCountry()));
-                                    Tooltip.install(this, new Tooltip(country.getName()));
+                                    Tooltip.install(this, new Tooltip(country.name));
                                 }
                             }
                         };

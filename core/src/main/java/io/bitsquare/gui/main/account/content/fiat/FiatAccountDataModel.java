@@ -20,7 +20,6 @@ package io.bitsquare.gui.main.account.content.fiat;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
@@ -52,10 +51,10 @@ class FiatAccountDataModel implements Activatable, DataModel {
     final StringProperty secondaryIDPrompt = new SimpleStringProperty();
     final StringProperty currencyCode = new SimpleStringProperty();
     final BooleanProperty countryNotInAcceptedCountriesList = new SimpleBooleanProperty();
-    final ObjectProperty<FiatAccountType> type = new SimpleObjectProperty<>();
+    final ObjectProperty<FiatAccount.Type> type = new SimpleObjectProperty<>();
     final ObjectProperty<Country> country = new SimpleObjectProperty<>();
 
-    final ObservableList<FiatAccountType> allTypes = FXCollections.observableArrayList(FiatAccountType
+    final ObservableList<FiatAccount.Type> allTypes = FXCollections.observableArrayList(FiatAccount.Type
             .getAllBankAccountTypes());
     final ObservableList<FiatAccount> allFiatAccounts = FXCollections.observableArrayList();
     final ObservableList<String> allCurrencyCodes = FXCollections.observableArrayList(CurrencyUtil
@@ -112,16 +111,16 @@ class FiatAccountDataModel implements Activatable, DataModel {
         user.setCurrentFiatAccountProperty(fiatAccount);
 
         if (fiatAccount != null) {
-            title.set(fiatAccount.getNameOfBank());
-            holderName.set(fiatAccount.getAccountHolderName());
-            primaryID.set(fiatAccount.getAccountPrimaryID());
-            secondaryID.set(fiatAccount.getAccountSecondaryID());
-            primaryIDPrompt.set(fiatAccount.getFiatAccountType().getPrimaryId());
-            secondaryIDPrompt.set(fiatAccount.getFiatAccountType().getSecondaryId());
+            title.set(fiatAccount.nameOfBank);
+            holderName.set(fiatAccount.accountHolderName);
+            primaryID.set(fiatAccount.accountPrimaryID);
+            secondaryID.set(fiatAccount.accountSecondaryID);
+            primaryIDPrompt.set(fiatAccount.type.primaryId);
+            secondaryIDPrompt.set(fiatAccount.type.secondaryId);
 
-            type.set(fiatAccount.getFiatAccountType());
-            country.set(fiatAccount.getCountry());
-            currencyCode.set(fiatAccount.getCurrencyCode());
+            type.set(fiatAccount.type);
+            country.set(fiatAccount.country);
+            currencyCode.set(fiatAccount.currencyCode);
         }
         else {
             reset();
@@ -134,12 +133,12 @@ class FiatAccountDataModel implements Activatable, DataModel {
     }
 
 
-    void setType(FiatAccountType type) {
+    void setType(FiatAccount.Type type) {
         this.type.set(type);
 
         if (type != null) {
-            primaryIDPrompt.set(type.getPrimaryId());
-            secondaryIDPrompt.set(type.getSecondaryId());
+            primaryIDPrompt.set(type.primaryId);
+            secondaryIDPrompt.set(type.secondaryId);
         }
         else {
             primaryIDPrompt.set(null);

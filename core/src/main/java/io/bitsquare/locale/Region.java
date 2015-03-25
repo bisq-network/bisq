@@ -19,8 +19,6 @@ package io.bitsquare.locale;
 
 import java.io.Serializable;
 
-import java.util.Objects;
-
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
@@ -28,43 +26,38 @@ public class Region implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
 
-    private final String code;
-    private final String name;
+    public final String code;
+    public final String name;
 
     public Region(String code, String name) {
         this.code = code;
         this.name = name;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Region region = (Region) o;
+
+        if (code != null ? !code.equals(region.code) : region.code != null) return false;
+        return !(name != null ? !name.equals(region.name) : region.name != null);
+
+    }
+
+    @Override
     public int hashCode() {
-        return Objects.hashCode(code);
+        int result = code != null ? code.hashCode() : 0;
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        return result;
     }
-
-    public boolean equals(Object obj) {
-        if (!(obj instanceof Region)) {
-            return false;
-        }
-        if (obj == this) {
-            return true;
-        }
-
-        Region other = (Region) obj;
-        return code.equals(other.getCode());
-    }
-
-
-    public String getCode() {
-        return code;
-    }
-
-    public String getName() {
-        return name;
-    }
-
 
     @Override
     public String toString() {
-        return "regionCode='" + code + '\'' +
-                ", continentName='" + name;
+        return "Region{" +
+                "code='" + code + '\'' +
+                ", name='" + name + '\'' +
+                '}';
     }
 }

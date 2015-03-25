@@ -152,14 +152,13 @@ class OfferBookDataModel implements Activatable, DataModel {
         if (currentFiatAccount == null)
             return true;
 
-        boolean countryResult = offer.getAcceptedCountries().contains(currentFiatAccount.getCountry());
+        boolean countryResult = offer.getAcceptedCountries().contains(currentFiatAccount.country);
         // for IRC test version deactivate the check
         countryResult = true;
         if (!countryResult)
             restrictionsInfo.set("This offer requires that the payments account resides in one of those countries:\n" +
                     formatter.countryLocalesToString(offer.getAcceptedCountries()) +
-                    "\n\nThe country of your payments account (" + user.currentFiatAccountPropertyProperty().get().getCountry()
-                    .getName() +
+                    "\n\nThe country of your payments account (" + user.currentFiatAccountPropertyProperty().get().country.name +
                     ") is not included in that list." +
                     "\n\n Do you want to edit your preferences now?");
 
@@ -245,9 +244,9 @@ class OfferBookDataModel implements Activatable, DataModel {
 
     private void setBankAccount(FiatAccount fiatAccount) {
         if (fiatAccount != null) {
-            fiatCode.set(fiatAccount.getCurrencyCode());
-            bankAccountCountry.set(fiatAccount.getCountry());
-            sortedItems.stream().forEach(e -> e.setBankAccountCountry(fiatAccount.getCountry()));
+            fiatCode.set(fiatAccount.currencyCode);
+            bankAccountCountry.set(fiatAccount.country);
+            sortedItems.stream().forEach(e -> e.setBankAccountCountry(fiatAccount.country));
         }
         else {
             fiatCode.set(CurrencyUtil.getDefaultCurrencyAsCode());

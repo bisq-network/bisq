@@ -144,7 +144,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         acceptedArbitratorIds = formatter.arbitratorIdsToNames(offer.getArbitratorIds());
         bankAccountType = BSResources.get(offer.getFiatAccountType().toString());
         bankAccountCurrency = BSResources.get(CurrencyUtil.getDisplayName(offer.getCurrencyCode()));
-        bankAccountCounty = BSResources.get(offer.getBankAccountCountry().getName());
+        bankAccountCounty = BSResources.get(offer.getBankAccountCountry().name);
 
         offer.stateProperty().addListener((ov, oldValue, newValue) -> applyOfferState(newValue));
         applyOfferState(offer.stateProperty().get());

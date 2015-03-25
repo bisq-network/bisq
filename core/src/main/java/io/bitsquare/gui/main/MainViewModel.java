@@ -23,7 +23,6 @@ import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.viewfx.model.ViewModel;
 import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.fiat.FiatAccountType;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.p2p.BaseP2PService;
@@ -193,7 +192,7 @@ class MainViewModel implements ViewModel {
 
         // For alpha version
         if (!user.isRegistered()) {
-            FiatAccount fiatAccount = new FiatAccount(FiatAccountType.IRC,
+            FiatAccount fiatAccount = new FiatAccount(FiatAccount.Type.IRC,
                     "EUR",
                     CountryUtil.getDefaultCountry(),
                     "Demo (Name of bank)",
@@ -286,7 +285,7 @@ class MainViewModel implements ViewModel {
         return new StringConverter<FiatAccount>() {
             @Override
             public String toString(FiatAccount fiatAccount) {
-                return fiatAccount.getNameOfBank();
+                return fiatAccount.nameOfBank;
             }
 
             @Override

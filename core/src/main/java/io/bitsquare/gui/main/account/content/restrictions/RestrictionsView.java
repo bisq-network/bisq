@@ -105,7 +105,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
         Region region = regionComboBox.getSelectionModel().getSelectedItem();
         countryComboBox.setItems(model.getAllCountriesFor(region));
 
-        addAllEuroCountriesButton.setVisible(region.getCode().equals("EU"));
+        addAllEuroCountriesButton.setVisible(region.code.equals("EU"));
     }
 
     @FXML
@@ -223,7 +223,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
         regionComboBox.setConverter(new StringConverter<io.bitsquare.locale.Region>() {
             @Override
             public String toString(io.bitsquare.locale.Region region) {
-                return region.getName();
+                return region.name;
             }
 
             @Override
@@ -248,11 +248,11 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
                     }
 
                     @Override
-                    public void updateItem(final Country item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null && !empty) {
-                            label.setText(item.getName());
-                            removeButton.setOnAction(actionEvent -> removeCountry(item));
+                    public void updateItem(final Country country, boolean empty) {
+                        super.updateItem(country, empty);
+                        if (country != null && !empty) {
+                            label.setText(country.name);
+                            removeButton.setOnAction(actionEvent -> removeCountry(country));
                             setGraphic(pane);
                         }
                         else {
@@ -266,7 +266,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
         countryComboBox.setConverter(new StringConverter<Country>() {
             @Override
             public String toString(Country country) {
-                return country.getName();
+                return country.name;
             }
 
             @Override

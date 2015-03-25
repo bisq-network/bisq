@@ -76,7 +76,7 @@ public class CountryUtil {
 
     public static List<Country> getAllCountriesFor(Region selectedRegion) {
         return Lists.newArrayList(Collections2.filter(getAllCountries(), country ->
-                selectedRegion != null && country != null && selectedRegion.equals(country.getRegion())));
+                selectedRegion != null && country != null && selectedRegion.equals(country.region)));
     }
 
     public static Country getDefaultCountry() {

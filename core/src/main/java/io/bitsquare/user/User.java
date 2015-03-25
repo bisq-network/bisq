@@ -181,7 +181,7 @@ public class User implements Serializable {
 
     public FiatAccount getFiatAccount(String fiatAccountId) {
         for (FiatAccount fiatAccount : fiatAccountsObservableList) {
-            if (fiatAccount.getId().equals(fiatAccountId)) {
+            if (fiatAccount.id.equals(fiatAccountId)) {
                 return fiatAccount;
             }
         }

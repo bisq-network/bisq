@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.account.content.irc;
 
 import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
 import io.bitsquare.common.viewfx.model.ViewModel;
-import io.bitsquare.fiat.FiatAccountType;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
@@ -43,7 +43,7 @@ class IrcAccountViewModel extends ActivatableWithDataModel<IrcAccountDataModel> 
     final StringProperty ircNickName = new SimpleStringProperty();
     final StringProperty currencyCode = new SimpleStringProperty();
     final BooleanProperty saveButtonDisable = new SimpleBooleanProperty(true);
-    final ObjectProperty<FiatAccountType> type = new SimpleObjectProperty<>();
+    final ObjectProperty<FiatAccount.Type> type = new SimpleObjectProperty<>();
 
     @Inject
     public IrcAccountViewModel(IrcAccountDataModel dataModel, BankAccountNumberValidator nickNameValidator) {
@@ -67,21 +67,21 @@ class IrcAccountViewModel extends ActivatableWithDataModel<IrcAccountDataModel> 
         return result;
     }
 
-    StringConverter<FiatAccountType> getTypesConverter() {
-        return new StringConverter<FiatAccountType>() {
+    StringConverter<FiatAccount.Type> getTypesConverter() {
+        return new StringConverter<FiatAccount.Type>() {
             @Override
-            public String toString(FiatAccountType TypeInfo) {
+            public String toString(FiatAccount.Type TypeInfo) {
                 return BSResources.get(TypeInfo.toString());
             }
 
             @Override
-            public FiatAccountType fromString(String s) {
+            public FiatAccount.Type fromString(String s) {
                 return null;
             }
         };
     }
 
-    String getBankAccountType(FiatAccountType fiatAccountType) {
+    String getBankAccountType(FiatAccount.Type fiatAccountType) {
         return fiatAccountType != null ? BSResources.get(fiatAccountType.toString()) : "";
     }
 
@@ -100,7 +100,7 @@ class IrcAccountViewModel extends ActivatableWithDataModel<IrcAccountDataModel> 
     }
 
 
-    ObservableList<FiatAccountType> getAllTypes() {
+    ObservableList<FiatAccount.Type> getAllTypes() {
         return dataModel.allTypes;
     }
 
@@ -113,7 +113,7 @@ class IrcAccountViewModel extends ActivatableWithDataModel<IrcAccountDataModel> 
     }
 
 
-    void setType(FiatAccountType type) {
+    void setType(FiatAccount.Type type) {
         dataModel.setType(type);
         validateInput();
     }

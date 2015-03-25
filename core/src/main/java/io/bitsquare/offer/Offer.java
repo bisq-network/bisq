@@ -18,7 +18,7 @@
 package io.bitsquare.offer;
 
 import io.bitsquare.btc.Restrictions;
-import io.bitsquare.fiat.FiatAccountType;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.locale.Country;
 
 import org.bitcoinj.core.Coin;
@@ -70,7 +70,7 @@ public class Offer implements Serializable {
     private final Coin amount;
     private final Coin minAmount;
     private final PublicKey p2pSigPubKey;
-    private final FiatAccountType fiatAccountType;
+    private final FiatAccount.Type fiatAccountType;
     private final Country bankAccountCountry;
 
     private final Coin securityDeposit;
@@ -98,7 +98,7 @@ public class Offer implements Serializable {
                  long fiatPrice,
                  Coin amount,
                  Coin minAmount,
-                 FiatAccountType fiatAccountType,
+                 FiatAccount.Type fiatAccountType,
                  String currencyCode,
                  Country bankAccountCountry,
                  String bankAccountUID,
@@ -217,7 +217,7 @@ public class Offer implements Serializable {
         return direction == Direction.BUY ? Direction.SELL : Direction.BUY;
     }
 
-    public FiatAccountType getFiatAccountType() {
+    public FiatAccount.Type getFiatAccountType() {
         return fiatAccountType;
     }
 
