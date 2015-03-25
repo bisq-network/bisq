@@ -28,8 +28,6 @@ import io.bitsquare.user.AccountSettings;
 
 import com.google.inject.Inject;
 
-import java.util.Locale;
-
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -37,11 +35,11 @@ class RestrictionsDataModel implements Activatable, DataModel {
 
     private final AccountSettings accountSettings;
 
-    final ObservableList<Locale> languageList = FXCollections.observableArrayList();
-    final ObservableList<Country> countryList = FXCollections.observableArrayList();
-    final ObservableList<Arbitrator> arbitratorList = FXCollections.observableArrayList();
-    final ObservableList<Locale> allLanguages = FXCollections.observableArrayList(LanguageUtil
-            .getAllLanguageLocales());
+    final ObservableList<String> languageCodes = FXCollections.observableArrayList();
+    final ObservableList<Country> countries = FXCollections.observableArrayList();
+    final ObservableList<Arbitrator> arbitrators = FXCollections.observableArrayList();
+    final ObservableList<String> allLanguageCodes = FXCollections.observableArrayList(LanguageUtil
+            .getAllLanguageLocaleCodes());
     final ObservableList<Region> allRegions = FXCollections.observableArrayList(CountryUtil.getAllRegions());
 
 
@@ -52,9 +50,9 @@ class RestrictionsDataModel implements Activatable, DataModel {
 
     @Override
     public void activate() {
-        countryList.setAll(accountSettings.getAcceptedCountries());
-        languageList.setAll(accountSettings.getAcceptedLanguageLocales());
-        arbitratorList.setAll(accountSettings.getAcceptedArbitrators());
+        countries.setAll(accountSettings.getAcceptedCountries());
+        languageCodes.setAll(accountSettings.getAcceptedLanguageLocaleCodes());
+        arbitrators.setAll(accountSettings.getAcceptedArbitrators());
     }
 
     @Override
@@ -66,24 +64,24 @@ class RestrictionsDataModel implements Activatable, DataModel {
     }
 
     void updateArbitratorList() {
-        arbitratorList.setAll(accountSettings.getAcceptedArbitrators());
+        arbitrators.setAll(accountSettings.getAcceptedArbitrators());
     }
 
-    void addLanguage(Locale locale) {
-        if (locale != null && !languageList.contains(locale)) {
-            languageList.add(locale);
-            accountSettings.addAcceptedLanguageLocale(locale);
+    void addLanguageCode(String code) {
+        if (code != null && !languageCodes.contains(code)) {
+            languageCodes.add(code);
+            accountSettings.addAcceptedLanguageLocale(code);
         }
     }
 
-    void removeLanguage(Locale locale) {
-        languageList.remove(locale);
-        accountSettings.removeAcceptedLanguageLocale(locale);
+    void removeLanguage(String code) {
+        languageCodes.remove(code);
+        accountSettings.removeAcceptedLanguageLocale(code);
     }
 
     void addCountry(Country country) {
-        if (!countryList.contains(country) && country != null) {
-            countryList.add(country);
+        if (!countries.contains(country) && country != null) {
+            countries.add(country);
             accountSettings.addAcceptedCountry(country);
         }
     }
@@ -92,17 +90,17 @@ class RestrictionsDataModel implements Activatable, DataModel {
         // TODO use Set instead of List
         // In addAcceptedCountry there is a check to no add duplicates, so it works correctly for now
         CountryUtil.getAllEuroCountries().stream().forEach(accountSettings::addAcceptedCountry);
-        countryList.setAll(accountSettings.getAcceptedCountries());
-        return countryList;
+        countries.setAll(accountSettings.getAcceptedCountries());
+        return countries;
     }
 
     void removeCountry(Country country) {
-        countryList.remove(country);
+        countries.remove(country);
         accountSettings.removeAcceptedCountry(country);
     }
 
     void removeArbitrator(Arbitrator arbitrator) {
-        arbitratorList.remove(arbitrator);
+        arbitrators.remove(arbitrator);
         accountSettings.removeAcceptedArbitrator(arbitrator);
     }
 }

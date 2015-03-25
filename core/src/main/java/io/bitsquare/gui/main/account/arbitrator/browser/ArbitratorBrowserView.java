@@ -66,7 +66,7 @@ public class ArbitratorBrowserView extends ActivatableView<Pane, Void> implement
     @Override
     public void initialize() {
         messageService.addArbitratorListener(this);
-        messageService.getArbitrators(LanguageUtil.getDefaultLanguageLocale());
+        messageService.getArbitrators(LanguageUtil.getDefaultLanguageLocaleAsCode());
 
         View view = viewLoader.load(ArbitratorProfileView.class);
         root.getChildren().set(0, view.getRoot());

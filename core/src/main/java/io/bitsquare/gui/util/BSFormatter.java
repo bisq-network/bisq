@@ -21,6 +21,7 @@ import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.user.User;
 
@@ -316,8 +317,8 @@ public class BSFormatter {
         return arbitrators.stream().map(Arbitrator::getName).collect(Collectors.joining(", "));
     }
 
-    public String languageLocalesToString(List<Locale> languageLocales) {
-        return languageLocales.stream().map(e -> e.getDisplayLanguage()).collect(Collectors.joining(", "));
+    public String languageCodesToString(List<String> languageLocales) {
+        return languageLocales.stream().map(e -> LanguageUtil.getDisplayName(e)).collect(Collectors.joining(", "));
     }
 
     public String arbitrationMethodsToString(List<Arbitrator.METHOD> methods) {

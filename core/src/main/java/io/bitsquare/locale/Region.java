@@ -24,9 +24,7 @@ import java.util.Objects;
 public class Region implements Serializable {
     private static final long serialVersionUID = -5930294199097793187L;
 
-
     private final String code;
-
     private final String name;
 
     public Region(String code, String name) {
@@ -54,7 +52,6 @@ public class Region implements Serializable {
     public String getCode() {
         return code;
     }
-
 
     public String getName() {
         return name;

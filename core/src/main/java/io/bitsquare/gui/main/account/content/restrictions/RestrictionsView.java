@@ -29,9 +29,8 @@ import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.Country;
+import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.Region;
-
-import java.util.Locale;
 
 import javax.inject.Inject;
 
@@ -48,10 +47,10 @@ import javafx.util.StringConverter;
 @FxmlView
 public class RestrictionsView extends ActivatableViewAndModel<GridPane, RestrictionsViewModel> implements Wizard.Step {
 
-    @FXML ListView<Locale> languagesListView;
+    @FXML ListView<String> languagesListView;
     @FXML ListView<Country> countriesListView;
     @FXML ListView<Arbitrator> arbitratorsListView;
-    @FXML ComboBox<Locale> languageComboBox;
+    @FXML ComboBox<String> languageComboBox;
     @FXML ComboBox<Region> regionComboBox;
     @FXML ComboBox<Country> countryComboBox;
     @FXML Button completedButton, addAllEuroCountriesButton;
@@ -79,7 +78,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
 
     @Override
     public void doActivate() {
-        languagesListView.setItems(model.getLanguageList());
+        languagesListView.setItems(model.getLanguageCodes());
         countriesListView.setItems(model.getCountryList());
         arbitratorsListView.setItems(model.getArbitratorList());
     }
@@ -174,10 +173,10 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
     }
 
     private void initLanguage() {
-        languagesListView.setCellFactory(new Callback<ListView<Locale>, ListCell<Locale>>() {
+        languagesListView.setCellFactory(new Callback<ListView<String>, ListCell<String>>() {
             @Override
-            public ListCell<Locale> call(ListView<Locale> list) {
-                return new ListCell<Locale>() {
+            public ListCell<String> call(ListView<String> list) {
+                return new ListCell<String>() {
                     final Label label = new Label();
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
                     final Button removeButton = new Button("", icon);
@@ -190,10 +189,10 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
                     }
 
                     @Override
-                    public void updateItem(final Locale item, boolean empty) {
+                    public void updateItem(final String item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            label.setText(item.getDisplayName());
+                            label.setText(LanguageUtil.getDisplayName(item));
                             removeButton.setOnAction(actionEvent -> removeLanguage(item));
                             setGraphic(pane);
                         }
@@ -205,15 +204,15 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
             }
         });
 
-        languageComboBox.setItems(model.getAllLanguages());
-        languageComboBox.setConverter(new StringConverter<Locale>() {
+        languageComboBox.setItems(model.getAllLanguageCodes());
+        languageComboBox.setConverter(new StringConverter<String>() {
             @Override
-            public String toString(Locale locale) {
-                return locale.getDisplayLanguage();
+            public String toString(String code) {
+                return LanguageUtil.getDisplayName(code);
             }
 
             @Override
-            public Locale fromString(String s) {
+            public String fromString(String s) {
                 return null;
             }
         });
@@ -310,7 +309,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
         });
     }
 
-    private void removeLanguage(Locale locale) {
+    private void removeLanguage(String locale) {
         model.removeLanguage(locale);
     }
 

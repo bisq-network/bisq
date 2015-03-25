@@ -176,7 +176,7 @@ public class TradeManager {
                 accountSettings.getAcceptedArbitrators(),
                 accountSettings.getSecurityDeposit(),
                 accountSettings.getAcceptedCountries(),
-                accountSettings.getAcceptedLanguageLocales());
+                accountSettings.getAcceptedLanguageLocaleCodes());
 
         try {
             Data offerData = new Data(offer);

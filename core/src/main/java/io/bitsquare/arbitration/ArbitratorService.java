@@ -21,13 +21,11 @@ package io.bitsquare.arbitration;
 import io.bitsquare.arbitration.listeners.ArbitratorListener;
 import io.bitsquare.p2p.DHTService;
 
-import java.util.Locale;
-
 public interface ArbitratorService extends DHTService {
     void addArbitrator(Arbitrator arbitrator);
 
     void addArbitratorListener(ArbitratorListener listener);
 
-    void getArbitrators(Locale defaultLanguageLocale);
+    void getArbitrators(String defaultLanguageLocaleCode);
 }
 

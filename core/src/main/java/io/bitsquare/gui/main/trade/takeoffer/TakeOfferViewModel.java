@@ -140,7 +140,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         }
 
         acceptedCountries = formatter.countryLocalesToString(offer.getAcceptedCountries());
-        acceptedLanguages = formatter.languageLocalesToString(offer.getAcceptedLanguageLocales());
+        acceptedLanguages = formatter.languageCodesToString(offer.getAcceptedLanguageCodes());
         acceptedArbitrators = formatter.arbitratorsToString(offer.getArbitrators());
         bankAccountType = BSResources.get(offer.getFiatAccountType().toString());
         bankAccountCurrency = BSResources.get(CurrencyUtil.getDisplayName(offer.getCurrencyCode()));

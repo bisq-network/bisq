@@ -82,7 +82,7 @@ public class Arbitrator implements Serializable {
 
     // editable
     private ID_TYPE idType;
-    private List<String> languages;
+    private List<String> languageCodes;
 
     private Coin fee;
     private List<METHOD> arbitrationMethods;
@@ -104,7 +104,7 @@ public class Arbitrator implements Serializable {
             p2pSigPubKey = persisted.getP2pSigPubKey();
             name = persisted.getName();
             idType = persisted.getIdType();
-            languages = persisted.getLanguages();
+            languageCodes = persisted.getLanguageCodes();
             reputation = persisted.getReputation();
             fee = persisted.getFee();
             arbitrationMethods = persisted.getArbitrationMethods();
@@ -119,7 +119,7 @@ public class Arbitrator implements Serializable {
             p2pSigPubKey = user.getP2PSigPubKey();
             name = "Mr. Default";
             idType = Arbitrator.ID_TYPE.REAL_LIFE_ID;
-            languages = Arrays.asList(LanguageUtil.getDefaultLanguageLocale().getISO3Language());
+            languageCodes = Arrays.asList(LanguageUtil.getDefaultLanguageLocaleAsCode());
             reputation = new Reputation();
             fee = Coin.parseCoin("0.1");
             arbitrationMethods = Arrays.asList(Arbitrator.METHOD.TLS_NOTARY);
@@ -173,8 +173,8 @@ public class Arbitrator implements Serializable {
         save();
     }
 
-    public void setLanguages(List<String> languages) {
-        this.languages = languages;
+    public void setLanguageCodes(List<String> languageCodes) {
+        this.languageCodes = languageCodes;
         save();
     }
 
@@ -223,8 +223,8 @@ public class Arbitrator implements Serializable {
         return idType;
     }
 
-    public List<String> getLanguages() {
-        return languages;
+    public List<String> getLanguageCodes() {
+        return languageCodes;
     }
 
     public Reputation getReputation() {

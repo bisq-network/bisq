@@ -30,7 +30,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.OptionalLong;
 
 import javax.inject.Inject;
@@ -41,10 +40,10 @@ public class AccountSettings implements Serializable {
     transient private Storage<AccountSettings> storage;
 
     // Persisted fields
-    private List<Locale> acceptedLanguageLocales = new ArrayList<>();
+    private List<String> acceptedLanguageLocaleCodes = new ArrayList<>();
     private List<Country> acceptedCountryLocales = new ArrayList<>();
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
-   
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -56,12 +55,12 @@ public class AccountSettings implements Serializable {
 
         AccountSettings persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
-            acceptedLanguageLocales = persisted.getAcceptedLanguageLocales();
+            acceptedLanguageLocaleCodes = persisted.getAcceptedLanguageLocaleCodes();
             acceptedCountryLocales = persisted.getAcceptedCountries();
             acceptedArbitrators = persisted.getAcceptedArbitrators();
         }
         else {
-            acceptedLanguageLocales = Arrays.asList(LanguageUtil.getDefaultLanguageLocale(), LanguageUtil.getEnglishLanguageLocale());
+            acceptedLanguageLocaleCodes = Arrays.asList(LanguageUtil.getDefaultLanguageLocaleAsCode(), LanguageUtil.getEnglishLanguageLocaleCode());
             acceptedCountryLocales = Arrays.asList(CountryUtil.getDefaultCountry());
             acceptedArbitrators = Arrays.asList(defaultArbitrator);
         }
@@ -73,15 +72,15 @@ public class AccountSettings implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public void addAcceptedLanguageLocale(Locale locale) {
-        if (!acceptedLanguageLocales.contains(locale)) {
-            acceptedLanguageLocales.add(locale);
+    public void addAcceptedLanguageLocale(String localeCode) {
+        if (!acceptedLanguageLocaleCodes.contains(localeCode)) {
+            acceptedLanguageLocaleCodes.add(localeCode);
             storage.save();
         }
     }
 
-    public void removeAcceptedLanguageLocale(Locale item) {
-        acceptedLanguageLocales.remove(item);
+    public void removeAcceptedLanguageLocale(String item) {
+        acceptedLanguageLocaleCodes.remove(item);
     }
 
     public void addAcceptedCountry(Country locale) {
@@ -107,7 +106,7 @@ public class AccountSettings implements Serializable {
         storage.save();
     }
 
-   
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -116,8 +115,8 @@ public class AccountSettings implements Serializable {
         return acceptedArbitrators;
     }
 
-    public List<Locale> getAcceptedLanguageLocales() {
-        return acceptedLanguageLocales;
+    public List<String> getAcceptedLanguageLocaleCodes() {
+        return acceptedLanguageLocaleCodes;
     }
 
     public List<Country> getAcceptedCountries() {

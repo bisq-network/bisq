@@ -25,8 +25,6 @@ import io.bitsquare.locale.Region;
 
 import com.google.inject.Inject;
 
-import java.util.Locale;
-
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
@@ -47,12 +45,12 @@ class RestrictionsViewModel extends ActivatableWithDataModel<RestrictionsDataMod
         updateDoneButtonDisableState();
     }
 
-    void addLanguage(Locale locale) {
-        dataModel.addLanguage(locale);
+    void addLanguage(String locale) {
+        dataModel.addLanguageCode(locale);
         updateDoneButtonDisableState();
     }
 
-    void removeLanguage(Locale locale) {
+    void removeLanguage(String locale) {
         dataModel.removeLanguage(locale);
         updateDoneButtonDisableState();
     }
@@ -86,32 +84,32 @@ class RestrictionsViewModel extends ActivatableWithDataModel<RestrictionsDataMod
         return dataModel.getAllCountriesFor(selectedRegion);
     }
 
-    ObservableList<Locale> getLanguageList() {
-        return dataModel.languageList;
+    ObservableList<String> getLanguageCodes() {
+        return dataModel.languageCodes;
     }
 
     ObservableList<Region> getAllRegions() {
         return dataModel.allRegions;
     }
 
-    ObservableList<Locale> getAllLanguages() {
-        return dataModel.allLanguages;
+    ObservableList<String> getAllLanguageCodes() {
+        return dataModel.allLanguageCodes;
     }
 
     ObservableList<Country> getCountryList() {
-        return dataModel.countryList;
+        return dataModel.countries;
     }
 
     ObservableList<Arbitrator> getArbitratorList() {
-        return dataModel.arbitratorList;
+        return dataModel.arbitrators;
     }
 
 
     //TODO Revert size() > -1 to 0(2 later). For mock testing disabled arbitratorList test
     private void updateDoneButtonDisableState() {
-        boolean isValid = dataModel.languageList != null && dataModel.languageList.size() > 0 &&
-                dataModel.countryList != null && dataModel.countryList.size() > 0 &&
-                dataModel.arbitratorList != null && dataModel.arbitratorList.size() > -1;
+        boolean isValid = dataModel.languageCodes != null && dataModel.languageCodes.size() > 0 &&
+                dataModel.countries != null && dataModel.countries.size() > 0 &&
+                dataModel.arbitrators != null && dataModel.arbitrators.size() > -1;
         doneButtonDisable.set(!isValid);
     }
 

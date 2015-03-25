@@ -28,7 +28,6 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import javax.inject.Inject;
 
@@ -134,7 +133,7 @@ public class TomP2PArbitratorService extends TomP2PDHTService implements Arbitra
         });
     }
 
-    public void getArbitrators(Locale languageLocale) {
+    public void getArbitrators(String languageLocaleCode) {
         Number160 locationKey = Number160.createHash(ARBITRATORS_ROOT);
         FutureGet futureGet = getMap(locationKey);
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {

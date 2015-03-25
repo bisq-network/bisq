@@ -26,7 +26,6 @@ import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -39,7 +38,6 @@ import org.bitcoinj.script.Script;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Locale;
 
 import javax.inject.Inject;
 
@@ -60,7 +58,7 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
     @FXML TextArea descriptionTextArea;
     @FXML Button saveProfileButton, paymentDoneButton;
     @FXML Label nameLabel, infoLabel, copyIcon, confirmationLabel;
-    @FXML ComboBox<Locale> languageComboBox;
+    @FXML ComboBox<String> languageComboBox;
     @FXML ComboBox<Arbitrator.ID_TYPE> idTypeComboBox;
     @FXML ComboBox<Arbitrator.METHOD> methodsComboBox;
     @FXML ConfidenceProgressIndicator progressIndicator;
@@ -74,23 +72,22 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
     private boolean isEditMode;
     private Arbitrator.ID_TYPE idType;
 
-    private List<Locale> languageList = new ArrayList<>();
+    private List<String> languageCodes = new ArrayList<>();
     private List<Arbitrator.METHOD> methodList = new ArrayList<>();
     private List<Arbitrator.ID_VERIFICATION> idVerificationList = new ArrayList<>();
 
     private final Arbitrator arbitrator;
     private final WalletService walletService;
     private final ArbitratorService messageService;
-    private final User user;
     private final BSFormatter formatter;
+
 
     @Inject
     private ArbitratorRegistrationView(Arbitrator arbitrator, WalletService walletService,
-                                       ArbitratorService messageService, User user, BSFormatter formatter) {
+                                       ArbitratorService messageService, BSFormatter formatter) {
         this.arbitrator = arbitrator;
         this.walletService = walletService;
         this.messageService = messageService;
-        this.user = user;
         this.formatter = formatter;
     }
 
@@ -98,17 +95,17 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
     public void initialize() {
         accordion.setExpandedPane(profileTitledPane);
 
-            applyArbitrator();
+        applyArbitrator();
 
-        languageComboBox.setItems(FXCollections.observableArrayList(LanguageUtil.getAllLanguageLocales()));
-        languageComboBox.setConverter(new StringConverter<Locale>() {
+        languageComboBox.setItems(FXCollections.observableArrayList(LanguageUtil.getAllLanguageLocaleCodes()));
+        languageComboBox.setConverter(new StringConverter<String>() {
             @Override
-            public String toString(Locale locale) {
-                return locale.getDisplayLanguage();
+            public String toString(String code) {
+                return LanguageUtil.getDisplayName(code);
             }
 
             @Override
-            public Locale fromString(String s) {
+            public String fromString(String s) {
                 return null;
             }
         });
@@ -192,17 +189,17 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
 
     @FXML
     public void onAddLanguage() {
-        Locale item = languageComboBox.getSelectionModel().getSelectedItem();
-        if (!languageList.contains(item) && item != null) {
-            languageList.add(item);
-            languagesTextField.setText(formatter.languageLocalesToString(languageList));
+        String item = languageComboBox.getSelectionModel().getSelectedItem();
+        if (!languageCodes.contains(item) && item != null) {
+            languageCodes.add(item);
+            languagesTextField.setText(formatter.languageCodesToString(languageCodes));
             languageComboBox.getSelectionModel().clearSelection();
         }
     }
 
     @FXML
     public void onClearLanguages() {
-        languageList.clear();
+        languageCodes.clear();
         languagesTextField.setText("");
     }
 
@@ -248,7 +245,7 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
         arbitrator.setFee(formatter.parseToCoin(arbitrationFeeTextField.getText()));
         arbitrator.setIdType(idType);
         arbitrator.setIdVerifications(idVerificationList);
-       // arbitrator.setLanguages(languageList);
+        arbitrator.setLanguageCodes(languageCodes);
         arbitrator.setArbitrationMethods(methodList);
         arbitrator.save();
 
@@ -343,7 +340,7 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
 
             nameTextField.setText(arbitrator.getName());
             idTypeTextField.setText(BSResources.get(arbitrator.getIdType().toString()));
-           // languagesTextField.setText(formatter.languageLocalesToString(arbitrator.getLanguages()));
+            // languagesTextField.setText(formatter.languageLocalesToString(arbitrator.getLanguages()));
             arbitrationFeeTextField.setText(String.valueOf(arbitrator.getFee()));
             methodsTextField.setText(formatter.arbitrationMethodsToString(arbitrator.getArbitrationMethods()));
             idVerificationsTextField.setText(
@@ -352,7 +349,7 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
             descriptionTextArea.setText(arbitrator.getDescription());
 
             idType = arbitrator.getIdType();
-          //  languageList = arbitrator.getLanguages();
+            languageCodes = arbitrator.getLanguageCodes();
             methodList = arbitrator.getArbitrationMethods();
             idVerificationList = arbitrator.getIdVerifications();
         }

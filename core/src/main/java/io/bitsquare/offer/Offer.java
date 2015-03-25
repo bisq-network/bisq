@@ -32,7 +32,6 @@ import java.security.PublicKey;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -75,7 +74,7 @@ public class Offer implements Serializable {
 
     private final Coin securityDeposit;
     private final List<Country> acceptedCountries;
-    private final List<Locale> acceptedLanguageLocales;
+    private final List<String> acceptedLanguageCodes;
     private final String bankAccountUID;
     private final List<Arbitrator> arbitrators;
 
@@ -105,7 +104,7 @@ public class Offer implements Serializable {
                  List<Arbitrator> arbitrators,
                  Coin securityDeposit,
                  List<Country> acceptedCountries,
-                 List<Locale> acceptedLanguageLocales) {
+                 List<String> acceptedLanguageCodes) {
         this.id = id;
         this.p2pSigPubKey = p2pSigPubKey;
         this.direction = direction;
@@ -120,7 +119,7 @@ public class Offer implements Serializable {
         this.securityDeposit = securityDeposit;
         this.acceptedCountries = acceptedCountries;
 
-        this.acceptedLanguageLocales = acceptedLanguageLocales;
+        this.acceptedLanguageCodes = acceptedLanguageCodes;
 
         creationDate = new Date();
         setState(State.UNKNOWN);
@@ -184,8 +183,8 @@ public class Offer implements Serializable {
         return acceptedCountries;
     }
 
-    public List<Locale> getAcceptedLanguageLocales() {
-        return acceptedLanguageLocales;
+    public List<String> getAcceptedLanguageCodes() {
+        return acceptedLanguageCodes;
     }
 
     public Fiat getVolumeByAmount(Coin amount) {
@@ -239,7 +238,7 @@ public class Offer implements Serializable {
 
     public void validate() throws Exception {
         checkNotNull(getAcceptedCountries(), "AcceptedCountries is null");
-        checkNotNull(getAcceptedLanguageLocales(), "AcceptedLanguageLocales is null");
+        checkNotNull(getAcceptedLanguageCodes(), "AcceptedLanguageLocales is null");
         checkNotNull(getAmount(), "Amount is null");
         checkNotNull(getArbitrators(), "Arbitrator is null");
         checkNotNull(getBankAccountId(), "BankAccountId is null");
@@ -279,7 +278,7 @@ public class Offer implements Serializable {
                 ", bankAccountCountry=" + bankAccountCountry +
                 ", securityDeposit=" + securityDeposit +
                 ", acceptedCountries=" + acceptedCountries +
-                ", acceptedLanguageLocales=" + acceptedLanguageLocales +
+                ", acceptedLanguageLocales=" + acceptedLanguageCodes +
                 ", bankAccountUID='" + bankAccountUID + '\'' +
                 ", arbitrators=" + arbitrators +
                 ", offerFeePaymentTxID='" + offerFeePaymentTxID + '\'' +

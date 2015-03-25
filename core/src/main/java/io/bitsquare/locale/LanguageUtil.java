@@ -26,25 +26,29 @@ import java.util.stream.Collectors;
 
 public class LanguageUtil {
 
-    public static List<Locale> getAllLanguageLocales() {
+    public static List<String> getAllLanguageLocaleCodes() {
         List<Locale> allLocales = Arrays.asList(Locale.getAvailableLocales());
-        final Set<Locale> allLocalesAsSet =
+        final Set<String> allLocaleCodesAsSet =
                 allLocales.stream().filter(locale -> !"".equals(locale.getLanguage())).map(locale ->
-                        new Locale(locale.getLanguage(), "")).collect(Collectors.toSet());
-        allLocales = new ArrayList<>();
-        allLocales.addAll(allLocalesAsSet);
-        allLocales.sort((locale1, locale2) -> locale1.getDisplayLanguage().compareTo(locale2.getDisplayLanguage()));
-        return allLocales;
+                        new Locale(locale.getLanguage(), "").getISO3Language()).collect(Collectors.toSet());
+        List<String> allLocaleCodes = new ArrayList<>();
+        allLocaleCodes.addAll(allLocaleCodesAsSet);
+        allLocaleCodes.sort((locale1, locale2) -> locale1.compareTo(locale2));
+        return allLocaleCodes;
     }
 
-    public static Locale getDefaultLanguageLocale() {
+    public static String getDefaultLanguageLocaleAsCode() {
         if (Locale.getDefault() != null)
-            return new Locale(Locale.getDefault().getLanguage(), "");
+            return new Locale(Locale.getDefault().getLanguage(), "").getISO3Language();
         else
-            return getEnglishLanguageLocale();
+            return getEnglishLanguageLocaleCode();
     }
 
-    public static Locale getEnglishLanguageLocale() {
-        return new Locale(Locale.ENGLISH.getLanguage(), "");
+    public static String getEnglishLanguageLocaleCode() {
+        return new Locale(Locale.ENGLISH.getLanguage(), "").getISO3Language();
+    }
+
+    public static String getDisplayName(String code) {
+        return new Locale(code).getDisplayName();
     }
 }

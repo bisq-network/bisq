@@ -39,7 +39,6 @@ import org.bitcoinj.utils.Fiat;
 
 import com.google.inject.Inject;
 
-import java.util.Locale;
 import java.util.UUID;
 
 import javafx.beans.property.BooleanProperty;
@@ -100,7 +99,7 @@ class CreateOfferDataModel implements Activatable, DataModel {
     final ObjectProperty<Coin> securityDepositAsCoin = new SimpleObjectProperty<>();
 
     final ObservableList<Country> acceptedCountries = FXCollections.observableArrayList();
-    final ObservableList<Locale> acceptedLanguages = FXCollections.observableArrayList();
+    final ObservableList<String> acceptedLanguageCodes = FXCollections.observableArrayList();
     final ObservableList<Arbitrator> acceptedArbitrators = FXCollections.observableArrayList();
 
 
@@ -154,7 +153,7 @@ class CreateOfferDataModel implements Activatable, DataModel {
                 securityDepositAsCoin.set(accountSettings.getSecurityDeposit());
 
             acceptedCountries.setAll(accountSettings.getAcceptedCountries());
-            acceptedLanguages.setAll(accountSettings.getAcceptedLanguageLocales());
+            acceptedLanguageCodes.setAll(accountSettings.getAcceptedLanguageLocaleCodes());
             acceptedArbitrators.setAll(accountSettings.getAcceptedArbitrators());
         }
     }
