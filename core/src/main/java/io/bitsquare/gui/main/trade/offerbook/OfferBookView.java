@@ -33,7 +33,6 @@ import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.validation.OptionalBtcValidator;
 import io.bitsquare.gui.util.validation.OptionalFiatValidator;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 
 import java.util.ArrayList;
@@ -141,7 +140,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         SortedList<OfferBookListItem> offerList = model.getOfferList();
         table.setItems(offerList);
         offerList.comparatorProperty().bind(table.comparatorProperty());
-        priceColumn.setSortType((model.getDirection() == Direction.BUY) ?
+        priceColumn.setSortType((model.getDirection() == Offer.Direction.BUY) ?
                 TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
         table.sort();
 
@@ -160,7 +159,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         createOfferButton.setDisable(false);
     }
 
-    public void setDirection(Direction direction) {
+    public void setDirection(Offer.Direction direction) {
         model.setDirection(direction);
     }
 
@@ -224,7 +223,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void takeOffer(Offer offer) {
         if (model.isRegistered()) {
-            if (offer.getDirection() == Direction.BUY) {
+            if (offer.getDirection() == Offer.Direction.BUY) {
                 offerActionHandler.takeOffer(model.getAmountAsCoin(), model.getPriceAsCoin(), offer);
             }
             else {
@@ -474,7 +473,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setOnAction(event -> model.cancelOpenOffer(item.getOffer()));
                                     }
                                     else {
-                                        if (offer.getDirection() == Direction.SELL)
+                                        if (offer.getDirection() == Offer.Direction.SELL)
                                             iconView.setId("image-buy");
                                         else
                                             iconView.setId("image-sell");

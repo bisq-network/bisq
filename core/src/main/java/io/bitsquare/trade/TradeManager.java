@@ -24,7 +24,6 @@ import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.p2p.AddressService;
@@ -156,7 +155,7 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void placeOffer(String id,
-                           Direction direction,
+                           Offer.Direction direction,
                            Fiat price,
                            Coin amount,
                            Coin minAmount,

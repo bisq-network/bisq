@@ -36,7 +36,6 @@ import io.bitsquare.gui.main.portfolio.pending.PendingTradesView;
 import io.bitsquare.gui.main.trade.TradeView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 
 import org.bitcoinj.core.Coin;
@@ -119,10 +118,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         model.errorMessage.removeListener(errorMessageChangeListener);
     }
 
-    public void initWithData(Direction direction, Coin amount, Offer offer) {
+    public void initWithData(Offer.Direction direction, Coin amount, Offer offer) {
         model.initWithData(direction, amount, offer);
 
-        if (direction == Direction.BUY)
+        if (direction == Offer.Direction.BUY)
             imageView.setId("image-buy-large");
         else
             imageView.setId("image-sell-large");

@@ -25,7 +25,7 @@ import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.offer.Direction;
+import io.bitsquare.offer.Offer;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -112,9 +112,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     // setOfferBookFilter is a one time call
-    void initWithData(Direction direction, Coin amount, Fiat price) {
+    void initWithData(Offer.Direction direction, Coin amount, Fiat price) {
         dataModel.setDirection(direction);
-        directionLabel.set(dataModel.getDirection() == Direction.BUY ? BSResources.get("shared.buy") : BSResources.get
+        directionLabel.set(dataModel.getDirection() == Offer.Direction.BUY ? BSResources.get("shared.buy") : BSResources.get
                 ("shared.sell"));
 
         // apply only if valid

@@ -22,7 +22,6 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
-import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -233,7 +232,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
         return selectedItem.getTrade().getOffer().getCurrency().getCurrencyCode();
     }
 
-    public Direction getDirection(Offer offer) {
+    public Offer.Direction getDirection(Offer offer) {
         return offer.getP2PSigPubKey().equals(user.getP2PSigPubKey()) ?
                 offer.getDirection() : offer.getMirroredDirection();
     }

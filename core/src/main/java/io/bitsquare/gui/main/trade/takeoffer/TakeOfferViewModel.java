@@ -24,7 +24,6 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 
 import org.bitcoinj.core.Address;
@@ -115,10 +114,10 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     // setOfferBookFilter is a one time call
-    void initWithData(Direction direction, Coin amount, Offer offer) {
+    void initWithData(Offer.Direction direction, Coin amount, Offer offer) {
         dataModel.initWithData(amount, offer);
 
-        directionLabel = direction == Direction.BUY ?
+        directionLabel = direction == Offer.Direction.BUY ?
                 BSResources.get("shared.buy") : BSResources.get("shared.sell");
 
         fiatCode = offer.getCurrency().getCurrencyCode();

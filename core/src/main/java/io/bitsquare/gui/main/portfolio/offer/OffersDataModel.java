@@ -21,7 +21,6 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
-import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -75,7 +74,7 @@ class OffersDataModel implements Activatable, DataModel {
         return list;
     }
 
-    public Direction getDirection(Offer offer) {
+    public Offer.Direction getDirection(Offer offer) {
         return offer.getP2PSigPubKey().equals(user.getP2PSigPubKey()) ?
                 offer.getDirection() : offer.getMirroredDirection();
     }

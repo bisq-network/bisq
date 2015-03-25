@@ -47,6 +47,8 @@ public class Offer implements Serializable {
     private static final long serialVersionUID = -971164804305475826L;
     private transient static final Logger log = LoggerFactory.getLogger(Offer.class);
 
+    public enum Direction {BUY, SELL}
+
     public enum State {
         UNKNOWN,
         AVAILABLE,

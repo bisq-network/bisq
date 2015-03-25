@@ -27,7 +27,7 @@ import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
-import io.bitsquare.offer.Direction;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.Preferences;
@@ -75,7 +75,7 @@ class CreateOfferDataModel implements Activatable, DataModel {
 
     private final String offerId;
 
-    @Nullable private Direction direction = null;
+    @Nullable private Offer.Direction direction = null;
     private AddressEntry addressEntry;
 
     final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
@@ -231,12 +231,12 @@ class CreateOfferDataModel implements Activatable, DataModel {
 
 
     @Nullable
-    Direction getDirection() {
+    Offer.Direction getDirection() {
         return direction;
     }
 
     @SuppressWarnings("NullableProblems")
-    void setDirection(Direction direction) {
+    void setDirection(Offer.Direction direction) {
         // direction can not be changed once it is initially set
         checkNotNull(direction);
         this.direction = direction;

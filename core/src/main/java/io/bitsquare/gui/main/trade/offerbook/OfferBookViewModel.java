@@ -25,7 +25,6 @@ import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.OptionalBtcValidator;
 import io.bitsquare.gui.util.validation.OptionalFiatValidator;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 
 import org.bitcoinj.core.Coin;
@@ -120,7 +119,7 @@ class OfferBookViewModel extends ActivatableWithDataModel<OfferBookDataModel> im
     }
 
 
-    void setDirection(Direction direction) {
+    void setDirection(Offer.Direction direction) {
         dataModel.setDirection(direction);
     }
 
@@ -159,7 +158,7 @@ class OfferBookViewModel extends ActivatableWithDataModel<OfferBookDataModel> im
         return formatter.formatDirection(offer.getMirroredDirection());
     }
 
-    Direction getDirection() {
+    Offer.Direction getDirection() {
         return dataModel.getDirection();
     }
 

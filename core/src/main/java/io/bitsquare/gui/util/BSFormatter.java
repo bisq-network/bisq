@@ -21,7 +21,6 @@ import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.user.User;
 
@@ -288,12 +287,12 @@ public class BSFormatter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public String formatDirection(Direction direction) {
+    public String formatDirection(Offer.Direction direction) {
         return formatDirection(direction, true);
     }
 
-    public String formatDirection(Direction direction, boolean allUpperCase) {
-        String result = (direction == Direction.BUY) ? "Buy" : "Sell";
+    public String formatDirection(Offer.Direction direction, boolean allUpperCase) {
+        String result = (direction == Offer.Direction.BUY) ? "Buy" : "Sell";
         if (allUpperCase) {
             result = result.toUpperCase();
         }

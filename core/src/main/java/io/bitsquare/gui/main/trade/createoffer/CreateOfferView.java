@@ -38,7 +38,7 @@ import io.bitsquare.gui.main.portfolio.pending.PendingTradesView;
 import io.bitsquare.gui.main.trade.TradeView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.offer.Direction;
+import io.bitsquare.offer.Offer;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -126,10 +126,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     }
 
-    public void initWithData(Direction direction, Coin amount, Fiat price) {
+    public void initWithData(Offer.Direction direction, Coin amount, Fiat price) {
         model.initWithData(direction, amount, price);
 
-        if (direction == Direction.BUY)
+        if (direction == Offer.Direction.BUY)
             imageView.setId("image-buy-large");
         else
             imageView.setId("image-sell-large");

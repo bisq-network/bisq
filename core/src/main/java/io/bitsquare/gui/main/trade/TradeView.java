@@ -27,7 +27,6 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.trade.createoffer.CreateOfferView;
 import io.bitsquare.gui.main.trade.offerbook.OfferBookView;
 import io.bitsquare.gui.main.trade.takeoffer.TakeOfferView;
-import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 
 import org.bitcoinj.core.Coin;
@@ -54,12 +53,12 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private final Direction direction;
+    private final Offer.Direction direction;
 
     protected TradeView(ViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
-        this.direction = (this instanceof BuyView) ? Direction.BUY : Direction.SELL;
+        this.direction = (this instanceof BuyView) ? Offer.Direction.BUY : Offer.Direction.SELL;
     }
 
     @Override
@@ -120,7 +119,7 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
         if (viewClass == OfferBookView.class && offerBookView == null) {
             view = viewLoader.load(viewClass);
             // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
-            final Tab tab = new Tab(direction == Direction.BUY ? "Buy Bitcoin" : "Sell Bitcoin");
+            final Tab tab = new Tab(direction == Offer.Direction.BUY ? "Buy Bitcoin" : "Sell Bitcoin");
             tab.setClosable(false);
             tab.setContent(view.getRoot());
             tabPane.getTabs().add(tab);

@@ -25,7 +25,6 @@ import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBook;
 import io.bitsquare.trade.TradeManager;
@@ -75,7 +74,7 @@ class OfferBookDataModel implements Activatable, DataModel {
     final StringProperty fiatCode = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
     final ObjectProperty<Country> bankAccountCountry = new SimpleObjectProperty<>();
-    private Direction direction;
+    private Offer.Direction direction;
 
 
     @Inject
@@ -184,7 +183,7 @@ class OfferBookDataModel implements Activatable, DataModel {
     }
 
 
-    void setDirection(Direction direction) {
+    void setDirection(Offer.Direction direction) {
         this.direction = direction;
     }
 
@@ -240,7 +239,7 @@ class OfferBookDataModel implements Activatable, DataModel {
         return volumeAsFiat;
     }
 
-    Direction getDirection() {
+    Offer.Direction getDirection() {
         return direction;
     }
 
@@ -268,7 +267,7 @@ class OfferBookDataModel implements Activatable, DataModel {
 
             boolean priceResult = true;
             if (priceAsFiat.get() != null && priceAsFiat.get().isPositive()) {
-                if (offer.getDirection() == Direction.SELL)
+                if (offer.getDirection() == Offer.Direction.SELL)
                     priceResult = priceAsFiat.get().compareTo(offer.getPrice()) >= 0;
                 else
                     priceResult = priceAsFiat.get().compareTo(offer.getPrice()) <= 0;
