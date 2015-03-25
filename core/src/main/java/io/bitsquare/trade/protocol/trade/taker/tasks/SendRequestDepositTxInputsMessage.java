@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
-import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
@@ -67,7 +67,7 @@ public class SendRequestDepositTxInputsMessage extends Task<TakerAsSellerModel> 
                             "connection. " +
                             "We persisted the state of the trade, please try again later or cancel that trade.");
 
-                    model.trade.setProcessState(Trade.ProcessState.MESSAGE_SENDING_FAILED);
+                    model.trade.setProcessState(TakerTrade.TakerProcessState.MESSAGE_SENDING_FAILED);
 
                     failed();
                 }

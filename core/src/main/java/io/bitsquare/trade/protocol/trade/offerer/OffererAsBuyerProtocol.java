@@ -23,7 +23,7 @@ import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.p2p.listener.SendMessageListener;
-import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.protocol.Protocol;
 import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
@@ -107,7 +107,7 @@ public class OffererAsBuyerProtocol implements Protocol {
 
             // We don't store anything in the model as we might be in a trade process and receive that request from another peer who wants to take the offer
             // at the same time
-            boolean isOfferOpen = model.trade.getLifeCycleState() == Trade.LifeCycleState.OPEN_OFFER;
+            boolean isOfferOpen = model.trade.getLifeCycleState() == OffererTrade.OffererLifeCycleState.OPEN_OFFER;
             ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(model.id, isOfferOpen);
             model.messageService.sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
                 @Override

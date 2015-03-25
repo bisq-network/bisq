@@ -95,7 +95,7 @@ class FiatAccountDataModel implements Activatable, DataModel {
     }
 
     void removeBankAccount() {
-        user.removeFiatAccount(user.currentFiatAccountPropertyProperty().get());
+        user.removeFiatAccount(user.currentFiatAccountProperty().get());
         allFiatAccounts.setAll(user.fiatAccountsObservableList());
         reset();
     }

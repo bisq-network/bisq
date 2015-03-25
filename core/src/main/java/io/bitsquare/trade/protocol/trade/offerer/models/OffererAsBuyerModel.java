@@ -24,7 +24,7 @@ import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.protocol.trade.SharedTradeModel;
 import io.bitsquare.user.User;
 
@@ -41,7 +41,7 @@ public class OffererAsBuyerModel extends SharedTradeModel implements Serializabl
     transient private static final Logger log = LoggerFactory.getLogger(OffererAsBuyerModel.class);
 
     transient private Storage<OffererAsBuyerModel> storage;
-    transient public final Trade trade;
+    transient public final OffererTrade trade;
 
     public final Taker taker;
     public final Offerer offerer;
@@ -49,7 +49,7 @@ public class OffererAsBuyerModel extends SharedTradeModel implements Serializabl
     // written by tasks
     private String takeOfferFeeTxId;
 
-    public OffererAsBuyerModel(Trade trade,
+    public OffererAsBuyerModel(OffererTrade trade,
                                MessageService messageService,
                                MailboxService mailboxService,
                                WalletService walletService,

@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 
 import org.bitcoinj.core.Coin;
@@ -59,7 +59,7 @@ public class SignAndPublishDepositTx extends Task<OffererAsBuyerModel> {
                             log.trace("offererSignAndPublishTx succeeded " + transaction);
 
                             model.trade.setDepositTx(transaction);
-                            model.trade.setProcessState(Trade.ProcessState.DEPOSIT_PUBLISHED);
+                            model.trade.setProcessState(OffererTrade.OffererProcessState.DEPOSIT_PUBLISHED);
 
                             complete();
                         }

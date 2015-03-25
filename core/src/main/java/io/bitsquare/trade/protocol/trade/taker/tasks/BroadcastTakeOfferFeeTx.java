@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
 import org.bitcoinj.core.Transaction;
@@ -47,14 +47,14 @@ public class BroadcastTakeOfferFeeTx extends Task<TakerAsSellerModel> {
                         public void onSuccess(Transaction transaction) {
                             log.debug("Take offer fee published successfully. Transaction ID = " + transaction.getHashAsString());
 
-                            model.trade.setProcessState(Trade.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
+                            model.trade.setProcessState(TakerTrade.TakerProcessState.TAKE_OFFER_FEE_PUBLISHED);
 
                             complete();
                         }
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
-                            model.trade.setProcessState(Trade.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
+                            model.trade.setProcessState(TakerTrade.TakerProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
 
                             failed(t);
                         }
@@ -63,7 +63,7 @@ public class BroadcastTakeOfferFeeTx extends Task<TakerAsSellerModel> {
             appendToErrorMessage("Take offer fee payment failed. Maybe your network connection was lost. Please try again.");
             appendToErrorMessage(e.getMessage());
 
-            model.trade.setProcessState(Trade.ProcessState.FAULT);
+            model.trade.setProcessState(TakerTrade.TakerProcessState.UNSPECIFIC_FAULT);
 
             failed(e);
         }

@@ -23,6 +23,8 @@ import io.bitsquare.common.viewfx.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.trade.OffererTrade;
+import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 
 import org.bitcoinj.core.Coin;
@@ -218,30 +220,56 @@ class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataM
 
 
     private void updateState() {
-        Trade.ProcessState tradeProcessState = dataModel.tradeState.get();
-        log.trace("tradeState " + tradeProcessState);
-        if (tradeProcessState != null) {
-            switch (tradeProcessState) {
-                case DEPOSIT_PUBLISHED:
-                    state.set(dataModel.isOfferer() ? State.OFFERER_BUYER_WAIT_TX_CONF : State.TAKER_SELLER_WAIT_TX_CONF);
-                    break;
-                case DEPOSIT_CONFIRMED:
-                    state.set(dataModel.isOfferer() ? State.OFFERER_BUYER_START_PAYMENT :
-                            State.TAKER_SELLER_WAIT_PAYMENT_STARTED);
-                    break;
-                case FIAT_PAYMENT_STARTED:
-                    state.set(dataModel.isOfferer() ? State.OFFERER_BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED :
-                            State.TAKER_SELLER_CONFIRM_RECEIVE_PAYMENT);
-                    break;
-                case PAYOUT_PUBLISHED:
-                    state.set(dataModel.isOfferer() ? State.OFFERER_BUYER_COMPLETED : State.TAKER_SELLER_COMPLETED);
-                    break;
-                case MESSAGE_SENDING_FAILED:
-                    // TODO error states not implemented yet
-                    break;
-                default:
-                    log.warn("unhandled state " + tradeProcessState);
-                    break;
+        Trade.ProcessState processState = dataModel.tradeState.get();
+        log.trace("tradeState " + processState);
+        if (processState != null) {
+            if (processState instanceof TakerTrade.TakerProcessState) {
+                switch ((TakerTrade.TakerProcessState) processState) {
+                    case DEPOSIT_PUBLISHED:
+                        state.set(dataModel.isOfferer() ? State.OFFERER_BUYER_WAIT_TX_CONF : State.TAKER_SELLER_WAIT_TX_CONF);
+                        break;
+                    case DEPOSIT_CONFIRMED:
+                        state.set(dataModel.isOfferer() ? State.OFFERER_BUYER_START_PAYMENT :
+                                State.TAKER_SELLER_WAIT_PAYMENT_STARTED);
+                        break;
+                    case FIAT_PAYMENT_STARTED:
+                        state.set(dataModel.isOfferer() ? State.OFFERER_BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED :
+                                State.TAKER_SELLER_CONFIRM_RECEIVE_PAYMENT);
+                        break;
+                    case PAYOUT_PUBLISHED:
+                        state.set(dataModel.isOfferer() ? State.OFFERER_BUYER_COMPLETED : State.TAKER_SELLER_COMPLETED);
+                        break;
+                    case MESSAGE_SENDING_FAILED:
+                        // TODO error states not implemented yet
+                        break;
+                    default:
+                        log.warn("unhandled state " + processState);
+                        break;
+                }
+            }
+            else if (processState instanceof OffererTrade.OffererProcessState) {
+                switch ((OffererTrade.OffererProcessState) processState) {
+                    case DEPOSIT_PUBLISHED:
+                        state.set(dataModel.isOfferer() ? State.OFFERER_BUYER_WAIT_TX_CONF : State.TAKER_SELLER_WAIT_TX_CONF);
+                        break;
+                    case DEPOSIT_CONFIRMED:
+                        state.set(dataModel.isOfferer() ? State.OFFERER_BUYER_START_PAYMENT :
+                                State.TAKER_SELLER_WAIT_PAYMENT_STARTED);
+                        break;
+                    case FIAT_PAYMENT_STARTED:
+                        state.set(dataModel.isOfferer() ? State.OFFERER_BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED :
+                                State.TAKER_SELLER_CONFIRM_RECEIVE_PAYMENT);
+                        break;
+                    case PAYOUT_PUBLISHED:
+                        state.set(dataModel.isOfferer() ? State.OFFERER_BUYER_COMPLETED : State.TAKER_SELLER_COMPLETED);
+                        break;
+                    case MESSAGE_SENDING_FAILED:
+                        // TODO error states not implemented yet
+                        break;
+                    default:
+                        log.warn("unhandled state " + processState);
+                        break;
+                }
             }
         }
         else {

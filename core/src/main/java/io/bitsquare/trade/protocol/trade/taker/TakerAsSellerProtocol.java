@@ -22,7 +22,7 @@ import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
-import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.protocol.Protocol;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
@@ -166,7 +166,7 @@ public class TakerAsSellerProtocol implements Protocol {
 
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     public void onFiatPaymentReceived() {
-        model.trade.setProcessState(Trade.ProcessState.FIAT_PAYMENT_RECEIVED);
+        model.trade.setProcessState(TakerTrade.TakerProcessState.FIAT_PAYMENT_RECEIVED);
 
         TaskRunner<TakerAsSellerModel> taskRunner = new TaskRunner<>(model,
                 () -> {

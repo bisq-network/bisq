@@ -39,12 +39,12 @@ public final class OptionalFiatValidator extends NumberValidator {
     @Inject
     public OptionalFiatValidator(User user) {
         if (user != null) {
-            if (user.currentFiatAccountPropertyProperty().get() == null)
+            if (user.currentFiatAccountProperty().get() == null)
                 setFiatCurrencyCode(CurrencyUtil.getDefaultCurrencyAsCode());
-            else if (user.currentFiatAccountPropertyProperty().get() != null)
-                setFiatCurrencyCode(user.currentFiatAccountPropertyProperty().get().currencyCode);
+            else if (user.currentFiatAccountProperty().get() != null)
+                setFiatCurrencyCode(user.currentFiatAccountProperty().get().currencyCode);
 
-            user.currentFiatAccountPropertyProperty().addListener((ov, oldValue, newValue) -> {
+            user.currentFiatAccountProperty().addListener((ov, oldValue, newValue) -> {
                 if (newValue != null)
                     setFiatCurrencyCode(newValue.currencyCode);
             });

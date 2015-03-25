@@ -17,9 +17,9 @@
 
 package io.bitsquare.trade.handlers;
 
-import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TakerTrade;
 
 
-public interface TradeResultHandler {
-    void handleTradeResult(Trade trade);
+public interface TakeOfferResultHandler {
+    void handleResult(TakerTrade trade);
 }

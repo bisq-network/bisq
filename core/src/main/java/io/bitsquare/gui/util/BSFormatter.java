@@ -79,12 +79,12 @@ public class BSFormatter {
     @Inject
     public BSFormatter(User user, ArbitrationRepository arbitrationRepository) {
         this.arbitrationRepository = arbitrationRepository;
-        if (user.currentFiatAccountPropertyProperty().get() == null)
+        if (user.currentFiatAccountProperty().get() == null)
             setFiatCurrencyCode(CurrencyUtil.getDefaultCurrencyAsCode());
-        else if (user.currentFiatAccountPropertyProperty().get() != null)
-            setFiatCurrencyCode(user.currentFiatAccountPropertyProperty().get().currencyCode);
+        else if (user.currentFiatAccountProperty().get() != null)
+            setFiatCurrencyCode(user.currentFiatAccountProperty().get().currencyCode);
 
-        user.currentFiatAccountPropertyProperty().addListener((ov, oldValue, newValue) -> {
+        user.currentFiatAccountProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue != null)
                 setFiatCurrencyCode(newValue.currencyCode);
         });
@@ -313,7 +313,7 @@ public class BSFormatter {
     }
 
     public String countryLocalesToString(List<Country> countries) {
-        return countries.stream().map(e-> e.name).collect(Collectors.joining(", "));
+        return countries.stream().map(e -> e.name).collect(Collectors.joining(", "));
     }
 
     public String arbitratorsToNames(List<Arbitrator> arbitrators) {

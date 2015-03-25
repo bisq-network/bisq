@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
 import org.bitcoinj.core.Transaction;
@@ -55,7 +55,7 @@ public class SignAndPublishPayoutTx extends Task<TakerAsSellerModel> {
                         @Override
                         public void onSuccess(Transaction transaction) {
                             model.setPayoutTx(transaction);
-                            model.trade.setProcessState(Trade.ProcessState.PAYOUT_PUBLISHED);
+                            model.trade.setProcessState(TakerTrade.TakerProcessState.PAYOUT_PUBLISHED);
 
                             complete();
                         }

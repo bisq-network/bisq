@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
 import org.bitcoinj.core.Transaction;
@@ -40,13 +40,13 @@ public class CreateTakeOfferFeeTx extends Task<TakerAsSellerModel> {
             Transaction createTakeOfferFeeTx = model.tradeWalletService.createTakeOfferFeeTx(model.taker.addressEntry);
 
             model.setTakeOfferFeeTx(createTakeOfferFeeTx);
-            model.trade.setProcessState(Trade.ProcessState.TAKE_OFFER_FEE_TX_CREATED);
+            model.trade.setProcessState(TakerTrade.TakerProcessState.TAKE_OFFER_FEE_TX_CREATED);
 
             complete();
         } catch (Exception e) {
             appendToErrorMessage(e.getMessage());
 
-            model.trade.setProcessState(Trade.ProcessState.FAULT);
+            model.trade.setProcessState(TakerTrade.TakerProcessState.UNSPECIFIC_FAULT);
 
             failed(e);
         }

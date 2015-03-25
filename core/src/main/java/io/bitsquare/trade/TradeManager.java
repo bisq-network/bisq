@@ -33,7 +33,7 @@ import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
-import io.bitsquare.trade.handlers.TradeResultHandler;
+import io.bitsquare.trade.handlers.TakeOfferResultHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityModel;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityProtocol;
@@ -51,7 +51,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import java.io.File;
-import java.io.IOException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -63,8 +62,6 @@ import javax.inject.Named;
 
 import javafx.collections.ObservableList;
 
-import net.tomp2p.storage.Data;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,15 +71,15 @@ public class TradeManager {
     private final User user;
     private final AccountSettings accountSettings;
     private final MessageService messageService;
-    private MailboxService mailboxService;
+    private final MailboxService mailboxService;
     private final AddressService addressService;
     private final BlockChainService blockChainService;
     private final WalletService walletService;
     private final SignatureService signatureService;
-    private EncryptionService<MailboxMessage> encryptionService;
+    private final EncryptionService<MailboxMessage> encryptionService;
     private final OfferBookService offerBookService;
-    private ArbitrationRepository arbitrationRepository;
-    private File storageDir;
+    private final ArbitrationRepository arbitrationRepository;
+    private final File storageDir;
 
     private final Map<String, CheckOfferAvailabilityProtocol> checkOfferAvailabilityProtocolMap = new HashMap<>();
 
@@ -124,20 +121,25 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // When all services are initialized we create the protocols for our open offers and persisted not completed pendingTrades
-    // BuyerAcceptsOfferProtocol listens for take offer requests, so we need to instantiate it early.
+    // OffererAsBuyerProtocol listens for take offer requests, so we need to instantiate it early.
     public void onAllServicesInitialized() {
         for (OffererTrade offererTrade : openOfferTrades) {
-            createOffererAsBuyerProtocol(offererTrade);
+            OffererAsBuyerProtocol protocol = createOffererAsBuyerProtocol(offererTrade);
+            offererTrade.setProtocol(protocol);
         }
         for (Trade trade : pendingTrades) {
             // We continue an interrupted trade.
             // TODO if the peer has changed its IP address, we need to make another findPeer request. At the moment we use the peer stored in trade to
             // continue the trade, but that might fail.
             if (trade instanceof OffererTrade) {
-                createOffererAsBuyerProtocol((OffererTrade) trade);
+                OffererTrade offererTrade = (OffererTrade) trade;
+                OffererAsBuyerProtocol protocol = createOffererAsBuyerProtocol(offererTrade);
+                offererTrade.setProtocol(protocol);
             }
             else if (trade instanceof TakerTrade) {
-                createTakerAsSellerProtocol((TakerTrade) trade);
+                TakerTrade takerTrade = (TakerTrade) trade;
+                TakerAsSellerProtocol sellerTakesOfferProtocol = createTakerAsSellerProtocol(takerTrade);
+                takerTrade.setProtocol(sellerTakesOfferProtocol);
             }
         }
 
@@ -146,10 +148,6 @@ public class TradeManager {
                     decryptMailboxMessages(encryptedMailboxMessages);
                     emptyMailbox();
                 });
-    }
-
-    public boolean isMyOffer(Offer offer) {
-        return offer.getP2PSigPubKey().equals(user.getP2PSigPubKey());
     }
 
 
@@ -165,7 +163,7 @@ public class TradeManager {
                            TransactionResultHandler resultHandler,
                            ErrorMessageHandler errorMessageHandler) {
 
-        FiatAccount currentFiatAccount = user.currentFiatAccountPropertyProperty().get();
+        FiatAccount currentFiatAccount = user.currentFiatAccountProperty().get();
         Offer offer = new Offer(id,
                 user.getP2PSigPubKey(),
                 direction,
@@ -181,20 +179,13 @@ public class TradeManager {
                 accountSettings.getAcceptedCountries(),
                 accountSettings.getAcceptedLanguageLocaleCodes());
 
-        try {
-            Data offerData = new Data(offer);
-            log.trace("-------------------------- placeOffer hash" + offerData.hash().toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         PlaceOfferModel model = new PlaceOfferModel(offer, walletService, offerBookService);
 
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 model,
                 (transaction) -> {
                     OffererTrade offererTrade = new OffererTrade(offer);
-                    offererTrade.setLifeCycleState(Trade.LifeCycleState.OPEN_OFFER);
+                    offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OPEN_OFFER);
                     openOfferTrades.add(offererTrade);
 
                     OffererAsBuyerProtocol protocol = createOffererAsBuyerProtocol(offererTrade);
@@ -239,19 +230,20 @@ public class TradeManager {
         disposeCheckOfferAvailabilityRequest(offer);
     }
 
-    public void requestTakeOffer(Coin amount, Offer offer, TradeResultHandler tradeResultHandler) {
+    // First we check if offer is still available then we create the trade with the protocol
+    public void requestTakeOffer(Coin amount, Offer offer, TakeOfferResultHandler takeOfferResultHandler) {
         CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(offer, messageService, addressService);
-        CheckOfferAvailabilityProtocol protocol = new CheckOfferAvailabilityProtocol(model,
+        CheckOfferAvailabilityProtocol availabilityProtocol = new CheckOfferAvailabilityProtocol(model,
                 () -> {
                     disposeCheckOfferAvailabilityRequest(offer);
                     if (offer.getState() == Offer.State.AVAILABLE) {
-                        Trade trade = takeAvailableOffer(amount, offer, model.getPeer());
-                        tradeResultHandler.handleTradeResult(trade);
+                        TakerTrade trade = takeAvailableOffer(amount, offer, model.getPeer());
+                        takeOfferResultHandler.handleResult(trade);
                     }
                 },
                 (errorMessage) -> disposeCheckOfferAvailabilityRequest(offer));
-        checkOfferAvailabilityProtocolMap.put(offer.getId(), protocol);
-        protocol.checkOfferAvailability();
+        checkOfferAvailabilityProtocolMap.put(offer.getId(), availabilityProtocol);
+        availabilityProtocol.checkOfferAvailability();
     }
 
 
@@ -268,10 +260,13 @@ public class TradeManager {
     }
 
     public void onWithdrawAtTradeCompleted(Trade trade) {
-        trade.setLifeCycleState(Trade.LifeCycleState.COMPLETED);
+        if (trade instanceof OffererTrade)
+            ((OffererTrade) trade).setLifeCycleState(OffererTrade.OffererLifeCycleState.COMPLETED);
+        else
+            ((TakerTrade) trade).setLifeCycleState(TakerTrade.TakerLifeCycleState.COMPLETED);
+
         pendingTrades.remove(trade);
         closedTrades.add(trade);
-        trade.disposeProtocol();
     }
 
 
@@ -305,10 +300,6 @@ public class TradeManager {
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Offer
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     private void removeOpenOffer(Offer offer,
                                  ResultHandler resultHandler,
                                  ErrorMessageHandler errorMessageHandler,
@@ -322,7 +313,7 @@ public class TradeManager {
                         openOfferTrades.remove(offererTrade);
 
                         if (isCancelRequest) {
-                            offererTrade.setLifeCycleState(Trade.LifeCycleState.CANCELED);
+                            offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_CANCELED);
                             closedTrades.add(offererTrade);
                             offererTrade.disposeProtocol();
                         }
@@ -335,16 +326,10 @@ public class TradeManager {
                 (message, throwable) -> errorMessageHandler.handleErrorMessage(message));
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Take offer
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     private void disposeCheckOfferAvailabilityRequest(Offer offer) {
         if (checkOfferAvailabilityProtocolMap.containsKey(offer.getId())) {
             CheckOfferAvailabilityProtocol protocol = checkOfferAvailabilityProtocolMap.get(offer.getId());
             protocol.cancel();
-            protocol.cleanup();
             checkOfferAvailabilityProtocolMap.remove(offer.getId());
         }
     }
@@ -354,11 +339,11 @@ public class TradeManager {
     // Trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Trade takeAvailableOffer(Coin amount, Offer offer, Peer peer) {
+    private TakerTrade takeAvailableOffer(Coin amount, Offer offer, Peer peer) {
         TakerTrade takerTrade = new TakerTrade(offer);
         takerTrade.setTradeAmount(amount);
         takerTrade.setTradingPeer(peer);
-        takerTrade.setLifeCycleState(Trade.LifeCycleState.PENDING);
+        takerTrade.setLifeCycleState(TakerTrade.TakerLifeCycleState.PENDING);
         pendingTrades.add(takerTrade);
 
         TakerAsSellerProtocol sellerTakesOfferProtocol = createTakerAsSellerProtocol(takerTrade);
@@ -370,30 +355,6 @@ public class TradeManager {
 
 
     private TakerAsSellerProtocol createTakerAsSellerProtocol(TakerTrade takerTrade) {
-        takerTrade.processStateProperty().addListener((ov, oldValue, newValue) -> {
-            log.debug("takerTrade state = " + newValue);
-            switch (newValue) {
-                case INIT:
-                    break;
-                case TAKE_OFFER_FEE_TX_CREATED:
-                case DEPOSIT_PUBLISHED:
-                case DEPOSIT_CONFIRMED:
-                case FIAT_PAYMENT_STARTED:
-                case FIAT_PAYMENT_RECEIVED:
-                case PAYOUT_PUBLISHED:
-                    //  persistPendingTrades();
-                    break;
-                case MESSAGE_SENDING_FAILED:
-                case FAULT:
-                    takerTrade.setLifeCycleState(Trade.LifeCycleState.FAILED);
-                    takerTrade.disposeProtocol();
-                    break;
-                default:
-                    log.warn("Unhandled takerTrade state: " + newValue);
-                    break;
-            }
-        });
-
         TakerAsSellerModel model = new TakerAsSellerModel(
                 takerTrade,
                 messageService,
@@ -426,33 +387,15 @@ public class TradeManager {
         offererTrade.processStateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("offererTrade state = " + newValue);
             switch (newValue) {
-                case INIT:
-                    break;
-                case TAKE_OFFER_FEE_TX_CREATED:
-                    // persistPendingTrades();
-                    break;
                 case DEPOSIT_PUBLISHED:
                     removeOpenOffer(offererTrade.getOffer(),
                             () -> log.debug("remove offer was successful"),
                             (message) -> log.error(message),
                             false);
-                    model.trade.setLifeCycleState(Trade.LifeCycleState.PENDING);
+                    ((OffererTrade) model.trade).setLifeCycleState(OffererTrade.OffererLifeCycleState.PENDING);
                     pendingTrades.add(offererTrade);
                     break;
-                case DEPOSIT_CONFIRMED:
-                case FIAT_PAYMENT_STARTED:
-                case FIAT_PAYMENT_RECEIVED:
-                case PAYOUT_PUBLISHED:
-                    // persistPendingTrades();
-                    break;
-                case TAKE_OFFER_FEE_PUBLISH_FAILED:
-                case MESSAGE_SENDING_FAILED:
-                case FAULT:
-                    offererTrade.setLifeCycleState(Trade.LifeCycleState.FAILED);
-                    offererTrade.disposeProtocol();
-                    break;
                 default:
-                    log.warn("Unhandled offererTrade state: " + newValue);
                     break;
             }
         });

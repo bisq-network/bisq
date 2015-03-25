@@ -207,27 +207,25 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         isTakeOfferSpinnerVisible.set(true);
 
-        dataModel.takeOffer((trade) -> {
-            trade.processStateProperty().addListener((ov, oldValue, newValue) -> {
-                log.debug("trade state = " + newValue);
+        dataModel.takeOffer((takerTrade) -> {
+            takerTrade.processStateProperty().addListener((ov, oldValue, newValue) -> {
+                log.debug("takerTrade state = " + newValue);
                 String msg = "";
                 if (newValue.getErrorMessage() != null)
                     msg = "\nError message: " + newValue.getErrorMessage();
 
                 switch (newValue) {
-                    case INIT:
-                        break;
                     case TAKE_OFFER_FEE_TX_CREATED:
                         break;
                     case DEPOSIT_PUBLISHED:
                     case DEPOSIT_CONFIRMED:
-                        transactionId.set(trade.getDepositTx().getHashAsString());
+                        transactionId.set(takerTrade.getDepositTx().getHashAsString());
                         applyTakeOfferRequestResult(true);
                         break;
                     case FIAT_PAYMENT_STARTED:
                         break;
                     case TAKE_OFFER_FEE_PUBLISH_FAILED:
-                        errorMessage.set("An error occurred when paying the trade fee." + msg);
+                        errorMessage.set("An error occurred when paying the takerTrade fee." + msg);
                         takeOfferRequested = false;
                         break;
                     case MESSAGE_SENDING_FAILED:
@@ -237,12 +235,12 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                         break;
                     case PAYOUT_PUBLISHED:
                         break;
-                    case FAULT:
+                    case UNSPECIFIC_FAULT:
                         errorMessage.set(msg);
                         takeOfferRequested = false;
                         break;
                     default:
-                        log.warn("Unhandled trade state: " + newValue);
+                        log.warn("Unhandled takerTrade state: " + newValue);
                         break;
                 }
 

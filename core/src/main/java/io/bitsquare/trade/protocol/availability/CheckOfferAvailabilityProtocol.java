@@ -88,6 +88,7 @@ public class CheckOfferAvailabilityProtocol {
     public void cancel() {
         isCanceled = true;
         taskRunner.cancel();
+        cleanup();
     }
 
 

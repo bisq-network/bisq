@@ -24,7 +24,7 @@ import org.bitcoinj.utils.Fiat;
 
 import java.util.Date;
 
-import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.
@@ -50,11 +50,11 @@ public class PendingTradesListItem {
         return trade;
     }
 
-    public ObjectProperty<Coin> tradeAmountProperty() {
+    public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
         return trade.tradeAmountProperty();
     }
 
-    public ObjectProperty<Fiat> tradeVolumeProperty() {
+    public ReadOnlyObjectProperty<Fiat> tradeVolumeProperty() {
         return trade.tradeVolumeProperty();
     }
 

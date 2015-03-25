@@ -20,7 +20,20 @@ package io.bitsquare.trade;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.protocol.trade.offerer.OffererAsBuyerProtocol;
 
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
+
+import com.google.common.base.Throwables;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+
+import java.io.IOException;
 import java.io.Serializable;
+
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +43,58 @@ public class OffererTrade extends Trade implements Serializable {
     private static final long serialVersionUID = 1L;
     transient private static final Logger log = LoggerFactory.getLogger(OffererTrade.class);
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Enum
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public enum OffererLifeCycleState implements LifeCycleState {
+        OPEN_OFFER,
+        OFFER_CANCELED,
+        PENDING,
+        COMPLETED,
+        FAILED
+    }
+
+    public enum OffererProcessState implements ProcessState {
+        DEPOSIT_PUBLISHED,
+        DEPOSIT_CONFIRMED,
+        FIAT_PAYMENT_STARTED,
+        PAYOUT_PUBLISHED,
+        MESSAGE_SENDING_FAILED,
+        UNSPECIFIC_FAULT;
+
+        protected String errorMessage;
+
+        public void setErrorMessage(String errorMessage) {
+            this.errorMessage = errorMessage;
+        }
+
+        public String getErrorMessage() {
+            return errorMessage;
+        }
+    }
+
+    protected OffererProcessState processState;
+    protected OffererLifeCycleState lifeCycleState;
+
+    transient protected ObjectProperty<OffererProcessState> processStateProperty = new SimpleObjectProperty<>(processState);
+    transient protected ObjectProperty<OffererLifeCycleState> lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public OffererTrade(Offer offer) {
         super(offer);
+    }
+
+    // Serialized object does not create our transient objects
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+
+        processStateProperty = new SimpleObjectProperty<>(processState);
+        lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
     }
 
     public void onFiatPaymentStarted() {
@@ -39,4 +102,82 @@ public class OffererTrade extends Trade implements Serializable {
     }
 
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setProcessState(OffererProcessState processState) {
+        this.processState = processState;
+        processStateProperty.set(processState);
+
+        switch (processState) {
+            case UNSPECIFIC_FAULT:
+                disposeProtocol();
+                setLifeCycleState(OffererLifeCycleState.FAILED);
+                break;
+        }
+    }
+
+    public void setLifeCycleState(OffererLifeCycleState lifeCycleState) {
+        switch (lifeCycleState) {
+            case FAILED:
+                disposeProtocol();
+                break;
+            case COMPLETED:
+                disposeProtocol();
+                break;
+        }
+        this.lifeCycleState = lifeCycleState;
+        lifeCycleStateProperty.set(lifeCycleState);
+    }
+
+    public void setDepositTx(Transaction tx) {
+        this.depositTx = tx;
+        setConfidenceListener();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public OffererProcessState getProcessState() {
+        return processState;
+    }
+
+    public OffererLifeCycleState getLifeCycleState() {
+        return lifeCycleState;
+    }
+
+    public ReadOnlyObjectProperty<OffererProcessState> processStateProperty() {
+        return processStateProperty;
+    }
+
+    public ReadOnlyObjectProperty<OffererLifeCycleState> lifeCycleStateProperty() {
+        return lifeCycleStateProperty;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected void setConfidenceListener() {
+        TransactionConfidence transactionConfidence = depositTx.getConfidence();
+        ListenableFuture<TransactionConfidence> future = transactionConfidence.getDepthFuture(1);
+        Futures.addCallback(future, new FutureCallback<TransactionConfidence>() {
+            @Override
+            public void onSuccess(TransactionConfidence result) {
+                if (processState.ordinal() < OffererProcessState.DEPOSIT_CONFIRMED.ordinal())
+                    setProcessState(OffererProcessState.DEPOSIT_CONFIRMED);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                t.printStackTrace();
+                log.error(t.getMessage());
+                Throwables.propagate(t);
+            }
+        });
+    }
 }

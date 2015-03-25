@@ -21,7 +21,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
 import org.bitcoinj.core.Coin;
@@ -59,7 +59,7 @@ public class TakerCreatesAndSignsDepositTx extends Task<TakerAsSellerModel> {
 
             complete();
         } catch (Exception e) {
-            Trade.ProcessState processState = Trade.ProcessState.FAULT;
+            TakerTrade.TakerProcessState processState = TakerTrade.TakerProcessState.UNSPECIFIC_FAULT;
             processState.setErrorMessage(errorMessage);
             model.trade.setProcessState(processState);
 

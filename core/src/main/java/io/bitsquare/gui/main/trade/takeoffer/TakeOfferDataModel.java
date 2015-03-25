@@ -25,7 +25,7 @@ import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.trade.handlers.TradeResultHandler;
+import io.bitsquare.trade.handlers.TakeOfferResultHandler;
 import io.bitsquare.user.Preferences;
 
 import org.bitcoinj.core.Coin;
@@ -124,8 +124,8 @@ class TakeOfferDataModel implements Activatable, DataModel {
         tradeManager.checkOfferAvailability(offer);
     }
 
-    void takeOffer(TradeResultHandler handler) {
-        tradeManager.requestTakeOffer(amountAsCoin.get(), offer, (trade) -> handler.handleTradeResult(trade));
+    void takeOffer(TakeOfferResultHandler handler) {
+        tradeManager.requestTakeOffer(amountAsCoin.get(), offer, (trade) -> handler.handleResult(trade));
     }
 
     void calculateVolume() {

@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
-import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 
@@ -50,19 +50,19 @@ public class SendBankTransferStartedMessage extends Task<OffererAsBuyerModel> {
                         @Override
                         public void handleResult() {
                             log.trace("Sending BankTransferInitedMessage succeeded.");
-                            model.trade.setProcessState(Trade.ProcessState.FIAT_PAYMENT_STARTED);
+                            model.trade.setProcessState(OffererTrade.OffererProcessState.FIAT_PAYMENT_STARTED);
                             complete();
                         }
 
                         @Override
                         public void handleFault() {
                             failed("Sending BankTransferInitedMessage failed.");
-                            model.trade.setProcessState(Trade.ProcessState.FAULT);
+                            model.trade.setProcessState(OffererTrade.OffererProcessState.UNSPECIFIC_FAULT);
                         }
                     });
         } catch (Throwable t) {
             failed("Sending BankTransferInitedMessage failed.");
-            model.trade.setProcessState(Trade.ProcessState.FAULT);
+            model.trade.setProcessState(OffererTrade.OffererProcessState.UNSPECIFIC_FAULT);
         }
     }
 }

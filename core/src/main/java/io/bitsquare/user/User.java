@@ -224,7 +224,7 @@ public class User implements Serializable {
         return currentFiatAccount;
     }
 
-    public ObjectProperty<FiatAccount> currentFiatAccountPropertyProperty() {
+    public ObjectProperty<FiatAccount> currentFiatAccountProperty() {
         return currentFiatAccountProperty;
     }
 

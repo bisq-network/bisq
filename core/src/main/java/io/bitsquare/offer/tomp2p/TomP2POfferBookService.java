@@ -172,14 +172,6 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
                             try {
                                 Object offerDataObject = offerData.object();
                                 if (offerDataObject instanceof Offer) {
-
-                                    try {
-                                        Data offerData1 = new Data(offerDataObject);
-                                        log.trace("-------------------------- getOffers hash" + offerData1.hash().toString());
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-
                                     offers.add((Offer) offerDataObject);
                                 }
                             } catch (ClassNotFoundException | IOException e) {
