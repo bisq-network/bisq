@@ -23,11 +23,11 @@ import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.Protocol;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestTakerDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.SetupListenerForBlockChainConfirmation;
 import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 import io.bitsquare.trade.protocol.trade.taker.tasks.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
-public class TakerAsSellerProtocol {
+public class TakerAsSellerProtocol implements Protocol {
     private static final Logger log = LoggerFactory.getLogger(TakerAsSellerProtocol.class);
 
     private final TakerAsSellerModel model;
@@ -141,8 +141,7 @@ public class TakerAsSellerProtocol {
 
         taskRunner.addTasks(
                 ProcessDepositTxPublishedMessage.class,
-                TakerCommitDepositTx.class,
-                SetupListenerForBlockChainConfirmation.class
+                TakerCommitDepositTx.class
         );
         taskRunner.run();
     }

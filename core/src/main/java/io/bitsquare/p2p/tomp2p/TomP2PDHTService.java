@@ -163,9 +163,10 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
      * @return
      */
     public FuturePut addProtectedDataToMap(Number160 locationKey, Data data) {
-        log.trace("addProtectedDataToMap");
+        log.trace("addProtectedDataToMap locationKey = " + locationKey);
         data.protectEntry(keyPair);
         log.trace("addProtectedDataToMap with contentKey " + data.hash().toString());
+
         return peerDHT.add(locationKey).data(data).keyPair(keyPair).start();
     }
 
@@ -178,7 +179,7 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
      * @return
      */
     public FutureRemove removeProtectedDataFromMap(Number160 locationKey, Data data) {
-        log.trace("removeProtectedDataFromMap");
+        log.trace("removeProtectedDataFromMap locationKey = " + locationKey);
         Number160 contentKey = data.hash();
         log.trace("removeProtectedDataFromMap with contentKey " + contentKey.toString());
         return peerDHT.remove(locationKey).contentKey(contentKey).keyPair(keyPair).start();
@@ -247,7 +248,7 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
         log.trace("getDataFromMapOfMyProtectedDomain");
         return peerDHT.get(locationKey).all().domainKey(pubKeyHashForMyDomain).start();
     }
-    
+
     /**
      * Remove all data from map for given locationKey.
      * Access: Only the domain owner.

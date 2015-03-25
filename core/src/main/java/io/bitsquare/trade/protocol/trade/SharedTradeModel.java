@@ -71,6 +71,7 @@ public class SharedTradeModel extends SharedTaskModel implements Serializable {
         id = offer.getId();
         tradeWalletService = walletService.getTradeWalletService();
         //TODO use default arbitrator for now
+
         arbitratorPubKey = offer.getArbitrators().get(0).getPubKey();
     }
 

@@ -30,12 +30,12 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TradeList extends ArrayList<Trade> implements Serializable {
+public class TradeList<T> extends ArrayList<T> implements Serializable {
     private static final long serialVersionUID = 1L;
     transient private static final Logger log = LoggerFactory.getLogger(TradeList.class);
 
     transient final private Storage<TradeList> storage;
-    transient private ObservableList<Trade> observableList;
+    transient private ObservableList<T> observableList;
 
     public TradeList(File storageDir, String fileName) {
         this.storage = new Storage<>(storageDir);
@@ -51,7 +51,7 @@ public class TradeList extends ArrayList<Trade> implements Serializable {
     }
 
     @Override
-    public boolean add(Trade trade) {
+    public boolean add(T trade) {
         boolean result = super.add(trade);
         observableList.add(trade);
         storage.save();
@@ -66,7 +66,7 @@ public class TradeList extends ArrayList<Trade> implements Serializable {
         return result;
     }
 
-    public ObservableList<Trade> getObservableList() {
+    public ObservableList<T> getObservableList() {
         return observableList;
     }
 

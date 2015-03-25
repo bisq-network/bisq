@@ -64,6 +64,7 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
 
     @Override
     public void addOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler) {
+        log.debug("addOffer " + offer);
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
         try {
             final Data offerData = new Data(offer);
@@ -108,6 +109,7 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
     }
 
     public void removeOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler) {
+        log.debug("removeOffer " + offer);
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
         try {
             final Data offerData = new Data(offer);
@@ -170,6 +172,14 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
                             try {
                                 Object offerDataObject = offerData.object();
                                 if (offerDataObject instanceof Offer) {
+
+                                    try {
+                                        Data offerData1 = new Data(offerDataObject);
+                                        log.trace("-------------------------- getOffers hash" + offerData1.hash().toString());
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                    
                                     offers.add((Offer) offerDataObject);
                                 }
                             } catch (ClassNotFoundException | IOException e) {

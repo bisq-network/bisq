@@ -43,8 +43,6 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.*;
 
-//TODO flatten down?
-
 public class Offer implements Serializable {
     private static final long serialVersionUID = -971164804305475826L;
     private transient static final Logger log = LoggerFactory.getLogger(Offer.class);
@@ -86,7 +84,7 @@ public class Offer implements Serializable {
 
     // Those state properties are transient and only used at runtime! 
     // don't access directly as it might be null; use getStateProperty() which creates an object if not instantiated
-    private transient ObjectProperty<State> stateProperty;
+    transient private ObjectProperty<State> stateProperty = new SimpleObjectProperty<>(State.UNKNOWN);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -137,6 +135,9 @@ public class Offer implements Serializable {
         stateProperty().set(state);
     }
 
+    public void setOfferFeePaymentTxID(String offerFeePaymentTxID) {
+        this.offerFeePaymentTxID = offerFeePaymentTxID;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -203,10 +204,6 @@ public class Offer implements Serializable {
 
     public String getOfferFeePaymentTxID() {
         return offerFeePaymentTxID;
-    }
-
-    public void setOfferFeePaymentTxID(String offerFeePaymentTxID) {
-        this.offerFeePaymentTxID = offerFeePaymentTxID;
     }
 
     public List<Arbitrator> getArbitrators() {
@@ -277,7 +274,6 @@ public class Offer implements Serializable {
                 ", fiatPrice=" + fiatPrice +
                 ", amount=" + amount +
                 ", minAmount=" + minAmount +
-                ", p2pSigPubKey=" + p2pSigPubKey +
                 ", fiatAccountType=" + fiatAccountType +
                 ", bankAccountCountry=" + bankAccountCountry +
                 ", securityDeposit=" + securityDeposit +

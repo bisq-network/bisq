@@ -249,7 +249,7 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
         arbitrator.setFee(formatter.parseToCoin(arbitrationFeeTextField.getText()));
         arbitrator.setIdType(idType);
         arbitrator.setIdVerifications(idVerificationList);
-        arbitrator.setLanguages(languageList);
+       // arbitrator.setLanguages(languageList);
         arbitrator.setArbitrationMethods(methodList);
 
         arbitrator.setSaveOnEveryUpdate(true);
@@ -346,7 +346,7 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
 
             nameTextField.setText(arbitrator.getName());
             idTypeTextField.setText(BSResources.get(arbitrator.getIdType().toString()));
-            languagesTextField.setText(formatter.languageLocalesToString(arbitrator.getLanguages()));
+           // languagesTextField.setText(formatter.languageLocalesToString(arbitrator.getLanguages()));
             arbitrationFeeTextField.setText(String.valueOf(arbitrator.getFee()));
             methodsTextField.setText(formatter.arbitrationMethodsToString(arbitrator.getArbitrationMethods()));
             idVerificationsTextField.setText(
@@ -355,7 +355,7 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
             descriptionTextArea.setText(arbitrator.getDescription());
 
             idType = arbitrator.getIdType();
-            languageList = arbitrator.getLanguages();
+          //  languageList = arbitrator.getLanguages();
             methodList = arbitrator.getArbitrationMethods();
             idVerificationList = arbitrator.getIdVerifications();
         }

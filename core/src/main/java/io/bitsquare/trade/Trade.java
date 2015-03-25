@@ -18,7 +18,9 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.offer.Offer;
+import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.Peer;
+import io.bitsquare.trade.protocol.Protocol;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -30,7 +32,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.io.IOException;
 import java.io.Serializable;
 
 import java.util.Date;
@@ -42,8 +43,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Trade implements Serializable {
-    private static final long serialVersionUID = -8275323072940974077L;
-    private static final Logger log = LoggerFactory.getLogger(Trade.class);
+    protected static final long serialVersionUID = 1;
+    protected static final Logger log = LoggerFactory.getLogger(Trade.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -71,7 +72,7 @@ public class Trade implements Serializable {
         MESSAGE_SENDING_FAILED,
         FAULT;
 
-        private String errorMessage;
+        protected String errorMessage;
 
         public void setErrorMessage(String errorMessage) {
             this.errorMessage = errorMessage;
@@ -82,28 +83,32 @@ public class Trade implements Serializable {
         }
     }
 
-    private final Offer offer;
-    private final Date date;
-    private ProcessState processState;
-    private LifeCycleState lifeCycleState;
+    transient protected Protocol protocol;
 
-    private Coin tradeAmount;
-    private Contract contract;
-    private String contractAsJson;
-    private String takerContractSignature;
-    private String offererContractSignature;
-    private Transaction depositTx;
-    private Transaction payoutTx;
-    private Peer tradingPeer;
-    private int depthInBlocks = 0;
+    protected MailboxMessage mailboxMessage;
+
+    protected final Offer offer;
+    protected final Date date;
+    protected ProcessState processState;
+    protected LifeCycleState lifeCycleState;
+
+    protected Coin tradeAmount;
+    protected Contract contract;
+    protected String contractAsJson;
+    protected String takerContractSignature;
+    protected String offererContractSignature;
+    protected Transaction depositTx;
+    protected Transaction payoutTx;
+    protected Peer tradingPeer;
+    protected int depthInBlocks = 0;
 
     // For changing values we use properties to get binding support in the UI (table)
     // When serialized those transient properties are not instantiated, so we instantiate them in the getters at first
-    // access. Only use the accessor not the private field.
-    transient private ObjectProperty<Coin> _tradeAmount;
-    transient private ObjectProperty<Fiat> _tradeVolume;
-    transient private ObjectProperty<ProcessState> _processState;
-    transient private ObjectProperty<LifeCycleState> _lifeCycleState;
+    // access. Only use the accessor not the protected field.
+    transient protected ObjectProperty<Coin> _tradeAmount;
+    transient protected ObjectProperty<Fiat> _tradeVolume;
+    transient protected ObjectProperty<ProcessState> _processState;
+    transient protected ObjectProperty<LifeCycleState> _lifeCycleState;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -118,46 +123,35 @@ public class Trade implements Serializable {
         log.debug("Trade ");
     }
 
-    private void writeObject(java.io.ObjectOutputStream out) throws IOException {
-        log.debug("Trade writeObject");
-        out.defaultWriteObject();
-        log.debug("Trade writeObject");
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public void disposeProtocol() {
+        if (protocol != null)
+            protocol.cleanup();
+        protocol = null;
     }
 
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        log.debug("Trade readObject");
-        in.defaultReadObject();
-        //TODO cannot call yet as persistence need to be refactored first. cann be called only after bitcoinJ is initialized as serialized tx objects throw 
-        // exceptions
-        //setConfidenceListener();
-        log.debug("Trade readObject");
+    public void setMailboxMessage(MailboxMessage mailboxMessage) {
+        this.mailboxMessage = mailboxMessage;
+        if (protocol != null)
+            protocol.setMailboxMessage(mailboxMessage);
     }
 
-    private void setConfidenceListener() {
-       // log.debug("setConfidenceListener called. depthInBlocks=" + depthInBlocks + " / depositTx != null ? " + (depositTx.toString() != null));
-        if (depositTx != null && depthInBlocks == 0) {
-            TransactionConfidence transactionConfidence = depositTx.getConfidence();
-            ListenableFuture<TransactionConfidence> future = transactionConfidence.getDepthFuture(1);
-            Futures.addCallback(future, new FutureCallback<TransactionConfidence>() {
-                @Override
-                public void onSuccess(TransactionConfidence result) {
-                    setProcessState(Trade.ProcessState.DEPOSIT_CONFIRMED);
-                }
+    public void setProtocol(Protocol protocol) {
+        this.protocol = protocol;
 
-                @Override
-                public void onFailure(Throwable t) {
-                    t.printStackTrace();
-                    log.error(t.getMessage());
-                    Throwables.propagate(t);
-                }
-            });
-        }
+        if (mailboxMessage != null)
+            protocol.setMailboxMessage(mailboxMessage);
     }
-
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
+
 
     public void setTradingPeer(Peer tradingPeer) {
         this.tradingPeer = tradingPeer;
@@ -298,12 +292,38 @@ public class Trade implements Serializable {
         return _lifeCycleState;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected void setConfidenceListener() {
+        TransactionConfidence transactionConfidence = depositTx.getConfidence();
+        ListenableFuture<TransactionConfidence> future = transactionConfidence.getDepthFuture(1);
+        Futures.addCallback(future, new FutureCallback<TransactionConfidence>() {
+            @Override
+            public void onSuccess(TransactionConfidence result) {
+                setProcessState(Trade.ProcessState.DEPOSIT_CONFIRMED);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                t.printStackTrace();
+                log.error(t.getMessage());
+                Throwables.propagate(t);
+            }
+        });
+    }
+
     @Override
     public String toString() {
         return "Trade{" +
-                "offer=" + offer +
+                "protocol=" + protocol +
+                ", mailboxMessage=" + mailboxMessage +
+                ", offer=" + offer +
                 ", date=" + date +
-                ", state=" + processState +
+                ", processState=" + processState +
+                ", lifeCycleState=" + lifeCycleState +
                 ", tradeAmount=" + tradeAmount +
                 ", contract=" + contract +
                 ", contractAsJson='" + contractAsJson + '\'' +
@@ -311,6 +331,8 @@ public class Trade implements Serializable {
                 ", offererContractSignature='" + offererContractSignature + '\'' +
                 ", depositTx=" + depositTx +
                 ", payoutTx=" + payoutTx +
+                ", tradingPeer=" + tradingPeer +
+                ", depthInBlocks=" + depthInBlocks +
                 '}';
     }
 }

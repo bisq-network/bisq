@@ -30,7 +30,6 @@ import java.security.PublicKey;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -83,7 +82,9 @@ public class Arbitrator implements Serializable {
 
     // editable
     private ID_TYPE idType;
-    private List<Locale> languages;
+    // TODO languages breaks something in serialisation with TomP2P when uing Locale. cannot remove an offer
+    private List<String> languages;
+    
     private Coin fee;
     private List<METHOD> arbitrationMethods;
     private List<ID_VERIFICATION> idVerifications;
@@ -119,7 +120,7 @@ public class Arbitrator implements Serializable {
             this.p2pSigPubKey = user.getP2PSigPubKey();
             this.name = "Manfred Karrer";
             this.idType = Arbitrator.ID_TYPE.REAL_LIFE_ID;
-            this.languages = Arrays.asList(LanguageUtil.getDefaultLanguageLocale());
+            this.languages = Arrays.asList(LanguageUtil.getDefaultLanguageLocale().getISO3Language());
             this.reputation = new Reputation();
             this.fee = Coin.parseCoin("0.1");
             this.arbitrationMethods = Arrays.asList(Arbitrator.METHOD.TLS_NOTARY);
@@ -181,7 +182,7 @@ public class Arbitrator implements Serializable {
         doSave();
     }
 
-    public void setLanguages(List<Locale> languages) {
+    public void setLanguages(List<String> languages) {
         this.languages = languages;
         doSave();
     }
@@ -231,7 +232,7 @@ public class Arbitrator implements Serializable {
         return idType;
     }
 
-    public List<Locale> getLanguages() {
+    public List<String> getLanguages() {
         return languages;
     }
 

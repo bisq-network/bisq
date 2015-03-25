@@ -139,11 +139,11 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     void fiatPaymentStarted() {
-        tradeManager.onFiatPaymentStarted(getTrade().getId());
+        tradeManager.onFiatPaymentStarted(getTrade());
     }
 
     void fiatPaymentReceived() {
-        tradeManager.onFiatPaymentReceived(getTrade().getId());
+        tradeManager.onFiatPaymentReceived(getTrade());
     }
 
     void withdraw(String toAddress) {

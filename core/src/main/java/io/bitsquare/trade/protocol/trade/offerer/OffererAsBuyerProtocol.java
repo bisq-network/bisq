@@ -24,6 +24,7 @@ import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.Protocol;
 import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
@@ -39,7 +40,6 @@ import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestOffererPubl
 import io.bitsquare.trade.protocol.trade.offerer.tasks.RequestTakerDepositPayment;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendBankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendDepositTxToTaker;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.SetupListenerForBlockChainConfirmation;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SignAndPublishDepositTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyAndSignContract;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakeOfferFeePayment;
@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
 
 import static io.bitsquare.util.Validator.*;
 
-public class OffererAsBuyerProtocol {
+public class OffererAsBuyerProtocol implements Protocol {
     private static final Logger log = LoggerFactory.getLogger(OffererAsBuyerProtocol.class);
 
     private final OffererAsBuyerModel model;
@@ -156,7 +156,6 @@ public class OffererAsBuyerProtocol {
                 VerifyTakerAccount.class,
                 VerifyAndSignContract.class,
                 SignAndPublishDepositTx.class,
-                SetupListenerForBlockChainConfirmation.class,
                 SendDepositTxToTaker.class
         );
         taskRunner.run();

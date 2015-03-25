@@ -37,7 +37,6 @@ import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestOffererPubl
 import io.bitsquare.trade.protocol.trade.offerer.tasks.RequestTakerDepositPayment;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendBankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendDepositTxToTaker;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.SetupListenerForBlockChainConfirmation;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SignAndPublishDepositTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyAndSignContract;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakeOfferFeePayment;
@@ -110,7 +109,6 @@ public class DebugView extends InitializableView {
                         VerifyTakerAccount.class,
                         VerifyAndSignContract.class,
                         SignAndPublishDepositTx.class,
-                        SetupListenerForBlockChainConfirmation.class,
                         SendDepositTxToTaker.class,
 
                         CreateAndSignPayoutTx.class,
