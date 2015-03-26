@@ -52,6 +52,7 @@ public class ProcessRequestTakerDepositPaymentMessage extends Task<TakerAsSeller
 
             complete();
         } catch (Throwable t) {
+            model.trade.setThrowable(t);
             failed(t);
         }
     }

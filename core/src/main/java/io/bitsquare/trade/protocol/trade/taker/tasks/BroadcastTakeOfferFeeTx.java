@@ -54,18 +54,16 @@ public class BroadcastTakeOfferFeeTx extends Task<TakerAsSellerModel> {
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
+                            appendToErrorMessage("Take offer fee payment failed. Maybe your network connection was lost. Please try again.");
+                            model.trade.setErrorMessage(errorMessage);
                             model.trade.setProcessState(TakerTrade.TakerProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
 
                             failed(t);
                         }
                     });
-        } catch (Exception e) {
-            appendToErrorMessage("Take offer fee payment failed. Maybe your network connection was lost. Please try again.");
-            appendToErrorMessage(e.getMessage());
-
-            model.trade.setProcessState(TakerTrade.TakerProcessState.UNSPECIFIC_FAULT);
-
-            failed(e);
+        } catch (Throwable t) {
+            model.trade.setThrowable(t);
+            failed(t);
         }
     }
 }

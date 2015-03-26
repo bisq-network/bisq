@@ -33,12 +33,17 @@ public class VerifyTakeOfferFeePayment extends Task<OffererAsBuyerModel> {
 
     @Override
     protected void doRun() {
-        //TODO mocked yet, need a confidence listeners
-        int numOfPeersSeenTx = model.walletService.getNumOfPeersSeenTx(model.getTakeOfferFeeTxId());
+        try {
+            //TODO mocked yet, need a confidence listeners
+            int numOfPeersSeenTx = model.walletService.getNumOfPeersSeenTx(model.getTakeOfferFeeTxId());
        /* if (numOfPeersSeenTx > 2) {
             resultHandler.handleResult();
         }*/
 
-        complete();
+            complete();
+        } catch (Throwable t) {
+            model.trade.setThrowable(t);
+            failed(t);
+        }
     }
 }

@@ -43,12 +43,9 @@ public class CreateTakeOfferFeeTx extends Task<TakerAsSellerModel> {
             model.trade.setProcessState(TakerTrade.TakerProcessState.TAKE_OFFER_FEE_TX_CREATED);
 
             complete();
-        } catch (Exception e) {
-            appendToErrorMessage(e.getMessage());
-
-            model.trade.setProcessState(TakerTrade.TakerProcessState.UNSPECIFIC_FAULT);
-
-            failed(e);
+        } catch (Throwable t) {
+            model.trade.setThrowable(t);
+            failed(t);
         }
     }
 }

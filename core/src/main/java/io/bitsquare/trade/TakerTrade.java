@@ -58,25 +58,17 @@ public class TakerTrade extends Trade implements Serializable {
         TAKE_OFFER_FEE_TX_CREATED,
         TAKE_OFFER_FEE_PUBLISHED,
         TAKE_OFFER_FEE_PUBLISH_FAILED,
+        
         DEPOSIT_PUBLISHED,
         DEPOSIT_CONFIRMED,
+        
         FIAT_PAYMENT_STARTED,
+        
         FIAT_PAYMENT_RECEIVED,
         PAYOUT_PUBLISHED,
+        
         MESSAGE_SENDING_FAILED,
-        UNSPECIFIC_FAULT;
-
-        protected String errorMessage;
-
-        @Override
-        public void setErrorMessage(String errorMessage) {
-            this.errorMessage = errorMessage;
-        }
-
-        @Override
-        public String getErrorMessage() {
-            return errorMessage;
-        }
+        EXCEPTION
     }
 
     protected TakerProcessState processState;
@@ -111,19 +103,19 @@ public class TakerTrade extends Trade implements Serializable {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void setLifeCycleState(TakerLifeCycleState lifeCycleState) {
+        this.lifeCycleState = lifeCycleState;
+        lifeCycleStateProperty.set(lifeCycleState);
+    }
+
     public void setProcessState(TakerProcessState processState) {
         this.processState = processState;
         processStateProperty.set(processState);
 
-        if (processState == TakerProcessState.UNSPECIFIC_FAULT) {
+        if (processState == TakerProcessState.EXCEPTION) {
             setLifeCycleState(TakerLifeCycleState.FAILED);
             disposeProtocol();
         }
-    }
-
-    public void setLifeCycleState(TakerLifeCycleState lifeCycleState) {
-        this.lifeCycleState = lifeCycleState;
-        lifeCycleStateProperty.set(lifeCycleState);
     }
 
     public void setDepositTx(Transaction tx) {
@@ -131,6 +123,12 @@ public class TakerTrade extends Trade implements Serializable {
         setConfidenceListener();
     }
 
+    @Override
+    public void setThrowable(Throwable throwable) {
+        super.setThrowable(throwable);
+        setProcessState(TakerTrade.TakerProcessState.EXCEPTION);
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters

@@ -47,6 +47,7 @@ public class ProcessDepositTxPublishedMessage extends Task<TakerAsSellerModel> {
 
             complete();
         } catch (Throwable t) {
+            model.trade.setThrowable(t);
             failed(t);
         }
     }

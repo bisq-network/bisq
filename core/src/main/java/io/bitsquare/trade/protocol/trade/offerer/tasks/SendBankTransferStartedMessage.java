@@ -35,7 +35,7 @@ public class SendBankTransferStartedMessage extends Task<OffererAsBuyerModel> {
     }
 
     @Override
-    protected void doRun() {
+    protected void doRun() { 
         try {
             FiatTransferStartedMessage tradeMessage = new FiatTransferStartedMessage(model.id,
                     model.offerer.payoutTxSignature,
@@ -49,20 +49,22 @@ public class SendBankTransferStartedMessage extends Task<OffererAsBuyerModel> {
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {
-                            log.trace("Sending BankTransferInitedMessage succeeded.");
+                            log.trace("Sending FiatTransferStartedMessage succeeded.");
                             model.trade.setProcessState(OffererTrade.OffererProcessState.FIAT_PAYMENT_STARTED);
                             complete();
                         }
 
                         @Override
                         public void handleFault() {
-                            failed("Sending BankTransferInitedMessage failed.");
-                            model.trade.setProcessState(OffererTrade.OffererProcessState.UNSPECIFIC_FAULT);
+                            appendToErrorMessage("Sending FiatTransferStartedMessage failed");
+                            model.trade.setErrorMessage(errorMessage);
+                            model.trade.setProcessState(OffererTrade.OffererProcessState.MESSAGE_SENDING_FAILED);
+                            failed();
                         }
                     });
         } catch (Throwable t) {
-            failed("Sending BankTransferInitedMessage failed.");
-            model.trade.setProcessState(OffererTrade.OffererProcessState.UNSPECIFIC_FAULT);
+            model.trade.setThrowable(t);
+            failed(t);
         }
     }
 }

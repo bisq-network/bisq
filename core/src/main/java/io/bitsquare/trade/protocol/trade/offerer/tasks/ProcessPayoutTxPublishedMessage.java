@@ -47,6 +47,7 @@ public class ProcessPayoutTxPublishedMessage extends Task<OffererAsBuyerModel> {
 
             complete();
         } catch (Throwable t) {
+            model.trade.setThrowable(t);
             failed(t);
         }
     }

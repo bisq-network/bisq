@@ -66,11 +66,13 @@ public class SignAndPublishDepositTx extends Task<OffererAsBuyerModel> {
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
+                            model.trade.setThrowable(t);
                             failed(t);
                         }
                     });
-        } catch (Exception e) {
-            failed(e);
+        } catch (Throwable t) {
+            model.trade.setThrowable(t);
+            failed(t);
         }
     }
 }

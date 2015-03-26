@@ -50,7 +50,7 @@ public class ProcessFiatTransferStartedMessage extends Task<TakerAsSellerModel> 
 
             complete();
         } catch (Throwable t) {
-            model.trade.setProcessState(TakerTrade.TakerProcessState.UNSPECIFIC_FAULT);
+            model.trade.setThrowable(t);
             failed(t);
         }
     }

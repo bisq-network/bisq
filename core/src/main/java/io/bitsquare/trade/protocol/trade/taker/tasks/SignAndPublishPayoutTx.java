@@ -62,11 +62,13 @@ public class SignAndPublishPayoutTx extends Task<TakerAsSellerModel> {
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
+                            model.trade.setThrowable(t);
                             failed(t);
                         }
                     });
-        } catch (Throwable e) {
-            failed(e);
+        } catch (Throwable t) {
+            model.trade.setThrowable(t);
+            failed(t);
         }
     }
 }

@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
+import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.protocol.trade.messages.RequestOffererPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
@@ -35,30 +36,39 @@ public class SendSignedTakerDepositTx extends Task<TakerAsSellerModel> {
 
     @Override
     protected void doRun() {
-        RequestOffererPublishDepositTxMessage tradeMessage = new RequestOffererPublishDepositTxMessage(
-                model.id,
-                model.taker.fiatAccount,
-                model.taker.accountId,
-                model.taker.p2pSigPubKey,
-                model.taker.p2pEncryptPublicKey,
-                model.trade.getContractAsJson(),
-                model.trade.getTakerContractSignature(),
-                model.taker.addressEntry.getAddressString(),
-                model.taker.preparedDepositTx,
-                model.taker.connectedOutputsForAllInputs,
-                model.taker.outputs
-        );
+        try {
+            RequestOffererPublishDepositTxMessage tradeMessage = new RequestOffererPublishDepositTxMessage(
+                    model.id,
+                    model.taker.fiatAccount,
+                    model.taker.accountId,
+                    model.taker.p2pSigPubKey,
+                    model.taker.p2pEncryptPublicKey,
+                    model.trade.getContractAsJson(),
+                    model.trade.getTakerContractSignature(),
+                    model.taker.addressEntry.getAddressString(),
+                    model.taker.preparedDepositTx,
+                    model.taker.connectedOutputsForAllInputs,
+                    model.taker.outputs
+            );
 
-        model.messageService.sendMessage(model.trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
-            @Override
-            public void handleResult() {
-                complete();
-            }
+            model.messageService.sendMessage(model.trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
+                @Override
+                public void handleResult() {
+                    complete();
+                }
 
-            @Override
-            public void handleFault() {
-                failed("Sending RequestOffererDepositPublicationMessage failed");
-            }
-        });
+                @Override
+                public void handleFault() {
+                    appendToErrorMessage("Sending RequestOffererDepositPublicationMessage failed");
+                    model.trade.setErrorMessage(errorMessage);
+                    model.trade.setProcessState(TakerTrade.TakerProcessState.MESSAGE_SENDING_FAILED);
+
+                    failed();
+                }
+            });
+        } catch (Throwable t) {
+            model.trade.setThrowable(t);
+            failed(t);
+        }
     }
 }

@@ -54,6 +54,7 @@ public class ProcessRequestOffererPublishDepositTxMessage extends Task<OffererAs
 
             complete();
         } catch (Throwable t) {
+            model.trade.setThrowable(t);
             failed(t);
         }
     }

@@ -44,9 +44,8 @@ abstract public class Trade implements Serializable {
 
     transient protected static final Logger log = LoggerFactory.getLogger(Trade.class);
 
+
     public interface ProcessState {
-        void setErrorMessage(String errorMessage);
-        String getErrorMessage();
     }
 
     public interface LifeCycleState {
@@ -68,6 +67,8 @@ abstract public class Trade implements Serializable {
     protected Peer tradingPeer;
     protected int depthInBlocks = 0;
 
+    transient protected String errorMessage;
+    transient protected Throwable throwable;
     transient protected ObjectProperty<Coin> tradeAmountProperty = new SimpleObjectProperty<>(tradeAmount);
     transient protected ObjectProperty<Fiat> tradeVolumeProperty = new SimpleObjectProperty<>(getTradeVolume());
 
@@ -159,6 +160,14 @@ abstract public class Trade implements Serializable {
         this.payoutTx = tx;
     }
 
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
+    public void setThrowable(Throwable throwable) {
+        this.throwable = throwable;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -214,6 +223,14 @@ abstract public class Trade implements Serializable {
 
     public ReadOnlyObjectProperty<Fiat> tradeVolumeProperty() {
         return tradeVolumeProperty;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public Throwable getThrowable() {
+        return throwable;
     }
 
     abstract public ReadOnlyObjectProperty<? extends ProcessState> processStateProperty();

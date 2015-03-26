@@ -58,20 +58,13 @@ public class OffererTrade extends Trade implements Serializable {
     public enum OffererProcessState implements ProcessState {
         DEPOSIT_PUBLISHED,
         DEPOSIT_CONFIRMED,
+        
         FIAT_PAYMENT_STARTED,
+        
         PAYOUT_PUBLISHED,
+        
         MESSAGE_SENDING_FAILED,
-        UNSPECIFIC_FAULT;
-
-        protected String errorMessage;
-
-        public void setErrorMessage(String errorMessage) {
-            this.errorMessage = errorMessage;
-        }
-
-        public String getErrorMessage() {
-            return errorMessage;
-        }
+        UNSPECIFIC_FAULT
     }
 
     protected OffererProcessState processState;

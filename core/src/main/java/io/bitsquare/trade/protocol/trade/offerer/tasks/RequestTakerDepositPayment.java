@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
+import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.protocol.trade.messages.RequestTakerDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 
@@ -35,27 +36,35 @@ public class RequestTakerDepositPayment extends Task<OffererAsBuyerModel> {
 
     @Override
     protected void doRun() {
-        RequestTakerDepositPaymentMessage tradeMessage = new RequestTakerDepositPaymentMessage(
-                model.id,
-                model.offerer.connectedOutputsForAllInputs,
-                model.offerer.outputs,
-                model.offerer.tradeWalletPubKey,
-                model.offerer.p2pSigPubKey,
-                model.offerer.p2pEncryptPubKey,
-                model.offerer.fiatAccount,
-                model.offerer.accountId);
+        try {
+            RequestTakerDepositPaymentMessage tradeMessage = new RequestTakerDepositPaymentMessage(
+                    model.id,
+                    model.offerer.connectedOutputsForAllInputs,
+                    model.offerer.outputs,
+                    model.offerer.tradeWalletPubKey,
+                    model.offerer.p2pSigPubKey,
+                    model.offerer.p2pEncryptPubKey,
+                    model.offerer.fiatAccount,
+                    model.offerer.accountId);
 
-        model.messageService.sendMessage(model.trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
-            @Override
-            public void handleResult() {
-                log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");
-                complete();
-            }
+            model.messageService.sendMessage(model.trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
+                @Override
+                public void handleResult() {
+                    log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");
+                    complete();
+                }
 
-            @Override
-            public void handleFault() {
-                failed();
-            }
-        });
+                @Override
+                public void handleFault() {
+                    appendToErrorMessage("Sending RequestTakerDepositPaymentMessage failed");
+                    model.trade.setErrorMessage(errorMessage);
+                    model.trade.setProcessState(OffererTrade.OffererProcessState.MESSAGE_SENDING_FAILED);
+                    failed();
+                }
+            });
+        } catch (Throwable t) {
+            model.trade.setThrowable(t);
+            failed(t);
+        }
     }
 }

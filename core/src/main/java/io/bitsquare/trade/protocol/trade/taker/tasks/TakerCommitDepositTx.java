@@ -22,7 +22,6 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.VerificationException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +42,8 @@ public class TakerCommitDepositTx extends Task<TakerAsSellerModel> {
             model.trade.setDepositTx(depositTx);
 
             complete();
-        } catch (VerificationException t) {
+        } catch (Throwable t) {
+            model.trade.setThrowable(t);
             failed(t);
         }
     }

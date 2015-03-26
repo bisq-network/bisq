@@ -57,8 +57,9 @@ public class CreateAndSignPayoutTx extends Task<OffererAsBuyerModel> {
             model.taker.payoutAmount = takerPayoutAmount;
 
             complete();
-        } catch (Exception e) {
-            failed(e);
+        } catch (Throwable t) {
+            model.trade.setThrowable(t);
+            failed(t);
         }
     }
 }

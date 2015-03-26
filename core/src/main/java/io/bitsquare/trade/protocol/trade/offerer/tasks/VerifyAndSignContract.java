@@ -36,26 +36,31 @@ public class VerifyAndSignContract extends Task<OffererAsBuyerModel> {
 
     @Override
     protected void doRun() {
-        Trade trade = model.trade;
+        try {
+            Trade trade = model.trade;
 
-        Contract contract = new Contract(
-                model.offer,
-                trade.getTradeAmount(),
-                model.getTakeOfferFeeTxId(),
-                model.offerer.accountId,
-                model.taker.accountId,
-                model.offerer.fiatAccount,
-                model.taker.fiatAccount,
-                model.offerer.p2pSigPubKey,
-                model.taker.p2pSigPublicKey);
-        String contractAsJson = Utilities.objectToJson(contract);
-        String signature = model.signatureService.signMessage(model.offerer.registrationKeyPair, contractAsJson);
+            Contract contract = new Contract(
+                    model.offer,
+                    trade.getTradeAmount(),
+                    model.getTakeOfferFeeTxId(),
+                    model.offerer.accountId,
+                    model.taker.accountId,
+                    model.offerer.fiatAccount,
+                    model.taker.fiatAccount,
+                    model.offerer.p2pSigPubKey,
+                    model.taker.p2pSigPublicKey);
+            String contractAsJson = Utilities.objectToJson(contract);
+            String signature = model.signatureService.signMessage(model.offerer.registrationKeyPair, contractAsJson);
 
-        trade.setContract(contract);
-        trade.setContractAsJson(contractAsJson);
-        trade.setOffererContractSignature(signature);
-        trade.setTakerContractSignature(model.taker.contractSignature);
+            trade.setContract(contract);
+            trade.setContractAsJson(contractAsJson);
+            trade.setOffererContractSignature(signature);
+            trade.setTakerContractSignature(model.taker.contractSignature);
 
-        complete();
+            complete();
+        } catch (Throwable t) {
+            model.trade.setThrowable(t);
+            failed(t);
+        }
     }
 }

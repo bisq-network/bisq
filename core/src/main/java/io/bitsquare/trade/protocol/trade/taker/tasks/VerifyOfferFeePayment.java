@@ -33,11 +33,16 @@ public class VerifyOfferFeePayment extends Task<TakerAsSellerModel> {
 
     @Override
     protected void doRun() {
-        //TODO impl. missing
-        int numOfPeersSeenTx = model.walletService.getNumOfPeersSeenTx(model.getTakeOfferFeeTx().getHashAsString());
+        try {
+            //TODO impl. missing
+            int numOfPeersSeenTx = model.walletService.getNumOfPeersSeenTx(model.getTakeOfferFeeTx().getHashAsString());
        /* if (numOfPeersSeenTx > 2) {
             resultHandler.handleResult();
         }*/
-        complete();
+            complete();
+        } catch (Throwable t) {
+            model.trade.setThrowable(t);
+            failed(t);
+        }
     }
 }

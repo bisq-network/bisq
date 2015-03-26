@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
+import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 
@@ -35,19 +36,27 @@ public class SendDepositTxToTaker extends Task<OffererAsBuyerModel> {
 
     @Override
     protected void doRun() {
-        DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(model.id, model.trade.getDepositTx());
+        try {
+            DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(model.id, model.trade.getDepositTx());
 
-        model.messageService.sendMessage(model.trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
-            @Override
-            public void handleResult() {
-                log.trace("DepositTxPublishedMessage successfully arrived at peer");
-                complete();
-            }
+            model.messageService.sendMessage(model.trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
+                @Override
+                public void handleResult() {
+                    log.trace("DepositTxPublishedMessage successfully arrived at peer");
+                    complete();
+                }
 
-            @Override
-            public void handleFault() {
-                failed("Sending DepositTxPublishedMessage failed.");
-            }
-        });
+                @Override
+                public void handleFault() {
+                    appendToErrorMessage("Sending DepositTxPublishedMessage failed");
+                    model.trade.setErrorMessage(errorMessage);
+                    model.trade.setProcessState(OffererTrade.OffererProcessState.MESSAGE_SENDING_FAILED);
+                    failed();
+                }
+            });
+        } catch (Throwable t) {
+            model.trade.setThrowable(t);
+            failed(t);
+        }
     }
 }

@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
+import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
@@ -35,22 +36,30 @@ public class SendPayoutTxToOfferer extends Task<TakerAsSellerModel> {
 
     @Override
     protected void doRun() {
-        PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(model.id, model.getPayoutTx());
-        model.messageService.sendMessage(model.trade.getTradingPeer(),
-                tradeMessage,
-                model.offerer.p2pSigPublicKey,
-                model.offerer.p2pEncryptPubKey,
-                new SendMessageListener() {
-                    @Override
-                    public void handleResult() {
-                        log.trace("PayoutTxPublishedMessage successfully arrived at peer");
-                        complete();
-                    }
+        try {
+            PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(model.id, model.getPayoutTx());
+            model.messageService.sendMessage(model.trade.getTradingPeer(),
+                    tradeMessage,
+                    model.offerer.p2pSigPublicKey,
+                    model.offerer.p2pEncryptPubKey,
+                    new SendMessageListener() {
+                        @Override
+                        public void handleResult() {
+                            log.trace("PayoutTxPublishedMessage successfully arrived at peer");
+                            complete();
+                        }
 
-                    @Override
-                    public void handleFault() {
-                        failed("Sending PayoutTxPublishedMessage failed.");
-                    }
-                });
+                        @Override
+                        public void handleFault() {
+                            appendToErrorMessage("Sending PayoutTxPublishedMessage failed");
+                            model.trade.setErrorMessage(errorMessage);
+                            model.trade.setProcessState(TakerTrade.TakerProcessState.MESSAGE_SENDING_FAILED);
+                            failed();
+                        }
+                    });
+        } catch (Throwable t) {
+            model.trade.setThrowable(t);
+            failed(t);
+        }
     }
 }

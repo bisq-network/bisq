@@ -211,8 +211,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             takerTrade.processStateProperty().addListener((ov, oldValue, newValue) -> {
                 log.debug("takerTrade state = " + newValue);
                 String msg = "";
-                if (newValue.getErrorMessage() != null)
-                    msg = "\nError message: " + newValue.getErrorMessage();
+                if (takerTrade.getErrorMessage() != null)
+                    msg = "\nError message: " + takerTrade.getErrorMessage();
 
                 switch (newValue) {
                     case TAKE_OFFER_FEE_TX_CREATED:
@@ -235,7 +235,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                         break;
                     case PAYOUT_PUBLISHED:
                         break;
-                    case UNSPECIFIC_FAULT:
+                    case EXCEPTION:
                         errorMessage.set(msg);
                         takeOfferRequested = false;
                         break;

@@ -33,16 +33,21 @@ public class VerifyOffererAccount extends Task<TakerAsSellerModel> {
 
     @Override
     protected void doRun() {
-        if (model.blockChainService.verifyAccountRegistration()) {
-            if (model.blockChainService.isAccountBlackListed(model.offerer.accountId, model.offerer.fiatAccount)) {
-                failed("Taker is blacklisted.");
+        try {
+            if (model.blockChainService.verifyAccountRegistration()) {
+                if (model.blockChainService.isAccountBlackListed(model.offerer.accountId, model.offerer.fiatAccount)) {
+                    failed("Taker is blacklisted.");
+                }
+                else {
+                    complete();
+                }
             }
             else {
-                complete();
+                failed("Account registration validation for peer faultHandler.onFault.");
             }
-        }
-        else {
-            failed("Account registration validation for peer faultHandler.onFault.");
+        } catch (Throwable t) {
+            model.trade.setThrowable(t);
+            failed(t);
         }
     }
 }

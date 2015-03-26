@@ -49,6 +49,7 @@ public class ProcessRequestDepositTxInputsMessage extends Task<OffererAsBuyerMod
 
             complete();
         } catch (Throwable t) {
+            model.trade.setThrowable(t);
             failed(t);
         }
     }

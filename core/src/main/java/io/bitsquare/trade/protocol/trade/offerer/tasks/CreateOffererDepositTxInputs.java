@@ -46,8 +46,9 @@ public class CreateOffererDepositTxInputs extends Task<OffererAsBuyerModel> {
             model.offerer.outputs = result.getOutputs();
 
             complete();
-        } catch (Throwable e) {
-            failed(e);
+        } catch (Throwable t) {
+            model.trade.setThrowable(t);
+            failed(t);
         }
     }
 }
