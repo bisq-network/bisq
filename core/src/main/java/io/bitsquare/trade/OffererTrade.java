@@ -76,8 +76,8 @@ public class OffererTrade extends Trade implements Serializable {
     private OffererProcessState processState;
     private OffererLifeCycleState lifeCycleState;
 
-    transient private ObjectProperty<OffererProcessState> processStateProperty = new SimpleObjectProperty<>(processState);
-    transient private ObjectProperty<OffererLifeCycleState> lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
+    transient private ObjectProperty<OffererProcessState> processStateProperty = new SimpleObjectProperty<>();
+    transient private ObjectProperty<OffererLifeCycleState> lifeCycleStateProperty = new SimpleObjectProperty<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

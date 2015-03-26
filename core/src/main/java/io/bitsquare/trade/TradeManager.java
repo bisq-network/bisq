@@ -291,14 +291,6 @@ public class TradeManager {
     // Trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onFiatPaymentStarted(Trade trade) {
-        ((OffererTrade) trade).onFiatPaymentStarted();
-    }
-
-    public void onFiatPaymentReceived(Trade trade) {
-        ((TakerTrade) trade).onFiatPaymentReceived();
-    }
-
     public void requestWithdraw(String toAddress, Trade trade, ResultHandler resultHandler, FaultHandler faultHandler) {
         AddressEntry addressEntry = walletService.getAddressEntry(trade.getId());
         String fromAddress = addressEntry.getAddressString();

@@ -36,6 +36,9 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Holds all data which are needed between tasks. All relevant data for the trade itself are stored in Trade.
+ */
 public class TakerAsSellerModel extends SharedTradeModel implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;

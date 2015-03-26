@@ -143,7 +143,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         acceptedCountriesTextField.setText(model.getAcceptedCountries());
         acceptedLanguagesTextField.setText(model.getAcceptedLanguages());
         acceptedArbitratorsTextField.setText(model.getAcceptedArbitratorIds());
-
+       
         showCheckAvailabilityScreen();
     }
 

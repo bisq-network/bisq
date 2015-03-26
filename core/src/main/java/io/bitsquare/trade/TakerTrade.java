@@ -79,8 +79,8 @@ public class TakerTrade extends Trade implements Serializable {
     private TakerProcessState processState;
     private TakerLifeCycleState lifeCycleState;
 
-    transient private ObjectProperty<TakerProcessState> processStateProperty = new SimpleObjectProperty<>(processState);
-    transient private ObjectProperty<TakerLifeCycleState> lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
+    transient private ObjectProperty<TakerProcessState> processStateProperty = new SimpleObjectProperty<>();
+    transient private ObjectProperty<TakerLifeCycleState> lifeCycleStateProperty = new SimpleObjectProperty<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -89,6 +89,7 @@ public class TakerTrade extends Trade implements Serializable {
 
     public TakerTrade(Offer offer, Coin tradeAmount, Peer peer) {
         super(offer);
+        
         this.tradeAmount = tradeAmount;
         this.tradingPeer = peer;
 

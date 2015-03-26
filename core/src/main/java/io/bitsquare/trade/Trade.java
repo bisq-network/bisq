@@ -38,6 +38,10 @@ import javafx.beans.property.SimpleObjectProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Holds all data which are relevant to the trade, but not those which are only needed in the trade process as shared data between tasks. Those data are 
+ * stored in the task model.
+ */
 abstract public class Trade implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
@@ -128,10 +132,6 @@ abstract public class Trade implements Serializable {
         this.offererContractSignature = offererContractSignature;
     }
 
-    public Contract getContract() {
-        return contract;
-    }
-
     public void setContractAsJson(String contractAsJson) {
         this.contractAsJson = contractAsJson;
     }
@@ -173,6 +173,10 @@ abstract public class Trade implements Serializable {
         return payoutTx;
     }
 
+    public Contract getContract() {
+        return contract;
+    }
+
     public Coin getSecurityDeposit() {
         return offer.getSecurityDeposit();
     }
@@ -193,20 +197,20 @@ abstract public class Trade implements Serializable {
         return date;
     }
 
-    public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
-        return tradeAmountProperty;
-    }
-
-    public ReadOnlyObjectProperty<Fiat> tradeVolumeProperty() {
-        return tradeVolumeProperty;
-    }
-
     public String getErrorMessage() {
         return errorMessage;
     }
 
     public Throwable getThrowable() {
         return throwable;
+    }
+
+    public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
+        return tradeAmountProperty;
+    }
+
+    public ReadOnlyObjectProperty<Fiat> tradeVolumeProperty() {
+        return tradeVolumeProperty;
     }
 
     public abstract ReadOnlyObjectProperty<? extends ProcessState> processStateProperty();
@@ -219,7 +223,6 @@ abstract public class Trade implements Serializable {
 
     public abstract Peer getTradingPeer();
 
-    protected abstract void setConfidenceListener();
 
     @Override
     public String toString() {
@@ -237,4 +240,12 @@ abstract public class Trade implements Serializable {
                 ", depthInBlocks=" + depthInBlocks +
                 '}';
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protected
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected abstract void setConfidenceListener();
+
+
 }
