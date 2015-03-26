@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Contract;
-import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 import io.bitsquare.util.Utilities;
 
@@ -37,11 +37,11 @@ public class VerifyAndSignContract extends Task<OffererAsBuyerModel> {
     @Override
     protected void doRun() {
         try {
-            Trade trade = model.trade;
+            OffererTrade offererTrade = model.trade;
 
             Contract contract = new Contract(
                     model.offer,
-                    trade.getTradeAmount(),
+                    offererTrade.getTradeAmount(),
                     model.getTakeOfferFeeTxId(),
                     model.offerer.accountId,
                     model.taker.accountId,
@@ -52,10 +52,10 @@ public class VerifyAndSignContract extends Task<OffererAsBuyerModel> {
             String contractAsJson = Utilities.objectToJson(contract);
             String signature = model.signatureService.signMessage(model.offerer.registrationKeyPair, contractAsJson);
 
-            trade.setContract(contract);
-            trade.setContractAsJson(contractAsJson);
-            trade.setOffererContractSignature(signature);
-            trade.setTakerContractSignature(model.taker.contractSignature);
+            offererTrade.setContract(contract);
+            offererTrade.setContractAsJson(contractAsJson);
+            offererTrade.setOffererContractSignature(signature);
+            offererTrade.setTakerContractSignature(model.taker.contractSignature);
 
             complete();
         } catch (Throwable t) {

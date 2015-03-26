@@ -27,7 +27,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.Fiat;
 
-import java.io.IOException;
 import java.io.Serializable;
 
 import java.util.Date;
@@ -57,20 +56,18 @@ abstract public class Trade implements Serializable {
     protected final Offer offer;
     protected final Date date;
 
-    protected Coin tradeAmount;
     protected Contract contract;
     protected String contractAsJson;
     protected String takerContractSignature;
     protected String offererContractSignature;
     protected Transaction depositTx;
     protected Transaction payoutTx;
-    protected Peer tradingPeer;
     protected int depthInBlocks = 0;
 
     transient protected String errorMessage;
     transient protected Throwable throwable;
-    transient protected ObjectProperty<Coin> tradeAmountProperty;
-    transient protected ObjectProperty<Fiat> tradeVolumeProperty;
+    transient protected ObjectProperty<Coin> tradeAmountProperty = new SimpleObjectProperty<>();
+    transient protected ObjectProperty<Fiat> tradeVolumeProperty = new SimpleObjectProperty<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -79,25 +76,14 @@ abstract public class Trade implements Serializable {
 
     public Trade(Offer offer) {
         this.offer = offer;
+
         date = new Date();
-        tradeAmountProperty = new SimpleObjectProperty<>(tradeAmount);
-        tradeVolumeProperty = new SimpleObjectProperty<>(getTradeVolume()); // cannot be set before offer is set
-    }
-
-    // Serialized object does not create our transient objects
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-
-        tradeAmountProperty = new SimpleObjectProperty<>(tradeAmount);
-        tradeVolumeProperty = new SimpleObjectProperty<>(getTradeVolume());
     }
 
     // The deserialized tx has not actual confidence data, so we need to get the fresh one from the wallet.
     public void updateTxFromWallet(TradeWalletService tradeWalletService) {
-        if (depositTx != null) {
-            depositTx = tradeWalletService.commitsDepositTx(depositTx);
-            setConfidenceListener();
-        }
+        if (depositTx != null)
+            setDepositTx(tradeWalletService.commitsDepositTx(depositTx));
     }
 
     public void setDepositTx(Transaction tx) {
@@ -134,28 +120,12 @@ abstract public class Trade implements Serializable {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
-    public void setTradeAmount(Coin tradeAmount) {
-        this.tradeAmount = tradeAmount;
-        tradeAmountProperty.set(tradeAmount);
-        tradeVolumeProperty.set(getTradeVolume());
-    }
-
-
-    public void setTradingPeer(Peer tradingPeer) {
-        this.tradingPeer = tradingPeer;
-    }
-
     public void setTakerContractSignature(String takerSignature) {
         this.takerContractSignature = takerSignature;
     }
 
     public void setOffererContractSignature(String offererContractSignature) {
         this.offererContractSignature = offererContractSignature;
-    }
-
-    public Coin getTradeAmount() {
-        return tradeAmount;
     }
 
     public Contract getContract() {
@@ -186,10 +156,6 @@ abstract public class Trade implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public Fiat getTradeVolume() {
-        return offer.getVolumeByAmount(tradeAmount);
-    }
 
     public String getTakerContractSignature() {
         return takerContractSignature;
@@ -227,10 +193,6 @@ abstract public class Trade implements Serializable {
         return date;
     }
 
-    public Peer getTradingPeer() {
-        return tradingPeer;
-    }
-
     public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
         return tradeAmountProperty;
     }
@@ -251,6 +213,12 @@ abstract public class Trade implements Serializable {
 
     public abstract ReadOnlyObjectProperty<? extends LifeCycleState> lifeCycleStateProperty();
 
+    public abstract Coin getTradeAmount();
+
+    public abstract Fiat getTradeVolume();
+
+    public abstract Peer getTradingPeer();
+
     protected abstract void setConfidenceListener();
 
     @Override
@@ -260,14 +228,12 @@ abstract public class Trade implements Serializable {
                 ", mailboxMessage=" + mailboxMessage +
                 ", offer=" + offer +
                 ", date=" + date +
-                ", tradeAmount=" + tradeAmount +
                 ", contract=" + contract +
                 ", contractAsJson='" + contractAsJson + '\'' +
                 ", takerContractSignature='" + takerContractSignature + '\'' +
                 ", offererContractSignature='" + offererContractSignature + '\'' +
                 ", depositTx=" + depositTx +
                 ", payoutTx=" + payoutTx +
-                ", tradingPeer=" + tradingPeer +
                 ", depthInBlocks=" + depthInBlocks +
                 '}';
     }

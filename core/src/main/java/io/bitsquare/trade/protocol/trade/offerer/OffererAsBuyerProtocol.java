@@ -107,7 +107,7 @@ public class OffererAsBuyerProtocol implements Protocol {
 
             // We don't store anything in the model as we might be in a trade process and receive that request from another peer who wants to take the offer
             // at the same time
-            boolean isOfferOpen = model.trade.getLifeCycleState() == OffererTrade.OffererLifeCycleState.OPEN_OFFER;
+            boolean isOfferOpen = model.trade.lifeCycleStateProperty().get() == OffererTrade.OffererLifeCycleState.OPEN_OFFER;
             ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(model.id, isOfferOpen);
             model.messageService.sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
                 @Override

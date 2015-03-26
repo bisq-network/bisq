@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 
@@ -40,10 +40,10 @@ public class ProcessRequestDepositTxInputsMessage extends Task<OffererAsBuyerMod
     protected void doRun() {
         try {
             checkTradeId(model.id, model.getTradeMessage());
-            Trade trade = model.trade;
+            OffererTrade offererTrade = model.trade;
             RequestDepositTxInputsMessage requestDepositTxInputsMessage = (RequestDepositTxInputsMessage) model.getTradeMessage();
 
-            trade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(requestDepositTxInputsMessage.tradeAmount)));
+            offererTrade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(requestDepositTxInputsMessage.tradeAmount)));
             model.setTakeOfferFeeTxId(nonEmptyStringOf(requestDepositTxInputsMessage.takeOfferFeeTxId));
             model.taker.tradeWalletPubKey = checkNotNull(requestDepositTxInputsMessage.takerTradeWalletPubKey);
 

@@ -18,9 +18,12 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.offer.Offer;
+import io.bitsquare.p2p.Peer;
 import io.bitsquare.trade.protocol.trade.offerer.OffererAsBuyerProtocol;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.utils.Fiat;
 
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.FutureCallback;
@@ -41,6 +44,7 @@ public class OffererTrade extends Trade implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
     transient private static final Logger log = LoggerFactory.getLogger(OffererTrade.class);
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
@@ -66,11 +70,14 @@ public class OffererTrade extends Trade implements Serializable {
         EXCEPTION
     }
 
-    protected OffererProcessState processState;
-    protected OffererLifeCycleState lifeCycleState;
 
-    transient protected ObjectProperty<OffererProcessState> processStateProperty = new SimpleObjectProperty<>(processState);
-    transient protected ObjectProperty<OffererLifeCycleState> lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
+    private Coin tradeAmount;
+    private Peer tradingPeer;
+    private OffererProcessState processState;
+    private OffererLifeCycleState lifeCycleState;
+
+    transient private ObjectProperty<OffererProcessState> processStateProperty = new SimpleObjectProperty<>(processState);
+    transient private ObjectProperty<OffererLifeCycleState> lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -88,6 +95,7 @@ public class OffererTrade extends Trade implements Serializable {
         processStateProperty = new SimpleObjectProperty<>(processState);
         lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
     }
+
 
     public void onFiatPaymentStarted() {
         ((OffererAsBuyerProtocol) protocol).onFiatPaymentStarted();
@@ -123,28 +131,46 @@ public class OffererTrade extends Trade implements Serializable {
         lifeCycleStateProperty.set(lifeCycleState);
     }
 
+    public void setTradeAmount(Coin tradeAmount) {
+        this.tradeAmount = tradeAmount;
+        tradeAmountProperty.set(tradeAmount);
+        tradeVolumeProperty.set(getTradeVolume());
+    }
 
+    public void setTradingPeer(Peer tradingPeer) {
+        this.tradingPeer = tradingPeer;
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public OffererProcessState getProcessState() {
-        return processState;
-    }
-
-    public OffererLifeCycleState getLifeCycleState() {
-        return lifeCycleState;
-    }
-
+    @Override
     public ReadOnlyObjectProperty<OffererProcessState> processStateProperty() {
         return processStateProperty;
     }
 
+    @Override
     public ReadOnlyObjectProperty<OffererLifeCycleState> lifeCycleStateProperty() {
         return lifeCycleStateProperty;
     }
 
+    @Override
+    public Coin getTradeAmount() {
+        return tradeAmount;
+    }
+
+    @Override
+    public Fiat getTradeVolume() {
+        return offer.getVolumeByAmount(tradeAmount);
+    }
+
+    @Override
+    public Peer getTradingPeer() {
+        return tradingPeer;
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

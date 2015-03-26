@@ -195,12 +195,12 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
                                 e.printStackTrace();
                             }
                         }
-
+                        log.trace("Get offers with offers.size(): " + offers.size());
                         executor.execute(() -> offerRepositoryListeners.stream().forEach(listener ->
                                 listener.onOffersReceived(offers)));
                     }
 
-                    log.trace("Get offers from DHT was successful. Stored data: [key: " + locationKey
+                    log.trace("Get offers from DHT was successful. Received data: [key: " + locationKey
                             + ", values: " + futureGet.dataMap() + "]");
                 }
                 else {

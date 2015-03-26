@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 
 import org.bitcoinj.core.Coin;
@@ -37,13 +37,13 @@ public class CreateAndSignPayoutTx extends Task<OffererAsBuyerModel> {
     @Override
     protected void doRun() {
         try {
-            Trade trade = model.trade;
-            Coin securityDeposit = trade.getSecurityDeposit();
-            Coin offererPayoutAmount = trade.getTradeAmount().add(securityDeposit);
+            OffererTrade offererTrade = model.trade;
+            Coin securityDeposit = offererTrade.getSecurityDeposit();
+            Coin offererPayoutAmount = offererTrade.getTradeAmount().add(securityDeposit);
             @SuppressWarnings("UnnecessaryLocalVariable") Coin takerPayoutAmount = securityDeposit;
 
             byte[] offererPayoutTxSignature = model.tradeWalletService.offererCreatesAndSignsPayoutTx(
-                    trade.getDepositTx(),
+                    offererTrade.getDepositTx(),
                     offererPayoutAmount,
                     takerPayoutAmount,
                     model.offerer.addressEntry,

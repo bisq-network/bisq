@@ -107,7 +107,7 @@ public class TradeManager {
     @Inject
     public TradeManager(User user, AccountSettings accountSettings,
                         MessageService messageService, MailboxService mailboxService, AddressService addressService, BlockChainService blockChainService,
-                        WalletService walletService,  TradeWalletService tradeWalletService, SignatureService signatureService, 
+                        WalletService walletService, TradeWalletService tradeWalletService, SignatureService signatureService,
                         EncryptionService<MailboxMessage> encryptionService,
                         OfferBookService offerBookService, ArbitrationRepository arbitrationRepository, @Named("storage.dir") File storageDir) {
         this.user = user;
@@ -179,6 +179,7 @@ public class TradeManager {
                 TakerTrade takerTrade = (TakerTrade) trade;
                 TakerAsSellerProtocol sellerTakesOfferProtocol = createTakerAsSellerProtocol(takerTrade);
                 takerTrade.setProtocol(sellerTakesOfferProtocol);
+                takerTrade.updateTxFromWallet(tradeWalletService);
             }
         }
 
@@ -305,7 +306,7 @@ public class TradeManager {
         // TODO handle overpaid securityDeposit
         Coin amountToWithdraw = trade.getSecurityDeposit();
         if (trade instanceof OffererTrade)
-            amountToWithdraw = amountToWithdraw.add(trade.getTradeAmount());
+            amountToWithdraw = amountToWithdraw.add(((OffererTrade) trade).getTradeAmount());
 
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
             @Override
@@ -411,9 +412,7 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TakerTrade takeAvailableOffer(Coin amount, Offer offer, Peer peer) {
-        TakerTrade takerTrade = new TakerTrade(offer);
-        takerTrade.setTradeAmount(amount);
-        takerTrade.setTradingPeer(peer);
+        TakerTrade takerTrade = new TakerTrade(offer, amount, peer);
         takerTrade.setLifeCycleState(TakerTrade.TakerLifeCycleState.PENDING);
         pendingTrades.add(takerTrade);
 
