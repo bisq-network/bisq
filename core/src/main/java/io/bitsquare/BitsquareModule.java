@@ -17,22 +17,24 @@
 
 package io.bitsquare;
 
-import com.google.common.collect.Sets;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.core.env.Environment;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public abstract class BitsquareModule extends AbstractModule {
-
+    private static final Logger log = LoggerFactory.getLogger(BitsquareModule.class);
     protected final Environment env;
 
-    private final Set<BitsquareModule> modules = Sets.newHashSet();
+    private final List<BitsquareModule> modules = new ArrayList();
 
     protected BitsquareModule(Environment env) {
         checkNotNull(env, "Environment must not be null");
@@ -41,6 +43,7 @@ public abstract class BitsquareModule extends AbstractModule {
 
     protected void install(BitsquareModule module) {
         super.install(module);
+        log.trace("install " + module.getClass().getSimpleName());
         modules.add(module);
     }
 
@@ -65,5 +68,6 @@ public abstract class BitsquareModule extends AbstractModule {
      * @param injector the Injector originally initialized with this module
      */
     protected void doClose(Injector injector) {
+        log.trace("doClose " + getClass().getSimpleName());
     }
 }

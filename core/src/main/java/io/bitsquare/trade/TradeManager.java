@@ -95,6 +95,7 @@ public class TradeManager {
     private final TradeList<OffererTrade> openOfferTrades;
     private final TradeList<Trade> pendingTrades;
     private final TradeList<Trade> closedTrades;
+    private boolean shutDownRequested;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -122,6 +123,10 @@ public class TradeManager {
         this.openOfferTrades = new TradeList<>(storageDir, "OpenOfferTrades");
         this.pendingTrades = new TradeList<>(storageDir, "PendingTrades");
         this.closedTrades = new TradeList<>(storageDir, "ClosedTrades");
+
+        // In case the app did get killed the shutDown from the modules is not called, so we use a shutdown hook
+        Thread shutDownHookThread = new Thread(TradeManager.this::shutDown, "TradeManager:ShutDownHook");
+        Runtime.getRuntime().addShutdownHook(shutDownHookThread);
     }
 
 
@@ -129,10 +134,30 @@ public class TradeManager {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+
+    public void shutDown() {
+        if (!shutDownRequested) {
+            log.debug("shutDown");
+            shutDownRequested = true;
+            // we remove own offers form offerbook when we go offline
+            for (OffererTrade offererTrade : openOfferTrades) {
+                Offer offer = offererTrade.getOffer();
+                offerBookService.removeOfferAtShutDown(offer);
+            }
+        }
+    }
+
     // When all services are initialized we create the protocols for our open offers and persisted not completed pendingTrades
     // OffererAsBuyerProtocol listens for take offer requests, so we need to instantiate it early.
     public void onAllServicesInitialized() {
+
         for (OffererTrade offererTrade : openOfferTrades) {
+            Offer offer = offererTrade.getOffer();
+            // we add own offers to offerbook when we go online again
+            offerBookService.addOffer(offer,
+                    () -> log.debug("Successful removed open offer from DHT"),
+                    (message, throwable) -> log.error("Remove open offer from DHT failed. " + message));
+
             OffererAsBuyerProtocol protocol = createOffererAsBuyerProtocol(offererTrade);
             offererTrade.setProtocol(protocol);
         }
@@ -310,7 +335,7 @@ public class TradeManager {
         }
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Called from Offerbook when offer gets removed from DHT
     ///////////////////////////////////////////////////////////////////////////////////////////

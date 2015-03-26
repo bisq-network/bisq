@@ -29,11 +29,15 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.core.env.Environment;
 
 import static io.bitsquare.p2p.tomp2p.BootstrappedPeerBuilder.*;
 
 public class TomP2PModule extends P2PModule {
+    private static final Logger log = LoggerFactory.getLogger(TomP2PModule.class);
     public static final String BOOTSTRAP_NODE_NAME_KEY = "bootstrap.node.name";
     public static final String BOOTSTRAP_NODE_IP_KEY = "bootstrap.node.ip";
     public static final String BOOTSTRAP_NODE_PORT_KEY = "bootstrap.node.port";
@@ -71,6 +75,7 @@ public class TomP2PModule extends P2PModule {
 
     @Override
     protected void doClose(Injector injector) {
+        log.trace("doClose " + getClass().getSimpleName());
         // First shut down AddressService to remove address from DHT
         injector.getInstance(AddressService.class).shutDown();
         injector.getInstance(BootstrappedPeerBuilder.class).shutDown();

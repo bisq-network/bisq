@@ -40,11 +40,15 @@ import java.io.File;
 
 import javafx.stage.Stage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.core.env.Environment;
 
 import static com.google.inject.name.Names.named;
 
 class BitsquareAppModule extends BitsquareModule {
+    private static final Logger log = LoggerFactory.getLogger(BitsquareAppModule.class);
 
     private final Stage primaryStage;
 
@@ -65,37 +69,38 @@ class BitsquareAppModule extends BitsquareModule {
         bind(Environment.class).toInstance(env);
         bind(UpdateProcess.class).in(Singleton.class);
 
-        install(networkModule());
-        install(bitcoinModule());
+        // ordering is used for shut down sequence
+        install(tradeModule());
         install(cryptoModule());
-        install(tradeMessageModule());
+        install(arbitratorModule());
         install(offerModule());
-        install(arbitratorMessageModule());
+        install(p2pModule());
+        install(bitcoinModule());
         install(guiModule());
     }
 
-    protected ArbitratorModule arbitratorMessageModule() {
-        return new TomP2PArbitratorModule(env);
-    }
-
-    protected P2PModule networkModule() {
-        return new TomP2PModule(env);
-    }
-
-    protected BitcoinModule bitcoinModule() {
-        return new BitcoinModule(env);
+    protected TradeModule tradeModule() {
+        return new TradeModule(env);
     }
 
     protected CryptoModule cryptoModule() {
         return new CryptoModule(env);
     }
 
-    protected TradeModule tradeMessageModule() {
-        return new TradeModule(env);
+    protected ArbitratorModule arbitratorModule() {
+        return new TomP2PArbitratorModule(env);
     }
 
     protected OfferModule offerModule() {
         return new TomP2POfferModule(env);
+    }
+
+    protected P2PModule p2pModule() {
+        return new TomP2PModule(env);
+    }
+
+    protected BitcoinModule bitcoinModule() {
+        return new BitcoinModule(env);
     }
 
     protected GuiModule guiModule() {
@@ -104,5 +109,6 @@ class BitsquareAppModule extends BitsquareModule {
 
     @Override
     protected void doClose(Injector injector) {
+        log.trace("doClose " + getClass().getSimpleName());
     }
 }

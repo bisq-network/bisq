@@ -33,6 +33,8 @@ public interface OfferBookService extends DHTService {
 
     void removeOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler);
 
+    void removeOfferAtShutDown(Offer offer);
+
     void addListener(Listener listener);
 
     void removeListener(Listener listener);

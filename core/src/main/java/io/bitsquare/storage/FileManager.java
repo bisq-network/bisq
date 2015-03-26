@@ -197,10 +197,10 @@ public class FileManager<T> {
      * Shut down auto-saving.
      */
     public void shutdown() {
-        if (serializable != null)
+      /*  if (serializable != null)
             log.debug("shutDown " + serializable.getClass().getSimpleName());
         else
-            log.debug("shutDown");
+            log.debug("shutDown");*/
 
         executor.shutdown();
         try {

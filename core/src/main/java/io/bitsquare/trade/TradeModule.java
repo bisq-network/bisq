@@ -19,11 +19,16 @@ package io.bitsquare.trade;
 
 import io.bitsquare.BitsquareModule;
 
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.core.env.Environment;
 
 public class TradeModule extends BitsquareModule {
+    private static final Logger log = LoggerFactory.getLogger(TradeModule.class);
 
     public TradeModule(Environment env) {
         super(env);
@@ -32,5 +37,12 @@ public class TradeModule extends BitsquareModule {
     @Override
     protected void configure() {
         bind(TradeManager.class).in(Singleton.class);
+    }
+
+    @Override
+    protected void doClose(Injector injector) {
+        log.trace("doClose " + getClass().getSimpleName());
+        // First shut down AddressService to remove address from DHT
+        injector.getInstance(TradeManager.class).shutDown();
     }
 }

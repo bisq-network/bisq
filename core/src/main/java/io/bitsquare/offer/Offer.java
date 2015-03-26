@@ -279,7 +279,6 @@ public class Offer implements Serializable {
                 ", fiatPrice=" + fiatPrice +
                 ", amount=" + amount +
                 ", minAmount=" + minAmount +
-                ", p2pSigPubKey=" + p2pSigPubKey +
                 ", fiatAccountType=" + fiatAccountType +
                 ", bankAccountCountry=" + bankAccountCountry +
                 ", securityDeposit=" + securityDeposit +

@@ -157,6 +157,23 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
         }
     }
 
+    public void removeOfferAtShutDown(Offer offer) {
+        log.debug("removeOfferAtShutDown " + offer);
+        Number160 locationKey = Number160.createHash(offer.getCurrencyCode());
+        try {
+            final Data offerData = new Data(offer);
+            log.trace("Remove offer from DHT requested. Removed data: [locationKey: " + locationKey +
+                    ", hash: " + offerData.hash().toString() + "]");
+            FutureRemove futureRemove = removeProtectedDataFromMap(locationKey, offerData);
+            writeInvalidationTimestampToDHT(offer.getCurrencyCode());
+            futureRemove.awaitUninterruptibly(1000);
+            log.trace("isRemoved? " + futureRemove.isRemoved());
+        } catch (IOException e) {
+            e.printStackTrace();
+            log.error("Remove offer from DHT failed. Error: " + e.getMessage());
+        }
+    }
+
     public void getOffers(String currencyCode) {
         Number160 locationKey = Number160.createHash(currencyCode);
         log.trace("Get offers from DHT requested for locationKey: " + locationKey);

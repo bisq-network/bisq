@@ -24,12 +24,15 @@ import com.google.inject.Singleton;
 
 import java.io.File;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.core.env.Environment;
 
 import static com.google.inject.name.Names.named;
 
 public class BitcoinModule extends BitsquareModule {
-
+    private static final Logger log = LoggerFactory.getLogger(BitcoinModule.class);
 
     public BitcoinModule(Environment env) {
         super(env);
@@ -56,6 +59,7 @@ public class BitcoinModule extends BitsquareModule {
 
     @Override
     protected void doClose(Injector injector) {
+        log.trace("doClose "+getClass().getSimpleName());
         injector.getInstance(WalletService.class).shutDown();
     }
 }
