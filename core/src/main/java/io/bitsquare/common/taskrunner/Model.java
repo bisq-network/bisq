@@ -20,8 +20,8 @@ package io.bitsquare.common.taskrunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SharedTaskModel {
-    private static final Logger log = LoggerFactory.getLogger(SharedTaskModel.class);
+public class Model {
+    private static final Logger log = LoggerFactory.getLogger(Model.class);
 
     public void persist() {
     }

@@ -17,33 +17,30 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
+import io.bitsquare.btc.exceptions.SigningException;
+import io.bitsquare.btc.exceptions.TransactionVerificationException;
+import io.bitsquare.btc.exceptions.WalletException;
+import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.TakerTrade;
-
-import org.bitcoinj.core.Transaction;
+import io.bitsquare.trade.protocol.trade.taker.models.TakerTradeProcessModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CreateTakeOfferFeeTx extends TakerTradeTask {
-    private static final Logger log = LoggerFactory.getLogger(CreateTakeOfferFeeTx.class);
+public class TakerTradeTask extends Task<TakerTrade> {
+    private static final Logger log = LoggerFactory.getLogger(TakerTradeTask.class);
+    protected final TakerTradeProcessModel takerTradeProcessModel;
+    protected final TakerTrade takerTrade;
 
-    public CreateTakeOfferFeeTx(TaskRunner taskHandler, TakerTrade model) {
+    public TakerTradeTask(TaskRunner taskHandler, TakerTrade model) {
         super(taskHandler, model);
+
+        takerTrade = model;
+        takerTradeProcessModel = takerTrade.getTakerTradeProcessModel();
     }
 
     @Override
-    protected void doRun() {
-        try {
-            Transaction createTakeOfferFeeTx = takerTradeProcessModel.tradeWalletService.createTakeOfferFeeTx(takerTradeProcessModel.taker.addressEntry);
-
-            takerTradeProcessModel.setTakeOfferFeeTx(createTakeOfferFeeTx);
-            takerTrade.setProcessState(TakerTrade.TakerProcessState.TAKE_OFFER_FEE_TX_CREATED);
-
-            complete();
-        } catch (Throwable t) {
-            takerTrade.setThrowable(t);
-            failed(t);
-        }
+    protected void doRun() throws WalletException, TransactionVerificationException, SigningException {
     }
 }

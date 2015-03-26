@@ -18,10 +18,13 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.btc.TradeWalletService;
+import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.Peer;
+import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.protocol.Protocol;
+import io.bitsquare.trade.protocol.trade.taker.models.TakerTradeProcessModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -39,14 +42,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Holds all data which are relevant to the trade, but not those which are only needed in the trade process as shared data between tasks. Those data are 
+ * Holds all data which are relevant to the trade, but not those which are only needed in the trade process as shared data between tasks. Those data are
  * stored in the task model.
  */
-abstract public class Trade implements Serializable {
+abstract public class Trade extends Model implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
     transient protected static final Logger log = LoggerFactory.getLogger(Trade.class);
+
 
     public interface ProcessState {
     }
@@ -54,12 +58,12 @@ abstract public class Trade implements Serializable {
     public interface LifeCycleState {
     }
 
-    transient protected Protocol protocol;
     protected MailboxMessage mailboxMessage;
 
     protected final Offer offer;
     protected final Date date;
 
+    protected Protocol protocol;
     protected Contract contract;
     protected String contractAsJson;
     protected String takerContractSignature;
@@ -73,16 +77,23 @@ abstract public class Trade implements Serializable {
     transient protected ObjectProperty<Coin> tradeAmountProperty = new SimpleObjectProperty<>();
     transient protected ObjectProperty<Fiat> tradeVolumeProperty = new SimpleObjectProperty<>();
 
+    transient private Storage<TakerTradeProcessModel> storage;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Trade(Offer offer) {
+    public Trade(Offer offer, Storage storage) {
         this.offer = offer;
+        this.storage = storage;
 
         date = new Date();
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     // The deserialized tx has not actual confidence data, so we need to get the fresh one from the wallet.
     public void updateTxFromWallet(TradeWalletService tradeWalletService) {
@@ -95,16 +106,25 @@ abstract public class Trade implements Serializable {
         setConfidenceListener();
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protocol
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setProtocol(Protocol protocol) {
-        this.protocol = protocol;
-
+    public void reActivate() {
         if (mailboxMessage != null)
             protocol.setMailboxMessage(mailboxMessage);
     }
+
+    // Get called from taskRunner after each completed task
+    @Override
+    public void persist() {
+        storage.save();
+    }
+
+    @Override
+    public void onComplete() {
+        storage.save();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protocol
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void disposeProtocol() {
         if (protocol != null) {
@@ -119,6 +139,9 @@ abstract public class Trade implements Serializable {
             protocol.setMailboxMessage(mailboxMessage);
     }
 
+    public void setStorage(Storage storage) {
+        this.storage = storage;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters

@@ -21,11 +21,11 @@ import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.protocol.trade.SharedTradeModel;
+import io.bitsquare.trade.protocol.trade.TradeProcessModel;
 import io.bitsquare.user.User;
 
 import java.io.File;
@@ -34,14 +34,13 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererAsBuyerModel extends SharedTradeModel implements Serializable {
+public class OffererTradeProcessModel extends TradeProcessModel implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
-    transient private static final Logger log = LoggerFactory.getLogger(OffererAsBuyerModel.class);
+    transient private static final Logger log = LoggerFactory.getLogger(OffererTradeProcessModel.class);
 
-    transient private Storage<OffererAsBuyerModel> storage;
-    transient public final OffererTrade trade;
+    transient private Storage<OffererTradeProcessModel> storage;
 
     public final Taker taker;
     public final Offerer offerer;
@@ -49,16 +48,16 @@ public class OffererAsBuyerModel extends SharedTradeModel implements Serializabl
     // written by tasks
     private String takeOfferFeeTxId;
 
-    public OffererAsBuyerModel(OffererTrade trade,
-                               MessageService messageService,
-                               MailboxService mailboxService,
-                               WalletService walletService,
-                               BlockChainService blockChainService,
-                               SignatureService signatureService,
-                               ArbitrationRepository arbitrationRepository,
-                               User user,
-                               File storageDir) {
-        super(trade.getOffer(),
+    public OffererTradeProcessModel(Offer offer,
+                                    MessageService messageService,
+                                    MailboxService mailboxService,
+                                    WalletService walletService,
+                                    BlockChainService blockChainService,
+                                    SignatureService signatureService,
+                                    ArbitrationRepository arbitrationRepository,
+                                    User user,
+                                    File storageDir) {
+        super(offer,
                 messageService,
                 mailboxService,
                 walletService,
@@ -66,10 +65,9 @@ public class OffererAsBuyerModel extends SharedTradeModel implements Serializabl
                 signatureService,
                 arbitrationRepository);
 
-        this.trade = trade;
         this.storage = new Storage<>(storageDir);
 
-        OffererAsBuyerModel persisted = storage.initAndGetPersisted(this, getFileName());
+        OffererTradeProcessModel persisted = storage.initAndGetPersisted(this, getFileName());
         if (persisted != null) {
             log.debug("Model reconstructed form persisted model.");
 

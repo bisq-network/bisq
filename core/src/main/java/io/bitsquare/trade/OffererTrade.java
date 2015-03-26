@@ -19,7 +19,9 @@ package io.bitsquare.trade;
 
 import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.Peer;
-import io.bitsquare.trade.protocol.trade.offerer.OffererAsBuyerProtocol;
+import io.bitsquare.storage.Storage;
+import io.bitsquare.trade.protocol.trade.offerer.OffererProtocol;
+import io.bitsquare.trade.protocol.trade.offerer.models.OffererTradeProcessModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
@@ -51,7 +53,8 @@ public class OffererTrade extends Trade implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public enum OffererLifeCycleState implements LifeCycleState {
-        OPEN_OFFER,
+        OFFER_OPEN,
+        OFFER_RESERVED,
         OFFER_CANCELED,
         PENDING,
         COMPLETED,
@@ -75,6 +78,7 @@ public class OffererTrade extends Trade implements Serializable {
     private Peer tradingPeer;
     private OffererProcessState processState;
     private OffererLifeCycleState lifeCycleState;
+    private OffererTradeProcessModel offererTradeProcessModel;
 
     transient private ObjectProperty<OffererProcessState> processStateProperty = new SimpleObjectProperty<>();
     transient private ObjectProperty<OffererLifeCycleState> lifeCycleStateProperty = new SimpleObjectProperty<>();
@@ -84,8 +88,12 @@ public class OffererTrade extends Trade implements Serializable {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public OffererTrade(Offer offer) {
-        super(offer);
+    public OffererTrade(Offer offer, OffererTradeProcessModel offererTradeProcessModel, Storage storage) {
+        super(offer, storage);
+
+        this.offererTradeProcessModel = offererTradeProcessModel;
+        protocol = new OffererProtocol(this);
+        setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_OPEN);
     }
 
     // Serialized object does not create our transient objects
@@ -94,11 +102,15 @@ public class OffererTrade extends Trade implements Serializable {
 
         processStateProperty = new SimpleObjectProperty<>(processState);
         lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
+        protocol = new OffererProtocol(this);
     }
 
-
     public void onFiatPaymentStarted() {
-        ((OffererAsBuyerProtocol) protocol).onFiatPaymentStarted();
+        ((OffererProtocol) protocol).onFiatPaymentStarted();
+    }
+
+    public OffererTradeProcessModel getOffererTradeProcessModel() {
+        return offererTradeProcessModel;
     }
 
 
@@ -140,7 +152,7 @@ public class OffererTrade extends Trade implements Serializable {
     public void setTradingPeer(Peer tradingPeer) {
         this.tradingPeer = tradingPeer;
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -170,7 +182,7 @@ public class OffererTrade extends Trade implements Serializable {
     public Peer getTradingPeer() {
         return tradingPeer;
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

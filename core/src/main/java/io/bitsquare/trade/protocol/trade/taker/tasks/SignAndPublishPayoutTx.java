@@ -17,10 +17,8 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.TakerTrade;
-import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
 import org.bitcoinj.core.Transaction;
 
@@ -31,43 +29,43 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SignAndPublishPayoutTx extends Task<TakerAsSellerModel> {
+public class SignAndPublishPayoutTx extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(SignAndPublishPayoutTx.class);
 
-    public SignAndPublishPayoutTx(TaskRunner taskHandler, TakerAsSellerModel model) {
+    public SignAndPublishPayoutTx(TaskRunner taskHandler, TakerTrade model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void doRun() {
         try {
-            model.tradeWalletService.takerSignsAndPublishPayoutTx(
-                    model.trade.getDepositTx(),
-                    model.offerer.signature,
-                    model.offerer.payoutAmount,
-                    model.taker.payoutAmount,
-                    model.offerer.payoutAddressString,
-                    model.taker.addressEntry,
-                    model.offerer.tradeWalletPubKey,
-                    model.taker.tradeWalletPubKey,
-                    model.arbitratorPubKey,
+            takerTradeProcessModel.tradeWalletService.takerSignsAndPublishPayoutTx(
+                    takerTrade.getDepositTx(),
+                    takerTradeProcessModel.offerer.signature,
+                    takerTradeProcessModel.offerer.payoutAmount,
+                    takerTradeProcessModel.taker.payoutAmount,
+                    takerTradeProcessModel.offerer.payoutAddressString,
+                    takerTradeProcessModel.taker.addressEntry,
+                    takerTradeProcessModel.offerer.tradeWalletPubKey,
+                    takerTradeProcessModel.taker.tradeWalletPubKey,
+                    takerTradeProcessModel.arbitratorPubKey,
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {
-                            model.setPayoutTx(transaction);
-                            model.trade.setProcessState(TakerTrade.TakerProcessState.PAYOUT_PUBLISHED);
+                            takerTradeProcessModel.setPayoutTx(transaction);
+                            takerTrade.setProcessState(TakerTrade.TakerProcessState.PAYOUT_PUBLISHED);
 
                             complete();
                         }
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
-                            model.trade.setThrowable(t);
+                            takerTrade.setThrowable(t);
                             failed(t);
                         }
                     });
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            takerTrade.setThrowable(t);
             failed(t);
         }
     }

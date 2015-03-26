@@ -19,36 +19,36 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
+import io.bitsquare.trade.OffererTrade;
 
 import org.bitcoinj.core.Coin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CreateOffererDepositTxInputs extends Task<OffererAsBuyerModel> {
+public class CreateOffererDepositTxInputs extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(CreateOffererDepositTxInputs.class);
 
-    public CreateOffererDepositTxInputs(TaskRunner taskHandler, OffererAsBuyerModel model) {
-        super(taskHandler, model);
+    public CreateOffererDepositTxInputs(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
+        super(taskHandler, offererTradeProcessModel);
     }
 
     @Override
     protected void doRun() {
         try {
-            log.debug("model.trade.id" + model.trade.getId());
-            Coin offererInputAmount = model.trade.getSecurityDeposit().add(FeePolicy.TX_FEE);
-            TradeWalletService.Result result = model.tradeWalletService.createOffererDepositTxInputs(offererInputAmount,
-                    model.offerer.addressEntry);
+            log.debug("offererTrade.id" + offererTrade.getId());
+            Coin offererInputAmount = offererTrade.getSecurityDeposit().add(FeePolicy.TX_FEE);
+            TradeWalletService.Result result = offererTradeProcessModel.tradeWalletService.createOffererDepositTxInputs(offererInputAmount,
+                    offererTradeProcessModel.offerer.addressEntry);
 
-            model.offerer.connectedOutputsForAllInputs = result.getConnectedOutputsForAllInputs();
-            model.offerer.outputs = result.getOutputs();
+            offererTradeProcessModel.offerer.connectedOutputsForAllInputs = result.getConnectedOutputsForAllInputs();
+            offererTradeProcessModel.offerer.outputs = result.getOutputs();
 
             complete();
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            offererTrade.setThrowable(t);
+            offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_OPEN);
             failed(t);
         }
     }

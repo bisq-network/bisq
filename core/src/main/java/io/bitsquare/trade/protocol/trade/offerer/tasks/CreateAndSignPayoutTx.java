@@ -17,48 +17,45 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 
 import org.bitcoinj.core.Coin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CreateAndSignPayoutTx extends Task<OffererAsBuyerModel> {
+public class CreateAndSignPayoutTx extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(CreateAndSignPayoutTx.class);
 
-    public CreateAndSignPayoutTx(TaskRunner taskHandler, OffererAsBuyerModel model) {
-        super(taskHandler, model);
+    public CreateAndSignPayoutTx(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
+        super(taskHandler, offererTradeProcessModel);
     }
 
     @Override
     protected void doRun() {
         try {
-            OffererTrade offererTrade = model.trade;
             Coin securityDeposit = offererTrade.getSecurityDeposit();
             Coin offererPayoutAmount = offererTrade.getTradeAmount().add(securityDeposit);
             @SuppressWarnings("UnnecessaryLocalVariable") Coin takerPayoutAmount = securityDeposit;
 
-            byte[] offererPayoutTxSignature = model.tradeWalletService.offererCreatesAndSignsPayoutTx(
+            byte[] offererPayoutTxSignature = offererTradeProcessModel.tradeWalletService.offererCreatesAndSignsPayoutTx(
                     offererTrade.getDepositTx(),
                     offererPayoutAmount,
                     takerPayoutAmount,
-                    model.offerer.addressEntry,
-                    model.taker.payoutAddressString,
-                    model.offerer.tradeWalletPubKey,
-                    model.taker.tradeWalletPubKey,
-                    model.arbitratorPubKey);
+                    offererTradeProcessModel.offerer.addressEntry,
+                    offererTradeProcessModel.taker.payoutAddressString,
+                    offererTradeProcessModel.offerer.tradeWalletPubKey,
+                    offererTradeProcessModel.taker.tradeWalletPubKey,
+                    offererTradeProcessModel.arbitratorPubKey);
 
-            model.offerer.payoutTxSignature = offererPayoutTxSignature;
-            model.offerer.payoutAmount = offererPayoutAmount;
-            model.taker.payoutAmount = takerPayoutAmount;
+            offererTradeProcessModel.offerer.payoutTxSignature = offererPayoutTxSignature;
+            offererTradeProcessModel.offerer.payoutAmount = offererPayoutAmount;
+            offererTradeProcessModel.taker.payoutAmount = takerPayoutAmount;
 
             complete();
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            offererTrade.setThrowable(t);
             failed(t);
         }
     }

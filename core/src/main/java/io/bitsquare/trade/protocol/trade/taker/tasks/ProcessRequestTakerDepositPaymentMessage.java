@@ -17,10 +17,9 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.protocol.trade.messages.RequestTakerDepositPaymentMessage;
-import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,31 +27,31 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.*;
 import static io.bitsquare.util.Validator.*;
 
-public class ProcessRequestTakerDepositPaymentMessage extends Task<TakerAsSellerModel> {
+public class ProcessRequestTakerDepositPaymentMessage extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(ProcessRequestTakerDepositPaymentMessage.class);
 
-    public ProcessRequestTakerDepositPaymentMessage(TaskRunner taskHandler, TakerAsSellerModel model) {
+    public ProcessRequestTakerDepositPaymentMessage(TaskRunner taskHandler, TakerTrade model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void doRun() {
         try {
-            checkTradeId(model.id, model.getTradeMessage());
-            RequestTakerDepositPaymentMessage message = (RequestTakerDepositPaymentMessage) model.getTradeMessage();
+            checkTradeId(takerTradeProcessModel.id, takerTradeProcessModel.getTradeMessage());
+            RequestTakerDepositPaymentMessage message = (RequestTakerDepositPaymentMessage) takerTradeProcessModel.getTradeMessage();
 
-            model.offerer.connectedOutputsForAllInputs = checkNotNull(message.offererConnectedOutputsForAllInputs);
+            takerTradeProcessModel.offerer.connectedOutputsForAllInputs = checkNotNull(message.offererConnectedOutputsForAllInputs);
             checkArgument(message.offererConnectedOutputsForAllInputs.size() > 0);
-            model.offerer.outputs = checkNotNull(message.offererOutputs);
-            model.offerer.tradeWalletPubKey = checkNotNull(message.offererTradeWalletPubKey);
-            model.offerer.p2pSigPublicKey = checkNotNull(message.offererP2PSigPublicKey);
-            model.offerer.p2pEncryptPubKey = checkNotNull(message.offererP2PEncryptPublicKey);
-            model.offerer.fiatAccount = checkNotNull(message.offererFiatAccount);
-            model.offerer.accountId = nonEmptyStringOf(message.offererAccountId);
+            takerTradeProcessModel.offerer.outputs = checkNotNull(message.offererOutputs);
+            takerTradeProcessModel.offerer.tradeWalletPubKey = checkNotNull(message.offererTradeWalletPubKey);
+            takerTradeProcessModel.offerer.p2pSigPublicKey = checkNotNull(message.offererP2PSigPublicKey);
+            takerTradeProcessModel.offerer.p2pEncryptPubKey = checkNotNull(message.offererP2PEncryptPublicKey);
+            takerTradeProcessModel.offerer.fiatAccount = checkNotNull(message.offererFiatAccount);
+            takerTradeProcessModel.offerer.accountId = nonEmptyStringOf(message.offererAccountId);
 
             complete();
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            takerTrade.setThrowable(t);
             failed(t);
         }
     }

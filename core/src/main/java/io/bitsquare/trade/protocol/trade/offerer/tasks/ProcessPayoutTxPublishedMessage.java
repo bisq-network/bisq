@@ -17,11 +17,9 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,25 +27,25 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.checkTradeId;
 
-public class ProcessPayoutTxPublishedMessage extends Task<OffererAsBuyerModel> {
+public class ProcessPayoutTxPublishedMessage extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(ProcessPayoutTxPublishedMessage.class);
 
-    public ProcessPayoutTxPublishedMessage(TaskRunner taskHandler, OffererAsBuyerModel model) {
-        super(taskHandler, model);
+    public ProcessPayoutTxPublishedMessage(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
+        super(taskHandler, offererTradeProcessModel);
     }
 
     @Override
     protected void doRun() {
         try {
-            checkTradeId(model.id, model.getTradeMessage());
+            checkTradeId(offererTradeProcessModel.id, offererTradeProcessModel.getTradeMessage());
 
-            model.trade.setPayoutTx(checkNotNull(((PayoutTxPublishedMessage) model.getTradeMessage()).payoutTx));
+            offererTrade.setPayoutTx(checkNotNull(((PayoutTxPublishedMessage) offererTradeProcessModel.getTradeMessage()).payoutTx));
 
-            model.trade.setProcessState(OffererTrade.OffererProcessState.PAYOUT_PUBLISHED);
+            offererTrade.setProcessState(OffererTrade.OffererProcessState.PAYOUT_PUBLISHED);
 
             complete();
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            offererTrade.setThrowable(t);
             failed(t);
         }
     }

@@ -17,37 +17,35 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.protocol.trade.messages.RequestTakerDepositPaymentMessage;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RequestTakerDepositPayment extends Task<OffererAsBuyerModel> {
+public class RequestTakerDepositPayment extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(RequestTakerDepositPayment.class);
 
-    public RequestTakerDepositPayment(TaskRunner taskHandler, OffererAsBuyerModel model) {
-        super(taskHandler, model);
+    public RequestTakerDepositPayment(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
+        super(taskHandler, offererTradeProcessModel);
     }
 
     @Override
     protected void doRun() {
         try {
             RequestTakerDepositPaymentMessage tradeMessage = new RequestTakerDepositPaymentMessage(
-                    model.id,
-                    model.offerer.connectedOutputsForAllInputs,
-                    model.offerer.outputs,
-                    model.offerer.tradeWalletPubKey,
-                    model.offerer.p2pSigPubKey,
-                    model.offerer.p2pEncryptPubKey,
-                    model.offerer.fiatAccount,
-                    model.offerer.accountId);
+                    offererTradeProcessModel.id,
+                    offererTradeProcessModel.offerer.connectedOutputsForAllInputs,
+                    offererTradeProcessModel.offerer.outputs,
+                    offererTradeProcessModel.offerer.tradeWalletPubKey,
+                    offererTradeProcessModel.offerer.p2pSigPubKey,
+                    offererTradeProcessModel.offerer.p2pEncryptPubKey,
+                    offererTradeProcessModel.offerer.fiatAccount,
+                    offererTradeProcessModel.offerer.accountId);
 
-            model.messageService.sendMessage(model.trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
+            offererTradeProcessModel.messageService.sendMessage(offererTrade.getTradingPeer(), tradeMessage, new SendMessageListener() {
                 @Override
                 public void handleResult() {
                     log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");
@@ -57,13 +55,15 @@ public class RequestTakerDepositPayment extends Task<OffererAsBuyerModel> {
                 @Override
                 public void handleFault() {
                     appendToErrorMessage("Sending RequestTakerDepositPaymentMessage failed");
-                    model.trade.setErrorMessage(errorMessage);
-                    model.trade.setProcessState(OffererTrade.OffererProcessState.MESSAGE_SENDING_FAILED);
+                    offererTrade.setErrorMessage(errorMessage);
+                    offererTrade.setProcessState(OffererTrade.OffererProcessState.MESSAGE_SENDING_FAILED);
+                    offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_OPEN);
                     failed();
                 }
             });
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            offererTrade.setThrowable(t);
+            offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_OPEN);
             failed(t);
         }
     }

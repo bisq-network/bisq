@@ -17,11 +17,9 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,28 +27,28 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.*;
 
-public class ProcessFiatTransferStartedMessage extends Task<TakerAsSellerModel> {
+public class ProcessFiatTransferStartedMessage extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(ProcessFiatTransferStartedMessage.class);
 
-    public ProcessFiatTransferStartedMessage(TaskRunner taskHandler, TakerAsSellerModel model) {
+    public ProcessFiatTransferStartedMessage(TaskRunner taskHandler, TakerTrade model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void doRun() {
         try {
-            checkTradeId(model.id, model.getTradeMessage());
-            FiatTransferStartedMessage message = (FiatTransferStartedMessage) model.getTradeMessage();
+            checkTradeId(takerTradeProcessModel.id, takerTradeProcessModel.getTradeMessage());
+            FiatTransferStartedMessage message = (FiatTransferStartedMessage) takerTradeProcessModel.getTradeMessage();
 
-            model.offerer.signature = checkNotNull(message.offererSignature);
-            model.offerer.payoutAmount = positiveCoinOf(nonZeroCoinOf(message.offererPayoutAmount));
-            model.taker.payoutAmount = positiveCoinOf(nonZeroCoinOf(message.takerPayoutAmount));
-            model.offerer.payoutAddressString = nonEmptyStringOf(message.offererPayoutAddress);
-            model.trade.setProcessState(TakerTrade.TakerProcessState.FIAT_PAYMENT_STARTED);
+            takerTradeProcessModel.offerer.signature = checkNotNull(message.offererSignature);
+            takerTradeProcessModel.offerer.payoutAmount = positiveCoinOf(nonZeroCoinOf(message.offererPayoutAmount));
+            takerTradeProcessModel.taker.payoutAmount = positiveCoinOf(nonZeroCoinOf(message.takerPayoutAmount));
+            takerTradeProcessModel.offerer.payoutAddressString = nonEmptyStringOf(message.offererPayoutAddress);
+            takerTrade.setProcessState(TakerTrade.TakerProcessState.FIAT_PAYMENT_STARTED);
 
             complete();
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            takerTrade.setThrowable(t);
             failed(t);
         }
     }

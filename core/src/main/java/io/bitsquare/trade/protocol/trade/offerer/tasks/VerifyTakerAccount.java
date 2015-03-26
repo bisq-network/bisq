@@ -17,26 +17,26 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
+import io.bitsquare.trade.OffererTrade;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VerifyTakerAccount extends Task<OffererAsBuyerModel> {
+public class VerifyTakerAccount extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(VerifyTakerAccount.class);
 
-    public VerifyTakerAccount(TaskRunner taskHandler, OffererAsBuyerModel model) {
-        super(taskHandler, model);
+    public VerifyTakerAccount(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
+        super(taskHandler, offererTradeProcessModel);
     }
 
     @Override
     protected void doRun() {
         try {
             //TODO mocked yet
-            if (model.blockChainService.verifyAccountRegistration()) {
-                if (model.blockChainService.isAccountBlackListed(model.taker.accountId, model.taker.fiatAccount)) {
+            if (offererTradeProcessModel.blockChainService.verifyAccountRegistration()) {
+                if (offererTradeProcessModel.blockChainService.isAccountBlackListed(offererTradeProcessModel.taker.accountId, offererTradeProcessModel.taker
+                        .fiatAccount)) {
                     log.error("Taker is blacklisted");
                     failed("Taker is blacklisted");
                 }
@@ -46,9 +46,11 @@ public class VerifyTakerAccount extends Task<OffererAsBuyerModel> {
             }
             else {
                 failed("Account registration validation for peer failed.");
+                offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_OPEN);
             }
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            offererTrade.setThrowable(t);
+            offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_OPEN);
             failed(t);
         }
     }

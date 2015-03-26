@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.availability;
 
-import io.bitsquare.common.taskrunner.SharedTaskModel;
+import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.AddressService;
 import io.bitsquare.p2p.MessageService;
@@ -27,7 +27,7 @@ import io.bitsquare.trade.protocol.trade.messages.OfferMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CheckOfferAvailabilityModel extends SharedTaskModel {
+public class CheckOfferAvailabilityModel extends Model {
     private static final Logger log = LoggerFactory.getLogger(CheckOfferAvailabilityModel.class);
 
     public final Offer offer;

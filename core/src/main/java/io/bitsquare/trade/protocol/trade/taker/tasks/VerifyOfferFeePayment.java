@@ -17,17 +17,16 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
+import io.bitsquare.trade.TakerTrade;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VerifyOfferFeePayment extends Task<TakerAsSellerModel> {
+public class VerifyOfferFeePayment extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(VerifyOfferFeePayment.class);
 
-    public VerifyOfferFeePayment(TaskRunner taskHandler, TakerAsSellerModel model) {
+    public VerifyOfferFeePayment(TaskRunner taskHandler, TakerTrade model) {
         super(taskHandler, model);
     }
 
@@ -35,13 +34,13 @@ public class VerifyOfferFeePayment extends Task<TakerAsSellerModel> {
     protected void doRun() {
         try {
             //TODO impl. missing
-            int numOfPeersSeenTx = model.walletService.getNumOfPeersSeenTx(model.getTakeOfferFeeTx().getHashAsString());
+            int numOfPeersSeenTx = takerTradeProcessModel.walletService.getNumOfPeersSeenTx(takerTradeProcessModel.getTakeOfferFeeTx().getHashAsString());
        /* if (numOfPeersSeenTx > 2) {
             resultHandler.handleResult();
         }*/
             complete();
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            takerTrade.setThrowable(t);
             failed(t);
         }
     }

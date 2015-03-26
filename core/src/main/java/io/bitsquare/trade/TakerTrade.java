@@ -19,7 +19,9 @@ package io.bitsquare.trade;
 
 import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.Peer;
-import io.bitsquare.trade.protocol.trade.taker.TakerAsSellerProtocol;
+import io.bitsquare.storage.Storage;
+import io.bitsquare.trade.protocol.trade.taker.TakerProtocol;
+import io.bitsquare.trade.protocol.trade.taker.models.TakerTradeProcessModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
@@ -44,6 +46,11 @@ public class TakerTrade extends Trade implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
     transient private static final Logger log = LoggerFactory.getLogger(TakerTrade.class);
+
+    public TakerTradeProcessModel getTakerTradeProcessModel() {
+        return takerTradeProcessModel;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
@@ -72,9 +79,9 @@ public class TakerTrade extends Trade implements Serializable {
         EXCEPTION
     }
 
-
     private final Coin tradeAmount;
     private final Peer tradingPeer;
+    private final TakerTradeProcessModel takerTradeProcessModel;
 
     private TakerProcessState processState;
     private TakerLifeCycleState lifeCycleState;
@@ -87,14 +94,19 @@ public class TakerTrade extends Trade implements Serializable {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TakerTrade(Offer offer, Coin tradeAmount, Peer peer) {
-        super(offer);
-        
+    public TakerTrade(Offer offer, Coin tradeAmount, Peer peer, TakerTradeProcessModel takerTradeProcessModel, Storage storage) {
+        super(offer, storage);
+
         this.tradeAmount = tradeAmount;
         this.tradingPeer = peer;
+        this.takerTradeProcessModel = takerTradeProcessModel;
+        protocol = new TakerProtocol(this);
+        setLifeCycleState(TakerTrade.TakerLifeCycleState.PENDING);
 
         tradeAmountProperty = new SimpleObjectProperty<>(tradeAmount);
         tradeVolumeProperty = new SimpleObjectProperty<>(getTradeVolume()); // cannot be set before offer is set
+
+        ((TakerProtocol) protocol).takeAvailableOffer();
     }
 
     // Serialized object does not create our transient objects
@@ -105,10 +117,12 @@ public class TakerTrade extends Trade implements Serializable {
         lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
         tradeAmountProperty = new SimpleObjectProperty<>(tradeAmount);
         tradeVolumeProperty = new SimpleObjectProperty<>(getTradeVolume());
+        protocol = new TakerProtocol(this);
     }
 
+
     public void onFiatPaymentReceived() {
-        ((TakerAsSellerProtocol) protocol).onFiatPaymentReceived();
+        ((TakerProtocol) protocol).onFiatPaymentReceived();
     }
 
 
@@ -141,11 +155,12 @@ public class TakerTrade extends Trade implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
-   
+
     @Override
     public ReadOnlyObjectProperty<TakerProcessState> processStateProperty() {
         return processStateProperty;
     }
+
     @Override
     public ReadOnlyObjectProperty<TakerLifeCycleState> lifeCycleStateProperty() {
         return lifeCycleStateProperty;
@@ -165,7 +180,7 @@ public class TakerTrade extends Trade implements Serializable {
     public Peer getTradingPeer() {
         return tradingPeer;
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

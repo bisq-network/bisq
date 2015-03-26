@@ -27,7 +27,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TaskRunner<T extends SharedTaskModel> {
+public class TaskRunner<T extends Model> {
     private static final Logger log = LoggerFactory.getLogger(TaskRunner.class);
 
     private final Queue<Class> tasks = new LinkedBlockingQueue<>();

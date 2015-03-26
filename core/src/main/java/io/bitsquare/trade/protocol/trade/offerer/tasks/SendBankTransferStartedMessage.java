@@ -17,53 +17,51 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendBankTransferStartedMessage extends Task<OffererAsBuyerModel> {
+public class SendBankTransferStartedMessage extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(SendBankTransferStartedMessage.class);
 
-    public SendBankTransferStartedMessage(TaskRunner taskHandler, OffererAsBuyerModel model) {
-        super(taskHandler, model);
+    public SendBankTransferStartedMessage(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
+        super(taskHandler, offererTradeProcessModel);
     }
 
     @Override
     protected void doRun() { 
         try {
-            FiatTransferStartedMessage tradeMessage = new FiatTransferStartedMessage(model.id,
-                    model.offerer.payoutTxSignature,
-                    model.offerer.payoutAmount,
-                    model.taker.payoutAmount,
-                    model.offerer.addressEntry.getAddressString());
+            FiatTransferStartedMessage tradeMessage = new FiatTransferStartedMessage(offererTradeProcessModel.id,
+                    offererTradeProcessModel.offerer.payoutTxSignature,
+                    offererTradeProcessModel.offerer.payoutAmount,
+                    offererTradeProcessModel.taker.payoutAmount,
+                    offererTradeProcessModel.offerer.addressEntry.getAddressString());
 
-            model.messageService.sendMessage(model.trade.getTradingPeer(), tradeMessage,
-                    model.taker.p2pSigPublicKey,
-                    model.taker.p2pEncryptPubKey,
+            offererTradeProcessModel.messageService.sendMessage(offererTrade.getTradingPeer(), tradeMessage,
+                    offererTradeProcessModel.taker.p2pSigPublicKey,
+                    offererTradeProcessModel.taker.p2pEncryptPubKey,
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {
                             log.trace("Sending FiatTransferStartedMessage succeeded.");
-                            model.trade.setProcessState(OffererTrade.OffererProcessState.FIAT_PAYMENT_STARTED);
+                            offererTrade.setProcessState(OffererTrade.OffererProcessState.FIAT_PAYMENT_STARTED);
                             complete();
                         }
 
                         @Override
                         public void handleFault() {
                             appendToErrorMessage("Sending FiatTransferStartedMessage failed");
-                            model.trade.setErrorMessage(errorMessage);
-                            model.trade.setProcessState(OffererTrade.OffererProcessState.MESSAGE_SENDING_FAILED);
+                            offererTrade.setErrorMessage(errorMessage);
+                            offererTrade.setProcessState(OffererTrade.OffererProcessState.MESSAGE_SENDING_FAILED);
                             failed();
                         }
                     });
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            offererTrade.setThrowable(t);
             failed(t);
         }
     }

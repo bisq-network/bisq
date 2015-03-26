@@ -18,10 +18,8 @@
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -33,45 +31,48 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SignAndPublishDepositTx extends Task<OffererAsBuyerModel> {
+public class SignAndPublishDepositTx extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(SignAndPublishDepositTx.class);
 
-    public SignAndPublishDepositTx(TaskRunner taskHandler, OffererAsBuyerModel model) {
-        super(taskHandler, model);
+    public SignAndPublishDepositTx(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
+        super(taskHandler, offererTradeProcessModel);
     }
 
     @Override
     protected void doRun() {
         try {
-            Coin offererInputAmount = model.trade.getSecurityDeposit().add(FeePolicy.TX_FEE);
-            model.tradeWalletService.offererSignsAndPublishDepositTx(
-                    model.taker.preparedDepositTx,
-                    model.offerer.connectedOutputsForAllInputs,
-                    model.taker.connectedOutputsForAllInputs,
-                    model.offerer.outputs,
+            Coin offererInputAmount = offererTrade.getSecurityDeposit().add(FeePolicy.TX_FEE);
+            offererTradeProcessModel.tradeWalletService.offererSignsAndPublishDepositTx(
+                    offererTradeProcessModel.taker.preparedDepositTx,
+                    offererTradeProcessModel.offerer.connectedOutputsForAllInputs,
+                    offererTradeProcessModel.taker.connectedOutputsForAllInputs,
+                    offererTradeProcessModel.offerer.outputs,
                     offererInputAmount,
-                    model.offerer.tradeWalletPubKey,
-                    model.taker.tradeWalletPubKey,
-                    model.arbitratorPubKey,
+                    offererTradeProcessModel.offerer.tradeWalletPubKey,
+                    offererTradeProcessModel.taker.tradeWalletPubKey,
+                    offererTradeProcessModel.arbitratorPubKey,
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {
                             log.trace("offererSignAndPublishTx succeeded " + transaction);
 
-                            model.trade.setDepositTx(transaction);
-                            model.trade.setProcessState(OffererTrade.OffererProcessState.DEPOSIT_PUBLISHED);
+                            offererTrade.setDepositTx(transaction);
+                            offererTrade.setProcessState(OffererTrade.OffererProcessState.DEPOSIT_PUBLISHED);
+                            offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.PENDING);
 
                             complete();
                         }
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
-                            model.trade.setThrowable(t);
+                            offererTrade.setThrowable(t);
+                            offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_OPEN);
                             failed(t);
                         }
                     });
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            offererTrade.setThrowable(t);
+            offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_OPEN);
             failed(t);
         }
     }

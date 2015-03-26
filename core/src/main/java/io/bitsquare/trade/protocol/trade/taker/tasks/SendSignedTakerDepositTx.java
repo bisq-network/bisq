@@ -17,20 +17,18 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.protocol.trade.messages.RequestOffererPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendSignedTakerDepositTx extends Task<TakerAsSellerModel> {
+public class SendSignedTakerDepositTx extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(SendSignedTakerDepositTx.class);
 
-    public SendSignedTakerDepositTx(TaskRunner taskHandler, TakerAsSellerModel model) {
+    public SendSignedTakerDepositTx(TaskRunner taskHandler, TakerTrade model) {
         super(taskHandler, model);
     }
 
@@ -38,20 +36,20 @@ public class SendSignedTakerDepositTx extends Task<TakerAsSellerModel> {
     protected void doRun() {
         try {
             RequestOffererPublishDepositTxMessage tradeMessage = new RequestOffererPublishDepositTxMessage(
-                    model.id,
-                    model.taker.fiatAccount,
-                    model.taker.accountId,
-                    model.taker.p2pSigPubKey,
-                    model.taker.p2pEncryptPublicKey,
-                    model.trade.getContractAsJson(),
-                    model.trade.getTakerContractSignature(),
-                    model.taker.addressEntry.getAddressString(),
-                    model.taker.preparedDepositTx,
-                    model.taker.connectedOutputsForAllInputs,
-                    model.taker.outputs
+                    takerTradeProcessModel.id,
+                    takerTradeProcessModel.taker.fiatAccount,
+                    takerTradeProcessModel.taker.accountId,
+                    takerTradeProcessModel.taker.p2pSigPubKey,
+                    takerTradeProcessModel.taker.p2pEncryptPublicKey,
+                    takerTrade.getContractAsJson(),
+                    takerTrade.getTakerContractSignature(),
+                    takerTradeProcessModel.taker.addressEntry.getAddressString(),
+                    takerTradeProcessModel.taker.preparedDepositTx,
+                    takerTradeProcessModel.taker.connectedOutputsForAllInputs,
+                    takerTradeProcessModel.taker.outputs
             );
 
-            model.messageService.sendMessage(model.trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
+            takerTradeProcessModel.messageService.sendMessage(takerTrade.getTradingPeer(), tradeMessage, new SendMessageListener() {
                 @Override
                 public void handleResult() {
                     complete();
@@ -60,14 +58,14 @@ public class SendSignedTakerDepositTx extends Task<TakerAsSellerModel> {
                 @Override
                 public void handleFault() {
                     appendToErrorMessage("Sending RequestOffererDepositPublicationMessage failed");
-                    model.trade.setErrorMessage(errorMessage);
-                    model.trade.setProcessState(TakerTrade.TakerProcessState.MESSAGE_SENDING_FAILED);
+                    takerTrade.setErrorMessage(errorMessage);
+                    takerTrade.setProcessState(TakerTrade.TakerProcessState.MESSAGE_SENDING_FAILED);
 
                     failed();
                 }
             });
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            takerTrade.setThrowable(t);
             failed(t);
         }
     }

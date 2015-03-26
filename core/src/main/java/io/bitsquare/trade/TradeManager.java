@@ -36,6 +36,7 @@ import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
+import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.handlers.TakeOfferResultHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityModel;
@@ -43,10 +44,8 @@ import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityProtocol;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.offerer.OffererAsBuyerProtocol;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
-import io.bitsquare.trade.protocol.trade.taker.TakerAsSellerProtocol;
-import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
+import io.bitsquare.trade.protocol.trade.offerer.models.OffererTradeProcessModel;
+import io.bitsquare.trade.protocol.trade.taker.models.TakerTradeProcessModel;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
 
@@ -85,6 +84,7 @@ public class TradeManager {
     private final AddressService addressService;
     private final BlockChainService blockChainService;
     private final WalletService walletService;
+    private final Storage pendingTradesStorage;
     private TradeWalletService tradeWalletService;
     private final SignatureService signatureService;
     private final EncryptionService<MailboxMessage> encryptionService;
@@ -124,9 +124,11 @@ public class TradeManager {
         this.arbitrationRepository = arbitrationRepository;
         this.storageDir = storageDir;
 
-        this.openOfferTrades = new TradeList<>(storageDir, "OpenOfferTrades");
-        this.pendingTrades = new TradeList<>(storageDir, "PendingTrades");
-        this.closedTrades = new TradeList<>(storageDir, "ClosedTrades");
+        pendingTradesStorage = new Storage(storageDir);
+        this.openOfferTrades = new TradeList<>(pendingTradesStorage, "OpenOfferTrades");
+        this.pendingTrades = new TradeList<>(new Storage(storageDir), "PendingTrades");
+        this.closedTrades = new TradeList<>(new Storage(storageDir), "ClosedTrades");
+
 
         // In case the app did get killed the shutDown from the modules is not called, so we use a shutdown hook
         Thread shutDownHookThread = new Thread(TradeManager.this::shutDown, "TradeManager:ShutDownHook");
@@ -162,25 +164,16 @@ public class TradeManager {
                     () -> log.debug("Successful removed open offer from DHT"),
                     (message, throwable) -> log.error("Remove open offer from DHT failed. " + message));
 
-            OffererAsBuyerProtocol protocol = createOffererAsBuyerProtocol(offererTrade);
-            offererTrade.setProtocol(protocol);
+            offererTrade.reActivate();
+
         }
         for (Trade trade : pendingTrades) {
             // We continue an interrupted trade.
             // TODO if the peer has changed its IP address, we need to make another findPeer request. At the moment we use the peer stored in trade to
             // continue the trade, but that might fail.
-            if (trade instanceof OffererTrade) {
-                OffererTrade offererTrade = (OffererTrade) trade;
-                OffererAsBuyerProtocol protocol = createOffererAsBuyerProtocol(offererTrade);
-                offererTrade.setProtocol(protocol);
-                offererTrade.updateTxFromWallet(tradeWalletService);
-            }
-            else if (trade instanceof TakerTrade) {
-                TakerTrade takerTrade = (TakerTrade) trade;
-                TakerAsSellerProtocol sellerTakesOfferProtocol = createTakerAsSellerProtocol(takerTrade);
-                takerTrade.setProtocol(sellerTakesOfferProtocol);
-                takerTrade.updateTxFromWallet(tradeWalletService);
-            }
+            trade.reActivate();
+            trade.updateTxFromWallet(tradeWalletService);
+            trade.setStorage(pendingTradesStorage);
         }
 
         mailboxService.getAllMessages(user.getP2PSigPubKey(),
@@ -224,12 +217,21 @@ public class TradeManager {
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 model,
                 (transaction) -> {
-                    OffererTrade offererTrade = new OffererTrade(offer);
-                    offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OPEN_OFFER);
+                    OffererTradeProcessModel processModel = createOffererTradeProcessModel(offer);
+                    OffererTrade offererTrade = new OffererTrade(offer, processModel, pendingTradesStorage);
                     openOfferTrades.add(offererTrade);
 
-                    OffererAsBuyerProtocol protocol = createOffererAsBuyerProtocol(offererTrade);
-                    offererTrade.setProtocol(protocol);
+                    offererTrade.processStateProperty().addListener((ov, oldValue, newValue) -> {
+                        log.debug("offererTrade state = " + newValue);
+                        if (newValue == OffererTrade.OffererProcessState.DEPOSIT_PUBLISHED) {
+                            removeOpenOffer(offererTrade.getOffer(),
+                                    () -> log.debug("remove offer was successful"),
+                                    (message) -> log.error(message),
+                                    false);
+                            pendingTrades.add(offererTrade);
+                        }
+                    });
+
                     resultHandler.handleResult(transaction);
                 },
                 (message) -> errorMessageHandler.handleErrorMessage(message)
@@ -404,37 +406,27 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TakerTrade takeAvailableOffer(Coin amount, Offer offer, Peer peer) {
-        TakerTrade takerTrade = new TakerTrade(offer, amount, peer);
-        takerTrade.setLifeCycleState(TakerTrade.TakerLifeCycleState.PENDING);
+        TakerTradeProcessModel takerTradeProcessModel = createTakerProcessModel(offer);
+        TakerTrade takerTrade = new TakerTrade(offer, amount, peer, takerTradeProcessModel, pendingTradesStorage);
         pendingTrades.add(takerTrade);
-
-        TakerAsSellerProtocol sellerTakesOfferProtocol = createTakerAsSellerProtocol(takerTrade);
-        takerTrade.setProtocol(sellerTakesOfferProtocol);
-        sellerTakesOfferProtocol.takeAvailableOffer();
-
         return takerTrade;
     }
 
 
-    private TakerAsSellerProtocol createTakerAsSellerProtocol(TakerTrade takerTrade) {
-        TakerAsSellerModel model = new TakerAsSellerModel(
-                takerTrade,
+    private TakerTradeProcessModel createTakerProcessModel(Offer offer) {
+        return new TakerTradeProcessModel(
+                offer,
                 messageService,
                 mailboxService,
                 walletService,
                 blockChainService,
                 signatureService,
                 arbitrationRepository,
-                user,
-                storageDir);
-
-        return new TakerAsSellerProtocol(model);
+                user);
     }
 
-
-    private OffererAsBuyerProtocol createOffererAsBuyerProtocol(OffererTrade offererTrade) {
-        OffererAsBuyerModel model = new OffererAsBuyerModel(
-                offererTrade,
+    private OffererTradeProcessModel createOffererTradeProcessModel(Offer offer) {
+        return new OffererTradeProcessModel(offer,
                 messageService,
                 mailboxService,
                 walletService,
@@ -443,26 +435,6 @@ public class TradeManager {
                 arbitrationRepository,
                 user,
                 storageDir);
-
-
-        // TODO check, remove listener
-        offererTrade.processStateProperty().addListener((ov, oldValue, newValue) -> {
-            log.debug("offererTrade state = " + newValue);
-            switch (newValue) {
-                case DEPOSIT_PUBLISHED:
-                    removeOpenOffer(offererTrade.getOffer(),
-                            () -> log.debug("remove offer was successful"),
-                            (message) -> log.error(message),
-                            false);
-                    ((OffererTrade) model.trade).setLifeCycleState(OffererTrade.OffererLifeCycleState.PENDING);
-                    pendingTrades.add(offererTrade);
-                    break;
-                default:
-                    break;
-            }
-        });
-
-        return new OffererAsBuyerProtocol(model);
     }
 
 

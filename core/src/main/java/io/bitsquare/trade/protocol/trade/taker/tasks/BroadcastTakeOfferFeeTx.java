@@ -17,10 +17,8 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.TakerTrade;
-import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
 import org.bitcoinj.core.Transaction;
 
@@ -31,23 +29,23 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BroadcastTakeOfferFeeTx extends Task<TakerAsSellerModel> {
+public class BroadcastTakeOfferFeeTx extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(BroadcastTakeOfferFeeTx.class);
 
-    public BroadcastTakeOfferFeeTx(TaskRunner taskHandler, TakerAsSellerModel model) {
+    public BroadcastTakeOfferFeeTx(TaskRunner taskHandler, TakerTrade model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void doRun() {
         try {
-            model.tradeWalletService.broadcastTakeOfferFeeTx(model.getTakeOfferFeeTx(),
+            takerTradeProcessModel.tradeWalletService.broadcastTakeOfferFeeTx(takerTradeProcessModel.getTakeOfferFeeTx(),
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {
                             log.debug("Take offer fee published successfully. Transaction ID = " + transaction.getHashAsString());
 
-                            model.trade.setProcessState(TakerTrade.TakerProcessState.TAKE_OFFER_FEE_PUBLISHED);
+                            takerTrade.setProcessState(TakerTrade.TakerProcessState.TAKE_OFFER_FEE_PUBLISHED);
 
                             complete();
                         }
@@ -55,14 +53,14 @@ public class BroadcastTakeOfferFeeTx extends Task<TakerAsSellerModel> {
                         @Override
                         public void onFailure(@NotNull Throwable t) {
                             appendToErrorMessage("Take offer fee payment failed. Maybe your network connection was lost. Please try again.");
-                            model.trade.setErrorMessage(errorMessage);
-                            model.trade.setProcessState(TakerTrade.TakerProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
+                            takerTrade.setErrorMessage(errorMessage);
+                            takerTrade.setProcessState(TakerTrade.TakerProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
 
                             failed(t);
                         }
                     });
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            takerTrade.setThrowable(t);
             failed(t);
         }
     }

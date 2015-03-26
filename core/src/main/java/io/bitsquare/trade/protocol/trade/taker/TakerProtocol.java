@@ -28,7 +28,7 @@ import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestTakerDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
+import io.bitsquare.trade.protocol.trade.taker.models.TakerTradeProcessModel;
 import io.bitsquare.trade.protocol.trade.taker.tasks.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateTakeOfferFeeTx;
@@ -49,10 +49,11 @@ import org.slf4j.LoggerFactory;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
-public class TakerAsSellerProtocol implements Protocol {
-    private static final Logger log = LoggerFactory.getLogger(TakerAsSellerProtocol.class);
+public class TakerProtocol implements Protocol {
+    private static final Logger log = LoggerFactory.getLogger(TakerProtocol.class);
 
-    private final TakerAsSellerModel model;
+    private final TakerTrade takerTrade;
+    private final TakerTradeProcessModel takerTradeProcessModel;
     private final MessageHandler messageHandler;
 
 
@@ -60,11 +61,13 @@ public class TakerAsSellerProtocol implements Protocol {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TakerAsSellerProtocol(TakerAsSellerModel model) {
+    public TakerProtocol(TakerTrade takerTrade) {
         log.debug("New SellerAsTakerProtocol " + this);
-        this.model = model;
+        this.takerTrade = takerTrade;
+        takerTradeProcessModel = takerTrade.getTakerTradeProcessModel();
+        
         messageHandler = this::handleMessage;
-        model.messageService.addMessageHandler(messageHandler);
+        takerTradeProcessModel.messageService.addMessageHandler(messageHandler);
     }
 
 
@@ -74,14 +77,14 @@ public class TakerAsSellerProtocol implements Protocol {
 
     public void cleanup() {
         log.debug("cleanup " + this);
-        model.messageService.removeMessageHandler(messageHandler);
+        takerTradeProcessModel.messageService.removeMessageHandler(messageHandler);
     }
 
     public void setMailboxMessage(MailboxMessage mailboxMessage) {
         log.debug("setMailboxMessage " + mailboxMessage);
         // Might be called twice, so check that its only processed once
-        if (model.mailboxMessage == null) {
-            model.mailboxMessage = mailboxMessage;
+        if (takerTradeProcessModel.mailboxMessage == null) {
+            takerTradeProcessModel.mailboxMessage = mailboxMessage;
             if (mailboxMessage instanceof FiatTransferStartedMessage) {
                 handleFiatTransferStartedMessage((FiatTransferStartedMessage) mailboxMessage);
             }
@@ -92,7 +95,7 @@ public class TakerAsSellerProtocol implements Protocol {
     }
 
     public void takeAvailableOffer() {
-        TaskRunner<TakerAsSellerModel> taskRunner = new TaskRunner<>(model,
+        TaskRunner<TakerTrade> taskRunner = new TaskRunner<>(takerTrade,
                 () -> {
                     log.debug("taskRunner at takeAvailableOffer completed");
                 },
@@ -112,9 +115,9 @@ public class TakerAsSellerProtocol implements Protocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handleRequestTakerDepositPaymentMessage(RequestTakerDepositPaymentMessage tradeMessage) {
-        model.setTradeMessage(tradeMessage);
+        takerTradeProcessModel.setTradeMessage(tradeMessage);
 
-        TaskRunner<TakerAsSellerModel> taskRunner = new TaskRunner<>(model,
+        TaskRunner<TakerTrade> taskRunner = new TaskRunner<>(takerTrade,
                 () -> {
                     log.debug("taskRunner at handleTakerDepositPaymentRequestMessage completed");
                 },
@@ -131,9 +134,9 @@ public class TakerAsSellerProtocol implements Protocol {
     }
 
     private void handleDepositTxPublishedMessage(DepositTxPublishedMessage tradeMessage) {
-        model.setTradeMessage(tradeMessage);
+        takerTradeProcessModel.setTradeMessage(tradeMessage);
 
-        TaskRunner<TakerAsSellerModel> taskRunner = new TaskRunner<>(model,
+        TaskRunner<TakerTrade> taskRunner = new TaskRunner<>(takerTrade,
                 () -> {
                     log.debug("taskRunner at handleDepositTxPublishedMessage completed");
                 },
@@ -147,9 +150,9 @@ public class TakerAsSellerProtocol implements Protocol {
     }
 
     private void handleFiatTransferStartedMessage(FiatTransferStartedMessage tradeMessage) {
-        model.setTradeMessage(tradeMessage);
+        takerTradeProcessModel.setTradeMessage(tradeMessage);
 
-        TaskRunner<TakerAsSellerModel> taskRunner = new TaskRunner<>(model,
+        TaskRunner<TakerTrade> taskRunner = new TaskRunner<>(takerTrade,
                 () -> {
                     log.debug("taskRunner at handleFiatTransferStartedMessage completed");
                 },
@@ -166,14 +169,14 @@ public class TakerAsSellerProtocol implements Protocol {
 
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     public void onFiatPaymentReceived() {
-        model.trade.setProcessState(TakerTrade.TakerProcessState.FIAT_PAYMENT_RECEIVED);
+        takerTrade.setProcessState(TakerTrade.TakerProcessState.FIAT_PAYMENT_RECEIVED);
 
-        TaskRunner<TakerAsSellerModel> taskRunner = new TaskRunner<>(model,
+        TaskRunner<TakerTrade> taskRunner = new TaskRunner<>(takerTrade,
                 () -> {
                     log.debug("taskRunner at handleFiatReceivedUIEvent completed");
 
                     // we are done!
-                    model.onComplete();
+                    takerTradeProcessModel.onComplete();
                 },
                 (errorMessage) -> handleTaskRunnerFault(errorMessage));
 
@@ -195,7 +198,7 @@ public class TakerAsSellerProtocol implements Protocol {
             TradeMessage tradeMessage = (TradeMessage) message;
             nonEmptyStringOf(tradeMessage.tradeId);
 
-            if (tradeMessage.tradeId.equals(model.id)) {
+            if (tradeMessage.tradeId.equals(takerTradeProcessModel.id)) {
                 if (tradeMessage instanceof RequestTakerDepositPaymentMessage) {
                     handleRequestTakerDepositPaymentMessage((RequestTakerDepositPaymentMessage) tradeMessage);
                 }

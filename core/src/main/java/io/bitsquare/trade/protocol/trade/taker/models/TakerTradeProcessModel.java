@@ -21,16 +21,14 @@ import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.MessageService;
-import io.bitsquare.storage.Storage;
-import io.bitsquare.trade.TakerTrade;
-import io.bitsquare.trade.protocol.trade.SharedTradeModel;
+import io.bitsquare.trade.protocol.trade.TradeProcessModel;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Transaction;
 
-import java.io.File;
 import java.io.Serializable;
 
 import org.slf4j.Logger;
@@ -39,32 +37,28 @@ import org.slf4j.LoggerFactory;
 /**
  * Holds all data which are needed between tasks. All relevant data for the trade itself are stored in Trade.
  */
-public class TakerAsSellerModel extends SharedTradeModel implements Serializable {
+public class TakerTradeProcessModel extends TradeProcessModel implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
-    transient private static final Logger log = LoggerFactory.getLogger(TakerAsSellerModel.class);
+    transient private static final Logger log = LoggerFactory.getLogger(TakerTradeProcessModel.class);
 
-    transient private Storage<TakerAsSellerModel> storage;
-    transient public final TakerTrade trade;
-
-    public final Taker taker;
-    public final Offerer offerer;
+    public final Taker taker = new Taker();
+    public final Offerer offerer = new Offerer();
 
     // written by tasks
     private Transaction takeOfferFeeTx;
     private Transaction payoutTx;
 
-    public TakerAsSellerModel(TakerTrade trade,
-                              MessageService messageService,
-                              MailboxService mailboxService,
-                              WalletService walletService,
-                              BlockChainService blockChainService,
-                              SignatureService signatureService,
-                              ArbitrationRepository arbitrationRepository,
-                              User user,
-                              File storageDir) {
-        super(trade.getOffer(),
+    public TakerTradeProcessModel(Offer offer,
+                                  MessageService messageService,
+                                  MailboxService mailboxService,
+                                  WalletService walletService,
+                                  BlockChainService blockChainService,
+                                  SignatureService signatureService,
+                                  ArbitrationRepository arbitrationRepository,
+                                  User user) {
+        super(offer,
                 messageService,
                 mailboxService,
                 walletService,
@@ -72,10 +66,8 @@ public class TakerAsSellerModel extends SharedTradeModel implements Serializable
                 signatureService,
                 arbitrationRepository);
 
-        this.trade = trade;
-        this.storage = new Storage<>(storageDir);
 
-        TakerAsSellerModel persisted = storage.initAndGetPersisted(this, getFileName());
+        /*TakerProcessModel persisted = storage.initAndGetPersisted(this, getFileName());
         if (persisted != null) {
             log.debug("Model reconstructed from persisted model.");
 
@@ -88,7 +80,7 @@ public class TakerAsSellerModel extends SharedTradeModel implements Serializable
         else {
             taker = new Taker();
             offerer = new Offerer();
-        }
+        }*/
 
         taker.registrationPubKey = walletService.getRegistrationAddressEntry().getPubKey();
         taker.registrationKeyPair = walletService.getRegistrationAddressEntry().getKeyPair();
@@ -101,7 +93,7 @@ public class TakerAsSellerModel extends SharedTradeModel implements Serializable
     }
 
     // Get called form taskRunner after each completed task
-    @Override
+ /*   @Override
     public void persist() {
         storage.save();
     }
@@ -110,7 +102,7 @@ public class TakerAsSellerModel extends SharedTradeModel implements Serializable
     public void onComplete() {
         // Just in case of successful completion we delete our persisted object
         storage.remove(getFileName());
-    }
+    }*/
 
     public Transaction getTakeOfferFeeTx() {
         return takeOfferFeeTx;
@@ -128,8 +120,8 @@ public class TakerAsSellerModel extends SharedTradeModel implements Serializable
         this.payoutTx = payoutTx;
     }
 
-    private String getFileName() {
+    /*private String getFileName() {
         return getClass().getSimpleName() + "_" + id;
-    }
+    }*/
 
 }

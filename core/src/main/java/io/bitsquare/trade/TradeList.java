@@ -19,7 +19,6 @@ package io.bitsquare.trade;
 
 import io.bitsquare.storage.Storage;
 
-import java.io.File;
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -45,8 +44,8 @@ public class TradeList<T> extends ArrayList<T> implements Serializable {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TradeList(File storageDir, String fileName) {
-        this.storage = new Storage<>(storageDir);
+    public TradeList(Storage<TradeList> storage, String fileName) {
+        this.storage = storage;
 
         TradeList persisted = storage.initAndGetPersisted(this, fileName);
         if (persisted != null) {

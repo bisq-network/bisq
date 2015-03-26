@@ -17,49 +17,46 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 import io.bitsquare.util.Utilities;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VerifyAndSignContract extends Task<OffererAsBuyerModel> {
+public class VerifyAndSignContract extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(VerifyAndSignContract.class);
 
-    public VerifyAndSignContract(TaskRunner taskHandler, OffererAsBuyerModel model) {
-        super(taskHandler, model);
+    public VerifyAndSignContract(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
+        super(taskHandler, offererTradeProcessModel);
     }
 
     @Override
     protected void doRun() {
         try {
-            OffererTrade offererTrade = model.trade;
-
             Contract contract = new Contract(
-                    model.offer,
+                    offererTradeProcessModel.offer,
                     offererTrade.getTradeAmount(),
-                    model.getTakeOfferFeeTxId(),
-                    model.offerer.accountId,
-                    model.taker.accountId,
-                    model.offerer.fiatAccount,
-                    model.taker.fiatAccount,
-                    model.offerer.p2pSigPubKey,
-                    model.taker.p2pSigPublicKey);
+                    offererTradeProcessModel.getTakeOfferFeeTxId(),
+                    offererTradeProcessModel.offerer.accountId,
+                    offererTradeProcessModel.taker.accountId,
+                    offererTradeProcessModel.offerer.fiatAccount,
+                    offererTradeProcessModel.taker.fiatAccount,
+                    offererTradeProcessModel.offerer.p2pSigPubKey,
+                    offererTradeProcessModel.taker.p2pSigPublicKey);
             String contractAsJson = Utilities.objectToJson(contract);
-            String signature = model.signatureService.signMessage(model.offerer.registrationKeyPair, contractAsJson);
+            String signature = offererTradeProcessModel.signatureService.signMessage(offererTradeProcessModel.offerer.registrationKeyPair, contractAsJson);
 
             offererTrade.setContract(contract);
             offererTrade.setContractAsJson(contractAsJson);
             offererTrade.setOffererContractSignature(signature);
-            offererTrade.setTakerContractSignature(model.taker.contractSignature);
+            offererTrade.setTakerContractSignature(offererTradeProcessModel.taker.contractSignature);
 
             complete();
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            offererTrade.setThrowable(t);
+            offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_OPEN);
             failed(t);
         }
     }

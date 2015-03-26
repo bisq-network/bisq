@@ -17,29 +17,27 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendDepositTxToTaker extends Task<OffererAsBuyerModel> {
+public class SendDepositTxToTaker extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(SendDepositTxToTaker.class);
 
-    public SendDepositTxToTaker(TaskRunner taskHandler, OffererAsBuyerModel model) {
-        super(taskHandler, model);
+    public SendDepositTxToTaker(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
+        super(taskHandler, offererTradeProcessModel);
     }
 
     @Override
     protected void doRun() {
         try {
-            DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(model.id, model.trade.getDepositTx());
+            DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(offererTradeProcessModel.id, offererTrade.getDepositTx());
 
-            model.messageService.sendMessage(model.trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
+            offererTradeProcessModel.messageService.sendMessage(offererTrade.getTradingPeer(), tradeMessage, new SendMessageListener() {
                 @Override
                 public void handleResult() {
                     log.trace("DepositTxPublishedMessage successfully arrived at peer");
@@ -49,13 +47,13 @@ public class SendDepositTxToTaker extends Task<OffererAsBuyerModel> {
                 @Override
                 public void handleFault() {
                     appendToErrorMessage("Sending DepositTxPublishedMessage failed");
-                    model.trade.setErrorMessage(errorMessage);
-                    model.trade.setProcessState(OffererTrade.OffererProcessState.MESSAGE_SENDING_FAILED);
+                    offererTrade.setErrorMessage(errorMessage);
+                    offererTrade.setProcessState(OffererTrade.OffererProcessState.MESSAGE_SENDING_FAILED);
                     failed();
                 }
             });
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            offererTrade.setThrowable(t);
             failed(t);
         }
     }

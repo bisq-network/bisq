@@ -17,32 +17,30 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
+import io.bitsquare.btc.exceptions.SigningException;
+import io.bitsquare.btc.exceptions.TransactionVerificationException;
+import io.bitsquare.btc.exceptions.WalletException;
+import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererTrade;
+import io.bitsquare.trade.protocol.trade.offerer.models.OffererTradeProcessModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VerifyTakeOfferFeePayment extends OffererTradeTask {
-    private static final Logger log = LoggerFactory.getLogger(VerifyTakeOfferFeePayment.class);
+public class OffererTradeTask extends Task<OffererTrade> {
+    private static final Logger log = LoggerFactory.getLogger(OffererTradeTask.class);
+    protected final OffererTradeProcessModel offererTradeProcessModel;
+    protected final OffererTrade offererTrade;
 
-    public VerifyTakeOfferFeePayment(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
-        super(taskHandler, offererTradeProcessModel);
+    public OffererTradeTask(TaskRunner taskHandler, OffererTrade model) {
+        super(taskHandler, model);
+
+        offererTrade = model;
+        offererTradeProcessModel = offererTrade.getOffererTradeProcessModel();
     }
 
     @Override
-    protected void doRun() {
-        try {
-            //TODO mocked yet, need a confidence listeners
-            int numOfPeersSeenTx = offererTradeProcessModel.walletService.getNumOfPeersSeenTx(offererTradeProcessModel.getTakeOfferFeeTxId());
-       /* if (numOfPeersSeenTx > 2) {
-            resultHandler.handleResult();
-        }*/
-
-            complete();
-        } catch (Throwable t) {
-            offererTrade.setThrowable(t);
-            failed(t);
-        }
+    protected void doRun() throws WalletException, TransactionVerificationException, SigningException {
     }
 }

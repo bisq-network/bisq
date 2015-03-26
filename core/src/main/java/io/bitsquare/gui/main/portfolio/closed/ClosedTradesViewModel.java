@@ -89,7 +89,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                         return "Completed";
                     case FAILED:
                         return "Failed";
-                    case OPEN_OFFER:
+                    case OFFER_OPEN:
                     case PENDING:
                         throw new RuntimeException("That must not happen. We got a pending state but we are in the closed trades list.");
                 }

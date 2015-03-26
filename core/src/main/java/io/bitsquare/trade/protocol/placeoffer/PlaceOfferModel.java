@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.placeoffer;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.common.taskrunner.SharedTaskModel;
+import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
 
@@ -27,7 +27,7 @@ import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PlaceOfferModel extends SharedTaskModel {
+public class PlaceOfferModel extends Model {
     private static final Logger log = LoggerFactory.getLogger(PlaceOfferModel.class);
 
     public final Offer offer;

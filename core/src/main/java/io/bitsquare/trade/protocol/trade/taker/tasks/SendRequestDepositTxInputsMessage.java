@@ -17,22 +17,20 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
-import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
 import javafx.application.Platform;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendRequestDepositTxInputsMessage extends Task<TakerAsSellerModel> {
+public class SendRequestDepositTxInputsMessage extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(SendRequestDepositTxInputsMessage.class);
 
-    public SendRequestDepositTxInputsMessage(TaskRunner taskHandler, TakerAsSellerModel model) {
+    public SendRequestDepositTxInputsMessage(TaskRunner taskHandler, TakerTrade model) {
         super(taskHandler, model);
     }
 
@@ -42,12 +40,12 @@ public class SendRequestDepositTxInputsMessage extends Task<TakerAsSellerModel> 
     protected void doRun() {
         try {
             RequestDepositTxInputsMessage msg = new RequestDepositTxInputsMessage(
-                    model.id,
-                    model.getTakeOfferFeeTx().getHashAsString(),
-                    model.trade.getTradeAmount(),
-                    model.taker.tradeWalletPubKey);
+                    takerTradeProcessModel.id,
+                    takerTradeProcessModel.getTakeOfferFeeTx().getHashAsString(),
+                    takerTrade.getTradeAmount(),
+                    takerTradeProcessModel.taker.tradeWalletPubKey);
 
-            model.messageService.sendMessage(model.trade.getTradingPeer(), msg, new SendMessageListener() {
+            takerTradeProcessModel.messageService.sendMessage(takerTrade.getTradingPeer(), msg, new SendMessageListener() {
                 @Override
                 public void handleResult() {
                     log.trace("Sending TakeOfferFeePayedMessage succeeded.");
@@ -68,15 +66,15 @@ public class SendRequestDepositTxInputsMessage extends Task<TakerAsSellerModel> 
                                 "lost or the offerer lost his connection. We persisted the state of the trade, please try again later " +
                                 "or cancel that trade.");
 
-                        model.trade.setErrorMessage(errorMessage);
-                        model.trade.setProcessState(TakerTrade.TakerProcessState.MESSAGE_SENDING_FAILED);
+                        takerTrade.setErrorMessage(errorMessage);
+                        takerTrade.setProcessState(TakerTrade.TakerProcessState.MESSAGE_SENDING_FAILED);
 
                         failed();
                     }
                 }
             });
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            takerTrade.setThrowable(t);
             failed(t);
         }
     }

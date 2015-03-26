@@ -17,11 +17,9 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,25 +27,25 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.checkTradeId;
 
-public class ProcessDepositTxPublishedMessage extends Task<TakerAsSellerModel> {
+public class ProcessDepositTxPublishedMessage extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(ProcessDepositTxPublishedMessage.class);
 
-    public ProcessDepositTxPublishedMessage(TaskRunner taskHandler, TakerAsSellerModel model) {
+    public ProcessDepositTxPublishedMessage(TaskRunner taskHandler, TakerTrade model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void doRun() {
         try {
-            checkTradeId(model.id, model.getTradeMessage());
+            checkTradeId(takerTradeProcessModel.id, takerTradeProcessModel.getTradeMessage());
 
-            DepositTxPublishedMessage message = (DepositTxPublishedMessage) model.getTradeMessage();
-            model.trade.setDepositTx(checkNotNull(message.depositTx));
-            model.trade.setProcessState(TakerTrade.TakerProcessState.DEPOSIT_PUBLISHED);
+            DepositTxPublishedMessage message = (DepositTxPublishedMessage) takerTradeProcessModel.getTradeMessage();
+            takerTrade.setDepositTx(checkNotNull(message.depositTx));
+            takerTrade.setProcessState(TakerTrade.TakerProcessState.DEPOSIT_PUBLISHED);
 
             complete();
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            takerTrade.setThrowable(t);
             failed(t);
         }
     }

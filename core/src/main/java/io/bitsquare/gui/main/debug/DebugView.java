@@ -28,7 +28,7 @@ import io.bitsquare.trade.protocol.placeoffer.tasks.AddOfferToRemoteOfferBook;
 import io.bitsquare.trade.protocol.placeoffer.tasks.BroadcastCreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.ValidateOffer;
-import io.bitsquare.trade.protocol.trade.offerer.OffererAsBuyerProtocol;
+import io.bitsquare.trade.protocol.trade.offerer.OffererProtocol;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateAndSignPayoutTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateOffererDepositTxInputs;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
@@ -41,7 +41,7 @@ import io.bitsquare.trade.protocol.trade.offerer.tasks.SignAndPublishDepositTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyAndSignContract;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakeOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakerAccount;
-import io.bitsquare.trade.protocol.trade.taker.TakerAsSellerProtocol;
+import io.bitsquare.trade.protocol.trade.taker.TakerProtocol;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessDepositTxPublishedMessage;
@@ -100,7 +100,7 @@ public class DebugView extends InitializableView {
 
                         
                         /*---- Protocol ----*/
-                        OffererAsBuyerProtocol.class,
+                        OffererProtocol.class,
                         ProcessRequestDepositTxInputsMessage.class,
                         CreateOffererDepositTxInputs.class,
                         RequestTakerDepositPayment.class,
@@ -120,7 +120,7 @@ public class DebugView extends InitializableView {
                         
 
                         /*---- Protocol ----*/
-                        TakerAsSellerProtocol.class,
+                        TakerProtocol.class,
                         CreateTakeOfferFeeTx.class,
                         SendRequestDepositTxInputsMessage.class,
 

@@ -17,25 +17,24 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
+import io.bitsquare.trade.TakerTrade;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VerifyOffererAccount extends Task<TakerAsSellerModel> {
+public class VerifyOffererAccount extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(VerifyOffererAccount.class);
 
-    public VerifyOffererAccount(TaskRunner taskHandler, TakerAsSellerModel model) {
+    public VerifyOffererAccount(TaskRunner taskHandler, TakerTrade model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void doRun() {
         try {
-            if (model.blockChainService.verifyAccountRegistration()) {
-                if (model.blockChainService.isAccountBlackListed(model.offerer.accountId, model.offerer.fiatAccount)) {
+            if (takerTradeProcessModel.blockChainService.verifyAccountRegistration()) {
+                if (takerTradeProcessModel.blockChainService.isAccountBlackListed(takerTradeProcessModel.offerer.accountId, takerTradeProcessModel.offerer.fiatAccount)) {
                     failed("Taker is blacklisted.");
                 }
                 else {
@@ -46,7 +45,7 @@ public class VerifyOffererAccount extends Task<TakerAsSellerModel> {
                 failed("Account registration validation for peer faultHandler.onFault.");
             }
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            takerTrade.setThrowable(t);
             failed(t);
         }
     }

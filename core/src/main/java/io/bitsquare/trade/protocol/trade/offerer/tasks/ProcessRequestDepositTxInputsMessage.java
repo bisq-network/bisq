@@ -17,11 +17,9 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererAsBuyerModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,27 +27,27 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.*;
 
-public class ProcessRequestDepositTxInputsMessage extends Task<OffererAsBuyerModel> {
+public class ProcessRequestDepositTxInputsMessage extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(ProcessRequestDepositTxInputsMessage.class);
 
-    public ProcessRequestDepositTxInputsMessage(TaskRunner taskHandler, OffererAsBuyerModel model) {
-        super(taskHandler, model);
+    public ProcessRequestDepositTxInputsMessage(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
+        super(taskHandler, offererTradeProcessModel);
     }
 
     @Override
     protected void doRun() {
         try {
-            checkTradeId(model.id, model.getTradeMessage());
-            OffererTrade offererTrade = model.trade;
-            RequestDepositTxInputsMessage requestDepositTxInputsMessage = (RequestDepositTxInputsMessage) model.getTradeMessage();
+            checkTradeId(offererTradeProcessModel.id, offererTradeProcessModel.getTradeMessage());
+            RequestDepositTxInputsMessage requestDepositTxInputsMessage = (RequestDepositTxInputsMessage) offererTradeProcessModel.getTradeMessage();
 
             offererTrade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(requestDepositTxInputsMessage.tradeAmount)));
-            model.setTakeOfferFeeTxId(nonEmptyStringOf(requestDepositTxInputsMessage.takeOfferFeeTxId));
-            model.taker.tradeWalletPubKey = checkNotNull(requestDepositTxInputsMessage.takerTradeWalletPubKey);
+            offererTradeProcessModel.setTakeOfferFeeTxId(nonEmptyStringOf(requestDepositTxInputsMessage.takeOfferFeeTxId));
+            offererTradeProcessModel.taker.tradeWalletPubKey = checkNotNull(requestDepositTxInputsMessage.takerTradeWalletPubKey);
 
             complete();
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            offererTrade.setThrowable(t);
+            offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_OPEN);
             failed(t);
         }
     }

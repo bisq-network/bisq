@@ -17,19 +17,18 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
+import io.bitsquare.trade.TakerTrade;
 
 import org.bitcoinj.core.Transaction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerCommitDepositTx extends Task<TakerAsSellerModel> {
+public class TakerCommitDepositTx extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerCommitDepositTx.class);
 
-    public TakerCommitDepositTx(TaskRunner taskHandler, TakerAsSellerModel model) {
+    public TakerCommitDepositTx(TaskRunner taskHandler, TakerTrade model) {
         super(taskHandler, model);
     }
 
@@ -37,13 +36,13 @@ public class TakerCommitDepositTx extends Task<TakerAsSellerModel> {
     protected void doRun() {
         try {
             // To access tx confidence we need to add that tx into our wallet.
-            Transaction depositTx = model.tradeWalletService.commitsDepositTx(model.trade.getDepositTx());
+            Transaction depositTx = takerTradeProcessModel.tradeWalletService.commitsDepositTx(takerTrade.getDepositTx());
 
-            model.trade.setDepositTx(depositTx);
+            takerTrade.setDepositTx(depositTx);
 
             complete();
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            takerTrade.setThrowable(t);
             failed(t);
         }
     }

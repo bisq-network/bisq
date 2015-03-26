@@ -21,7 +21,7 @@ import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.common.taskrunner.SharedTaskModel;
+import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.MailboxMessage;
@@ -34,11 +34,11 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SharedTradeModel extends SharedTaskModel implements Serializable {
+public class TradeProcessModel extends Model implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
-    protected static final Logger log = LoggerFactory.getLogger(SharedTradeModel.class);
+    protected static final Logger log = LoggerFactory.getLogger(TradeProcessModel.class);
 
     transient public MailboxMessage mailboxMessage;
     // provided
@@ -59,13 +59,13 @@ public class SharedTradeModel extends SharedTaskModel implements Serializable {
     // data written/read by tasks
     transient private TradeMessage tradeMessage;
 
-    protected SharedTradeModel(Offer offer,
-                               MessageService messageService,
-                               MailboxService mailboxService,
-                               WalletService walletService,
-                               BlockChainService blockChainService,
-                               SignatureService signatureService,
-                               ArbitrationRepository arbitrationRepository) {
+    protected TradeProcessModel(Offer offer,
+                                MessageService messageService,
+                                MailboxService mailboxService,
+                                WalletService walletService,
+                                BlockChainService blockChainService,
+                                SignatureService signatureService,
+                                ArbitrationRepository arbitrationRepository) {
         this.offer = offer;
         this.messageService = messageService;
         this.mailboxService = mailboxService;

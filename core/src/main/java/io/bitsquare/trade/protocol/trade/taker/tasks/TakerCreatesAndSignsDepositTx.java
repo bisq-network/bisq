@@ -19,46 +19,45 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
+import io.bitsquare.trade.TakerTrade;
 
 import org.bitcoinj.core.Coin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerCreatesAndSignsDepositTx extends Task<TakerAsSellerModel> {
+public class TakerCreatesAndSignsDepositTx extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerCreatesAndSignsDepositTx.class);
 
-    public TakerCreatesAndSignsDepositTx(TaskRunner taskHandler, TakerAsSellerModel model) {
+    public TakerCreatesAndSignsDepositTx(TaskRunner taskHandler, TakerTrade model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void doRun() {
         try {
-            Coin takerInputAmount = model.trade.getTradeAmount().add(model.trade.getSecurityDeposit()).add(FeePolicy.TX_FEE);
-            Coin msOutputAmount = takerInputAmount.add(model.trade.getSecurityDeposit());
+            Coin takerInputAmount = takerTrade.getTradeAmount().add(takerTrade.getSecurityDeposit()).add(FeePolicy.TX_FEE);
+            Coin msOutputAmount = takerInputAmount.add(takerTrade.getSecurityDeposit());
 
-            TradeWalletService.Result result = model.tradeWalletService.takerCreatesAndSignsDepositTx(
+            TradeWalletService.Result result = takerTradeProcessModel.tradeWalletService.takerCreatesAndSignsDepositTx(
                     takerInputAmount,
                     msOutputAmount,
-                    model.offerer.connectedOutputsForAllInputs,
-                    model.offerer.outputs,
-                    model.taker.addressEntry,
-                    model.offerer.tradeWalletPubKey,
-                    model.taker.tradeWalletPubKey,
-                    model.arbitratorPubKey);
+                    takerTradeProcessModel.offerer.connectedOutputsForAllInputs,
+                    takerTradeProcessModel.offerer.outputs,
+                    takerTradeProcessModel.taker.addressEntry,
+                    takerTradeProcessModel.offerer.tradeWalletPubKey,
+                    takerTradeProcessModel.taker.tradeWalletPubKey,
+                    takerTradeProcessModel.arbitratorPubKey);
 
 
-            model.taker.connectedOutputsForAllInputs = result.getConnectedOutputsForAllInputs();
-            model.taker.outputs = result.getOutputs();
-            model.taker.preparedDepositTx = result.getDepositTx();
+            takerTradeProcessModel.taker.connectedOutputsForAllInputs = result.getConnectedOutputsForAllInputs();
+            takerTradeProcessModel.taker.outputs = result.getOutputs();
+            takerTradeProcessModel.taker.preparedDepositTx = result.getDepositTx();
 
             complete();
         } catch (Throwable t) {
-            model.trade.setThrowable(t);
+            takerTrade.setThrowable(t);
             failed(t);
         }
     }
