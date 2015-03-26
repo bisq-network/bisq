@@ -34,6 +34,7 @@
 
 package io.bitsquare.storage;
 
+
 import io.bitsquare.gui.components.Popups;
 
 import org.bitcoinj.core.Utils;

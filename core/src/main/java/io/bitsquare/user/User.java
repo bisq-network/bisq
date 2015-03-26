@@ -19,8 +19,9 @@ package io.bitsquare.user;
 
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.gui.components.Popups;
 import io.bitsquare.storage.Storage;
+
+import com.google.common.base.Throwables;
 
 import java.io.Serializable;
 
@@ -94,7 +95,7 @@ public class User implements Serializable {
             } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
-                Popups.openExceptionPopup(e);
+                Throwables.propagate(e);
             }
         }
         storage.save();

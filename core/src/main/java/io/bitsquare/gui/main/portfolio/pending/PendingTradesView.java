@@ -85,8 +85,8 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
     private ChangeListener<Number> selectedIndexChangeListener;
     private ListChangeListener<PendingTradesListItem> listChangeListener;
     private ChangeListener<String> txIdChangeListener;
-    private ChangeListener<PendingTradesViewModel.State> offererStateChangeListener;
-    private ChangeListener<PendingTradesViewModel.State> takerStateChangeListener;
+    private ChangeListener<PendingTradesViewModel.ViewState> offererStateChangeListener;
+    private ChangeListener<PendingTradesViewModel.ViewState> takerStateChangeListener;
 
     private final Navigation navigation;
     private ChangeListener<Boolean> focusedPropertyListener;
@@ -170,8 +170,8 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
     public void doDeactivate() {
         model.getList().removeListener(listChangeListener);
         model.txId.removeListener(txIdChangeListener);
-        model.state.removeListener(offererStateChangeListener);
-        model.state.removeListener(takerStateChangeListener);
+        model.viewState.removeListener(offererStateChangeListener);
+        model.viewState.removeListener(takerStateChangeListener);
         model.selectedIndex.removeListener(selectedIndexChangeListener);
         table.getSelectionModel().selectedItemProperty().removeListener(selectedItemChangeListener);
 
@@ -258,8 +258,8 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
             processBar.setProcessStepItems(items);
         }
 
-        model.state.addListener(offererStateChangeListener);
-        applyOffererState(model.state.get());
+        model.viewState.addListener(offererStateChangeListener);
+        applyOffererState(model.viewState.get());
     }
 
     private void setupScreenForTaker() {
@@ -273,18 +273,18 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
             processBar.setProcessStepItems(items);
         }
 
-        model.state.addListener(takerStateChangeListener);
-        applyTakerState(model.state.get());
+        model.viewState.addListener(takerStateChangeListener);
+        applyTakerState(model.viewState.get());
     }
 
-    private void applyOffererState(PendingTradesViewModel.State state) {
+    private void applyOffererState(PendingTradesViewModel.ViewState viewState) {
         setPaymentsControlsVisible(false);
         setSummaryControlsVisible(false);
-        log.debug("applyOffererState " + state);
+        log.debug("applyOffererState " + viewState);
         processBar.reset();
 
-        if (state != null) {
-            switch (state) {
+        if (viewState != null) {
+            switch (viewState) {
                 case OFFERER_BUYER_WAIT_TX_CONF:
                     processBar.setSelectedIndex(0);
 
@@ -347,21 +347,27 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
 
                     withdrawAmountTextField.setText(model.getAmountToWithdraw());
                     break;
+                case MESSAGE_SENDING_FAILED:
+                    Popups.openWarningPopup("Sending message to trading peer failed.", model.getErrorMessage());
+                    break;
+                case EXCEPTION:
+                    Popups.openExceptionPopup(model.getTradeException());
+                    break;
             }
         }
     }
 
-    private void applyTakerState(PendingTradesViewModel.State state) {
+    private void applyTakerState(PendingTradesViewModel.ViewState viewState) {
         confirmPaymentReceiptButton.setVisible(false);
         confirmPaymentReceiptButton.setManaged(false);
 
         setSummaryControlsVisible(false);
 
         processBar.reset();
-        log.debug("applyTakerState " + state);
+        log.debug("applyTakerState " + viewState);
 
-        if (state != null) {
-            switch (state) {
+        if (viewState != null) {
+            switch (viewState) {
                 case TAKER_SELLER_WAIT_TX_CONF:
                     processBar.setSelectedIndex(0);
 
@@ -421,6 +427,12 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
                             "You can review the details to that trade any time in the closed trades screen.");
 
                     withdrawAmountTextField.setText(model.getAmountToWithdraw());
+                    break;
+                case MESSAGE_SENDING_FAILED:
+                    Popups.openWarningPopup("Sending message to trading peer failed.", model.getErrorMessage());
+                    break;
+                case EXCEPTION:
+                    Popups.openExceptionPopup(model.getTradeException());
                     break;
             }
         }

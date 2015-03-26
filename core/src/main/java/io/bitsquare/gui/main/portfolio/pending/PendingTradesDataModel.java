@@ -17,22 +17,19 @@
 
 package io.bitsquare.gui.main.portfolio.pending;
 
-import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
+import io.bitsquare.gui.components.Popups;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.trade.OffererTrade;
+import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 
-import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.Transaction;
-
-import com.google.common.util.concurrent.FutureCallback;
 
 import com.google.inject.Inject;
 
@@ -44,12 +41,9 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-
-import org.jetbrains.annotations.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,14 +59,14 @@ class PendingTradesDataModel implements Activatable, DataModel {
 
     private PendingTradesListItem selectedItem;
     private boolean isOfferer;
-    private Trade closedTrade;
 
-    private final ChangeListener<Trade.ProcessState> tradeStateChangeListener;
     private final ListChangeListener<Trade> tradesListChangeListener;
 
     final StringProperty txId = new SimpleStringProperty();
-    final ObjectProperty<Trade.ProcessState> tradeState = new SimpleObjectProperty<>();
     final IntegerProperty selectedIndex = new SimpleIntegerProperty(-1);
+
+    final ObjectProperty<TakerTrade.TakerProcessState> takerProcessState = new SimpleObjectProperty<>();
+    final ObjectProperty<OffererTrade.OffererProcessState> offererProcessState = new SimpleObjectProperty<>();
 
     @Inject
     public PendingTradesDataModel(TradeManager tradeManager, WalletService walletService, User user) {
@@ -80,13 +74,12 @@ class PendingTradesDataModel implements Activatable, DataModel {
         this.walletService = walletService;
         this.user = user;
 
-        tradeStateChangeListener = (ov, oldValue, newValue) -> tradeState.set(newValue);
-        tradesListChangeListener = change -> applyList();
+        tradesListChangeListener = change -> onListChanged();
     }
 
     @Override
     public void activate() {
-        applyList();
+        onListChanged();
         tradeManager.getPendingTrades().addListener(tradesListChangeListener);
 
         if (list.size() > 0) {
@@ -98,10 +91,10 @@ class PendingTradesDataModel implements Activatable, DataModel {
     @Override
     public void deactivate() {
         tradeManager.getPendingTrades().removeListener(tradesListChangeListener);
-        cleanUpSelectedTrade();
+        removeListenerFromSelectedTrade();
     }
 
-    private void applyList() {
+    private void onListChanged() {
         list.clear();
         list.addAll(tradeManager.getPendingTrades().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
 
@@ -116,7 +109,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
 
     void selectTrade(PendingTradesListItem item) {
         // clean up previous selectedItem
-        cleanUpSelectedTrade();
+        removeListenerFromSelectedTrade();
 
         selectedItem = item;
 
@@ -124,8 +117,11 @@ class PendingTradesDataModel implements Activatable, DataModel {
             isOfferer = getTrade().getOffer().getP2PSigPubKey().equals(user.getP2PSigPubKey());
 
             Trade trade = getTrade();
-            trade.processStateProperty().addListener(tradeStateChangeListener);
-            tradeState.set(trade.processStateProperty().get());
+            if (trade instanceof TakerTrade)
+                takerProcessState.bind(((TakerTrade) trade).processStateProperty());
+            else
+                offererProcessState.bind(((OffererTrade) trade).processStateProperty());
+
             log.trace("selectTrade trade.stateProperty().get() " + trade.processStateProperty().get());
 
             if (trade.getDepositTx() != null)
@@ -133,7 +129,6 @@ class PendingTradesDataModel implements Activatable, DataModel {
         }
         else {
             txId.set(null);
-            tradeState.set(null);
         }
     }
 
@@ -146,34 +141,14 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     void withdraw(String toAddress) {
-        FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
-            @Override
-            public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
-                if (transaction != null) {
-                    log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
-
-                    if (closedTrade != null) {
-                        list.removeIf(e -> e.getTrade().getId().equals(closedTrade.getId()));
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(@NotNull Throwable t) {
-                log.debug("onWithdraw onFailure");
-            }
-        };
-
-        AddressEntry addressEntry = walletService.getAddressEntry(getTrade().getId());
-        String fromAddress = addressEntry.getAddressString();
-        try {
-            walletService.sendFunds(fromAddress, toAddress, getAmountToWithdraw(), callback);
-        } catch (AddressFormatException | InsufficientMoneyException e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-        }
-
-        tradeManager.onWithdrawAtTradeCompleted(getTrade());
+        tradeManager.requestWithdraw(toAddress,
+                getTrade(),
+                () -> log.debug("requestWithdraw was successful"),
+                (errorMessage, throwable) -> {
+                    log.error(errorMessage);
+                    Popups.openExceptionPopup(throwable);
+                });
+        
 
 /*
         Action response = Popups.openConfirmPopup(
@@ -203,7 +178,6 @@ class PendingTradesDataModel implements Activatable, DataModel {
         }*/
     }
 
-
     ObservableList<PendingTradesListItem> getList() {
         return list;
     }
@@ -232,31 +206,35 @@ class PendingTradesDataModel implements Activatable, DataModel {
         return selectedItem.getTrade().getOffer().getCurrencyCode();
     }
 
+    Throwable getTradeException() {
+        return getTrade().getThrowable();
+    }
+
+    String getErrorMessage() {
+        return getTrade().getErrorMessage();
+    }
+
     public Offer.Direction getDirection(Offer offer) {
         return offer.getP2PSigPubKey().equals(user.getP2PSigPubKey()) ?
                 offer.getDirection() : offer.getMirroredDirection();
     }
 
-    Coin getAmountToWithdraw() {
-        AddressEntry addressEntry = walletService.getAddressEntry(getTrade().getId());
-        log.debug("trade id " + getTrade().getId());
-        log.debug("getAddressString " + addressEntry.getAddressString());
-        log.debug("funds  " + walletService.getBalanceForAddress(addressEntry.getAddress()).subtract(FeePolicy
-                .TX_FEE).toString());
-        // return walletService.getBalanceForAddress(addressEntry.getAddress()).subtract(FeePolicy.TX_FEE);
-
-        // TODO handle overpaid securityDeposit
-        if (isOfferer())
-            return getTrade().getTradeAmount().add(getTrade().getOffer().getSecurityDeposit());
-        else
-            return getTrade().getSecurityDeposit();
+    private void removeListenerFromSelectedTrade() {
+        if (selectedItem != null) {
+            Trade trade = selectedItem.getTrade();
+            if (trade instanceof TakerTrade)
+                takerProcessState.unbind();
+            else
+                offererProcessState.unbind();
+        }
     }
 
-
-    private void cleanUpSelectedTrade() {
-        if (selectedItem != null) {
-            selectedItem.getTrade().processStateProperty().removeListener(tradeStateChangeListener);
-        }
+    public Coin getAmountToWithdraw() {
+        Trade trade = selectedItem.getTrade();
+        Coin amountToWithdraw = trade.getSecurityDeposit();
+        if (trade instanceof OffererTrade)
+            amountToWithdraw = amountToWithdraw.add(trade.getTradeAmount());
+        return amountToWithdraw;
     }
 
 }

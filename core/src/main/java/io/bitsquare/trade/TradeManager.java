@@ -18,9 +18,11 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.arbitration.ArbitrationRepository;
+import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.crypto.SignatureService;
@@ -47,8 +49,13 @@ import io.bitsquare.trade.protocol.trade.taker.models.TakerAsSellerModel;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
 
+import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.Fiat;
+
+import com.google.common.util.concurrent.FutureCallback;
 
 import java.io.File;
 
@@ -61,6 +68,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import javafx.collections.ObservableList;
+
+import org.jetbrains.annotations.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -259,17 +268,49 @@ public class TradeManager {
         ((TakerTrade) trade).onFiatPaymentReceived();
     }
 
-    public void onWithdrawAtTradeCompleted(Trade trade) {
-        if (trade instanceof OffererTrade)
-            ((OffererTrade) trade).setLifeCycleState(OffererTrade.OffererLifeCycleState.COMPLETED);
-        else
-            ((TakerTrade) trade).setLifeCycleState(TakerTrade.TakerLifeCycleState.COMPLETED);
+    public void requestWithdraw(String toAddress, Trade trade, ResultHandler resultHandler, FaultHandler faultHandler) {
+        AddressEntry addressEntry = walletService.getAddressEntry(trade.getId());
+        String fromAddress = addressEntry.getAddressString();
 
-        pendingTrades.remove(trade);
-        closedTrades.add(trade);
+        // TODO handle overpaid securityDeposit
+        Coin amountToWithdraw = trade.getSecurityDeposit();
+        if (trade instanceof OffererTrade)
+            amountToWithdraw = amountToWithdraw.add(trade.getTradeAmount());
+
+        FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
+            @Override
+            public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
+                if (transaction != null) {
+                    log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
+                    if (trade instanceof OffererTrade)
+                        ((OffererTrade) trade).setLifeCycleState(OffererTrade.OffererLifeCycleState.COMPLETED);
+                    else
+                        ((TakerTrade) trade).setLifeCycleState(TakerTrade.TakerLifeCycleState.COMPLETED);
+
+                    pendingTrades.remove(trade);
+                    closedTrades.add(trade);
+
+                    resultHandler.handleResult();
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable t) {
+                t.printStackTrace();
+                log.error(t.getMessage());
+                faultHandler.handleFault("An exception occurred at requestWithdraw (onFailure).", t);
+            }
+        };
+        try {
+            walletService.sendFunds(fromAddress, toAddress, amountToWithdraw, callback);
+        } catch (AddressFormatException | InsufficientMoneyException e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            faultHandler.handleFault("An exception occurred at requestWithdraw.", e);
+        }
     }
 
-
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Called from Offerbook when offer gets removed from DHT
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -437,5 +478,4 @@ public class TradeManager {
                     log.error(fault.getMessage());
                 });
     }
-
 }

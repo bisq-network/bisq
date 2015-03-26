@@ -78,7 +78,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                     case FAILED:
                         return "Failed";
                     case PENDING:
-                        throw new RuntimeException("Wrong state: " + lifeCycleState);
+                        throw new RuntimeException("That must not happen. We got a pending state but we are in the closed trades list.");
                 }
             }
             else if (lifeCycleState instanceof OffererTrade.OffererLifeCycleState) {
@@ -91,11 +91,10 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                         return "Failed";
                     case OPEN_OFFER:
                     case PENDING:
-                        throw new RuntimeException("Wrong state: " + lifeCycleState);
+                        throw new RuntimeException("That must not happen. We got a pending state but we are in the closed trades list.");
                 }
             }
-
-            return "Undefined";
+            throw new RuntimeException("That must not happen. We got no defined state.");
         }
         else {
             return "";

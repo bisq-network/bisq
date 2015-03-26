@@ -69,8 +69,8 @@ abstract public class Trade implements Serializable {
 
     transient protected String errorMessage;
     transient protected Throwable throwable;
-    transient protected ObjectProperty<Coin> tradeAmountProperty = new SimpleObjectProperty<>(tradeAmount);
-    transient protected ObjectProperty<Fiat> tradeVolumeProperty = new SimpleObjectProperty<>(getTradeVolume());
+    transient protected ObjectProperty<Coin> tradeAmountProperty;
+    transient protected ObjectProperty<Fiat> tradeVolumeProperty;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -80,6 +80,8 @@ abstract public class Trade implements Serializable {
     public Trade(Offer offer) {
         this.offer = offer;
         date = new Date();
+        tradeAmountProperty = new SimpleObjectProperty<>(tradeAmount);
+        tradeVolumeProperty = new SimpleObjectProperty<>(getTradeVolume()); // cannot be set before offer is set
     }
 
     // Serialized object does not create our transient objects

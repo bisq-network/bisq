@@ -17,7 +17,7 @@
 
 package io.bitsquare.storage;
 
-import io.bitsquare.gui.components.Popups;
+import com.google.common.base.Throwables;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -132,7 +132,7 @@ public class Storage<T extends Serializable> {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            Popups.openErrorPopup("An exception occurred at reading data from disc.", e.getMessage());
+            Throwables.propagate(e);
 
         }
         return null;

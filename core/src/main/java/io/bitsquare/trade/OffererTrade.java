@@ -64,7 +64,7 @@ public class OffererTrade extends Trade implements Serializable {
         PAYOUT_PUBLISHED,
         
         MESSAGE_SENDING_FAILED,
-        UNSPECIFIC_FAULT
+        EXCEPTION
     }
 
     protected OffererProcessState processState;
@@ -104,7 +104,7 @@ public class OffererTrade extends Trade implements Serializable {
         processStateProperty.set(processState);
 
         switch (processState) {
-            case UNSPECIFIC_FAULT:
+            case EXCEPTION:
                 disposeProtocol();
                 setLifeCycleState(OffererLifeCycleState.FAILED);
                 break;
