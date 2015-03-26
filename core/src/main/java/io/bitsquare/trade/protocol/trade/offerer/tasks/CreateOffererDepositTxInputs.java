@@ -38,6 +38,7 @@ public class CreateOffererDepositTxInputs extends Task<OffererAsBuyerModel> {
     @Override
     protected void doRun() {
         try {
+            log.debug("model.trade.id" + model.trade.getId());
             Coin offererInputAmount = model.trade.getSecurityDeposit().add(FeePolicy.TX_FEE);
             TradeWalletService.Result result = model.tradeWalletService.createOffererDepositTxInputs(offererInputAmount,
                     model.offerer.addressEntry);

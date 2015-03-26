@@ -112,24 +112,18 @@ class PendingTradesDataModel implements Activatable, DataModel {
         removeListenerFromSelectedTrade();
 
         selectedItem = item;
+        isOfferer = getTrade().getOffer().getP2PSigPubKey().equals(user.getP2PSigPubKey());
 
-        if (selectedItem != null) {
-            isOfferer = getTrade().getOffer().getP2PSigPubKey().equals(user.getP2PSigPubKey());
+        Trade trade = getTrade();
+        if (trade instanceof TakerTrade)
+            takerProcessState.bind(((TakerTrade) trade).processStateProperty());
+        else
+            offererProcessState.bind(((OffererTrade) trade).processStateProperty());
 
-            Trade trade = getTrade();
-            if (trade instanceof TakerTrade)
-                takerProcessState.bind(((TakerTrade) trade).processStateProperty());
-            else
-                offererProcessState.bind(((OffererTrade) trade).processStateProperty());
+        log.trace("selectTrade trade.stateProperty().get() " + trade.processStateProperty().get());
 
-            log.trace("selectTrade trade.stateProperty().get() " + trade.processStateProperty().get());
-
-            if (trade.getDepositTx() != null)
-                txId.set(trade.getDepositTx().getHashAsString());
-        }
-        else {
-            txId.set(null);
-        }
+        if (trade.getDepositTx() != null)
+            txId.set(trade.getDepositTx().getHashAsString());
     }
 
     void fiatPaymentStarted() {

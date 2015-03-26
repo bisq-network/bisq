@@ -46,13 +46,14 @@ public class AddressEntryList extends ArrayList<AddressEntry> implements Seriali
         this.storage = storage;
     }
 
-    public void init(Wallet wallet) {
+    public void onWalletReady(Wallet wallet) {
         this.wallet = wallet;
 
         AddressEntryList persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
             for (AddressEntry addressEntry : persisted) {
                 addressEntry.setDeterministicKey((DeterministicKey) wallet.findKeyFromPubHash(addressEntry.getPubKeyHash()));
+                this.add(addressEntry);
             }
         }
         else {

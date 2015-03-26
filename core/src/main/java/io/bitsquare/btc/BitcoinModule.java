@@ -37,8 +37,7 @@ public class BitcoinModule extends BitsquareModule {
 
     @Override
     protected void configure() {
-        bind(BitcoinNetwork.class).toInstance(
-                env.getProperty(BitcoinNetwork.KEY, BitcoinNetwork.class, BitcoinNetwork.DEFAULT));
+        bind(BitcoinNetwork.class).toInstance(env.getProperty(BitcoinNetwork.KEY, BitcoinNetwork.class, BitcoinNetwork.DEFAULT));
         bind(FeePolicy.class).in(Singleton.class);
 
         bindConstant().annotatedWith(named(UserAgent.NAME_KEY)).to(env.getRequiredProperty(UserAgent.NAME_KEY));
@@ -47,10 +46,11 @@ public class BitcoinModule extends BitsquareModule {
 
         File walletDir = new File(env.getRequiredProperty(WalletService.DIR_KEY));
         bind(File.class).annotatedWith(named(WalletService.DIR_KEY)).toInstance(walletDir);
-        bindConstant().annotatedWith(named(WalletService.PREFIX_KEY)).to(
-                env.getRequiredProperty(WalletService.PREFIX_KEY));
-        bind(WalletService.class).in(Singleton.class);
+        bindConstant().annotatedWith(named(WalletService.PREFIX_KEY)).to(env.getRequiredProperty(WalletService.PREFIX_KEY));
 
+        bind(AddressEntryList.class).in(Singleton.class);
+        bind(TradeWalletService.class).in(Singleton.class);
+        bind(WalletService.class).in(Singleton.class);
         bind(BlockChainService.class).in(Singleton.class);
     }
 

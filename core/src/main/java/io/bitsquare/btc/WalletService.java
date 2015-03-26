@@ -87,6 +87,8 @@ public class WalletService {
     private final Observable<Double> downloadProgress = downloadListener.getObservable();
     private final WalletEventListener walletEventListener = new BitsquareWalletEventListener();
 
+    private final TradeWalletService tradeWalletService;
+    private final AddressEntryList addressEntryList;
     private final NetworkParameters params;
     private final FeePolicy feePolicy;
     private final SignatureService signatureService;
@@ -98,9 +100,7 @@ public class WalletService {
     private Wallet wallet;
     private AddressEntry registrationAddressEntry;
     private AddressEntry arbitratorDepositAddressEntry;
-    private AddressEntryList addressEntryList;
 
-    private TradeWalletService tradeWalletService;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -108,8 +108,9 @@ public class WalletService {
 
     @Inject
     public WalletService(BitcoinNetwork bitcoinNetwork, FeePolicy feePolicy, SignatureService signatureService,
-                         AddressEntryList addressEntryList, UserAgent userAgent,
+                         TradeWalletService tradeWalletService, AddressEntryList addressEntryList, UserAgent userAgent,
                          @Named(DIR_KEY) File walletDir, @Named(PREFIX_KEY) String walletPrefix) {
+        this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
         this.params = bitcoinNetwork.getParameters();
         this.feePolicy = feePolicy;
@@ -145,7 +146,8 @@ public class WalletService {
                 walletAppKit.peerGroup().setBloomFilterFalsePositiveRate(0.00001);
                 initWallet();
 
-                tradeWalletService = new TradeWalletService(params, wallet, walletAppKit, feePolicy);
+                // set after wallet is ready
+                tradeWalletService.setWalletAppKit(walletAppKit);
 
                 status.onCompleted();
             }
@@ -200,7 +202,7 @@ public class WalletService {
         wallet = walletAppKit.wallet();
         wallet.addEventListener(walletEventListener);
 
-        addressEntryList.init(wallet);
+        addressEntryList.onWalletReady(wallet);
         registrationAddressEntry = addressEntryList.getRegistrationAddressEntry();
     }
 

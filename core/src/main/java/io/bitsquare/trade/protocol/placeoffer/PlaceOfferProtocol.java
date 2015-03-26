@@ -53,6 +53,7 @@ public class PlaceOfferProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void placeOffer() {
+        log.debug("model.offer.id" + model.offer.getId());
         TaskRunner<PlaceOfferModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleRequestTakeOfferMessage completed");

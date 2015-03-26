@@ -62,8 +62,9 @@ public class GuiModule extends BitsquareModule {
         bind(ViewLoader.class).to(FxmlViewLoader.class).in(Singleton.class);
         bind(CachingViewLoader.class).in(Singleton.class);
 
-        bind(OfferBook.class).in(Singleton.class);
         bind(Navigation.class).in(Singleton.class);
+        
+        bind(OfferBook.class).in(Singleton.class);
         bind(OverlayManager.class).in(Singleton.class);
         bind(BSFormatter.class).in(Singleton.class);
 

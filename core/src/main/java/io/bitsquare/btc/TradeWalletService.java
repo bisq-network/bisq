@@ -48,6 +48,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,15 +83,19 @@ public class TradeWalletService {
     private static final Logger log = LoggerFactory.getLogger(TradeWalletService.class);
 
     private final NetworkParameters params;
-    private final Wallet wallet;
-    private final WalletAppKit walletAppKit;
+    private Wallet wallet;
+    private WalletAppKit walletAppKit;
     private final FeePolicy feePolicy;
 
-    public TradeWalletService(NetworkParameters params, Wallet wallet, WalletAppKit walletAppKit, FeePolicy feePolicy) {
-        this.params = params;
-        this.wallet = wallet;
-        this.walletAppKit = walletAppKit;
+    @Inject
+    public TradeWalletService(BitcoinNetwork bitcoinNetwork, FeePolicy feePolicy) {
+        this.params = bitcoinNetwork.getParameters();
         this.feePolicy = feePolicy;
+    }
+
+    public void setWalletAppKit(WalletAppKit walletAppKit) {
+        this.walletAppKit = walletAppKit;
+        wallet = walletAppKit.wallet();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -142,11 +148,27 @@ public class TradeWalletService {
     // Trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private Coin getBalance(List<TransactionOutput> transactionOutputs, Address address) {
+        Coin balance = Coin.ZERO;
+        for (TransactionOutput transactionOutput : transactionOutputs) {
+            if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
+                Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
+                if (addressOutput.equals(address))
+                    balance = balance.add(transactionOutput.getValue());
+            }
+        }
+        return balance;
+    }
+
+
     public Result createOffererDepositTxInputs(Coin offererInputAmount, AddressEntry offererAddressEntry) throws
             TransactionVerificationException, WalletException {
         log.trace("createOffererDepositTxInputs called");
         log.trace("offererInputAmount " + offererInputAmount.toFriendlyString());
         log.trace("offererAddressEntry " + offererAddressEntry.toString());
+
+        Coin balance = getBalance(wallet.calculateAllSpendCandidates(true), offererAddressEntry.getAddress());
+        log.trace("balance " + balance.toFriendlyString());
 
         // We pay the tx fee 2 times to the deposit tx:
         // 1. Will be spent when publishing the deposit tx (paid by offerer)

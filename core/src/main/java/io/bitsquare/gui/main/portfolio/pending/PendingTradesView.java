@@ -139,8 +139,10 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
                 model.withdrawAddressFocusOut(withdrawAddressTextField.getText());
         };
         selectedItemChangeListener = (ov, oldValue, newValue) -> {
-            model.selectTrade(newValue);
-            updateScreen();
+            if (newValue != null) {
+                model.selectTrade(newValue);
+                updateScreen();
+            }
         };
 
         withdrawAddressTextField.setValidator(model.getBtcAddressValidator());
