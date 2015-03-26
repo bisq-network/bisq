@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade;
 
+import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.Peer;
@@ -43,7 +44,6 @@ abstract public class Trade implements Serializable {
     private static final long serialVersionUID = 1L;
 
     transient protected static final Logger log = LoggerFactory.getLogger(Trade.class);
-
 
     public interface ProcessState {
     }
@@ -92,6 +92,18 @@ abstract public class Trade implements Serializable {
         tradeVolumeProperty = new SimpleObjectProperty<>(getTradeVolume());
     }
 
+    // The deserialized tx has not actual confidence data, so we need to get the fresh one from the wallet.
+    public void updateTxFromWallet(TradeWalletService tradeWalletService) {
+        if (depositTx != null) {
+            depositTx = tradeWalletService.commitsDepositTx(depositTx);
+            setConfidenceListener();
+        }
+    }
+
+    public void setDepositTx(Transaction tx) {
+        this.depositTx = tx;
+        setConfidenceListener();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protocol
@@ -235,10 +247,11 @@ abstract public class Trade implements Serializable {
         return throwable;
     }
 
-    abstract public ReadOnlyObjectProperty<? extends ProcessState> processStateProperty();
+    public abstract ReadOnlyObjectProperty<? extends ProcessState> processStateProperty();
 
-    abstract public ReadOnlyObjectProperty<? extends LifeCycleState> lifeCycleStateProperty();
+    public abstract ReadOnlyObjectProperty<? extends LifeCycleState> lifeCycleStateProperty();
 
+    protected abstract void setConfidenceListener();
 
     @Override
     public String toString() {

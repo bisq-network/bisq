@@ -113,8 +113,8 @@ public class BitsquareApp extends Application {
 
         primaryStage.setTitle(env.getRequiredProperty(APP_NAME_KEY));
         primaryStage.setScene(scene);
-        primaryStage.setMinWidth(75);
-        primaryStage.setMinHeight(50);
+        primaryStage.setMinWidth(750);
+        primaryStage.setMinHeight(500);
 
         // on windows the title icon is also used as task bar icon in a larger size
         // on Linux no title icon is supported but also a large task bar icon is derived form that title icon

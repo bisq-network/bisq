@@ -20,6 +20,7 @@ package io.bitsquare.trade;
 import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.BlockChainService;
+import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.FaultHandler;
@@ -84,6 +85,7 @@ public class TradeManager {
     private final AddressService addressService;
     private final BlockChainService blockChainService;
     private final WalletService walletService;
+    private TradeWalletService tradeWalletService;
     private final SignatureService signatureService;
     private final EncryptionService<MailboxMessage> encryptionService;
     private final OfferBookService offerBookService;
@@ -105,7 +107,8 @@ public class TradeManager {
     @Inject
     public TradeManager(User user, AccountSettings accountSettings,
                         MessageService messageService, MailboxService mailboxService, AddressService addressService, BlockChainService blockChainService,
-                        WalletService walletService, SignatureService signatureService, EncryptionService<MailboxMessage> encryptionService,
+                        WalletService walletService,  TradeWalletService tradeWalletService, SignatureService signatureService, 
+                        EncryptionService<MailboxMessage> encryptionService,
                         OfferBookService offerBookService, ArbitrationRepository arbitrationRepository, @Named("storage.dir") File storageDir) {
         this.user = user;
         this.accountSettings = accountSettings;
@@ -114,6 +117,7 @@ public class TradeManager {
         this.addressService = addressService;
         this.blockChainService = blockChainService;
         this.walletService = walletService;
+        this.tradeWalletService = tradeWalletService;
         this.signatureService = signatureService;
         this.encryptionService = encryptionService;
         this.offerBookService = offerBookService;
@@ -169,6 +173,7 @@ public class TradeManager {
                 OffererTrade offererTrade = (OffererTrade) trade;
                 OffererAsBuyerProtocol protocol = createOffererAsBuyerProtocol(offererTrade);
                 offererTrade.setProtocol(protocol);
+                offererTrade.updateTxFromWallet(tradeWalletService);
             }
             else if (trade instanceof TakerTrade) {
                 TakerTrade takerTrade = (TakerTrade) trade;

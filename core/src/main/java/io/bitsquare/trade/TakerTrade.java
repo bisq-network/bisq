@@ -20,7 +20,6 @@ package io.bitsquare.trade;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.protocol.trade.taker.TakerAsSellerProtocol;
 
-import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 
 import com.google.common.base.Throwables;
@@ -58,15 +57,15 @@ public class TakerTrade extends Trade implements Serializable {
         TAKE_OFFER_FEE_TX_CREATED,
         TAKE_OFFER_FEE_PUBLISHED,
         TAKE_OFFER_FEE_PUBLISH_FAILED,
-        
+
         DEPOSIT_PUBLISHED,
         DEPOSIT_CONFIRMED,
-        
+
         FIAT_PAYMENT_STARTED,
-        
+
         FIAT_PAYMENT_RECEIVED,
         PAYOUT_PUBLISHED,
-        
+
         MESSAGE_SENDING_FAILED,
         EXCEPTION
     }
@@ -118,17 +117,12 @@ public class TakerTrade extends Trade implements Serializable {
         }
     }
 
-    public void setDepositTx(Transaction tx) {
-        this.depositTx = tx;
-        setConfidenceListener();
-    }
-
     @Override
     public void setThrowable(Throwable throwable) {
         super.setThrowable(throwable);
         setProcessState(TakerTrade.TakerProcessState.EXCEPTION);
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -146,7 +140,8 @@ public class TakerTrade extends Trade implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
-
+   
+    @Override
     protected void setConfidenceListener() {
         TransactionConfidence transactionConfidence = depositTx.getConfidence();
         ListenableFuture<TransactionConfidence> future = transactionConfidence.getDepthFuture(1);

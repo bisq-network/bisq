@@ -398,13 +398,13 @@ public class TradeWalletService {
         Futures.addCallback(broadcastComplete, callback);
     }
 
-    // Returns local transaction which has a different state as the serialized publishedOffererDepositTx we get from the offerer
-    public Transaction takerCommitsDepositTx(Transaction publishedOffererDepositTx) throws VerificationException {
+    // Returns local transaction which has a different state as the serialized publishedDepositTx we get from the offerer
+    public Transaction commitsDepositTx(Transaction publishedDepositTx) throws VerificationException {
         log.trace("takerCommitsDepositTx called");
-        log.trace("publishedOffererDepositTx " + publishedOffererDepositTx.toString());
+        log.trace("publishedDepositTx " + publishedDepositTx.toString());
 
         // We need to recreate the tx we get a null pointer otherwise
-        Transaction depositTx = new Transaction(params, publishedOffererDepositTx.bitcoinSerialize());
+        Transaction depositTx = new Transaction(params, publishedDepositTx.bitcoinSerialize());
         log.trace("depositTx " + depositTx.toString());
 
         wallet.receivePending(depositTx, null, true);

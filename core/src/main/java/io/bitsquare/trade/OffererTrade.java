@@ -20,7 +20,6 @@ package io.bitsquare.trade;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.protocol.trade.offerer.OffererAsBuyerProtocol;
 
-import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 
 import com.google.common.base.Throwables;
@@ -58,11 +57,11 @@ public class OffererTrade extends Trade implements Serializable {
     public enum OffererProcessState implements ProcessState {
         DEPOSIT_PUBLISHED,
         DEPOSIT_CONFIRMED,
-        
+
         FIAT_PAYMENT_STARTED,
-        
+
         PAYOUT_PUBLISHED,
-        
+
         MESSAGE_SENDING_FAILED,
         EXCEPTION
     }
@@ -124,10 +123,6 @@ public class OffererTrade extends Trade implements Serializable {
         lifeCycleStateProperty.set(lifeCycleState);
     }
 
-    public void setDepositTx(Transaction tx) {
-        this.depositTx = tx;
-        setConfidenceListener();
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -155,6 +150,7 @@ public class OffererTrade extends Trade implements Serializable {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     protected void setConfidenceListener() {
         TransactionConfidence transactionConfidence = depositTx.getConfidence();
         ListenableFuture<TransactionConfidence> future = transactionConfidence.getDepthFuture(1);

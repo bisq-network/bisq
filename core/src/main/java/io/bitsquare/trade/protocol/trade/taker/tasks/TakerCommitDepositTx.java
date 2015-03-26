@@ -37,7 +37,7 @@ public class TakerCommitDepositTx extends Task<TakerAsSellerModel> {
     protected void doRun() {
         try {
             // To access tx confidence we need to add that tx into our wallet.
-            Transaction depositTx = model.tradeWalletService.takerCommitsDepositTx(model.trade.getDepositTx());
+            Transaction depositTx = model.tradeWalletService.commitsDepositTx(model.trade.getDepositTx());
 
             model.trade.setDepositTx(depositTx);
 
