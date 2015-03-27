@@ -98,15 +98,15 @@ public class User implements Serializable {
                 Throwables.propagate(e);
             }
         }
-        storage.save();
+        storage.queueUpForSave();
         // Use that to guarantee update of the serializable field and to make a storage update in case of a change
         fiatAccountsObservableList.addListener((ListChangeListener<FiatAccount>) change -> {
             fiatAccounts = new ArrayList<>(fiatAccountsObservableList);
-            storage.save();
+            storage.queueUpForSave();
         });
         currentFiatAccountProperty.addListener((ov) -> {
             currentFiatAccount = currentFiatAccountProperty.get();
-            storage.save();
+            storage.queueUpForSave();
         });
     }
 
@@ -153,7 +153,7 @@ public class User implements Serializable {
     // Public key from the input for the registration payment tx (or address) will be used
     public void setAccountID(String accountID) {
         this.accountID = accountID;
-        storage.save();
+        storage.queueUpForSave();
     }
 
     public void setCurrentFiatAccountProperty(@Nullable FiatAccount fiatAccount) {

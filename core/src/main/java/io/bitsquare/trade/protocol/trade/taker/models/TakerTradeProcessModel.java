@@ -66,22 +66,6 @@ public class TakerTradeProcessModel extends TradeProcessModel implements Seriali
                 signatureService,
                 arbitrationRepository);
 
-
-        /*TakerProcessModel persisted = storage.initAndGetPersisted(this, getFileName());
-        if (persisted != null) {
-            log.debug("Model reconstructed from persisted model.");
-
-            setTakeOfferFeeTx(persisted.getTakeOfferFeeTx());
-            setPayoutTx(persisted.payoutTx);
-
-            taker = persisted.taker;
-            offerer = persisted.offerer;
-        }
-        else {
-            taker = new Taker();
-            offerer = new Offerer();
-        }*/
-
         taker.registrationPubKey = walletService.getRegistrationAddressEntry().getPubKey();
         taker.registrationKeyPair = walletService.getRegistrationAddressEntry().getKeyPair();
         taker.addressEntry = walletService.getAddressEntry(id);
@@ -91,18 +75,6 @@ public class TakerTradeProcessModel extends TradeProcessModel implements Seriali
         taker.p2pEncryptPublicKey = user.getP2PEncryptPubKey();
         taker.tradeWalletPubKey = taker.addressEntry.getPubKey();
     }
-
-    // Get called form taskRunner after each completed task
- /*   @Override
-    public void persist() {
-        storage.save();
-    }
-
-    @Override
-    public void onComplete() {
-        // Just in case of successful completion we delete our persisted object
-        storage.remove(getFileName());
-    }*/
 
     public Transaction getTakeOfferFeeTx() {
         return takeOfferFeeTx;
@@ -119,9 +91,5 @@ public class TakerTradeProcessModel extends TradeProcessModel implements Seriali
     public void setPayoutTx(Transaction payoutTx) {
         this.payoutTx = payoutTx;
     }
-
-    /*private String getFileName() {
-        return getClass().getSimpleName() + "_" + id;
-    }*/
 
 }

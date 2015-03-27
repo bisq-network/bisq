@@ -17,7 +17,13 @@
 
 package io.bitsquare.trade;
 
+import io.bitsquare.btc.BlockChainService;
+import io.bitsquare.btc.TradeWalletService;
+import io.bitsquare.btc.WalletService;
+import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.p2p.MailboxService;
+import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.protocol.trade.taker.TakerProtocol;
@@ -47,8 +53,8 @@ public class TakerTrade extends Trade implements Serializable {
     private static final long serialVersionUID = 1L;
     transient private static final Logger log = LoggerFactory.getLogger(TakerTrade.class);
 
-    public TakerTradeProcessModel getTakerTradeProcessModel() {
-        return takerTradeProcessModel;
+    public TakerTradeProcessModel getProcessModel() {
+        return processModel;
     }
 
 
@@ -81,7 +87,7 @@ public class TakerTrade extends Trade implements Serializable {
 
     private final Coin tradeAmount;
     private final Peer tradingPeer;
-    private final TakerTradeProcessModel takerTradeProcessModel;
+    private TakerTradeProcessModel processModel;
 
     private TakerProcessState processState;
     private TakerLifeCycleState lifeCycleState;
@@ -94,12 +100,12 @@ public class TakerTrade extends Trade implements Serializable {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TakerTrade(Offer offer, Coin tradeAmount, Peer peer, TakerTradeProcessModel takerTradeProcessModel, Storage storage) {
+    public TakerTrade(Offer offer, Coin tradeAmount, Peer peer, TakerTradeProcessModel processModel, Storage storage) {
         super(offer, storage);
 
         this.tradeAmount = tradeAmount;
         this.tradingPeer = peer;
-        this.takerTradeProcessModel = takerTradeProcessModel;
+        this.processModel = processModel;
         protocol = new TakerProtocol(this);
         setLifeCycleState(TakerTrade.TakerLifeCycleState.PENDING);
 
@@ -117,9 +123,29 @@ public class TakerTrade extends Trade implements Serializable {
         lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
         tradeAmountProperty = new SimpleObjectProperty<>(tradeAmount);
         tradeVolumeProperty = new SimpleObjectProperty<>(getTradeVolume());
-        protocol = new TakerProtocol(this);
     }
 
+    public void reActivate(MessageService messageService,
+                           MailboxService mailboxService,
+                           WalletService walletService,
+                           TradeWalletService tradeWalletService,
+                           BlockChainService blockChainService,
+                           SignatureService signatureService) {
+        processModel.messageService = messageService;
+        processModel.mailboxService = mailboxService;
+        processModel.walletService = walletService;
+        processModel.tradeWalletService = tradeWalletService;
+        processModel.blockChainService = blockChainService;
+        processModel.signatureService = signatureService;
+
+        processModel.taker.registrationKeyPair =walletService.getRegistrationAddressEntry().getKeyPair();
+        processModel.taker.addressEntry = walletService.getAddressEntry(getId());
+
+        protocol = new TakerProtocol(this);
+        
+        if (mailboxMessage != null)
+            protocol.setMailboxMessage(mailboxMessage);
+    }
 
     public void onFiatPaymentReceived() {
         ((TakerProtocol) protocol).onFiatPaymentReceived();

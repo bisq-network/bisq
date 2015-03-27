@@ -64,7 +64,7 @@ public class TakerProtocol implements Protocol {
     public TakerProtocol(TakerTrade takerTrade) {
         log.debug("New SellerAsTakerProtocol " + this);
         this.takerTrade = takerTrade;
-        takerTradeProcessModel = takerTrade.getTakerTradeProcessModel();
+        takerTradeProcessModel = takerTrade.getProcessModel();
         
         messageHandler = this::handleMessage;
         takerTradeProcessModel.messageService.addMessageHandler(messageHandler);

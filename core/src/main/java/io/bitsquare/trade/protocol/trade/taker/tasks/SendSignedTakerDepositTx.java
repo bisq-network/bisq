@@ -65,6 +65,7 @@ public class SendSignedTakerDepositTx extends TakerTradeTask {
                 }
             });
         } catch (Throwable t) {
+            t.printStackTrace();
             takerTrade.setThrowable(t);
             failed(t);
         }

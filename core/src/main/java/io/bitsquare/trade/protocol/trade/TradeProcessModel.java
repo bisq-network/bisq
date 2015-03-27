@@ -40,23 +40,19 @@ public class TradeProcessModel extends Model implements Serializable {
 
     protected static final Logger log = LoggerFactory.getLogger(TradeProcessModel.class);
 
+    public final String id;
+    public final Offer offer;
+    public byte[] arbitratorPubKey;
+
+
+    transient public MessageService messageService;
+    transient public MailboxService mailboxService;
+    transient public WalletService walletService;
+    transient public TradeWalletService tradeWalletService;
+    transient public BlockChainService blockChainService;
+    transient public SignatureService signatureService;
+
     transient public MailboxMessage mailboxMessage;
-    // provided
-    transient public final Offer offer;
-    transient public final MessageService messageService;
-    transient public final MailboxService mailboxService;
-    transient public final WalletService walletService;
-    transient public final BlockChainService blockChainService;
-    transient public final SignatureService signatureService;
-
-    // derived
-    transient public final String id;
-    transient public final TradeWalletService tradeWalletService;
-
-    // get set async when arbitrators are loaded from arbitratorService
-    transient public byte[] arbitratorPubKey;
-
-    // data written/read by tasks
     transient private TradeMessage tradeMessage;
 
     protected TradeProcessModel(Offer offer,

@@ -88,7 +88,7 @@ public class ArbitrationRepository implements Serializable {
             arbitratorsMap.putAll(persisted.getArbitratorsMap());
         }
         arbitratorsObservableMap.putAll(arbitratorsMap);
-        arbitratorsObservableMap.addListener((MapChangeListener<String, Arbitrator>) change -> storage.save());
+        arbitratorsObservableMap.addListener((MapChangeListener<String, Arbitrator>) change -> storage.queueUpForSave());
         allArbitratorsSynced = false;
     }
 

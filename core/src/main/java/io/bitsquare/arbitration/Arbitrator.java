@@ -112,7 +112,7 @@ public class Arbitrator implements Serializable {
     }
 
     public void save() {
-        storage.save();
+        storage.queueUpForSave();
     }
 
     @Override

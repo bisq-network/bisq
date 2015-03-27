@@ -24,11 +24,9 @@ import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.MessageService;
-import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.protocol.trade.TradeProcessModel;
 import io.bitsquare.user.User;
 
-import java.io.File;
 import java.io.Serializable;
 
 import org.slf4j.Logger;
@@ -40,10 +38,8 @@ public class OffererTradeProcessModel extends TradeProcessModel implements Seria
 
     transient private static final Logger log = LoggerFactory.getLogger(OffererTradeProcessModel.class);
 
-    transient private Storage<OffererTradeProcessModel> storage;
-
-    public final Taker taker;
-    public final Offerer offerer;
+    public final Taker taker = new Taker();
+    public final Offerer offerer = new Offerer();
 
     // written by tasks
     private String takeOfferFeeTxId;
@@ -55,8 +51,7 @@ public class OffererTradeProcessModel extends TradeProcessModel implements Seria
                                     BlockChainService blockChainService,
                                     SignatureService signatureService,
                                     ArbitrationRepository arbitrationRepository,
-                                    User user,
-                                    File storageDir) {
+                                    User user) {
         super(offer,
                 messageService,
                 mailboxService,
@@ -64,22 +59,6 @@ public class OffererTradeProcessModel extends TradeProcessModel implements Seria
                 blockChainService,
                 signatureService,
                 arbitrationRepository);
-
-        this.storage = new Storage<>(storageDir);
-
-        OffererTradeProcessModel persisted = storage.initAndGetPersisted(this, getFileName());
-        if (persisted != null) {
-            log.debug("Model reconstructed form persisted model.");
-
-            setTakeOfferFeeTxId(persisted.takeOfferFeeTxId);
-
-            taker = persisted.taker;
-            offerer = persisted.offerer;
-        }
-        else {
-            taker = new Taker();
-            offerer = new Offerer();
-        }
 
         offerer.registrationPubKey = walletService.getRegistrationAddressEntry().getPubKey();
         offerer.registrationKeyPair = walletService.getRegistrationAddressEntry().getKeyPair();
@@ -92,27 +71,11 @@ public class OffererTradeProcessModel extends TradeProcessModel implements Seria
         log.debug("BuyerAsOffererModel addressEntry " + offerer.addressEntry);
     }
 
-    // Get called form taskRunner after each completed task
-    @Override
-    public void persist() {
-        storage.save();
-    }
-
-    @Override
-    public void onComplete() {
-        // Just in case of successful completion we delete our persisted object
-        storage.remove(getFileName());
-    }
-
     public String getTakeOfferFeeTxId() {
         return takeOfferFeeTxId;
     }
 
     public void setTakeOfferFeeTxId(String takeOfferFeeTxId) {
         this.takeOfferFeeTxId = takeOfferFeeTxId;
-    }
-
-    private String getFileName() {
-        return getClass().getSimpleName() + "_" + id;
     }
 }

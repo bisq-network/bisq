@@ -34,7 +34,8 @@ public class VerifyOffererAccount extends TakerTradeTask {
     protected void doRun() {
         try {
             if (takerTradeProcessModel.blockChainService.verifyAccountRegistration()) {
-                if (takerTradeProcessModel.blockChainService.isAccountBlackListed(takerTradeProcessModel.offerer.accountId, takerTradeProcessModel.offerer.fiatAccount)) {
+                if (takerTradeProcessModel.blockChainService.isAccountBlackListed(takerTradeProcessModel.offerer.accountId, takerTradeProcessModel.offerer
+                        .fiatAccount)) {
                     failed("Taker is blacklisted.");
                 }
                 else {
@@ -45,6 +46,7 @@ public class VerifyOffererAccount extends TakerTradeTask {
                 failed("Account registration validation for peer faultHandler.onFault.");
             }
         } catch (Throwable t) {
+            t.printStackTrace();
             takerTrade.setThrowable(t);
             failed(t);
         }

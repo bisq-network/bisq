@@ -17,7 +17,13 @@
 
 package io.bitsquare.trade;
 
+import io.bitsquare.btc.BlockChainService;
+import io.bitsquare.btc.TradeWalletService;
+import io.bitsquare.btc.WalletService;
+import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.p2p.MailboxService;
+import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.protocol.trade.offerer.OffererProtocol;
@@ -78,7 +84,7 @@ public class OffererTrade extends Trade implements Serializable {
     private Peer tradingPeer;
     private OffererProcessState processState;
     private OffererLifeCycleState lifeCycleState;
-    private OffererTradeProcessModel offererTradeProcessModel;
+    private OffererTradeProcessModel processModel;
 
     transient private ObjectProperty<OffererProcessState> processStateProperty = new SimpleObjectProperty<>();
     transient private ObjectProperty<OffererLifeCycleState> lifeCycleStateProperty = new SimpleObjectProperty<>();
@@ -88,10 +94,10 @@ public class OffererTrade extends Trade implements Serializable {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public OffererTrade(Offer offer, OffererTradeProcessModel offererTradeProcessModel, Storage storage) {
+    public OffererTrade(Offer offer, OffererTradeProcessModel processModel, Storage storage) {
         super(offer, storage);
 
-        this.offererTradeProcessModel = offererTradeProcessModel;
+        this.processModel = processModel;
         protocol = new OffererProtocol(this);
         setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_OPEN);
     }
@@ -102,17 +108,44 @@ public class OffererTrade extends Trade implements Serializable {
 
         processStateProperty = new SimpleObjectProperty<>(processState);
         lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
-        protocol = new OffererProtocol(this);
+        tradeAmountProperty = new SimpleObjectProperty<>();
+        tradeVolumeProperty = new SimpleObjectProperty<>();
+        if (tradeAmount != null) {
+            tradeAmountProperty.set(tradeAmount);
+            tradeVolumeProperty.set(getTradeVolume());
+        }
     }
 
     public void onFiatPaymentStarted() {
         ((OffererProtocol) protocol).onFiatPaymentStarted();
     }
 
-    public OffererTradeProcessModel getOffererTradeProcessModel() {
-        return offererTradeProcessModel;
+    public OffererTradeProcessModel getProcessModel() {
+        return processModel;
     }
 
+    public void reActivate(MessageService messageService,
+                           MailboxService mailboxService,
+                           WalletService walletService,
+                           TradeWalletService tradeWalletService,
+                           BlockChainService blockChainService,
+                           SignatureService signatureService) {
+
+        processModel.messageService = messageService;
+        processModel.mailboxService = mailboxService;
+        processModel.walletService = walletService;
+        processModel.tradeWalletService = tradeWalletService;
+        processModel.blockChainService = blockChainService;
+        processModel.signatureService = signatureService;
+
+        processModel.offerer.registrationKeyPair = walletService.getRegistrationAddressEntry().getKeyPair();
+        processModel.offerer.addressEntry = walletService.getAddressEntry(getId());
+
+        protocol = new OffererProtocol(this);
+
+        if (mailboxMessage != null)
+            protocol.setMailboxMessage(mailboxMessage);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters

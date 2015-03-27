@@ -62,9 +62,9 @@ public class OffererProtocol implements Protocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public OffererProtocol(OffererTrade model) {
-        log.debug("New BuyerAsOffererProtocol " + this);
+        log.debug("New OffererProtocol " + this);
         this.offererTrade = model;
-        offererTradeProcessModel = offererTrade.getOffererTradeProcessModel();
+        offererTradeProcessModel = offererTrade.getProcessModel();
         messageHandler = this::handleMessage;
 
         offererTradeProcessModel.messageService.addMessageHandler(messageHandler);

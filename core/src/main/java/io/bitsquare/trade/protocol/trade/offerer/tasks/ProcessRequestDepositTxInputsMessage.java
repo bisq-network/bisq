@@ -46,6 +46,7 @@ public class ProcessRequestDepositTxInputsMessage extends OffererTradeTask {
 
             complete();
         } catch (Throwable t) {
+            t.printStackTrace();
             offererTrade.setThrowable(t);
             offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_OPEN);
             failed(t);

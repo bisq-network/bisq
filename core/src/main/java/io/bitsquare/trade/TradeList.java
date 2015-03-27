@@ -37,9 +37,9 @@ public class TradeList<T> extends ArrayList<T> implements Serializable {
 
     transient final private Storage<TradeList> storage;
     transient private ObservableList<T> observableList;
-    
+
     // Superclass is ArrayList, which will be persisted
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +58,7 @@ public class TradeList<T> extends ArrayList<T> implements Serializable {
     public boolean add(T trade) {
         boolean result = super.add(trade);
         observableList.add(trade);
-        storage.save();
+        storage.queueUpForSave();
         return result;
     }
 
@@ -66,7 +66,7 @@ public class TradeList<T> extends ArrayList<T> implements Serializable {
     public boolean remove(Object trade) {
         boolean result = super.remove(trade);
         observableList.remove(trade);
-        storage.save();
+        storage.queueUpForSave();
         return result;
     }
 

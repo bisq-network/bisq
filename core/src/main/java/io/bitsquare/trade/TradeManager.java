@@ -85,6 +85,7 @@ public class TradeManager {
     private final BlockChainService blockChainService;
     private final WalletService walletService;
     private final Storage pendingTradesStorage;
+    private final Storage openOfferTradesStorage;
     private TradeWalletService tradeWalletService;
     private final SignatureService signatureService;
     private final EncryptionService<MailboxMessage> encryptionService;
@@ -124,14 +125,16 @@ public class TradeManager {
         this.arbitrationRepository = arbitrationRepository;
         this.storageDir = storageDir;
 
+        openOfferTradesStorage = new Storage(storageDir);
         pendingTradesStorage = new Storage(storageDir);
-        this.openOfferTrades = new TradeList<>(pendingTradesStorage, "OpenOfferTrades");
-        this.pendingTrades = new TradeList<>(new Storage(storageDir), "PendingTrades");
+
+        this.openOfferTrades = new TradeList<>(openOfferTradesStorage, "OpenOfferTrades");
+        this.pendingTrades = new TradeList<>(pendingTradesStorage, "PendingTrades");
         this.closedTrades = new TradeList<>(new Storage(storageDir), "ClosedTrades");
 
 
         // In case the app did get killed the shutDown from the modules is not called, so we use a shutdown hook
-        Thread shutDownHookThread = new Thread(TradeManager.this::shutDown, "TradeManager:ShutDownHook");
+        Thread shutDownHookThread = new Thread(TradeManager.this::shutDown, "TradeManager.ShutDownHook");
         Runtime.getRuntime().addShutdownHook(shutDownHookThread);
     }
 
@@ -163,17 +166,37 @@ public class TradeManager {
             offerBookService.addOffer(offer,
                     () -> log.debug("Successful removed open offer from DHT"),
                     (message, throwable) -> log.error("Remove open offer from DHT failed. " + message));
-
-            offererTrade.reActivate();
+            offererTrade.setStorage(openOfferTradesStorage);
+            offererTrade.reActivate(messageService,
+                    mailboxService,
+                    walletService,
+                    tradeWalletService,
+                    blockChainService,
+                    signatureService);
 
         }
         for (Trade trade : pendingTrades) {
             // We continue an interrupted trade.
             // TODO if the peer has changed its IP address, we need to make another findPeer request. At the moment we use the peer stored in trade to
             // continue the trade, but that might fail.
-            trade.reActivate();
-            trade.updateTxFromWallet(tradeWalletService);
+            trade.syncDepositTxWithWallet(tradeWalletService);
             trade.setStorage(pendingTradesStorage);
+            if (trade instanceof TakerTrade) {
+                ((TakerTrade) trade).reActivate(messageService,
+                        mailboxService,
+                        walletService,
+                        tradeWalletService,
+                        blockChainService,
+                        signatureService);
+            }
+            else if (trade instanceof OffererTrade) {
+                ((OffererTrade) trade).reActivate(messageService,
+                        mailboxService,
+                        walletService,
+                        tradeWalletService,
+                        blockChainService,
+                        signatureService);
+            }
         }
 
         mailboxService.getAllMessages(user.getP2PSigPubKey(),
@@ -218,7 +241,7 @@ public class TradeManager {
                 model,
                 (transaction) -> {
                     OffererTradeProcessModel processModel = createOffererTradeProcessModel(offer);
-                    OffererTrade offererTrade = new OffererTrade(offer, processModel, pendingTradesStorage);
+                    OffererTrade offererTrade = new OffererTrade(offer, processModel, openOfferTradesStorage);
                     openOfferTrades.add(offererTrade);
 
                     offererTrade.processStateProperty().addListener((ov, oldValue, newValue) -> {
@@ -229,6 +252,7 @@ public class TradeManager {
                                     (message) -> log.error(message),
                                     false);
                             pendingTrades.add(offererTrade);
+                            offererTrade.setStorage(pendingTradesStorage);
                         }
                     });
 
@@ -406,14 +430,14 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TakerTrade takeAvailableOffer(Coin amount, Offer offer, Peer peer) {
-        TakerTradeProcessModel takerTradeProcessModel = createTakerProcessModel(offer);
+        TakerTradeProcessModel takerTradeProcessModel = createTakerTradeProcessModel(offer);
         TakerTrade takerTrade = new TakerTrade(offer, amount, peer, takerTradeProcessModel, pendingTradesStorage);
         pendingTrades.add(takerTrade);
         return takerTrade;
     }
 
 
-    private TakerTradeProcessModel createTakerProcessModel(Offer offer) {
+    private TakerTradeProcessModel createTakerTradeProcessModel(Offer offer) {
         return new TakerTradeProcessModel(
                 offer,
                 messageService,
@@ -433,8 +457,7 @@ public class TradeManager {
                 blockChainService,
                 signatureService,
                 arbitrationRepository,
-                user,
-                storageDir);
+                user);
     }
 
 

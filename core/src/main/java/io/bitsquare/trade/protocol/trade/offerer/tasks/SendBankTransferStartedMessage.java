@@ -33,7 +33,7 @@ public class SendBankTransferStartedMessage extends OffererTradeTask {
     }
 
     @Override
-    protected void doRun() { 
+    protected void doRun() {
         try {
             FiatTransferStartedMessage tradeMessage = new FiatTransferStartedMessage(offererTradeProcessModel.id,
                     offererTradeProcessModel.offerer.payoutTxSignature,
@@ -61,6 +61,7 @@ public class SendBankTransferStartedMessage extends OffererTradeTask {
                         }
                     });
         } catch (Throwable t) {
+            t.printStackTrace();
             offererTrade.setThrowable(t);
             failed(t);
         }

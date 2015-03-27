@@ -57,6 +57,7 @@ public class TakerCreatesAndSignsDepositTx extends TakerTradeTask {
 
             complete();
         } catch (Throwable t) {
+            t.printStackTrace();
             takerTrade.setThrowable(t);
             failed(t);
         }

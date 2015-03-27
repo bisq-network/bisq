@@ -49,6 +49,7 @@ public class VerifyTakerAccount extends OffererTradeTask {
                 offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_OPEN);
             }
         } catch (Throwable t) {
+            t.printStackTrace();
             offererTrade.setThrowable(t);
             offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_OPEN);
             failed(t);

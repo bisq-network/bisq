@@ -42,6 +42,7 @@ public class TakerCommitDepositTx extends TakerTradeTask {
 
             complete();
         } catch (Throwable t) {
+            t.printStackTrace();
             takerTrade.setThrowable(t);
             failed(t);
         }

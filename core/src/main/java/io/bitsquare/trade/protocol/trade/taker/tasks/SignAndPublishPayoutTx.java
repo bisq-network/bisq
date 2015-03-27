@@ -60,11 +60,13 @@ public class SignAndPublishPayoutTx extends TakerTradeTask {
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
+                            t.printStackTrace();
                             takerTrade.setThrowable(t);
                             failed(t);
                         }
                     });
         } catch (Throwable t) {
+            t.printStackTrace();
             takerTrade.setThrowable(t);
             failed(t);
         }

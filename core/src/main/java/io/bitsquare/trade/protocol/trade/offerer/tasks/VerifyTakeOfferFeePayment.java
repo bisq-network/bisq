@@ -41,6 +41,7 @@ public class VerifyTakeOfferFeePayment extends OffererTradeTask {
 
             complete();
         } catch (Throwable t) {
+            t.printStackTrace();
             offererTrade.setThrowable(t);
             failed(t);
         }

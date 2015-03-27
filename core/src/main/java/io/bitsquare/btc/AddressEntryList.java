@@ -67,7 +67,7 @@ public class AddressEntryList extends ArrayList<AddressEntry> implements Seriali
         DeterministicKey key = wallet.freshReceiveKey();
         AddressEntry addressEntry = new AddressEntry(key, wallet.getParams(), context, offerId);
         add(addressEntry);
-        storage.save();
+        storage.queueUpForSave();
         return addressEntry;
     }
 
@@ -75,7 +75,7 @@ public class AddressEntryList extends ArrayList<AddressEntry> implements Seriali
         DeterministicKey registrationKey = wallet.currentReceiveKey();
         AddressEntry registrationAddressEntry = new AddressEntry(registrationKey, wallet.getParams(), AddressEntry.Context.REGISTRATION_FEE);
         add(registrationAddressEntry);
-        storage.save();
+        storage.queueUpForSave();
     }
 
     public AddressEntry getRegistrationAddressEntry() {

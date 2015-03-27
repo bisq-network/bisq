@@ -20,7 +20,6 @@ package io.bitsquare.storage;
 import com.google.common.base.Throwables;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InvalidClassException;
 import java.io.Serializable;
@@ -78,13 +77,14 @@ public class Storage<T extends Serializable> {
         this.serializable = serializable;
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
-        fileManager = new FileManager<>(dir, storageFile, 500, TimeUnit.MILLISECONDS);
+        fileManager = new FileManager<>(dir, storageFile, 600, TimeUnit.MILLISECONDS);
 
         return getPersisted(serializable);
     }
 
     // Save delayed and on a background thread
-    public void save() {
+    public void queueUpForSave() {
+        log.debug("save " + fileName);
         if (storageFile == null)
             throw new RuntimeException("storageFile = null. Call setupFileStorage before using read/write.");
 
@@ -103,37 +103,35 @@ public class Storage<T extends Serializable> {
     // We do the file read on the UI thread to avoid problems from multi threading. 
     // Data are small and read is done only at startup, so it is no performance issue.
     private T getPersisted(T serializable) {
-        if (storageFile == null)
-            throw new RuntimeException("storageFile = null. Call init before using read/write.");
-
-        try {
+        if (storageFile.exists()) {
             long now = System.currentTimeMillis();
-            T persistedObject = (T) fileManager.read(storageFile);
-            log.info("Read {} completed in {}msec", serializable.getClass().getSimpleName(), System.currentTimeMillis() - now);
-
-            // If we did not get any exception we can be sure the data are consistent so we make a backup 
-            now = System.currentTimeMillis();
-            fileManager.backupFile(fileName);
-            log.info("Backup {} completed in {}msec", serializable.getClass().getSimpleName(), System.currentTimeMillis() - now);
-
-            return persistedObject;
-        } catch (InvalidClassException e) {
-            log.error("Version of persisted class has changed. We cannot read the persisted data anymore. We make a backup and remove the inconsistent file.");
             try {
-                // In case the persisted data have been critical (keys) we keep a backup which might be used for recovery
-                fileManager.removeAndBackupFile(fileName);
-            } catch (IOException e1) {
-                e1.printStackTrace();
-                log.error(e1.getMessage());
-                // We swallow Exception if backup fails
-            }
-        } catch (FileNotFoundException e) {
-            log.info("File not available. That is OK for the first run.");
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-            Throwables.propagate(e);
+                T persistedObject = (T) fileManager.read(storageFile);
+                log.info("Read {} completed in {}msec", serializable.getClass().getSimpleName(), System.currentTimeMillis() - now);
 
+                // If we did not get any exception we can be sure the data are consistent so we make a backup 
+                now = System.currentTimeMillis();
+                fileManager.backupFile(fileName);
+                log.info("Backup {} completed in {}msec", serializable.getClass().getSimpleName(), System.currentTimeMillis() - now);
+
+                return persistedObject;
+            } catch (InvalidClassException e) {
+                log.error("Version of persisted class has changed. We cannot read the persisted data anymore. We make a backup and remove the inconsistent " +
+                        "file.");
+                try {
+                    // In case the persisted data have been critical (keys) we keep a backup which might be used for recovery
+                    fileManager.removeAndBackupFile(fileName);
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                    log.error(e1.getMessage());
+                    // We swallow Exception if backup fails
+                }
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
+                Throwables.propagate(e);
+
+            }
         }
         return null;
     }

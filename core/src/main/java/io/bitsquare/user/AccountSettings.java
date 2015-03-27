@@ -78,7 +78,7 @@ public class AccountSettings implements Serializable {
     public void addAcceptedLanguageLocale(String localeCode) {
         if (!acceptedLanguageLocaleCodes.contains(localeCode)) {
             acceptedLanguageLocaleCodes.add(localeCode);
-            storage.save();
+            storage.queueUpForSave();
         }
     }
 
@@ -89,7 +89,7 @@ public class AccountSettings implements Serializable {
     public void addAcceptedCountry(Country locale) {
         if (!acceptedCountryLocales.contains(locale)) {
             acceptedCountryLocales.add(locale);
-            storage.save();
+            storage.queueUpForSave();
         }
     }
 
@@ -100,13 +100,13 @@ public class AccountSettings implements Serializable {
     public void addAcceptedArbitrator(Arbitrator arbitrator) {
         if (!acceptedArbitrators.contains(arbitrator)) {
             acceptedArbitrators.add(arbitrator);
-            storage.save();
+            storage.queueUpForSave();
         }
     }
 
     public void removeAcceptedArbitrator(Arbitrator item) {
         acceptedArbitrators.remove(item);
-        storage.save();
+        storage.queueUpForSave();
     }
 
 

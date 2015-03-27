@@ -235,7 +235,7 @@ public class FileManager<T> {
     private void saveNowInternal(T serializable) throws IOException {
         long now = System.currentTimeMillis();
         saveToFile(serializable, dir, storageFile);
-        log.info("Save completed in {}msec", System.currentTimeMillis() - now);
+        log.info("Save {} completed in {}msec", storageFile, System.currentTimeMillis() - now);
     }
 
     private void saveToFile(T serializable, File dir, File storageFile) throws IOException {
@@ -268,10 +268,13 @@ public class FileManager<T> {
             objectOutputStream.close();
 
             renameTempFileToFile(tempFile, storageFile);
+        } catch (Throwable t) {
+            t.printStackTrace();
         } finally {
             if (tempFile != null && tempFile.exists()) {
-                log.warn("Temp file still exists after failed save.");
-                if (!tempFile.delete()) log.error("Cannot delete temp file.");
+                log.warn("Temp file still exists after failed save. storageFile=" + storageFile);
+                if (!tempFile.delete()) 
+                    log.error("Cannot delete temp file.");
             }
 
             try {

@@ -34,16 +34,14 @@ public class Offerer implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
-    // Those fields are set at constructor but not declared as final because constructor is not called in case model gets created from a persisted model
-    // Declared transient as they will be provided in any case at construction time
-    transient public FiatAccount fiatAccount;
-    transient public String accountId;
-    transient public PublicKey p2pSigPubKey;
-    transient public PublicKey p2pEncryptPubKey;
-    transient public byte[] registrationPubKey;
+    public FiatAccount fiatAccount;
+    public String accountId;
+    public PublicKey p2pSigPubKey;
+    public PublicKey p2pEncryptPubKey;
+    public byte[] registrationPubKey;
     transient public DeterministicKey registrationKeyPair;
-    transient public AddressEntry addressEntry;
-    transient public byte[] tradeWalletPubKey;
+    public AddressEntry addressEntry;
+    public byte[] tradeWalletPubKey;
 
     // written by tasks
     public byte[] payoutTxSignature;

@@ -104,7 +104,7 @@ public class Navigation implements Serializable {
 
         currentPath = newPath;
         previousPath = currentPath;
-        storage.save();
+        storage.queueUpForSave();
         listeners.stream().forEach((e) -> e.onNavigationRequested(currentPath));
     }
 

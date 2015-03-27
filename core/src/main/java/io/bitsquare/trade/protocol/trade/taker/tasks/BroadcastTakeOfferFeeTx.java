@@ -52,6 +52,7 @@ public class BroadcastTakeOfferFeeTx extends TakerTradeTask {
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
+                            t.printStackTrace();
                             appendToErrorMessage("Take offer fee payment failed. Maybe your network connection was lost. Please try again.");
                             takerTrade.setErrorMessage(errorMessage);
                             takerTrade.setProcessState(TakerTrade.TakerProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
@@ -60,6 +61,7 @@ public class BroadcastTakeOfferFeeTx extends TakerTradeTask {
                         }
                     });
         } catch (Throwable t) {
+            t.printStackTrace();
             takerTrade.setThrowable(t);
             failed(t);
         }

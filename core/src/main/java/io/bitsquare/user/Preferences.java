@@ -81,15 +81,15 @@ public class Preferences implements Serializable {
         // Use that to guarantee update of the serializable field and to make a storage update in case of a change
         btcDenominationProperty.addListener((ov) -> {
             btcDenomination = btcDenominationProperty.get();
-            storage.save();
+            storage.queueUpForSave();
         });
         useAnimationsProperty.addListener((ov) -> {
             useAnimations = useAnimationsProperty.get();
-            storage.save();
+            storage.queueUpForSave();
         });
         useEffectsProperty.addListener((ov) -> {
             useEffects = useEffectsProperty.get();
-            storage.save();
+            storage.queueUpForSave();
         });
     }
 
@@ -112,7 +112,7 @@ public class Preferences implements Serializable {
 
     public void setDisplaySecurityDepositInfo(Boolean displaySecurityDepositInfo) {
         this.displaySecurityDepositInfo = displaySecurityDepositInfo;
-        storage.save();
+        storage.queueUpForSave();
     }
 
 

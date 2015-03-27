@@ -37,7 +37,7 @@ public class OffererTradeTask extends Task<OffererTrade> {
         super(taskHandler, model);
 
         offererTrade = model;
-        offererTradeProcessModel = offererTrade.getOffererTradeProcessModel();
+        offererTradeProcessModel = offererTrade.getProcessModel();
     }
 
     @Override

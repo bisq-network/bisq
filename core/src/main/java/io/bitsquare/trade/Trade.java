@@ -62,8 +62,7 @@ abstract public class Trade extends Model implements Serializable {
 
     protected final Offer offer;
     protected final Date date;
-
-    protected Protocol protocol;
+   
     protected Contract contract;
     protected String contractAsJson;
     protected String takerContractSignature;
@@ -78,7 +77,7 @@ abstract public class Trade extends Model implements Serializable {
     transient protected ObjectProperty<Fiat> tradeVolumeProperty = new SimpleObjectProperty<>();
 
     transient private Storage<TakerTradeProcessModel> storage;
-
+    transient protected Protocol protocol;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -91,12 +90,13 @@ abstract public class Trade extends Model implements Serializable {
         date = new Date();
     }
 
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // The deserialized tx has not actual confidence data, so we need to get the fresh one from the wallet.
-    public void updateTxFromWallet(TradeWalletService tradeWalletService) {
+    public void syncDepositTxWithWallet(TradeWalletService tradeWalletService) {
         if (depositTx != null)
             setDepositTx(tradeWalletService.commitsDepositTx(depositTx));
     }
@@ -106,20 +106,16 @@ abstract public class Trade extends Model implements Serializable {
         setConfidenceListener();
     }
 
-    public void reActivate() {
-        if (mailboxMessage != null)
-            protocol.setMailboxMessage(mailboxMessage);
-    }
 
     // Get called from taskRunner after each completed task
     @Override
     public void persist() {
-        storage.save();
+        storage.queueUpForSave();
     }
 
     @Override
     public void onComplete() {
-        storage.save();
+        storage.queueUpForSave();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
