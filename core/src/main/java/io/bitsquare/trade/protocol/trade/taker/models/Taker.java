@@ -35,6 +35,9 @@ public class Taker implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
+    public Taker() {
+    }
+
     public FiatAccount fiatAccount;
     public String accountId;
     public PublicKey p2pSigPubKey;

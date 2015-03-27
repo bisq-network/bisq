@@ -44,8 +44,6 @@ import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityProtocol;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererTradeProcessModel;
-import io.bitsquare.trade.protocol.trade.taker.models.TakerTradeProcessModel;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
 
@@ -84,20 +82,19 @@ public class TradeManager {
     private final AddressService addressService;
     private final BlockChainService blockChainService;
     private final WalletService walletService;
-    private final Storage pendingTradesStorage;
-    private final Storage openOfferTradesStorage;
-    private TradeWalletService tradeWalletService;
+    private final TradeWalletService tradeWalletService;
     private final SignatureService signatureService;
     private final EncryptionService<MailboxMessage> encryptionService;
     private final OfferBookService offerBookService;
     private final ArbitrationRepository arbitrationRepository;
-    private final File storageDir;
 
     private final Map<String, CheckOfferAvailabilityProtocol> checkOfferAvailabilityProtocolMap = new HashMap<>();
-
+    private final Storage pendingTradesStorage;
+    private final Storage openOfferTradesStorage;
     private final TradeList<OffererTrade> openOfferTrades;
     private final TradeList<Trade> pendingTrades;
     private final TradeList<Trade> closedTrades;
+
     private boolean shutDownRequested;
 
 
@@ -106,11 +103,19 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeManager(User user, AccountSettings accountSettings,
-                        MessageService messageService, MailboxService mailboxService, AddressService addressService, BlockChainService blockChainService,
-                        WalletService walletService, TradeWalletService tradeWalletService, SignatureService signatureService,
+    public TradeManager(User user,
+                        AccountSettings accountSettings,
+                        MessageService messageService,
+                        MailboxService mailboxService,
+                        AddressService addressService,
+                        BlockChainService blockChainService,
+                        WalletService walletService,
+                        TradeWalletService tradeWalletService,
+                        SignatureService signatureService,
                         EncryptionService<MailboxMessage> encryptionService,
-                        OfferBookService offerBookService, ArbitrationRepository arbitrationRepository, @Named("storage.dir") File storageDir) {
+                        OfferBookService offerBookService,
+                        ArbitrationRepository arbitrationRepository,
+                        @Named("storage.dir") File storageDir) {
         this.user = user;
         this.accountSettings = accountSettings;
         this.messageService = messageService;
@@ -123,7 +128,6 @@ public class TradeManager {
         this.encryptionService = encryptionService;
         this.offerBookService = offerBookService;
         this.arbitrationRepository = arbitrationRepository;
-        this.storageDir = storageDir;
 
         openOfferTradesStorage = new Storage(storageDir);
         pendingTradesStorage = new Storage(storageDir);
@@ -167,36 +171,30 @@ public class TradeManager {
                     () -> log.debug("Successful removed open offer from DHT"),
                     (message, throwable) -> log.error("Remove open offer from DHT failed. " + message));
             offererTrade.setStorage(openOfferTradesStorage);
-            offererTrade.reActivate(messageService,
+            offererTrade.initProcessModel(messageService,
                     mailboxService,
                     walletService,
                     tradeWalletService,
                     blockChainService,
-                    signatureService);
+                    signatureService,
+                    arbitrationRepository,
+                    user);
 
         }
         for (Trade trade : pendingTrades) {
             // We continue an interrupted trade.
             // TODO if the peer has changed its IP address, we need to make another findPeer request. At the moment we use the peer stored in trade to
             // continue the trade, but that might fail.
+            trade.initProcessModel(messageService,
+                    mailboxService,
+                    walletService,
+                    tradeWalletService,
+                    blockChainService,
+                    signatureService,
+                    arbitrationRepository,
+                    user);
             trade.syncDepositTxWithWallet(tradeWalletService);
             trade.setStorage(pendingTradesStorage);
-            if (trade instanceof TakerTrade) {
-                ((TakerTrade) trade).reActivate(messageService,
-                        mailboxService,
-                        walletService,
-                        tradeWalletService,
-                        blockChainService,
-                        signatureService);
-            }
-            else if (trade instanceof OffererTrade) {
-                ((OffererTrade) trade).reActivate(messageService,
-                        mailboxService,
-                        walletService,
-                        tradeWalletService,
-                        blockChainService,
-                        signatureService);
-            }
         }
 
         mailboxService.getAllMessages(user.getP2PSigPubKey(),
@@ -235,14 +233,21 @@ public class TradeManager {
                 accountSettings.getAcceptedCountries(),
                 accountSettings.getAcceptedLanguageLocaleCodes());
 
-        PlaceOfferModel model = new PlaceOfferModel(offer, walletService, offerBookService);
+        PlaceOfferModel model = new PlaceOfferModel(offer, walletService, tradeWalletService, offerBookService);
 
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 model,
                 (transaction) -> {
-                    OffererTradeProcessModel processModel = createOffererTradeProcessModel(offer);
-                    OffererTrade offererTrade = new OffererTrade(offer, processModel, openOfferTradesStorage);
+                    OffererTrade offererTrade = new OffererTrade(offer, openOfferTradesStorage);
                     openOfferTrades.add(offererTrade);
+                    offererTrade.initProcessModel(messageService,
+                            mailboxService,
+                            walletService,
+                            tradeWalletService,
+                            blockChainService,
+                            signatureService,
+                            arbitrationRepository,
+                            user);
 
                     offererTrade.processStateProperty().addListener((ov, oldValue, newValue) -> {
                         log.debug("offererTrade state = " + newValue);
@@ -430,36 +435,19 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TakerTrade takeAvailableOffer(Coin amount, Offer offer, Peer peer) {
-        TakerTradeProcessModel takerTradeProcessModel = createTakerTradeProcessModel(offer);
-        TakerTrade takerTrade = new TakerTrade(offer, amount, peer, takerTradeProcessModel, pendingTradesStorage);
+        TakerTrade takerTrade = new TakerTrade(offer, amount, peer, pendingTradesStorage);
+        takerTrade.initProcessModel(messageService,
+                mailboxService,
+                walletService,
+                tradeWalletService,
+                blockChainService,
+                signatureService,
+                arbitrationRepository,
+                user);
         pendingTrades.add(takerTrade);
+        takerTrade.takeAvailableOffer();
         return takerTrade;
     }
-
-
-    private TakerTradeProcessModel createTakerTradeProcessModel(Offer offer) {
-        return new TakerTradeProcessModel(
-                offer,
-                messageService,
-                mailboxService,
-                walletService,
-                blockChainService,
-                signatureService,
-                arbitrationRepository,
-                user);
-    }
-
-    private OffererTradeProcessModel createOffererTradeProcessModel(Offer offer) {
-        return new OffererTradeProcessModel(offer,
-                messageService,
-                mailboxService,
-                walletService,
-                blockChainService,
-                signatureService,
-                arbitrationRepository,
-                user);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Mailbox

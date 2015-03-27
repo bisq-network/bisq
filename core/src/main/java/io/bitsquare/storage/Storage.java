@@ -26,6 +26,8 @@ import java.io.Serializable;
 
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -69,10 +71,12 @@ public class Storage<T extends Serializable> {
         this.dir = dir;
     }
 
+    @Nullable
     public T initAndGetPersisted(T serializable) {
         return initAndGetPersisted(serializable, serializable.getClass().getSimpleName());
     }
 
+    @Nullable
     public T initAndGetPersisted(T serializable, String fileName) {
         this.serializable = serializable;
         this.fileName = fileName;
@@ -102,6 +106,7 @@ public class Storage<T extends Serializable> {
 
     // We do the file read on the UI thread to avoid problems from multi threading. 
     // Data are small and read is done only at startup, so it is no performance issue.
+    @Nullable
     private T getPersisted(T serializable) {
         if (storageFile.exists()) {
             long now = System.currentTimeMillis();
@@ -130,7 +135,6 @@ public class Storage<T extends Serializable> {
                 e.printStackTrace();
                 log.error(e.getMessage());
                 Throwables.propagate(e);
-
             }
         }
         return null;

@@ -19,6 +19,7 @@ package io.bitsquare.trade.protocol.trade.offerer.models;
 
 import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.btc.BlockChainService;
+import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.offer.Offer;
@@ -28,6 +29,8 @@ import io.bitsquare.trade.protocol.trade.TradeProcessModel;
 import io.bitsquare.user.User;
 
 import java.io.Serializable;
+
+import org.jetbrains.annotations.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,21 +47,27 @@ public class OffererTradeProcessModel extends TradeProcessModel implements Seria
     // written by tasks
     private String takeOfferFeeTxId;
 
-    public OffererTradeProcessModel(Offer offer,
-                                    MessageService messageService,
-                                    MailboxService mailboxService,
-                                    WalletService walletService,
-                                    BlockChainService blockChainService,
-                                    SignatureService signatureService,
-                                    ArbitrationRepository arbitrationRepository,
-                                    User user) {
-        super(offer,
+    public OffererTradeProcessModel() {
+    }
+
+    public void init(@NotNull Offer offer,
+                     @NotNull MessageService messageService,
+                     @NotNull MailboxService mailboxService,
+                     @NotNull WalletService walletService,
+                     @NotNull TradeWalletService tradeWalletService,
+                     @NotNull BlockChainService blockChainService,
+                     @NotNull SignatureService signatureService,
+                     @NotNull ArbitrationRepository arbitrationRepository,
+                     @NotNull User user) {
+        super.init(offer,
                 messageService,
                 mailboxService,
                 walletService,
+                tradeWalletService,
                 blockChainService,
                 signatureService,
-                arbitrationRepository);
+                arbitrationRepository,
+                user);
 
         offerer.registrationPubKey = walletService.getRegistrationAddressEntry().getPubKey();
         offerer.registrationKeyPair = walletService.getRegistrationAddressEntry().getKeyPair();

@@ -25,6 +25,8 @@ import java.io.Serializable;
 
 import java.util.Arrays;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Is a minimalistic wallet abstraction used to separate transactions between different activities like:
  * Registration, trade and arbiter deposit.
@@ -35,7 +37,7 @@ public class AddressEntry implements Serializable {
 
     // that will be restored from the wallet at deserialisation
     private transient DeterministicKey keyPair;
-    
+
     private final String offerId;
     private final Context context;
     private final byte[] pubKey;
@@ -68,6 +70,7 @@ public class AddressEntry implements Serializable {
         return getAddress().toString();
     }
 
+    @NotNull
     public DeterministicKey getKeyPair() {
         return keyPair;
     }

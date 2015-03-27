@@ -36,7 +36,7 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
     @Override
     protected void doRun() {
         try {
-            Transaction transaction = model.walletService.getTradeWalletService().createOfferFeeTx(
+            Transaction transaction = model.tradeWalletService.createOfferFeeTx(
                     model.walletService.getAddressEntry(model.offer.getId()));
 
             // We assume there will be no tx malleability. We add a check later in case the published offer has a different hash.

@@ -83,8 +83,8 @@ public class TakerProtocol implements Protocol {
     public void setMailboxMessage(MailboxMessage mailboxMessage) {
         log.debug("setMailboxMessage " + mailboxMessage);
         // Might be called twice, so check that its only processed once
-        if (takerTradeProcessModel.mailboxMessage == null) {
-            takerTradeProcessModel.mailboxMessage = mailboxMessage;
+        if (takerTradeProcessModel.getMailboxMessage() == null) {
+            takerTradeProcessModel.setMailboxMessage(mailboxMessage);
             if (mailboxMessage instanceof FiatTransferStartedMessage) {
                 handleFiatTransferStartedMessage((FiatTransferStartedMessage) mailboxMessage);
             }

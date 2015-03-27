@@ -28,6 +28,8 @@ import java.security.PublicKey;
 import java.util.List;
 import java.util.Objects;
 
+import org.jetbrains.annotations.NotNull;
+
 public class Arbitrator implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
@@ -83,19 +85,19 @@ public class Arbitrator implements Serializable {
     private String webUrl;
     private String description;
 
-    public Arbitrator(Storage<Arbitrator> storage,
-                      String id,
-                      byte[] pubKey,
-                      PublicKey p2pSigPubKey,
-                      String name,
-                      Reputation reputation,
-                      ID_TYPE idType,
-                      List<String> languageCodes,
-                      Coin fee,
-                      List<METHOD> arbitrationMethods,
-                      List<ID_VERIFICATION> idVerifications,
-                      String webUrl,
-                      String description) {
+    public Arbitrator(@NotNull Storage<Arbitrator> storage,
+                      @NotNull String id,
+                      @NotNull byte[] pubKey,
+                      @NotNull PublicKey p2pSigPubKey,
+                      @NotNull String name,
+                      @NotNull Reputation reputation,
+                      @NotNull ID_TYPE idType,
+                      @NotNull List<String> languageCodes,
+                      @NotNull Coin fee,
+                      @NotNull List<METHOD> arbitrationMethods,
+                      @NotNull List<ID_VERIFICATION> idVerifications,
+                      @NotNull String webUrl,
+                      @NotNull String description) {
         this.storage = storage;
         this.id = id;
         this.pubKey = pubKey;
@@ -137,8 +139,6 @@ public class Arbitrator implements Serializable {
         Arbitrator other = (Arbitrator) obj;
         return id != null && id.equals(other.getId());
     }
-    
-    
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

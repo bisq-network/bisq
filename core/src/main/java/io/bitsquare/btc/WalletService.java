@@ -262,6 +262,7 @@ public class WalletService {
         return ImmutableList.copyOf(addressEntryList);
     }
 
+    @NotNull
     public AddressEntry getRegistrationAddressEntry() {
         return registrationAddressEntry;
     }
@@ -439,10 +440,6 @@ public class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Transactions
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public TradeWalletService getTradeWalletService() {
-        return tradeWalletService;
-    }
 
     public void payRegistrationFee(String stringifiedFiatAccounts, FutureCallback<Transaction> callback) throws
             InsufficientMoneyException {

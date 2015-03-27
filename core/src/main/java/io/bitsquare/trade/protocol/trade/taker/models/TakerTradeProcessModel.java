@@ -19,6 +19,7 @@ package io.bitsquare.trade.protocol.trade.taker.models;
 
 import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.btc.BlockChainService;
+import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.offer.Offer;
@@ -30,6 +31,10 @@ import io.bitsquare.user.User;
 import org.bitcoinj.core.Transaction;
 
 import java.io.Serializable;
+
+import javax.annotation.Nullable;
+
+import org.jetbrains.annotations.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,24 +52,31 @@ public class TakerTradeProcessModel extends TradeProcessModel implements Seriali
     public final Offerer offerer = new Offerer();
 
     // written by tasks
-    private Transaction takeOfferFeeTx;
-    private Transaction payoutTx;
+    @Nullable private Transaction takeOfferFeeTx;
+    @Nullable private Transaction payoutTx;
 
-    public TakerTradeProcessModel(Offer offer,
-                                  MessageService messageService,
-                                  MailboxService mailboxService,
-                                  WalletService walletService,
-                                  BlockChainService blockChainService,
-                                  SignatureService signatureService,
-                                  ArbitrationRepository arbitrationRepository,
-                                  User user) {
-        super(offer,
+    public TakerTradeProcessModel(){
+    }
+
+    public void init(@NotNull Offer offer,
+                        @NotNull MessageService messageService,
+                        @NotNull MailboxService mailboxService,
+                        @NotNull WalletService walletService,
+                        @NotNull TradeWalletService tradeWalletService,
+                        @NotNull BlockChainService blockChainService,
+                        @NotNull SignatureService signatureService,
+                        @NotNull ArbitrationRepository arbitrationRepository,
+                        @NotNull  User user) {
+
+        super.init(offer,
                 messageService,
                 mailboxService,
                 walletService,
+                tradeWalletService,
                 blockChainService,
                 signatureService,
-                arbitrationRepository);
+                arbitrationRepository,
+                user);
 
         taker.registrationPubKey = walletService.getRegistrationAddressEntry().getPubKey();
         taker.registrationKeyPair = walletService.getRegistrationAddressEntry().getKeyPair();
@@ -76,20 +88,22 @@ public class TakerTradeProcessModel extends TradeProcessModel implements Seriali
         taker.tradeWalletPubKey = taker.addressEntry.getPubKey();
     }
 
+    public void setPayoutTx(@NotNull Transaction payoutTx) {
+        this.payoutTx = payoutTx;
+    }
+
+    public void setTakeOfferFeeTx(@NotNull Transaction takeOfferFeeTx) {
+        this.takeOfferFeeTx = takeOfferFeeTx;
+    }
+
+    @Nullable
     public Transaction getTakeOfferFeeTx() {
         return takeOfferFeeTx;
     }
 
-    public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {
-        this.takeOfferFeeTx = takeOfferFeeTx;
-    }
-
+    @Nullable
     public Transaction getPayoutTx() {
         return payoutTx;
-    }
-
-    public void setPayoutTx(Transaction payoutTx) {
-        this.payoutTx = payoutTx;
     }
 
 }

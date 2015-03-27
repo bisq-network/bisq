@@ -28,8 +28,13 @@ import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
+import io.bitsquare.user.User;
 
 import java.io.Serializable;
+
+import javax.annotation.Nullable;
+
+import org.jetbrains.annotations.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,46 +45,62 @@ public class TradeProcessModel extends Model implements Serializable {
 
     protected static final Logger log = LoggerFactory.getLogger(TradeProcessModel.class);
 
-    public final String id;
-    public final Offer offer;
-    public byte[] arbitratorPubKey;
+    // those fields are re-assigned in case of deserialized object after backend is ready.
+    // Therefore they are not final but annotated with @NotNull 
+    @NotNull transient public MessageService messageService;
+    @NotNull transient public MailboxService mailboxService;
+    @NotNull transient public WalletService walletService;
+    @NotNull transient public TradeWalletService tradeWalletService;
+    @NotNull transient public BlockChainService blockChainService;
+    @NotNull transient public SignatureService signatureService;
 
+    @NotNull public Offer offer;
+    @NotNull public String id;
+    @NotNull public byte[] arbitratorPubKey;
 
-    transient public MessageService messageService;
-    transient public MailboxService mailboxService;
-    transient public WalletService walletService;
-    transient public TradeWalletService tradeWalletService;
-    transient public BlockChainService blockChainService;
-    transient public SignatureService signatureService;
+    @Nullable private transient MailboxMessage mailboxMessage;
+    @Nullable transient private TradeMessage tradeMessage;
 
-    transient public MailboxMessage mailboxMessage;
-    transient private TradeMessage tradeMessage;
+    protected TradeProcessModel() {
+    }
 
-    protected TradeProcessModel(Offer offer,
-                                MessageService messageService,
-                                MailboxService mailboxService,
-                                WalletService walletService,
-                                BlockChainService blockChainService,
-                                SignatureService signatureService,
-                                ArbitrationRepository arbitrationRepository) {
+    public void init(@NotNull Offer offer,
+                     @NotNull MessageService messageService,
+                     @NotNull MailboxService mailboxService,
+                     @NotNull WalletService walletService,
+                     @NotNull TradeWalletService tradeWalletService,
+                     @NotNull BlockChainService blockChainService,
+                     @NotNull SignatureService signatureService,
+                     @NotNull ArbitrationRepository arbitrationRepository,
+                     @NotNull User user) {
         this.offer = offer;
         this.messageService = messageService;
         this.mailboxService = mailboxService;
         this.walletService = walletService;
+        this.tradeWalletService = tradeWalletService;
         this.blockChainService = blockChainService;
         this.signatureService = signatureService;
 
         id = offer.getId();
-        tradeWalletService = walletService.getTradeWalletService();
         arbitratorPubKey = arbitrationRepository.getDefaultArbitrator().getPubKey();
+        assert arbitratorPubKey != null;
     }
 
-    public void setTradeMessage(TradeMessage tradeMessage) {
+    public void setTradeMessage(@NotNull TradeMessage tradeMessage) {
         this.tradeMessage = tradeMessage;
     }
 
+    public void setMailboxMessage(@NotNull MailboxMessage mailboxMessage) {
+        this.mailboxMessage = mailboxMessage;
+    }
+
+    @Nullable
     public TradeMessage getTradeMessage() {
         return tradeMessage;
     }
 
+    @Nullable
+    public MailboxMessage getMailboxMessage() {
+        return mailboxMessage;
+    }
 }

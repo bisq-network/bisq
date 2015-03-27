@@ -38,6 +38,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
 
+import org.jetbrains.annotations.NotNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,16 +48,15 @@ public class ArbitrationRepository implements Serializable {
     private static final long serialVersionUID = 1L;
     transient private static final Logger log = LoggerFactory.getLogger(ArbitrationRepository.class);
 
-    transient private Storage<ArbitrationRepository> storage;
-    transient private ArbitratorService arbitratorService;
-    transient private Arbitrator defaultArbitrator;
-
+    transient private final Storage<ArbitrationRepository> storage;
+    transient private final ArbitratorService arbitratorService;
+    transient private final Arbitrator defaultArbitrator;
+    transient private final ObservableMap<String, Arbitrator> arbitratorsObservableMap = FXCollections.observableHashMap();
+    transient private boolean allArbitratorsSynced;
 
     // Persisted fields
     private final Map<String, Arbitrator> arbitratorsMap = new HashMap<>();
-    transient private final ObservableMap<String, Arbitrator> arbitratorsObservableMap = FXCollections.observableHashMap();
-
-    transient private boolean allArbitratorsSynced;
+    
 
     @Inject
     public ArbitrationRepository(Storage<ArbitrationRepository> storage,
@@ -81,12 +82,13 @@ public class ArbitrationRepository implements Serializable {
                 Arrays.asList(Arbitrator.ID_VERIFICATION.PASSPORT),
                 "https://bitsquare.io",
                 "Bla bla...");
-
-        arbitratorsMap.put(defaultArbitrator.getId(), defaultArbitrator);
+       
         ArbitrationRepository persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
             arbitratorsMap.putAll(persisted.getArbitratorsMap());
         }
+        arbitratorsMap.put(defaultArbitrator.getId(), defaultArbitrator);
+        
         arbitratorsObservableMap.putAll(arbitratorsMap);
         arbitratorsObservableMap.addListener((MapChangeListener<String, Arbitrator>) change -> storage.queueUpForSave());
         allArbitratorsSynced = false;
@@ -120,6 +122,7 @@ public class ArbitrationRepository implements Serializable {
         return allArbitratorsSynced;
     }
 
+    @NotNull
     public Arbitrator getDefaultArbitrator() {
         return defaultArbitrator;
     }

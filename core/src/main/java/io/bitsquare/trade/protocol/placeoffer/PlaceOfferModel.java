@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.placeoffer;
 
+import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.offer.Offer;
@@ -32,15 +33,18 @@ public class PlaceOfferModel extends Model {
 
     public final Offer offer;
     public final WalletService walletService;
+    public TradeWalletService tradeWalletService;
     public final OfferBookService offerBookService;
 
     private Transaction transaction;
 
     public PlaceOfferModel(Offer offer,
                            WalletService walletService,
+                           TradeWalletService tradeWalletService,
                            OfferBookService offerBookService) {
         this.offer = offer;
         this.walletService = walletService;
+        this.tradeWalletService = tradeWalletService;
         this.offerBookService = offerBookService;
     }
 
