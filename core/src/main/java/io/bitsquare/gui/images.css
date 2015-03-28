@@ -1,4 +1,5 @@
 /* splash screen */
+/*noinspection CssUnknownTarget*/
 #image-splash-logo {
     -fx-image: url("../../../images/logo_splash.png");
 }

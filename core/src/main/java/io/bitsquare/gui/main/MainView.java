@@ -160,7 +160,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         });
 
         // Delay a bit to give time for rendering the splash screen
-        Platform.runLater(() -> model.initBackend());
+        Platform.runLater(model::initBackend);
     }
 
     private void setupNotificationIcon(Pane portfolioButtonHolder) {

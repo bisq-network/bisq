@@ -31,18 +31,10 @@ import org.slf4j.LoggerFactory;
 public class DSAKeyUtil {
     private static final Logger log = LoggerFactory.getLogger(DSAKeyUtil.class);
 
-    public static PublicKey decodePubKeyHex(String pubKeyHex) {
+    public static PublicKey decodePubKeyHex(String pubKeyHex) throws NoSuchAlgorithmException, InvalidKeySpecException {
         X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Utils.HEX.decode(pubKeyHex));
-        try {
-            KeyFactory keyFactory = KeyFactory.getInstance("DSA");
-            return keyFactory.generatePublic(pubKeySpec);
-        } catch (NoSuchAlgorithmException e) {
-            log.error("could not find algorithm", e);
-            return null;
-        } catch (InvalidKeySpecException e) {
-            log.error("wrong keyspec", e);
-            return null;
-        }
+        KeyFactory keyFactory = KeyFactory.getInstance("DSA");
+        return keyFactory.generatePublic(pubKeySpec);
     }
 
     public static String encodePubKeyToHex(PublicKey pubKey) {

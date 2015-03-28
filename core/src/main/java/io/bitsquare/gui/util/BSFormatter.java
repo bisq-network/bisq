@@ -73,7 +73,7 @@ public class BSFormatter {
 
     // format is like: 1,00  never more then 2 decimals
     private final MonetaryFormat fiatFormat = MonetaryFormat.FIAT.repeatOptionalDecimals(0, 0).code(0, currencyCode);
-    private ArbitrationRepository arbitrationRepository;
+    private final ArbitrationRepository arbitrationRepository;
 
 
     @Inject
@@ -131,8 +131,7 @@ public class BSFormatter {
             try {
                 return coinFormat.noCode().format(coin).toString();
             } catch (Throwable t) {
-                if (coin != null)
-                    log.warn("Exception at formatBtc: " + t.toString());
+                log.warn("Exception at formatBtc: " + t.toString());
                 return "";
             }
         }
@@ -148,8 +147,7 @@ public class BSFormatter {
                 // pre and post fixing
                 return coinFormat.postfixCode().format(coin).toString();
             } catch (Throwable t) {
-                if (coin != null)
-                    log.warn("Exception at formatBtcWithCode: " + t.toString());
+                log.warn("Exception at formatBtcWithCode: " + t.toString());
                 return "";
             }
         }
@@ -159,12 +157,11 @@ public class BSFormatter {
     }
 
     public Coin parseToCoin(String input) {
-        if (input != null) {
+        if (input != null && input.length() > 0) {
             try {
                 return coinFormat.parse(cleanInput(input));
             } catch (Throwable t) {
-                if (input != null && input.length() > 0)
-                    log.warn("Exception at parseToBtc: " + t.toString());
+                log.warn("Exception at parseToBtc: " + t.toString());
                 return Coin.ZERO;
             }
         }
@@ -217,8 +214,7 @@ public class BSFormatter {
             try {
                 return fiatFormat.noCode().format(fiat).toString();
             } catch (Throwable t) {
-                if (fiat != null)
-                    log.warn("Exception at formatFiat: " + t.toString());
+                log.warn("Exception at formatFiat: " + t.toString());
                 return "";
             }
         }
@@ -232,8 +228,7 @@ public class BSFormatter {
             try {
                 return fiatFormat.postfixCode().format(fiat).toString();
             } catch (Throwable t) {
-                if (fiat != null)
-                    log.warn("Exception at formatFiatWithCode: " + t.toString());
+                log.warn("Exception at formatFiatWithCode: " + t.toString());
                 return "";
             }
         }
@@ -243,12 +238,11 @@ public class BSFormatter {
     }
 
     public Fiat parseToFiat(String input) {
-        if (input != null) {
+        if (input != null && input.length() > 0) {
             try {
                 return Fiat.parseFiat(currencyCode, cleanInput(input));
             } catch (Exception e) {
-                if (input != null && input.length() > 0)
-                    log.warn("Exception at parseToFiat: " + e.toString());
+                log.warn("Exception at parseToFiat: " + e.toString());
                 return Fiat.valueOf(currencyCode, 0);
             }
 
@@ -268,12 +262,11 @@ public class BSFormatter {
      */
 
     public Fiat parseToFiatWith2Decimals(String input) {
-        if (input != null) {
+        if (input != null && input.length() > 0) {
             try {
                 return parseToFiat(new BigDecimal(cleanInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString());
             } catch (Throwable t) {
-                if (input != null && input.length() > 0)
-                    log.warn("Exception at parseCoinTo4Decimals: " + t.toString());
+                log.warn("Exception at parseCoinTo4Decimals: " + t.toString());
                 return Fiat.valueOf(currencyCode, 0);
             }
 
@@ -317,7 +310,7 @@ public class BSFormatter {
     }
 
     public String arbitratorsToNames(List<Arbitrator> arbitrators) {
-        return arbitrators.stream().map(e -> e.getName()).collect(Collectors.joining(", "));
+        return arbitrators.stream().map(Arbitrator::getName).collect(Collectors.joining(", "));
     }
 
     public String arbitratorIdsToNames(List<String> ids) {
@@ -325,7 +318,7 @@ public class BSFormatter {
     }
 
     public String languageCodesToString(List<String> languageLocales) {
-        return languageLocales.stream().map(e -> LanguageUtil.getDisplayName(e)).collect(Collectors.joining(", "));
+        return languageLocales.stream().map(LanguageUtil::getDisplayName).collect(Collectors.joining(", "));
     }
 
     public String arbitrationMethodsToString(List<Arbitrator.METHOD> methods) {

@@ -27,7 +27,6 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.settings.application.PreferencesView;
 import io.bitsquare.gui.main.settings.network.NetworkSettingsView;
-import io.bitsquare.user.Preferences;
 
 import javax.inject.Inject;
 
@@ -40,7 +39,6 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
 
     @FXML Tab preferencesTab, networkSettingsTab;
 
-    private Preferences preferences;
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
 
@@ -48,10 +46,9 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
     private final Navigation navigation;
 
     @Inject
-    public SettingsView(CachingViewLoader viewLoader, Navigation navigation, Preferences preferences) {
+    public SettingsView(CachingViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
-        this.preferences = preferences;
     }
 
     @Override

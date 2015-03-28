@@ -47,7 +47,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> implements ViewModel {
     private static final Logger log = LoggerFactory.getLogger(TakeOfferViewModel.class);
 
-    public static enum State {
+    public enum State {
         CHECK_AVAILABILITY,
         AMOUNT_SCREEN,
         PAYMENT_SCREEN,
@@ -219,6 +219,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                         break;
                     case DEPOSIT_PUBLISHED:
                     case DEPOSIT_CONFIRMED:
+                        assert takerTrade.getDepositTx() != null;
                         transactionId.set(takerTrade.getDepositTx().getHashAsString());
                         applyTakeOfferRequestResult(true);
                         break;

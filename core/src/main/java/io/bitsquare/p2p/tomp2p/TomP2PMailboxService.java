@@ -153,9 +153,7 @@ public class TomP2PMailboxService extends TomP2PDHTService implements MailboxSer
                 // it might change in future to something like foundAndRemoved and notFound
                 // See discussion at: https://github.com/tomp2p/TomP2P/issues/57#issuecomment-62069840
                 log.trace("isRemoved? " + futureRemove.isRemoved());
-                executor.execute(() -> {
-                    resultHandler.handleResult();
-                });
+                executor.execute(resultHandler::handleResult);
             }
 
             @Override

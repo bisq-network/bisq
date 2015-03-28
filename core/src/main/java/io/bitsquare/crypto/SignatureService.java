@@ -29,7 +29,7 @@ public class SignatureService {
 
     public String signMessage(ECKey key, String message) {
         byte[] data = Utils.formatMessageForSigning(message);
-        Sha256Hash hash = Sha256Hash.createDouble(data);
+        Sha256Hash hash = Sha256Hash.hashTwice(data);
         return signMessage(key, hash);
     }
 

@@ -18,9 +18,8 @@ class DesktopUtil {
 
         if (openSystemSpecific(uri.toString())) return true;
 
-        if (browseDESKTOP(uri)) return true;
+        return browseDESKTOP(uri);
 
-        return false;
     }
 
 
@@ -28,9 +27,8 @@ class DesktopUtil {
 
         if (openSystemSpecific(file.getPath())) return true;
 
-        if (openDESKTOP(file)) return true;
+        return openDESKTOP(file);
 
-        return false;
     }
 
 
@@ -42,9 +40,8 @@ class DesktopUtil {
 
         if (openSystemSpecific(file.getPath())) return true;
 
-        if (editDESKTOP(file)) return true;
+        return editDESKTOP(file);
 
-        return false;
     }
 
 
@@ -175,7 +172,7 @@ class DesktopUtil {
 
     private static String[] prepareCommand(String command, String args, String file) {
 
-        List<String> parts = new ArrayList<String>();
+        List<String> parts = new ArrayList<>();
         parts.add(command);
 
         if (args != null) {
@@ -202,7 +199,7 @@ class DesktopUtil {
         System.out.println(msg);
     }
 
-    public static enum EnumOS {
+    public enum EnumOS {
         linux, macos, solaris, unknown, windows;
 
         public boolean isLinux() {

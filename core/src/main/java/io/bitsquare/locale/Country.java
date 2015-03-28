@@ -44,6 +44,7 @@ public class Country implements Serializable {
         Country country = (Country) o;
 
         if (code != null ? !code.equals(country.code) : country.code != null) return false;
+        //noinspection SimplifiableIfStatement
         if (name != null ? !name.equals(country.name) : country.name != null) return false;
         return !(region != null ? !region.equals(country.region) : country.region != null);
 

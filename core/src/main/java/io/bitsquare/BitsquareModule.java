@@ -34,7 +34,7 @@ public abstract class BitsquareModule extends AbstractModule {
     private static final Logger log = LoggerFactory.getLogger(BitsquareModule.class);
     protected final Environment env;
 
-    private final List<BitsquareModule> modules = new ArrayList();
+    private final List<BitsquareModule> modules = new ArrayList<>();
 
     protected BitsquareModule(Environment env) {
         checkNotNull(env, "Environment must not be null");

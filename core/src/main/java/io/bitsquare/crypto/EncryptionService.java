@@ -73,7 +73,7 @@ public class EncryptionService<T> {
 
     public T decryptToObject(PrivateKey privateKey, Bucket bucket) throws IllegalBlockSizeException, InvalidKeyException,
             BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException {
-        return (T) Utilities.byteArrayToObject(decrypt(privateKey, bucket));
+        return Utilities.<T>byteArrayToObject(decrypt(privateKey, bucket));
     }
 
     public Bucket encrypt(PublicKey publicKey, byte[] payload) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,

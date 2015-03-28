@@ -17,10 +17,6 @@
 
 package io.bitsquare.common.taskrunner;
 
-import io.bitsquare.btc.exceptions.SigningException;
-import io.bitsquare.btc.exceptions.TransactionVerificationException;
-import io.bitsquare.btc.exceptions.WalletException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +45,7 @@ public abstract class Task<T extends Model> {
         }
     }
 
-    abstract protected void doRun() throws WalletException, TransactionVerificationException, SigningException;
+    abstract protected void doRun();
 
     private void interceptBeforeRun() {
         if (getClass() == taskToInterceptBeforeRun)

@@ -7,7 +7,6 @@
 !.idea/copyright/profiles_settings.xml
 !.idea/codeStyleSettings.xml
 *.iml
-*/*.iml
 *.spvchain
 *.wallet
 *.ser

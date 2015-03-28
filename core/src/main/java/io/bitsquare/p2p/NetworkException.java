@@ -22,6 +22,8 @@ import java.io.IOException;
 @SuppressWarnings("serializable")
 public class NetworkException extends IOException {
 
+    private static final long serialVersionUID = 3635593267998809977L;
+
     public NetworkException(Throwable cause) {
         super(cause);
     }

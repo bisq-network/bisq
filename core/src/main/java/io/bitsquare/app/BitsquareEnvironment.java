@@ -121,8 +121,11 @@ public class BitsquareEnvironment extends StandardEnvironment {
         return new ResourcePropertySource(BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME, resource);
     }
 
-    PropertySource<?> defaultProperties() throws Exception {
-        return new PropertiesPropertySource(BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {{
+    PropertySource<?> defaultProperties() {
+        return new PropertiesPropertySource(BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
+            private static final long serialVersionUID = -8478089705207326165L;
+
+            {
             setProperty(APP_DATA_DIR_KEY, appDataDir);
             setProperty(APP_DATA_DIR_CLEAN_KEY, DEFAULT_APP_DATA_DIR_CLEAN);
 

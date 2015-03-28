@@ -65,6 +65,8 @@ class AddressBasedCoinSelector extends DefaultCoinSelector {
         Collections.sort(outputs, (a, b) -> {
             int depth1 = 0;
             int depth2 = 0;
+            assert a.getParentTransaction() != null;
+            assert b.getParentTransaction() != null;
             TransactionConfidence conf1 = a.getParentTransaction().getConfidence();
             TransactionConfidence conf2 = b.getParentTransaction().getConfidence();
             if (conf1.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)

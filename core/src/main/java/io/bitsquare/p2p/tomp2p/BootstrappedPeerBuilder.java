@@ -78,7 +78,7 @@ public class BootstrappedPeerBuilder {
 
     private KeyPair keyPair;
     private final int port;
-    private boolean useManualPortForwarding;
+    private final boolean useManualPortForwarding;
     private final Node bootstrapNode;
     private final String networkInterface;
 

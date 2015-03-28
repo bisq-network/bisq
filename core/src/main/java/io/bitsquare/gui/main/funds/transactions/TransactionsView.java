@@ -77,8 +77,7 @@ public class TransactionsView extends ActivatableViewAndModel {
 
     @Override
     public void doDeactivate() {
-        for (TransactionsListItem transactionsListItem : transactionsListItems)
-            transactionsListItem.cleanup();
+        transactionsListItems.forEach(TransactionsListItem::cleanup);
     }
 
     private void openTxDetails(TransactionsListItem item) {

@@ -116,8 +116,7 @@ public class WithdrawalView extends ActivatableViewAndModel {
 
     @Override
     public void doDeactivate() {
-        for (WithdrawalListItem item : addressList)
-            item.cleanup();
+        addressList.forEach(WithdrawalListItem::cleanup);
     }
 
     @FXML

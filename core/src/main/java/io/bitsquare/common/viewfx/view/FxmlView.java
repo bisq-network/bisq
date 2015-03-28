@@ -41,6 +41,6 @@ public @interface FxmlView {
      */
     Class<? extends PathConvention> convention() default DefaultPathConvention.class;
 
-    static interface PathConvention extends Function<Class<? extends View>, String> {
+    interface PathConvention extends Function<Class<? extends View>, String> {
     }
 }

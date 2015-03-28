@@ -125,7 +125,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
     }
 
     void takeOffer(TakeOfferResultHandler handler) {
-        tradeManager.requestTakeOffer(amountAsCoin.get(), offer, (trade) -> handler.handleResult(trade));
+        tradeManager.requestTakeOffer(amountAsCoin.get(), offer, handler::handleResult);
     }
 
     void calculateVolume() {

@@ -262,7 +262,7 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
                 () -> {
                     // log.debug("arbitrator added successfully " + arbitratorService.getAllArbitrators().size());
                 },
-                (errorMessage -> log.error(errorMessage)));
+                log::error);
     }
 
     @FXML
@@ -284,9 +284,7 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
         securityDepositAddressTextField.setText(securityDepositAddress);
 
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
-        copyIcon.setOnMouseClicked(e -> {
-            Utilities.copyToClipboard(securityDepositAddress);
-        });
+        copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(securityDepositAddress));
 
         paymentDoneButton.setDisable(walletService.getArbitratorDepositBalance().isZero());
         log.debug("getArbitratorDepositBalance " + walletService.getArbitratorDepositBalance());

@@ -20,7 +20,7 @@ package io.bitsquare.common.viewfx.view;
 public interface Wizard extends View {
     void nextStep(Step currentStep);
 
-    public interface Step {
+    interface Step {
         void hideWizardNavigation();
 
         void setWizard(Wizard wizard);

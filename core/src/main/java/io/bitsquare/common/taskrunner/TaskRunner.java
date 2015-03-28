@@ -21,6 +21,7 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -45,8 +46,9 @@ public class TaskRunner<T extends Model> {
         this.errorMessageHandler = errorMessageHandler;
     }
     
-    public final void addTasks(Class<? extends Task>... items) {
-        tasks.addAll(Arrays.asList(items));
+    public final void addTasks(Class<? extends Task<? extends Model>>... items) {
+        List<Class<? extends Task<? extends Model>>> list = Arrays.asList(items);
+        tasks.addAll(list);
     }
 
     public void run() {

@@ -36,7 +36,7 @@ public class Transitions {
 
     public final static int DEFAULT_DURATION = 400;
 
-    private Preferences preferences;
+    private final Preferences preferences;
     private Timeline removeBlurTimeLine;
 
     @Inject

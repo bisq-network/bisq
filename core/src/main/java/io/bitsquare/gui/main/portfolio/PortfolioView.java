@@ -47,13 +47,11 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private final TradeManager tradeManager;
 
     @Inject
     public PortfolioView(CachingViewLoader viewLoader, Navigation navigation, TradeManager tradeManager) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
-        this.tradeManager = tradeManager;
     }
 
     @Override

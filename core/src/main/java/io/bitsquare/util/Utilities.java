@@ -152,7 +152,7 @@ public class Utilities {
         return result;
     }
 
-    public static Object byteArrayToObject(byte[] data) {
+    public static <T> T byteArrayToObject(byte[] data) {
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         ObjectInput in = null;
         Object result = null;
@@ -175,7 +175,7 @@ public class Utilities {
                 // ignore close exception
             }
         }
-        return result;
+        return (T) result;
     }
 
     public static byte[] objectToBytArray(Object object) {
@@ -249,17 +249,16 @@ public class Utilities {
         if (folder.isDirectory()) {
             File[] list = folder.listFiles();
             if (list != null) {
-                for (int i = 0; i < list.length; i++) {
-                    File tmpF = list[i];
+                for (File tmpF : list) {
                     if (tmpF.isDirectory()) {
                         removeDirectory(tmpF);
                     }
-                    tmpF.delete();
+                    if (!tmpF.delete())
+                        log.warn("can't delete file : " + tmpF);
                 }
             }
-            if (!folder.delete()) {
+            if (!folder.delete()) 
                 log.warn("can't delete folder : " + folder);
-            }
         }
     }
 

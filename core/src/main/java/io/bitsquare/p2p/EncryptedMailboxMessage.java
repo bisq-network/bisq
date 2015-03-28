@@ -31,7 +31,7 @@ public class EncryptedMailboxMessage implements MailboxMessage, Serializable {
     private static final long serialVersionUID = -3111178895546299769L;
     private static final Logger log = LoggerFactory.getLogger(EncryptedMailboxMessage.class);
 
-    private Bucket bucket;
+    private final Bucket bucket;
 
     public EncryptedMailboxMessage(Bucket bucket) {
         this.bucket = bucket;

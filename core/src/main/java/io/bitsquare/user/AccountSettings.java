@@ -40,7 +40,7 @@ public class AccountSettings implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
-    transient private Storage<AccountSettings> storage;
+    final transient private Storage<AccountSettings> storage;
 
     // Persisted fields
     private List<String> acceptedLanguageLocaleCodes = new ArrayList<>();
@@ -119,7 +119,7 @@ public class AccountSettings implements Serializable {
     }
 
     public List<String> getAcceptedArbitratorIds() {
-        return acceptedArbitrators.stream().map(e -> e.getId()).collect(Collectors.toList());
+        return acceptedArbitrators.stream().map(Arbitrator::getId).collect(Collectors.toList());
     }
 
     public List<String> getAcceptedLanguageLocaleCodes() {

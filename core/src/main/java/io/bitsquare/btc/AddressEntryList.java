@@ -36,7 +36,7 @@ public class AddressEntryList extends ArrayList<AddressEntry> implements Seriali
     private static final long serialVersionUID = 1L;
     transient private static final Logger log = LoggerFactory.getLogger(AddressEntryList.class);
 
-    transient private Storage<AddressEntryList> storage;
+    final transient private Storage<AddressEntryList> storage;
     transient private Wallet wallet;
 
     // Persisted fields are in ArrayList superclass

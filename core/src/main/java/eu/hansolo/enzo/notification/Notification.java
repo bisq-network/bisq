@@ -96,7 +96,7 @@ public class Notification {
 
 
         // ******************** Constructor ***************************************
-        private Notifier() {
+        Notifier() {
             init();
             initGraphics();
         }

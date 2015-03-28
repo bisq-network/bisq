@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class CurrencyUtil {
 
     public static List<String> getAllCurrencyCodes() {
-        return getAllCurrencies().stream().map(e -> e.getCurrencyCode()).collect(Collectors.toList());
+        return getAllCurrencies().stream().map(Currency::getCurrencyCode).collect(Collectors.toList());
     }
 
     public static String getDefaultCurrencyAsCode() {

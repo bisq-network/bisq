@@ -20,6 +20,8 @@ package io.bitsquare;
 @SuppressWarnings("serializable")
 public class BitsquareException extends RuntimeException {
 
+    private static final long serialVersionUID = 556191645860856173L;
+
     public BitsquareException(Throwable cause) {
         super(cause);
     }

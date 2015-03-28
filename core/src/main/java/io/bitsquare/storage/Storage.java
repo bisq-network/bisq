@@ -111,7 +111,7 @@ public class Storage<T extends Serializable> {
         if (storageFile.exists()) {
             long now = System.currentTimeMillis();
             try {
-                T persistedObject = (T) fileManager.read(storageFile);
+                T persistedObject = fileManager.read(storageFile);
                 log.info("Read {} completed in {}msec", serializable.getClass().getSimpleName(), System.currentTimeMillis() - now);
 
                 // If we did not get any exception we can be sure the data are consistent so we make a backup 

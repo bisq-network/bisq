@@ -40,7 +40,6 @@ public class BootstrapNode {
     private static final Logger log = LoggerFactory.getLogger(BootstrapNode.class);
 
     private static Peer peer = null;
-    private static boolean running = true;
 
     private final Environment env;
     private boolean noPeersInfoPrinted;
@@ -97,7 +96,7 @@ public class BootstrapNode {
 
             log.info("Bootstrap node started with name " + name + " and port " + port);
             new Thread(() -> {
-                while (running) {
+                while (true) {
                     if (peer.peerBean().peerMap().all().size() > 0) {
                         noPeersInfoPrinted = false;
                         log.info("Number of peers online = " + peer.peerBean().peerMap().all().size());

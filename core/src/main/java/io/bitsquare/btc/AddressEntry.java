@@ -91,7 +91,7 @@ public class AddressEntry implements Serializable {
         return pubKey;
     }
 
-    public static enum Context {
+    public enum Context {
         REGISTRATION_FEE,
         TRADE,
         ARBITRATOR_DEPOSIT

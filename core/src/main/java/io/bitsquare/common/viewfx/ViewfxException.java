@@ -21,6 +21,8 @@ import static java.lang.String.format;
 
 public class ViewfxException extends RuntimeException {
 
+    private static final long serialVersionUID = -6266047448442595372L;
+
     public ViewfxException(Throwable cause, String format, Object... args) {
         super(format(format, args), cause);
     }

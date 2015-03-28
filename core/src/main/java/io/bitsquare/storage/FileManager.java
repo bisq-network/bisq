@@ -100,6 +100,7 @@ public class FileManager<T> {
                 .setNameFormat("FileManager thread")
                 .setPriority(Thread.MIN_PRIORITY);  // Avoid competing with the GUI thread.
 
+        //noinspection Convert2Lambda
         builder.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread t, Throwable throwable) {
@@ -118,17 +119,14 @@ public class FileManager<T> {
         this.delay = delay;
         this.delayTimeUnit = checkNotNull(delayTimeUnit);
 
-        this.saver = new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                // Runs in an auto save thread.
-                if (!savePending.getAndSet(false)) {
-                    // Some other scheduled request already beat us to it.
-                    return null;
-                }
-                saveNowInternal(serializable);
+        this.saver = () -> {
+            // Runs in an auto save thread.
+            if (!savePending.getAndSet(false)) {
+                // Some other scheduled request already beat us to it.
                 return null;
             }
+            saveNowInternal(serializable);
+            return null;
         };
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -165,11 +163,11 @@ public class FileManager<T> {
         executor.schedule(saver, delay, delayTimeUnit);
     }
 
-    public Object read(File file) throws IOException, ClassNotFoundException {
+    public T read(File file) throws IOException, ClassNotFoundException {
         lock.lock();
         try (final FileInputStream fileInputStream = new FileInputStream(file);
              final ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
-            return objectInputStream.readObject();
+            return (T) objectInputStream.readObject();
         } finally {
             lock.unlock();
         }
@@ -213,7 +211,8 @@ public class FileManager<T> {
     public void removeAndBackupFile(String fileName) throws IOException {
         File corruptedBackupDir = new File(Paths.get(dir.getAbsolutePath(), "corrupted").toString());
         if (!corruptedBackupDir.exists())
-            corruptedBackupDir.mkdir();
+            if (!corruptedBackupDir.mkdir())
+                log.warn("make dir failed");
 
         File corruptedFile = new File(Paths.get(dir.getAbsolutePath(), "corrupted", fileName).toString());
         renameTempFileToFile(storageFile, corruptedFile);
@@ -222,7 +221,8 @@ public class FileManager<T> {
     public void backupFile(String fileName) throws IOException {
         File backupDir = new File(Paths.get(dir.getAbsolutePath(), "backup").toString());
         if (!backupDir.exists())
-            backupDir.mkdir();
+            if (!backupDir.mkdir())
+                log.warn("make dir failed");
 
         File backupFile = new File(Paths.get(dir.getAbsolutePath(), "backup", fileName).toString());
         Files.copy(storageFile, backupFile);
@@ -232,20 +232,21 @@ public class FileManager<T> {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void saveNowInternal(T serializable) throws IOException {
+    private void saveNowInternal(T serializable) {
         long now = System.currentTimeMillis();
         saveToFile(serializable, dir, storageFile);
         log.info("Save {} completed in {}msec", storageFile, System.currentTimeMillis() - now);
     }
 
-    private void saveToFile(T serializable, File dir, File storageFile) throws IOException {
+    private void saveToFile(T serializable, File dir, File storageFile) {
         lock.lock();
         File tempFile = null;
         FileOutputStream fileOutputStream = null;
         ObjectOutputStream objectOutputStream = null;
         try {
             if (!dir.exists())
-                dir.mkdir();
+                if (!dir.mkdir())
+                    log.warn("make dir failed");
 
             tempFile = File.createTempFile("temp", null, dir);
 

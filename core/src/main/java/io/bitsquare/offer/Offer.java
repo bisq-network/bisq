@@ -133,7 +133,7 @@ public class Offer implements Serializable {
         stateProperty = new SimpleObjectProperty<>(state);
     }
 
-    public void validate() throws Exception {
+    public void validate() {
         checkNotNull(getAcceptedCountries(), "AcceptedCountries is null");
         checkNotNull(getAcceptedLanguageCodes(), "AcceptedLanguageLocales is null");
         checkNotNull(getAmount(), "Amount is null");

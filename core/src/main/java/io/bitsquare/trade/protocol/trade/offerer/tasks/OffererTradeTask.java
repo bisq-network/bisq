@@ -41,6 +41,6 @@ class OffererTradeTask extends Task<OffererTrade> {
     }
 
     @Override
-    protected void doRun() throws WalletException, TransactionVerificationException, SigningException {
+    protected void doRun() {
     }
 }

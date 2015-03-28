@@ -57,7 +57,6 @@ public class User implements Serializable {
     transient private static final Logger log = LoggerFactory.getLogger(User.class);
 
     transient private Storage<User> storage;
-    transient private EncryptionService encryptionService;
 
     // Persisted fields
     private KeyPair p2pSigKeyPair;
@@ -67,13 +66,13 @@ public class User implements Serializable {
     private FiatAccount currentFiatAccount;
 
     // Observable wrappers
-    transient private ObservableList<FiatAccount> fiatAccountsObservableList = FXCollections.observableArrayList(fiatAccounts);
-    transient private ObjectProperty<FiatAccount> currentFiatAccountProperty = new SimpleObjectProperty<>(currentFiatAccount);
+    final transient private ObservableList<FiatAccount> fiatAccountsObservableList = FXCollections.observableArrayList(fiatAccounts);
+    final transient private ObjectProperty<FiatAccount> currentFiatAccountProperty = new SimpleObjectProperty<>(currentFiatAccount);
 
     @Inject
     public User(Storage<User> storage, EncryptionService encryptionService) {
         this.storage = storage;
-        this.encryptionService = encryptionService;
+        EncryptionService encryptionService1 = encryptionService;
 
         User persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {

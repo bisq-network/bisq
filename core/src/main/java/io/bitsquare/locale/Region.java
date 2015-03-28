@@ -41,6 +41,7 @@ public class Region implements Serializable {
 
         Region region = (Region) o;
 
+        //noinspection SimplifiableIfStatement
         if (code != null ? !code.equals(region.code) : region.code != null) return false;
         return !(name != null ? !name.equals(region.name) : region.name != null);
 

@@ -74,6 +74,7 @@ public class Navigation implements Serializable {
         currentPath = null;
     }
 
+    @SuppressWarnings("unchecked")
     public void navigateTo(Class<? extends View>... viewClasses) {
         navigateTo(ViewPath.to(viewClasses));
     }

@@ -26,13 +26,10 @@ import java.io.File;
 import java.nio.file.Path;
 
 import java.util.List;
-import java.util.function.Function;
 
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +59,7 @@ public class UpdateProcess {
         return BUILD_VERSION;
     }
 
-    private Environment environment;
+    private final Environment environment;
 
     public enum State {
         CHECK_FOR_UPDATES,
@@ -98,12 +95,9 @@ public class UpdateProcess {
         log.info("UpdateFX current version " + BUILD_VERSION);
 
         // process.timeout() will cause an error state back but we don't want to break startup in case of an timeout
-        timeoutTimer = Utilities.setTimeout(10000, new Function<AnimationTimer, Void>() {
-            @Override
-            public Void apply(AnimationTimer animationTimer) {
-                process.onCompleted();
-                return null;
-            }
+        timeoutTimer = Utilities.setTimeout(10000, animationTimer -> {
+            process.onCompleted();
+            return null;
         });
         timeoutTimer.start();
 
@@ -118,11 +112,8 @@ public class UpdateProcess {
             }
         };
 
-        updater.progressProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number oldValue, Number newValue) {
-                log.trace("progressProperty newValue = " + newValue);
-            }
+        updater.progressProperty().addListener((observableValue, oldValue, newValue) -> {
+            log.trace("progressProperty newValue = " + newValue);
         });
 
         log.info("Checking for updates!");

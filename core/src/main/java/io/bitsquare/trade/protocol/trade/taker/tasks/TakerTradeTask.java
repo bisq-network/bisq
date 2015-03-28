@@ -41,6 +41,6 @@ class TakerTradeTask extends Task<TakerTrade> {
     }
 
     @Override
-    protected void doRun() throws WalletException, TransactionVerificationException, SigningException {
+    protected void doRun() {
     }
 }

@@ -90,7 +90,6 @@ public class WalletService {
     private final TradeWalletService tradeWalletService;
     private final AddressEntryList addressEntryList;
     private final NetworkParameters params;
-    private final FeePolicy feePolicy;
     private final SignatureService signatureService;
     private final File walletDir;
     private final String walletPrefix;
@@ -107,13 +106,12 @@ public class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletService(BitcoinNetwork bitcoinNetwork, FeePolicy feePolicy, SignatureService signatureService,
+    public WalletService(BitcoinNetwork bitcoinNetwork, SignatureService signatureService,
                          TradeWalletService tradeWalletService, AddressEntryList addressEntryList, UserAgent userAgent,
                          @Named(DIR_KEY) File walletDir, @Named(PREFIX_KEY) String walletPrefix) {
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
         this.params = bitcoinNetwork.getParameters();
-        this.feePolicy = feePolicy;
         this.signatureService = signatureService;
         this.walletDir = walletDir;
         this.walletPrefix = walletPrefix;
@@ -262,7 +260,6 @@ public class WalletService {
         return ImmutableList.copyOf(addressEntryList);
     }
 
-    @NotNull
     public AddressEntry getRegistrationAddressEntry() {
         return registrationAddressEntry;
     }
@@ -377,12 +374,9 @@ public class WalletService {
 
     @SuppressWarnings("UnusedDeclaration")
     public boolean isRegistrationFeeConfirmed() {
-        TransactionConfidence transactionConfidence = null;
-        if (getRegistrationAddressEntry() != null) {
-            transactionConfidence = getConfidenceForAddress(getRegistrationAddressEntry().getAddress());
-        }
-        return transactionConfidence != null &&
-                transactionConfidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING);
+        assert getRegistrationAddressEntry() != null;
+        TransactionConfidence transactionConfidence = getConfidenceForAddress(getRegistrationAddressEntry().getAddress());
+        return TransactionConfidence.ConfidenceType.BUILDING.equals(transactionConfidence.getConfidenceType());
     }
 
 

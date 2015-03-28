@@ -159,7 +159,7 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
 
 
         // TODO Set focus to row does not work yet...
-        Platform.runLater(() -> table.requestFocus());
+        Platform.runLater(table::requestFocus);
         table.getFocusModel().focus(model.selectedIndex.get());
         txIdTextField.setup(model.getWalletService(), model.txId.get());
         selectedIndexChangeListener.changed(null, null, model.selectedIndex.get());

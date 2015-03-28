@@ -69,9 +69,8 @@ class CreateOfferDataModel implements Activatable, DataModel {
 
     private final TradeManager tradeManager;
     private final WalletService walletService;
-    private ArbitratorService arbitratorService;
     private final AccountSettings accountSettings;
-    private Preferences preferences;
+    private final Preferences preferences;
     private final BSFormatter formatter;
 
     private final String offerId;
@@ -111,7 +110,7 @@ class CreateOfferDataModel implements Activatable, DataModel {
                                 AccountSettings accountSettings, Preferences preferences, User user, BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
-        this.arbitratorService = arbitratorService;
+        ArbitratorService arbitratorService1 = arbitratorService;
         this.accountSettings = accountSettings;
         this.preferences = preferences;
         this.formatter = formatter;
@@ -151,8 +150,7 @@ class CreateOfferDataModel implements Activatable, DataModel {
         // might be changed after screen change
         if (accountSettings != null) {
             // set it here again to cover the case of an securityDeposit change after a screen change
-            if (accountSettings != null)
-                securityDepositAsCoin.set(accountSettings.getSecurityDeposit());
+            securityDepositAsCoin.set(accountSettings.getSecurityDeposit());
 
             acceptedCountries.setAll(accountSettings.getAcceptedCountries());
             acceptedLanguageCodes.setAll(accountSettings.getAcceptedLanguageLocaleCodes());

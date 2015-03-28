@@ -55,7 +55,7 @@ public class TomP2PNode implements ClientNode {
     private PeerDHT peerDHT;
     private BootstrappedPeerBuilder bootstrappedPeerBuilder;
     private final Subject<BootstrapState, BootstrapState> bootstrapStateSubject;
-    private List<ResultHandler> resultHandlers = new CopyOnWriteArrayList<>();
+    private final List<ResultHandler> resultHandlers = new CopyOnWriteArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +94,7 @@ public class TomP2PNode implements ClientNode {
             public void onSuccess(@Nullable PeerDHT peerDHT) {
                 if (peerDHT != null) {
                     TomP2PNode.this.peerDHT = peerDHT;
-                    resultHandlers.stream().forEach(e -> e.handleResult());
+                    resultHandlers.stream().forEach(ResultHandler::handleResult);
                     bootstrapStateSubject.onCompleted();
                 }
                 else {

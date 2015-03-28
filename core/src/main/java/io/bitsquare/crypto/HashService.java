@@ -24,6 +24,6 @@ public class HashService {
 
     public Sha256Hash hash(String message) {
         byte[] data = Utils.formatMessageForSigning(message);
-        return Sha256Hash.createDouble(data);
+        return Sha256Hash.hashTwice(data);
     }
 }

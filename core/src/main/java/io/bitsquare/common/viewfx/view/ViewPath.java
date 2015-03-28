@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 public class ViewPath extends ArrayList<Class<? extends View>> implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -36,7 +37,8 @@ public class ViewPath extends ArrayList<Class<? extends View>> implements Serial
 
     public static ViewPath to(Class<? extends View>... elements) {
         ViewPath path = new ViewPath();
-        path.addAll(Arrays.asList(elements));
+        List<Class<? extends View>> list = Arrays.asList(elements);
+        path.addAll(list);
         return path;
     }
 

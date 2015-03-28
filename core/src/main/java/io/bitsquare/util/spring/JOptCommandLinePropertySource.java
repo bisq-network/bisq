@@ -17,9 +17,9 @@
 
 package io.bitsquare.util.spring;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import joptsimple.OptionSet;
 
@@ -38,10 +38,8 @@ public class JOptCommandLinePropertySource extends org.springframework.core.env.
     @Override
     public List<String> getOptionValues(String name) {
         List<?> argValues = this.source.valuesOf(name);
-        List<String> stringArgValues = new ArrayList<>();
-        for (Object argValue : argValues) {
-            stringArgValues.add(argValue instanceof String ? (String) argValue : argValue.toString());
-        }
+        List<String> stringArgValues = argValues.stream().map(argValue -> argValue instanceof String ? (String) argValue : argValue.toString()).collect
+                (Collectors.toList());
         if (stringArgValues.isEmpty()) {
             return (this.source.has(name) ? Collections.<String>emptyList() : null);
         }

@@ -47,6 +47,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -138,7 +139,7 @@ public class TradeWalletService {
         return takeOfferFeeTx;
     }
 
-    public void broadcastTakeOfferFeeTx(Transaction takeOfferFeeTx, FutureCallback<Transaction> callback) throws InsufficientMoneyException {
+    public void broadcastTakeOfferFeeTx(Transaction takeOfferFeeTx, FutureCallback<Transaction> callback) {
         ListenableFuture<Transaction> future = walletAppKit.peerGroup().broadcastTransaction(takeOfferFeeTx).future();
         Futures.addCallback(future, callback);
     }
@@ -206,10 +207,8 @@ public class TradeWalletService {
 
         printTxWithInputs("dummyTX", dummyTX);
 
-        List<TransactionOutput> connectedOutputsForAllInputs = new ArrayList<>();
-        for (TransactionInput input : dummyTX.getInputs()) {
-            connectedOutputsForAllInputs.add(input.getConnectedOutput());
-        }
+        List<TransactionOutput> connectedOutputsForAllInputs = dummyTX.getInputs().stream().map(TransactionInput::getConnectedOutput)
+                .collect(Collectors.toList());
 
         // Only save offerer outputs, the dummy output (index 1) is ignored
         List<TransactionOutput> outputs = new ArrayList<>();
@@ -279,9 +278,7 @@ public class TradeWalletService {
         preparedDepositTx.addOutput(p2SHMultiSigOutput);
 
         // Add optional offerer outputs 
-        for (TransactionOutput output : offererOutputs) {
-            preparedDepositTx.addOutput(output);
-        }
+        offererOutputs.forEach(preparedDepositTx::addOutput);
 
         Coin takersSpendingAmount = Coin.ZERO;
 
@@ -300,6 +297,7 @@ public class TradeWalletService {
             checkScriptSig(preparedDepositTx, input, i);
 
             // add up spending amount
+            assert input.getConnectedOutput() != null;
             takersSpendingAmount = takersSpendingAmount.add(input.getConnectedOutput().getValue());
         }
 
@@ -352,6 +350,7 @@ public class TradeWalletService {
             depositTx.addInput(input);
 
             // add up spending amount
+            assert input.getConnectedOutput() != null;
             offererSpendingAmount = offererSpendingAmount.add(input.getConnectedOutput().getValue());
         }
 
@@ -370,9 +369,7 @@ public class TradeWalletService {
         }
 
         // Add all outputs from takersPreparedDepositTx to depositTx
-        for (TransactionOutput output : takersPreparedDepositTx.getOutputs()) {
-            depositTx.addOutput(output);
-        }
+        takersPreparedDepositTx.getOutputs().forEach(depositTx::addOutput);
 
         // Sign inputs
         for (int i = 0; i < offererConnectedOutputsForAllInputs.size(); i++) {
@@ -514,6 +511,7 @@ public class TradeWalletService {
         verifyTransaction(payoutTx);
         checkWalletConsistency();
         checkScriptSig(payoutTx, input, 0);
+        assert input.getConnectedOutput() != null;
         input.verify(input.getConnectedOutput());
 
         printTxWithInputs("payoutTx", payoutTx);
@@ -595,8 +593,10 @@ public class TradeWalletService {
     }
 
     private void signInput(Transaction transaction, TransactionInput input, int inputIndex) throws SigningException {
+        assert input.getConnectedOutput() != null;
         Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
         ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
+        assert sigKey != null;
         Sha256Hash hash = transaction.hashForSignature(inputIndex, scriptPubKey, Transaction.SigHash.ALL, false);
         ECKey.ECDSASignature signature = sigKey.sign(hash);
         TransactionSignature txSig = new TransactionSignature(signature, Transaction.SigHash.ALL, false);
@@ -614,6 +614,7 @@ public class TradeWalletService {
     private void checkScriptSig(Transaction transaction, TransactionInput input, int inputIndex) throws TransactionVerificationException {
         try {
             log.trace("Verifies that this script (interpreted as a scriptSig) correctly spends the given scriptPubKey. Check input at index: " + inputIndex);
+            assert input.getConnectedOutput() != null;
             input.getScriptSig().correctlySpends(transaction, inputIndex, input.getConnectedOutput().getScriptPubKey());
         } catch (Throwable t) {
             t.printStackTrace();
@@ -651,8 +652,8 @@ public class TradeWalletService {
 ///////////////////////////////////////////////////////////////////////////////////////////
 
     public class Result {
-        private List<TransactionOutput> connectedOutputsForAllInputs;
-        private List<TransactionOutput> outputs;
+        private final List<TransactionOutput> connectedOutputsForAllInputs;
+        private final List<TransactionOutput> outputs;
         private Transaction depositTx;
 
 

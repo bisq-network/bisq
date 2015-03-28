@@ -33,7 +33,7 @@ public class LanguageUtil {
                         new Locale(locale.getLanguage(), "").getISO3Language()).collect(Collectors.toSet());
         List<String> allLocaleCodes = new ArrayList<>();
         allLocaleCodes.addAll(allLocaleCodesAsSet);
-        allLocaleCodes.sort((locale1, locale2) -> locale1.compareTo(locale2));
+        allLocaleCodes.sort(String::compareTo);
         return allLocaleCodes;
     }
 

@@ -86,7 +86,7 @@ public class OfferBook {
             public void onOffersReceived(List<Offer> offers) {
                 //TODO use deltas instead replacing the whole list
                 offerBookListItems.clear();
-                offers.stream().forEach(e -> addOfferToOfferBookListItems(e));
+                offers.stream().forEach(OfferBook.this::addOfferToOfferBookListItems);
             }
 
             @Override

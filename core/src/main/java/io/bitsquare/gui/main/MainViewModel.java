@@ -86,10 +86,10 @@ class MainViewModel implements ViewModel {
 
     private final User user;
     private final WalletService walletService;
-    private ArbitrationRepository arbitrationRepository;
+    private final ArbitrationRepository arbitrationRepository;
     private final ClientNode clientNode;
     private final TradeManager tradeManager;
-    private UpdateProcess updateProcess;
+    private final UpdateProcess updateProcess;
     private final BSFormatter formatter;
 
     @Inject
@@ -123,7 +123,7 @@ class MainViewModel implements ViewModel {
     }
 
     public void initBackend() {
-        Platform.runLater(() -> updateProcess.init());
+        Platform.runLater(updateProcess::init);
 
         setBitcoinNetworkSyncProgress(-1);
         walletService.getDownloadProgress().subscribe(
@@ -179,7 +179,7 @@ class MainViewModel implements ViewModel {
                 next -> {
                 },
                 error -> log.error(error.toString()),
-                () -> Platform.runLater(() -> onAllServicesInitialized())
+                () -> Platform.runLater(this::onAllServicesInitialized)
         );
     }
 

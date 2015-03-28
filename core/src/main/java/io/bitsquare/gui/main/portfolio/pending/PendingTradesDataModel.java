@@ -226,6 +226,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
     public Coin getAmountToWithdraw() {
         Trade trade = selectedItem.getTrade();
         Coin amountToWithdraw = trade.getSecurityDeposit();
+        assert trade.getTradeAmount() != null;
         if (trade instanceof OffererTrade)
             amountToWithdraw = amountToWithdraw.add(trade.getTradeAmount());
         return amountToWithdraw;

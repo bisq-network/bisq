@@ -27,7 +27,6 @@ import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.p2p.listener.SendMessageListener;
-import io.bitsquare.user.User;
 
 import java.security.PublicKey;
 
@@ -46,9 +45,8 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
     private static final Logger log = LoggerFactory.getLogger(TomP2PMessageService.class);
 
     private final CopyOnWriteArrayList<MessageHandler> messageHandlers = new CopyOnWriteArrayList<>();
-    private MailboxService mailboxService;
-    private User user;
-    private EncryptionService<MailboxMessage> encryptionService;
+    private final MailboxService mailboxService;
+    private final EncryptionService<MailboxMessage> encryptionService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -56,10 +54,9 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TomP2PMessageService(TomP2PNode tomP2PNode, MailboxService mailboxService, User user, EncryptionService<MailboxMessage> encryptionService) {
+    public TomP2PMessageService(TomP2PNode tomP2PNode, MailboxService mailboxService,  EncryptionService<MailboxMessage> encryptionService) {
         super(tomP2PNode);
         this.mailboxService = mailboxService;
-        this.user = user;
         this.encryptionService = encryptionService;
     }
 

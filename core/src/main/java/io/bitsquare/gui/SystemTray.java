@@ -54,9 +54,8 @@ public class SystemTray {
     private final Runnable onExit;
     private final MenuItem toggleShowHideItem = new MenuItem(HIDE_WINDOW_LABEL);
 
-
     public static void create(Stage stage, Runnable onExit) {
-        systemTray = new SystemTray(stage, onExit);
+         systemTray = new SystemTray(stage, onExit);
     }
 
     public SystemTray(Stage stage, Runnable onExit) {

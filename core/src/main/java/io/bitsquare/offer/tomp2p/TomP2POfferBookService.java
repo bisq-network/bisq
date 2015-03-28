@@ -286,10 +286,10 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
                         log.error("Get invalidationTimestamp from DHT failed. Data = " + data);
                     }
                 }
-                else if (futureGet.data() == null) {
+                /*else if (futureGet.data() == null) {
                     // OK as nothing is set at the moment
-                    // log.trace("Get invalidationTimestamp from DHT returns null. That is ok for the startup.");
-                }
+                     log.trace("Get invalidationTimestamp from DHT returns null. That is ok for the startup.");
+                }*/
                 else {
                     log.error("Get invalidationTimestamp from DHT failed with reason:" + futureGet.failedReason());
                 }
