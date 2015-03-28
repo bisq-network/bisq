@@ -30,7 +30,7 @@ public abstract class OfferMessage implements Message, Serializable {
 
     public final String offerId;
 
-    public OfferMessage(String offerId) {
+    protected OfferMessage(String offerId) {
         this.offerId = offerId;
     }
 }

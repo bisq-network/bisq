@@ -31,7 +31,7 @@ import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestOffererPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererTradeProcessModel;
+import io.bitsquare.trade.protocol.trade.offerer.models.OffererProcessModel;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateAndSignPayoutTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateOffererDepositTxInputs;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
@@ -55,7 +55,7 @@ public class OffererProtocol implements Protocol {
 
     private final MessageHandler messageHandler;
     private final OffererTrade offererTrade;
-    private final OffererTradeProcessModel offererTradeProcessModel;
+    private final OffererProcessModel offererTradeProcessModel;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -67,7 +67,7 @@ public class OffererProtocol implements Protocol {
         offererTradeProcessModel = offererTrade.getProcessModel();
         messageHandler = this::handleMessage;
 
-        offererTradeProcessModel.messageService.addMessageHandler(messageHandler);
+        offererTradeProcessModel.getMessageService().addMessageHandler(messageHandler);
     }
 
 
@@ -89,7 +89,7 @@ public class OffererProtocol implements Protocol {
     public void cleanup() {
         log.debug("cleanup " + this);
 
-        offererTradeProcessModel.messageService.removeMessageHandler(messageHandler);
+        offererTradeProcessModel.getMessageService().removeMessageHandler(messageHandler);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -99,15 +99,15 @@ public class OffererProtocol implements Protocol {
     // OpenOffer requests
     private void handleRequestIsOfferAvailableMessage(RequestIsOfferAvailableMessage tradeMessage, Peer sender) {
         try {
-            checkTradeId(offererTradeProcessModel.id, tradeMessage);
+            checkTradeId(offererTradeProcessModel.getId(), tradeMessage);
 
             // We don't store anything in the offererTradeProcessModel as we might be in a trade process and receive that request from another peer who wants
             // to take the
             // offer
             // at the same time
             boolean isOfferOpen = offererTrade.lifeCycleStateProperty().get() == OffererTrade.OffererLifeCycleState.OFFER_OPEN;
-            ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(offererTradeProcessModel.id, isOfferOpen);
-            offererTradeProcessModel.messageService.sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
+            ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(offererTradeProcessModel.getId(), isOfferOpen);
+            offererTradeProcessModel.getMessageService().sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
                 @Override
                 public void handleResult() {
                     // Offerer does not do anything at that moment. Peer might only watch the offer and does not start a trade.
@@ -128,14 +128,14 @@ public class OffererProtocol implements Protocol {
 
     // Trade started. We reserve the offer for that taker. If anything goes wrong we reset the offer as open.
     private void handleRequestDepositTxInputsMessage(RequestDepositTxInputsMessage tradeMessage, Peer taker) {
-        checkTradeId(offererTradeProcessModel.id, tradeMessage);
+        checkTradeId(offererTradeProcessModel.getId(), tradeMessage);
         offererTradeProcessModel.setTradeMessage(tradeMessage);
         offererTrade.setTradingPeer(taker);
         offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_RESERVED);
 
         TaskRunner<OffererTrade> taskRunner = new TaskRunner<>(offererTrade,
                 () -> log.debug("taskRunner at handleTakeOfferFeePayedMessage completed"),
-                (errorMessage) -> handleTaskRunnerFault(errorMessage));
+                this::handleTaskRunnerFault);
         taskRunner.addTasks(
                 ProcessRequestDepositTxInputsMessage.class,
                 CreateOffererDepositTxInputs.class,
@@ -149,7 +149,7 @@ public class OffererProtocol implements Protocol {
 
         TaskRunner<OffererTrade> taskRunner = new TaskRunner<>(offererTrade,
                 () -> log.debug("taskRunner at handleRequestOffererPublishDepositTxMessage completed"),
-                (errorMessage) -> handleTaskRunnerFault(errorMessage));
+                this::handleTaskRunnerFault);
         taskRunner.addTasks(
                 ProcessRequestOffererPublishDepositTxMessage.class,
                 VerifyTakerAccount.class,
@@ -169,7 +169,7 @@ public class OffererProtocol implements Protocol {
     public void onFiatPaymentStarted() {
         TaskRunner<OffererTrade> taskRunner = new TaskRunner<>(offererTrade,
                 () -> log.debug("taskRunner at handleBankTransferStartedUIEvent completed"),
-                (errorMessage) -> handleTaskRunnerFault(errorMessage));
+                this::handleTaskRunnerFault);
         taskRunner.addTasks(
                 CreateAndSignPayoutTx.class,
                 VerifyTakeOfferFeePayment.class,
@@ -192,7 +192,7 @@ public class OffererProtocol implements Protocol {
                     // we are done!
                     offererTradeProcessModel.onComplete();
                 },
-                (errorMessage) -> handleTaskRunnerFault(errorMessage));
+                this::handleTaskRunnerFault);
 
         taskRunner.addTasks(ProcessPayoutTxPublishedMessage.class);
         taskRunner.run();
@@ -230,6 +230,7 @@ public class OffererProtocol implements Protocol {
     }
 
     private void handleTaskRunnerFault(String errorMessage) {
+        log.error(errorMessage);
         cleanup();
     }
 }

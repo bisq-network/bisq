@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 public class TaskRunner<T extends Model> {
     private static final Logger log = LoggerFactory.getLogger(TaskRunner.class);
 
-    private final Queue<Class> tasks = new LinkedBlockingQueue<>();
+    private final Queue<Class<? extends Task>> tasks = new LinkedBlockingQueue<>();
     protected final T sharedModel;
     private final ResultHandler resultHandler;
     private final ErrorMessageHandler errorMessageHandler;
@@ -44,8 +44,8 @@ public class TaskRunner<T extends Model> {
         this.resultHandler = resultHandler;
         this.errorMessageHandler = errorMessageHandler;
     }
-
-    public void addTasks(Class<? extends Task>... items) {
+    
+    public final void addTasks(Class<? extends Task>... items) {
         tasks.addAll(Arrays.asList(items));
     }
 

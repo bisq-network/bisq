@@ -72,9 +72,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                                     // We store now the changed txID to the offer and add that again.
                                     model.offer.setOfferFeePaymentTxID(transaction.getHashAsString());
                                     model.offerBookService.addOffer(model.offer,
-                                            () -> {
-                                                complete();
-                                            },
+                                            BroadcastCreateOfferFeeTx.this::complete,
                                             (message, throwable) -> {
                                                 log.error("addOffer failed");
                                                 addOfferFailed = true;
@@ -108,9 +106,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
         if (!removeOfferFailed && !addOfferFailed) {
             // If broadcast fails we need to remove offer from offerbook
             model.offerBookService.removeOffer(model.offer,
-                    () -> {
-                        log.info("Offer removed from offerbook because broadcast failed.");
-                    },
+                    () -> log.info("Offer removed from offerbook because broadcast failed."),
                     (message, throwable) -> {
                         log.error("removeOffer failed");
                         failed(throwable);

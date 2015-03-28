@@ -34,7 +34,7 @@ public class VerifyTakeOfferFeePayment extends OffererTradeTask {
     protected void doRun() {
         try {
             //TODO mocked yet, need a confidence listeners
-            int numOfPeersSeenTx = offererTradeProcessModel.walletService.getNumOfPeersSeenTx(offererTradeProcessModel.getTakeOfferFeeTxId());
+            int numOfPeersSeenTx = offererTradeProcessModel.getWalletService().getNumOfPeersSeenTx(offererTradeProcessModel.getTakeOfferFeeTxId());
        /* if (numOfPeersSeenTx > 2) {
             resultHandler.handleResult();
         }*/

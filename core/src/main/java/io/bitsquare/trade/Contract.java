@@ -29,6 +29,7 @@ import java.security.PublicKey;
 
 import javax.annotation.concurrent.Immutable;
 
+@SuppressWarnings("WeakerAccess")
 @Immutable
 public class Contract implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.

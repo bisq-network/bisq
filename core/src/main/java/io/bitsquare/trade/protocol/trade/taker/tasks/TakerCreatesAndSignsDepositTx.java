@@ -37,23 +37,23 @@ public class TakerCreatesAndSignsDepositTx extends TakerTradeTask {
     @Override
     protected void doRun() {
         try {
+            assert takerTrade.getTradeAmount() != null;
             Coin takerInputAmount = takerTrade.getTradeAmount().add(takerTrade.getSecurityDeposit()).add(FeePolicy.TX_FEE);
             Coin msOutputAmount = takerInputAmount.add(takerTrade.getSecurityDeposit());
 
-            TradeWalletService.Result result = takerTradeProcessModel.tradeWalletService.takerCreatesAndSignsDepositTx(
+            TradeWalletService.Result result = takerTradeProcessModel.getTradeWalletService().takerCreatesAndSignsDepositTx(
                     takerInputAmount,
                     msOutputAmount,
-                    takerTradeProcessModel.offerer.connectedOutputsForAllInputs,
-                    takerTradeProcessModel.offerer.outputs,
-                    takerTradeProcessModel.taker.addressEntry,
-                    takerTradeProcessModel.offerer.tradeWalletPubKey,
-                    takerTradeProcessModel.taker.tradeWalletPubKey,
-                    takerTradeProcessModel.arbitratorPubKey);
+                    takerTradeProcessModel.offerer.getConnectedOutputsForAllInputs(),
+                    takerTradeProcessModel.offerer.getOutputs(),
+                    takerTradeProcessModel.taker.getAddressEntry(),
+                    takerTradeProcessModel.offerer.getTradeWalletPubKey(),
+                    takerTradeProcessModel.taker.getTradeWalletPubKey(),
+                    takerTradeProcessModel.getArbitratorPubKey());
 
 
-            takerTradeProcessModel.taker.connectedOutputsForAllInputs = result.getConnectedOutputsForAllInputs();
-            takerTradeProcessModel.taker.outputs = result.getOutputs();
-            takerTradeProcessModel.taker.preparedDepositTx = result.getDepositTx();
+            takerTradeProcessModel.taker.setConnectedOutputsForAllInputs(result.getConnectedOutputsForAllInputs());
+            takerTradeProcessModel.taker.setPreparedDepositTx(result.getDepositTx());
 
             complete();
         } catch (Throwable t) {

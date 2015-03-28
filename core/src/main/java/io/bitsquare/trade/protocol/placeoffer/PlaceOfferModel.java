@@ -33,7 +33,7 @@ public class PlaceOfferModel extends Model {
 
     public final Offer offer;
     public final WalletService walletService;
-    public TradeWalletService tradeWalletService;
+    public final TradeWalletService tradeWalletService;
     public final OfferBookService offerBookService;
 
     private Transaction transaction;

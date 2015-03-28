@@ -55,7 +55,7 @@ public class CheckOfferAvailabilityProtocol {
         messageHandler = this::handleMessage;
     }
 
-    public void cleanup() {
+    private void cleanup() {
         model.messageService.removeMessageHandler(messageHandler);
     }
 
@@ -71,12 +71,8 @@ public class CheckOfferAvailabilityProtocol {
         model.messageService.addMessageHandler(messageHandler);
 
         taskRunner = new TaskRunner<>(model,
-                () -> {
-                    log.debug("sequence at onCheckOfferAvailability completed");
-                },
-                (errorMessage) -> {
-                    log.error(errorMessage);
-                }
+                () -> log.debug("sequence at onCheckOfferAvailability completed"),
+                log::error
         );
         taskRunner.addTasks(
                 GetPeerAddress.class,
@@ -96,7 +92,7 @@ public class CheckOfferAvailabilityProtocol {
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handleMessage(Message message, Peer sender) {
+    private void handleMessage(Message message, @SuppressWarnings("UnusedParameters") Peer sender) {
         if (!isCanceled) {
             if (message instanceof ReportOfferAvailabilityMessage && model.offer.getId().equals(((ReportOfferAvailabilityMessage) message).offerId))
                 handleReportOfferAvailabilityMessage((ReportOfferAvailabilityMessage) message);

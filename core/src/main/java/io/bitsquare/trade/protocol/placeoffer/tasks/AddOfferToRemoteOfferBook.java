@@ -35,11 +35,7 @@ public class AddOfferToRemoteOfferBook extends Task<PlaceOfferModel> {
     @Override
     protected void doRun() {
         model.offerBookService.addOffer(model.offer,
-                () -> {
-                    complete();
-                },
-                (message, throwable) -> {
-                    failed(throwable);
-                });
+                this::complete,
+                (message, throwable) -> failed(throwable));
     }
 }

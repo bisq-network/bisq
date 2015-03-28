@@ -25,18 +25,18 @@ import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.MailboxMessage;
-import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.MessageService;
-import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.protocol.Protocol;
-import io.bitsquare.trade.protocol.trade.TradeProcessModel;
+import io.bitsquare.trade.protocol.trade.ProcessModel;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.Fiat;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 import java.util.Date;
@@ -45,9 +45,6 @@ import javax.annotation.Nullable;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-
-import org.jetbrains.annotations.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +57,7 @@ abstract public class Trade extends Model implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
-    transient protected static final Logger log = LoggerFactory.getLogger(Trade.class);
+    private transient static final Logger log = LoggerFactory.getLogger(Trade.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -78,53 +75,59 @@ abstract public class Trade extends Model implements Serializable {
     // Fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // Transient/Immutable
+    transient private Storage<? extends TradeList> storage;
+    transient protected Protocol protocol;
+
+    // Immutable
     protected final Offer offer;
-    @NotNull private final Date date;
-    @NotNull protected TradeProcessModel processModel = createProcessModel();
+    private final Date date;
+    protected final ProcessModel processModel;
 
-    protected abstract TradeProcessModel createProcessModel();
+    // Mutable
+    private MailboxMessage mailboxMessage;
+    protected Transaction depositTx;
+    private Contract contract;
+    private String contractAsJson;
+    private String takerContractSignature;
+    private String offererContractSignature;
+    private Transaction payoutTx;
 
-    @NotNull transient protected Protocol protocol;
-
-    @Nullable MailboxMessage mailboxMessage;
-    @Nullable Transaction depositTx;
-    @Nullable private Transaction payoutTx;
-    @Nullable private Contract contract;
-    @Nullable private String contractAsJson;
-    @Nullable private String takerContractSignature;
-    @Nullable private String offererContractSignature;
-
-    @NotNull transient private Storage<? extends TradeProcessModel> storage;
-
-    @Nullable private transient String errorMessage;
-    @Nullable private transient Throwable throwable;
-    @NotNull transient ObjectProperty<Coin> tradeAmountProperty = new SimpleObjectProperty<>();
-    @NotNull transient ObjectProperty<Fiat> tradeVolumeProperty = new SimpleObjectProperty<>();
+    // Transient/Mutable
+    transient private String errorMessage;
+    transient private Throwable throwable;
+    transient protected ObjectProperty<Coin> tradeAmountProperty;
+    transient protected ObjectProperty<Fiat> tradeVolumeProperty;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
+    // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    Trade(Offer offer, @NotNull Storage<? extends TradeProcessModel> storage) {
+    Trade(Offer offer, Storage<? extends TradeList> storage) {
+        log.trace("Created by constructor");
         this.offer = offer;
         this.storage = storage;
 
         date = new Date();
+        processModel = createProcessModel();
     }
 
-    public void initProcessModel(@NotNull MessageService messageService,
-                                 @NotNull MailboxService mailboxService,
-                                 @NotNull WalletService walletService,
-                                 @NotNull TradeWalletService tradeWalletService,
-                                 @NotNull BlockChainService blockChainService,
-                                 @NotNull SignatureService signatureService,
-                                 @NotNull ArbitrationRepository arbitrationRepository,
-                                 @NotNull User user) {
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        log.trace("Created from serialized form.");
+    }
 
-        processModel.init(offer,
+    public void init(MessageService messageService,
+                     WalletService walletService,
+                     TradeWalletService tradeWalletService,
+                     BlockChainService blockChainService,
+                     SignatureService signatureService,
+                     ArbitrationRepository arbitrationRepository,
+                     User user) {
+
+        processModel.onAllServicesInitialized(offer,
                 messageService,
-                mailboxService,
                 walletService,
                 tradeWalletService,
                 blockChainService,
@@ -133,25 +136,33 @@ abstract public class Trade extends Model implements Serializable {
                 user);
 
         createProtocol();
-        
+
         if (mailboxMessage != null)
             protocol.setMailboxMessage(mailboxMessage);
     }
-    
-    
+
+    public void setStorage(Storage<? extends TradeList> storage) {
+        this.storage = storage;
+    }
+
+    abstract protected ProcessModel createProcessModel();
+
+    abstract protected void createProtocol();
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // The deserialized tx has not actual confidence data, so we need to get the fresh one from the wallet.
-    public void syncDepositTxWithWallet(@NotNull TradeWalletService tradeWalletService) {
+    public void updateDepositTxFromWallet(TradeWalletService tradeWalletService) {
         if (depositTx != null)
-            setDepositTx(tradeWalletService.commitsDepositTx(depositTx));
+            setDepositTx(tradeWalletService.getWalletTx(depositTx));
     }
 
-    public void setDepositTx(@NotNull Transaction tx) {
+    public void setDepositTx(Transaction tx) {
         this.depositTx = tx;
-        setConfidenceListener();
+        setupConfidenceListener();
     }
 
     public void disposeProtocol() {
@@ -161,15 +172,15 @@ abstract public class Trade extends Model implements Serializable {
         }
     }
 
-    public void setMailboxMessage(@NotNull MailboxMessage mailboxMessage) {
+    public void setMailboxMessage(MailboxMessage mailboxMessage) {
         this.mailboxMessage = mailboxMessage;
-        assert protocol != null;
-        protocol.setMailboxMessage(mailboxMessage);
+        if (protocol != null)
+            protocol.setMailboxMessage(mailboxMessage);
+
+        storage.queueUpForSave();
     }
 
-    public void setStorage(@NotNull Storage<? extends TradeProcessModel> storage) {
-        this.storage = storage;
-    }
+    protected abstract void setupConfidenceListener();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -187,72 +198,13 @@ abstract public class Trade extends Model implements Serializable {
         storage.queueUpForSave();
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    protected abstract void setConfidenceListener();
-
-    public void setTakerContractSignature(@NotNull String takerSignature) {
-        this.takerContractSignature = takerSignature;
-    }
-
-    public void setOffererContractSignature(@NotNull String offererContractSignature) {
-        this.offererContractSignature = offererContractSignature;
-    }
-
-    public void setContractAsJson(@NotNull String contractAsJson) {
-        this.contractAsJson = contractAsJson;
-    }
-
-    public void setContract(@NotNull Contract contract) {
-        this.contract = contract;
-    }
-
-    public void setPayoutTx(@NotNull Transaction tx) {
-        this.payoutTx = tx;
-    }
-
-    public void setErrorMessage(@NotNull String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
-
-    public void setThrowable(@NotNull Throwable throwable) {
-        this.throwable = throwable;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
+    // Getter only
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable
-    public String getTakerContractSignature() {
-        return takerContractSignature;
-    }
-
-    @Nullable
-    public String getOffererContractSignature() {
-        return offererContractSignature;
-    }
-
-    @Nullable
-    public Transaction getDepositTx() {
-        return depositTx;
-    }
-
-    @Nullable
-    public Transaction getPayoutTx() {
-        return payoutTx;
-    }
-
-    @Nullable
-    public Contract getContract() {
-        return contract;
-    }
-
-    public Coin getSecurityDeposit() {
-        return offer.getSecurityDeposit();
+    public Date getDate() {
+        return date;
     }
 
     public String getId() {
@@ -264,13 +216,85 @@ abstract public class Trade extends Model implements Serializable {
     }
 
     @Nullable
+    public Transaction getDepositTx() {
+        return depositTx;
+    }
+
+    public Coin getSecurityDeposit() {
+        return offer.getSecurityDeposit();
+    }
+
+    public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
+        return tradeAmountProperty;
+    }
+
+
+    public ReadOnlyObjectProperty<Fiat> tradeVolumeProperty() {
+        return tradeVolumeProperty;
+    }
+
+    @Nullable
+    abstract public Coin getTradeAmount();
+
+    @Nullable
+    abstract public Fiat getTradeVolume();
+
+    abstract public ReadOnlyObjectProperty<? extends ProcessState> processStateProperty();
+
+    abstract public ReadOnlyObjectProperty<? extends LifeCycleState> lifeCycleStateProperty();
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getter/Setter for Mutable objects
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setTakerContractSignature(String takerSignature) {
+        this.takerContractSignature = takerSignature;
+    }
+
+    @Nullable
+    public String getTakerContractSignature() {
+        return takerContractSignature;
+    }
+
+    public void setOffererContractSignature(String offererContractSignature) {
+        this.offererContractSignature = offererContractSignature;
+    }
+
+    @Nullable
+    public String getOffererContractSignature() {
+        return offererContractSignature;
+    }
+
+    public void setContractAsJson(String contractAsJson) {
+        this.contractAsJson = contractAsJson;
+    }
+
+    @Nullable
     public String getContractAsJson() {
         return contractAsJson;
     }
 
-    @NotNull
-    public Date getDate() {
-        return date;
+    public void setContract(Contract contract) {
+        this.contract = contract;
+    }
+
+    @Nullable
+    public Contract getContract() {
+        return contract;
+    }
+
+    public void setPayoutTx(Transaction payoutTx) {
+        this.payoutTx = payoutTx;
+    }
+
+    // Not used now, but will be used in some reporting UI
+    public Transaction getPayoutTx() {
+        return payoutTx;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
     }
 
     @Nullable
@@ -278,53 +302,30 @@ abstract public class Trade extends Model implements Serializable {
         return errorMessage;
     }
 
+
+    public void setThrowable(Throwable throwable) {
+        this.throwable = throwable;
+    }
+
     @Nullable
     public Throwable getThrowable() {
         return throwable;
     }
 
-    @NotNull
-    public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
-        return tradeAmountProperty;
-    }
-
-    @NotNull
-    public ReadOnlyObjectProperty<Fiat> tradeVolumeProperty() {
-        return tradeVolumeProperty;
-    }
-
-    abstract void createProtocol();
-
-    @NotNull
-    public abstract ReadOnlyObjectProperty<? extends ProcessState> processStateProperty();
-
-    @NotNull
-    public abstract ReadOnlyObjectProperty<? extends LifeCycleState> lifeCycleStateProperty();
-
-    @org.jetbrains.annotations.Nullable
-    public abstract Coin getTradeAmount();
-
-    @org.jetbrains.annotations.Nullable
-    public abstract Fiat getTradeVolume();
-
-    @org.jetbrains.annotations.Nullable
-    public abstract Peer getTradingPeer();
-
-    @NotNull
     @Override
     public String toString() {
         return "Trade{" +
-                "protocol=" + protocol +
-                ", mailboxMessage=" + mailboxMessage +
+                "throwable=" + throwable +
                 ", offer=" + offer +
                 ", date=" + date +
+                ", mailboxMessage=" + mailboxMessage +
+                ", depositTx=" + depositTx +
                 ", contract=" + contract +
                 ", contractAsJson='" + contractAsJson + '\'' +
                 ", takerContractSignature='" + takerContractSignature + '\'' +
                 ", offererContractSignature='" + offererContractSignature + '\'' +
-                ", depositTx=" + depositTx +
-                ", payoutTx=" + payoutTx +
+                ", errorMessage='" + errorMessage + '\'' +
+                ", processModel=" + processModel +
                 '}';
     }
-
 }

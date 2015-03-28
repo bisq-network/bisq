@@ -273,7 +273,7 @@ public class FileManager<T> {
         } finally {
             if (tempFile != null && tempFile.exists()) {
                 log.warn("Temp file still exists after failed save. storageFile=" + storageFile);
-                if (!tempFile.delete()) 
+                if (!tempFile.delete())
                     log.error("Cannot delete temp file.");
             }
 

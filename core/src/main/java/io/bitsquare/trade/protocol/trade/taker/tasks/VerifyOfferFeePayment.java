@@ -34,7 +34,7 @@ public class VerifyOfferFeePayment extends TakerTradeTask {
     protected void doRun() {
         try {
             //TODO impl. missing
-            int numOfPeersSeenTx = takerTradeProcessModel.walletService.getNumOfPeersSeenTx(takerTradeProcessModel.getTakeOfferFeeTx().getHashAsString());
+            int numOfPeersSeenTx = takerTradeProcessModel.getWalletService().getNumOfPeersSeenTx(takerTradeProcessModel.getTakeOfferFeeTx().getHashAsString());
        /* if (numOfPeersSeenTx > 2) {
             resultHandler.handleResult();
         }*/

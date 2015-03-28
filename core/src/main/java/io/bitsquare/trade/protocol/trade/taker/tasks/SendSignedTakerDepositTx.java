@@ -36,20 +36,19 @@ public class SendSignedTakerDepositTx extends TakerTradeTask {
     protected void doRun() {
         try {
             RequestOffererPublishDepositTxMessage tradeMessage = new RequestOffererPublishDepositTxMessage(
-                    takerTradeProcessModel.id,
-                    takerTradeProcessModel.taker.fiatAccount,
-                    takerTradeProcessModel.taker.accountId,
-                    takerTradeProcessModel.taker.p2pSigPubKey,
-                    takerTradeProcessModel.taker.p2pEncryptPublicKey,
+                    takerTradeProcessModel.getId(),
+                    takerTradeProcessModel.taker.getFiatAccount(),
+                    takerTradeProcessModel.taker.getAccountId(),
+                    takerTradeProcessModel.taker.getP2pSigPubKey(),
+                    takerTradeProcessModel.taker.getP2pEncryptPublicKey(),
                     takerTrade.getContractAsJson(),
                     takerTrade.getTakerContractSignature(),
-                    takerTradeProcessModel.taker.addressEntry.getAddressString(),
-                    takerTradeProcessModel.taker.preparedDepositTx,
-                    takerTradeProcessModel.taker.connectedOutputsForAllInputs,
-                    takerTradeProcessModel.taker.outputs
+                    takerTradeProcessModel.taker.getAddressEntry().getAddressString(),
+                    takerTradeProcessModel.taker.getPreparedDepositTx(),
+                    takerTradeProcessModel.taker.getConnectedOutputsForAllInputs()
             );
 
-            takerTradeProcessModel.messageService.sendMessage(takerTrade.getTradingPeer(), tradeMessage, new SendMessageListener() {
+            takerTradeProcessModel.getMessageService().sendMessage(takerTrade.getTradingPeer(), tradeMessage, new SendMessageListener() {
                 @Override
                 public void handleResult() {
                     complete();

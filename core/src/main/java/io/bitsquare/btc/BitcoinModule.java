@@ -59,7 +59,7 @@ public class BitcoinModule extends BitsquareModule {
 
     @Override
     protected void doClose(Injector injector) {
-        log.trace("doClose "+getClass().getSimpleName());
+        log.trace("doClose " + getClass().getSimpleName());
         injector.getInstance(WalletService.class).shutDown();
     }
 }

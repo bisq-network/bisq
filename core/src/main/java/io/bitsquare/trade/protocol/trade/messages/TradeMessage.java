@@ -30,7 +30,7 @@ public abstract class TradeMessage implements Message, Serializable {
 
     public final String tradeId;
 
-    public TradeMessage(String tradeId) {
+    protected TradeMessage(String tradeId) {
         this.tradeId = tradeId;
     }
 }

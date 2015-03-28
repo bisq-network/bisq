@@ -35,9 +35,9 @@ public class SendDepositTxToTaker extends OffererTradeTask {
     @Override
     protected void doRun() {
         try {
-            DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(offererTradeProcessModel.id, offererTrade.getDepositTx());
+            DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(offererTradeProcessModel.getId(), offererTrade.getDepositTx());
 
-            offererTradeProcessModel.messageService.sendMessage(offererTrade.getTradingPeer(), tradeMessage, new SendMessageListener() {
+            offererTradeProcessModel.getMessageService().sendMessage(offererTrade.getTradingPeer(), tradeMessage, new SendMessageListener() {
                 @Override
                 public void handleResult() {
                     log.trace("DepositTxPublishedMessage successfully arrived at peer");

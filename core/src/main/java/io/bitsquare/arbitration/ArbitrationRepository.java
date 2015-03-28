@@ -56,7 +56,7 @@ public class ArbitrationRepository implements Serializable {
 
     // Persisted fields
     private final Map<String, Arbitrator> arbitratorsMap = new HashMap<>();
-    
+
 
     @Inject
     public ArbitrationRepository(Storage<ArbitrationRepository> storage,
@@ -82,13 +82,13 @@ public class ArbitrationRepository implements Serializable {
                 Arrays.asList(Arbitrator.ID_VERIFICATION.PASSPORT),
                 "https://bitsquare.io",
                 "Bla bla...");
-       
+
         ArbitrationRepository persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
             arbitratorsMap.putAll(persisted.getArbitratorsMap());
         }
         arbitratorsMap.put(defaultArbitrator.getId(), defaultArbitrator);
-        
+
         arbitratorsObservableMap.putAll(arbitratorsMap);
         arbitratorsObservableMap.addListener((MapChangeListener<String, Arbitrator>) change -> storage.queueUpForSave());
         allArbitratorsSynced = false;

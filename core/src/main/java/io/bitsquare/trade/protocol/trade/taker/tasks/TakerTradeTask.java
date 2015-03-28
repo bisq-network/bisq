@@ -23,17 +23,17 @@ import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.TakerTrade;
-import io.bitsquare.trade.protocol.trade.taker.models.TakerTradeProcessModel;
+import io.bitsquare.trade.protocol.trade.taker.models.TakerProcessModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerTradeTask extends Task<TakerTrade> {
+class TakerTradeTask extends Task<TakerTrade> {
     private static final Logger log = LoggerFactory.getLogger(TakerTradeTask.class);
-    protected final TakerTradeProcessModel takerTradeProcessModel;
+    protected final TakerProcessModel takerTradeProcessModel;
     protected final TakerTrade takerTrade;
 
-    public TakerTradeTask(TaskRunner taskHandler, TakerTrade model) {
+    TakerTradeTask(TaskRunner taskHandler, TakerTrade model) {
         super(taskHandler, model);
 
         takerTrade = model;

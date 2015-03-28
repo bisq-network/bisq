@@ -36,22 +36,23 @@ public class VerifyAndSignContract extends OffererTradeTask {
     protected void doRun() {
         try {
             Contract contract = new Contract(
-                    offererTradeProcessModel.offer,
+                    offererTradeProcessModel.getOffer(),
                     offererTrade.getTradeAmount(),
                     offererTradeProcessModel.getTakeOfferFeeTxId(),
-                    offererTradeProcessModel.offerer.accountId,
-                    offererTradeProcessModel.taker.accountId,
-                    offererTradeProcessModel.offerer.fiatAccount,
-                    offererTradeProcessModel.taker.fiatAccount,
-                    offererTradeProcessModel.offerer.p2pSigPubKey,
-                    offererTradeProcessModel.taker.p2pSigPublicKey);
+                    offererTradeProcessModel.offerer.getAccountId(),
+                    offererTradeProcessModel.taker.getAccountId(),
+                    offererTradeProcessModel.offerer.getFiatAccount(),
+                    offererTradeProcessModel.taker.getFiatAccount(),
+                    offererTradeProcessModel.offerer.getP2pSigPubKey(),
+                    offererTradeProcessModel.taker.getP2pSigPublicKey());
             String contractAsJson = Utilities.objectToJson(contract);
-            String signature = offererTradeProcessModel.signatureService.signMessage(offererTradeProcessModel.offerer.registrationKeyPair, contractAsJson);
+            String signature = offererTradeProcessModel.getSignatureService().signMessage(offererTradeProcessModel.offerer.getRegistrationKeyPair(),
+                    contractAsJson);
 
             offererTrade.setContract(contract);
             offererTrade.setContractAsJson(contractAsJson);
             offererTrade.setOffererContractSignature(signature);
-            offererTrade.setTakerContractSignature(offererTradeProcessModel.taker.contractSignature);
+            offererTrade.setTakerContractSignature(offererTradeProcessModel.taker.getContractSignature());
 
             complete();
         } catch (Throwable t) {

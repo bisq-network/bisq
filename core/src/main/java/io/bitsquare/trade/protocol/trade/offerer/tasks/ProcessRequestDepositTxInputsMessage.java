@@ -37,12 +37,13 @@ public class ProcessRequestDepositTxInputsMessage extends OffererTradeTask {
     @Override
     protected void doRun() {
         try {
-            checkTradeId(offererTradeProcessModel.id, offererTradeProcessModel.getTradeMessage());
-            RequestDepositTxInputsMessage requestDepositTxInputsMessage = (RequestDepositTxInputsMessage) offererTradeProcessModel.getTradeMessage();
+            RequestDepositTxInputsMessage message = (RequestDepositTxInputsMessage) offererTradeProcessModel.getTradeMessage();
+            checkTradeId(offererTradeProcessModel.getId(), message);
+            checkNotNull(message);
 
-            offererTrade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(requestDepositTxInputsMessage.tradeAmount)));
-            offererTradeProcessModel.setTakeOfferFeeTxId(nonEmptyStringOf(requestDepositTxInputsMessage.takeOfferFeeTxId));
-            offererTradeProcessModel.taker.tradeWalletPubKey = checkNotNull(requestDepositTxInputsMessage.takerTradeWalletPubKey);
+            offererTrade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(message.tradeAmount)));
+            offererTradeProcessModel.setTakeOfferFeeTxId(nonEmptyStringOf(message.takeOfferFeeTxId));
+            offererTradeProcessModel.taker.setTradeWalletPubKey(checkNotNull(message.takerTradeWalletPubKey));
 
             complete();
         } catch (Throwable t) {

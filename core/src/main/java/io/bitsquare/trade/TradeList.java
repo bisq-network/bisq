@@ -19,6 +19,8 @@ package io.bitsquare.trade;
 
 import io.bitsquare.storage.Storage;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -36,6 +38,7 @@ public class TradeList<T> extends ArrayList<T> implements Serializable {
     transient private static final Logger log = LoggerFactory.getLogger(TradeList.class);
 
     transient final private Storage<TradeList> storage;
+    // Use getObservableList() also class locally, to be sure that object exists in case we use the object as deserialized form
     transient private ObservableList<T> observableList;
 
     // Superclass is ArrayList, which will be persisted
@@ -45,6 +48,7 @@ public class TradeList<T> extends ArrayList<T> implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public TradeList(Storage<TradeList> storage, String fileName) {
+        log.trace("Created by constructor");
         this.storage = storage;
 
         TradeList persisted = storage.initAndGetPersisted(this, fileName);
@@ -54,10 +58,15 @@ public class TradeList<T> extends ArrayList<T> implements Serializable {
         observableList = FXCollections.observableArrayList(this);
     }
 
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        log.trace("Created from serialized form.");
+    }
+
     @Override
     public boolean add(T trade) {
         boolean result = super.add(trade);
-        observableList.add(trade);
+        getObservableList().add(trade);
         storage.queueUpForSave();
         return result;
     }
@@ -65,12 +74,14 @@ public class TradeList<T> extends ArrayList<T> implements Serializable {
     @Override
     public boolean remove(Object trade) {
         boolean result = super.remove(trade);
-        observableList.remove(trade);
+        getObservableList().remove(trade);
         storage.queueUpForSave();
         return result;
     }
 
     public ObservableList<T> getObservableList() {
+        if (observableList == null)
+            observableList = FXCollections.observableArrayList(this);
         return observableList;
     }
 

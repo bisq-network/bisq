@@ -44,7 +44,6 @@ public class RequestOffererPublishDepositTxMessage extends TradeMessage implemen
     public final String takerPayoutAddressString;
     public final Transaction takersPreparedDepositTx;
     public final List<TransactionOutput> takerConnectedOutputsForAllInputs;
-    public final List<TransactionOutput> takerOutputs;
 
     public RequestOffererPublishDepositTxMessage(String tradeId,
                                                  FiatAccount takerFiatAccount,
@@ -55,8 +54,7 @@ public class RequestOffererPublishDepositTxMessage extends TradeMessage implemen
                                                  String takerContractSignature,
                                                  String takerPayoutAddressString,
                                                  Transaction takersPreparedDepositTx,
-                                                 List<TransactionOutput> takerConnectedOutputsForAllInputs,
-                                                 List<TransactionOutput> takerOutputs) {
+                                                 List<TransactionOutput> takerConnectedOutputsForAllInputs) {
         super(tradeId);
         this.takerFiatAccount = takerFiatAccount;
         this.takerAccountId = takerAccountId;
@@ -67,6 +65,5 @@ public class RequestOffererPublishDepositTxMessage extends TradeMessage implemen
         this.takerPayoutAddressString = takerPayoutAddressString;
         this.takersPreparedDepositTx = takersPreparedDepositTx;
         this.takerConnectedOutputsForAllInputs = takerConnectedOutputsForAllInputs;
-        this.takerOutputs = takerOutputs;
     }
 }

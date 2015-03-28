@@ -37,9 +37,11 @@ public class ProcessPayoutTxPublishedMessage extends OffererTradeTask {
     @Override
     protected void doRun() {
         try {
-            checkTradeId(offererTradeProcessModel.id, offererTradeProcessModel.getTradeMessage());
+            PayoutTxPublishedMessage message = (PayoutTxPublishedMessage) offererTradeProcessModel.getTradeMessage();
+            checkTradeId(offererTradeProcessModel.getId(), message);
+            checkNotNull(message);
 
-            offererTrade.setPayoutTx(checkNotNull(((PayoutTxPublishedMessage) offererTradeProcessModel.getTradeMessage()).payoutTx));
+            offererTrade.setPayoutTx(checkNotNull(message.payoutTx));
 
             offererTrade.setProcessState(OffererTrade.OffererProcessState.PAYOUT_PUBLISHED);
 

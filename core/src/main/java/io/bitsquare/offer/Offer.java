@@ -128,7 +128,6 @@ public class Offer implements Serializable {
         setState(State.UNKNOWN);
     }
 
-    // Serialized object does not create our transient objects
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         stateProperty = new SimpleObjectProperty<>(state);
@@ -194,7 +193,7 @@ public class Offer implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
-   
+
     @NotNull
     public String getId() {
         return id;
@@ -282,6 +281,7 @@ public class Offer implements Serializable {
                 ", fiatPrice=" + fiatPrice +
                 ", amount=" + amount +
                 ", minAmount=" + minAmount +
+                ", p2pSigPubKey=" + p2pSigPubKey +
                 ", fiatAccountType=" + fiatAccountType +
                 ", bankAccountCountry=" + bankAccountCountry +
                 ", securityDeposit=" + securityDeposit +
@@ -291,7 +291,6 @@ public class Offer implements Serializable {
                 ", arbitratorIds=" + arbitratorIds +
                 ", offerFeePaymentTxID='" + offerFeePaymentTxID + '\'' +
                 ", state=" + state +
-                ", stateProperty=" + stateProperty +
                 '}';
     }
 }

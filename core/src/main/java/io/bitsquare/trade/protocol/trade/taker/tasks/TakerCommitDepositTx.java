@@ -36,7 +36,7 @@ public class TakerCommitDepositTx extends TakerTradeTask {
     protected void doRun() {
         try {
             // To access tx confidence we need to add that tx into our wallet.
-            Transaction depositTx = takerTradeProcessModel.tradeWalletService.commitsDepositTx(takerTrade.getDepositTx());
+            Transaction depositTx = takerTradeProcessModel.getTradeWalletService().commitsDepositTx(takerTrade.getDepositTx());
 
             takerTrade.setDepositTx(depositTx);
 

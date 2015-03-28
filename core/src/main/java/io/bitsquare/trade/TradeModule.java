@@ -42,7 +42,6 @@ public class TradeModule extends BitsquareModule {
     @Override
     protected void doClose(Injector injector) {
         log.trace("doClose " + getClass().getSimpleName());
-        // First shut down AddressService to remove address from DHT
         injector.getInstance(TradeManager.class).shutDown();
     }
 }

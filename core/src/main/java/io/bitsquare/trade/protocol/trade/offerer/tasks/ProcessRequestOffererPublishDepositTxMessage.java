@@ -37,18 +37,19 @@ public class ProcessRequestOffererPublishDepositTxMessage extends OffererTradeTa
     @Override
     protected void doRun() {
         try {
-            checkTradeId(offererTradeProcessModel.id, offererTradeProcessModel.getTradeMessage());
             RequestOffererPublishDepositTxMessage message = (RequestOffererPublishDepositTxMessage) offererTradeProcessModel.getTradeMessage();
+            checkTradeId(offererTradeProcessModel.getId(), message);
+            checkNotNull(message);
 
-            offererTradeProcessModel.taker.fiatAccount = checkNotNull(message.takerFiatAccount);
-            offererTradeProcessModel.taker.accountId = nonEmptyStringOf(message.takerAccountId);
-            offererTradeProcessModel.taker.p2pSigPublicKey = checkNotNull(message.takerP2PSigPublicKey);
-            offererTradeProcessModel.taker.p2pEncryptPubKey = checkNotNull(message.takerP2PEncryptPublicKey);
-            offererTradeProcessModel.taker.contractAsJson = nonEmptyStringOf(message.takerContractAsJson);
-            offererTradeProcessModel.taker.contractSignature = nonEmptyStringOf(message.takerContractSignature);
-            offererTradeProcessModel.taker.payoutAddressString = nonEmptyStringOf(message.takerPayoutAddressString);
-            offererTradeProcessModel.taker.preparedDepositTx = checkNotNull(message.takersPreparedDepositTx);
-            offererTradeProcessModel.taker.connectedOutputsForAllInputs = checkNotNull(message.takerConnectedOutputsForAllInputs);
+            offererTradeProcessModel.taker.setFiatAccount(checkNotNull(message.takerFiatAccount));
+            offererTradeProcessModel.taker.setAccountId(nonEmptyStringOf(message.takerAccountId));
+            offererTradeProcessModel.taker.setP2pSigPublicKey(checkNotNull(message.takerP2PSigPublicKey));
+            offererTradeProcessModel.taker.setP2pEncryptPubKey(checkNotNull(message.takerP2PEncryptPublicKey));
+            offererTradeProcessModel.taker.setContractAsJson(nonEmptyStringOf(message.takerContractAsJson));
+            offererTradeProcessModel.taker.setContractSignature(nonEmptyStringOf(message.takerContractSignature));
+            offererTradeProcessModel.taker.setPayoutAddressString(nonEmptyStringOf(message.takerPayoutAddressString));
+            offererTradeProcessModel.taker.setPreparedDepositTx(checkNotNull(message.takersPreparedDepositTx));
+            offererTradeProcessModel.taker.setConnectedOutputsForAllInputs(checkNotNull(message.takerConnectedOutputsForAllInputs));
             checkArgument(message.takerConnectedOutputsForAllInputs.size() > 0);
 
             complete();

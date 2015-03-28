@@ -39,13 +39,14 @@ public class SendRequestDepositTxInputsMessage extends TakerTradeTask {
     @Override
     protected void doRun() {
         try {
+            assert takerTradeProcessModel.getTakeOfferFeeTx() != null;
             RequestDepositTxInputsMessage msg = new RequestDepositTxInputsMessage(
-                    takerTradeProcessModel.id,
+                    takerTradeProcessModel.getId(),
                     takerTradeProcessModel.getTakeOfferFeeTx().getHashAsString(),
                     takerTrade.getTradeAmount(),
-                    takerTradeProcessModel.taker.tradeWalletPubKey);
+                    takerTradeProcessModel.taker.getTradeWalletPubKey());
 
-            takerTradeProcessModel.messageService.sendMessage(takerTrade.getTradingPeer(), msg, new SendMessageListener() {
+            takerTradeProcessModel.getMessageService().sendMessage(takerTrade.getTradingPeer(), msg, new SendMessageListener() {
                 @Override
                 public void handleResult() {
                     log.trace("Sending TakeOfferFeePayedMessage succeeded.");

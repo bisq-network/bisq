@@ -37,17 +37,18 @@ public class ProcessRequestTakerDepositPaymentMessage extends TakerTradeTask {
     @Override
     protected void doRun() {
         try {
-            checkTradeId(takerTradeProcessModel.id, takerTradeProcessModel.getTradeMessage());
             RequestTakerDepositPaymentMessage message = (RequestTakerDepositPaymentMessage) takerTradeProcessModel.getTradeMessage();
+            checkTradeId(takerTradeProcessModel.getId(), message);
+            checkNotNull(message);
 
-            takerTradeProcessModel.offerer.connectedOutputsForAllInputs = checkNotNull(message.offererConnectedOutputsForAllInputs);
+            takerTradeProcessModel.offerer.setConnectedOutputsForAllInputs(checkNotNull(message.offererConnectedOutputsForAllInputs));
             checkArgument(message.offererConnectedOutputsForAllInputs.size() > 0);
-            takerTradeProcessModel.offerer.outputs = checkNotNull(message.offererOutputs);
-            takerTradeProcessModel.offerer.tradeWalletPubKey = checkNotNull(message.offererTradeWalletPubKey);
-            takerTradeProcessModel.offerer.p2pSigPublicKey = checkNotNull(message.offererP2PSigPublicKey);
-            takerTradeProcessModel.offerer.p2pEncryptPubKey = checkNotNull(message.offererP2PEncryptPublicKey);
-            takerTradeProcessModel.offerer.fiatAccount = checkNotNull(message.offererFiatAccount);
-            takerTradeProcessModel.offerer.accountId = nonEmptyStringOf(message.offererAccountId);
+            takerTradeProcessModel.offerer.setOutputs(checkNotNull(message.offererOutputs));
+            takerTradeProcessModel.offerer.setTradeWalletPubKey(checkNotNull(message.offererTradeWalletPubKey));
+            takerTradeProcessModel.offerer.setP2pSigPublicKey(checkNotNull(message.offererP2PSigPublicKey));
+            takerTradeProcessModel.offerer.setP2pEncryptPubKey(checkNotNull(message.offererP2PEncryptPublicKey));
+            takerTradeProcessModel.offerer.setFiatAccount(checkNotNull(message.offererFiatAccount));
+            takerTradeProcessModel.offerer.setAccountId(nonEmptyStringOf(message.offererAccountId));
 
             complete();
         } catch (Throwable t) {

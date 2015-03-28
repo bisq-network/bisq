@@ -398,7 +398,7 @@ public class TradeWalletService {
         Futures.addCallback(broadcastComplete, callback);
     }
 
-    // Returns local transaction which has a different state as the serialized publishedDepositTx we get from the offerer
+    // Commits the tx to the wallet and returns that
     public Transaction commitsDepositTx(Transaction publishedDepositTx) throws VerificationException {
         log.trace("takerCommitsDepositTx called");
         log.trace("publishedDepositTx " + publishedDepositTx.toString());
@@ -409,6 +409,14 @@ public class TradeWalletService {
 
         wallet.receivePending(depositTx, null, true);
         return depositTx;
+    }
+
+    // Returns local existing wallet transaction 
+    public Transaction getWalletTx(Transaction tx) throws VerificationException {
+        log.trace("getWalleTx called");
+        log.trace("tx " + tx.toString());
+
+        return wallet.getTransaction(tx.getHash());
     }
 
     public byte[] offererCreatesAndSignsPayoutTx(Transaction depositTx,

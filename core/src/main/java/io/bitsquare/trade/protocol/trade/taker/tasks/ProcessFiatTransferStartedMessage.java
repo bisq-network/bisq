@@ -37,13 +37,14 @@ public class ProcessFiatTransferStartedMessage extends TakerTradeTask {
     @Override
     protected void doRun() {
         try {
-            checkTradeId(takerTradeProcessModel.id, takerTradeProcessModel.getTradeMessage());
             FiatTransferStartedMessage message = (FiatTransferStartedMessage) takerTradeProcessModel.getTradeMessage();
+            checkTradeId(takerTradeProcessModel.getId(), message);
+            checkNotNull(message);
 
-            takerTradeProcessModel.offerer.signature = checkNotNull(message.offererSignature);
-            takerTradeProcessModel.offerer.payoutAmount = positiveCoinOf(nonZeroCoinOf(message.offererPayoutAmount));
-            takerTradeProcessModel.taker.payoutAmount = positiveCoinOf(nonZeroCoinOf(message.takerPayoutAmount));
-            takerTradeProcessModel.offerer.payoutAddressString = nonEmptyStringOf(message.offererPayoutAddress);
+            takerTradeProcessModel.offerer.setSignature(checkNotNull(message.offererSignature));
+            takerTradeProcessModel.offerer.setPayoutAmount(positiveCoinOf(nonZeroCoinOf(message.offererPayoutAmount)));
+            takerTradeProcessModel.taker.setPayoutAmount(positiveCoinOf(nonZeroCoinOf(message.takerPayoutAmount)));
+            takerTradeProcessModel.offerer.setPayoutAddressString(nonEmptyStringOf(message.offererPayoutAddress));
             takerTrade.setProcessState(TakerTrade.TakerProcessState.FIAT_PAYMENT_STARTED);
 
             complete();

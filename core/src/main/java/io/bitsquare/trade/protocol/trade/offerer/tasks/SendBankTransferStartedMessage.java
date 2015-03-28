@@ -35,15 +35,15 @@ public class SendBankTransferStartedMessage extends OffererTradeTask {
     @Override
     protected void doRun() {
         try {
-            FiatTransferStartedMessage tradeMessage = new FiatTransferStartedMessage(offererTradeProcessModel.id,
-                    offererTradeProcessModel.offerer.payoutTxSignature,
-                    offererTradeProcessModel.offerer.payoutAmount,
-                    offererTradeProcessModel.taker.payoutAmount,
-                    offererTradeProcessModel.offerer.addressEntry.getAddressString());
+            FiatTransferStartedMessage tradeMessage = new FiatTransferStartedMessage(offererTradeProcessModel.getId(),
+                    offererTradeProcessModel.offerer.getPayoutTxSignature(),
+                    offererTradeProcessModel.offerer.getPayoutAmount(),
+                    offererTradeProcessModel.taker.getPayoutAmount(),
+                    offererTradeProcessModel.offerer.getAddressEntry().getAddressString());
 
-            offererTradeProcessModel.messageService.sendMessage(offererTrade.getTradingPeer(), tradeMessage,
-                    offererTradeProcessModel.taker.p2pSigPublicKey,
-                    offererTradeProcessModel.taker.p2pEncryptPubKey,
+            offererTradeProcessModel.getMessageService().sendMessage(offererTrade.getTradingPeer(), tradeMessage,
+                    offererTradeProcessModel.taker.getP2pSigPublicKey(),
+                    offererTradeProcessModel.taker.getP2pEncryptPubKey(),
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {

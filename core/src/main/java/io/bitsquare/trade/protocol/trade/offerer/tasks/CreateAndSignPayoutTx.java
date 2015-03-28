@@ -35,23 +35,24 @@ public class CreateAndSignPayoutTx extends OffererTradeTask {
     @Override
     protected void doRun() {
         try {
+            assert offererTrade.getTradeAmount() != null;
             Coin securityDeposit = offererTrade.getSecurityDeposit();
             Coin offererPayoutAmount = offererTrade.getTradeAmount().add(securityDeposit);
             @SuppressWarnings("UnnecessaryLocalVariable") Coin takerPayoutAmount = securityDeposit;
 
-            byte[] offererPayoutTxSignature = offererTradeProcessModel.tradeWalletService.offererCreatesAndSignsPayoutTx(
+            byte[] offererPayoutTxSignature = offererTradeProcessModel.getTradeWalletService().offererCreatesAndSignsPayoutTx(
                     offererTrade.getDepositTx(),
                     offererPayoutAmount,
                     takerPayoutAmount,
-                    offererTradeProcessModel.offerer.addressEntry,
-                    offererTradeProcessModel.taker.payoutAddressString,
-                    offererTradeProcessModel.offerer.tradeWalletPubKey,
-                    offererTradeProcessModel.taker.tradeWalletPubKey,
-                    offererTradeProcessModel.arbitratorPubKey);
+                    offererTradeProcessModel.offerer.getAddressEntry(),
+                    offererTradeProcessModel.taker.getPayoutAddressString(),
+                    offererTradeProcessModel.offerer.getTradeWalletPubKey(),
+                    offererTradeProcessModel.taker.getTradeWalletPubKey(),
+                    offererTradeProcessModel.getArbitratorPubKey());
 
-            offererTradeProcessModel.offerer.payoutTxSignature = offererPayoutTxSignature;
-            offererTradeProcessModel.offerer.payoutAmount = offererPayoutAmount;
-            offererTradeProcessModel.taker.payoutAmount = takerPayoutAmount;
+            offererTradeProcessModel.offerer.setPayoutTxSignature(offererPayoutTxSignature);
+            offererTradeProcessModel.offerer.setPayoutAmount(offererPayoutAmount);
+            offererTradeProcessModel.taker.setPayoutAmount(takerPayoutAmount);
 
             complete();
         } catch (Throwable t) {

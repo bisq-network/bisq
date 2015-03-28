@@ -20,9 +20,9 @@ package io.bitsquare.trade;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.trade.protocol.trade.TradeProcessModel;
+import io.bitsquare.trade.protocol.trade.ProcessModel;
 import io.bitsquare.trade.protocol.trade.offerer.OffererProtocol;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererTradeProcessModel;
+import io.bitsquare.trade.protocol.trade.offerer.models.OffererProcessModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
@@ -34,6 +34,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 import javax.annotation.Nullable;
@@ -50,6 +51,7 @@ import org.slf4j.LoggerFactory;
 public class OffererTrade extends Trade implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
+
     transient private static final Logger log = LoggerFactory.getLogger(OffererTrade.class);
 
 
@@ -78,52 +80,65 @@ public class OffererTrade extends Trade implements Serializable {
         MESSAGE_SENDING_FAILED,
         EXCEPTION
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable private Coin tradeAmount;
-    @Nullable private Peer tradingPeer;
-    @NotNull private OffererProcessState processState = OffererProcessState.UNDEFINED;
-    @NotNull private OffererLifeCycleState lifeCycleState = OffererLifeCycleState.OFFER_OPEN;
-    @NotNull transient private ObjectProperty<OffererProcessState> processStateProperty = new SimpleObjectProperty<>(processState);
-    @NotNull transient private ObjectProperty<OffererLifeCycleState> lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
+    // Transient/Immutable
+    transient private ObjectProperty<OffererProcessState> processStateProperty;
+    transient private ObjectProperty<OffererLifeCycleState> lifeCycleStateProperty;
+
+    // Mutable
+    private Coin tradeAmount;
+    private Peer tradingPeer;
+    private OffererProcessState processState;
+    private OffererLifeCycleState lifeCycleState;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
+    // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public OffererTrade(@NotNull Offer offer, @NotNull Storage<? extends TradeProcessModel> storage) {
+    public OffererTrade(Offer offer, Storage<? extends TradeList> storage) {
         super(offer, storage);
-    }
+        log.trace("Created by constructor");
 
-    @Override
-    protected TradeProcessModel createProcessModel() {
-        return new OffererTradeProcessModel();
-    }
-
-    @Override
-    public void createProtocol() {
-        protocol = new OffererProtocol(this);
-    }
-
-
-    // Serialized object does not create our transient objects
-    private void readObject(@NotNull java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
+        processState = OffererProcessState.UNDEFINED;
+        lifeCycleState = OffererLifeCycleState.OFFER_OPEN;
 
         processStateProperty = new SimpleObjectProperty<>(processState);
         lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
 
         tradeAmountProperty = new SimpleObjectProperty<>();
         tradeVolumeProperty = new SimpleObjectProperty<>();
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        log.trace("Created from serialized form.");
+
+        processStateProperty = new SimpleObjectProperty<>(processState);
+        lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
+
+        tradeAmountProperty = new SimpleObjectProperty<>();
+        tradeVolumeProperty = new SimpleObjectProperty<>();
+
         if (tradeAmount != null) {
             tradeAmountProperty.set(tradeAmount);
             tradeVolumeProperty.set(getTradeVolume());
         }
+    }
+
+    @Override
+    protected ProcessModel createProcessModel() {
+        return new OffererProcessModel();
+    }
+
+    @Override
+    public void createProtocol() {
+        protocol = new OffererProtocol(this);
     }
 
     public void onFiatPaymentStarted() {
@@ -133,10 +148,29 @@ public class OffererTrade extends Trade implements Serializable {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
+    // Getter only
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setProcessState(@NotNull OffererProcessState processState) {
+    @Override
+    public ReadOnlyObjectProperty<OffererProcessState> processStateProperty() {
+        return processStateProperty;
+    }
+
+    @Override
+    public ReadOnlyObjectProperty<OffererLifeCycleState> lifeCycleStateProperty() {
+        return lifeCycleStateProperty;
+    }
+
+    public OffererProcessModel getProcessModel() {
+        return (OffererProcessModel) processModel;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setter for Mutable objects
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setProcessState(OffererProcessState processState) {
         this.processState = processState;
         processStateProperty.set(processState);
 
@@ -148,7 +182,7 @@ public class OffererTrade extends Trade implements Serializable {
         }
     }
 
-    public void setLifeCycleState(@NotNull OffererLifeCycleState lifeCycleState) {
+    public void setLifeCycleState(OffererLifeCycleState lifeCycleState) {
         switch (lifeCycleState) {
             case FAILED:
                 disposeProtocol();
@@ -161,36 +195,24 @@ public class OffererTrade extends Trade implements Serializable {
         lifeCycleStateProperty.set(lifeCycleState);
     }
 
-    public void setTradeAmount(@NotNull Coin tradeAmount) {
-        this.tradeAmount = tradeAmount;
-        tradeAmountProperty.set(tradeAmount);
-        tradeVolumeProperty.set(getTradeVolume());
-    }
 
-    public void setTradingPeer(@NotNull Peer tradingPeer) {
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getter/Setter for Mutable objects
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setTradingPeer(Peer tradingPeer) {
         this.tradingPeer = tradingPeer;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @NotNull
-    public OffererTradeProcessModel getProcessModel() {
-        return (OffererTradeProcessModel) processModel;
+    @Nullable
+    public Peer getTradingPeer() {
+        return tradingPeer;
     }
 
-    @NotNull
-    @Override
-    public ReadOnlyObjectProperty<OffererProcessState> processStateProperty() {
-        return processStateProperty;
-    }
-
-    @NotNull
-    @Override
-    public ReadOnlyObjectProperty<OffererLifeCycleState> lifeCycleStateProperty() {
-        return lifeCycleStateProperty;
+    public void setTradeAmount(Coin tradeAmount) {
+        this.tradeAmount = tradeAmount;
+        tradeAmountProperty.set(tradeAmount);
+        tradeVolumeProperty.set(getTradeVolume());
     }
 
     @Nullable
@@ -202,22 +224,19 @@ public class OffererTrade extends Trade implements Serializable {
     @Nullable
     @Override
     public Fiat getTradeVolume() {
-        return offer.getVolumeByAmount(tradeAmount);
-    }
-
-    @Nullable
-    @Override
-    public Peer getTradingPeer() {
-        return tradingPeer;
+        if (tradeAmount != null)
+            return offer.getVolumeByAmount(tradeAmount);
+        else
+            return null;
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
+    // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void setConfidenceListener() {
+    protected void setupConfidenceListener() {
         assert depositTx != null;
         TransactionConfidence transactionConfidence = depositTx.getConfidence();
         ListenableFuture<TransactionConfidence> future = transactionConfidence.getDepthFuture(1);
@@ -235,5 +254,15 @@ public class OffererTrade extends Trade implements Serializable {
                 Throwables.propagate(t);
             }
         });
+    }
+
+    @Override
+    public String toString() {
+        return "OffererTrade{" +
+                "tradeAmount=" + tradeAmount +
+                ", tradingPeer=" + tradingPeer +
+                ", processState=" + processState +
+                ", lifeCycleState=" + lifeCycleState +
+                '}';
     }
 }

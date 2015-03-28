@@ -35,7 +35,6 @@ import io.bitsquare.p2p.EncryptedMailboxMessage;
 import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.MessageService;
-import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.handlers.TakeOfferResultHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
@@ -89,8 +88,8 @@ public class TradeManager {
     private final ArbitrationRepository arbitrationRepository;
 
     private final Map<String, CheckOfferAvailabilityProtocol> checkOfferAvailabilityProtocolMap = new HashMap<>();
-    private final Storage pendingTradesStorage;
-    private final Storage openOfferTradesStorage;
+    private final Storage<TradeList> pendingTradesStorage;
+    private final Storage<TradeList> openOfferTradesStorage;
     private final TradeList<OffererTrade> openOfferTrades;
     private final TradeList<Trade> pendingTrades;
     private final TradeList<Trade> closedTrades;
@@ -129,12 +128,12 @@ public class TradeManager {
         this.offerBookService = offerBookService;
         this.arbitrationRepository = arbitrationRepository;
 
-        openOfferTradesStorage = new Storage(storageDir);
-        pendingTradesStorage = new Storage(storageDir);
+        openOfferTradesStorage = new Storage<>(storageDir);
+        pendingTradesStorage = new Storage<>(storageDir);
 
         this.openOfferTrades = new TradeList<>(openOfferTradesStorage, "OpenOfferTrades");
         this.pendingTrades = new TradeList<>(pendingTradesStorage, "PendingTrades");
-        this.closedTrades = new TradeList<>(new Storage(storageDir), "ClosedTrades");
+        this.closedTrades = new TradeList<>(new Storage<>(storageDir), "ClosedTrades");
 
 
         // In case the app did get killed the shutDown from the modules is not called, so we use a shutdown hook
@@ -144,9 +143,66 @@ public class TradeManager {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public API
+    // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // When all services are initialized we create the protocols for our open offers and persisted pendingTrades
+    // OffererAsBuyerProtocol listens for take offer requests, so we need to instantiate it early.
+    public void onAllServicesInitialized() {
+        for (OffererTrade offererTrade : openOfferTrades) {
+            Offer offer = offererTrade.getOffer();
+            // We add own offers to offerbook when we go online again
+            offerBookService.addOffer(offer,
+                    () -> log.debug("Successful removed open offer from DHT"),
+                    (message, throwable) -> log.error("Remove open offer from DHT failed. " + message));
+            offererTrade.setStorage(openOfferTradesStorage);
+            initTrade(offererTrade);
+
+        }
+        for (Trade trade : pendingTrades) {
+            // We continue an interrupted trade.
+            // TODO if the peer has changed its IP address, we need to make another findPeer request. At the moment we use the peer stored in trade to
+            // continue the trade, but that might fail.
+            initTrade(trade);
+            trade.updateDepositTxFromWallet(tradeWalletService);
+            trade.setStorage(pendingTradesStorage);
+        }
+
+        // if there are messages in our mailbox we apply it and remove them from the DHT
+        mailboxService.getAllMessages(user.getP2PSigPubKey(),
+                (encryptedMailboxMessages) -> {
+                    setMailboxMessagesToTrades(encryptedMailboxMessages);
+                    emptyMailbox();
+                });
+    }
+
+    private void setMailboxMessagesToTrades(List<EncryptedMailboxMessage> encryptedMailboxMessages) {
+        log.trace("applyMailboxMessage encryptedMailboxMessage.size=" + encryptedMailboxMessages.size());
+        for (EncryptedMailboxMessage encrypted : encryptedMailboxMessages) {
+            try {
+                MailboxMessage mailboxMessage = encryptionService.decryptToObject(user.getP2pEncryptPrivateKey(), encrypted.getBucket());
+
+                if (mailboxMessage instanceof TradeMessage) {
+                    String tradeId = ((TradeMessage) mailboxMessage).tradeId;
+                    Optional<Trade> tradeOptional = pendingTrades.stream().filter(e -> e.getId().equals(tradeId)).findAny();
+                    if (tradeOptional.isPresent())
+                        tradeOptional.get().setMailboxMessage(mailboxMessage);
+                }
+            } catch (Throwable e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
+            }
+        }
+    }
+
+    private void emptyMailbox() {
+        mailboxService.removeAllMessages(user.getP2PSigPubKey(),
+                () -> log.debug("All mailbox entries removed"),
+                (errorMessage, fault) -> {
+                    log.error(errorMessage);
+                    log.error(fault.getMessage());
+                });
+    }
 
     public void shutDown() {
         if (!shutDownRequested) {
@@ -158,50 +214,6 @@ public class TradeManager {
                 offerBookService.removeOfferAtShutDown(offer);
             }
         }
-    }
-
-    // When all services are initialized we create the protocols for our open offers and persisted not completed pendingTrades
-    // OffererAsBuyerProtocol listens for take offer requests, so we need to instantiate it early.
-    public void onAllServicesInitialized() {
-
-        for (OffererTrade offererTrade : openOfferTrades) {
-            Offer offer = offererTrade.getOffer();
-            // we add own offers to offerbook when we go online again
-            offerBookService.addOffer(offer,
-                    () -> log.debug("Successful removed open offer from DHT"),
-                    (message, throwable) -> log.error("Remove open offer from DHT failed. " + message));
-            offererTrade.setStorage(openOfferTradesStorage);
-            offererTrade.initProcessModel(messageService,
-                    mailboxService,
-                    walletService,
-                    tradeWalletService,
-                    blockChainService,
-                    signatureService,
-                    arbitrationRepository,
-                    user);
-
-        }
-        for (Trade trade : pendingTrades) {
-            // We continue an interrupted trade.
-            // TODO if the peer has changed its IP address, we need to make another findPeer request. At the moment we use the peer stored in trade to
-            // continue the trade, but that might fail.
-            trade.initProcessModel(messageService,
-                    mailboxService,
-                    walletService,
-                    tradeWalletService,
-                    blockChainService,
-                    signatureService,
-                    arbitrationRepository,
-                    user);
-            trade.syncDepositTxWithWallet(tradeWalletService);
-            trade.setStorage(pendingTradesStorage);
-        }
-
-        mailboxService.getAllMessages(user.getP2PSigPubKey(),
-                (encryptedMailboxMessages) -> {
-                    decryptMailboxMessages(encryptedMailboxMessages);
-                    emptyMailbox();
-                });
     }
 
 
@@ -217,17 +229,17 @@ public class TradeManager {
                            TransactionResultHandler resultHandler,
                            ErrorMessageHandler errorMessageHandler) {
 
-        FiatAccount currentFiatAccount = user.currentFiatAccountProperty().get();
+        FiatAccount fiatAccount = user.currentFiatAccountProperty().get();
         Offer offer = new Offer(id,
                 user.getP2PSigPubKey(),
                 direction,
                 price.getValue(),
                 amount,
                 minAmount,
-                currentFiatAccount.type,
-                currentFiatAccount.currencyCode,
-                currentFiatAccount.country,
-                currentFiatAccount.id,
+                fiatAccount.type,
+                fiatAccount.currencyCode,
+                fiatAccount.country,
+                fiatAccount.id,
                 accountSettings.getAcceptedArbitratorIds(),
                 accountSettings.getSecurityDeposit(),
                 accountSettings.getAcceptedCountries(),
@@ -237,40 +249,61 @@ public class TradeManager {
 
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 model,
-                (transaction) -> {
-                    OffererTrade offererTrade = new OffererTrade(offer, openOfferTradesStorage);
-                    openOfferTrades.add(offererTrade);
-                    offererTrade.initProcessModel(messageService,
-                            mailboxService,
-                            walletService,
-                            tradeWalletService,
-                            blockChainService,
-                            signatureService,
-                            arbitrationRepository,
-                            user);
-
-                    offererTrade.processStateProperty().addListener((ov, oldValue, newValue) -> {
-                        log.debug("offererTrade state = " + newValue);
-                        if (newValue == OffererTrade.OffererProcessState.DEPOSIT_PUBLISHED) {
-                            removeOpenOffer(offererTrade.getOffer(),
-                                    () -> log.debug("remove offer was successful"),
-                                    (message) -> log.error(message),
-                                    false);
-                            pendingTrades.add(offererTrade);
-                            offererTrade.setStorage(pendingTradesStorage);
-                        }
-                    });
-
-                    resultHandler.handleResult(transaction);
-                },
-                (message) -> errorMessageHandler.handleErrorMessage(message)
+                transaction -> handlePlaceOfferResult(transaction, offer, resultHandler),
+                errorMessageHandler::handleErrorMessage
         );
 
         placeOfferProtocol.placeOffer();
     }
 
+    private void handlePlaceOfferResult(Transaction transaction, Offer offer, TransactionResultHandler resultHandler) {
+        OffererTrade offererTrade = new OffererTrade(offer, openOfferTradesStorage);
+        openOfferTrades.add(offererTrade);
+        initTrade(offererTrade);
+
+        offererTrade.processStateProperty().addListener((ov, oldValue, newValue) -> {
+            log.debug("offererTrade state = " + newValue);
+            if (newValue == OffererTrade.OffererProcessState.DEPOSIT_PUBLISHED) {
+                removeOpenOffer(offererTrade.getOffer(),
+                        () -> log.debug("remove offer was successful"),
+                        log::error,
+                        false);
+                pendingTrades.add(offererTrade);
+                offererTrade.setStorage(pendingTradesStorage);
+            }
+        });
+
+        resultHandler.handleResult(transaction);
+    }
+
     public void cancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         removeOpenOffer(offer, resultHandler, errorMessageHandler, true);
+    }
+
+    private void removeOpenOffer(Offer offer,
+                                 ResultHandler resultHandler,
+                                 ErrorMessageHandler errorMessageHandler,
+                                 boolean isCancelRequest) {
+        offerBookService.removeOffer(offer,
+                () -> {
+                    offer.setState(Offer.State.REMOVED);
+                    Optional<OffererTrade> offererTradeOptional = openOfferTrades.stream().filter(e -> e.getId().equals(offer.getId())).findAny();
+                    if (offererTradeOptional.isPresent()) {
+                        OffererTrade offererTrade = offererTradeOptional.get();
+                        openOfferTrades.remove(offererTrade);
+
+                        if (isCancelRequest) {
+                            offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_CANCELED);
+                            closedTrades.add(offererTrade);
+                            offererTrade.disposeProtocol();
+                        }
+                    }
+
+                    disposeCheckOfferAvailabilityRequest(offer);
+
+                    resultHandler.handleResult();
+                },
+                (message, throwable) -> errorMessageHandler.handleErrorMessage(message));
     }
 
 
@@ -305,16 +338,22 @@ public class TradeManager {
     public void requestTakeOffer(Coin amount, Offer offer, TakeOfferResultHandler takeOfferResultHandler) {
         CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(offer, messageService, addressService);
         CheckOfferAvailabilityProtocol availabilityProtocol = new CheckOfferAvailabilityProtocol(model,
-                () -> {
-                    disposeCheckOfferAvailabilityRequest(offer);
-                    if (offer.getState() == Offer.State.AVAILABLE) {
-                        TakerTrade trade = takeAvailableOffer(amount, offer, model.getPeer());
-                        takeOfferResultHandler.handleResult(trade);
-                    }
-                },
+                () -> handleCheckOfferAvailabilityResult(amount, offer, model, takeOfferResultHandler),
                 (errorMessage) -> disposeCheckOfferAvailabilityRequest(offer));
         checkOfferAvailabilityProtocolMap.put(offer.getId(), availabilityProtocol);
         availabilityProtocol.checkOfferAvailability();
+    }
+
+    private void handleCheckOfferAvailabilityResult(Coin amount, Offer offer, CheckOfferAvailabilityModel model, TakeOfferResultHandler
+            takeOfferResultHandler) {
+        disposeCheckOfferAvailabilityRequest(offer);
+        if (offer.getState() == Offer.State.AVAILABLE) {
+            TakerTrade takerTrade = new TakerTrade(offer, amount, model.getPeer(), pendingTradesStorage);
+            initTrade(takerTrade);
+            pendingTrades.add(takerTrade);
+            takerTrade.takeAvailableOffer();
+            takeOfferResultHandler.handleResult(takerTrade);
+        }
     }
 
 
@@ -328,8 +367,9 @@ public class TradeManager {
 
         // TODO handle overpaid securityDeposit
         Coin amountToWithdraw = trade.getSecurityDeposit();
+        assert trade.getTradeAmount() != null;
         if (trade instanceof OffererTrade)
-            amountToWithdraw = amountToWithdraw.add(((OffererTrade) trade).getTradeAmount());
+            amountToWithdraw = amountToWithdraw.add(trade.getTradeAmount());
 
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
             @Override
@@ -392,34 +432,8 @@ public class TradeManager {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
+    // Misc
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void removeOpenOffer(Offer offer,
-                                 ResultHandler resultHandler,
-                                 ErrorMessageHandler errorMessageHandler,
-                                 boolean isCancelRequest) {
-        offerBookService.removeOffer(offer,
-                () -> {
-                    offer.setState(Offer.State.REMOVED);
-                    Optional<OffererTrade> offererTradeOptional = openOfferTrades.stream().filter(e -> e.getId().equals(offer.getId())).findAny();
-                    if (offererTradeOptional.isPresent()) {
-                        OffererTrade offererTrade = offererTradeOptional.get();
-                        openOfferTrades.remove(offererTrade);
-
-                        if (isCancelRequest) {
-                            offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_CANCELED);
-                            closedTrades.add(offererTrade);
-                            offererTrade.disposeProtocol();
-                        }
-                    }
-
-                    disposeCheckOfferAvailabilityRequest(offer);
-
-                    resultHandler.handleResult();
-                },
-                (message, throwable) -> errorMessageHandler.handleErrorMessage(message));
-    }
 
     private void disposeCheckOfferAvailabilityRequest(Offer offer) {
         if (checkOfferAvailabilityProtocolMap.containsKey(offer.getId())) {
@@ -429,57 +443,14 @@ public class TradeManager {
         }
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Trade
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private TakerTrade takeAvailableOffer(Coin amount, Offer offer, Peer peer) {
-        TakerTrade takerTrade = new TakerTrade(offer, amount, peer, pendingTradesStorage);
-        takerTrade.initProcessModel(messageService,
-                mailboxService,
+    private void initTrade(Trade trade) {
+        trade.init(messageService,
                 walletService,
                 tradeWalletService,
                 blockChainService,
                 signatureService,
                 arbitrationRepository,
                 user);
-        pendingTrades.add(takerTrade);
-        takerTrade.takeAvailableOffer();
-        return takerTrade;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Mailbox
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void decryptMailboxMessages(List<EncryptedMailboxMessage> encryptedMailboxMessages) {
-        log.trace("applyMailboxMessage encryptedMailboxMessage.size=" + encryptedMailboxMessages.size());
-        for (EncryptedMailboxMessage encrypted : encryptedMailboxMessages) {
-            try {
-                MailboxMessage mailboxMessage = encryptionService.decryptToObject(user.getP2pEncryptPrivateKey(), encrypted.getBucket());
-
-                if (mailboxMessage instanceof TradeMessage) {
-                    String tradeId = ((TradeMessage) mailboxMessage).tradeId;
-                    Optional<Trade> tradeOptional = pendingTrades.stream().filter(e -> e.getId().equals(tradeId)).findAny();
-                    if (tradeOptional.isPresent())
-                        tradeOptional.get().setMailboxMessage(mailboxMessage);
-                }
-            } catch (Throwable e) {
-                e.printStackTrace();
-                log.error(e.getMessage());
-            }
-        }
-    }
-
-    private void emptyMailbox() {
-        mailboxService.removeAllMessages(user.getP2PSigPubKey(),
-                () -> {
-                    log.debug("All mailbox entries removed");
-                },
-                (errorMessage, fault) -> {
-                    log.error(errorMessage);
-                    log.error(fault.getMessage());
-                });
-    }
 }
