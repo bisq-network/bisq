@@ -25,10 +25,10 @@ import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendDepositTxToTaker extends OffererTradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SendDepositTxToTaker.class);
+public class SendDepositTxPublishedMessage extends OffererTradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SendDepositTxPublishedMessage.class);
 
-    public SendDepositTxToTaker(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
+    public SendDepositTxPublishedMessage(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
         super(taskHandler, offererTradeProcessModel);
     }
 

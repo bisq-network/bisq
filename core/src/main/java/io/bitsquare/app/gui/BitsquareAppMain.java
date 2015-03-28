@@ -15,9 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.app;
+package io.bitsquare.app.gui;
 
 import io.bitsquare.BitsquareException;
+import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.BitsquareEnvironment;
+import io.bitsquare.app.BitsquareExecutable;
+import io.bitsquare.app.UpdateProcess;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.p2p.BootstrapNodes;
 import io.bitsquare.p2p.Node;

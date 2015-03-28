@@ -35,7 +35,7 @@
         <key>JVMRuntime</key>
         <string>..</string>
         <key>JVMMainClassName</key>
-        <string>io.bitsquare.app.gui.BitsquareAppMain</string>
+        <string>io.bitsquare.app.core.BitsquareAppMain</string>
         <key>JVMAppClasspath</key>
         <string></string>
         <key>JVMMainJarName</key>

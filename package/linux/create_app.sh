@@ -21,9 +21,9 @@ $JAVA_HOME/bin/javapackager \
     -name Bitsquare \
     -title Bitsquare \
     -vendor Bitsquare \
-    -outdir gui/deploy \
-    -srcfiles gui/updatefx/builds/processed/$buildVersion.jar \
-    -appclass io.bitsquare.app.gui.BitsquareAppMain \
+    -outdir core/deploy \
+    -srcfiles core/updatefx/builds/processed/$buildVersion.jar \
+    -appclass io.bitsquare.app.core.BitsquareAppMain \
     -outfile Bitsquare
 
 cd package/linux

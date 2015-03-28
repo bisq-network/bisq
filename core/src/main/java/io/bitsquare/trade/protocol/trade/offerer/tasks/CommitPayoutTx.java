@@ -15,39 +15,34 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.taker.tasks;
+package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.TakerTrade;
+import io.bitsquare.trade.OffererTrade;
+
+import org.bitcoinj.core.Transaction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VerifyOffererAccount extends TakerTradeTask {
-    private static final Logger log = LoggerFactory.getLogger(VerifyOffererAccount.class);
+public class CommitPayoutTx extends OffererTradeTask {
+    private static final Logger log = LoggerFactory.getLogger(CommitPayoutTx.class);
 
-    public VerifyOffererAccount(TaskRunner taskHandler, TakerTrade model) {
-        super(taskHandler, model);
+    public CommitPayoutTx(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
+        super(taskHandler, offererTradeProcessModel);
     }
 
     @Override
     protected void doRun() {
         try {
-            if (takerTradeProcessModel.getBlockChainService().verifyAccountRegistration()) {
-                if (takerTradeProcessModel.getBlockChainService().isAccountBlackListed(takerTradeProcessModel.offerer.getAccountId(),
-                        takerTradeProcessModel.offerer.getFiatAccount())) {
-                    failed("Taker is blacklisted.");
-                }
-                else {
-                    complete();
-                }
-            }
-            else {
-                failed("Account registration validation for peer faultHandler.onFault.");
-            }
+            Transaction transaction = offererTradeProcessModel.getTradeWalletService().commitTx(offererTrade.getPayoutTx());
+            
+            offererTrade.setPayoutTx(transaction);
+
+            complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            takerTrade.setThrowable(t);
+            offererTrade.setThrowable(t);
             failed(t);
         }
     }

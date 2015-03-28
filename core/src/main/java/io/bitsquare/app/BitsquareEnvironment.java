@@ -18,6 +18,7 @@
 package io.bitsquare.app;
 
 import io.bitsquare.BitsquareException;
+import io.bitsquare.app.gui.BitsquareAppMain;
 import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.main.MainView;

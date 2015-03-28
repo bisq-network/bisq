@@ -25,10 +25,10 @@ import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendBankTransferStartedMessage extends OffererTradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SendBankTransferStartedMessage.class);
+public class SendFiatTransferStartedMessage extends OffererTradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SendFiatTransferStartedMessage.class);
 
-    public SendBankTransferStartedMessage(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
+    public SendFiatTransferStartedMessage(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
         super(taskHandler, offererTradeProcessModel);
     }
 

@@ -3,7 +3,7 @@ Binary build instructions with Update FX:
 Binary build:
 
 1. Set version numbers in UpdateProcess, BitsquareAppMain and pom files. Check in changes.
-2. Remove previous build files under gui/updatefx. Use wallet file form backup if not there. Run setup.sh. Key in UpdateProcess must be same as reported in 
+2. Remove previous build files under core/updatefx. Use wallet file form backup if not there. Run setup.sh. Key in UpdateProcess must be same as reported in 
 console.
 3. Run create_app.sh
 4. Upload index to server

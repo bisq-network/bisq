@@ -39,6 +39,8 @@ import org.springframework.core.env.Environment;
 public class BootstrapNode {
     private static final Logger log = LoggerFactory.getLogger(BootstrapNode.class);
 
+    private static final String VERSION = "0.1.3";
+
     private static Peer peer = null;
 
     private final Environment env;
@@ -51,7 +53,6 @@ public class BootstrapNode {
     public void start() {
         String name = env.getRequiredProperty(Node.NAME_KEY);
         int port = env.getProperty(Node.PORT_KEY, Integer.class, Node.DEFAULT_PORT);
-
         try {
             Number160 peerId = Number160.createHash(name);
 
@@ -94,7 +95,7 @@ public class BootstrapNode {
                 }
             });
 
-            log.info("Bootstrap node started with name " + name + " and port " + port);
+            log.info("Bootstrap node started with name " + name + " ,port " + port + " and version " + VERSION);
             new Thread(() -> {
                 while (true) {
                     if (peer.peerBean().peerMap().all().size() > 0) {

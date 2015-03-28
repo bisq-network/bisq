@@ -25,10 +25,10 @@ import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerCommitDepositTx extends TakerTradeTask {
-    private static final Logger log = LoggerFactory.getLogger(TakerCommitDepositTx.class);
+public class CommitDepositTx extends TakerTradeTask {
+    private static final Logger log = LoggerFactory.getLogger(CommitDepositTx.class);
 
-    public TakerCommitDepositTx(TaskRunner taskHandler, TakerTrade model) {
+    public CommitDepositTx(TaskRunner taskHandler, TakerTrade model) {
         super(taskHandler, model);
     }
 
@@ -36,7 +36,7 @@ public class TakerCommitDepositTx extends TakerTradeTask {
     protected void doRun() {
         try {
             // To access tx confidence we need to add that tx into our wallet.
-            Transaction depositTx = takerTradeProcessModel.getTradeWalletService().commitsDepositTx(takerTrade.getDepositTx());
+            Transaction depositTx = takerTradeProcessModel.getTradeWalletService().commitTx(takerTrade.getDepositTx());
 
             takerTrade.setDepositTx(depositTx);
 

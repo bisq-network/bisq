@@ -20,22 +20,22 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.TakerTrade;
-import io.bitsquare.trade.protocol.trade.messages.RequestOffererPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendSignedTakerDepositTx extends TakerTradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SendSignedTakerDepositTx.class);
+public class SendRequestPublishDepositTxMessage extends TakerTradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SendRequestPublishDepositTxMessage.class);
 
-    public SendSignedTakerDepositTx(TaskRunner taskHandler, TakerTrade model) {
+    public SendRequestPublishDepositTxMessage(TaskRunner taskHandler, TakerTrade model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void doRun() {
         try {
-            RequestOffererPublishDepositTxMessage tradeMessage = new RequestOffererPublishDepositTxMessage(
+            RequestPublishDepositTxMessage tradeMessage = new RequestPublishDepositTxMessage(
                     takerTradeProcessModel.getId(),
                     takerTradeProcessModel.taker.getFiatAccount(),
                     takerTradeProcessModel.taker.getAccountId(),
@@ -56,7 +56,7 @@ public class SendSignedTakerDepositTx extends TakerTradeTask {
 
                 @Override
                 public void handleFault() {
-                    appendToErrorMessage("Sending RequestOffererDepositPublicationMessage failed");
+                    appendToErrorMessage("Sending RequestOffererPublishDepositTxMessage failed");
                     takerTrade.setErrorMessage(errorMessage);
                     takerTrade.setProcessState(TakerTrade.TakerProcessState.MESSAGE_SENDING_FAILED);
 

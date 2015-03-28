@@ -396,16 +396,16 @@ public class TradeWalletService {
     }
 
     // Commits the tx to the wallet and returns that
-    public Transaction commitsDepositTx(Transaction publishedDepositTx) throws VerificationException {
-        log.trace("takerCommitsDepositTx called");
-        log.trace("publishedDepositTx " + publishedDepositTx.toString());
+    public Transaction commitTx(Transaction tx) throws VerificationException {
+        log.trace("commitTx called");
+        log.trace("tx " + tx.toString());
 
         // We need to recreate the tx we get a null pointer otherwise
-        Transaction depositTx = new Transaction(params, publishedDepositTx.bitcoinSerialize());
-        log.trace("depositTx " + depositTx.toString());
+        Transaction transaction = new Transaction(params, tx.bitcoinSerialize());
+        log.trace("transaction " + transaction.toString());
 
-        wallet.receivePending(depositTx, null, true);
-        return depositTx;
+        wallet.receivePending(transaction, null, true);
+        return transaction;
     }
 
     // Returns local existing wallet transaction 

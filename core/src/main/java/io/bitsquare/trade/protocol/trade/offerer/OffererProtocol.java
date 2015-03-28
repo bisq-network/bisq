@@ -29,17 +29,18 @@ import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailability
 import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
-import io.bitsquare.trade.protocol.trade.messages.RequestOffererPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.models.OffererProcessModel;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.CommitPayoutTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateAndSignPayoutTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateOffererDepositTxInputs;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestDepositTxInputsMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestOffererPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.RequestTakerDepositPayment;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.SendBankTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.SendDepositTxToTaker;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.SendRequestTakerDepositPaymentMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.SendFiatTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.SendDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SignAndPublishDepositTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyAndSignContract;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakeOfferFeePayment;
@@ -134,28 +135,28 @@ public class OffererProtocol implements Protocol {
         offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_RESERVED);
 
         TaskRunner<OffererTrade> taskRunner = new TaskRunner<>(offererTrade,
-                () -> log.debug("taskRunner at handleTakeOfferFeePayedMessage completed"),
+                () -> log.debug("taskRunner at handleRequestDepositTxInputsMessage completed"),
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
                 ProcessRequestDepositTxInputsMessage.class,
                 CreateOffererDepositTxInputs.class,
-                RequestTakerDepositPayment.class
+                SendRequestTakerDepositPaymentMessage.class
         );
         taskRunner.run();
     }
 
-    private void handleRequestOffererPublishDepositTxMessage(RequestOffererPublishDepositTxMessage tradeMessage) {
+    private void handleRequestPublishDepositTxMessage(RequestPublishDepositTxMessage tradeMessage) {
         offererTradeProcessModel.setTradeMessage(tradeMessage);
 
         TaskRunner<OffererTrade> taskRunner = new TaskRunner<>(offererTrade,
-                () -> log.debug("taskRunner at handleRequestOffererPublishDepositTxMessage completed"),
+                () -> log.debug("taskRunner at handleRequestPublishDepositTxMessage completed"),
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
-                ProcessRequestOffererPublishDepositTxMessage.class,
+                ProcessRequestPublishDepositTxMessage.class,
                 VerifyTakerAccount.class,
                 VerifyAndSignContract.class,
                 SignAndPublishDepositTx.class,
-                SendDepositTxToTaker.class
+                SendDepositTxPublishedMessage.class
         );
         taskRunner.run();
     }
@@ -173,7 +174,7 @@ public class OffererProtocol implements Protocol {
         taskRunner.addTasks(
                 CreateAndSignPayoutTx.class,
                 VerifyTakeOfferFeePayment.class,
-                SendBankTransferStartedMessage.class
+                SendFiatTransferStartedMessage.class
         );
         taskRunner.run();
     }
@@ -195,6 +196,7 @@ public class OffererProtocol implements Protocol {
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(ProcessPayoutTxPublishedMessage.class);
+        taskRunner.addTasks(CommitPayoutTx.class);
         taskRunner.run();
     }
 
@@ -216,8 +218,8 @@ public class OffererProtocol implements Protocol {
                 else if (tradeMessage instanceof RequestDepositTxInputsMessage) {
                     handleRequestDepositTxInputsMessage((RequestDepositTxInputsMessage) tradeMessage, sender);
                 }
-                else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage) {
-                    handleRequestOffererPublishDepositTxMessage((RequestOffererPublishDepositTxMessage) tradeMessage);
+                else if (tradeMessage instanceof RequestPublishDepositTxMessage) {
+                    handleRequestPublishDepositTxMessage((RequestPublishDepositTxMessage) tradeMessage);
                 }
                 else if (tradeMessage instanceof PayoutTxPublishedMessage) {
                     handlePayoutTxPublishedMessage((PayoutTxPublishedMessage) tradeMessage);

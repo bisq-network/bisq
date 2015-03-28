@@ -17,6 +17,7 @@
 
 package io.bitsquare.app;
 
+import io.bitsquare.app.gui.BitsquareAppMain;
 import io.bitsquare.util.Utilities;
 
 import com.google.inject.Inject;
@@ -101,7 +102,7 @@ public class UpdateProcess {
         });
         timeoutTimer.start();
 
-        String agent = environment.getProperty(BitsquareEnvironment.APP_NAME_KEY) + BUILD_VERSION;
+        String agent = environment.getProperty(BitsquareEnvironment.APP_NAME_KEY) + BitsquareAppMain.getVersion();
         Path dataDirPath = new File(environment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY)).toPath();
         Updater updater = new Updater(UPDATES_BASE_URL, agent, BUILD_VERSION, dataDirPath, ROOT_CLASS_PATH,
                 UPDATE_SIGNING_KEYS, UPDATE_SIGNING_THRESHOLD) {

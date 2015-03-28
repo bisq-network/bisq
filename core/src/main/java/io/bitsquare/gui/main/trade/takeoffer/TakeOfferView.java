@@ -243,9 +243,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         model.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
             // TODO temp just for testing 
-            newValue = false;
-            close();
-            navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
+           /* newValue = false;
+            close();*/
+            //navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
 
             if (newValue) {
                 overlayManager.blurContent();

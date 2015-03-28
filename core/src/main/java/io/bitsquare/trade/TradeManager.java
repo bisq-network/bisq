@@ -155,6 +155,7 @@ public class TradeManager {
             offerBookService.addOffer(offer,
                     () -> log.debug("Successful removed open offer from DHT"),
                     (message, throwable) -> log.error("Remove open offer from DHT failed. " + message));
+            setupDepositPublishedListener(offererTrade);
             offererTrade.setStorage(openOfferTradesStorage);
             initTrade(offererTrade);
 
@@ -163,9 +164,9 @@ public class TradeManager {
             // We continue an interrupted trade.
             // TODO if the peer has changed its IP address, we need to make another findPeer request. At the moment we use the peer stored in trade to
             // continue the trade, but that might fail.
-            initTrade(trade);
-            trade.updateDepositTxFromWallet(tradeWalletService);
             trade.setStorage(pendingTradesStorage);
+            trade.updateDepositTxFromWallet(tradeWalletService);
+            initTrade(trade);
         }
 
         // if there are messages in our mailbox we apply it and remove them from the DHT
@@ -260,7 +261,11 @@ public class TradeManager {
         OffererTrade offererTrade = new OffererTrade(offer, openOfferTradesStorage);
         openOfferTrades.add(offererTrade);
         initTrade(offererTrade);
+        setupDepositPublishedListener(offererTrade);
+        resultHandler.handleResult(transaction);
+    }
 
+    private void setupDepositPublishedListener(OffererTrade offererTrade) {
         offererTrade.processStateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("offererTrade state = " + newValue);
             if (newValue == OffererTrade.OffererProcessState.DEPOSIT_PUBLISHED) {
@@ -272,8 +277,6 @@ public class TradeManager {
                 offererTrade.setStorage(pendingTradesStorage);
             }
         });
-
-        resultHandler.handleResult(transaction);
     }
 
     public void cancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {

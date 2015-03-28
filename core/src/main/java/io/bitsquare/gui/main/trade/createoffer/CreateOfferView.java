@@ -34,7 +34,7 @@ import io.bitsquare.gui.main.account.settings.AccountSettingsView;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
-import io.bitsquare.gui.main.portfolio.pending.PendingTradesView;
+import io.bitsquare.gui.main.portfolio.offer.OffersView;
 import io.bitsquare.gui.main.trade.TradeView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
@@ -292,10 +292,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         model.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
             // TODO temp just for testing 
-            newValue = false;
-            close();
-            navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
-
+           // newValue = false;
+           // close();
+            //navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class, OffersView.class);
+            
             if (newValue) {
                 overlayManager.blurContent();
 
@@ -315,6 +315,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                         getProperties().put("type", "CLOSE");
                         try {
                             close();
+                            navigation.navigateTo(MainView.class, PortfolioView.class, OffersView.class);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }

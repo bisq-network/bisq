@@ -31,7 +31,7 @@ import java.util.List;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-public class RequestOffererPublishDepositTxMessage extends TradeMessage implements Serializable {
+public class RequestPublishDepositTxMessage extends TradeMessage implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
 
@@ -45,16 +45,16 @@ public class RequestOffererPublishDepositTxMessage extends TradeMessage implemen
     public final Transaction takersPreparedDepositTx;
     public final List<TransactionOutput> takerConnectedOutputsForAllInputs;
 
-    public RequestOffererPublishDepositTxMessage(String tradeId,
-                                                 FiatAccount takerFiatAccount,
-                                                 String takerAccountId,
-                                                 PublicKey takerP2PSigPublicKey,
-                                                 PublicKey takerP2PEncryptPublicKey,
-                                                 String takerContractAsJson,
-                                                 String takerContractSignature,
-                                                 String takerPayoutAddressString,
-                                                 Transaction takersPreparedDepositTx,
-                                                 List<TransactionOutput> takerConnectedOutputsForAllInputs) {
+    public RequestPublishDepositTxMessage(String tradeId,
+                                          FiatAccount takerFiatAccount,
+                                          String takerAccountId,
+                                          PublicKey takerP2PSigPublicKey,
+                                          PublicKey takerP2PEncryptPublicKey,
+                                          String takerContractAsJson,
+                                          String takerContractSignature,
+                                          String takerPayoutAddressString,
+                                          Transaction takersPreparedDepositTx,
+                                          List<TransactionOutput> takerConnectedOutputsForAllInputs) {
         super(tradeId);
         this.takerFiatAccount = takerFiatAccount;
         this.takerAccountId = takerAccountId;

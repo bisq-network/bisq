@@ -155,7 +155,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         switch (state) {
             case UNKNOWN:
-                log.error("Offer state is UNKNOWN. That must not happen.");
+                // TODO set spinner?
                 break;
             case AVAILABLE:
                 this.state.set(State.AMOUNT_SCREEN);

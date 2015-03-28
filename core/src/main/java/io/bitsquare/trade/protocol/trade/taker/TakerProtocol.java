@@ -35,12 +35,12 @@ import io.bitsquare.trade.protocol.trade.taker.tasks.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessFiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRequestTakerDepositPaymentMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.SendPayoutTxToOfferer;
+import io.bitsquare.trade.protocol.trade.taker.tasks.SendPayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SendRequestDepositTxInputsMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.SendSignedTakerDepositTx;
+import io.bitsquare.trade.protocol.trade.taker.tasks.SendRequestPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.SignAndPublishPayoutTx;
-import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCommitDepositTx;
-import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCreatesAndSignsDepositTx;
+import io.bitsquare.trade.protocol.trade.taker.tasks.CommitDepositTx;
+import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOffererAccount;
 
@@ -123,8 +123,8 @@ public class TakerProtocol implements Protocol {
                 ProcessRequestTakerDepositPaymentMessage.class,
                 VerifyOffererAccount.class,
                 CreateAndSignContract.class,
-                TakerCreatesAndSignsDepositTx.class,
-                SendSignedTakerDepositTx.class
+                CreateAndSignDepositTx.class,
+                SendRequestPublishDepositTxMessage.class
         );
         taskRunner.run();
     }
@@ -138,7 +138,7 @@ public class TakerProtocol implements Protocol {
 
         taskRunner.addTasks(
                 ProcessDepositTxPublishedMessage.class,
-                TakerCommitDepositTx.class
+                CommitDepositTx.class
         );
         taskRunner.run();
     }
@@ -175,7 +175,7 @@ public class TakerProtocol implements Protocol {
         taskRunner.addTasks(
                 SignAndPublishPayoutTx.class,
                 VerifyOfferFeePayment.class,
-                SendPayoutTxToOfferer.class
+                SendPayoutTxPublishedMessage.class
         );
         taskRunner.run();
     }

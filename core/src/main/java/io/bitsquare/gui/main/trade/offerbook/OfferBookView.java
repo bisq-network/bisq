@@ -145,9 +145,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         table.sort();
 
         //TODO temp for testing
-        amountTextField.setText("1");
+       /* amountTextField.setText("1");
         priceTextField.setText("300");
-        volumeTextField.setText("300");
+        volumeTextField.setText("300");*/
     }
 
     @Override

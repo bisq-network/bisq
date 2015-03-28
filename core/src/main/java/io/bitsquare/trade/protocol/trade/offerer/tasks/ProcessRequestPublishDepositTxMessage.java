@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.protocol.trade.messages.RequestOffererPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,17 +27,17 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.*;
 import static io.bitsquare.util.Validator.*;
 
-public class ProcessRequestOffererPublishDepositTxMessage extends OffererTradeTask {
-    private static final Logger log = LoggerFactory.getLogger(ProcessRequestOffererPublishDepositTxMessage.class);
+public class ProcessRequestPublishDepositTxMessage extends OffererTradeTask {
+    private static final Logger log = LoggerFactory.getLogger(ProcessRequestPublishDepositTxMessage.class);
 
-    public ProcessRequestOffererPublishDepositTxMessage(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
+    public ProcessRequestPublishDepositTxMessage(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
         super(taskHandler, offererTradeProcessModel);
     }
 
     @Override
     protected void doRun() {
         try {
-            RequestOffererPublishDepositTxMessage message = (RequestOffererPublishDepositTxMessage) offererTradeProcessModel.getTradeMessage();
+            RequestPublishDepositTxMessage message = (RequestPublishDepositTxMessage) offererTradeProcessModel.getTradeMessage();
             checkTradeId(offererTradeProcessModel.getId(), message);
             checkNotNull(message);
 
