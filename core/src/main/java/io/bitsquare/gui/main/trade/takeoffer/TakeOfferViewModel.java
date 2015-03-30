@@ -26,6 +26,8 @@ import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.trade.TakerAsBuyerTrade;
+import io.bitsquare.trade.TakerAsSellerTrade;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -54,7 +56,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         DETAILS_SCREEN
     }
 
-    private String fiatCode;
     private String amountRange;
     private String price;
     private String directionLabel;
@@ -85,7 +86,11 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final StringProperty transactionId = new SimpleStringProperty();
     final StringProperty errorMessage = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
-
+    final StringProperty amountDescription = new SimpleStringProperty();
+    final StringProperty volumeDescriptionLabel = new SimpleStringProperty();
+    final StringProperty fiatCode = new SimpleStringProperty();
+    final StringProperty amountPriceBoxInfo = new SimpleStringProperty();
+    final StringProperty fundsBoxInfoDisplay = new SimpleStringProperty();
 
     final BooleanProperty takeOfferButtonDisabled = new SimpleBooleanProperty(false);
     final BooleanProperty isTakeOfferSpinnerVisible = new SimpleBooleanProperty(false);
@@ -115,16 +120,29 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     // setOfferBookFilter is a one time call
-    void initWithData(Offer.Direction direction, Coin amount, Offer offer) {
+    void initWithData(Coin amount, Offer offer) {
         dataModel.initWithData(amount, offer);
 
-        directionLabel = direction == Offer.Direction.BUY ?
-                BSResources.get("shared.buy") : BSResources.get("shared.sell");
+        directionLabel = offer.getDirection() == Offer.Direction.SELL ?
+                BSResources.get("shared.buyBitcoin") : BSResources.get("shared.sellBitcoin");
 
-        fiatCode = offer.getCurrencyCode();
+        fiatCode.set(offer.getCurrencyCode());
         if (!dataModel.isMinAmountLessOrEqualAmount()) {
             amountValidationResult.set(new InputValidator.ValidationResult(false,
                     BSResources.get("takeOffer.validation.amountSmallerThanMinAmount")));
+        }
+
+        if (dataModel.getDirection() == Offer.Direction.BUY) {
+            amountDescription.set(BSResources.get("takeOffer.amountPriceBox.buy.amountDescription", offer.getId()));
+            volumeDescriptionLabel.set(BSResources.get("takeOffer.amountPriceBox.buy.volumeDescription", fiatCode.get()));
+            amountPriceBoxInfo.set(BSResources.get("takeOffer.amountPriceBox.buy.info"));
+            fundsBoxInfoDisplay.set(BSResources.get("takeOffer.fundsBox.buy.info"));
+        }
+        else {
+            amountDescription.set(BSResources.get("takeOffer.amountPriceBox.sell.amountDescription", offer.getId()));
+            volumeDescriptionLabel.set(BSResources.get("takeOffer.amountPriceBox.sell.volumeDescription", fiatCode.get()));
+            amountPriceBoxInfo.set(BSResources.get("takeOffer.amountPriceBox.sell.info"));
+            fundsBoxInfoDisplay.set(BSResources.get("takeOffer.fundsBox.sell.info"));
         }
 
         //model.volumeAsFiat.set(offer.getVolumeByAmount(model.amountAsCoin.get()));
@@ -210,39 +228,74 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         dataModel.takeOffer((takerTrade) -> {
             takerTrade.processStateProperty().addListener((ov, oldValue, newValue) -> {
                 log.debug("takerTrade state = " + newValue);
+
                 String msg = "";
                 if (takerTrade.getErrorMessage() != null)
                     msg = "\nError message: " + takerTrade.getErrorMessage();
 
-                switch (newValue) {
-                    case TAKE_OFFER_FEE_TX_CREATED:
-                        break;
-                    case DEPOSIT_PUBLISHED:
-                    case DEPOSIT_CONFIRMED:
-                        assert takerTrade.getDepositTx() != null;
-                        transactionId.set(takerTrade.getDepositTx().getHashAsString());
-                        applyTakeOfferRequestResult(true);
-                        break;
-                    case FIAT_PAYMENT_STARTED:
-                        break;
-                    case TAKE_OFFER_FEE_PUBLISH_FAILED:
-                        errorMessage.set("An error occurred when paying the takerTrade fee." + msg);
-                        takeOfferRequested = false;
-                        break;
-                    case MESSAGE_SENDING_FAILED:
-                        errorMessage.set("An error occurred when sending a message to the offerer. Maybe there are connection problems. " +
-                                "Please try later again." + msg);
-                        takeOfferRequested = false;
-                        break;
-                    case PAYOUT_PUBLISHED:
-                        break;
-                    case EXCEPTION:
-                        errorMessage.set(msg);
-                        takeOfferRequested = false;
-                        break;
-                    default:
-                        log.warn("Unhandled takerTrade state: " + newValue);
-                        break;
+                if (takerTrade instanceof TakerAsBuyerTrade) {
+                    switch ((TakerAsBuyerTrade.ProcessState) newValue) {
+                        case TAKE_OFFER_FEE_TX_CREATED:
+                            break;
+                        case DEPOSIT_PUBLISHED:
+                        case DEPOSIT_CONFIRMED:
+                            assert takerTrade.getDepositTx() != null;
+                            transactionId.set(takerTrade.getDepositTx().getHashAsString());
+                            applyTakeOfferRequestResult(true);
+                            break;
+                        case FIAT_PAYMENT_STARTED:
+                            break;
+                        case TAKE_OFFER_FEE_PUBLISH_FAILED:
+                            errorMessage.set("An error occurred when paying the takerTrade fee." + msg);
+                            takeOfferRequested = false;
+                            break;
+                        case MESSAGE_SENDING_FAILED:
+                            errorMessage.set("An error occurred when sending a message to the offerer. Maybe there are connection problems. " +
+                                    "Please try later again." + msg);
+                            takeOfferRequested = false;
+                            break;
+                        case PAYOUT_PUBLISHED:
+                            break;
+                        case EXCEPTION:
+                            errorMessage.set(msg);
+                            takeOfferRequested = false;
+                            break;
+                        default:
+                            log.warn("Unhandled takerTrade state: " + newValue);
+                            break;
+                    }
+                }
+                else if (takerTrade instanceof TakerAsSellerTrade) {
+                    switch ((TakerAsSellerTrade.ProcessState) newValue) {
+                        case TAKE_OFFER_FEE_TX_CREATED:
+                            break;
+                        case DEPOSIT_PUBLISHED:
+                        case DEPOSIT_CONFIRMED:
+                            assert takerTrade.getDepositTx() != null;
+                            transactionId.set(takerTrade.getDepositTx().getHashAsString());
+                            applyTakeOfferRequestResult(true);
+                            break;
+                        case FIAT_PAYMENT_STARTED:
+                            break;
+                        case TAKE_OFFER_FEE_PUBLISH_FAILED:
+                            errorMessage.set("An error occurred when paying the takerTrade fee." + msg);
+                            takeOfferRequested = false;
+                            break;
+                        case MESSAGE_SENDING_FAILED:
+                            errorMessage.set("An error occurred when sending a message to the offerer. Maybe there are connection problems. " +
+                                    "Please try later again." + msg);
+                            takeOfferRequested = false;
+                            break;
+                        case PAYOUT_PUBLISHED:
+                            break;
+                        case EXCEPTION:
+                            errorMessage.set(msg);
+                            takeOfferRequested = false;
+                            break;
+                        default:
+                            log.warn("Unhandled takerTrade state: " + newValue);
+                            break;
+                    }
                 }
 
                 if (errorMessage.get() != null) {
@@ -253,6 +306,10 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
             evaluateState();
         });
+    }
+
+    boolean isSeller() {
+        return dataModel.getDirection() == Offer.Direction.BUY;
     }
 
     void securityDepositInfoDisplayed() {
@@ -307,7 +364,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     String getFiatCode() {
-        return fiatCode;
+        return fiatCode.get();
     }
 
     String getAmount() {

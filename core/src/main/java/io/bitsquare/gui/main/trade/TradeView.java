@@ -22,7 +22,6 @@ import io.bitsquare.common.viewfx.view.View;
 import io.bitsquare.common.viewfx.view.ViewLoader;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.InputTextField;
-import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.trade.createoffer.CreateOfferView;
 import io.bitsquare.gui.main.trade.offerbook.OfferBookView;
@@ -128,13 +127,6 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
             OfferActionHandler offerActionHandler = new OfferActionHandler() {
                 @Override
                 public void createOffer(Coin amount, Fiat price) {
-                    if (TradeView.this instanceof SellView) {
-                        Popups.openWarningPopup("Warning",
-                                "Please note that a sell offer is not supported yet for trading",
-                                "You can create the offer and it appears in the offerbook, " +
-                                        "but nobody can take the offer.\n" +
-                                        "That will be implemented in an upcoming development milestone.");
-                    }
                     TradeView.this.amount = amount;
                     TradeView.this.price = price;
                     TradeView.this.navigation.navigateTo(MainView.class, TradeView.this.getClass(),
@@ -175,7 +167,7 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
             takeOfferView = (TakeOfferView) view;
-            takeOfferView.initWithData(direction, amount, offer);
+            takeOfferView.initWithData(amount, offer);
             takeOfferPane = ((TakeOfferView) view).getRoot();
             final Tab tab = new Tab("Take offer");
             takeOfferView.setCloseHandler(() -> {

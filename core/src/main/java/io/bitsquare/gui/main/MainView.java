@@ -91,9 +91,9 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             setDisable(true); // alpha
         }};
         ToggleButton settingsButton = new NavButton(SettingsView.class, "Settings");
-        ToggleButton accountButton = new NavButton(AccountView.class, "Account") {{
+        ToggleButton accountButton = new NavButton(AccountView.class, "Account"); /*{{
             setDisable(true); // alpha
-        }};
+        }};*/
         Pane portfolioButtonHolder = new Pane(portfolioButton);
         Pane bankAccountComboBoxHolder = new Pane();
 

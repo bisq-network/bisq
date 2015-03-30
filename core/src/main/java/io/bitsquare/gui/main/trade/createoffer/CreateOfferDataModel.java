@@ -75,7 +75,7 @@ class CreateOfferDataModel implements Activatable, DataModel {
 
     private final String offerId;
 
-    @Nullable private Offer.Direction direction = null;
+    private Offer.Direction direction;
     private AddressEntry addressEntry;
 
     final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
@@ -211,8 +211,12 @@ class CreateOfferDataModel implements Activatable, DataModel {
     }
 
     void calculateTotalToPay() {
-        if (securityDepositAsCoin.get() != null)
-            totalToPayAsCoin.set(offerFeeAsCoin.get().add(networkFeeAsCoin.get()).add(securityDepositAsCoin.get()));
+        if (securityDepositAsCoin.get() != null) {
+            if (direction == Offer.Direction.BUY)
+                totalToPayAsCoin.set(offerFeeAsCoin.get().add(networkFeeAsCoin.get()).add(securityDepositAsCoin.get()));
+            else
+                totalToPayAsCoin.set(offerFeeAsCoin.get().add(networkFeeAsCoin.get()).add(securityDepositAsCoin.get()).add(amountAsCoin.get()));
+        }
     }
 
 
@@ -232,13 +236,6 @@ class CreateOfferDataModel implements Activatable, DataModel {
     @Nullable
     Offer.Direction getDirection() {
         return direction;
-    }
-
-    @SuppressWarnings("NullableProblems")
-    void setDirection(Offer.Direction direction) {
-        // direction can not be changed once it is initially set
-        checkNotNull(direction);
-        this.direction = direction;
     }
 
     WalletService getWalletService() {
@@ -269,5 +266,10 @@ class CreateOfferDataModel implements Activatable, DataModel {
 
     public Boolean getDisplaySecurityDepositInfo() {
         return preferences.getDisplaySecurityDepositInfo();
+    }
+
+    public void initWithData(Offer.Direction direction, Coin amount, Fiat price) {
+        checkNotNull(direction);
+        this.direction = direction;
     }
 }

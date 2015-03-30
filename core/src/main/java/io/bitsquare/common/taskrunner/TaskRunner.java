@@ -45,7 +45,7 @@ public class TaskRunner<T extends Model> {
         this.resultHandler = resultHandler;
         this.errorMessageHandler = errorMessageHandler;
     }
-    
+
     public final void addTasks(Class<? extends Task<? extends Model>>... items) {
         List<Class<? extends Task<? extends Model>>> list = Arrays.asList(items);
         tasks.addAll(list);
@@ -61,7 +61,19 @@ public class TaskRunner<T extends Model> {
                 try {
                     currentTask = tasks.poll();
                     log.trace("Run task: " + currentTask.getSimpleName());
-                    currentTask.getDeclaredConstructor(TaskRunner.class, sharedModel.getClass()).newInstance(this, sharedModel).run();
+                    log.debug("sharedModel.getClass() " + sharedModel.getClass());
+                    log.debug("sharedModel.getClass().getSuperclass() " + sharedModel.getClass().getSuperclass());
+                   /* Object c = currentTask.getDeclaredConstructor(TaskRunner.class, sharedModel.getClass());
+                    log.debug("c " + c);
+                    Object c2 = currentTask.getDeclaredConstructor(TaskRunner.class, sharedModel.getClass().getSuperclass());
+                    log.debug("c getSuperclass " + c2);
+                    Object o = currentTask.getDeclaredConstructor(TaskRunner.class, sharedModel.getClass()).newInstance(this, sharedModel);*/
+                    //TODO solve in tasks problem with superclasses
+                    try {
+                        currentTask.getDeclaredConstructor(TaskRunner.class, sharedModel.getClass()).newInstance(this, sharedModel).run();
+                    } catch (Throwable throwable) {
+                        currentTask.getDeclaredConstructor(TaskRunner.class, sharedModel.getClass().getSuperclass()).newInstance(this, sharedModel).run();
+                    }
                 } catch (Throwable throwable) {
                     throwable.printStackTrace();
                     handleErrorMessage("Error at taskRunner: " + throwable.getMessage());

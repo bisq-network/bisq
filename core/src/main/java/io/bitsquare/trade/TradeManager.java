@@ -56,6 +56,7 @@ import com.google.common.util.concurrent.FutureCallback;
 
 import java.io.File;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,7 +91,7 @@ public class TradeManager {
     private final Map<String, CheckOfferAvailabilityProtocol> checkOfferAvailabilityProtocolMap = new HashMap<>();
     private final Storage<TradeList> pendingTradesStorage;
     private final Storage<TradeList> openOfferTradesStorage;
-    private final TradeList<OffererTrade> openOfferTrades;
+    private final TradeList<OffererAsBuyerTrade> openOfferTrades;
     private final TradeList<Trade> pendingTrades;
     private final TradeList<Trade> closedTrades;
 
@@ -149,24 +150,42 @@ public class TradeManager {
     // When all services are initialized we create the protocols for our open offers and persisted pendingTrades
     // OffererAsBuyerProtocol listens for take offer requests, so we need to instantiate it early.
     public void onAllServicesInitialized() {
-        for (OffererTrade offererTrade : openOfferTrades) {
-            Offer offer = offererTrade.getOffer();
+        for (OffererAsBuyerTrade OffererAsBuyerTrade : openOfferTrades) {
+            Offer offer = OffererAsBuyerTrade.getOffer();
             // We add own offers to offerbook when we go online again
             offerBookService.addOffer(offer,
                     () -> log.debug("Successful removed open offer from DHT"),
                     (message, throwable) -> log.error("Remove open offer from DHT failed. " + message));
-            setupDepositPublishedListener(offererTrade);
-            offererTrade.setStorage(openOfferTradesStorage);
-            initTrade(offererTrade);
+            setupDepositPublishedListener(OffererAsBuyerTrade);
+            OffererAsBuyerTrade.setStorage(openOfferTradesStorage);
+            initTrade(OffererAsBuyerTrade);
 
         }
+        List<Trade> failedTrades = new ArrayList<>();
         for (Trade trade : pendingTrades) {
             // We continue an interrupted trade.
             // TODO if the peer has changed its IP address, we need to make another findPeer request. At the moment we use the peer stored in trade to
             // continue the trade, but that might fail.
-            trade.setStorage(pendingTradesStorage);
-            trade.updateDepositTxFromWallet(tradeWalletService);
-            initTrade(trade);
+
+            boolean failed = false;
+            if (trade instanceof TakerAsSellerTrade) {
+                failed = trade.lifeCycleState == TakerAsSellerTrade.LifeCycleState.FAILED;
+            }
+            else if (trade instanceof TakerAsBuyerTrade) {
+                failed = trade.lifeCycleState == TakerAsBuyerTrade.LifeCycleState.FAILED;
+            }
+            if (failed) {
+                failedTrades.add(trade);
+            }
+            else {
+                trade.setStorage(pendingTradesStorage);
+                trade.updateDepositTxFromWallet(tradeWalletService);
+                initTrade(trade);
+            }
+        }
+        for (Trade trade : failedTrades) {
+            pendingTrades.remove(trade);
+            closedTrades.add(trade);
         }
 
         // if there are messages in our mailbox we apply it and remove them from the DHT
@@ -210,8 +229,8 @@ public class TradeManager {
             log.debug("shutDown");
             shutDownRequested = true;
             // we remove own offers form offerbook when we go offline
-            for (OffererTrade offererTrade : openOfferTrades) {
-                Offer offer = offererTrade.getOffer();
+            for (OffererAsBuyerTrade OffererAsBuyerTrade : openOfferTrades) {
+                Offer offer = OffererAsBuyerTrade.getOffer();
                 offerBookService.removeOfferAtShutDown(offer);
             }
         }
@@ -258,23 +277,23 @@ public class TradeManager {
     }
 
     private void handlePlaceOfferResult(Transaction transaction, Offer offer, TransactionResultHandler resultHandler) {
-        OffererTrade offererTrade = new OffererTrade(offer, openOfferTradesStorage);
-        openOfferTrades.add(offererTrade);
-        initTrade(offererTrade);
-        setupDepositPublishedListener(offererTrade);
+        OffererAsBuyerTrade offererAsBuyerTrade = new OffererAsBuyerTrade(offer, openOfferTradesStorage);
+        openOfferTrades.add(offererAsBuyerTrade);
+        initTrade(offererAsBuyerTrade);
+        setupDepositPublishedListener(offererAsBuyerTrade);
         resultHandler.handleResult(transaction);
     }
 
-    private void setupDepositPublishedListener(OffererTrade offererTrade) {
-        offererTrade.processStateProperty().addListener((ov, oldValue, newValue) -> {
-            log.debug("offererTrade state = " + newValue);
-            if (newValue == OffererTrade.OffererProcessState.DEPOSIT_PUBLISHED) {
-                removeOpenOffer(offererTrade.getOffer(),
+    private void setupDepositPublishedListener(OffererAsBuyerTrade offererAsBuyerTrade) {
+        offererAsBuyerTrade.processStateProperty().addListener((ov, oldValue, newValue) -> {
+            log.debug("OffererAsBuyerTrade state = " + newValue);
+            if (newValue == OffererAsBuyerTrade.ProcessState.DEPOSIT_PUBLISHED) {
+                removeOpenOffer(offererAsBuyerTrade.getOffer(),
                         () -> log.debug("remove offer was successful"),
                         log::error,
                         false);
-                pendingTrades.add(offererTrade);
-                offererTrade.setStorage(pendingTradesStorage);
+                pendingTrades.add(offererAsBuyerTrade);
+                offererAsBuyerTrade.setStorage(pendingTradesStorage);
             }
         });
     }
@@ -290,15 +309,15 @@ public class TradeManager {
         offerBookService.removeOffer(offer,
                 () -> {
                     offer.setState(Offer.State.REMOVED);
-                    Optional<OffererTrade> offererTradeOptional = openOfferTrades.stream().filter(e -> e.getId().equals(offer.getId())).findAny();
-                    if (offererTradeOptional.isPresent()) {
-                        OffererTrade offererTrade = offererTradeOptional.get();
-                        openOfferTrades.remove(offererTrade);
+                    Optional<OffererAsBuyerTrade> OffererAsBuyerTradeOptional = openOfferTrades.stream().filter(e -> e.getId().equals(offer.getId())).findAny();
+                    if (OffererAsBuyerTradeOptional.isPresent()) {
+                        OffererAsBuyerTrade offererAsBuyerTrade = OffererAsBuyerTradeOptional.get();
+                        openOfferTrades.remove(offererAsBuyerTrade);
 
                         if (isCancelRequest) {
-                            offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_CANCELED);
-                            closedTrades.add(offererTrade);
-                            offererTrade.disposeProtocol();
+                            offererAsBuyerTrade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_CANCELED);
+                            closedTrades.add(offererAsBuyerTrade);
+                            offererAsBuyerTrade.disposeProtocol();
                         }
                     }
 
@@ -351,7 +370,7 @@ public class TradeManager {
             takeOfferResultHandler) {
         disposeCheckOfferAvailabilityRequest(offer);
         if (offer.getState() == Offer.State.AVAILABLE) {
-            TakerTrade takerTrade = new TakerTrade(offer, amount, model.getPeer(), pendingTradesStorage);
+            TakerAsSellerTrade takerTrade = new TakerAsSellerTrade(offer, amount, model.getPeer(), pendingTradesStorage);
             initTrade(takerTrade);
             pendingTrades.add(takerTrade);
             takerTrade.takeAvailableOffer();
@@ -371,7 +390,7 @@ public class TradeManager {
         // TODO handle overpaid securityDeposit
         Coin amountToWithdraw = trade.getSecurityDeposit();
         assert trade.getTradeAmount() != null;
-        if (trade instanceof OffererTrade)
+        if (trade instanceof OffererAsBuyerTrade)
             amountToWithdraw = amountToWithdraw.add(trade.getTradeAmount());
 
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
@@ -379,10 +398,10 @@ public class TradeManager {
             public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                 if (transaction != null) {
                     log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
-                    if (trade instanceof OffererTrade)
-                        ((OffererTrade) trade).setLifeCycleState(OffererTrade.OffererLifeCycleState.COMPLETED);
+                    if (trade instanceof OffererAsBuyerTrade)
+                        ((OffererAsBuyerTrade) trade).setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.COMPLETED);
                     else
-                        ((TakerTrade) trade).setLifeCycleState(TakerTrade.TakerLifeCycleState.COMPLETED);
+                        ((TakerAsSellerTrade) trade).setLifeCycleState(TakerAsSellerTrade.LifeCycleState.COMPLETED);
 
                     pendingTrades.remove(trade);
                     closedTrades.add(trade);
@@ -421,7 +440,7 @@ public class TradeManager {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableList<OffererTrade> getOpenOfferTrades() {
+    public ObservableList<OffererAsBuyerTrade> getOpenOfferTrades() {
         return openOfferTrades.getObservableList();
     }
 

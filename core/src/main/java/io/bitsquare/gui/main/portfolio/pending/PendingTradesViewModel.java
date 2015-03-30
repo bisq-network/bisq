@@ -23,8 +23,10 @@ import io.bitsquare.common.viewfx.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.TakerTrade;
+import io.bitsquare.trade.OffererAsBuyerTrade;
+import io.bitsquare.trade.OffererAsSellerTrade;
+import io.bitsquare.trade.TakerAsBuyerTrade;
+import io.bitsquare.trade.TakerAsSellerTrade;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -240,79 +242,160 @@ class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataM
     }
 
     private void updateTakerState() {
-        TakerTrade.TakerProcessState processState = dataModel.takerProcessState.get();
-        log.debug("updateTakerState " + processState);
-        if (processState != null) {
-            switch (processState) {
-                case TAKE_OFFER_FEE_TX_CREATED:
-                    break;
-                case TAKE_OFFER_FEE_PUBLISHED:
-                    break;
-                case TAKE_OFFER_FEE_PUBLISH_FAILED:
-                    break;
+        if (dataModel.getTrade() instanceof TakerAsSellerTrade) {
+            TakerAsSellerTrade.ProcessState processState = (TakerAsSellerTrade.ProcessState) dataModel.takerProcessState.get();
+            log.debug("updateTakerState " + processState);
+            if (processState != null) {
+                switch (processState) {
+                    case TAKE_OFFER_FEE_TX_CREATED:
+                        break;
+                    case TAKE_OFFER_FEE_PUBLISHED:
+                        break;
+                    case TAKE_OFFER_FEE_PUBLISH_FAILED:
+                        break;
 
-                case DEPOSIT_PUBLISHED:
-                    viewState.set(ViewState.TAKER_SELLER_WAIT_TX_CONF);
-                    break;
-                case DEPOSIT_CONFIRMED:
-                    viewState.set(ViewState.TAKER_SELLER_WAIT_PAYMENT_STARTED);
-                    break;
+                    case DEPOSIT_PUBLISHED:
+                        viewState.set(ViewState.TAKER_SELLER_WAIT_TX_CONF);
+                        break;
+                    case DEPOSIT_CONFIRMED:
+                        viewState.set(ViewState.TAKER_SELLER_WAIT_PAYMENT_STARTED);
+                        break;
 
-                case FIAT_PAYMENT_STARTED:
-                    viewState.set(ViewState.TAKER_SELLER_CONFIRM_RECEIVE_PAYMENT);
-                    break;
+                    case FIAT_PAYMENT_STARTED:
+                        viewState.set(ViewState.TAKER_SELLER_CONFIRM_RECEIVE_PAYMENT);
+                        break;
 
-                case FIAT_PAYMENT_RECEIVED:
-                    viewState.set(ViewState.TAKER_SELLER_COMPLETED);
-                    break;
-                case PAYOUT_PUBLISHED:
-                    break;
+                    case FIAT_PAYMENT_RECEIVED:
+                        viewState.set(ViewState.TAKER_SELLER_COMPLETED);
+                        break;
+                    case PAYOUT_PUBLISHED:
+                        break;
 
-                case MESSAGE_SENDING_FAILED:
-                    viewState.set(ViewState.MESSAGE_SENDING_FAILED);
-                    break;
-                case EXCEPTION:
-                    viewState.set(ViewState.EXCEPTION);
-                    break;
+                    case MESSAGE_SENDING_FAILED:
+                        viewState.set(ViewState.MESSAGE_SENDING_FAILED);
+                        break;
+                    case EXCEPTION:
+                        viewState.set(ViewState.EXCEPTION);
+                        break;
 
-                default:
-                    log.warn("unhandled processState " + processState);
-                    break;
+                    default:
+                        log.warn("unhandled processState " + processState);
+                        break;
+                }
             }
         }
+        else if (dataModel.getTrade() instanceof TakerAsBuyerTrade) {
+            TakerAsBuyerTrade.ProcessState processState = (TakerAsBuyerTrade.ProcessState) dataModel.takerProcessState.get();
+            log.debug("updateTakerState " + processState);
+            if (processState != null) {
+                switch (processState) {
+                    case TAKE_OFFER_FEE_TX_CREATED:
+                        break;
+                    case TAKE_OFFER_FEE_PUBLISHED:
+                        break;
+                    case TAKE_OFFER_FEE_PUBLISH_FAILED:
+                        break;
+
+                    case DEPOSIT_PUBLISHED:
+                        viewState.set(ViewState.TAKER_SELLER_WAIT_TX_CONF);
+                        break;
+                    case DEPOSIT_CONFIRMED:
+                        viewState.set(ViewState.TAKER_SELLER_WAIT_PAYMENT_STARTED);
+                        break;
+
+                    case FIAT_PAYMENT_STARTED:
+                        viewState.set(ViewState.TAKER_SELLER_CONFIRM_RECEIVE_PAYMENT);
+                        break;
+
+                    case FIAT_PAYMENT_RECEIVED:
+                        viewState.set(ViewState.TAKER_SELLER_COMPLETED);
+                        break;
+                    case PAYOUT_PUBLISHED:
+                        break;
+
+                    case MESSAGE_SENDING_FAILED:
+                        viewState.set(ViewState.MESSAGE_SENDING_FAILED);
+                        break;
+                    case EXCEPTION:
+                        viewState.set(ViewState.EXCEPTION);
+                        break;
+
+                    default:
+                        log.warn("unhandled processState " + processState);
+                        break;
+                }
+            }
+        }
+
     }
 
     private void updateOffererState() {
-        OffererTrade.OffererProcessState processState = dataModel.offererProcessState.get();
-        log.debug("updateOffererState " + processState);
-        if (processState != null) {
-            switch (processState) {
-                case DEPOSIT_PUBLISHED:
-                    viewState.set(ViewState.OFFERER_BUYER_WAIT_TX_CONF);
-                    break;
-                case DEPOSIT_CONFIRMED:
-                    viewState.set(ViewState.OFFERER_BUYER_START_PAYMENT);
-                    break;
+        if (dataModel.getTrade() instanceof OffererAsBuyerTrade) {
+            OffererAsBuyerTrade.ProcessState processState = (OffererAsBuyerTrade.ProcessState) dataModel.offererProcessState.get();
+            log.debug("updateOffererState " + processState);
+            if (processState != null) {
+                switch (processState) {
+                    case DEPOSIT_PUBLISHED:
+                        viewState.set(ViewState.OFFERER_BUYER_WAIT_TX_CONF);
+                        break;
+                    case DEPOSIT_CONFIRMED:
+                        viewState.set(ViewState.OFFERER_BUYER_START_PAYMENT);
+                        break;
 
-                case FIAT_PAYMENT_STARTED:
-                    viewState.set(ViewState.OFFERER_BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED);
-                    break;
+                    case FIAT_PAYMENT_STARTED:
+                        viewState.set(ViewState.OFFERER_BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED);
+                        break;
 
-                case PAYOUT_PUBLISHED:
-                    viewState.set(ViewState.OFFERER_BUYER_COMPLETED);
-                    break;
+                    case PAYOUT_PUBLISHED:
+                        viewState.set(ViewState.OFFERER_BUYER_COMPLETED);
+                        break;
 
-                case MESSAGE_SENDING_FAILED:
-                    viewState.set(ViewState.MESSAGE_SENDING_FAILED);
-                    break;
-                case EXCEPTION:
-                    viewState.set(ViewState.EXCEPTION);
-                    break;
+                    case MESSAGE_SENDING_FAILED:
+                        viewState.set(ViewState.MESSAGE_SENDING_FAILED);
+                        break;
+                    case EXCEPTION:
+                        viewState.set(ViewState.EXCEPTION);
+                        break;
 
-                default:
-                    log.warn("unhandled viewState " + processState);
-                    break;
+                    default:
+                        log.warn("unhandled viewState " + processState);
+                        break;
+                }
             }
         }
+        else if (dataModel.getTrade() instanceof OffererAsSellerTrade) {
+            OffererAsSellerTrade.ProcessState processState = (OffererAsSellerTrade.ProcessState) dataModel.offererProcessState.get();
+            log.debug("updateOffererState " + processState);
+            if (processState != null) {
+                switch (processState) {
+                    case DEPOSIT_PUBLISHED:
+                        viewState.set(ViewState.OFFERER_BUYER_WAIT_TX_CONF);
+                        break;
+                    case DEPOSIT_CONFIRMED:
+                        viewState.set(ViewState.OFFERER_BUYER_START_PAYMENT);
+                        break;
+
+                    case FIAT_PAYMENT_STARTED:
+                        viewState.set(ViewState.OFFERER_BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED);
+                        break;
+
+                    case PAYOUT_PUBLISHED:
+                        viewState.set(ViewState.OFFERER_BUYER_COMPLETED);
+                        break;
+
+                    case MESSAGE_SENDING_FAILED:
+                        viewState.set(ViewState.MESSAGE_SENDING_FAILED);
+                        break;
+                    case EXCEPTION:
+                        viewState.set(ViewState.EXCEPTION);
+                        break;
+
+                    default:
+                        log.warn("unhandled viewState " + processState);
+                        break;
+                }
+            }
+        }
+
     }
 }

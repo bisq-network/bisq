@@ -23,7 +23,9 @@ import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.trade.OffererAsBuyerTrade;
 import io.bitsquare.trade.OffererTrade;
+import io.bitsquare.trade.TakerAsSellerTrade;
 import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -34,6 +36,8 @@ import org.bitcoinj.core.Coin;
 import com.google.inject.Inject;
 
 import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -65,8 +69,8 @@ class PendingTradesDataModel implements Activatable, DataModel {
     final StringProperty txId = new SimpleStringProperty();
     final IntegerProperty selectedIndex = new SimpleIntegerProperty(-1);
 
-    final ObjectProperty<TakerTrade.TakerProcessState> takerProcessState = new SimpleObjectProperty<>();
-    final ObjectProperty<OffererTrade.OffererProcessState> offererProcessState = new SimpleObjectProperty<>();
+    final ObjectProperty<Trade.ProcessState> takerProcessState = new SimpleObjectProperty<>();
+    final ObjectProperty<Trade.ProcessState> offererProcessState = new SimpleObjectProperty<>();
 
     @Inject
     public PendingTradesDataModel(TradeManager tradeManager, WalletService walletService, User user) {
@@ -115,10 +119,10 @@ class PendingTradesDataModel implements Activatable, DataModel {
         isOfferer = getTrade().getOffer().getP2PSigPubKey().equals(user.getP2PSigPubKey());
 
         Trade trade = getTrade();
-        if (trade instanceof TakerTrade)
-            takerProcessState.bind(((TakerTrade) trade).processStateProperty());
+        if (trade instanceof TakerAsSellerTrade)
+            takerProcessState.bind(trade.processStateProperty());
         else
-            offererProcessState.bind(((OffererTrade) trade).processStateProperty());
+            offererProcessState.bind(trade.processStateProperty());
 
         log.trace("selectTrade trade.stateProperty().get() " + trade.processStateProperty().get());
 
@@ -127,11 +131,11 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     void fiatPaymentStarted() {
-        ((OffererTrade) getTrade()).onFiatPaymentStarted();
+        ((OffererAsBuyerTrade) getTrade()).onFiatPaymentStarted();
     }
 
     void fiatPaymentReceived() {
-        ((TakerTrade) getTrade()).onFiatPaymentReceived();
+        ((TakerAsSellerTrade) getTrade()).onFiatPaymentReceived();
     }
 
     void withdraw(String toAddress) {
@@ -180,8 +184,9 @@ class PendingTradesDataModel implements Activatable, DataModel {
         return isOfferer;
     }
 
+    @Nullable
     Trade getTrade() {
-        return selectedItem.getTrade();
+        return selectedItem != null ? selectedItem.getTrade() : null;
     }
 
     Coin getTotalFees() {

@@ -30,20 +30,20 @@ public class FiatTransferStartedMessage extends TradeMessage implements MailboxM
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
 
-    public final byte[] offererSignature;
+    public final byte[] buyerSignature;
     public final Coin offererPayoutAmount;
     public final Coin takerPayoutAmount;
-    public final String offererPayoutAddress;
+    public final String buyerPayoutAddress;
 
     public FiatTransferStartedMessage(String tradeId,
-                                      byte[] offererSignature,
+                                      byte[] buyerSignature,
                                       Coin offererPayoutAmount,
                                       Coin takerPayoutAmount,
-                                      String offererPayoutAddress) {
+                                      String buyerPayoutAddress) {
         super(tradeId);
-        this.offererSignature = offererSignature;
+        this.buyerSignature = buyerSignature;
         this.offererPayoutAmount = offererPayoutAmount;
         this.takerPayoutAmount = takerPayoutAmount;
-        this.offererPayoutAddress = offererPayoutAddress;
+        this.buyerPayoutAddress = buyerPayoutAddress;
     }
 }

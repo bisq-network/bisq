@@ -27,6 +27,8 @@ import io.bitsquare.p2p.MessageService;
 import io.bitsquare.trade.protocol.trade.ProcessModel;
 import io.bitsquare.user.User;
 
+import org.bitcoinj.core.Transaction;
+
 import java.io.IOException;
 import java.io.Serializable;
 
@@ -47,6 +49,7 @@ public class OffererProcessModel extends ProcessModel implements Serializable {
 
     // Mutable
     private String takeOfferFeeTxId;
+    private Transaction payoutTx;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -99,6 +102,13 @@ public class OffererProcessModel extends ProcessModel implements Serializable {
         this.takeOfferFeeTxId = takeOfferFeeTxId;
     }
 
+    public Transaction getPayoutTx() {
+        return payoutTx;
+    }
+
+    public void setPayoutTx(Transaction payoutTx) {
+        this.payoutTx = payoutTx;
+    }
 
     @Override
     public String toString() {
@@ -108,4 +118,6 @@ public class OffererProcessModel extends ProcessModel implements Serializable {
                 ", takeOfferFeeTxId='" + takeOfferFeeTxId + '\'' +
                 '}';
     }
+
+
 }

@@ -28,31 +28,31 @@ import io.bitsquare.trade.protocol.placeoffer.tasks.AddOfferToRemoteOfferBook;
 import io.bitsquare.trade.protocol.placeoffer.tasks.BroadcastCreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.ValidateOffer;
-import io.bitsquare.trade.protocol.trade.offerer.OffererProtocol;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateAndSignPayoutTx;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateOffererDepositTxInputs;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessPayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestDepositTxInputsMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.ProcessRequestPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.SendRequestTakerDepositPaymentMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.SendFiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.SendDepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.SignAndPublishDepositTx;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyAndSignContract;
+import io.bitsquare.trade.protocol.trade.offerer.OffererAsBuyerProtocol;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererCreatesAndSignPayoutTx;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererCreatesDepositTxInputs;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererProcessPayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererProcessRequestDepositTxInputsMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererProcessRequestPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererSendsRequestSellerDepositPaymentMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererSendsFiatTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererSendsDepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererSignsAndPublishDepositTx;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererVerifiesAndSignsContract;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakeOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakerAccount;
-import io.bitsquare.trade.protocol.trade.taker.TakerProtocol;
-import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignContract;
+import io.bitsquare.trade.protocol.trade.taker.TakerAsSellerProtocol;
+import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCreatesAndSignContract;
 import io.bitsquare.trade.protocol.trade.taker.tasks.CreateTakeOfferFeeTx;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessDepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessFiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.ProcessRequestTakerDepositPaymentMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.SendPayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.SendRequestDepositTxInputsMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.SendRequestPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.SignAndPublishPayoutTx;
-import io.bitsquare.trade.protocol.trade.taker.tasks.CommitDepositTx;
-import io.bitsquare.trade.protocol.trade.taker.tasks.CreateAndSignDepositTx;
+import io.bitsquare.trade.protocol.trade.taker.tasks.TakerProcessDepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.TakerProcessFiatTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.TakerProcessRequestSellerDepositPaymentMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.TakerSendsPayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.TakerSendsRequestDepositTxInputsMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.TakerSendsRequestPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.TakerSignsAndPublishPayoutTx;
+import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCommitDepositTx;
+import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCreatesAndSignsDepositTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOffererAccount;
 
@@ -100,44 +100,44 @@ public class DebugView extends InitializableView {
 
                         
                         /*---- Protocol ----*/
-                        OffererProtocol.class,
-                        ProcessRequestDepositTxInputsMessage.class,
-                        CreateOffererDepositTxInputs.class,
-                        SendRequestTakerDepositPaymentMessage.class,
+                        OffererAsBuyerProtocol.class,
+                        OffererProcessRequestDepositTxInputsMessage.class,
+                        OffererCreatesDepositTxInputs.class,
+                        OffererSendsRequestSellerDepositPaymentMessage.class,
 
-                        ProcessRequestPublishDepositTxMessage.class,
+                        OffererProcessRequestPublishDepositTxMessage.class,
                         VerifyTakerAccount.class,
-                        VerifyAndSignContract.class,
-                        SignAndPublishDepositTx.class,
-                        SendDepositTxPublishedMessage.class,
+                        OffererVerifiesAndSignsContract.class,
+                        OffererSignsAndPublishDepositTx.class,
+                        OffererSendsDepositTxPublishedMessage.class,
 
-                        CreateAndSignPayoutTx.class,
+                        OffererCreatesAndSignPayoutTx.class,
                         VerifyTakeOfferFeePayment.class,
-                        SendFiatTransferStartedMessage.class,
+                        OffererSendsFiatTransferStartedMessage.class,
 
-                        ProcessPayoutTxPublishedMessage.class,
+                        OffererProcessPayoutTxPublishedMessage.class,
                         Boolean.class, /* used as seperator*/
                         
 
                         /*---- Protocol ----*/
-                        TakerProtocol.class,
+                        TakerAsSellerProtocol.class,
                         CreateTakeOfferFeeTx.class,
-                        SendRequestDepositTxInputsMessage.class,
+                        TakerSendsRequestDepositTxInputsMessage.class,
 
-                        ProcessRequestTakerDepositPaymentMessage.class,
+                        TakerProcessRequestSellerDepositPaymentMessage.class,
                         VerifyOffererAccount.class,
-                        CreateAndSignContract.class,
-                        CreateAndSignDepositTx.class,
-                        SendRequestPublishDepositTxMessage.class,
+                        TakerCreatesAndSignContract.class,
+                        TakerCreatesAndSignsDepositTx.class,
+                        TakerSendsRequestPublishDepositTxMessage.class,
 
-                        ProcessDepositTxPublishedMessage.class,
-                        CommitDepositTx.class,
+                        TakerProcessDepositTxPublishedMessage.class,
+                        TakerCommitDepositTx.class,
 
-                        ProcessFiatTransferStartedMessage.class,
+                        TakerProcessFiatTransferStartedMessage.class,
 
-                        SignAndPublishPayoutTx.class,
+                        TakerSignsAndPublishPayoutTx.class,
                         VerifyOfferFeePayment.class,
-                        SendPayoutTxPublishedMessage.class
+                        TakerSendsPayoutTxPublishedMessage.class
                 )
         );
 

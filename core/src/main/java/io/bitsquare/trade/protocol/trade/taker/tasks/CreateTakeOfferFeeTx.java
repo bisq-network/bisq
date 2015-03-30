@@ -18,6 +18,8 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.TakerAsBuyerTrade;
+import io.bitsquare.trade.TakerAsSellerTrade;
 import io.bitsquare.trade.TakerTrade;
 
 import org.bitcoinj.core.Transaction;
@@ -39,7 +41,11 @@ public class CreateTakeOfferFeeTx extends TakerTradeTask {
                     .getAddressEntry());
 
             takerTradeProcessModel.setTakeOfferFeeTx(createTakeOfferFeeTx);
-            takerTrade.setProcessState(TakerTrade.TakerProcessState.TAKE_OFFER_FEE_TX_CREATED);
+
+            if (takerTrade instanceof TakerAsBuyerTrade)
+                takerTrade.setProcessState(TakerAsBuyerTrade.ProcessState.TAKE_OFFER_FEE_TX_CREATED);
+            else if (takerTrade instanceof TakerAsSellerTrade)
+                takerTrade.setProcessState(TakerAsSellerTrade.ProcessState.TAKE_OFFER_FEE_TX_CREATED);
 
             complete();
         } catch (Throwable t) {

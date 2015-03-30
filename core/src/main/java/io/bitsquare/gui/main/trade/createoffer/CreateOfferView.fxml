@@ -51,7 +51,7 @@
                     <Insets bottom="10.0" left="10.0" right="10.0" top="20.0"/>
                 </GridPane.margin>
                 <ImageView fx:id="imageView" pickOnBounds="true"/>
-                <Label fx:id="buyLabel" id="direction-icon-label" text="%createOffer.amountPriceBox.subTitle"
+                <Label fx:id="buyLabel" id="direction-icon-label" 
                        alignment="CENTER">
                     <padding>
                         <Insets top="-5.0"/>
@@ -64,7 +64,7 @@
                     <Insets right="10.0" top="20.0"/>
                 </GridPane.margin>
                 <VBox spacing="4">
-                    <Label id="input-description-label" text="%createOffer.amountPriceBox.amountDescription"
+                    <Label fx:id="amountToTradeLabel" id="input-description-label" text="%createOffer.amountPriceBox.amountDescription"
                            prefWidth="170"/>
                     <HBox>
                         <InputTextField fx:id="amountTextField" id="text-input-with-currency-text-field"
@@ -125,8 +125,7 @@
                 </HBox>
             </VBox>
 
-            <InfoDisplay gridPane="$gridPane" onAction="#onOpenGeneralHelp" rowIndex="2"
-                         text="%createOffer.amountPriceBox.info"/>
+            <InfoDisplay fx:id="amountPriceBoxInfo" gridPane="$gridPane" onAction="#onOpenGeneralHelp" rowIndex="2"/>
 
             <Button fx:id="showPaymentInfoScreenButton" text="%createOffer.amountPriceBox.next" id="show-details-button"
                     GridPane.columnIndex="1" GridPane.rowIndex="3" defaultButton="true"

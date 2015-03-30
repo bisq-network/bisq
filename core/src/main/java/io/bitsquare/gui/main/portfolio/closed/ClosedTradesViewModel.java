@@ -20,8 +20,8 @@ package io.bitsquare.gui.main.portfolio.closed;
 import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
 import io.bitsquare.common.viewfx.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.TakerTrade;
+import io.bitsquare.trade.OffererAsSellerTrade;
+import io.bitsquare.trade.TakerAsBuyerTrade;
 import io.bitsquare.trade.Trade;
 
 import com.google.inject.Inject;
@@ -71,8 +71,8 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
     String getState(ClosedTradesListItem item) {
         if (item != null && item.getTrade() != null) {
             Trade.LifeCycleState lifeCycleState = item.getTrade().lifeCycleStateProperty().get();
-            if (lifeCycleState instanceof TakerTrade.TakerLifeCycleState) {
-                switch ((TakerTrade.TakerLifeCycleState) lifeCycleState) {
+            if (lifeCycleState instanceof TakerAsBuyerTrade.LifeCycleState) {
+                switch ((TakerAsBuyerTrade.LifeCycleState) lifeCycleState) {
                     case COMPLETED:
                         return "Completed";
                     case FAILED:
@@ -81,8 +81,8 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                         throw new RuntimeException("That must not happen. We got a pending state but we are in the closed trades list.");
                 }
             }
-            else if (lifeCycleState instanceof OffererTrade.OffererLifeCycleState) {
-                switch ((OffererTrade.OffererLifeCycleState) lifeCycleState) {
+            else if (lifeCycleState instanceof OffererAsSellerTrade.LifeCycleState) {
+                switch ((OffererAsSellerTrade.LifeCycleState) lifeCycleState) {
                     case OFFER_CANCELED:
                         return "Canceled";
                     case COMPLETED:
@@ -94,11 +94,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                         throw new RuntimeException("That must not happen. We got a pending state but we are in the closed trades list.");
                 }
             }
-            throw new RuntimeException("That must not happen. We got no defined state.");
         }
-        else {
-            return "";
-        }
+        return "";
     }
-
 }

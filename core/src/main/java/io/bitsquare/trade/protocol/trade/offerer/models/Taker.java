@@ -44,7 +44,7 @@ public class Taker implements Serializable {
     // Mutable
     private String accountId;
     private FiatAccount fiatAccount;
-    private PublicKey p2pSigPublicKey;
+    private PublicKey p2pSigPubKey;
     private PublicKey p2pEncryptPubKey;
     private String contractAsJson;
     private String contractSignature;
@@ -53,7 +53,8 @@ public class Taker implements Serializable {
     private List<TransactionOutput> connectedOutputsForAllInputs;
     private String payoutAddressString;
     private byte[] tradeWalletPubKey;
-
+    private List<TransactionOutput> outputs;
+    private byte[] signature;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -89,12 +90,12 @@ public class Taker implements Serializable {
         this.fiatAccount = fiatAccount;
     }
 
-    public PublicKey getP2pSigPublicKey() {
-        return p2pSigPublicKey;
+    public PublicKey getP2pSigPubKey() {
+        return p2pSigPubKey;
     }
 
-    public void setP2pSigPublicKey(PublicKey p2pSigPublicKey) {
-        this.p2pSigPublicKey = p2pSigPublicKey;
+    public void setP2pSigPubKey(PublicKey p2pSigPubKey) {
+        this.p2pSigPubKey = p2pSigPubKey;
     }
 
     public PublicKey getP2pEncryptPubKey() {
@@ -161,13 +162,28 @@ public class Taker implements Serializable {
         this.tradeWalletPubKey = tradeWalletPubKey;
     }
 
+    public List<TransactionOutput> getOutputs() {
+        return outputs;
+    }
+
+    public void setOutputs(List<TransactionOutput> outputs) {
+        this.outputs = outputs;
+    }
+
+    public byte[] getSignature() {
+        return signature;
+    }
+
+    public void setSignature(byte[] signature) {
+        this.signature = signature;
+    }
 
     @Override
     public String toString() {
         return "Taker{" +
                 "accountId='" + accountId + '\'' +
                 ", fiatAccount=" + fiatAccount +
-                ", p2pSigPublicKey=" + p2pSigPublicKey +
+                ", p2pSigPublicKey=" + p2pSigPubKey +
                 ", p2pEncryptPubKey=" + p2pEncryptPubKey +
                 ", contractAsJson='" + contractAsJson + '\'' +
                 ", contractSignature='" + contractSignature + '\'' +
@@ -178,4 +194,6 @@ public class Taker implements Serializable {
                 ", tradeWalletPubKey=" + Arrays.toString(tradeWalletPubKey) +
                 '}';
     }
+
+
 }

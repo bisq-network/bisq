@@ -17,9 +17,6 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.btc.exceptions.SigningException;
-import io.bitsquare.btc.exceptions.TransactionVerificationException;
-import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.TakerTrade;

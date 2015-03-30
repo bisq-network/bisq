@@ -50,13 +50,18 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private final BSFormatter formatter;
     private final FiatValidator fiatValidator;
 
+
     final StringProperty amount = new SimpleStringProperty();
     final StringProperty minAmount = new SimpleStringProperty();
     final StringProperty price = new SimpleStringProperty();
     final StringProperty volume = new SimpleStringProperty();
+    final StringProperty volumeDescriptionLabel = new SimpleStringProperty();
+    final StringProperty amountPriceBoxInfo = new SimpleStringProperty();
     final StringProperty securityDeposit = new SimpleStringProperty();
+    final StringProperty tradeAmount = new SimpleStringProperty();
     final StringProperty totalToPay = new SimpleStringProperty();
     final StringProperty directionLabel = new SimpleStringProperty();
+    final StringProperty amountToTradeLabel = new SimpleStringProperty();
     final StringProperty offerFee = new SimpleStringProperty();
     final StringProperty networkFee = new SimpleStringProperty();
     final StringProperty bankAccountType = new SimpleStringProperty();
@@ -113,9 +118,21 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     // setOfferBookFilter is a one time call
     void initWithData(Offer.Direction direction, Coin amount, Fiat price) {
-        dataModel.setDirection(direction);
-        directionLabel.set(dataModel.getDirection() == Offer.Direction.BUY ? BSResources.get("shared.buy") : BSResources.get
-                ("shared.sell"));
+        dataModel.initWithData( direction,  amount,  price);
+
+        if (dataModel.getDirection() == Offer.Direction.BUY) {
+            directionLabel.set(BSResources.get("shared.buyBitcoin"));
+            amountToTradeLabel.set(BSResources.get("createOffer.amountPriceBox.amountDescription", BSResources.get("shared.buy")));
+            volumeDescriptionLabel.set(BSResources.get("createOffer.amountPriceBox.buy.volumeDescription", fiatCode.get()));
+            amountPriceBoxInfo.set(BSResources.get("createOffer.amountPriceBox.buy.info"));
+        }
+        else {
+            directionLabel.set(BSResources.get("shared.sellBitcoin"));
+            amountToTradeLabel.set(BSResources.get("createOffer.amountPriceBox.amountDescription", BSResources.get("shared.sell")));
+            volumeDescriptionLabel.set(BSResources.get("createOffer.amountPriceBox.sell.volumeDescription", fiatCode.get()));
+            amountPriceBoxInfo.set(BSResources.get("createOffer.amountPriceBox.sell.info"));
+        }
+
 
         // apply only if valid
         boolean amountValid = false;
@@ -327,6 +344,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         securityDeposit.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.securityDepositAsCoin.get()),
                 dataModel.securityDepositAsCoin));
 
+        tradeAmount.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.amountAsCoin.get()),
+                dataModel.amountAsCoin));
+
         totalToPayAsCoin.bind(dataModel.totalToPayAsCoin);
 
         offerFee.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.offerFeeAsCoin.get()),
@@ -407,4 +427,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         return fiatValidator.validate(input);
     }
 
+     boolean isSeller() {
+        return dataModel.getDirection() == Offer.Direction.SELL;
+    }
 }

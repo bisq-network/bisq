@@ -67,8 +67,7 @@
                     <Insets right="10.0" top="20.0"/>
                 </GridPane.margin>
                 <VBox spacing="4">
-                    <Label id="input-description-label" text="%takeOffer.amountPriceBox.amountDescription"
-                           prefWidth="170"/>
+                    <Label fx:id="amountDescriptionLabel" id="input-description-label" prefWidth="170"/>
                     <HBox>
                         <InputTextField fx:id="amountTextField" id="text-input-with-currency-text-field"
                                         promptText="%takeOffer.amount.prompt" prefWidth="170"
@@ -120,8 +119,7 @@
                        style=" -fx-alignment: center;"/>
             </VBox>
 
-            <InfoDisplay gridPane="$gridPane" onAction="#onOpenGeneralHelp" rowIndex="2"
-                         text="%takeOffer.amountPriceBox.info"/>
+            <InfoDisplay fx:id="amountPriceBoxInfoDisplay" gridPane="$gridPane" onAction="#onOpenGeneralHelp" rowIndex="2"/>
 
             <Label fx:id="isOfferAvailableLabel" text="%takeOffer.fundsBox.isOfferAvailable" GridPane.rowIndex="3">
                 <GridPane.margin>
@@ -179,8 +177,7 @@
                 </GridPane.margin>
             </BalanceTextField>
 
-            <InfoDisplay fx:id="fundsBoxInfoDisplay" gridPane="$gridPane" onAction="#onOpenFundingHelp" rowIndex="7"
-                         text="%takeOffer.fundsBox.info" visible="false"/>
+            <InfoDisplay fx:id="fundsBoxInfoDisplay" gridPane="$gridPane" onAction="#onOpenFundingHelp" rowIndex="7" visible="false"/>
 
             <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="8">
                 <Button fx:id="showAdvancedSettingsButton" text="%takeOffer.fundsBox.showAdvanced"

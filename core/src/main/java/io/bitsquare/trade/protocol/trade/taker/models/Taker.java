@@ -56,7 +56,8 @@ public class Taker implements Serializable {
     private List<TransactionOutput> connectedOutputsForAllInputs;
     private Coin payoutAmount;
     private Transaction preparedDepositTx;
-
+    private List<TransactionOutput> outputs; // used to verify amounts with change outputs
+    private byte[] payoutTxSignature;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -118,6 +119,10 @@ public class Taker implements Serializable {
         return getAddressEntry().getPubKey();
     }
 
+    public PublicKey getP2pEncryptPubKey() {
+        return user.getP2PEncryptPubKey();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter/Setter for Mutable objects
@@ -150,6 +155,24 @@ public class Taker implements Serializable {
         this.preparedDepositTx = preparedDepositTx;
     }
 
+    @Nullable
+    public List<TransactionOutput> getOutputs() {
+        return outputs;
+    }
+
+    public void setOutputs(List<TransactionOutput> outputs) {
+        this.outputs = outputs;
+    }
+
+    @Nullable
+    public byte[] getPayoutTxSignature() {
+        return payoutTxSignature;
+    }
+
+    public void setPayoutTxSignature(byte[] payoutTxSignature) {
+        this.payoutTxSignature = payoutTxSignature;
+    }
+
     @Override
     public String toString() {
         return "Taker{" +
@@ -161,4 +184,6 @@ public class Taker implements Serializable {
                 ", preparedDepositTx=" + preparedDepositTx +
                 '}';
     }
+
+
 }

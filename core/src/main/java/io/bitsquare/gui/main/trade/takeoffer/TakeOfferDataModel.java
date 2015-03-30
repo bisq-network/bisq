@@ -98,6 +98,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
 
     void initWithData(Coin amount, Offer offer) {
         this.offer = offer;
+        securityDepositAsCoin.set(offer.getSecurityDeposit());
 
         if (amount != null &&
                 !amount.isGreaterThan(offer.getAmount()) &&
@@ -107,8 +108,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
         else {
             amountAsCoin.set(offer.getAmount());
         }
-
-        securityDepositAsCoin.set(offer.getSecurityDeposit());
+       
         calculateVolume();
         calculateTotalToPay();
 
@@ -143,17 +143,15 @@ class TakeOfferDataModel implements Activatable, DataModel {
     }
 
     void calculateTotalToPay() {
-        try {
-            if (securityDepositAsCoin.get() != null) {
-                totalToPayAsCoin.set(offerFeeAsCoin.get().add(amountAsCoin.get()).add(networkFeeAsCoin.get()).add
-                        (securityDepositAsCoin.get()));
-            }
-        } catch (Throwable t) {
-            // Should be never reached
-            log.error(t.toString());
-        }
+        if (getDirection() == Offer.Direction.SELL)
+            totalToPayAsCoin.set(offerFeeAsCoin.get().add(networkFeeAsCoin.get()).add(securityDepositAsCoin.get()));
+        else
+            totalToPayAsCoin.set(offerFeeAsCoin.get().add(networkFeeAsCoin.get()).add(securityDepositAsCoin.get()).add(amountAsCoin.get()));
     }
 
+    Offer.Direction getDirection() {
+        return offer.getDirection();
+    }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     boolean isMinAmountLessOrEqualAmount() {

@@ -35,6 +35,7 @@ import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.offer.OffersView;
+import io.bitsquare.gui.main.portfolio.pending.PendingTradesView;
 import io.bitsquare.gui.main.trade.TradeView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
@@ -80,14 +81,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     @FXML AddressTextField addressTextField;
     @FXML BalanceTextField balanceTextField;
     @FXML ProgressIndicator placeOfferSpinner;
-    @FXML InfoDisplay advancedInfoDisplay, fundsBoxInfoDisplay;
+    @FXML InfoDisplay amountPriceBoxInfo, advancedInfoDisplay, fundsBoxInfoDisplay;
     @FXML TitledGroupBg priceAmountPane, payFundsPane, showDetailsPane;
     @FXML Button showPaymentInfoScreenButton, showAdvancedSettingsButton, placeOfferButton;
     @FXML InputTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
     @FXML TextField acceptedArbitratorsTextField, totalToPayTextField, bankAccountTypeTextField,
             bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField,
             acceptedLanguagesTextField;
-    @FXML Label buyLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel, bankAccountTypeLabel,
+    @FXML Label buyLabel, amountToTradeLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel, bankAccountTypeLabel,
             bankAccountCurrencyLabel, bankAccountCountyLabel, acceptedCountriesLabel, acceptedCountriesLabelIcon,
             acceptedLanguagesLabel, acceptedLanguagesLabelIcon, acceptedArbitratorsLabel,
             acceptedArbitratorsLabelIcon, amountBtcLabel, priceFiatLabel, volumeFiatLabel, minAmountBtcLabel,
@@ -116,8 +117,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     protected void initialize() {
         setupListeners();
         setupBindings();
-        balanceTextField.setup(model.getWalletService(), model.address.get(),
-                model.getFormatter());
+
+        balanceTextField.setup(model.getWalletService(), model.address.get(), model.getFormatter());
         volumeTextField.setPromptText(BSResources.get("createOffer.volume.prompt", model.fiatCode.get()));
     }
 
@@ -292,10 +293,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         model.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
             // TODO temp just for testing 
-           // newValue = false;
-           // close();
-            //navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class, OffersView.class);
-            
+            newValue = false;
+            close();
+            navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class, OffersView.class);
+
             if (newValue) {
                 overlayManager.blurContent();
 
@@ -336,20 +337,17 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         minAmountBtcLabel.textProperty().bind(model.btcCode);
 
         priceDescriptionLabel.textProperty().bind(createStringBinding(() ->
-                        BSResources.get("createOffer.amountPriceBox.priceDescription",
-                                model.fiatCode.get()),
-                model.fiatCode));
-        volumeDescriptionLabel.textProperty().bind(createStringBinding(() ->
-                        BSResources.get("createOffer.amountPriceBox.volumeDescription",
-                                model.fiatCode.get()),
-                model.fiatCode));
+                BSResources.get("createOffer.amountPriceBox.priceDescription", model.fiatCode.get()), model.fiatCode));
+
+        volumeDescriptionLabel.textProperty().bind(createStringBinding(() -> model.volumeDescriptionLabel.get(), model.fiatCode, model.volumeDescriptionLabel));
 
         buyLabel.textProperty().bind(model.directionLabel);
-
+        amountToTradeLabel.textProperty().bind(model.amountToTradeLabel);
         amountTextField.textProperty().bindBidirectional(model.amount);
         minAmountTextField.textProperty().bindBidirectional(model.minAmount);
         priceTextField.textProperty().bindBidirectional(model.price);
         volumeTextField.textProperty().bindBidirectional(model.volume);
+        amountPriceBoxInfo.textProperty().bind(model.amountPriceBoxInfo);
 
         totalToPayTextField.textProperty().bind(model.totalToPay);
 
@@ -471,19 +469,25 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         infoGridPane.setVgap(5);
         infoGridPane.setPadding(new Insets(10, 10, 10, 10));
 
-        addPayInfoEntry(infoGridPane, 0,
+        int i = 0;
+        if (model.isSeller()) {
+            addPayInfoEntry(infoGridPane, i++,
+                    BSResources.get("createOffer.fundsBox.tradeAmount"),
+                    model.tradeAmount.get());
+        }
+        addPayInfoEntry(infoGridPane, i++,
                 BSResources.get("createOffer.fundsBox.securityDeposit"),
                 model.securityDeposit.get());
-        addPayInfoEntry(infoGridPane, 1, BSResources.get("createOffer.fundsBox.offerFee"),
+        addPayInfoEntry(infoGridPane, i++, BSResources.get("createOffer.fundsBox.offerFee"),
                 model.offerFee.get());
-        addPayInfoEntry(infoGridPane, 2, BSResources.get("createOffer.fundsBox.networkFee"),
+        addPayInfoEntry(infoGridPane, i++, BSResources.get("createOffer.fundsBox.networkFee"),
                 model.networkFee.get());
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
         separator.setStyle("-fx-background: #666;");
-        GridPane.setConstraints(separator, 1, 3);
+        GridPane.setConstraints(separator, 1, i++);
         infoGridPane.getChildren().add(separator);
-        addPayInfoEntry(infoGridPane, 4, BSResources.get("createOffer.fundsBox.total"),
+        addPayInfoEntry(infoGridPane, i++, BSResources.get("createOffer.fundsBox.total"),
                 model.totalToPay.get());
         totalToPayInfoPopover = new PopOver(infoGridPane);
         if (totalToPayInfoIconLabel.getScene() != null) {

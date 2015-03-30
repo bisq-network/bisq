@@ -24,6 +24,7 @@ import io.bitsquare.offer.Offer;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.DeterministicKey;
 
@@ -35,8 +36,6 @@ import java.security.PublicKey;
 
 import java.util.Arrays;
 import java.util.List;
-
-import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +56,8 @@ public class Offerer implements Serializable {
     private Coin payoutAmount;
     private List<TransactionOutput> connectedOutputsForAllInputs;
     private List<TransactionOutput> outputs; // used to verify amounts with change outputs
-
+    private Transaction preparedDepositTx;
+    private PublicKey p2pSigPublicKey;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -99,6 +99,10 @@ public class Offerer implements Serializable {
         return user.getP2PSigPubKey();
     }
 
+    public PublicKey getP2pEncryptPublicKey() {
+        return user.getP2PEncryptPubKey();
+    }
+
     public PublicKey getP2pEncryptPubKey() {
         return user.getP2PEncryptPubKey();
     }
@@ -124,7 +128,7 @@ public class Offerer implements Serializable {
     // Getter/Setter for Mutable objects
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable
+
     public List<TransactionOutput> getOutputs() {
         return outputs;
     }
@@ -133,7 +137,6 @@ public class Offerer implements Serializable {
         this.outputs = outputs;
     }
 
-    @Nullable
     public byte[] getPayoutTxSignature() {
         return payoutTxSignature;
     }
@@ -142,7 +145,6 @@ public class Offerer implements Serializable {
         this.payoutTxSignature = payoutTxSignature;
     }
 
-    @Nullable
     public Coin getPayoutAmount() {
         return payoutAmount;
     }
@@ -151,13 +153,28 @@ public class Offerer implements Serializable {
         this.payoutAmount = payoutAmount;
     }
 
-    @Nullable
     public List<TransactionOutput> getConnectedOutputsForAllInputs() {
         return connectedOutputsForAllInputs;
     }
 
     public void setConnectedOutputsForAllInputs(List<TransactionOutput> connectedOutputsForAllInputs) {
         this.connectedOutputsForAllInputs = connectedOutputsForAllInputs;
+    }
+
+    public Transaction getPreparedDepositTx() {
+        return preparedDepositTx;
+    }
+
+    public void setPreparedDepositTx(Transaction preparedDepositTx) {
+        this.preparedDepositTx = preparedDepositTx;
+    }
+
+    public PublicKey getP2pSigPublicKey() {
+        return p2pSigPublicKey;
+    }
+
+    public void setP2pSigPublicKey(PublicKey p2pSigPublicKey) {
+        this.p2pSigPublicKey = p2pSigPublicKey;
     }
 
     @Override
@@ -172,4 +189,6 @@ public class Offerer implements Serializable {
                 ", outputs=" + outputs +
                 '}';
     }
+
+
 }

@@ -18,6 +18,8 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.TakerAsBuyerTrade;
+import io.bitsquare.trade.TakerAsSellerTrade;
 import io.bitsquare.trade.TakerTrade;
 
 import org.bitcoinj.core.Transaction;
@@ -45,9 +47,11 @@ public class BroadcastTakeOfferFeeTx extends TakerTradeTask {
                         public void onSuccess(Transaction transaction) {
                             log.debug("Take offer fee published successfully. Transaction ID = " + transaction.getHashAsString());
 
-                            takerTrade.setProcessState(TakerTrade.TakerProcessState.TAKE_OFFER_FEE_PUBLISHED);
-
-                            complete();
+                            if (takerTrade instanceof TakerAsBuyerTrade)
+                                takerTrade.setProcessState(TakerAsBuyerTrade.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
+                            else if (takerTrade instanceof TakerAsSellerTrade)
+                                takerTrade.setProcessState(TakerAsSellerTrade.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
+                                complete();
                         }
 
                         @Override
@@ -55,7 +59,11 @@ public class BroadcastTakeOfferFeeTx extends TakerTradeTask {
                             t.printStackTrace();
                             appendToErrorMessage("Take offer fee payment failed. Maybe your network connection was lost. Please try again.");
                             takerTrade.setErrorMessage(errorMessage);
-                            takerTrade.setProcessState(TakerTrade.TakerProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
+
+                            if (takerTrade instanceof TakerAsBuyerTrade)
+                                takerTrade.setProcessState(TakerAsBuyerTrade.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
+                            else if (takerTrade instanceof TakerAsSellerTrade)
+                                takerTrade.setProcessState(TakerAsSellerTrade.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
 
                             failed(t);
                         }

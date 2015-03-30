@@ -18,6 +18,8 @@
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.OffererAsBuyerTrade;
+import io.bitsquare.trade.OffererAsSellerTrade;
 import io.bitsquare.trade.OffererTrade;
 
 import org.slf4j.Logger;
@@ -47,12 +49,21 @@ public class VerifyTakerAccount extends OffererTradeTask {
             }
             else {
                 failed("Account registration validation for peer failed.");
-                offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_OPEN);
+
+                if (offererTrade instanceof OffererAsBuyerTrade)
+                    offererTrade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
+                else if (offererTrade instanceof OffererAsSellerTrade)
+                    offererTrade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
             }
         } catch (Throwable t) {
             t.printStackTrace();
             offererTrade.setThrowable(t);
-            offererTrade.setLifeCycleState(OffererTrade.OffererLifeCycleState.OFFER_OPEN);
+            
+            if (offererTrade instanceof OffererAsBuyerTrade)
+                offererTrade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
+            else if (offererTrade instanceof OffererAsSellerTrade)
+                offererTrade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
+            
             failed(t);
         }
     }

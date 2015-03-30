@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.trade.taker.models;
 import io.bitsquare.fiat.FiatAccount;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
 import java.io.IOException;
@@ -56,6 +57,10 @@ public class Offerer implements Serializable {
     private String accountId;
     private PublicKey p2pSigPublicKey;
     private PublicKey p2pEncryptPubKey;
+    private String contractAsJson;
+    private String contractSignature;
+    private Transaction preparedDepositTx;
+    private PublicKey p2pSigPubKey;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -166,6 +171,41 @@ public class Offerer implements Serializable {
         this.p2pEncryptPubKey = p2pEncryptPubKey;
     }
 
+    @Nullable
+    public String getContractAsJson() {
+        return contractAsJson;
+    }
+
+    public void setContractAsJson(String contractAsJson) {
+        this.contractAsJson = contractAsJson;
+    }
+
+    @Nullable
+    public String getContractSignature() {
+        return contractSignature;
+    }
+
+    public void setContractSignature(String contractSignature) {
+        this.contractSignature = contractSignature;
+    }
+
+    @Nullable
+    public Transaction getPreparedDepositTx() {
+        return preparedDepositTx;
+    }
+
+    public void setPreparedDepositTx(Transaction preparedDepositTx) {
+        this.preparedDepositTx = preparedDepositTx;
+    }
+
+    @Nullable
+    public PublicKey getP2pSigPubKey() {
+        return p2pSigPubKey;
+    }
+
+    public void setP2pSigPubKey(PublicKey p2pSigPubKey) {
+        this.p2pSigPubKey = p2pSigPubKey;
+    }
 
     @Override
     public String toString() {

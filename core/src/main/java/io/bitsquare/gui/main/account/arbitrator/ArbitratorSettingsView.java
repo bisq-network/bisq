@@ -28,6 +28,7 @@ import javax.inject.Inject;
 
 import javafx.fxml.FXML;
 import javafx.scene.*;
+import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -69,6 +70,10 @@ public class ArbitratorSettingsView extends AbstractView {
         stage.initOwner(primaryStage);
         Scene scene = new Scene((Parent) view.getRoot(), 800, 600);
         stage.setScene(scene);
+        stage.setOnCloseRequest(e -> {
+            // need to unset root to be re-uasabel to other popups screens
+            scene.setRoot(new Pane());
+        });
         stage.show();
     }
 }

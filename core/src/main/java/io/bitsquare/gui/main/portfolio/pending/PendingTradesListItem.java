@@ -17,6 +17,8 @@
 
 package io.bitsquare.gui.main.portfolio.pending;
 
+import io.bitsquare.trade.OffererTrade;
+import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 
 import org.bitcoinj.core.Coin;
@@ -51,11 +53,17 @@ public class PendingTradesListItem {
     }
 
     public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
-        return trade.tradeAmountProperty();
+        if (trade instanceof TakerTrade)
+            return ((TakerTrade) trade).tradeAmountProperty();
+        else
+            return ((OffererTrade) trade).tradeAmountProperty();
     }
 
     public ReadOnlyObjectProperty<Fiat> tradeVolumeProperty() {
-        return trade.tradeVolumeProperty();
+        if (trade instanceof TakerTrade)
+            return ((TakerTrade) trade).tradeVolumeProperty();
+        else
+            return ((OffererTrade) trade).tradeVolumeProperty();
     }
 
     public Date getDate() {

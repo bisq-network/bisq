@@ -145,9 +145,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         table.sort();
 
         //TODO temp for testing
-       /* amountTextField.setText("1");
+        amountTextField.setText("1");
         priceTextField.setText("300");
-        volumeTextField.setText("300");*/
+        volumeTextField.setText("300");
     }
 
     @Override
@@ -227,8 +227,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 offerActionHandler.takeOffer(model.getAmountAsCoin(), model.getPriceAsCoin(), offer);
             }
             else {
-                Popups.openInfoPopup("Not implemented yet",
-                        "At the moment you can only take offers in the Sell BTC screen.");
+                offerActionHandler.takeOffer(model.getAmountAsCoin(), model.getPriceAsCoin(), offer);
             }
         }
         else {
