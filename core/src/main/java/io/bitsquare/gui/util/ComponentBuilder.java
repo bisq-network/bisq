@@ -81,6 +81,17 @@ public class ComponentBuilder {
         return label;
     }
 
+    public static Label getAndAddInfoLabel(GridPane gridPane, int rowIndex, double top) {
+        Label label = new Label();
+        label.setWrapText(true);
+        GridPane.setHalignment(label, HPos.LEFT);
+        GridPane.setRowIndex(label, rowIndex);
+        GridPane.setColumnSpan(label, 2);
+        GridPane.setMargin(label, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(label);
+        return label;
+    }
+
     public static LabelTextFieldPair getAndAddLabelTextFieldPair(GridPane gridPane, int rowIndex, String title) {
         return getAndAddLabelTextFieldPair(gridPane, rowIndex, title, 0);
     }

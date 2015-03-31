@@ -19,36 +19,19 @@ package io.bitsquare.gui.main.portfolio.pending;
 
 import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
 import io.bitsquare.common.viewfx.view.FxmlView;
-import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.components.InfoDisplay;
-import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
-import io.bitsquare.gui.components.TextFieldWithCopyIcon;
-import io.bitsquare.gui.components.TitledGroupBg;
-import io.bitsquare.gui.components.TxIdTextField;
-import io.bitsquare.gui.components.processbar.ProcessStepBar;
-import io.bitsquare.gui.components.processbar.ProcessStepItem;
-import io.bitsquare.gui.main.MainView;
-import io.bitsquare.gui.main.help.Help;
-import io.bitsquare.gui.main.help.HelpId;
-import io.bitsquare.gui.main.portfolio.PortfolioView;
-import io.bitsquare.gui.main.portfolio.closed.ClosedTradesView;
-import io.bitsquare.locale.BSResources;
 import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import javax.inject.Inject;
 
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
-import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.*;
@@ -57,23 +40,11 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 @FxmlView
-public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, PendingTradesViewModel> {
+public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTradesViewModel> {
 
-    @FXML GridPane gridPane;
-    @FXML ScrollPane scrollPane;
-    @FXML ProcessStepBar processBar;
-    @FXML TxIdTextField txIdTextField;
+    @FXML AnchorPane tradeStepPane;
+
     @FXML TableView<PendingTradesListItem> table;
-    @FXML InputTextField withdrawAddressTextField;
-    @FXML InfoDisplay infoDisplay, paymentsInfoDisplay, summaryInfoDisplay;
-    @FXML Button confirmPaymentReceiptButton, paymentStartedButton, withdrawButton;
-    @FXML TitledGroupBg titledGroupBg, paymentsGroupBg, summaryGroupBg, withdrawGroupBg;
-    @FXML TextFieldWithCopyIcon fiatAmountTextField, holderNameTextField, secondaryIdTextField, primaryIdTextField;
-    @FXML TextField statusTextField, paymentMethodTextField, btcTradeAmountTextField, fiatTradeAmountTextField,
-            feesTextField, securityDepositTextField, withdrawAmountTextField;
-    @FXML Label statusLabel, txIdLabel, paymentMethodLabel, fiatAmountLabel, holderNameLabel, primaryIdLabel,
-            secondaryIdLabel, btcTradeAmountLabel, fiatTradeAmountLabel, feesLabel, securityDepositLabel,
-            withdrawAmountLabel, withdrawAddressLabel;
 
     @FXML TableColumn<PendingTradesListItem, Fiat> priceColumn;
     @FXML TableColumn<PendingTradesListItem, Fiat> tradeVolumeColumn;
@@ -82,21 +53,17 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
     @FXML TableColumn<PendingTradesListItem, Date> dateColumn;
     @FXML TableColumn<PendingTradesListItem, Coin> tradeAmountColumn;
 
-    private ChangeListener<Number> selectedIndexChangeListener;
-    private ListChangeListener<PendingTradesListItem> listChangeListener;
-    private ChangeListener<String> txIdChangeListener;
-    private ChangeListener<PendingTradesViewModel.ViewState> offererStateChangeListener;
-    private ChangeListener<PendingTradesViewModel.ViewState> takerStateChangeListener;
-
-    private final Navigation navigation;
-    private ChangeListener<Boolean> focusedPropertyListener;
     private ChangeListener<PendingTradesListItem> selectedItemChangeListener;
+    private TradeSubView currentSubView;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, Initialisation
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradesView(PendingTradesViewModel model, Navigation navigation) {
+    public PendingTradesView(PendingTradesViewModel model) {
         super(model);
-
-        this.navigation = navigation;
     }
 
     @Override
@@ -108,109 +75,78 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
         setVolumeColumnCellFactory();
         setDateColumnCellFactory();
 
-        //TODO just temp for testing
-        withdrawAddressTextField.setText("mxmKZruv9x9JLcEj6rZx6Hnm4LLAcQHtcr");
-
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPlaceholder(new Label("No pending trades available"));
 
-        txIdChangeListener = (ov, oldValue, newValue) -> txIdTextField.setup(model.getWalletService(), newValue);
-
-        selectedIndexChangeListener = (ov, oldValue, newValue) -> {
-            if ((Integer) newValue > -1)
-                table.getSelectionModel().select((Integer) newValue);
-
-            updateScreen();
-        };
-
-        listChangeListener = change -> {
-            change.next();
-            if ((change.wasAdded() && change.getList().size() == 1) ||
-                    (change.wasRemoved() && change.getList().size() == 0))
-
-                updateScreen();
-        };
-
-        offererStateChangeListener = (ov, oldValue, newValue) -> applyOffererState(newValue);
-        takerStateChangeListener = (ov, oldValue, newValue) -> applyTakerState(newValue);
-
-        focusedPropertyListener = (ov, oldValue, newValue) -> {
-            if (oldValue && !newValue)
-                model.withdrawAddressFocusOut(withdrawAddressTextField.getText());
-        };
         selectedItemChangeListener = (ov, oldValue, newValue) -> {
-            if (newValue != null) {
-                model.selectTrade(newValue);
-                updateScreen();
-            }
-        };
+            if (newValue != null)
+                addSubView();
 
-        withdrawAddressTextField.setValidator(model.getBtcAddressValidator());
+            model.selectTrade(newValue);
+        };
     }
 
     @Override
     public void doActivate() {
         table.setItems(model.getList());
+
         table.getSelectionModel().selectedItemProperty().addListener(selectedItemChangeListener);
-        model.getList().addListener(listChangeListener);
-        model.txId.addListener(txIdChangeListener);
-        model.selectedIndex.addListener(selectedIndexChangeListener);
-        withdrawAddressTextField.focusedProperty().addListener(focusedPropertyListener);
+        PendingTradesListItem selectedItem = model.getSelectedItem();
+        if (selectedItem != null) {
+            addSubView();
 
-
-        // TODO Set focus to row does not work yet...
-        Platform.runLater(table::requestFocus);
-        table.getFocusModel().focus(model.selectedIndex.get());
-        txIdTextField.setup(model.getWalletService(), model.txId.get());
-        selectedIndexChangeListener.changed(null, null, model.selectedIndex.get());
-
-        withdrawButton.disableProperty().bind(model.withdrawalButtonDisable);
-        updateScreen();
+            // Select and focus selectedItem from model
+            int index = table.getItems().indexOf(selectedItem);
+            Platform.runLater(() -> {
+                table.getSelectionModel().select(index);
+                table.requestFocus();
+                Platform.runLater(() -> table.getFocusModel().focus(index));
+            });
+        }
+        else {
+            removeSubView();
+        }
+        
+        if (currentSubView != null)
+            currentSubView.activate();
     }
 
     @Override
     public void doDeactivate() {
-        model.getList().removeListener(listChangeListener);
-        model.txId.removeListener(txIdChangeListener);
-        model.viewState.removeListener(offererStateChangeListener);
-        model.viewState.removeListener(takerStateChangeListener);
-        model.selectedIndex.removeListener(selectedIndexChangeListener);
         table.getSelectionModel().selectedItemProperty().removeListener(selectedItemChangeListener);
 
-        withdrawButton.disableProperty().unbind();
+        if (currentSubView != null)
+            currentSubView.deactivate();
     }
 
-    @FXML
-    void onPaymentStarted() {
-        model.fiatPaymentStarted();
-        paymentStartedButton.setDisable(true);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void addSubView() {
+        removeSubView();
+
+        if (model.isOfferer())
+            currentSubView = new OffererAsBuyerSubView(model);
+        else
+            currentSubView = new TakerAsSellerSubView(model);
+
+        currentSubView.activate();
+        
+        AnchorPane.setTopAnchor(currentSubView, 0d);
+        AnchorPane.setRightAnchor(currentSubView, 0d);
+        AnchorPane.setBottomAnchor(currentSubView, 0d);
+        AnchorPane.setLeftAnchor(currentSubView, 0d);
+        tradeStepPane.getChildren().setAll(currentSubView);
     }
 
-    @FXML
-    void onConfirmPaymentReceipt() {
-        model.fiatPaymentReceived();
-    }
-
-    @FXML
-    public void onWithdraw() {
-        setSummaryControlsVisible(false);
-        model.withdraw(withdrawAddressTextField.getText());
-        Platform.runLater(() -> navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class));
-    }
-
-    @FXML
-    void onOpenHelp() {
-        Help.openWindow(model.isOfferer() ? HelpId.PENDING_TRADE_OFFERER : HelpId.PENDING_TRADE_TAKER);
-    }
-
-    @FXML
-    void onOpenPaymentsHelp() {
-        Help.openWindow(HelpId.PENDING_TRADE_PAYMENT);
-    }
-
-    @FXML
-    void onOpenSummaryHelp() {
-        Help.openWindow(HelpId.PENDING_TRADE_SUMMARY);
+    private void removeSubView() {
+        if (currentSubView != null) {
+            currentSubView.deactivate();
+            tradeStepPane.getChildren().remove(currentSubView);
+            currentSubView = null;
+        }
     }
 
     private void openOfferDetails(String id) {
@@ -224,310 +160,9 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
     }
 
 
-    private void updateScreen() {
-        boolean dataAvailable = !model.getList().isEmpty();
-        titledGroupBg.setVisible(dataAvailable);
-        processBar.setVisible(dataAvailable);
-        statusLabel.setVisible(dataAvailable);
-        statusTextField.setVisible(dataAvailable);
-        txIdLabel.setVisible(dataAvailable);
-        txIdTextField.setVisible(dataAvailable);
-        infoDisplay.setVisible(dataAvailable);
-
-        titledGroupBg.setManaged(dataAvailable);
-        processBar.setManaged(dataAvailable);
-        statusLabel.setManaged(dataAvailable);
-        statusTextField.setManaged(dataAvailable);
-        txIdLabel.setManaged(dataAvailable);
-        txIdTextField.setManaged(dataAvailable);
-        infoDisplay.setManaged(dataAvailable);
-
-        if (dataAvailable) {
-            if (model.isOfferer())
-                setupScreenForOfferer();
-            else
-                setupScreenForTaker();
-        }
-    }
-
-    private void setupScreenForOfferer() {
-        if (processBar.getProcessStepItems() == null) {
-            List<ProcessStepItem> items = new ArrayList<>();
-            items.add(new ProcessStepItem("Wait for block chain confirmation"));
-            items.add(new ProcessStepItem("Start payment"));
-            items.add(new ProcessStepItem("Wait for payment confirmation"));
-            items.add(new ProcessStepItem("Trade successful completed"));
-            processBar.setProcessStepItems(items);
-        }
-
-        model.viewState.addListener(offererStateChangeListener);
-        applyOffererState(model.viewState.get());
-    }
-
-    private void setupScreenForTaker() {
-        log.debug("setupScreenForTaker");
-        if (processBar.getProcessStepItems() == null) {
-            List<ProcessStepItem> items = new ArrayList<>();
-            items.add(new ProcessStepItem("Wait for block chain confirmation"));
-            items.add(new ProcessStepItem("Wait for payment started"));
-            items.add(new ProcessStepItem("Confirm  payment"));
-            items.add(new ProcessStepItem("Trade successful completed"));
-            processBar.setProcessStepItems(items);
-        }
-
-        model.viewState.addListener(takerStateChangeListener);
-        applyTakerState(model.viewState.get());
-    }
-
-    private void applyOffererState(PendingTradesViewModel.ViewState viewState) {
-        setPaymentsControlsVisible(false);
-        setSummaryControlsVisible(false);
-        log.debug("applyOffererState " + viewState);
-        processBar.reset();
-
-        if (viewState != null) {
-            switch (viewState) {
-                case OFFERER_BUYER_WAIT_TX_CONF:
-                    processBar.setSelectedIndex(0);
-
-                    statusTextField.setText("Deposit transaction has been published. You need to wait for at least " +
-                            "one block chain confirmation.");
-                    infoDisplay.setText("You need to wait for at least one block chain confirmation to" +
-                            " be sure that the deposit funding has not been double spent. For higher trade volumes we" +
-                            " recommend to wait up to 6 confirmations.");
-                    break;
-                case OFFERER_BUYER_START_PAYMENT:
-                    processBar.setSelectedIndex(1);
-
-                    paymentStartedButton.setDisable(false);
-                    setPaymentsControlsVisible(true);
-
-                    statusTextField.setText("Deposit transaction has at least one block chain confirmation. " +
-                            "Please start now the payment.");
-                    infoDisplay.setText("You are now safe to start the payment. You can wait for up to 6 block chain " +
-                            "confirmations if you want more security.");
-
-                    paymentMethodTextField.setText(model.getPaymentMethod());
-                    fiatAmountTextField.setText(model.getFiatAmount());
-                    holderNameTextField.setText(model.getHolderName());
-                    primaryIdTextField.setText(model.getPrimaryId());
-                    secondaryIdTextField.setText(model.getSecondaryId());
-                    paymentsInfoDisplay.setText(BSResources.get("Copy and paste the payment account data to your " +
-                                    "internet banking web page and transfer the {0} amount to the other traders " +
-                                    "payment account. When the transfer is completed inform the other trader by " +
-                                    "clicking the button below.",
-                            model.getCurrencyCode()));
-                    break;
-                case OFFERER_BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED:
-                    processBar.setSelectedIndex(2);
-
-                    statusTextField.setText(BSResources.get("Waiting for the Bitcoin sellers confirmation " +
-                                    "that the {0} payment has arrived.",
-                            model.getCurrencyCode()));
-                    infoDisplay.setText(BSResources.get("When the confirmation that the {0} payment arrived at the " +
-                                    "Bitcoin sellers payment account, the payout transaction will be published.",
-                            model.getCurrencyCode()));
-                    break;
-                case OFFERER_BUYER_COMPLETED:
-                    processBar.setSelectedIndex(3);
-                    setSummaryControlsVisible(true);
-
-                    statusTextField.setText("Congratulations! Trade has successfully completed.");
-                    infoDisplay.setText("The trade is now completed and you can withdraw your Bitcoin to any external" +
-                            "wallet. To protect your privacy you should take care that your trades are not merged " +
-                            "in " +
-                            "that external wallet. For more information about privacy see our help pages.");
-
-                    btcTradeAmountLabel.setText("You have bought:");
-                    fiatTradeAmountLabel.setText("You have paid:");
-                    btcTradeAmountTextField.setText(model.getTradeVolume());
-                    fiatTradeAmountTextField.setText(model.getFiatVolume());
-                    feesTextField.setText(model.getTotalFees());
-                    securityDepositTextField.setText(model.getSecurityDeposit());
-                    summaryInfoDisplay.setText("Your security deposit has been refunded to you. " +
-                            "You can review the details to that trade any time in the closed trades screen.");
-
-                    withdrawAmountTextField.setText(model.getAmountToWithdraw());
-                    break;
-                case MESSAGE_SENDING_FAILED:
-                    Popups.openWarningPopup("Sending message to trading peer failed.", model.getErrorMessage());
-                    break;
-                case EXCEPTION:
-                    Popups.openExceptionPopup(model.getTradeException());
-                    break;
-            }
-        }
-    }
-
-    private void applyTakerState(PendingTradesViewModel.ViewState viewState) {
-        confirmPaymentReceiptButton.setVisible(false);
-        confirmPaymentReceiptButton.setManaged(false);
-
-        setSummaryControlsVisible(false);
-
-        processBar.reset();
-        log.debug("applyTakerState " + viewState);
-
-        if (viewState != null) {
-            switch (viewState) {
-                case TAKER_SELLER_WAIT_TX_CONF:
-                    processBar.setSelectedIndex(0);
-
-                    statusTextField.setText("Deposit transaction has been published. " +
-                            "The Bitcoin buyer need to wait for at least one block chain confirmation.");
-                    infoDisplay.setText(BSResources.get("The Bitcoin buyer needs to wait for at least one " +
-                                    "block chain confirmation before starting the {0} payment. " +
-                                    "That is needed to assure that the deposit input funding has not been " +
-                                    "double-spent. " +
-                                    "For higher trade volumes it is recommended to wait up to 6 confirmations.",
-                            model.getCurrencyCode()));
-                    break;
-                case TAKER_SELLER_WAIT_PAYMENT_STARTED:
-                    processBar.setSelectedIndex(1);
-
-                    statusTextField.setText(BSResources.get("Deposit transaction has at least one block chain " +
-                                    "confirmation. " +
-                                    "Waiting that other trader starts the {0} payment.",
-                            model.getCurrencyCode()));
-                    infoDisplay.setText(BSResources.get("You will get informed when the other trader has indicated " +
-                                    "the {0} payment has been started.",
-                            model.getCurrencyCode()));
-                    break;
-                case TAKER_SELLER_CONFIRM_RECEIVE_PAYMENT:
-                    processBar.setSelectedIndex(2);
-
-                    confirmPaymentReceiptButton.setVisible(true);
-                    confirmPaymentReceiptButton.setManaged(true);
-
-                    statusTextField.setText(BSResources.get("The Bitcoin buyer has started the {0} payment." +
-                                    "Check your payments account and confirm when you have received the payment.",
-                            model.getCurrencyCode()));
-                    infoDisplay.setText(BSResources.get("It is important that you confirm when you have received the " +
-                                    "{0} payment as this will publish the payout transaction where you get returned " +
-                                    "your security deposit and the Bitcoin buyer receive the Bitcoin amount you sold.",
-                            model.getCurrencyCode()));
-
-                    break;
-                case TAKER_SELLER_COMPLETED:
-                    processBar.setSelectedIndex(3);
-
-                    setSummaryControlsVisible(true);
-
-                    statusTextField.setText("Congratulations! Trade has successfully completed.");
-                    infoDisplay.setText("The trade is now completed and you can withdraw the refunded Bitcoin from " +
-                            "the security deposit to any external wallet. " +
-                            "To protect your privacy you should take care that your coins are not merged in " +
-                            "that external wallet. For more information about privacy see our help pages.");
-
-                    btcTradeAmountLabel.setText("You have sold:");
-                    fiatTradeAmountLabel.setText("You have received:");
-                    btcTradeAmountTextField.setText(model.getTradeVolume());
-                    fiatTradeAmountTextField.setText(model.getFiatVolume());
-                    feesTextField.setText(model.getTotalFees());
-                    securityDepositTextField.setText(model.getSecurityDeposit());
-                    summaryInfoDisplay.setText("Your security deposit has been refunded to you. " +
-                            "You can review the details to that trade any time in the closed trades screen.");
-
-                    withdrawAmountTextField.setText(model.getAmountToWithdraw());
-                    break;
-                case MESSAGE_SENDING_FAILED:
-                    Popups.openWarningPopup("Sending message to trading peer failed.", model.getErrorMessage());
-                    break;
-                case EXCEPTION:
-                    Popups.openExceptionPopup(model.getTradeException());
-                    break;
-            }
-        }
-    }
-
-    private void setPaymentsControlsVisible(boolean visible) {
-        paymentsGroupBg.setVisible(visible);
-        paymentMethodLabel.setVisible(visible);
-        fiatAmountLabel.setVisible(visible);
-        holderNameLabel.setVisible(visible);
-
-        // irc demo
-        primaryIdLabel.setVisible(visible);
-        secondaryIdLabel.setVisible(visible);
-        primaryIdTextField.setVisible(visible);
-        secondaryIdTextField.setVisible(visible);
-
-        paymentMethodTextField.setVisible(visible);
-        paymentsInfoDisplay.setVisible(visible);
-        paymentStartedButton.setVisible(visible);
-        fiatAmountTextField.setVisible(visible);
-        holderNameTextField.setVisible(visible);
-
-
-        paymentsGroupBg.setManaged(visible);
-        paymentMethodLabel.setManaged(visible);
-        fiatAmountLabel.setManaged(visible);
-        holderNameLabel.setManaged(visible);
-
-        primaryIdLabel.setManaged(visible);
-        secondaryIdLabel.setManaged(visible);
-        primaryIdLabel.setManaged(visible);
-        secondaryIdLabel.setManaged(visible);
-        primaryIdTextField.setManaged(visible);
-        secondaryIdTextField.setManaged(visible);
-
-        paymentMethodTextField.setManaged(visible);
-        paymentsInfoDisplay.setManaged(visible);
-        paymentStartedButton.setManaged(visible);
-        fiatAmountTextField.setManaged(visible);
-        holderNameTextField.setManaged(visible);
-
-        if (visible)
-            Platform.runLater(() -> scrollPane.setVvalue(scrollPane.getVmax()));
-    }
-
-    private void setSummaryControlsVisible(boolean visible) {
-        summaryGroupBg.setVisible(visible);
-        btcTradeAmountLabel.setVisible(visible);
-        btcTradeAmountTextField.setVisible(visible);
-        fiatTradeAmountLabel.setVisible(visible);
-        fiatTradeAmountTextField.setVisible(visible);
-        feesLabel.setVisible(visible);
-        feesTextField.setVisible(visible);
-        securityDepositLabel.setVisible(visible);
-        securityDepositTextField.setVisible(visible);
-        summaryInfoDisplay.setVisible(visible);
-
-        withdrawGroupBg.setVisible(visible);
-        withdrawAmountLabel.setVisible(visible);
-        withdrawAmountTextField.setVisible(visible);
-        withdrawAddressLabel.setVisible(visible);
-        withdrawAddressTextField.setVisible(visible);
-        withdrawButton.setVisible(visible);
-
-        summaryGroupBg.setManaged(visible);
-        btcTradeAmountLabel.setManaged(visible);
-        btcTradeAmountTextField.setManaged(visible);
-        fiatTradeAmountLabel.setManaged(visible);
-        fiatTradeAmountTextField.setManaged(visible);
-        feesLabel.setManaged(visible);
-        feesTextField.setManaged(visible);
-        securityDepositLabel.setManaged(visible);
-        securityDepositTextField.setManaged(visible);
-        summaryInfoDisplay.setManaged(visible);
-
-        withdrawGroupBg.setManaged(visible);
-        withdrawAmountLabel.setManaged(visible);
-        withdrawAmountTextField.setManaged(visible);
-        withdrawAddressLabel.setManaged(visible);
-        withdrawAddressTextField.setManaged(visible);
-        withdrawButton.setManaged(visible);
-
-        if (visible)
-            Platform.runLater(() -> {
-                withdrawAddressTextField.requestFocus();
-
-                // delay it once more as it does not get applied at first runLater
-                Platform.runLater(() -> scrollPane.setVvalue(scrollPane.getVmax()));
-            });
-    }
-
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // CellFactories
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setTradeIdColumnCellFactory() {
         idColumn.setCellFactory(

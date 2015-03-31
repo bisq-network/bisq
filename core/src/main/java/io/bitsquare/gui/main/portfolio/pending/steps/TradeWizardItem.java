@@ -15,42 +15,45 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.portfolio.pending;
+package io.bitsquare.gui.main.portfolio.pending.steps;
 
 import io.bitsquare.gui.util.Colors;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.*;
 import javafx.scene.control.*;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 public class TradeWizardItem extends Button {
-    public Class<? extends Node> getViewClass() {
+    public Class<? extends TradeStepDetailsView> getViewClass() {
         return viewClass;
     }
 
-    private final Class<? extends Node> viewClass;
+    private final Class<? extends TradeStepDetailsView> viewClass;
 
-    public TradeWizardItem(Class<? extends Node> viewClass, String title) {
+    public TradeWizardItem(Class<? extends TradeStepDetailsView> viewClass, String title) {
         this.viewClass = viewClass;
 
+        setMouseTransparent(true);
         setText(title);
-        setId("trade-wizard-item-background-disabled");
         setPrefHeight(40);
         setPrefWidth(270);
         setPadding(new Insets(0, 20, 0, 10));
         setAlignment(Pos.CENTER_LEFT);
+        inactive();
+    }
 
+    public void inactive() {
+        setId("trade-wizard-item-background-disabled");
         Label icon = new Label();
         icon.setTextFill(Colors.MID_GREY);
         AwesomeDude.setIcon(icon, AwesomeIcon.ANGLE_DOWN);
         setGraphic(icon);
     }
 
-    void show() {
+    public void active() {
         setId("trade-wizard-item-background-active");
         Label icon = new Label();
         icon.setTextFill(Colors.BLUE);
@@ -58,7 +61,7 @@ public class TradeWizardItem extends Button {
         setGraphic(icon);
     }
 
-    void onCompleted() {
+    public void done() {
         setId("trade-wizard-item-background-completed");
         Label icon = new Label();
         icon.setTextFill(Colors.GREEN);

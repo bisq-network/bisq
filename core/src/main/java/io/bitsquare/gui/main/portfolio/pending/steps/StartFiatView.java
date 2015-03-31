@@ -19,55 +19,110 @@ package io.bitsquare.gui.main.portfolio.pending.steps;
 
 import io.bitsquare.gui.components.InfoDisplay;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
+import io.bitsquare.gui.components.TxIdTextField;
+import io.bitsquare.gui.main.portfolio.pending.PendingTradesViewModel;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.BSResources;
 
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static io.bitsquare.gui.util.ComponentBuilder.*;
 
-public class StartFiatView extends AnchorPane {
-    private static final Logger log = LoggerFactory.getLogger(WaitView.class);
+public class StartFiatView extends TradeStepDetailsView {
+    private static final Logger log = LoggerFactory.getLogger(WaitTxInBlockchainView.class);
 
+    private TxIdTextField txIdTextField;
     private TextFieldWithCopyIcon fiatAmountTextField;
     private TextField paymentMethodTextField;
     private TextFieldWithCopyIcon holderNameTextField;
-    private TextFieldWithCopyIcon primarTextField;
+    private TextFieldWithCopyIcon primaryIdTextField;
     private TextFieldWithCopyIcon secondaryIdTextField;
-    private InfoDisplay infoDisplay;
+    private InfoDisplay paymentsInfoDisplay;
+    private Button paymentStartedButton;
 
-    public StartFiatView() {
-        buildViews();
+    private final ChangeListener<String> txIdChangeListener;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, Initialisation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public StartFiatView(PendingTradesViewModel model) {
+        super(model);
+
+        txIdChangeListener = (ov, oldValue, newValue) -> txIdTextField.setup(model.getWalletService(), newValue);
+
+        paymentMethodTextField.setText(model.getPaymentMethod());
+        fiatAmountTextField.setText(model.getFiatAmount());
+        holderNameTextField.setText(model.getHolderName());
+        primaryIdTextField.setText(model.getPrimaryId());
+        secondaryIdTextField.setText(model.getSecondaryId());
+        paymentsInfoDisplay.setText(BSResources.get("Copy and paste the payment account data to your " +
+                        "internet banking web page and transfer the {0} amount to the other traders " +
+                        "payment account. When the transfer is completed inform the other trader by " +
+                        "clicking the button below.",
+                model.getCurrencyCode()));
+        
+        /*
+              statusTextField.setText("Deposit transaction has at least one block chain confirmation. " +
+                            "Please start now the payment.");
+                    infoDisplay.setText("You are now safe to start the payment. You can wait for up to 6 block chain " +
+                            "confirmations if you want more security.");
+
+         */
     }
 
-    private void buildViews() {
-        AnchorPane.setLeftAnchor(this, 0d);
-        AnchorPane.setRightAnchor(this, 0d);
-        AnchorPane.setTopAnchor(this, 0d);
-        AnchorPane.setBottomAnchor(this, 0d);
+    @Override
+    public void activate() {
+        log.debug("activate ##");
+        super.activate();
 
-        int i = 0;
-        GridPane gridPane = getAndAddGridPane(this);
-        getAndAddTitledGroupBg(gridPane, i, 6, "Payments details");
-        fiatAmountTextField = getAndAddLabelTextFieldWithCopyIconPair(gridPane, i++, "Amount to transfer:", Layout.FIRST_ROW_DISTANCE).textFieldWithCopyIcon;
-        paymentMethodTextField = getAndAddLabelTextFieldPair(gridPane, i++, "Payment method:").textField;
-        holderNameTextField = getAndAddLabelTextFieldWithCopyIconPair(gridPane, i++, "Receiver:").textFieldWithCopyIcon;
-        primarTextField = getAndAddLabelTextFieldWithCopyIconPair(gridPane, i++, "IBAN:").textFieldWithCopyIcon;
-        secondaryIdTextField = getAndAddLabelTextFieldWithCopyIconPair(gridPane, i++, "BIC:").textFieldWithCopyIcon;
-        infoDisplay = getAndAddInfoDisplay(gridPane, i++, "infoDisplay", this::onOpenHelp);
-        getAndAddButton(gridPane, i++, "Payment started", this::onPaymentStarted);
+        model.txId.addListener(txIdChangeListener);
+        Platform.runLater(() -> txIdTextField.setup(model.getWalletService(), model.txId.get()));
     }
+
+    @Override
+    public void deactivate() {
+        super.deactivate();
+
+        model.txId.removeListener(txIdChangeListener);
+        txIdTextField.cleanup();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI Handlers
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onPaymentStarted(ActionEvent actionEvent) {
         log.debug("onPaymentStarted");
+        model.fiatPaymentStarted();
+        paymentStartedButton.setDisable(true);
     }
 
-    private void onOpenHelp(ActionEvent actionEvent) {
-        log.debug("onOpenHelp");
-    }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Build view
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void buildGridEntries() {
+        getAndAddTitledGroupBg(gridPane, gridRow, 1, "Blockchain confirmation");
+        txIdTextField = getAndAddLabelTxIdTextFieldPair(gridPane, gridRow++, "Deposit transaction ID:", Layout.FIRST_ROW_DISTANCE).txIdTextField;
+
+        getAndAddTitledGroupBg(gridPane, gridRow, 6, "Payments details", Layout.GROUP_DISTANCE);
+        fiatAmountTextField = getAndAddLabelTextFieldWithCopyIconPair(gridPane, gridRow++, "Amount to transfer:", Layout.FIRST_ROW_AND_GROUP_DISTANCE)
+                .textFieldWithCopyIcon;
+        paymentMethodTextField = getAndAddLabelTextFieldPair(gridPane, gridRow++, "Payment method:").textField;
+        holderNameTextField = getAndAddLabelTextFieldWithCopyIconPair(gridPane, gridRow++, "Receiver:").textFieldWithCopyIcon;
+        primaryIdTextField = getAndAddLabelTextFieldWithCopyIconPair(gridPane, gridRow++, "IBAN:").textFieldWithCopyIcon;
+        secondaryIdTextField = getAndAddLabelTextFieldWithCopyIconPair(gridPane, gridRow++, "BIC:").textFieldWithCopyIcon;
+        paymentsInfoDisplay = getAndAddInfoDisplay(gridPane, gridRow++, "infoDisplay", this::onOpenHelp);
+        paymentStartedButton = getAndAddButton(gridPane, gridRow++, "Payment started", this::onPaymentStarted);
+    }
 }

@@ -23,6 +23,7 @@ import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.OffererAsBuyerTrade;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.TakerAsSellerTrade;
@@ -36,8 +37,6 @@ import org.bitcoinj.core.Coin;
 import com.google.inject.Inject;
 
 import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -71,6 +70,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
 
     final ObjectProperty<Trade.ProcessState> takerProcessState = new SimpleObjectProperty<>();
     final ObjectProperty<Trade.ProcessState> offererProcessState = new SimpleObjectProperty<>();
+    final ObjectProperty<Trade> currentTrade = new SimpleObjectProperty<>();
 
     @Inject
     public PendingTradesDataModel(TradeManager tradeManager, WalletService walletService, User user) {
@@ -116,36 +116,48 @@ class PendingTradesDataModel implements Activatable, DataModel {
         removeListenerFromSelectedTrade();
 
         selectedItem = item;
-        isOfferer = getTrade().getOffer().getP2PSigPubKey().equals(user.getP2PSigPubKey());
 
-        Trade trade = getTrade();
-        if (trade instanceof TakerAsSellerTrade)
-            takerProcessState.bind(trade.processStateProperty());
-        else
-            offererProcessState.bind(trade.processStateProperty());
+        if (item == null) {
+            if (currentTrade != null) {
+                takerProcessState.unbind();
+                offererProcessState.unbind();
+            }
+            currentTrade.set(null);
+        }
+        else {
+            currentTrade.set(item.getTrade());
 
-        log.trace("selectTrade trade.stateProperty().get() " + trade.processStateProperty().get());
+            Trade trade = item.getTrade();
+            isOfferer = trade.getOffer().getP2PSigPubKey().equals(user.getP2PSigPubKey());
+            if (trade instanceof TakerAsSellerTrade)
+                takerProcessState.bind(trade.processStateProperty());
+            else
+                offererProcessState.bind(trade.processStateProperty());
 
-        if (trade.getDepositTx() != null)
-            txId.set(trade.getDepositTx().getHashAsString());
+            if (trade.getDepositTx() != null)
+                txId.set(trade.getDepositTx().getHashAsString());
+        }
     }
 
     void fiatPaymentStarted() {
-        ((OffererAsBuyerTrade) getTrade()).onFiatPaymentStarted();
+        if (getTrade() != null)
+            ((OffererAsBuyerTrade) getTrade()).onFiatPaymentStarted();
     }
 
     void fiatPaymentReceived() {
-        ((TakerAsSellerTrade) getTrade()).onFiatPaymentReceived();
+        if (getTrade() != null)
+            ((TakerAsSellerTrade) getTrade()).onFiatPaymentReceived();
     }
 
     void withdraw(String toAddress) {
-        tradeManager.requestWithdraw(toAddress,
-                getTrade(),
-                () -> log.debug("requestWithdraw was successful"),
-                (errorMessage, throwable) -> {
-                    log.error(errorMessage);
-                    Popups.openExceptionPopup(throwable);
-                });
+        if (getTrade() != null) {
+            tradeManager.requestWithdraw(toAddress,
+                    getTrade(),
+                    () -> log.debug("requestWithdraw was successful"),
+                    (errorMessage, throwable) -> {
+                        log.error(errorMessage);
+                        Popups.openExceptionPopup(throwable);
+                    });
         
 
 /*
@@ -174,6 +186,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
                 Popups.openErrorPopup("Wrong inputs", "Please check the inputs.");
             }
         }*/
+        }
     }
 
     ObservableList<PendingTradesListItem> getList() {
@@ -184,10 +197,10 @@ class PendingTradesDataModel implements Activatable, DataModel {
         return isOfferer;
     }
 
-    @Nullable
+   /* @Nullable
     Trade getTrade() {
         return selectedItem != null ? selectedItem.getTrade() : null;
-    }
+    }*/
 
     Coin getTotalFees() {
         return FeePolicy.TX_FEE.add(isOfferer() ? FeePolicy.CREATE_OFFER_FEE : FeePolicy.TAKE_OFFER_FEE);
@@ -206,11 +219,17 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     Throwable getTradeException() {
-        return getTrade().getThrowable();
+        if (getTrade() != null)
+            return getTrade().getThrowable();
+        else
+            return null;
     }
 
     String getErrorMessage() {
-        return getTrade().getErrorMessage();
+        if (getTrade() != null)
+            return getTrade().getErrorMessage();
+        else
+            return null;
     }
 
     public Offer.Direction getDirection(Offer offer) {
@@ -237,5 +256,18 @@ class PendingTradesDataModel implements Activatable, DataModel {
         return amountToWithdraw;
     }
 
+    public Contract getContract() {
+        if (getTrade() != null)
+            return getTrade().getContract();
+        else
+            return null;
+    }
+
+    public Trade getTrade() {
+        if (currentTrade.get() != null)
+            return currentTrade.get();
+        else
+            return null;
+    }
 }
 

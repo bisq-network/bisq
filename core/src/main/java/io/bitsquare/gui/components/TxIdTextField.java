@@ -41,6 +41,7 @@ public class TxIdTextField extends AnchorPane {
     private final ConfidenceProgressIndicator progressIndicator;
     private final Label copyIcon;
     private TxConfidenceListener txConfidenceListener;
+    private WalletService walletService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -79,6 +80,7 @@ public class TxIdTextField extends AnchorPane {
     }
 
     public void setup(WalletService walletService, String txID) {
+        this.walletService = walletService;
         if (txConfidenceListener != null)
             walletService.removeTxConfidenceListener(txConfidenceListener);
 
@@ -105,6 +107,11 @@ public class TxIdTextField extends AnchorPane {
         });
 
         copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(txID));
+    }
+
+    public void cleanup() {
+        if (walletService != null && txConfidenceListener != null)
+            walletService.removeTxConfidenceListener(txConfidenceListener);
     }
 
 

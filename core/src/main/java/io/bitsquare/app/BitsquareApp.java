@@ -84,7 +84,7 @@ public class BitsquareApp extends Application {
         CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
         View view = viewLoader.load(MainView.class);
 
-        scene = new Scene((Parent) view.getRoot(), 1000, 600);
+        scene = new Scene((Parent) view.getRoot(), 1000, 620);
         scene.getStylesheets().setAll(
                 "/io/bitsquare/gui/bitsquare.css",
                 "/io/bitsquare/gui/images.css");
@@ -114,7 +114,7 @@ public class BitsquareApp extends Application {
         primaryStage.setTitle(env.getRequiredProperty(APP_NAME_KEY));
         primaryStage.setScene(scene);
         primaryStage.setMinWidth(750);
-        primaryStage.setMinHeight(500);
+        primaryStage.setMinHeight(620);
 
         // on windows the title icon is also used as task bar icon in a larger size
         // on Linux no title icon is supported but also a large task bar icon is derived form that title icon

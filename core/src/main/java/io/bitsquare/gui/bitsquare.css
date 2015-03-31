@@ -186,6 +186,11 @@ textfield */
     /*-fx-background-color: transparent;*/
 }
 
+/* horizontal scrollbars are never needed and are flickering at scaling so lets turn them off */
+.table-view > .scroll-bar:horizontal {
+    -fx-opacity: 0;
+}
+
 .table-view:focused {
     -fx-background-color: -fx-box-border, -fx-control-inner-background;
     -fx-background-insets: 0, 1;
@@ -481,6 +486,7 @@ textfield */
 }
 
 #trade-wizard-item-background-active {
+    -fx-font-weight: bold;
     -fx-body-color: linear-gradient(to bottom, #f1f6f7, #e7f5f9);
     -fx-outer-border: linear-gradient(to bottom, #b5e1ef, #6aa4b6);
     -fx-background-color: -fx-shadow-highlight-color,
