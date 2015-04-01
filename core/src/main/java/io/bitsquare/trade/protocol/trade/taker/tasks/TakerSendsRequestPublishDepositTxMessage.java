@@ -30,8 +30,8 @@ import org.slf4j.LoggerFactory;
 public class TakerSendsRequestPublishDepositTxMessage extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerSendsRequestPublishDepositTxMessage.class);
 
-    public TakerSendsRequestPublishDepositTxMessage(TaskRunner taskHandler, TakerTrade model) {
-        super(taskHandler, model);
+    public TakerSendsRequestPublishDepositTxMessage(TaskRunner taskHandler, TakerTrade takerTrade) {
+        super(taskHandler, takerTrade);
     }
 
     @Override

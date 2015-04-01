@@ -30,19 +30,19 @@ import org.slf4j.LoggerFactory;
 public class TakerCreatesAndSignsDepositTx extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerCreatesAndSignsDepositTx.class);
 
-    public TakerCreatesAndSignsDepositTx(TaskRunner taskHandler, TakerTrade model) {
-        super(taskHandler, model);
+    public TakerCreatesAndSignsDepositTx(TaskRunner taskHandler, TakerTrade takerTrade) {
+        super(taskHandler, takerTrade);
     }
 
     @Override
     protected void doRun() {
         try {
             assert takerTrade.getTradeAmount() != null;
-            Coin takerInputAmount = takerTrade.getSecurityDeposit().add(FeePolicy.TX_FEE);
-            Coin msOutputAmount = takerInputAmount.add(takerTrade.getSecurityDeposit());
-
-            TradeWalletService.Result result = takerTradeProcessModel.getTradeWalletService().takerCreatesAndSignsDepositTx(
-                    takerInputAmount,
+            Coin inputAmount = takerTrade.getSecurityDeposit().add(FeePolicy.TX_FEE).add(takerTrade.getTradeAmount());
+            Coin msOutputAmount = inputAmount.add(takerTrade.getSecurityDeposit());
+            
+            TradeWalletService.Result result = takerTradeProcessModel.getTradeWalletService().createAndSignDepositTx(
+                    inputAmount,
                     msOutputAmount,
                     takerTradeProcessModel.offerer.getConnectedOutputsForAllInputs(),
                     takerTradeProcessModel.offerer.getOutputs(),
@@ -50,7 +50,6 @@ public class TakerCreatesAndSignsDepositTx extends TakerTradeTask {
                     takerTradeProcessModel.offerer.getTradeWalletPubKey(),
                     takerTradeProcessModel.taker.getTradeWalletPubKey(),
                     takerTradeProcessModel.getArbitratorPubKey());
-
 
             takerTradeProcessModel.taker.setConnectedOutputsForAllInputs(result.getConnectedOutputsForAllInputs());
             takerTradeProcessModel.taker.setPreparedDepositTx(result.getDepositTx());

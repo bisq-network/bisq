@@ -32,8 +32,8 @@ import static io.bitsquare.util.Validator.checkTradeId;
 public class TakerProcessPayoutTxPublishedMessage extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerProcessPayoutTxPublishedMessage.class);
 
-    public TakerProcessPayoutTxPublishedMessage(TaskRunner taskHandler, TakerTrade takerTradeProcessModel) {
-        super(taskHandler, takerTradeProcessModel);
+    public TakerProcessPayoutTxPublishedMessage(TaskRunner taskHandler, TakerTrade takerTrade) {
+        super(taskHandler, takerTrade);
     }
 
     @Override

@@ -28,8 +28,8 @@ import org.slf4j.LoggerFactory;
 public class VerifyTakerAccount extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(VerifyTakerAccount.class);
 
-    public VerifyTakerAccount(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
-        super(taskHandler, offererTradeProcessModel);
+    public VerifyTakerAccount(TaskRunner taskHandler, OffererTrade offererTrade) {
+        super(taskHandler, offererTrade);
     }
 
     @Override

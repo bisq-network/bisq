@@ -31,19 +31,19 @@ public class FiatTransferStartedMessage extends TradeMessage implements MailboxM
     private static final long serialVersionUID = 1L;
 
     public final byte[] buyerSignature;
-    public final Coin offererPayoutAmount;
-    public final Coin takerPayoutAmount;
+    public final Coin buyerPayoutAmount;
+    public final Coin sellerPayoutAmount;
     public final String buyerPayoutAddress;
 
     public FiatTransferStartedMessage(String tradeId,
                                       byte[] buyerSignature,
-                                      Coin offererPayoutAmount,
-                                      Coin takerPayoutAmount,
+                                      Coin buyerPayoutAmount,
+                                      Coin sellerPayoutAmount,
                                       String buyerPayoutAddress) {
         super(tradeId);
         this.buyerSignature = buyerSignature;
-        this.offererPayoutAmount = offererPayoutAmount;
-        this.takerPayoutAmount = takerPayoutAmount;
+        this.buyerPayoutAmount = buyerPayoutAmount;
+        this.sellerPayoutAmount = sellerPayoutAmount;
         this.buyerPayoutAddress = buyerPayoutAddress;
     }
 }

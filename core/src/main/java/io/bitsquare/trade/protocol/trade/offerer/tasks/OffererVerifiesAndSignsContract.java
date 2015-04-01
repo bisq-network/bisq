@@ -30,8 +30,8 @@ import org.slf4j.LoggerFactory;
 public class OffererVerifiesAndSignsContract extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererVerifiesAndSignsContract.class);
 
-    public OffererVerifiesAndSignsContract(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
-        super(taskHandler, offererTradeProcessModel);
+    public OffererVerifiesAndSignsContract(TaskRunner taskHandler, OffererTrade offererTrade) {
+        super(taskHandler, offererTrade);
     }
 
     @Override

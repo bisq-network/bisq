@@ -32,8 +32,8 @@ import static io.bitsquare.util.Validator.*;
 public class OffererProcessRequestPublishDepositTxMessage extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererProcessRequestPublishDepositTxMessage.class);
 
-    public OffererProcessRequestPublishDepositTxMessage(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
-        super(taskHandler, offererTradeProcessModel);
+    public OffererProcessRequestPublishDepositTxMessage(TaskRunner taskHandler, OffererTrade offererTrade) {
+        super(taskHandler, offererTrade);
     }
 
     @Override

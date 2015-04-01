@@ -55,7 +55,6 @@ public class Offerer implements Serializable {
     private byte[] signature;
     private FiatAccount fiatAccount;
     private String accountId;
-    private PublicKey p2pSigPublicKey;
     private PublicKey p2pEncryptPubKey;
     private String contractAsJson;
     private String contractSignature;
@@ -154,15 +153,6 @@ public class Offerer implements Serializable {
     }
 
     @Nullable
-    public PublicKey getP2pSigPublicKey() {
-        return p2pSigPublicKey;
-    }
-
-    public void setP2pSigPublicKey(PublicKey p2pSigPublicKey) {
-        this.p2pSigPublicKey = p2pSigPublicKey;
-    }
-
-    @Nullable
     public PublicKey getP2pEncryptPubKey() {
         return p2pEncryptPubKey;
     }
@@ -218,7 +208,7 @@ public class Offerer implements Serializable {
                 ", signature=" + Arrays.toString(signature) +
                 ", fiatAccount=" + fiatAccount +
                 ", accountId='" + accountId + '\'' +
-                ", p2pSigPublicKey=" + p2pSigPublicKey +
+                ", p2pSigPubKey=" + p2pSigPubKey +
                 ", p2pEncryptPubKey=" + p2pEncryptPubKey +
                 '}';
     }

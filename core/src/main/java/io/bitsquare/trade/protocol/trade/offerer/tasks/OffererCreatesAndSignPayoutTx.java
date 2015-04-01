@@ -18,7 +18,6 @@
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.OffererTrade;
 
 import org.bitcoinj.core.Coin;
@@ -29,8 +28,8 @@ import org.slf4j.LoggerFactory;
 public class OffererCreatesAndSignPayoutTx extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererCreatesAndSignPayoutTx.class);
 
-    public OffererCreatesAndSignPayoutTx(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
-        super(taskHandler, offererTradeProcessModel);
+    public OffererCreatesAndSignPayoutTx(TaskRunner taskHandler, OffererTrade offererTrade) {
+        super(taskHandler, offererTrade);
     }
 
     @Override
@@ -38,15 +37,9 @@ public class OffererCreatesAndSignPayoutTx extends OffererTradeTask {
         try {
             assert offererTrade.getTradeAmount() != null;
             Coin securityDeposit = offererTrade.getSecurityDeposit();
-            
-            Coin offererPayoutAmount = securityDeposit;
-            if (offererTrade.getOffer().getDirection() == Offer.Direction.BUY)
-                offererPayoutAmount = offererPayoutAmount.add(offererTrade.getTradeAmount());
-
+            Coin offererPayoutAmount = securityDeposit.add(offererTrade.getTradeAmount());
             Coin takerPayoutAmount = securityDeposit;
-            if (offererTrade.getOffer().getDirection() == Offer.Direction.SELL)
-                takerPayoutAmount = takerPayoutAmount.add(offererTrade.getTradeAmount());
-
+            
             byte[] offererPayoutTxSignature = offererTradeProcessModel.getTradeWalletService().createAndSignPayoutTx(
                     offererTrade.getDepositTx(),
                     offererPayoutAmount,

@@ -30,8 +30,8 @@ import org.slf4j.LoggerFactory;
 public class OffererSendsPayoutTxPublishedMessage extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererSendsPayoutTxPublishedMessage.class);
 
-    public OffererSendsPayoutTxPublishedMessage(TaskRunner taskHandler, OffererTrade model) {
-        super(taskHandler, model);
+    public OffererSendsPayoutTxPublishedMessage(TaskRunner taskHandler, OffererTrade offererTrade) {
+        super(taskHandler, offererTrade);
     }
 
     @Override
@@ -40,7 +40,7 @@ public class OffererSendsPayoutTxPublishedMessage extends OffererTradeTask {
             PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(offererTradeProcessModel.getId(), offererTradeProcessModel.getPayoutTx());
             offererTradeProcessModel.getMessageService().sendMessage(offererTrade.getTradingPeer(),
                     tradeMessage,
-                    offererTradeProcessModel.offerer.getP2pSigPublicKey(),
+                    offererTradeProcessModel.offerer.getP2pSigPubKey(),
                     offererTradeProcessModel.offerer.getP2pEncryptPubKey(),
                     new SendMessageListener() {
                         @Override

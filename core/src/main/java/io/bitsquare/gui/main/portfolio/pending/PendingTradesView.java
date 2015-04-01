@@ -106,7 +106,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         else {
             removeSubView();
         }
-        
+
         if (currentSubView != null)
             currentSubView.activate();
     }
@@ -127,13 +127,20 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private void addSubView() {
         removeSubView();
 
-        if (model.isOfferer())
-            currentSubView = new OffererAsBuyerSubView(model);
-        else
-            currentSubView = new TakerAsSellerSubView(model);
-
+        if (model.isOfferer()) {
+            if (model.isBuyOffer())
+                currentSubView = new OffererAsBuyerSubView(model);
+            else
+                currentSubView = new OffererAsSellerSubView(model);
+        }
+        else {
+            if (model.isBuyOffer())
+                currentSubView = new TakerAsSellerSubView(model);
+            else
+                currentSubView = new TakerAsBuyerSubView(model);
+        }
         currentSubView.activate();
-        
+
         AnchorPane.setTopAnchor(currentSubView, 0d);
         AnchorPane.setRightAnchor(currentSubView, 0d);
         AnchorPane.setBottomAnchor(currentSubView, 0d);

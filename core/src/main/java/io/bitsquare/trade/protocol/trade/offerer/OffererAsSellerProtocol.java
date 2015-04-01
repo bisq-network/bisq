@@ -37,12 +37,12 @@ import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererCreatesAndSignsCon
 import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererCreatesAndSignsDepositTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererProcessDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererProcessFiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererProcessRequestPayDepositMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererProcessRequestPayDepositFromOffererMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererSendsPayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererSendsRequestPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererSendsRequestPublishDepositTxFromTakerMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererSignsAndPublishPayoutTx;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakeOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakerAccount;
-import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOfferFeePayment;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -134,19 +134,21 @@ public class OffererAsSellerProtocol implements Protocol {
     // Trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(RequestPayDepositMessage tradeMessage) {
+    private void handle(RequestPayDepositMessage tradeMessage, Peer sender) {
         offererTradeProcessModel.setTradeMessage(tradeMessage);
 
+        offererAsSellerTrade.setTradingPeer(sender);
+        
         TaskRunner<OffererAsSellerTrade> taskRunner = new TaskRunner<>(offererAsSellerTrade,
                 () -> log.debug("taskRunner at handleTakerDepositPaymentRequestMessage completed"),
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                OffererProcessRequestPayDepositMessage.class,
+                OffererProcessRequestPayDepositFromOffererMessage.class,
                 VerifyTakerAccount.class,
                 OffererCreatesAndSignsContract.class,
                 OffererCreatesAndSignsDepositTx.class,
-                OffererSendsRequestPublishDepositTxMessage.class
+                OffererSendsRequestPublishDepositTxFromTakerMessage.class
         );
         taskRunner.run();
     }
@@ -195,7 +197,7 @@ public class OffererAsSellerProtocol implements Protocol {
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                VerifyOfferFeePayment.class,
+                VerifyTakeOfferFeePayment.class,
                 OffererSignsAndPublishPayoutTx.class,
                 OffererSendsPayoutTxPublishedMessage.class
         );
@@ -217,7 +219,7 @@ public class OffererAsSellerProtocol implements Protocol {
                     handle((RequestIsOfferAvailableMessage) tradeMessage, sender);
                 }
                 else if (tradeMessage instanceof RequestPayDepositMessage) {
-                    handle((RequestPayDepositMessage) tradeMessage);
+                    handle((RequestPayDepositMessage) tradeMessage, sender);
                 }
                 else if (tradeMessage instanceof DepositTxPublishedMessage) {
                     handle((DepositTxPublishedMessage) tradeMessage);

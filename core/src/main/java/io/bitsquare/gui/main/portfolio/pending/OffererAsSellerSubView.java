@@ -19,21 +19,20 @@ package io.bitsquare.gui.main.portfolio.pending;
 
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.portfolio.pending.steps.CompletedView;
-import io.bitsquare.gui.main.portfolio.pending.steps.StartFiatView;
+import io.bitsquare.gui.main.portfolio.pending.steps.ConfirmFiatReceivedView;
 import io.bitsquare.gui.main.portfolio.pending.steps.TradeWizardItem;
-import io.bitsquare.gui.main.portfolio.pending.steps.WaitFiatReceivedView;
 import io.bitsquare.gui.main.portfolio.pending.steps.WaitTxInBlockchainView;
 import io.bitsquare.locale.BSResources;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererAsBuyerSubView extends TradeSubView {
-    private static final Logger log = LoggerFactory.getLogger(OffererAsBuyerSubView.class);
+public class OffererAsSellerSubView extends TradeSubView {
+    private static final Logger log = LoggerFactory.getLogger(OffererAsSellerSubView.class);
 
     private TradeWizardItem waitTxInBlockchain;
-    private TradeWizardItem startFiat;
-    private TradeWizardItem waitFiatReceived;
+    private TradeWizardItem waitFiatStarted;
+    private TradeWizardItem confirmFiatReceived;
     private TradeWizardItem completed;
 
 
@@ -41,7 +40,7 @@ public class OffererAsBuyerSubView extends TradeSubView {
     // Constructor, Initialisation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public OffererAsBuyerSubView(PendingTradesViewModel model) {
+    public OffererAsSellerSubView(PendingTradesViewModel model) {
         super(model);
     }
 
@@ -58,11 +57,11 @@ public class OffererAsBuyerSubView extends TradeSubView {
     @Override
     protected void addWizards() {
         waitTxInBlockchain = new TradeWizardItem(WaitTxInBlockchainView.class, "Wait for blockchain confirmation");
-        startFiat = new TradeWizardItem(StartFiatView.class, "Start payment");
-        waitFiatReceived = new TradeWizardItem(WaitFiatReceivedView.class, "Wait until payment has arrived");
+        waitFiatStarted = new TradeWizardItem(WaitTxInBlockchainView.class, "Wait for payment started");
+        confirmFiatReceived = new TradeWizardItem(ConfirmFiatReceivedView.class, "Confirm payment received");
         completed = new TradeWizardItem(CompletedView.class, "Completed");
 
-        leftVBox.getChildren().addAll(waitTxInBlockchain, startFiat, waitFiatReceived, completed);
+        leftVBox.getChildren().addAll(waitTxInBlockchain, waitFiatStarted, confirmFiatReceived, completed);
     }
 
 
@@ -75,53 +74,67 @@ public class OffererAsBuyerSubView extends TradeSubView {
         log.debug("applyState " + viewState);
 
         waitTxInBlockchain.inactive();
-        startFiat.inactive();
-        waitFiatReceived.inactive();
+        waitFiatStarted.inactive();
+        confirmFiatReceived.inactive();
         completed.inactive();
 
         switch (viewState) {
             case EMPTY:
                 break;
-            case OFFERER_BUYER_WAIT_TX_CONF:
+            case OFFERER_SELLER_WAIT_TX_CONF:
                 showItem(waitTxInBlockchain);
 
-                ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText("Deposit transaction has been published. You need to wait for at least " +
-                        "one block chain confirmation.");
-                ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoDisplayField("You need to wait for at least one block chain confirmation to" +
-                        " be sure that the deposit funding has not been double spent. For higher trade volumes we" +
-                        " recommend to wait up to 6 confirmations.");
+                ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText("Deposit transaction has been published. " +
+                        "The Bitcoin buyer need to wait for at least one block chain confirmation.");
+                ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoDisplayField(BSResources.get("The Bitcoin buyer needs to wait for at least one " +
+                                "block chain confirmation before starting the {0} payment. " +
+                                "That is needed to assure that the deposit input funding has not been " +
+                                "double-spent. " +
+                                "For higher trade volumes it is recommended to wait up to 6 confirmations.",
+                        model.getCurrencyCode()));
                 break;
-            case OFFERER_BUYER_START_PAYMENT:
+            case OFFERER_SELLER_WAIT_PAYMENT_STARTED:
                 waitTxInBlockchain.done();
-                showItem(startFiat);
-                break;
-            case OFFERER_BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED:
-                waitTxInBlockchain.done();
-                startFiat.done();
-                showItem(waitFiatReceived);
+                showItem(waitFiatStarted);
 
-                ((WaitFiatReceivedView) tradeStepDetailsView).setInfoLabelText(BSResources.get("Waiting for the Bitcoin sellers confirmation " +
-                                "that the {0} payment has arrived.",
+                ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText(BSResources.get("Deposit transaction has at least one block chain " +
+                                "confirmation. " +
+                                "Waiting that other trader starts the {0} payment.",
                         model.getCurrencyCode()));
-                ((WaitFiatReceivedView) tradeStepDetailsView).setInfoDisplayField(BSResources.get("When the confirmation that the {0} payment arrived at " +
-                                "the Bitcoin sellers payment account, the payout transaction will be published.",
+                ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoDisplayField(BSResources.get("You will get informed when the other trader has " +
+                                "indicated the {0} payment has been started.",
                         model.getCurrencyCode()));
                 break;
-            case OFFERER_BUYER_COMPLETED:
+            case OFFERER_SELLER_CONFIRM_RECEIVE_PAYMENT:
                 waitTxInBlockchain.done();
-                startFiat.done();
-                waitFiatReceived.done();
+                waitFiatStarted.done();
+                showItem(confirmFiatReceived);
+
+                ((ConfirmFiatReceivedView) tradeStepDetailsView).setInfoLabelText(BSResources.get("The Bitcoin buyer has started the {0} payment." +
+                                "Check your payments account and confirm when you have received the payment.",
+                        model.getCurrencyCode()));
+                ((ConfirmFiatReceivedView) tradeStepDetailsView).setInfoDisplayField(BSResources.get("It is important that you confirm when you have " +
+                                "received the {0} payment as this will publish the payout transaction where you get returned " +
+                                "your security deposit and the Bitcoin buyer receive the Bitcoin amount you sold.",
+                        model.getCurrencyCode()));
+
+                break;
+            case OFFERER_SELLER_COMPLETED:
+                waitTxInBlockchain.done();
+                waitFiatStarted.done();
+                confirmFiatReceived.done();
                 showItem(completed);
 
                 CompletedView completedView = (CompletedView) tradeStepDetailsView;
-                completedView.setBtcTradeAmountLabelText("You have bought:");
-                completedView.setFiatTradeAmountLabelText("You have paid:");
+                completedView.setBtcTradeAmountLabelText("You have sold:");
+                completedView.setFiatTradeAmountLabelText("You have received:");
                 completedView.setBtcTradeAmountTextFieldText(model.getTradeVolume());
                 completedView.setFiatTradeAmountTextFieldText(model.getFiatVolume());
                 completedView.setFeesTextFieldText(model.getTotalFees());
                 completedView.setSecurityDepositTextFieldText(model.getSecurityDeposit());
                 completedView.setSummaryInfoDisplayText("Your security deposit has been refunded to you. " +
                         "You can review the details to that trade any time in the closed trades screen.");
+
                 completedView.setWithdrawAmountTextFieldText(model.getAmountToWithdraw());
                 break;
             case MESSAGE_SENDING_FAILED:

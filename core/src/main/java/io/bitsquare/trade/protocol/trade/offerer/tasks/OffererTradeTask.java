@@ -17,9 +17,6 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.btc.exceptions.SigningException;
-import io.bitsquare.btc.exceptions.TransactionVerificationException;
-import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererTrade;
@@ -33,10 +30,10 @@ class OffererTradeTask extends Task<OffererTrade> {
     protected final OffererProcessModel offererTradeProcessModel;
     protected final OffererTrade offererTrade;
 
-    OffererTradeTask(TaskRunner taskHandler, OffererTrade model) {
-        super(taskHandler, model);
+    OffererTradeTask(TaskRunner taskHandler, OffererTrade offererTrade) {
+        super(taskHandler, offererTrade);
 
-        offererTrade = model;
+        this.offererTrade = offererTrade;
         offererTradeProcessModel = offererTrade.getProcessModel();
     }
 

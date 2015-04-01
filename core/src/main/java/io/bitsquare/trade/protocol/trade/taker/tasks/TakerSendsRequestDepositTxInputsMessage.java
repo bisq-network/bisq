@@ -32,8 +32,8 @@ import org.slf4j.LoggerFactory;
 public class TakerSendsRequestDepositTxInputsMessage extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerSendsRequestDepositTxInputsMessage.class);
 
-    public TakerSendsRequestDepositTxInputsMessage(TaskRunner taskHandler, TakerTrade model) {
-        super(taskHandler, model);
+    public TakerSendsRequestDepositTxInputsMessage(TaskRunner taskHandler, TakerTrade takerTrade) {
+        super(taskHandler, takerTrade);
     }
 
     private int retryCounter = 0;

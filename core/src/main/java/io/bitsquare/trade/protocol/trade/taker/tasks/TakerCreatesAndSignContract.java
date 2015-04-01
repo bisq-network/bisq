@@ -28,8 +28,8 @@ import org.slf4j.LoggerFactory;
 public class TakerCreatesAndSignContract extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerCreatesAndSignContract.class);
 
-    public TakerCreatesAndSignContract(TaskRunner taskHandler, TakerTrade model) {
-        super(taskHandler, model);
+    public TakerCreatesAndSignContract(TaskRunner taskHandler, TakerTrade takerTrade) {
+        super(taskHandler, takerTrade);
     }
 
     @Override

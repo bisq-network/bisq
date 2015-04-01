@@ -32,8 +32,8 @@ import static io.bitsquare.util.Validator.*;
 public class TakerProcessFiatTransferStartedMessage extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerProcessFiatTransferStartedMessage.class);
 
-    public TakerProcessFiatTransferStartedMessage(TaskRunner taskHandler, TakerTrade model) {
-        super(taskHandler, model);
+    public TakerProcessFiatTransferStartedMessage(TaskRunner taskHandler, TakerTrade takerTrade) {
+        super(taskHandler, takerTrade);
     }
 
     @Override
@@ -44,8 +44,8 @@ public class TakerProcessFiatTransferStartedMessage extends TakerTradeTask {
             checkNotNull(message);
 
             takerTradeProcessModel.offerer.setSignature(checkNotNull(message.buyerSignature));
-            takerTradeProcessModel.offerer.setPayoutAmount(positiveCoinOf(nonZeroCoinOf(message.offererPayoutAmount)));
-            takerTradeProcessModel.taker.setPayoutAmount(positiveCoinOf(nonZeroCoinOf(message.takerPayoutAmount)));
+            takerTradeProcessModel.offerer.setPayoutAmount(positiveCoinOf(nonZeroCoinOf(message.buyerPayoutAmount)));
+            takerTradeProcessModel.taker.setPayoutAmount(positiveCoinOf(nonZeroCoinOf(message.sellerPayoutAmount)));
             takerTradeProcessModel.offerer.setPayoutAddressString(nonEmptyStringOf(message.buyerPayoutAddress));
 
             if (takerTrade instanceof TakerAsBuyerTrade)

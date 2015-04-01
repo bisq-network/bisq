@@ -30,8 +30,8 @@ import static io.bitsquare.util.Validator.*;
 public class TakerProcessRequestSellerDepositPaymentMessage extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerProcessRequestSellerDepositPaymentMessage.class);
 
-    public TakerProcessRequestSellerDepositPaymentMessage(TaskRunner taskHandler, TakerTrade model) {
-        super(taskHandler, model);
+    public TakerProcessRequestSellerDepositPaymentMessage(TaskRunner taskHandler, TakerTrade takerTrade) {
+        super(taskHandler, takerTrade);
     }
 
     @Override
@@ -45,7 +45,7 @@ public class TakerProcessRequestSellerDepositPaymentMessage extends TakerTradeTa
             checkArgument(message.buyerConnectedOutputsForAllInputs.size() > 0);
             takerTradeProcessModel.offerer.setOutputs(checkNotNull(message.buyerOutputs));
             takerTradeProcessModel.offerer.setTradeWalletPubKey(checkNotNull(message.buyerTradeWalletPubKey));
-            takerTradeProcessModel.offerer.setP2pSigPublicKey(checkNotNull(message.buyerP2PSigPublicKey));
+            takerTradeProcessModel.offerer.setP2pSigPubKey(checkNotNull(message.buyerP2PSigPublicKey));
             takerTradeProcessModel.offerer.setP2pEncryptPubKey(checkNotNull(message.buyerP2PEncryptPublicKey));
             takerTradeProcessModel.offerer.setFiatAccount(checkNotNull(message.buyerFiatAccount));
             takerTradeProcessModel.offerer.setAccountId(nonEmptyStringOf(message.buyerAccountId));

@@ -36,8 +36,8 @@ import org.slf4j.LoggerFactory;
 public class OffererSignsAndPublishDepositTx extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererSignsAndPublishDepositTx.class);
 
-    public OffererSignsAndPublishDepositTx(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
-        super(taskHandler, offererTradeProcessModel);
+    public OffererSignsAndPublishDepositTx(TaskRunner taskHandler, OffererTrade offererTrade) {
+        super(taskHandler, offererTrade);
     }
 
     @Override

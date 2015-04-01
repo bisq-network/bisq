@@ -30,8 +30,8 @@ import org.slf4j.LoggerFactory;
 public class CreateTakeOfferFeeTx extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(CreateTakeOfferFeeTx.class);
 
-    public CreateTakeOfferFeeTx(TaskRunner taskHandler, TakerTrade model) {
-        super(taskHandler, model);
+    public CreateTakeOfferFeeTx(TaskRunner taskHandler, TakerTrade takerTrade) {
+        super(taskHandler, takerTrade);
     }
 
     @Override

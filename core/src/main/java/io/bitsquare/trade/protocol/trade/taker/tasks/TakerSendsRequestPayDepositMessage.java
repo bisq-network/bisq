@@ -22,7 +22,7 @@ import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.TakerAsBuyerTrade;
 import io.bitsquare.trade.TakerAsSellerTrade;
 import io.bitsquare.trade.TakerTrade;
-import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositFromOffererMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,15 +30,16 @@ import org.slf4j.LoggerFactory;
 public class TakerSendsRequestPayDepositMessage extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerSendsRequestPayDepositMessage.class);
 
-    public TakerSendsRequestPayDepositMessage(TaskRunner taskHandler, TakerTrade takerTradeProcessModel) {
-        super(taskHandler, takerTradeProcessModel);
+    public TakerSendsRequestPayDepositMessage(TaskRunner taskHandler, TakerTrade takerTrade) {
+        super(taskHandler, takerTrade);
     }
 
     @Override
     protected void doRun() {
         try {
-            RequestPayDepositMessage tradeMessage = new RequestPayDepositMessage(
+            RequestPayDepositFromOffererMessage message = new RequestPayDepositFromOffererMessage(
                     takerTradeProcessModel.getId(),
+                    model.getTradeAmount(),
                     takerTradeProcessModel.taker.getConnectedOutputsForAllInputs(),
                     takerTradeProcessModel.taker.getOutputs(),
                     takerTradeProcessModel.taker.getTradeWalletPubKey(),
@@ -47,7 +48,7 @@ public class TakerSendsRequestPayDepositMessage extends TakerTradeTask {
                     takerTradeProcessModel.taker.getFiatAccount(),
                     takerTradeProcessModel.taker.getAccountId());
 
-            takerTradeProcessModel.getMessageService().sendMessage(takerTrade.getTradingPeer(), tradeMessage, new SendMessageListener() {
+            takerTradeProcessModel.getMessageService().sendMessage(takerTrade.getTradingPeer(), message, new SendMessageListener() {
                 @Override
                 public void handleResult() {
                     log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");

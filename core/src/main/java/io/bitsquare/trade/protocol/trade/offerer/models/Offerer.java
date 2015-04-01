@@ -57,7 +57,7 @@ public class Offerer implements Serializable {
     private List<TransactionOutput> connectedOutputsForAllInputs;
     private List<TransactionOutput> outputs; // used to verify amounts with change outputs
     private Transaction preparedDepositTx;
-    private PublicKey p2pSigPublicKey;
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -167,14 +167,6 @@ public class Offerer implements Serializable {
 
     public void setPreparedDepositTx(Transaction preparedDepositTx) {
         this.preparedDepositTx = preparedDepositTx;
-    }
-
-    public PublicKey getP2pSigPublicKey() {
-        return p2pSigPublicKey;
-    }
-
-    public void setP2pSigPublicKey(PublicKey p2pSigPublicKey) {
-        this.p2pSigPublicKey = p2pSigPublicKey;
     }
 
     @Override

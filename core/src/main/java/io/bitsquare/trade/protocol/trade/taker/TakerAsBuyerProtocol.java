@@ -34,7 +34,7 @@ import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCommitsPayoutTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCreatesAndSignsPayoutTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerCreatesDepositTxInputs;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerProcessPayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.TakerProcessRequestPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.taker.tasks.TakerProcessRequestPublishDepositTxFromTakerMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerSendsDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerSendsFiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerSendsRequestPayDepositMessage;
@@ -119,7 +119,7 @@ public class TakerAsBuyerProtocol implements Protocol {
                 () -> log.debug("taskRunner at handleRequestPublishDepositTxMessage completed"),
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
-                TakerProcessRequestPublishDepositTxMessage.class,
+                TakerProcessRequestPublishDepositTxFromTakerMessage.class,
                 VerifyOffererAccount.class,
                 TakerVerifiesAndSignsContract.class,
                 TakerSignsAndPublishDepositTx.class,

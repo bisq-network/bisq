@@ -183,7 +183,7 @@ public class Taker implements Serializable {
         return "Taker{" +
                 "accountId='" + accountId + '\'' +
                 ", fiatAccount=" + fiatAccount +
-                ", p2pSigPublicKey=" + p2pSigPubKey +
+                ", p2pSigPubKey=" + p2pSigPubKey +
                 ", p2pEncryptPubKey=" + p2pEncryptPubKey +
                 ", contractAsJson='" + contractAsJson + '\'' +
                 ", contractSignature='" + contractSignature + '\'' +

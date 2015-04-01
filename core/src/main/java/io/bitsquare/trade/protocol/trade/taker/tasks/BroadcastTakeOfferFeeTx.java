@@ -34,8 +34,8 @@ import org.slf4j.LoggerFactory;
 public class BroadcastTakeOfferFeeTx extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(BroadcastTakeOfferFeeTx.class);
 
-    public BroadcastTakeOfferFeeTx(TaskRunner taskHandler, TakerTrade model) {
-        super(taskHandler, model);
+    public BroadcastTakeOfferFeeTx(TaskRunner taskHandler, TakerTrade takerTrade) {
+        super(taskHandler, takerTrade);
     }
 
     @Override

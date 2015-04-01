@@ -30,8 +30,8 @@ import org.slf4j.LoggerFactory;
 public class TakerSendsFiatTransferStartedMessage extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerSendsFiatTransferStartedMessage.class);
 
-    public TakerSendsFiatTransferStartedMessage(TaskRunner taskHandler, TakerTrade takerTradeProcessModel) {
-        super(taskHandler, takerTradeProcessModel);
+    public TakerSendsFiatTransferStartedMessage(TaskRunner taskHandler, TakerTrade takerTrade) {
+        super(taskHandler, takerTrade);
     }
 
     @Override
@@ -39,8 +39,8 @@ public class TakerSendsFiatTransferStartedMessage extends TakerTradeTask {
         try {
             FiatTransferStartedMessage tradeMessage = new FiatTransferStartedMessage(takerTradeProcessModel.getId(),
                     takerTradeProcessModel.taker.getPayoutTxSignature(),
-                    takerTradeProcessModel.offerer.getPayoutAmount(),
                     takerTradeProcessModel.taker.getPayoutAmount(),
+                    takerTradeProcessModel.offerer.getPayoutAmount(),
                     takerTradeProcessModel.taker.getAddressEntry().getAddressString());
 
             takerTradeProcessModel.getMessageService().sendMessage(takerTrade.getTradingPeer(), tradeMessage,

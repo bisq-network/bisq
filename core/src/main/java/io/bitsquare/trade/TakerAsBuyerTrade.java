@@ -101,6 +101,7 @@ public class TakerAsBuyerTrade extends TakerTrade implements Serializable {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     public void takeAvailableOffer() {
         assert protocol instanceof TakerAsBuyerProtocol;
         ((TakerAsBuyerProtocol) protocol).takeAvailableOffer();

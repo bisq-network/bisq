@@ -79,6 +79,8 @@ public class TakerAsSellerSubView extends TradeSubView {
         completed.inactive();
 
         switch (viewState) {
+            case EMPTY:
+                break;
             case TAKER_SELLER_WAIT_TX_CONF:
                 showItem(waitTxInBlockchain);
 
@@ -141,10 +143,14 @@ public class TakerAsSellerSubView extends TradeSubView {
                 Popups.openWarningPopup("Sending message to trading peer failed.", model.getErrorMessage());
                 break;
             case EXCEPTION:
-                Popups.openExceptionPopup(model.getTradeException());
+                if (model.getTradeException() != null)
+                    Popups.openExceptionPopup(model.getTradeException());
+                break;
+            default:
+                log.warn("unhandled viewState " + viewState);
                 break;
         }
-        
+
         if (tradeStepDetailsView != null)
             tradeStepDetailsView.activate();
     }

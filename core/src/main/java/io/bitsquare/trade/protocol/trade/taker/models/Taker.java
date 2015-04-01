@@ -58,6 +58,7 @@ public class Taker implements Serializable {
     private Transaction preparedDepositTx;
     private List<TransactionOutput> outputs; // used to verify amounts with change outputs
     private byte[] payoutTxSignature;
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization

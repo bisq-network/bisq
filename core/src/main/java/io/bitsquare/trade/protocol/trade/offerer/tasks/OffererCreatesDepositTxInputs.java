@@ -32,8 +32,8 @@ import org.slf4j.LoggerFactory;
 public class OffererCreatesDepositTxInputs extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererCreatesDepositTxInputs.class);
 
-    public OffererCreatesDepositTxInputs(TaskRunner taskHandler, OffererTrade offererTradeProcessModel) {
-        super(taskHandler, offererTradeProcessModel);
+    public OffererCreatesDepositTxInputs(TaskRunner taskHandler, OffererTrade offererTrade) {
+        super(taskHandler, offererTrade);
     }
 
     @Override
@@ -41,7 +41,7 @@ public class OffererCreatesDepositTxInputs extends OffererTradeTask {
         try {
             log.debug("offererTrade.id" + offererTrade.getId());
             Coin inputAmount = offererTrade.getSecurityDeposit().add(FeePolicy.TX_FEE);
-            TradeWalletService.Result result = offererTradeProcessModel.getTradeWalletService().createOffererDepositTxInputs(inputAmount,
+            TradeWalletService.Result result = offererTradeProcessModel.getTradeWalletService().createDepositTxInputs(inputAmount,
                     offererTradeProcessModel.offerer.getAddressEntry());
 
             offererTradeProcessModel.offerer.setConnectedOutputsForAllInputs(result.getConnectedOutputsForAllInputs());

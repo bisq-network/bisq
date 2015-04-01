@@ -34,8 +34,8 @@ import org.slf4j.LoggerFactory;
 public class OffererSignsAndPublishPayoutTx extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererSignsAndPublishPayoutTx.class);
 
-    public OffererSignsAndPublishPayoutTx(TaskRunner taskHandler, OffererTrade model) {
-        super(taskHandler, model);
+    public OffererSignsAndPublishPayoutTx(TaskRunner taskHandler, OffererTrade offererTrade) {
+        super(taskHandler, offererTrade);
     }
 
     @Override
@@ -44,12 +44,12 @@ public class OffererSignsAndPublishPayoutTx extends OffererTradeTask {
             offererTradeProcessModel.getTradeWalletService().signAndPublishPayoutTx(
                     offererTrade.getDepositTx(),
                     offererTradeProcessModel.taker.getSignature(),
-                    offererTradeProcessModel.offerer.getPayoutAmount(),
                     offererTradeProcessModel.taker.getPayoutAmount(),
+                    offererTradeProcessModel.offerer.getPayoutAmount(),
                     offererTradeProcessModel.taker.getPayoutAddressString(),
                     offererTradeProcessModel.offerer.getAddressEntry(),
-                    offererTradeProcessModel.offerer.getTradeWalletPubKey(),
                     offererTradeProcessModel.taker.getTradeWalletPubKey(),
+                    offererTradeProcessModel.offerer.getTradeWalletPubKey(),
                     offererTradeProcessModel.getArbitratorPubKey(),
                     new FutureCallback<Transaction>() {
                         @Override

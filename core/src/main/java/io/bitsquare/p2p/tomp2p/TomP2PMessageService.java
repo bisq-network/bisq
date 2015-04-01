@@ -54,7 +54,7 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TomP2PMessageService(TomP2PNode tomP2PNode, MailboxService mailboxService,  EncryptionService<MailboxMessage> encryptionService) {
+    public TomP2PMessageService(TomP2PNode tomP2PNode, MailboxService mailboxService, EncryptionService<MailboxMessage> encryptionService) {
         super(tomP2PNode);
         this.mailboxService = mailboxService;
         this.encryptionService = encryptionService;
@@ -80,7 +80,10 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
     @Override
     public void sendMessage(Peer peer, Message message, PublicKey p2pSigPubKey, PublicKey p2pEncryptPubKey,
                             SendMessageListener listener) {
-        if (!(peer instanceof TomP2PPeer))
+
+        if (peer == null)
+            throw new IllegalArgumentException("Peer must not be null");
+        else if (!(peer instanceof TomP2PPeer))
             throw new IllegalArgumentException("Peer must be of type TomP2PPeer");
 
         FutureDirect futureDirect = peerDHT.peer().sendDirect(((TomP2PPeer) peer).getPeerAddress()).object(message).start();

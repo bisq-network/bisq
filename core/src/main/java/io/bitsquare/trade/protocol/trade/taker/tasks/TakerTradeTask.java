@@ -30,10 +30,10 @@ class TakerTradeTask extends Task<TakerTrade> {
     protected final TakerProcessModel takerTradeProcessModel;
     protected final TakerTrade takerTrade;
 
-    TakerTradeTask(TaskRunner taskHandler, TakerTrade model) {
-        super(taskHandler, model);
+    TakerTradeTask(TaskRunner taskHandler, TakerTrade takerTrade) {
+        super(taskHandler, takerTrade);
 
-        takerTrade = model;
+        this.takerTrade = takerTrade;
         takerTradeProcessModel = takerTrade.getProcessModel();
     }
 

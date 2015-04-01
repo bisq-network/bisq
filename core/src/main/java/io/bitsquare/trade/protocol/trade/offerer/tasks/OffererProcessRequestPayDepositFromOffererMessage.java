@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositFromOffererMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,17 +27,17 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.*;
 import static io.bitsquare.util.Validator.*;
 
-public class OffererProcessRequestPayDepositMessage extends OffererTradeTask {
-    private static final Logger log = LoggerFactory.getLogger(OffererProcessRequestPayDepositMessage.class);
+public class OffererProcessRequestPayDepositFromOffererMessage extends OffererTradeTask {
+    private static final Logger log = LoggerFactory.getLogger(OffererProcessRequestPayDepositFromOffererMessage.class);
 
-    public OffererProcessRequestPayDepositMessage(TaskRunner taskHandler, OffererTrade model) {
-        super(taskHandler, model);
+    public OffererProcessRequestPayDepositFromOffererMessage(TaskRunner taskHandler, OffererTrade offererTrade) {
+        super(taskHandler, offererTrade);
     }
 
     @Override
     protected void doRun() {
         try {
-            RequestPayDepositMessage message = (RequestPayDepositMessage) offererTradeProcessModel.getTradeMessage();
+            RequestPayDepositFromOffererMessage message = (RequestPayDepositFromOffererMessage) offererTradeProcessModel.getTradeMessage();
             checkTradeId(offererTradeProcessModel.getId(), message);
             checkNotNull(message);
 
@@ -49,6 +49,7 @@ public class OffererProcessRequestPayDepositMessage extends OffererTradeTask {
             offererTradeProcessModel.taker.setP2pEncryptPubKey(checkNotNull(message.buyerP2PEncryptPublicKey));
             offererTradeProcessModel.taker.setFiatAccount(checkNotNull(message.buyerFiatAccount));
             offererTradeProcessModel.taker.setAccountId(nonEmptyStringOf(message.buyerAccountId));
+            offererTrade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(message.tradeAmount)));
 
             complete();
         } catch (Throwable t) {

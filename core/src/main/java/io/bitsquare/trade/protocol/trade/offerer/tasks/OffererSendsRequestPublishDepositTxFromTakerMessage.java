@@ -22,25 +22,26 @@ import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.OffererAsBuyerTrade;
 import io.bitsquare.trade.OffererAsSellerTrade;
 import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxFromTakerMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererSendsRequestPublishDepositTxMessage extends OffererTradeTask {
-    private static final Logger log = LoggerFactory.getLogger(OffererSendsRequestPublishDepositTxMessage.class);
+public class OffererSendsRequestPublishDepositTxFromTakerMessage extends OffererTradeTask {
+    private static final Logger log = LoggerFactory.getLogger(OffererSendsRequestPublishDepositTxFromTakerMessage.class);
 
-    public OffererSendsRequestPublishDepositTxMessage(TaskRunner taskHandler, OffererTrade model) {
-        super(taskHandler, model);
+    public OffererSendsRequestPublishDepositTxFromTakerMessage(TaskRunner taskHandler, OffererTrade offererTrade) {
+        super(taskHandler, offererTrade);
     }
 
     @Override
     protected void doRun() {
         try {
-            RequestPublishDepositTxMessage tradeMessage = new RequestPublishDepositTxMessage(
+            RequestPublishDepositTxFromTakerMessage tradeMessage = new RequestPublishDepositTxFromTakerMessage(
                     offererTradeProcessModel.getId(),
                     offererTradeProcessModel.offerer.getFiatAccount(),
                     offererTradeProcessModel.offerer.getAccountId(),
+                    offererTradeProcessModel.offerer.getTradeWalletPubKey(),
                     offererTradeProcessModel.offerer.getP2pSigPubKey(),
                     offererTradeProcessModel.offerer.getP2pEncryptPublicKey(),
                     offererTrade.getContractAsJson(),

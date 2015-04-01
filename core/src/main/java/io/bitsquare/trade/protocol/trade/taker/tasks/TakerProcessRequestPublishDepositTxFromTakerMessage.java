@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.TakerTrade;
-import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxFromTakerMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,23 +27,25 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.*;
 import static io.bitsquare.util.Validator.*;
 
-public class TakerProcessRequestPublishDepositTxMessage extends TakerTradeTask {
-    private static final Logger log = LoggerFactory.getLogger(TakerProcessRequestPublishDepositTxMessage.class);
+public class TakerProcessRequestPublishDepositTxFromTakerMessage extends TakerTradeTask {
+    private static final Logger log = LoggerFactory.getLogger(TakerProcessRequestPublishDepositTxFromTakerMessage.class);
 
-    public TakerProcessRequestPublishDepositTxMessage(TaskRunner taskHandler, TakerTrade takerTradeProcessModel) {
-        super(taskHandler, takerTradeProcessModel);
+    public TakerProcessRequestPublishDepositTxFromTakerMessage(TaskRunner taskHandler, TakerTrade takerTrade) {
+        super(taskHandler, takerTrade);
     }
 
     @Override
     protected void doRun() {
         try {
-            RequestPublishDepositTxMessage message = (RequestPublishDepositTxMessage) takerTradeProcessModel.getTradeMessage();
+            RequestPublishDepositTxFromTakerMessage message = (RequestPublishDepositTxFromTakerMessage) takerTradeProcessModel.getTradeMessage();
             checkTradeId(takerTradeProcessModel.getId(), message);
             checkNotNull(message);
 
             takerTradeProcessModel.offerer.setFiatAccount(checkNotNull(message.takerFiatAccount));
             takerTradeProcessModel.offerer.setAccountId(nonEmptyStringOf(message.takerAccountId));
-            takerTradeProcessModel.offerer.setP2pSigPublicKey(checkNotNull(message.takerP2PSigPublicKey));
+            takerTradeProcessModel.offerer.setP2pSigPubKey(checkNotNull(message.takerP2PSigPublicKey));
+            takerTradeProcessModel.offerer.setP2pSigPubKey(checkNotNull(message.takerP2PSigPublicKey));
+            takerTradeProcessModel.offerer.setTradeWalletPubKey(checkNotNull(message.sellerTradeWalletPubKey));
             takerTradeProcessModel.offerer.setP2pEncryptPubKey(checkNotNull(message.takerP2PEncryptPublicKey));
             takerTradeProcessModel.offerer.setContractAsJson(nonEmptyStringOf(message.takerContractAsJson));
             takerTradeProcessModel.offerer.setContractSignature(nonEmptyStringOf(message.takerContractSignature));

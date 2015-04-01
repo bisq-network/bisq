@@ -28,8 +28,8 @@ import org.slf4j.LoggerFactory;
 public class TakerCommitsPayoutTx extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerCommitsPayoutTx.class);
 
-    public TakerCommitsPayoutTx(TaskRunner taskHandler, TakerTrade takerTradeProcessModel) {
-        super(taskHandler, takerTradeProcessModel);
+    public TakerCommitsPayoutTx(TaskRunner taskHandler, TakerTrade takerTrade) {
+        super(taskHandler, takerTrade);
     }
 
     @Override

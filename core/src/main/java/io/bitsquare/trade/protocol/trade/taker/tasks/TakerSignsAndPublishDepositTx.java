@@ -36,23 +36,23 @@ import org.slf4j.LoggerFactory;
 public class TakerSignsAndPublishDepositTx extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerSignsAndPublishDepositTx.class);
 
-    public TakerSignsAndPublishDepositTx(TaskRunner taskHandler, TakerTrade takerTradeProcessModel) {
-        super(taskHandler, takerTradeProcessModel);
+    public TakerSignsAndPublishDepositTx(TaskRunner taskHandler, TakerTrade takerTrade) {
+        super(taskHandler, takerTrade);
     }
 
     @Override
     protected void doRun() {
         try {
             Coin inputAmount = takerTrade.getSecurityDeposit().add(FeePolicy.TX_FEE);
-
+            
             takerTradeProcessModel.getTradeWalletService().signAndPublishDepositTx(
                     takerTradeProcessModel.offerer.getPreparedDepositTx(),
-                    takerTradeProcessModel.offerer.getConnectedOutputsForAllInputs(),
                     takerTradeProcessModel.taker.getConnectedOutputsForAllInputs(),
+                    takerTradeProcessModel.offerer.getConnectedOutputsForAllInputs(),
                     takerTradeProcessModel.taker.getOutputs(),
                     inputAmount,
-                    takerTradeProcessModel.offerer.getTradeWalletPubKey(),
                     takerTradeProcessModel.taker.getTradeWalletPubKey(),
+                    takerTradeProcessModel.offerer.getTradeWalletPubKey(),
                     takerTradeProcessModel.getArbitratorPubKey(),
                     new FutureCallback<Transaction>() {
                         @Override
