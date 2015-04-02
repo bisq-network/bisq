@@ -27,7 +27,6 @@ import io.bitsquare.trade.OffererAsBuyerTrade;
 import io.bitsquare.trade.protocol.Protocol;
 import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
-import io.bitsquare.trade.protocol.trade.ProcessModel;
 import io.bitsquare.trade.protocol.trade.buyer.offerer.tasks.OffererCommitsPayoutTx;
 import io.bitsquare.trade.protocol.trade.buyer.offerer.tasks.OffererCreatesAndSignPayoutTx;
 import io.bitsquare.trade.protocol.trade.buyer.offerer.tasks.OffererCreatesDepositTxInputs;
@@ -43,6 +42,7 @@ import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
+import io.bitsquare.trade.protocol.trade.shared.models.ProcessModel;
 import io.bitsquare.trade.protocol.trade.shared.offerer.tasks.VerifyTakeOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.shared.offerer.tasks.VerifyTakerAccount;
 

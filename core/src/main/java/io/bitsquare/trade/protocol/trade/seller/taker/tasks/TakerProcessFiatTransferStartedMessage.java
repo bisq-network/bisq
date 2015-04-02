@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.seller.taker.tasks;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.TakerAsBuyerTrade;
 import io.bitsquare.trade.TakerAsSellerTrade;
-import io.bitsquare.trade.TakerTrade;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerTradeTask;
 
@@ -33,7 +33,7 @@ import static io.bitsquare.util.Validator.*;
 public class TakerProcessFiatTransferStartedMessage extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerProcessFiatTransferStartedMessage.class);
 
-    public TakerProcessFiatTransferStartedMessage(TaskRunner taskHandler, TakerTrade takerTrade) {
+    public TakerProcessFiatTransferStartedMessage(TaskRunner taskHandler, Trade takerTrade) {
         super(taskHandler, takerTrade);
     }
 

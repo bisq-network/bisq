@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.shared.offerer.tasks;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererAsBuyerTrade;
 import io.bitsquare.trade.OffererAsSellerTrade;
-import io.bitsquare.trade.OffererTrade;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
 
 import org.slf4j.Logger;
@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 public class VerifyTakerAccount extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(VerifyTakerAccount.class);
 
-    public VerifyTakerAccount(TaskRunner taskHandler, OffererTrade offererTrade) {
+    public VerifyTakerAccount(TaskRunner taskHandler, Trade offererTrade) {
         super(taskHandler, offererTrade);
     }
 
@@ -38,10 +38,10 @@ public class VerifyTakerAccount extends OffererTradeTask {
         try {
             //TODO mocked yet
             if (processModel.getBlockChainService().verifyAccountRegistration()) {
-                if (processModel.getBlockChainService().isAccountBlackListed(processModel.tradingPeer.getAccountId(), 
+                if (processModel.getBlockChainService().isAccountBlackListed(processModel.tradingPeer.getAccountId(),
                         processModel
-                        .tradingPeer
-                        .getFiatAccount())) {
+                                .tradingPeer
+                                .getFiatAccount())) {
                     log.error("Taker is blacklisted");
                     failed("Taker is blacklisted");
                 }

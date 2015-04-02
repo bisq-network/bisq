@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.seller.taker.tasks;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.TakerAsBuyerTrade;
 import io.bitsquare.trade.TakerAsSellerTrade;
-import io.bitsquare.trade.TakerTrade;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerTradeTask;
 
 import org.bitcoinj.core.Transaction;
@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 public class TakerSignsAndPublishPayoutTx extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerSignsAndPublishPayoutTx.class);
 
-    public TakerSignsAndPublishPayoutTx(TaskRunner taskHandler, TakerTrade takerTrade) {
+    public TakerSignsAndPublishPayoutTx(TaskRunner taskHandler, Trade takerTrade) {
         super(taskHandler, takerTrade);
     }
 

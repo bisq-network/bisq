@@ -91,7 +91,7 @@ public class TradeManager {
     private final Map<String, CheckOfferAvailabilityProtocol> checkOfferAvailabilityProtocolMap = new HashMap<>();
     private final Storage<TradeList> pendingTradesStorage;
     private final Storage<TradeList> openOfferTradesStorage;
-    private final TradeList<OffererTrade> openOfferTrades;
+    private final TradeList<Trade> openOfferTrades;
     private final TradeList<Trade> pendingTrades;
     private final TradeList<Trade> closedTrades;
 
@@ -150,7 +150,7 @@ public class TradeManager {
     // When all services are initialized we create the protocols for our open offers and persisted pendingTrades
     // OffererAsBuyerProtocol listens for take offer requests, so we need to instantiate it early.
     public void onAllServicesInitialized() {
-        for (OffererTrade offererTrade : openOfferTrades) {
+        for (Trade offererTrade : openOfferTrades) {
             Offer offer = offererTrade.getOffer();
             // We add own offers to offerbook when we go online again
             offerBookService.addOffer(offer,
@@ -228,7 +228,7 @@ public class TradeManager {
             log.debug("shutDown");
             shutDownRequested = true;
             // we remove own offers form offerbook when we go offline
-            for (OffererTrade offererTrade : openOfferTrades) {
+            for (Trade offererTrade : openOfferTrades) {
                 Offer offer = offererTrade.getOffer();
                 offerBookService.removeOfferAtShutDown(offer);
             }
@@ -276,7 +276,7 @@ public class TradeManager {
     }
 
     private void handlePlaceOfferResult(Transaction transaction, Offer offer, TransactionResultHandler resultHandler) {
-        OffererTrade offererTrade;
+        Trade offererTrade;
         if (offer.getDirection() == Offer.Direction.BUY)
             offererTrade = new OffererAsBuyerTrade(offer, openOfferTradesStorage);
         else
@@ -288,7 +288,7 @@ public class TradeManager {
         resultHandler.handleResult(transaction);
     }
 
-    private void setupDepositPublishedListener(OffererTrade offererTrade) {
+    private void setupDepositPublishedListener(Trade offererTrade) {
         offererTrade.processStateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("setupDepositPublishedListener state = " + newValue);
             if (newValue == OffererAsBuyerTrade.ProcessState.DEPOSIT_PUBLISHED || newValue == OffererAsSellerTrade.ProcessState.DEPOSIT_PUBLISHED) {
@@ -313,9 +313,9 @@ public class TradeManager {
         offerBookService.removeOffer(offer,
                 () -> {
                     offer.setState(Offer.State.REMOVED);
-                    Optional<OffererTrade> offererTradeOptional = openOfferTrades.stream().filter(e -> e.getId().equals(offer.getId())).findAny();
+                    Optional<Trade> offererTradeOptional = openOfferTrades.stream().filter(e -> e.getId().equals(offer.getId())).findAny();
                     if (offererTradeOptional.isPresent()) {
-                        OffererTrade offererTrade = offererTradeOptional.get();
+                        Trade offererTrade = offererTradeOptional.get();
                         openOfferTrades.remove(offererTrade);
 
                         if (isCancelRequest) {
@@ -377,7 +377,7 @@ public class TradeManager {
             takeOfferResultHandler) {
         disposeCheckOfferAvailabilityRequest(offer);
         if (offer.getState() == Offer.State.AVAILABLE) {
-            TakerTrade takerTrade;
+            Trade takerTrade;
             if (offer.getDirection() == Offer.Direction.BUY)
                 takerTrade = new TakerAsSellerTrade(offer, amount, model.getPeer(), pendingTradesStorage);
             else
@@ -456,7 +456,7 @@ public class TradeManager {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableList<OffererTrade> getOpenOfferTrades() {
+    public ObservableList<Trade> getOpenOfferTrades() {
         return openOfferTrades.getObservableList();
     }
 

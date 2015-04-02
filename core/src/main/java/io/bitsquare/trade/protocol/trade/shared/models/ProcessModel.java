@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade;
+package io.bitsquare.trade.protocol.trade.shared.models;
 
 import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.btc.AddressEntry;
@@ -29,7 +29,6 @@ import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.shared.models.TradingPeer;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;

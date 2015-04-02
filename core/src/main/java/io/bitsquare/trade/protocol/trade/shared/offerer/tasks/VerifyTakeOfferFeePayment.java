@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.shared.offerer.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.OffererTrade;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
 
 import org.slf4j.Logger;
@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 public class VerifyTakeOfferFeePayment extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(VerifyTakeOfferFeePayment.class);
 
-    public VerifyTakeOfferFeePayment(TaskRunner taskHandler, OffererTrade offererTrade) {
+    public VerifyTakeOfferFeePayment(TaskRunner taskHandler, Trade offererTrade) {
         super(taskHandler, offererTrade);
     }
 

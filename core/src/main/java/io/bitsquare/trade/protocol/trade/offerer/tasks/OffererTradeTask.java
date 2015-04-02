@@ -19,18 +19,18 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.protocol.trade.ProcessModel;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.shared.models.ProcessModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererTradeTask extends Task<OffererTrade> {
+public class OffererTradeTask extends Task<Trade> {
     private static final Logger log = LoggerFactory.getLogger(OffererTradeTask.class);
     protected final ProcessModel processModel;
-    protected final OffererTrade offererTrade;
+    protected final Trade offererTrade;
 
-    public OffererTradeTask(TaskRunner taskHandler, OffererTrade offererTrade) {
+    public OffererTradeTask(TaskRunner taskHandler, Trade offererTrade) {
         super(taskHandler, offererTrade);
 
         this.offererTrade = offererTrade;

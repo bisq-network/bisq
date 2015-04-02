@@ -21,7 +21,7 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.OffererAsBuyerTrade;
 import io.bitsquare.trade.OffererAsSellerTrade;
-import io.bitsquare.trade.OffererTrade;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
 import io.bitsquare.util.Utilities;
 
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 public class OffererVerifiesAndSignsContract extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererVerifiesAndSignsContract.class);
 
-    public OffererVerifiesAndSignsContract(TaskRunner taskHandler, OffererTrade offererTrade) {
+    public OffererVerifiesAndSignsContract(TaskRunner taskHandler, Trade offererTrade) {
         super(taskHandler, offererTrade);
     }
 

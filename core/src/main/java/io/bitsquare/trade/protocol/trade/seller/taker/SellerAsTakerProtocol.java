@@ -23,9 +23,8 @@ import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.trade.TakerAsSellerTrade;
-import io.bitsquare.trade.TakerTrade;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.Protocol;
-import io.bitsquare.trade.protocol.trade.ProcessModel;
 import io.bitsquare.trade.protocol.trade.buyer.taker.tasks.TakerSendsRequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.buyer.taker.tasks.TakerSendsRequestPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
@@ -40,6 +39,7 @@ import io.bitsquare.trade.protocol.trade.seller.taker.tasks.TakerProcessFiatTran
 import io.bitsquare.trade.protocol.trade.seller.taker.tasks.TakerProcessRequestSellerDepositPaymentMessage;
 import io.bitsquare.trade.protocol.trade.seller.taker.tasks.TakerSendsPayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.seller.taker.tasks.TakerSignsAndPublishPayoutTx;
+import io.bitsquare.trade.protocol.trade.shared.models.ProcessModel;
 import io.bitsquare.trade.protocol.trade.shared.taker.tasks.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.shared.taker.tasks.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.shared.taker.tasks.VerifyOfferFeePayment;
@@ -96,7 +96,7 @@ public class SellerAsTakerProtocol implements Protocol {
     }
 
     public void takeAvailableOffer() {
-        TaskRunner<TakerTrade> taskRunner = new TaskRunner<>(takerAsSellerTrade,
+        TaskRunner<Trade> taskRunner = new TaskRunner<>(takerAsSellerTrade,
                 () -> log.debug("taskRunner at takeAvailableOffer completed"),
                 this::handleTaskRunnerFault);
 
@@ -116,7 +116,7 @@ public class SellerAsTakerProtocol implements Protocol {
     private void handleRequestTakerDepositPaymentMessage(RequestPayDepositMessage tradeMessage) {
         processModel.setTradeMessage(tradeMessage);
 
-        TaskRunner<TakerTrade> taskRunner = new TaskRunner<>(takerAsSellerTrade,
+        TaskRunner<Trade> taskRunner = new TaskRunner<>(takerAsSellerTrade,
                 () -> log.debug("taskRunner at handleTakerDepositPaymentRequestMessage completed"),
                 this::handleTaskRunnerFault);
 

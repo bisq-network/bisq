@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.buyer.taker.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.TakerTrade;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxFromTakerMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerTradeTask;
 
@@ -31,7 +31,7 @@ import static io.bitsquare.util.Validator.*;
 public class TakerProcessRequestPublishDepositTxFromTakerMessage extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerProcessRequestPublishDepositTxFromTakerMessage.class);
 
-    public TakerProcessRequestPublishDepositTxFromTakerMessage(TaskRunner taskHandler, TakerTrade takerTrade) {
+    public TakerProcessRequestPublishDepositTxFromTakerMessage(TaskRunner taskHandler, Trade takerTrade) {
         super(taskHandler, takerTrade);
     }
 

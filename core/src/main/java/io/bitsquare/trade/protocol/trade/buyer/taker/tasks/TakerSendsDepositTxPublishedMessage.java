@@ -21,7 +21,7 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.TakerAsBuyerTrade;
 import io.bitsquare.trade.TakerAsSellerTrade;
-import io.bitsquare.trade.TakerTrade;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerTradeTask;
 
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 public class TakerSendsDepositTxPublishedMessage extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerSendsDepositTxPublishedMessage.class);
 
-    public TakerSendsDepositTxPublishedMessage(TaskRunner taskHandler, TakerTrade takerTrade) {
+    public TakerSendsDepositTxPublishedMessage(TaskRunner taskHandler, Trade takerTrade) {
         super(taskHandler, takerTrade);
     }
 

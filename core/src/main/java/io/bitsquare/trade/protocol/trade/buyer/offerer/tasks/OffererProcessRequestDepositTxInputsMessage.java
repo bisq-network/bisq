@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.buyer.offerer.tasks;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererAsBuyerTrade;
 import io.bitsquare.trade.OffererAsSellerTrade;
-import io.bitsquare.trade.OffererTrade;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
 
@@ -33,7 +33,7 @@ import static io.bitsquare.util.Validator.*;
 public class OffererProcessRequestDepositTxInputsMessage extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererProcessRequestDepositTxInputsMessage.class);
 
-    public OffererProcessRequestDepositTxInputsMessage(TaskRunner taskHandler, OffererTrade offererTrade) {
+    public OffererProcessRequestDepositTxInputsMessage(TaskRunner taskHandler, Trade offererTrade) {
         super(taskHandler, offererTrade);
     }
 

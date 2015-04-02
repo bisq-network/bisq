@@ -26,9 +26,10 @@ import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.MessageService;
+import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.protocol.Protocol;
-import io.bitsquare.trade.protocol.trade.ProcessModel;
+import io.bitsquare.trade.protocol.trade.shared.models.ProcessModel;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;
@@ -67,6 +68,11 @@ abstract public class Trade extends Model implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private transient static final Logger log = LoggerFactory.getLogger(Trade.class);
+    // Mutable
+    protected Coin tradeAmount;
+    protected Peer tradingPeer;
+    transient protected ObjectProperty<Coin> tradeAmountProperty;
+    transient protected ObjectProperty<Fiat> tradeVolumeProperty;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -123,11 +129,28 @@ abstract public class Trade extends Model implements Serializable {
 
         date = new Date();
         processModel = createProcessModel();
+        tradeVolumeProperty = new SimpleObjectProperty<>();
+        tradeAmountProperty = new SimpleObjectProperty<>();
+
+        initStates();
+        initStateProperties();
+    }
+
+    // taker
+    protected Trade(Offer offer, Coin tradeAmount, Peer tradingPeer,
+                    Storage<? extends TradeList> storage) {
+
+        this(offer, storage);
+        this.tradeAmount = tradeAmount;
+        this.tradingPeer = tradingPeer;
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         log.trace("Created from serialized form.");
+
+        initStateProperties();
+        initAmountProperty();
     }
 
     public void init(MessageService messageService,
@@ -151,6 +174,11 @@ abstract public class Trade extends Model implements Serializable {
 
         if (mailboxMessage != null)
             protocol.setMailboxMessage(mailboxMessage);
+    }
+
+    protected void initStateProperties() {
+        processStateProperty = new SimpleObjectProperty<>(processState);
+        lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
     }
 
 
@@ -217,20 +245,36 @@ abstract public class Trade extends Model implements Serializable {
         }
     }
 
+    // taker only
+    public void takeAvailableOffer() {
+    }
 
     abstract protected void createProtocol();
 
-    abstract protected void initAmountProperty();
+    public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
+        return tradeAmountProperty;
+    }
+
+    public ReadOnlyObjectProperty<Fiat> tradeVolumeProperty() {
+        return tradeVolumeProperty;
+    }
+
+    protected void initAmountProperty() {
+        tradeAmountProperty = new SimpleObjectProperty<>();
+        tradeVolumeProperty = new SimpleObjectProperty<>();
+
+        if (tradeAmount != null) {
+            tradeAmountProperty.set(tradeAmount);
+            tradeVolumeProperty.set(getTradeVolume());
+        }
+    }
 
     abstract protected void handleConfidenceResult();
 
     abstract protected void initStates();
 
-    abstract protected ProcessModel createProcessModel();
-
-    protected void initStateProperties() {
-        processStateProperty = new SimpleObjectProperty<>(processState);
-        lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
+    public ProcessModel createProcessModel() {
+        return new ProcessModel();
     }
 
 
@@ -275,11 +319,37 @@ abstract public class Trade extends Model implements Serializable {
         return offer.getSecurityDeposit();
     }
 
-    @Nullable
-    abstract public Coin getTradeAmount();
+    public ProcessModel getProcessModel() {
+        return processModel;
+    }
+
+    public void setTradingPeer(Peer tradingPeer) {
+        this.tradingPeer = tradingPeer;
+    }
 
     @Nullable
-    abstract public Fiat getTradeVolume();
+    public Peer getTradingPeer() {
+        return tradingPeer;
+    }
+
+    public void setTradeAmount(Coin tradeAmount) {
+        this.tradeAmount = tradeAmount;
+        tradeAmountProperty.set(tradeAmount);
+        tradeVolumeProperty.set(getTradeVolume());
+    }
+
+    @Nullable
+    public Coin getTradeAmount() {
+        return tradeAmount;
+    }
+
+    @Nullable
+    public Fiat getTradeVolume() {
+        if (tradeAmount != null)
+            return offer.getVolumeByAmount(tradeAmount);
+        else
+            return null;
+    }
 
     public ReadOnlyObjectProperty<? extends ProcessState> processStateProperty() {
         return processStateProperty;

@@ -30,7 +30,7 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerAsBuyerTrade extends TakerTrade implements Serializable {
+public class TakerAsBuyerTrade extends Trade implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
@@ -41,13 +41,13 @@ public class TakerAsBuyerTrade extends TakerTrade implements Serializable {
     // Enum
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public enum LifeCycleState implements TakerTrade.LifeCycleState {
+    public enum LifeCycleState implements Trade.LifeCycleState {
         PENDING,
         COMPLETED,
         FAILED
     }
 
-    public enum ProcessState implements TakerTrade.ProcessState {
+    public enum ProcessState implements Trade.ProcessState {
         UNDEFINED,
         TAKE_OFFER_FEE_TX_CREATED,
         TAKE_OFFER_FEE_PUBLISHED,

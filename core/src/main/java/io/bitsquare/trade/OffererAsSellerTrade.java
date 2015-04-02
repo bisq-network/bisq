@@ -28,7 +28,7 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererAsSellerTrade extends OffererTrade implements Serializable {
+public class OffererAsSellerTrade extends Trade implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
@@ -39,7 +39,7 @@ public class OffererAsSellerTrade extends OffererTrade implements Serializable {
     // Enum
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public enum LifeCycleState implements OffererTrade.LifeCycleState {
+    public enum LifeCycleState implements Trade.LifeCycleState {
         OFFER_OPEN,
         OFFER_RESERVED,
         OFFER_CANCELED,
@@ -48,7 +48,7 @@ public class OffererAsSellerTrade extends OffererTrade implements Serializable {
         FAILED
     }
 
-    public enum ProcessState implements OffererTrade.ProcessState {
+    public enum ProcessState implements Trade.ProcessState {
         UNDEFINED,
         DEPOSIT_PUBLISHED,
         DEPOSIT_CONFIRMED,
