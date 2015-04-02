@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.seller.offerer.tasks;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositFromOffererMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +38,7 @@ public class OffererProcessRequestPayDepositFromOffererMessage extends TradeTask
     @Override
     protected void doRun() {
         try {
-            RequestPayDepositFromOffererMessage message = (RequestPayDepositFromOffererMessage) processModel.getTradeMessage();
+            RequestPayDepositMessage message = (RequestPayDepositMessage) processModel.getTradeMessage();
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);
 

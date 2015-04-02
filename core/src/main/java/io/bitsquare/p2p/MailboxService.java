@@ -23,7 +23,7 @@ import io.bitsquare.common.handlers.ResultHandler;
 import java.security.PublicKey;
 
 public interface MailboxService {
-    void addMessage(PublicKey p2pSigPubKey, EncryptedMailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler);
+    void addMessage(PublicKey recipientP2pSigPubKey, EncryptedMailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler);
 
     void getAllMessages(PublicKey p2pSigPubKey, MailboxMessagesResultHandler resultHandler);
 

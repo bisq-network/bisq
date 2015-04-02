@@ -15,35 +15,44 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.buyer.taker.tasks;
+package io.bitsquare.trade.protocol.trade.buyer.tasks;
 
+import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
 
-import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.Coin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerCommitsPayoutTx extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(TakerCommitsPayoutTx.class);
+public class BuyerCreatesDepositTxInputs extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(BuyerCreatesDepositTxInputs.class);
 
-    public TakerCommitsPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public BuyerCreatesDepositTxInputs(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            Transaction transaction = processModel.getTradeWalletService().commitTx(trade.getPayoutTx());
+            log.debug("trade.id" + trade.getId());
+            Coin inputAmount = trade.getSecurityDeposit().add(FeePolicy.TX_FEE);
+            TradeWalletService.Result result = processModel.getTradeWalletService().createDepositTxInputs(inputAmount,
+                    processModel.getAddressEntry());
 
-            trade.setPayoutTx(transaction);
+            processModel.setConnectedOutputsForAllInputs(result.getConnectedOutputsForAllInputs());
+            processModel.setOutputs(result.getOutputs());
 
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
             trade.setThrowable(t);
+
+            StateUtil.setOfferOpenState(trade);
+
             failed(t);
         }
     }

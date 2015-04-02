@@ -19,6 +19,7 @@ package io.bitsquare.trade.protocol.trade.messages;
 
 import io.bitsquare.fiat.FiatAccount;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionOutput;
 
 import java.io.Serializable;
@@ -41,8 +42,10 @@ public class RequestPayDepositMessage extends TradeMessage implements Serializab
     public final PublicKey buyerP2PEncryptPublicKey;
     public final FiatAccount buyerFiatAccount;
     public final String buyerAccountId;
+    public final Coin tradeAmount;
 
     public RequestPayDepositMessage(String tradeId,
+                                    Coin tradeAmount,
                                     List<TransactionOutput> buyerConnectedOutputsForAllInputs,
                                     List<TransactionOutput> buyerOutputs,
                                     byte[] buyerTradeWalletPubKey,
@@ -51,6 +54,7 @@ public class RequestPayDepositMessage extends TradeMessage implements Serializab
                                     FiatAccount buyerFiatAccount,
                                     String buyerAccountId) {
         super(tradeId);
+        this.tradeAmount = tradeAmount;
         this.buyerP2PSigPublicKey = buyerP2PSigPublicKey;
         this.buyerP2PEncryptPublicKey = buyerP2PEncryptPublicKey;
         this.buyerConnectedOutputsForAllInputs = buyerConnectedOutputsForAllInputs;

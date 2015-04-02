@@ -15,14 +15,17 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.buyer.taker.tasks;
+package io.bitsquare.trade.protocol.trade.buyer.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.BuyerAsOffererTrade;
 import io.bitsquare.trade.BuyerAsTakerTrade;
+import io.bitsquare.trade.SellerAsOffererTrade;
 import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
+import io.bitsquare.trade.states.OffererState;
 import io.bitsquare.trade.states.TakerState;
 
 import org.slf4j.Logger;
@@ -31,10 +34,10 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.checkTradeId;
 
-public class TakerProcessPayoutTxPublishedMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(TakerProcessPayoutTxPublishedMessage.class);
+public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(BuyerProcessPayoutTxPublishedMessage.class);
 
-    public TakerProcessPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
+    public BuyerProcessPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -47,9 +50,9 @@ public class TakerProcessPayoutTxPublishedMessage extends TradeTask {
 
             trade.setPayoutTx(checkNotNull(message.payoutTx));
 
-            if (trade instanceof BuyerAsTakerTrade)
-                trade.setProcessState(TakerState.ProcessState.PAYOUT_PUBLISHED);
-            else if (trade instanceof SellerAsTakerTrade)
+            if (trade instanceof BuyerAsOffererTrade || trade instanceof SellerAsOffererTrade)
+                trade.setProcessState(OffererState.ProcessState.PAYOUT_PUBLISHED);
+            else if (trade instanceof BuyerAsTakerTrade || trade instanceof SellerAsTakerTrade)
                 trade.setProcessState(TakerState.ProcessState.PAYOUT_PUBLISHED);
 
             complete();

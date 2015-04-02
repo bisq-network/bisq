@@ -31,22 +31,22 @@ import java.util.List;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-public class RequestPublishDepositTxFromTakerMessage extends RequestPublishDepositTxMessage implements Serializable {
+public class RequestPublishDepositTxFromSellerMessage extends RequestPublishDepositTxMessage implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
     public byte[] sellerTradeWalletPubKey;
 
-    public RequestPublishDepositTxFromTakerMessage(String tradeId,
-                                                   FiatAccount takerFiatAccount,
-                                                   String takerAccountId,
-                                                   byte[] sellerTradeWalletPubKey,
-                                                   PublicKey takerP2PSigPublicKey,
-                                                   PublicKey takerP2PEncryptPublicKey,
-                                                   String takerContractAsJson,
-                                                   String takerContractSignature,
-                                                   String takerPayoutAddressString,
-                                                   Transaction takersPreparedDepositTx,
-                                                   List<TransactionOutput> takerConnectedOutputsForAllInputs) {
+    public RequestPublishDepositTxFromSellerMessage(String tradeId,
+                                                    FiatAccount takerFiatAccount,
+                                                    String takerAccountId,
+                                                    byte[] sellerTradeWalletPubKey,
+                                                    PublicKey takerP2PSigPublicKey,
+                                                    PublicKey takerP2PEncryptPublicKey,
+                                                    String takerContractAsJson,
+                                                    String takerContractSignature,
+                                                    String takerPayoutAddressString,
+                                                    Transaction takersPreparedDepositTx,
+                                                    List<TransactionOutput> takerConnectedOutputsForAllInputs) {
         super(tradeId,
                 takerFiatAccount,
                 takerAccountId,

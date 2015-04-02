@@ -15,15 +15,18 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.buyer.offerer.tasks;
+package io.bitsquare.trade.protocol.trade.buyer.tasks;
 
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.BuyerAsOffererTrade;
+import io.bitsquare.trade.BuyerAsTakerTrade;
 import io.bitsquare.trade.SellerAsOffererTrade;
+import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.states.OffererState;
+import io.bitsquare.trade.states.TakerState;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -35,10 +38,10 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererSignsAndPublishDepositTx extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(OffererSignsAndPublishDepositTx.class);
+public class BuyerSignsAndPublishDepositTx extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(BuyerSignsAndPublishDepositTx.class);
 
-    public OffererSignsAndPublishDepositTx(TaskRunner taskHandler, Trade trade) {
+    public BuyerSignsAndPublishDepositTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -59,15 +62,15 @@ public class OffererSignsAndPublishDepositTx extends TradeTask {
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {
-                            log.trace("offererSignAndPublishTx succeeded " + transaction);
+                            log.trace("takerSignAndPublishTx succeeded " + transaction);
 
                             trade.setDepositTx(transaction);
 
-                            if (trade instanceof BuyerAsOffererTrade) {
-                                trade.setProcessState(OffererState.ProcessState.DEPOSIT_PUBLISHED);
-                                trade.setLifeCycleState(OffererState.LifeCycleState.PENDING);
+                            if (trade instanceof BuyerAsTakerTrade || trade instanceof SellerAsTakerTrade) {
+                                trade.setProcessState(TakerState.ProcessState.DEPOSIT_PUBLISHED);
+                                trade.setLifeCycleState(TakerState.LifeCycleState.PENDING);
                             }
-                            else if (trade instanceof SellerAsOffererTrade) {
+                            else if (trade instanceof BuyerAsOffererTrade || trade instanceof SellerAsOffererTrade) {
                                 trade.setProcessState(OffererState.ProcessState.DEPOSIT_PUBLISHED);
                                 trade.setLifeCycleState(OffererState.LifeCycleState.PENDING);
                             }
@@ -77,27 +80,21 @@ public class OffererSignsAndPublishDepositTx extends TradeTask {
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
-                            t.printStackTrace();
-                            trade.setThrowable(t);
-
-                            if (trade instanceof BuyerAsOffererTrade)
-                                trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
-                            else if (trade instanceof SellerAsOffererTrade)
-                                trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
-
-                            failed(t);
+                            handleFault(t);
                         }
                     });
         } catch (Throwable t) {
-            t.printStackTrace();
-            trade.setThrowable(t);
-
-            if (trade instanceof BuyerAsOffererTrade)
-                trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
-            else if (trade instanceof SellerAsOffererTrade)
-                trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
-
-            failed(t);
+            handleFault(t);
         }
+    }
+
+    private void handleFault(Throwable t) {
+        t.printStackTrace();
+        trade.setThrowable(t);
+
+        if (trade instanceof BuyerAsOffererTrade || trade instanceof SellerAsOffererTrade)
+            trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
+
+        failed(t);
     }
 }

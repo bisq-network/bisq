@@ -217,7 +217,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     // payment
     public String getPaymentMethod() {
         assert dataModel.getContract() != null;
-        return BSResources.get(dataModel.getContract().takerFiatAccount.type.toString());
+        return BSResources.get(dataModel.getContract().sellerFiatAccount.type.toString());
     }
 
     public String getFiatAmount() {
@@ -226,17 +226,17 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public String getHolderName() {
         assert dataModel.getContract() != null;
-        return dataModel.getContract().takerFiatAccount.accountHolderName;
+        return dataModel.getContract().sellerFiatAccount.accountHolderName;
     }
 
     public String getPrimaryId() {
         assert dataModel.getContract() != null;
-        return dataModel.getContract().takerFiatAccount.accountPrimaryID;
+        return dataModel.getContract().sellerFiatAccount.accountPrimaryID;
     }
 
     public String getSecondaryId() {
         assert dataModel.getContract() != null;
-        return dataModel.getContract().takerFiatAccount.accountSecondaryID;
+        return dataModel.getContract().sellerFiatAccount.accountSecondaryID;
     }
 
     // summary

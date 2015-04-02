@@ -15,24 +15,27 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.buyer.taker.tasks;
+package io.bitsquare.trade.protocol.trade.buyer.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
+import io.bitsquare.trade.BuyerAsOffererTrade;
 import io.bitsquare.trade.BuyerAsTakerTrade;
+import io.bitsquare.trade.SellerAsOffererTrade;
 import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
+import io.bitsquare.trade.states.OffererState;
 import io.bitsquare.trade.states.TakerState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerSendsFiatTransferStartedMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(TakerSendsFiatTransferStartedMessage.class);
+public class BuyerSendsFiatTransferStartedMessage extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(BuyerSendsFiatTransferStartedMessage.class);
 
-    public TakerSendsFiatTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
+    public BuyerSendsFiatTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -42,23 +45,22 @@ public class TakerSendsFiatTransferStartedMessage extends TradeTask {
             FiatTransferStartedMessage tradeMessage = new FiatTransferStartedMessage(processModel.getId(),
                     processModel.getPayoutTxSignature(),
                     processModel.getPayoutAmount(),
-                    processModel.tradingPeer.getPayoutAmount(),
-                    processModel.getAddressEntry().getAddressString());
+                    processModel.getAddressEntry().getAddressString(),
+                    processModel.tradingPeer.getPayoutAmount()
+            );
 
             processModel.getMessageService().sendMessage(trade.getTradingPeer(), tradeMessage,
-                    processModel.getP2pSigPubKey(),
-                    processModel.getP2pEncryptPubKey(),
+                    processModel.tradingPeer.getP2pSigPubKey(),
+                    processModel.tradingPeer.getP2pEncryptPubKey(),
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {
                             log.trace("Sending FiatTransferStartedMessage succeeded.");
 
-                            if (trade instanceof BuyerAsTakerTrade) {
+                            if (trade instanceof BuyerAsOffererTrade || trade instanceof SellerAsOffererTrade)
+                                trade.setProcessState(OffererState.ProcessState.FIAT_PAYMENT_STARTED);
+                            if (trade instanceof BuyerAsTakerTrade || trade instanceof SellerAsTakerTrade)
                                 trade.setProcessState(TakerState.ProcessState.FIAT_PAYMENT_STARTED);
-                            }
-                            else if (trade instanceof SellerAsTakerTrade) {
-                                trade.setProcessState(TakerState.ProcessState.FIAT_PAYMENT_STARTED);
-                            }
 
                             complete();
                         }
@@ -68,16 +70,12 @@ public class TakerSendsFiatTransferStartedMessage extends TradeTask {
                             appendToErrorMessage("Sending FiatTransferStartedMessage failed");
                             trade.setErrorMessage(errorMessage);
 
-                            if (trade instanceof BuyerAsTakerTrade) {
-                                ((BuyerAsTakerTrade) trade).setProcessState(TakerState.ProcessState.MESSAGE_SENDING_FAILED);
-                            }
-                            else if (trade instanceof SellerAsTakerTrade) {
-                                trade.setProcessState(TakerState.ProcessState.MESSAGE_SENDING_FAILED);
-                            }
+                            StateUtil.setSendFailedState(trade);
 
                             failed();
                         }
-                    });
+                    }
+            );
         } catch (Throwable t) {
             t.printStackTrace();
             trade.setThrowable(t);

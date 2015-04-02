@@ -19,12 +19,10 @@ package io.bitsquare.trade.protocol.trade.buyer.taker.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
-import io.bitsquare.trade.BuyerAsTakerTrade;
-import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
+import io.bitsquare.trade.protocol.trade.buyer.tasks.StateUtil;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
-import io.bitsquare.trade.states.TakerState;
 
 import javafx.application.Platform;
 
@@ -72,13 +70,7 @@ public class TakerSendsRequestDepositTxInputsMessage extends TradeTask {
                                 "or cancel that trade.");
 
                         trade.setErrorMessage(errorMessage);
-
-                        if (trade instanceof BuyerAsTakerTrade)
-                            trade.setProcessState(TakerState.ProcessState.MESSAGE_SENDING_FAILED);
-                        else if (trade instanceof SellerAsTakerTrade)
-                            trade.setProcessState(TakerState.ProcessState.MESSAGE_SENDING_FAILED);
-
-
+                        StateUtil.setSendFailedState(trade);
                         failed();
                     }
                 }

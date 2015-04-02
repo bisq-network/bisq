@@ -78,7 +78,7 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
     }
 
     @Override
-    public void sendMessage(Peer peer, Message message, PublicKey p2pSigPubKey, PublicKey p2pEncryptPubKey,
+    public void sendMessage(Peer peer, Message message, PublicKey recipientP2pSigPubKey, PublicKey recipientP2pEncryptPubKey,
                             SendMessageListener listener) {
 
         if (peer == null)
@@ -95,9 +95,9 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
                     executor.execute(listener::handleResult);
                 }
                 else {
-                    if (p2pSigPubKey != null && p2pEncryptPubKey != null) {
+                    if (recipientP2pSigPubKey != null && recipientP2pEncryptPubKey != null) {
                         log.info("sendMessage failed. We will try to send the message to the mailbox. Fault reason:  " + futureDirect.failedReason());
-                        sendMailboxMessage(p2pSigPubKey, p2pEncryptPubKey, (MailboxMessage) message, listener);
+                        sendMailboxMessage(recipientP2pSigPubKey, recipientP2pEncryptPubKey, (MailboxMessage) message, listener);
                     }
                     else {
                         log.error("sendMessage failed with reason " + futureDirect.failedReason());
@@ -108,9 +108,9 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
 
             @Override
             public void exceptionCaught(Throwable t) throws Exception {
-                if (p2pSigPubKey != null && p2pEncryptPubKey != null) {
+                if (recipientP2pSigPubKey != null && recipientP2pEncryptPubKey != null) {
                     log.info("sendMessage failed with exception. We will try to send the message to the mailbox. Exception: " + t.getMessage());
-                    sendMailboxMessage(p2pSigPubKey, p2pEncryptPubKey, (MailboxMessage) message, listener);
+                    sendMailboxMessage(recipientP2pSigPubKey, recipientP2pEncryptPubKey, (MailboxMessage) message, listener);
                 }
                 else {
                     log.error("sendMessage failed with exception " + t.getMessage());
@@ -120,18 +120,19 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
         });
     }
 
-    private void sendMailboxMessage(PublicKey p2pSigPubKey, PublicKey p2pEncryptPubKey, MailboxMessage message, SendMessageListener listener) {
+    private void sendMailboxMessage(PublicKey recipientP2pSigPubKey, PublicKey recipientP2pEncryptPubKey, MailboxMessage message, SendMessageListener 
+            listener) {
         Bucket bucket = null;
         log.info("sendMailboxMessage called");
         try {
-            bucket = encryptionService.encryptObject(p2pEncryptPubKey, message);
+            bucket = encryptionService.encryptObject(recipientP2pEncryptPubKey, message);
         } catch (Throwable t) {
             t.printStackTrace();
             log.error(t.getMessage());
             executor.execute(listener::handleFault);
         }
         EncryptedMailboxMessage encrypted = new EncryptedMailboxMessage(bucket);
-        mailboxService.addMessage(p2pSigPubKey,
+        mailboxService.addMessage(recipientP2pSigPubKey,
                 encrypted,
                 () -> {
                     log.debug("Message successfully added to peers mailbox.");

@@ -32,18 +32,18 @@ public class FiatTransferStartedMessage extends TradeMessage implements MailboxM
 
     public final byte[] buyerSignature;
     public final Coin buyerPayoutAmount;
-    public final Coin sellerPayoutAmount;
     public final String buyerPayoutAddress;
+    public final Coin sellerPayoutAmount;
 
     public FiatTransferStartedMessage(String tradeId,
                                       byte[] buyerSignature,
                                       Coin buyerPayoutAmount,
-                                      Coin sellerPayoutAmount,
-                                      String buyerPayoutAddress) {
+                                      String buyerPayoutAddress,
+                                      Coin sellerPayoutAmount) {
         super(tradeId);
         this.buyerSignature = buyerSignature;
         this.buyerPayoutAmount = buyerPayoutAmount;
-        this.sellerPayoutAmount = sellerPayoutAmount;
         this.buyerPayoutAddress = buyerPayoutAddress;
+        this.sellerPayoutAmount = sellerPayoutAmount;
     }
 }

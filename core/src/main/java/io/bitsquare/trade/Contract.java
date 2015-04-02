@@ -38,31 +38,31 @@ public class Contract implements Serializable {
     public final Offer offer;
     public final String takeOfferFeeTxID;
     public final Coin tradeAmount;
-    public final String offererAccountID;
-    public final String takerAccountID;
-    public final FiatAccount offererFiatAccount;
-    public final FiatAccount takerFiatAccount;
-    public final String offererP2PSigPubKeyAsString;
-    public final String takerP2PSigPubKeyAsString;
+    public final String buyerAccountID;
+    public final String sellerAccountID;
+    public final FiatAccount buyerFiatAccount;
+    public final FiatAccount sellerFiatAccount;
+    public final String buyerP2PSigPubKeyAsString;
+    public final String sellerP2PSigPubKeyAsString;
 
     public Contract(Offer offer,
                     Coin tradeAmount,
                     String takeOfferFeeTxID,
-                    String offererAccountID,
-                    String takerAccountID,
-                    FiatAccount offererFiatAccount,
-                    FiatAccount takerFiatAccount,
-                    PublicKey offererP2PSigPubKey,
-                    PublicKey takerP2PSigPubKey) {
+                    String buyerAccountID,
+                    String sellerAccountID,
+                    FiatAccount buyerFiatAccount,
+                    FiatAccount sellerFiatAccount,
+                    PublicKey buyerP2PSigPubKey,
+                    PublicKey sellerP2PSigPubKey) {
         this.offer = offer;
         this.tradeAmount = tradeAmount;
         this.takeOfferFeeTxID = takeOfferFeeTxID;
-        this.offererAccountID = offererAccountID;
-        this.takerAccountID = takerAccountID;
-        this.offererFiatAccount = offererFiatAccount;
-        this.takerFiatAccount = takerFiatAccount;
-        this.offererP2PSigPubKeyAsString = Utilities.getHexFromPubKey(offererP2PSigPubKey);
-        this.takerP2PSigPubKeyAsString = Utilities.getHexFromPubKey(takerP2PSigPubKey);
+        this.buyerAccountID = buyerAccountID;
+        this.sellerAccountID = sellerAccountID;
+        this.buyerFiatAccount = buyerFiatAccount;
+        this.sellerFiatAccount = sellerFiatAccount;
+        this.buyerP2PSigPubKeyAsString = Utilities.getHexFromPubKey(buyerP2PSigPubKey);
+        this.sellerP2PSigPubKeyAsString = Utilities.getHexFromPubKey(sellerP2PSigPubKey);
     }
 
     @Override
@@ -71,12 +71,12 @@ public class Contract implements Serializable {
                 "offer=" + offer +
                 ", takeOfferFeeTxID='" + takeOfferFeeTxID + '\'' +
                 ", tradeAmount=" + tradeAmount +
-                ", offererAccountID='" + offererAccountID + '\'' +
-                ", takerAccountID='" + takerAccountID + '\'' +
-                ", offererFiatAccount=" + offererFiatAccount +
-                ", takerFiatAccount=" + takerFiatAccount +
-                ", offererP2PSigPubKeyAsString='" + offererP2PSigPubKeyAsString + '\'' +
-                ", takerP2PSigPubKeyAsString='" + takerP2PSigPubKeyAsString + '\'' +
+                ", buyerAccountID='" + buyerAccountID + '\'' +
+                ", sellerAccountID='" + sellerAccountID + '\'' +
+                ", buyerFiatAccount=" + buyerFiatAccount +
+                ", sellerFiatAccount=" + sellerFiatAccount +
+                ", buyerP2PSigPubKeyAsString='" + buyerP2PSigPubKeyAsString + '\'' +
+                ", sellerP2PSigPubKeyAsString='" + sellerP2PSigPubKeyAsString + '\'' +
                 '}';
     }
 }

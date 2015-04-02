@@ -42,6 +42,7 @@ public class CreateTakeOfferFeeTx extends TradeTask {
             Transaction createTakeOfferFeeTx = processModel.getTradeWalletService().createTakeOfferFeeTx(processModel.getAddressEntry());
 
             processModel.setTakeOfferFeeTx(createTakeOfferFeeTx);
+            processModel.setTakeOfferFeeTxId(createTakeOfferFeeTx.getHashAsString());
 
             if (trade instanceof BuyerAsTakerTrade)
                 trade.setProcessState(TakerState.ProcessState.TAKE_OFFER_FEE_TX_CREATED);

@@ -70,14 +70,14 @@ public class TomP2PMailboxService extends TomP2PDHTService implements MailboxSer
     }
 
     @Override
-    public void addMessage(PublicKey p2pSigPubKey, EncryptedMailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler) {
+    public void addMessage(PublicKey recipientP2pSigPubKey, EncryptedMailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler) {
         try {
             final Data data = new Data(message);
             data.ttlSeconds(TTL);
-            log.trace("Add message to DHT requested. Added data: [locationKey: " + getLocationKey(p2pSigPubKey) +
+            log.trace("Add message to DHT requested. Added data: [locationKey: " + getLocationKey(recipientP2pSigPubKey) +
                     ", hash: " + data.hash().toString() + "]");
 
-            FuturePut futurePut = addDataToMapOfProtectedDomain(getLocationKey(p2pSigPubKey), data, p2pSigPubKey);
+            FuturePut futurePut = addDataToMapOfProtectedDomain(getLocationKey(recipientP2pSigPubKey), data, recipientP2pSigPubKey);
             futurePut.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
@@ -85,7 +85,7 @@ public class TomP2PMailboxService extends TomP2PDHTService implements MailboxSer
                         executor.execute(() -> {
                             resultHandler.handleResult();
 
-                            log.trace("Add message to mailbox was successful. Added data: [locationKey: " + getLocationKey(p2pSigPubKey) +
+                            log.trace("Add message to mailbox was successful. Added data: [locationKey: " + getLocationKey(recipientP2pSigPubKey) +
                                     ", value: " + data + "]");
                         });
                     }

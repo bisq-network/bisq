@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.buyer.offerer.tasks;
+package io.bitsquare.trade.protocol.trade.buyer.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
@@ -26,10 +26,10 @@ import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererCreatesAndSignPayoutTx extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(OffererCreatesAndSignPayoutTx.class);
+public class BuyerCreatesAndSignPayoutTx extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(BuyerCreatesAndSignPayoutTx.class);
 
-    public OffererCreatesAndSignPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public BuyerCreatesAndSignPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -37,23 +37,23 @@ public class OffererCreatesAndSignPayoutTx extends TradeTask {
     protected void doRun() {
         try {
             assert trade.getTradeAmount() != null;
-            Coin securityDeposit = trade.getSecurityDeposit();
-            Coin offererPayoutAmount = securityDeposit.add(trade.getTradeAmount());
-            Coin takerPayoutAmount = securityDeposit;
+            assert trade.getSecurityDeposit() != null;
+            Coin sellerPayoutAmount = trade.getSecurityDeposit();
+            Coin buyerPayoutAmount = sellerPayoutAmount.add(trade.getTradeAmount());
 
-            byte[] offererPayoutTxSignature = processModel.getTradeWalletService().createAndSignPayoutTx(
+            byte[] buyerPayoutTxSignature = processModel.getTradeWalletService().createAndSignPayoutTx(
                     trade.getDepositTx(),
-                    offererPayoutAmount,
-                    takerPayoutAmount,
+                    buyerPayoutAmount,
+                    sellerPayoutAmount,
                     processModel.getAddressEntry(),
                     processModel.tradingPeer.getPayoutAddressString(),
                     processModel.getTradeWalletPubKey(),
                     processModel.tradingPeer.getTradeWalletPubKey(),
                     processModel.getArbitratorPubKey());
 
-            processModel.setPayoutTxSignature(offererPayoutTxSignature);
-            processModel.setPayoutAmount(offererPayoutAmount);
-            processModel.tradingPeer.setPayoutAmount(takerPayoutAmount);
+            processModel.setPayoutTxSignature(buyerPayoutTxSignature);
+            processModel.setPayoutAmount(buyerPayoutAmount);
+            processModel.tradingPeer.setPayoutAmount(sellerPayoutAmount);
 
             complete();
         } catch (Throwable t) {

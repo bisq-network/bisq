@@ -23,7 +23,7 @@ import io.bitsquare.trade.BuyerAsOffererTrade;
 import io.bitsquare.trade.SellerAsOffererTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxFromTakerMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxFromSellerMessage;
 import io.bitsquare.trade.states.OffererState;
 
 import org.slf4j.Logger;
@@ -39,7 +39,7 @@ public class OffererSendsRequestPublishDepositTxFromTakerMessage extends TradeTa
     @Override
     protected void doRun() {
         try {
-            RequestPublishDepositTxFromTakerMessage tradeMessage = new RequestPublishDepositTxFromTakerMessage(
+            RequestPublishDepositTxFromSellerMessage tradeMessage = new RequestPublishDepositTxFromSellerMessage(
                     processModel.getId(),
                     processModel.getFiatAccount(),
                     processModel.getAccountId(),

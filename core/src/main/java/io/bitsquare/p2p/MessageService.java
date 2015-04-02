@@ -26,7 +26,7 @@ public interface MessageService extends P2PService {
 
     void sendMessage(Peer peer, Message message, SendMessageListener listener);
 
-    void sendMessage(Peer peer, Message message, PublicKey p2pSigPubKey, PublicKey p2pEncryptPubKey, SendMessageListener listener);
+    void sendMessage(Peer peer, Message message, PublicKey recipientP2pSigPubKey, PublicKey recipientP2pEncryptPubKey, SendMessageListener listener);
 
     void addMessageHandler(MessageHandler listener);
 
