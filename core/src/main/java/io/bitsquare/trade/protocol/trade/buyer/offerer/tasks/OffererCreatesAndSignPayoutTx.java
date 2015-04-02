@@ -40,7 +40,7 @@ public class OffererCreatesAndSignPayoutTx extends OffererTradeTask {
             Coin securityDeposit = offererTrade.getSecurityDeposit();
             Coin offererPayoutAmount = securityDeposit.add(offererTrade.getTradeAmount());
             Coin takerPayoutAmount = securityDeposit;
-            
+
             byte[] offererPayoutTxSignature = offererTradeProcessModel.getTradeWalletService().createAndSignPayoutTx(
                     offererTrade.getDepositTx(),
                     offererPayoutAmount,

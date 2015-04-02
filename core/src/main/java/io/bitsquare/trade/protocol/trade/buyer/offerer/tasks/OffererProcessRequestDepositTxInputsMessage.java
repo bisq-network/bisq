@@ -52,7 +52,7 @@ public class OffererProcessRequestDepositTxInputsMessage extends OffererTradeTas
         } catch (Throwable t) {
             t.printStackTrace();
             offererTrade.setThrowable(t);
-           
+
             if (offererTrade instanceof OffererAsBuyerTrade)
                 offererTrade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
             else if (offererTrade instanceof OffererAsSellerTrade)

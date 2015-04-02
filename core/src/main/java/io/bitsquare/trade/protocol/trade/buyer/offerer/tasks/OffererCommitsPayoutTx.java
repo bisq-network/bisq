@@ -37,7 +37,7 @@ public class OffererCommitsPayoutTx extends OffererTradeTask {
     protected void doRun() {
         try {
             Transaction transaction = offererTradeProcessModel.getTradeWalletService().commitTx(offererTrade.getPayoutTx());
-            
+
             offererTrade.setPayoutTx(transaction);
 
             complete();

@@ -24,12 +24,6 @@ import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.trade.TakerAsBuyerTrade;
 import io.bitsquare.trade.protocol.Protocol;
-import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.taker.models.TakerProcessModel;
-import io.bitsquare.trade.protocol.trade.shared.taker.tasks.BroadcastTakeOfferFeeTx;
-import io.bitsquare.trade.protocol.trade.shared.taker.tasks.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.buyer.taker.tasks.TakerCommitsPayoutTx;
 import io.bitsquare.trade.protocol.trade.buyer.taker.tasks.TakerCreatesAndSignsPayoutTx;
 import io.bitsquare.trade.protocol.trade.buyer.taker.tasks.TakerCreatesDepositTxInputs;
@@ -40,8 +34,14 @@ import io.bitsquare.trade.protocol.trade.buyer.taker.tasks.TakerSendsFiatTransfe
 import io.bitsquare.trade.protocol.trade.buyer.taker.tasks.TakerSendsRequestPayDepositMessage;
 import io.bitsquare.trade.protocol.trade.buyer.taker.tasks.TakerSignsAndPublishDepositTx;
 import io.bitsquare.trade.protocol.trade.buyer.taker.tasks.TakerVerifiesAndSignsContract;
+import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
+import io.bitsquare.trade.protocol.trade.shared.taker.tasks.BroadcastTakeOfferFeeTx;
+import io.bitsquare.trade.protocol.trade.shared.taker.tasks.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.shared.taker.tasks.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.shared.taker.tasks.VerifyOffererAccount;
+import io.bitsquare.trade.protocol.trade.taker.models.TakerProcessModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -27,6 +27,7 @@ import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.trade.protocol.trade.ProcessModel;
+import io.bitsquare.trade.protocol.trade.shared.models.TradingPeer;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;

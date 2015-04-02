@@ -48,7 +48,7 @@ public class OffererCreatesAndSignsContract extends OffererTradeTask {
                     offererTradeProcessModel.getOffer().getP2PSigPubKey(),
                     offererTradeProcessModel.getP2pSigPubKey());
             String contractAsJson = Utilities.objectToJson(contract);
-            String signature = offererTradeProcessModel.getSignatureService().signMessage(offererTradeProcessModel.getRegistrationKeyPair(), 
+            String signature = offererTradeProcessModel.getSignatureService().signMessage(offererTradeProcessModel.getRegistrationKeyPair(),
                     contractAsJson);
 
             model.setContract(contract);

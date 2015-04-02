@@ -50,7 +50,7 @@ public class TakerProcessPayoutTxPublishedMessage extends TakerTradeTask {
                 takerTrade.setProcessState(TakerAsBuyerTrade.ProcessState.PAYOUT_PUBLISHED);
             else if (takerTrade instanceof TakerAsSellerTrade)
                 takerTrade.setProcessState(TakerAsSellerTrade.ProcessState.PAYOUT_PUBLISHED);
-            
+
             complete();
         } catch (Throwable t) {
             t.printStackTrace();

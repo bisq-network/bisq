@@ -52,7 +52,7 @@ public class BroadcastTakeOfferFeeTx extends TakerTradeTask {
                                 takerTrade.setProcessState(TakerAsBuyerTrade.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
                             else if (takerTrade instanceof TakerAsSellerTrade)
                                 takerTrade.setProcessState(TakerAsSellerTrade.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
-                                complete();
+                            complete();
                         }
 
                         @Override

@@ -58,7 +58,7 @@ public class OffererSendsFiatTransferStartedMessage extends OffererTradeTask {
                             else if (offererTrade instanceof OffererAsSellerTrade) {
                                 ((OffererAsSellerTrade) offererTrade).setProcessState(OffererAsSellerTrade.ProcessState.FIAT_PAYMENT_STARTED);
                             }
-                            
+
                             complete();
                         }
 
@@ -73,7 +73,7 @@ public class OffererSendsFiatTransferStartedMessage extends OffererTradeTask {
                             else if (offererTrade instanceof OffererAsSellerTrade) {
                                 ((OffererAsSellerTrade) offererTrade).setProcessState(OffererAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
                             }
-                            
+
                             failed();
                         }
                     });

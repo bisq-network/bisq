@@ -66,7 +66,7 @@ public class OffererVerifiesAndSignsContract extends OffererTradeTask {
                 offererTrade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
             else if (offererTrade instanceof OffererAsSellerTrade)
                 offererTrade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
-            
+
             failed(t);
         }
     }

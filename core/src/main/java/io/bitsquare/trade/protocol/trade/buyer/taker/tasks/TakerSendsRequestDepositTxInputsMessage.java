@@ -71,7 +71,7 @@ public class TakerSendsRequestDepositTxInputsMessage extends TakerTradeTask {
                                 "or cancel that trade.");
 
                         takerTrade.setErrorMessage(errorMessage);
-                        
+
                         if (takerTrade instanceof TakerAsBuyerTrade)
                             takerTrade.setProcessState(TakerAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
                         else if (takerTrade instanceof TakerAsSellerTrade)

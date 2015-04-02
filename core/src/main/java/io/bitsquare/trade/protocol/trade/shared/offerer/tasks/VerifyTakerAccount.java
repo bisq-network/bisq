@@ -38,7 +38,8 @@ public class VerifyTakerAccount extends OffererTradeTask {
         try {
             //TODO mocked yet
             if (offererTradeProcessModel.getBlockChainService().verifyAccountRegistration()) {
-                if (offererTradeProcessModel.getBlockChainService().isAccountBlackListed(offererTradeProcessModel.tradingPeer.getAccountId(), offererTradeProcessModel
+                if (offererTradeProcessModel.getBlockChainService().isAccountBlackListed(offererTradeProcessModel.tradingPeer.getAccountId(), 
+                        offererTradeProcessModel
                         .tradingPeer
                         .getFiatAccount())) {
                     log.error("Taker is blacklisted");
@@ -59,12 +60,12 @@ public class VerifyTakerAccount extends OffererTradeTask {
         } catch (Throwable t) {
             t.printStackTrace();
             offererTrade.setThrowable(t);
-            
+
             if (offererTrade instanceof OffererAsBuyerTrade)
                 offererTrade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
             else if (offererTrade instanceof OffererAsSellerTrade)
                 offererTrade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
-            
+
             failed(t);
         }
     }

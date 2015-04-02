@@ -41,7 +41,7 @@ public class OffererCreatesAndSignsDepositTx extends OffererTradeTask {
             assert offererTrade.getTradeAmount() != null;
             Coin inputAmount = offererTrade.getSecurityDeposit().add(FeePolicy.TX_FEE).add(offererTrade.getTradeAmount());
             Coin msOutputAmount = inputAmount.add(offererTrade.getSecurityDeposit());
-                    
+
             TradeWalletService.Result result = offererTradeProcessModel.getTradeWalletService().createAndSignDepositTx(
                     inputAmount,
                     msOutputAmount,

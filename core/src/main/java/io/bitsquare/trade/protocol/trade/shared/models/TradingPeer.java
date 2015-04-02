@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.offerer.models;
+package io.bitsquare.trade.protocol.trade.shared.models;
 
 import io.bitsquare.fiat.FiatAccount;
 
@@ -43,18 +43,19 @@ public class TradingPeer implements Serializable {
 
     // Mutable
     private String accountId;
-    private FiatAccount fiatAccount;
     private PublicKey p2pSigPubKey;
     private PublicKey p2pEncryptPubKey;
-    private String contractAsJson;
-    private String contractSignature;
-    private Coin payoutAmount;
+    private byte[] tradeWalletPubKey;
+    private FiatAccount fiatAccount;
     private Transaction preparedDepositTx;
     private List<TransactionOutput> connectedOutputsForAllInputs;
-    private String payoutAddressString;
-    private byte[] tradeWalletPubKey;
     private List<TransactionOutput> outputs;
+    private Coin payoutAmount;
+    private String payoutAddressString;
     private byte[] signature;
+    private String contractAsJson;
+    private String contractSignature;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -82,14 +83,6 @@ public class TradingPeer implements Serializable {
         this.accountId = accountId;
     }
 
-    public FiatAccount getFiatAccount() {
-        return fiatAccount;
-    }
-
-    public void setFiatAccount(FiatAccount fiatAccount) {
-        this.fiatAccount = fiatAccount;
-    }
-
     public PublicKey getP2pSigPubKey() {
         return p2pSigPubKey;
     }
@@ -106,28 +99,20 @@ public class TradingPeer implements Serializable {
         this.p2pEncryptPubKey = p2pEncryptPubKey;
     }
 
-    public String getContractAsJson() {
-        return contractAsJson;
+    public byte[] getTradeWalletPubKey() {
+        return tradeWalletPubKey;
     }
 
-    public void setContractAsJson(String contractAsJson) {
-        this.contractAsJson = contractAsJson;
+    public void setTradeWalletPubKey(byte[] tradeWalletPubKey) {
+        this.tradeWalletPubKey = tradeWalletPubKey;
     }
 
-    public String getContractSignature() {
-        return contractSignature;
+    public FiatAccount getFiatAccount() {
+        return fiatAccount;
     }
 
-    public void setContractSignature(String contractSignature) {
-        this.contractSignature = contractSignature;
-    }
-
-    public Coin getPayoutAmount() {
-        return payoutAmount;
-    }
-
-    public void setPayoutAmount(Coin payoutAmount) {
-        this.payoutAmount = payoutAmount;
+    public void setFiatAccount(FiatAccount fiatAccount) {
+        this.fiatAccount = fiatAccount;
     }
 
     public Transaction getPreparedDepositTx() {
@@ -146,28 +131,28 @@ public class TradingPeer implements Serializable {
         this.connectedOutputsForAllInputs = connectedOutputsForAllInputs;
     }
 
-    public String getPayoutAddressString() {
-        return payoutAddressString;
-    }
-
-    public void setPayoutAddressString(String payoutAddressString) {
-        this.payoutAddressString = payoutAddressString;
-    }
-
-    public byte[] getTradeWalletPubKey() {
-        return tradeWalletPubKey;
-    }
-
-    public void setTradeWalletPubKey(byte[] tradeWalletPubKey) {
-        this.tradeWalletPubKey = tradeWalletPubKey;
-    }
-
     public List<TransactionOutput> getOutputs() {
         return outputs;
     }
 
     public void setOutputs(List<TransactionOutput> outputs) {
         this.outputs = outputs;
+    }
+
+    public Coin getPayoutAmount() {
+        return payoutAmount;
+    }
+
+    public void setPayoutAmount(Coin payoutAmount) {
+        this.payoutAmount = payoutAmount;
+    }
+
+    public String getPayoutAddressString() {
+        return payoutAddressString;
+    }
+
+    public void setPayoutAddressString(String payoutAddressString) {
+        this.payoutAddressString = payoutAddressString;
     }
 
     public byte[] getSignature() {
@@ -178,22 +163,38 @@ public class TradingPeer implements Serializable {
         this.signature = signature;
     }
 
-    @Override
-    public String toString() {
-        return "Taker{" +
-                "accountId='" + accountId + '\'' +
-                ", fiatAccount=" + fiatAccount +
-                ", p2pSigPubKey=" + p2pSigPubKey +
-                ", p2pEncryptPubKey=" + p2pEncryptPubKey +
-                ", contractAsJson='" + contractAsJson + '\'' +
-                ", contractSignature='" + contractSignature + '\'' +
-                ", payoutAmount=" + payoutAmount +
-                ", preparedDepositTx=" + preparedDepositTx +
-                ", connectedOutputsForAllInputs=" + connectedOutputsForAllInputs +
-                ", payoutAddressString='" + payoutAddressString + '\'' +
-                ", tradeWalletPubKey=" + Arrays.toString(tradeWalletPubKey) +
-                '}';
+    public String getContractAsJson() {
+        return contractAsJson;
     }
 
+    public void setContractAsJson(String contractAsJson) {
+        this.contractAsJson = contractAsJson;
+    }
 
+    public String getContractSignature() {
+        return contractSignature;
+    }
+
+    public void setContractSignature(String contractSignature) {
+        this.contractSignature = contractSignature;
+    }
+
+    @Override
+    public String toString() {
+        return "TradingPeer{" +
+                "accountId='" + accountId + '\'' +
+                ", p2pSigPubKey=" + p2pSigPubKey +
+                ", p2pEncryptPubKey=" + p2pEncryptPubKey +
+                ", tradeWalletPubKey=" + Arrays.toString(tradeWalletPubKey) +
+                ", fiatAccount=" + fiatAccount +
+                ", preparedDepositTx=" + preparedDepositTx +
+                ", connectedOutputsForAllInputs=" + connectedOutputsForAllInputs +
+                ", outputs=" + outputs +
+                ", payoutAmount=" + payoutAmount +
+                ", payoutAddressString='" + payoutAddressString + '\'' +
+                ", signature=" + Arrays.toString(signature) +
+                ", contractAsJson='" + contractAsJson + '\'' +
+                ", contractSignature='" + contractSignature + '\'' +
+                '}';
+    }
 }

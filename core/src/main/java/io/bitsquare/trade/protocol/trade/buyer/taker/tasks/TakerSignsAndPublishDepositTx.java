@@ -45,7 +45,7 @@ public class TakerSignsAndPublishDepositTx extends TakerTradeTask {
     protected void doRun() {
         try {
             Coin inputAmount = takerTrade.getSecurityDeposit().add(FeePolicy.TX_FEE);
-            
+
             takerTradeProcessModel.getTradeWalletService().signAndPublishDepositTx(
                     takerTradeProcessModel.tradingPeer.getPreparedDepositTx(),
                     takerTradeProcessModel.getConnectedOutputsForAllInputs(),

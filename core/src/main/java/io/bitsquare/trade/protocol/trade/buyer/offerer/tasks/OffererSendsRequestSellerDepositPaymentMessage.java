@@ -74,7 +74,7 @@ public class OffererSendsRequestSellerDepositPaymentMessage extends OffererTrade
         } catch (Throwable t) {
             t.printStackTrace();
             offererTrade.setThrowable(t);
-            
+
             if (offererTrade instanceof OffererAsBuyerTrade) {
                 ((OffererAsBuyerTrade) offererTrade).setProcessState(OffererAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
                 ((OffererAsSellerTrade) offererTrade).setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
