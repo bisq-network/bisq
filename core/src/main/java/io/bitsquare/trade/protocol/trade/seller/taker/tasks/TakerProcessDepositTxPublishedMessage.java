@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.trade.seller.taker.tasks;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.TakerAsBuyerTrade;
 import io.bitsquare.trade.TakerAsSellerTrade;
+import io.bitsquare.trade.TakerState;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerTradeTask;
@@ -47,9 +48,9 @@ public class TakerProcessDepositTxPublishedMessage extends TakerTradeTask {
             trade.setDepositTx(checkNotNull(message.depositTx));
 
             if (trade instanceof TakerAsBuyerTrade)
-                trade.setProcessState(TakerAsBuyerTrade.ProcessState.DEPOSIT_PUBLISHED);
+                trade.setProcessState(TakerState.ProcessState.DEPOSIT_PUBLISHED);
             else if (trade instanceof TakerAsSellerTrade)
-                trade.setProcessState(TakerAsSellerTrade.ProcessState.DEPOSIT_PUBLISHED);
+                trade.setProcessState(TakerState.ProcessState.DEPOSIT_PUBLISHED);
 
             complete();
         } catch (Throwable t) {

@@ -21,6 +21,7 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.OffererAsBuyerTrade;
 import io.bitsquare.trade.OffererAsSellerTrade;
+import io.bitsquare.trade.OffererState;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
@@ -53,9 +54,9 @@ public class OffererSendsDepositTxPublishedMessage extends OffererTradeTask {
                     trade.setErrorMessage(errorMessage);
 
                     if (trade instanceof OffererAsBuyerTrade)
-                        trade.setProcessState(OffererAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                        trade.setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
                     else if (trade instanceof OffererAsSellerTrade)
-                        trade.setProcessState(OffererAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                        trade.setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
 
                     failed();
                 }

@@ -24,6 +24,7 @@ import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.OffererAsBuyerTrade;
+import io.bitsquare.trade.OffererState;
 import io.bitsquare.trade.protocol.Protocol;
 import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
@@ -109,7 +110,7 @@ public class BuyerAsOffererProtocol implements Protocol {
             // to take the
             // offer
             // at the same time
-            boolean isOfferOpen = offererAsBuyerTrade.lifeCycleStateProperty().get() == OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN;
+            boolean isOfferOpen = offererAsBuyerTrade.lifeCycleStateProperty().get() == OffererState.LifeCycleState.OFFER_OPEN;
             ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(processModel.getId(), isOfferOpen);
             processModel.getMessageService().sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
                 @Override
@@ -136,7 +137,7 @@ public class BuyerAsOffererProtocol implements Protocol {
         processModel.setTradeMessage(tradeMessage);
         offererAsBuyerTrade.setTradingPeer(taker);
 
-        offererAsBuyerTrade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_RESERVED);
+        offererAsBuyerTrade.setLifeCycleState(OffererState.LifeCycleState.OFFER_RESERVED);
 
         TaskRunner<OffererAsBuyerTrade> taskRunner = new TaskRunner<>(offererAsBuyerTrade,
                 () -> log.debug("taskRunner at handleRequestDepositTxInputsMessage completed"),

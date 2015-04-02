@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.trade.shared.taker.tasks;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.TakerAsBuyerTrade;
 import io.bitsquare.trade.TakerAsSellerTrade;
+import io.bitsquare.trade.TakerState;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerTradeTask;
 
@@ -43,9 +44,9 @@ public class CreateTakeOfferFeeTx extends TakerTradeTask {
             processModel.setTakeOfferFeeTx(createTakeOfferFeeTx);
 
             if (trade instanceof TakerAsBuyerTrade)
-                trade.setProcessState(TakerAsBuyerTrade.ProcessState.TAKE_OFFER_FEE_TX_CREATED);
+                trade.setProcessState(TakerState.ProcessState.TAKE_OFFER_FEE_TX_CREATED);
             else if (trade instanceof TakerAsSellerTrade)
-                trade.setProcessState(TakerAsSellerTrade.ProcessState.TAKE_OFFER_FEE_TX_CREATED);
+                trade.setProcessState(TakerState.ProcessState.TAKE_OFFER_FEE_TX_CREATED);
 
             complete();
         } catch (Throwable t) {

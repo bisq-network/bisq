@@ -21,6 +21,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.TakerAsBuyerTrade;
 import io.bitsquare.trade.TakerAsSellerTrade;
+import io.bitsquare.trade.TakerState;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerTradeTask;
 
@@ -63,12 +64,12 @@ public class TakerSignsAndPublishDepositTx extends TakerTradeTask {
                             trade.setDepositTx(transaction);
 
                             if (trade instanceof TakerAsBuyerTrade) {
-                                trade.setProcessState(TakerAsBuyerTrade.ProcessState.DEPOSIT_PUBLISHED);
-                                trade.setLifeCycleState(TakerAsBuyerTrade.LifeCycleState.PENDING);
+                                trade.setProcessState(TakerState.ProcessState.DEPOSIT_PUBLISHED);
+                                trade.setLifeCycleState(TakerState.LifeCycleState.PENDING);
                             }
                             else if (trade instanceof TakerAsSellerTrade) {
-                                trade.setProcessState(TakerAsSellerTrade.ProcessState.DEPOSIT_PUBLISHED);
-                                trade.setLifeCycleState(TakerAsSellerTrade.LifeCycleState.PENDING);
+                                trade.setProcessState(TakerState.ProcessState.DEPOSIT_PUBLISHED);
+                                trade.setLifeCycleState(TakerState.LifeCycleState.PENDING);
                             }
 
                             complete();

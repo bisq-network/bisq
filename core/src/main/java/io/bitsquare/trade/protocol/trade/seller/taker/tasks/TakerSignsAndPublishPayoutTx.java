@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.trade.seller.taker.tasks;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.TakerAsBuyerTrade;
 import io.bitsquare.trade.TakerAsSellerTrade;
+import io.bitsquare.trade.TakerState;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerTradeTask;
 
@@ -58,9 +59,9 @@ public class TakerSignsAndPublishPayoutTx extends TakerTradeTask {
                             processModel.setPayoutTx(transaction);
 
                             if (trade instanceof TakerAsBuyerTrade)
-                                trade.setProcessState(TakerAsBuyerTrade.ProcessState.PAYOUT_PUBLISHED);
+                                trade.setProcessState(TakerState.ProcessState.PAYOUT_PUBLISHED);
                             else if (trade instanceof TakerAsSellerTrade)
-                                trade.setProcessState(TakerAsSellerTrade.ProcessState.PAYOUT_PUBLISHED);
+                                trade.setProcessState(TakerState.ProcessState.PAYOUT_PUBLISHED);
 
                             complete();
                         }

@@ -27,10 +27,8 @@ import io.bitsquare.gui.main.portfolio.closed.ClosedTradesView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.trade.OffererAsBuyerTrade;
-import io.bitsquare.trade.OffererAsSellerTrade;
-import io.bitsquare.trade.TakerAsBuyerTrade;
-import io.bitsquare.trade.TakerAsSellerTrade;
+import io.bitsquare.trade.OffererState;
+import io.bitsquare.trade.TakerState;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -276,7 +274,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     private void updateTakerAsSellerState() {
-        TakerAsSellerTrade.ProcessState processState = (TakerAsSellerTrade.ProcessState) dataModel.takerAsSellerProcessState.get();
+        TakerState.ProcessState processState = (TakerState.ProcessState) dataModel.takerAsSellerProcessState.get();
         log.debug("updateTakerAsSellerState " + processState);
         if (processState != null) {
             switch (processState) {
@@ -319,7 +317,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     private void updateOffererAsBuyerState() {
-        OffererAsBuyerTrade.ProcessState processState = (OffererAsBuyerTrade.ProcessState) dataModel.offererAsBuyerProcessState.get();
+        OffererState.ProcessState processState = (OffererState.ProcessState) dataModel.offererAsBuyerProcessState.get();
         log.debug("updateOffererAsBuyerState " + processState);
         if (processState != null) {
             switch (processState) {
@@ -355,7 +353,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     private void updateTakerAsBuyerState() {
-        TakerAsBuyerTrade.ProcessState processState = (TakerAsBuyerTrade.ProcessState) dataModel.takerAsBuyerProcessState.get();
+        TakerState.ProcessState processState = (TakerState.ProcessState) dataModel.takerAsBuyerProcessState.get();
         log.debug("updateTakerAsBuyerState " + processState);
         if (processState != null) {
             switch (processState) {
@@ -398,7 +396,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     private void updateOffererAsSellerState() {
-        OffererAsSellerTrade.ProcessState processState = (OffererAsSellerTrade.ProcessState) dataModel.offererAsSellerProcessState.get();
+        OffererState.ProcessState processState = (OffererState.ProcessState) dataModel.offererAsSellerProcessState.get();
         log.debug("updateOffererAsSellerState " + processState);
         if (processState != null) {
             switch (processState) {

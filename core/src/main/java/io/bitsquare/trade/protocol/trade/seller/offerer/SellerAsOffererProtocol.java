@@ -24,6 +24,7 @@ import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.OffererAsSellerTrade;
+import io.bitsquare.trade.OffererState;
 import io.bitsquare.trade.protocol.Protocol;
 import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
@@ -107,7 +108,7 @@ public class SellerAsOffererProtocol implements Protocol {
             // to take the
             // offer
             // at the same time
-            boolean isOfferOpen = offererAsSellerTrade.lifeCycleStateProperty().get() == OffererAsSellerTrade.LifeCycleState.OFFER_OPEN;
+            boolean isOfferOpen = offererAsSellerTrade.lifeCycleStateProperty().get() == OffererState.LifeCycleState.OFFER_OPEN;
 
             ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(processModel.getId(), isOfferOpen);
             processModel.getMessageService().sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
@@ -185,7 +186,7 @@ public class SellerAsOffererProtocol implements Protocol {
 
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     public void onFiatPaymentReceived() {
-        offererAsSellerTrade.setProcessState(OffererAsSellerTrade.ProcessState.FIAT_PAYMENT_RECEIVED);
+        offererAsSellerTrade.setProcessState(OffererState.ProcessState.FIAT_PAYMENT_RECEIVED);
 
         TaskRunner<OffererAsSellerTrade> taskRunner = new TaskRunner<>(offererAsSellerTrade,
                 () -> {

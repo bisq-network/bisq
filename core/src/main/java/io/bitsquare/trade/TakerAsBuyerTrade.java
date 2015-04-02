@@ -38,35 +38,6 @@ public class TakerAsBuyerTrade extends Trade implements Serializable {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Enum
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public enum LifeCycleState implements Trade.LifeCycleState {
-        PENDING,
-        COMPLETED,
-        FAILED
-    }
-
-    public enum ProcessState implements Trade.ProcessState {
-        UNDEFINED,
-        TAKE_OFFER_FEE_TX_CREATED,
-        TAKE_OFFER_FEE_PUBLISHED,
-        TAKE_OFFER_FEE_PUBLISH_FAILED,
-
-        DEPOSIT_PUBLISHED,
-        DEPOSIT_CONFIRMED,
-
-        FIAT_PAYMENT_STARTED,
-
-        FIAT_PAYMENT_RECEIVED,
-        PAYOUT_PUBLISHED,
-
-        MESSAGE_SENDING_FAILED,
-        EXCEPTION
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -86,8 +57,8 @@ public class TakerAsBuyerTrade extends Trade implements Serializable {
 
     @Override
     protected void initStates() {
-        processState = ProcessState.UNDEFINED;
-        lifeCycleState = TakerAsBuyerTrade.LifeCycleState.PENDING;
+        processState = TakerState.ProcessState.UNDEFINED;
+        lifeCycleState = TakerState.LifeCycleState.PENDING;
         initStateProperties();
     }
 
@@ -121,10 +92,10 @@ public class TakerAsBuyerTrade extends Trade implements Serializable {
     public void setProcessState(Trade.ProcessState processState) {
         super.setProcessState(processState);
 
-        switch ((ProcessState) processState) {
+        switch ((TakerState.ProcessState) processState) {
             case EXCEPTION:
                 disposeProtocol();
-                setLifeCycleState(TakerAsBuyerTrade.LifeCycleState.FAILED);
+                setLifeCycleState(TakerState.LifeCycleState.FAILED);
                 break;
         }
     }
@@ -133,7 +104,7 @@ public class TakerAsBuyerTrade extends Trade implements Serializable {
     public void setLifeCycleState(Trade.LifeCycleState lifeCycleState) {
         super.setLifeCycleState(lifeCycleState);
 
-        switch ((LifeCycleState) lifeCycleState) {
+        switch ((TakerState.LifeCycleState) lifeCycleState) {
             case FAILED:
                 disposeProtocol();
                 break;
@@ -146,7 +117,7 @@ public class TakerAsBuyerTrade extends Trade implements Serializable {
     @Override
     public void setThrowable(Throwable throwable) {
         super.setThrowable(throwable);
-        setProcessState(ProcessState.EXCEPTION);
+        setProcessState(TakerState.ProcessState.EXCEPTION);
     }
 
 
@@ -156,7 +127,7 @@ public class TakerAsBuyerTrade extends Trade implements Serializable {
 
     @Override
     protected void handleConfidenceResult() {
-        if (((ProcessState) processState).ordinal() < ProcessState.DEPOSIT_CONFIRMED.ordinal())
-            setProcessState(ProcessState.DEPOSIT_CONFIRMED);
+        if (((TakerState.ProcessState) processState).ordinal() < TakerState.ProcessState.DEPOSIT_CONFIRMED.ordinal())
+            setProcessState(TakerState.ProcessState.DEPOSIT_CONFIRMED);
     }
 }

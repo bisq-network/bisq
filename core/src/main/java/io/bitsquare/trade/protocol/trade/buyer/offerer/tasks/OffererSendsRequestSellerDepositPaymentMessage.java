@@ -21,6 +21,7 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.OffererAsBuyerTrade;
 import io.bitsquare.trade.OffererAsSellerTrade;
+import io.bitsquare.trade.OffererState;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
@@ -60,12 +61,12 @@ public class OffererSendsRequestSellerDepositPaymentMessage extends OffererTrade
                     appendToErrorMessage("Sending RequestTakerDepositPaymentMessage failed");
                     trade.setErrorMessage(errorMessage);
                     if (trade instanceof OffererAsBuyerTrade) {
-                        ((OffererAsBuyerTrade) trade).setProcessState(OffererAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
-                        ((OffererAsBuyerTrade) trade).setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
+                        ((OffererAsBuyerTrade) trade).setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
+                        ((OffererAsBuyerTrade) trade).setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
                     }
                     else if (trade instanceof OffererAsSellerTrade) {
-                        ((OffererAsSellerTrade) trade).setProcessState(OffererAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
-                        ((OffererAsSellerTrade) trade).setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
+                        ((OffererAsSellerTrade) trade).setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
+                        ((OffererAsSellerTrade) trade).setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
                     }
 
                     failed();
@@ -76,12 +77,12 @@ public class OffererSendsRequestSellerDepositPaymentMessage extends OffererTrade
             trade.setThrowable(t);
 
             if (trade instanceof OffererAsBuyerTrade) {
-                ((OffererAsBuyerTrade) trade).setProcessState(OffererAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
-                ((OffererAsSellerTrade) trade).setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
+                ((OffererAsBuyerTrade) trade).setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
+                ((OffererAsSellerTrade) trade).setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
             }
             else if (trade instanceof OffererAsSellerTrade) {
-                ((OffererAsSellerTrade) trade).setProcessState(OffererAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
-                ((OffererAsSellerTrade) trade).setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
+                ((OffererAsSellerTrade) trade).setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
+                ((OffererAsSellerTrade) trade).setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
             }
 
             failed(t);

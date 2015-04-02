@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.trade.shared.taker.tasks;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.TakerAsBuyerTrade;
 import io.bitsquare.trade.TakerAsSellerTrade;
+import io.bitsquare.trade.TakerState;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerTradeTask;
 
@@ -49,9 +50,9 @@ public class BroadcastTakeOfferFeeTx extends TakerTradeTask {
                             log.debug("Take offer fee published successfully. Transaction ID = " + transaction.getHashAsString());
 
                             if (trade instanceof TakerAsBuyerTrade)
-                                trade.setProcessState(TakerAsBuyerTrade.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
+                                trade.setProcessState(TakerState.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
                             else if (trade instanceof TakerAsSellerTrade)
-                                trade.setProcessState(TakerAsSellerTrade.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
+                                trade.setProcessState(TakerState.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
                             complete();
                         }
 
@@ -62,9 +63,9 @@ public class BroadcastTakeOfferFeeTx extends TakerTradeTask {
                             trade.setErrorMessage(errorMessage);
 
                             if (trade instanceof TakerAsBuyerTrade)
-                                trade.setProcessState(TakerAsBuyerTrade.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
+                                trade.setProcessState(TakerState.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
                             else if (trade instanceof TakerAsSellerTrade)
-                                trade.setProcessState(TakerAsSellerTrade.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
+                                trade.setProcessState(TakerState.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
 
                             failed(t);
                         }

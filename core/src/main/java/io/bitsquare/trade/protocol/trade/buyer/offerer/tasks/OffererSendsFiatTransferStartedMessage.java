@@ -21,6 +21,7 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.OffererAsBuyerTrade;
 import io.bitsquare.trade.OffererAsSellerTrade;
+import io.bitsquare.trade.OffererState;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
@@ -53,10 +54,10 @@ public class OffererSendsFiatTransferStartedMessage extends OffererTradeTask {
                             log.trace("Sending FiatTransferStartedMessage succeeded.");
 
                             if (trade instanceof OffererAsBuyerTrade) {
-                                ((OffererAsBuyerTrade) trade).setProcessState(OffererAsBuyerTrade.ProcessState.FIAT_PAYMENT_STARTED);
+                                ((OffererAsBuyerTrade) trade).setProcessState(OffererState.ProcessState.FIAT_PAYMENT_STARTED);
                             }
                             else if (trade instanceof OffererAsSellerTrade) {
-                                ((OffererAsSellerTrade) trade).setProcessState(OffererAsSellerTrade.ProcessState.FIAT_PAYMENT_STARTED);
+                                ((OffererAsSellerTrade) trade).setProcessState(OffererState.ProcessState.FIAT_PAYMENT_STARTED);
                             }
 
                             complete();
@@ -68,10 +69,10 @@ public class OffererSendsFiatTransferStartedMessage extends OffererTradeTask {
                             trade.setErrorMessage(errorMessage);
 
                             if (trade instanceof OffererAsBuyerTrade) {
-                                ((OffererAsBuyerTrade) trade).setProcessState(OffererAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                                ((OffererAsBuyerTrade) trade).setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
                             }
                             else if (trade instanceof OffererAsSellerTrade) {
-                                ((OffererAsSellerTrade) trade).setProcessState(OffererAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                                ((OffererAsSellerTrade) trade).setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
                             }
 
                             failed();

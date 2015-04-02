@@ -34,36 +34,7 @@ public class TakerAsSellerTrade extends Trade implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
-    transient private static final Logger log = LoggerFactory.getLogger(TakerAsSellerTrade.class);
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Enum
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public enum LifeCycleState implements Trade.LifeCycleState {
-        PENDING,
-        COMPLETED,
-        FAILED
-    }
-
-    public enum ProcessState implements Trade.ProcessState {
-        UNDEFINED,
-        TAKE_OFFER_FEE_TX_CREATED,
-        TAKE_OFFER_FEE_PUBLISHED,
-        TAKE_OFFER_FEE_PUBLISH_FAILED,
-
-        DEPOSIT_PUBLISHED,
-        DEPOSIT_CONFIRMED,
-
-        FIAT_PAYMENT_STARTED,
-
-        FIAT_PAYMENT_RECEIVED,
-        PAYOUT_PUBLISHED,
-
-        MESSAGE_SENDING_FAILED,
-        EXCEPTION
-    }
+    transient private static final Logger log = LoggerFactory.getLogger(TakerState.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -86,8 +57,8 @@ public class TakerAsSellerTrade extends Trade implements Serializable {
 
     @Override
     protected void initStates() {
-        processState = ProcessState.UNDEFINED;
-        lifeCycleState = TakerAsSellerTrade.LifeCycleState.PENDING;
+        processState = TakerState.ProcessState.UNDEFINED;
+        lifeCycleState = TakerState.LifeCycleState.PENDING;
         initStateProperties();
     }
 
@@ -119,21 +90,21 @@ public class TakerAsSellerTrade extends Trade implements Serializable {
 
     @Override
     public void setProcessState(Trade.ProcessState processState) {
-        ProcessState state = (ProcessState) processState;
+        TakerState.ProcessState state = (TakerState.ProcessState) processState;
         this.processState = processState;
         processStateProperty.set(processState);
 
         switch (state) {
             case EXCEPTION:
                 disposeProtocol();
-                setLifeCycleState(TakerAsSellerTrade.LifeCycleState.FAILED);
+                setLifeCycleState(TakerState.LifeCycleState.FAILED);
                 break;
         }
     }
 
     @Override
     public void setLifeCycleState(Trade.LifeCycleState lifeCycleState) {
-        LifeCycleState state = (LifeCycleState) lifeCycleState;
+        TakerState.LifeCycleState state = (TakerState.LifeCycleState) lifeCycleState;
         switch (state) {
             case FAILED:
                 disposeProtocol();
@@ -149,7 +120,7 @@ public class TakerAsSellerTrade extends Trade implements Serializable {
     @Override
     public void setThrowable(Throwable throwable) {
         super.setThrowable(throwable);
-        setProcessState(ProcessState.EXCEPTION);
+        setProcessState(TakerState.ProcessState.EXCEPTION);
     }
 
 
@@ -159,7 +130,7 @@ public class TakerAsSellerTrade extends Trade implements Serializable {
 
     @Override
     protected void handleConfidenceResult() {
-        if (((ProcessState) processState).ordinal() < ProcessState.DEPOSIT_CONFIRMED.ordinal())
-            setProcessState(ProcessState.DEPOSIT_CONFIRMED);
+        if (((TakerState.ProcessState) processState).ordinal() < TakerState.ProcessState.DEPOSIT_CONFIRMED.ordinal())
+            setProcessState(TakerState.ProcessState.DEPOSIT_CONFIRMED);
     }
 }

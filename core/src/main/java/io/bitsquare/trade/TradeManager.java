@@ -169,9 +169,9 @@ public class TradeManager {
 
             boolean failed = false;
             if (trade instanceof TakerAsSellerTrade)
-                failed = trade.lifeCycleState == TakerAsSellerTrade.LifeCycleState.FAILED;
+                failed = trade.lifeCycleState == TakerState.LifeCycleState.FAILED;
             else if (trade instanceof TakerAsBuyerTrade)
-                failed = trade.lifeCycleState == TakerAsBuyerTrade.LifeCycleState.FAILED;
+                failed = trade.lifeCycleState == TakerState.LifeCycleState.FAILED;
 
             if (failed) {
                 failedTrades.add(trade);
@@ -291,7 +291,7 @@ public class TradeManager {
     private void setupDepositPublishedListener(Trade trade) {
         trade.processStateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("setupDepositPublishedListener state = " + newValue);
-            if (newValue == OffererAsBuyerTrade.ProcessState.DEPOSIT_PUBLISHED || newValue == OffererAsSellerTrade.ProcessState.DEPOSIT_PUBLISHED) {
+            if (newValue == OffererState.ProcessState.DEPOSIT_PUBLISHED || newValue == OffererState.ProcessState.DEPOSIT_PUBLISHED) {
                 removeOpenOffer(trade.getOffer(),
                         () -> log.debug("remove offer was successful"),
                         log::error,
@@ -320,9 +320,9 @@ public class TradeManager {
 
                         if (isCancelRequest) {
                             if (trade instanceof OffererAsBuyerTrade)
-                                trade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_CANCELED);
+                                trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_CANCELED);
                             else if (trade instanceof OffererAsSellerTrade)
-                                trade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_CANCELED);
+                                trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_CANCELED);
                             closedTrades.add(trade);
                             trade.disposeProtocol();
                         }
@@ -411,13 +411,13 @@ public class TradeManager {
                 if (transaction != null) {
                     log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
                     if (trade instanceof OffererAsBuyerTrade)
-                        trade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.COMPLETED);
+                        trade.setLifeCycleState(OffererState.LifeCycleState.COMPLETED);
                     else if (trade instanceof TakerAsSellerTrade)
-                        trade.setLifeCycleState(TakerAsSellerTrade.LifeCycleState.COMPLETED);
+                        trade.setLifeCycleState(TakerState.LifeCycleState.COMPLETED);
                     else if (trade instanceof OffererAsSellerTrade)
-                        trade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.COMPLETED);
+                        trade.setLifeCycleState(OffererState.LifeCycleState.COMPLETED);
                     else if (trade instanceof TakerAsBuyerTrade)
-                        trade.setLifeCycleState(TakerAsBuyerTrade.LifeCycleState.COMPLETED);
+                        trade.setLifeCycleState(TakerState.LifeCycleState.COMPLETED);
 
                     pendingTrades.remove(trade);
                     closedTrades.add(trade);

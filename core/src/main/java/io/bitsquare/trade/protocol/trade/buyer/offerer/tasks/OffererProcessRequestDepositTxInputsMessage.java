@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.trade.buyer.offerer.tasks;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererAsBuyerTrade;
 import io.bitsquare.trade.OffererAsSellerTrade;
+import io.bitsquare.trade.OffererState;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
@@ -54,9 +55,9 @@ public class OffererProcessRequestDepositTxInputsMessage extends OffererTradeTas
             trade.setThrowable(t);
 
             if (trade instanceof OffererAsBuyerTrade)
-                trade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
+                trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
             else if (trade instanceof OffererAsSellerTrade)
-                trade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
+                trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
 
             failed(t);
         }

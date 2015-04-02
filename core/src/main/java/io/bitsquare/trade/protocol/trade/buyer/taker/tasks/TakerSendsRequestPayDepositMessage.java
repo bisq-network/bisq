@@ -21,6 +21,7 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.TakerAsBuyerTrade;
 import io.bitsquare.trade.TakerAsSellerTrade;
+import io.bitsquare.trade.TakerState;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositFromOffererMessage;
 import io.bitsquare.trade.protocol.trade.taker.tasks.TakerTradeTask;
@@ -61,9 +62,9 @@ public class TakerSendsRequestPayDepositMessage extends TakerTradeTask {
                     appendToErrorMessage("Sending RequestTakerDepositPaymentMessage failed");
                     trade.setErrorMessage(errorMessage);
                     if (trade instanceof TakerAsBuyerTrade)
-                        trade.setProcessState(TakerAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                        trade.setProcessState(TakerState.ProcessState.MESSAGE_SENDING_FAILED);
                     else if (trade instanceof TakerAsSellerTrade)
-                        trade.setProcessState(TakerAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                        trade.setProcessState(TakerState.ProcessState.MESSAGE_SENDING_FAILED);
 
                     failed();
                 }
@@ -73,10 +74,10 @@ public class TakerSendsRequestPayDepositMessage extends TakerTradeTask {
             trade.setThrowable(t);
 
             if (trade instanceof TakerAsBuyerTrade) {
-                trade.setProcessState(TakerAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                trade.setProcessState(TakerState.ProcessState.MESSAGE_SENDING_FAILED);
             }
             else if (trade instanceof TakerAsSellerTrade) {
-                trade.setProcessState(TakerAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                trade.setProcessState(TakerState.ProcessState.MESSAGE_SENDING_FAILED);
             }
 
             failed(t);
