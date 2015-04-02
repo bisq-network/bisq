@@ -40,8 +40,8 @@ public class OffererProcessDepositTxPublishedMessage extends OffererTradeTask {
     @Override
     protected void doRun() {
         try {
-            DepositTxPublishedMessage message = (DepositTxPublishedMessage) offererTradeProcessModel.getTradeMessage();
-            checkTradeId(offererTradeProcessModel.getId(), message);
+            DepositTxPublishedMessage message = (DepositTxPublishedMessage) processModel.getTradeMessage();
+            checkTradeId(processModel.getId(), message);
             checkNotNull(message);
 
             offererTrade.setDepositTx(checkNotNull(message.depositTx));

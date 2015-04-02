@@ -42,18 +42,18 @@ public class TakerCreatesAndSignsDepositTx extends TakerTradeTask {
             Coin inputAmount = takerTrade.getSecurityDeposit().add(FeePolicy.TX_FEE).add(takerTrade.getTradeAmount());
             Coin msOutputAmount = inputAmount.add(takerTrade.getSecurityDeposit());
 
-            TradeWalletService.Result result = takerTradeProcessModel.getTradeWalletService().createAndSignDepositTx(
+            TradeWalletService.Result result = processModel.getTradeWalletService().createAndSignDepositTx(
                     inputAmount,
                     msOutputAmount,
-                    takerTradeProcessModel.tradingPeer.getConnectedOutputsForAllInputs(),
-                    takerTradeProcessModel.tradingPeer.getOutputs(),
-                    takerTradeProcessModel.getAddressEntry(),
-                    takerTradeProcessModel.tradingPeer.getTradeWalletPubKey(),
-                    takerTradeProcessModel.getTradeWalletPubKey(),
-                    takerTradeProcessModel.getArbitratorPubKey());
+                    processModel.tradingPeer.getConnectedOutputsForAllInputs(),
+                    processModel.tradingPeer.getOutputs(),
+                    processModel.getAddressEntry(),
+                    processModel.tradingPeer.getTradeWalletPubKey(),
+                    processModel.getTradeWalletPubKey(),
+                    processModel.getArbitratorPubKey());
 
-            takerTradeProcessModel.setConnectedOutputsForAllInputs(result.getConnectedOutputsForAllInputs());
-            takerTradeProcessModel.setPreparedDepositTx(result.getDepositTx());
+            processModel.setConnectedOutputsForAllInputs(result.getConnectedOutputsForAllInputs());
+            processModel.setPreparedDepositTx(result.getDepositTx());
 
             complete();
         } catch (Throwable t) {

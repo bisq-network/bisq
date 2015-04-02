@@ -38,18 +38,18 @@ public class OffererProcessRequestPayDepositFromOffererMessage extends OffererTr
     @Override
     protected void doRun() {
         try {
-            RequestPayDepositFromOffererMessage message = (RequestPayDepositFromOffererMessage) offererTradeProcessModel.getTradeMessage();
-            checkTradeId(offererTradeProcessModel.getId(), message);
+            RequestPayDepositFromOffererMessage message = (RequestPayDepositFromOffererMessage) processModel.getTradeMessage();
+            checkTradeId(processModel.getId(), message);
             checkNotNull(message);
 
-            offererTradeProcessModel.tradingPeer.setConnectedOutputsForAllInputs(checkNotNull(message.buyerConnectedOutputsForAllInputs));
+            processModel.tradingPeer.setConnectedOutputsForAllInputs(checkNotNull(message.buyerConnectedOutputsForAllInputs));
             checkArgument(message.buyerConnectedOutputsForAllInputs.size() > 0);
-            offererTradeProcessModel.tradingPeer.setOutputs(checkNotNull(message.buyerOutputs));
-            offererTradeProcessModel.tradingPeer.setTradeWalletPubKey(checkNotNull(message.buyerTradeWalletPubKey));
-            offererTradeProcessModel.tradingPeer.setP2pSigPubKey(checkNotNull(message.buyerP2PSigPublicKey));
-            offererTradeProcessModel.tradingPeer.setP2pEncryptPubKey(checkNotNull(message.buyerP2PEncryptPublicKey));
-            offererTradeProcessModel.tradingPeer.setFiatAccount(checkNotNull(message.buyerFiatAccount));
-            offererTradeProcessModel.tradingPeer.setAccountId(nonEmptyStringOf(message.buyerAccountId));
+            processModel.tradingPeer.setOutputs(checkNotNull(message.buyerOutputs));
+            processModel.tradingPeer.setTradeWalletPubKey(checkNotNull(message.buyerTradeWalletPubKey));
+            processModel.tradingPeer.setP2pSigPubKey(checkNotNull(message.buyerP2PSigPublicKey));
+            processModel.tradingPeer.setP2pEncryptPubKey(checkNotNull(message.buyerP2PEncryptPublicKey));
+            processModel.tradingPeer.setFiatAccount(checkNotNull(message.buyerFiatAccount));
+            processModel.tradingPeer.setAccountId(nonEmptyStringOf(message.buyerAccountId));
             offererTrade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(message.tradeAmount)));
 
             complete();

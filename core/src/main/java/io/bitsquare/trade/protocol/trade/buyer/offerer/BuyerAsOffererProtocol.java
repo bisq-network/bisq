@@ -27,6 +27,7 @@ import io.bitsquare.trade.OffererAsBuyerTrade;
 import io.bitsquare.trade.protocol.Protocol;
 import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
+import io.bitsquare.trade.protocol.trade.ProcessModel;
 import io.bitsquare.trade.protocol.trade.buyer.offerer.tasks.OffererCommitsPayoutTx;
 import io.bitsquare.trade.protocol.trade.buyer.offerer.tasks.OffererCreatesAndSignPayoutTx;
 import io.bitsquare.trade.protocol.trade.buyer.offerer.tasks.OffererCreatesDepositTxInputs;
@@ -42,7 +43,6 @@ import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererProcessModel;
 import io.bitsquare.trade.protocol.trade.shared.offerer.tasks.VerifyTakeOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.shared.offerer.tasks.VerifyTakerAccount;
 
@@ -56,7 +56,7 @@ public class BuyerAsOffererProtocol implements Protocol {
 
     private MessageHandler messageHandler;
     private final OffererAsBuyerTrade offererAsBuyerTrade;
-    private final OffererProcessModel offererTradeProcessModel;
+    private final ProcessModel processModel;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -65,10 +65,10 @@ public class BuyerAsOffererProtocol implements Protocol {
     public BuyerAsOffererProtocol(OffererAsBuyerTrade model) {
         log.debug("New OffererProtocol " + this);
         this.offererAsBuyerTrade = model;
-        offererTradeProcessModel = offererAsBuyerTrade.getProcessModel();
+        processModel = offererAsBuyerTrade.getProcessModel();
         messageHandler = this::handleMessage;
 
-        offererTradeProcessModel.getMessageService().addMessageHandler(messageHandler);
+        processModel.getMessageService().addMessageHandler(messageHandler);
     }
 
 
@@ -79,8 +79,8 @@ public class BuyerAsOffererProtocol implements Protocol {
     public void setMailboxMessage(MailboxMessage mailboxMessage) {
         log.debug("setMailboxMessage " + mailboxMessage);
         // Might be called twice, so check that its only processed once
-        if (offererTradeProcessModel.getMailboxMessage() == null) {
-            offererTradeProcessModel.setMailboxMessage(mailboxMessage);
+        if (processModel.getMailboxMessage() == null) {
+            processModel.setMailboxMessage(mailboxMessage);
             if (mailboxMessage instanceof PayoutTxPublishedMessage) {
                 handlePayoutTxPublishedMessage((PayoutTxPublishedMessage) mailboxMessage);
             }
@@ -91,7 +91,7 @@ public class BuyerAsOffererProtocol implements Protocol {
         log.debug("cleanup " + this);
 
         if (messageHandler != null) {
-            offererTradeProcessModel.getMessageService().removeMessageHandler(messageHandler);
+            processModel.getMessageService().removeMessageHandler(messageHandler);
             messageHandler = null;
         }
     }
@@ -103,15 +103,15 @@ public class BuyerAsOffererProtocol implements Protocol {
     // OpenOffer requests
     private void handleRequestIsOfferAvailableMessage(RequestIsOfferAvailableMessage tradeMessage, Peer sender) {
         try {
-            checkTradeId(offererTradeProcessModel.getId(), tradeMessage);
+            checkTradeId(processModel.getId(), tradeMessage);
 
             // We don't store anything in the offererTradeProcessModel as we might be in a trade process and receive that request from another peer who wants
             // to take the
             // offer
             // at the same time
             boolean isOfferOpen = offererAsBuyerTrade.lifeCycleStateProperty().get() == OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN;
-            ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(offererTradeProcessModel.getId(), isOfferOpen);
-            offererTradeProcessModel.getMessageService().sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
+            ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(processModel.getId(), isOfferOpen);
+            processModel.getMessageService().sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
                 @Override
                 public void handleResult() {
                     // Offerer does not do anything at that moment. Peer might only watch the offer and does not start a trade.
@@ -132,8 +132,8 @@ public class BuyerAsOffererProtocol implements Protocol {
 
     // Trade started. We reserve the offer for that taker. If anything goes wrong we reset the offer as open.
     private void handleRequestDepositTxInputsMessage(RequestDepositTxInputsMessage tradeMessage, Peer taker) {
-        checkTradeId(offererTradeProcessModel.getId(), tradeMessage);
-        offererTradeProcessModel.setTradeMessage(tradeMessage);
+        checkTradeId(processModel.getId(), tradeMessage);
+        processModel.setTradeMessage(tradeMessage);
         offererAsBuyerTrade.setTradingPeer(taker);
 
         offererAsBuyerTrade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_RESERVED);
@@ -150,7 +150,7 @@ public class BuyerAsOffererProtocol implements Protocol {
     }
 
     private void handleRequestPublishDepositTxMessage(RequestPublishDepositTxMessage tradeMessage) {
-        offererTradeProcessModel.setTradeMessage(tradeMessage);
+        processModel.setTradeMessage(tradeMessage);
 
         TaskRunner<OffererAsBuyerTrade> taskRunner = new TaskRunner<>(offererAsBuyerTrade,
                 () -> log.debug("taskRunner at handleRequestPublishDepositTxMessage completed"),
@@ -189,13 +189,13 @@ public class BuyerAsOffererProtocol implements Protocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handlePayoutTxPublishedMessage(PayoutTxPublishedMessage tradeMessage) {
-        offererTradeProcessModel.setTradeMessage(tradeMessage);
+        processModel.setTradeMessage(tradeMessage);
 
         TaskRunner<OffererAsBuyerTrade> taskRunner = new TaskRunner<>(offererAsBuyerTrade,
                 () -> {
                     log.debug("taskRunner at handlePayoutTxPublishedMessage completed");
                     // we are done!
-                    offererTradeProcessModel.onComplete();
+                    processModel.onComplete();
                 },
                 this::handleTaskRunnerFault);
 

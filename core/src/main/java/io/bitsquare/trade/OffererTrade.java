@@ -21,7 +21,6 @@ import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.protocol.trade.ProcessModel;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererProcessModel;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -92,7 +91,7 @@ public abstract class OffererTrade extends Trade implements Serializable {
 
     @Override
     public ProcessModel createProcessModel() {
-        return new OffererProcessModel();
+        return new ProcessModel();
     }
 
 
@@ -100,8 +99,8 @@ public abstract class OffererTrade extends Trade implements Serializable {
     // Getter/Setter for Mutable objects
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public OffererProcessModel getProcessModel() {
-        return (OffererProcessModel) processModel;
+    public ProcessModel getProcessModel() {
+        return processModel;
     }
 
     public void setTradingPeer(Peer tradingPeer) {

@@ -38,11 +38,11 @@ public class TakerSendsPayoutTxPublishedMessage extends TakerTradeTask {
     @Override
     protected void doRun() {
         try {
-            PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(takerTradeProcessModel.getId(), takerTradeProcessModel.getPayoutTx());
-            takerTradeProcessModel.getMessageService().sendMessage(takerTrade.getTradingPeer(),
+            PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(processModel.getId(), processModel.getPayoutTx());
+            processModel.getMessageService().sendMessage(takerTrade.getTradingPeer(),
                     tradeMessage,
-                    takerTradeProcessModel.tradingPeer.getP2pSigPubKey(),
-                    takerTradeProcessModel.tradingPeer.getP2pEncryptPubKey(),
+                    processModel.tradingPeer.getP2pSigPubKey(),
+                    processModel.tradingPeer.getP2pEncryptPubKey(),
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {

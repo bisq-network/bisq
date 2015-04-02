@@ -36,7 +36,7 @@ public class TakerCommitsPayoutTx extends TakerTradeTask {
     @Override
     protected void doRun() {
         try {
-            Transaction transaction = takerTradeProcessModel.getTradeWalletService().commitTx(takerTrade.getPayoutTx());
+            Transaction transaction = processModel.getTradeWalletService().commitTx(takerTrade.getPayoutTx());
 
             takerTrade.setPayoutTx(transaction);
 

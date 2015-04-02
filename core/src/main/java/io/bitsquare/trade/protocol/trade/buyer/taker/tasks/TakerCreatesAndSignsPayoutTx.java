@@ -43,19 +43,19 @@ public class TakerCreatesAndSignsPayoutTx extends TakerTradeTask {
             Coin takerPayoutAmount = securityDeposit.add(takerTrade.getTradeAmount());
 
 
-            byte[] takerPayoutTxSignature = takerTradeProcessModel.getTradeWalletService().createAndSignPayoutTx(
+            byte[] takerPayoutTxSignature = processModel.getTradeWalletService().createAndSignPayoutTx(
                     takerTrade.getDepositTx(),
                     takerPayoutAmount,
                     offererPayoutAmount,
-                    takerTradeProcessModel.getAddressEntry(),
-                    takerTradeProcessModel.tradingPeer.getPayoutAddressString(),
-                    takerTradeProcessModel.getTradeWalletPubKey(),
-                    takerTradeProcessModel.tradingPeer.getTradeWalletPubKey(),
-                    takerTradeProcessModel.getArbitratorPubKey());
+                    processModel.getAddressEntry(),
+                    processModel.tradingPeer.getPayoutAddressString(),
+                    processModel.getTradeWalletPubKey(),
+                    processModel.tradingPeer.getTradeWalletPubKey(),
+                    processModel.getArbitratorPubKey());
 
-            takerTradeProcessModel.setPayoutTxSignature(takerPayoutTxSignature);
-            takerTradeProcessModel.setPayoutAmount(takerPayoutAmount);
-            takerTradeProcessModel.tradingPeer.setPayoutAmount(offererPayoutAmount);
+            processModel.setPayoutTxSignature(takerPayoutTxSignature);
+            processModel.setPayoutAmount(takerPayoutAmount);
+            processModel.tradingPeer.setPayoutAmount(offererPayoutAmount);
 
             complete();
         } catch (Throwable t) {

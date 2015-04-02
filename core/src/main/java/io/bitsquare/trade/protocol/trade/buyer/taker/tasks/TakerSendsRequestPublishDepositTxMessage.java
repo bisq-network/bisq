@@ -39,19 +39,19 @@ public class TakerSendsRequestPublishDepositTxMessage extends TakerTradeTask {
     protected void doRun() {
         try {
             RequestPublishDepositTxMessage tradeMessage = new RequestPublishDepositTxMessage(
-                    takerTradeProcessModel.getId(),
-                    takerTradeProcessModel.getFiatAccount(),
-                    takerTradeProcessModel.getAccountId(),
-                    takerTradeProcessModel.getP2pSigPubKey(),
-                    takerTradeProcessModel.getP2pEncryptPublicKey(),
+                    processModel.getId(),
+                    processModel.getFiatAccount(),
+                    processModel.getAccountId(),
+                    processModel.getP2pSigPubKey(),
+                    processModel.getP2pEncryptPublicKey(),
                     takerTrade.getContractAsJson(),
                     takerTrade.getTakerContractSignature(),
-                    takerTradeProcessModel.getAddressEntry().getAddressString(),
-                    takerTradeProcessModel.getPreparedDepositTx(),
-                    takerTradeProcessModel.getConnectedOutputsForAllInputs()
+                    processModel.getAddressEntry().getAddressString(),
+                    processModel.getPreparedDepositTx(),
+                    processModel.getConnectedOutputsForAllInputs()
             );
 
-            takerTradeProcessModel.getMessageService().sendMessage(takerTrade.getTradingPeer(), tradeMessage, new SendMessageListener() {
+            processModel.getMessageService().sendMessage(takerTrade.getTradingPeer(), tradeMessage, new SendMessageListener() {
                 @Override
                 public void handleResult() {
                     complete();

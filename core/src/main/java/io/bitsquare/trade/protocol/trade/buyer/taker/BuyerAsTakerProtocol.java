@@ -24,6 +24,7 @@ import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.trade.TakerAsBuyerTrade;
 import io.bitsquare.trade.protocol.Protocol;
+import io.bitsquare.trade.protocol.trade.ProcessModel;
 import io.bitsquare.trade.protocol.trade.buyer.taker.tasks.TakerCommitsPayoutTx;
 import io.bitsquare.trade.protocol.trade.buyer.taker.tasks.TakerCreatesAndSignsPayoutTx;
 import io.bitsquare.trade.protocol.trade.buyer.taker.tasks.TakerCreatesDepositTxInputs;
@@ -41,7 +42,6 @@ import io.bitsquare.trade.protocol.trade.shared.taker.tasks.BroadcastTakeOfferFe
 import io.bitsquare.trade.protocol.trade.shared.taker.tasks.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.shared.taker.tasks.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.shared.taker.tasks.VerifyOffererAccount;
-import io.bitsquare.trade.protocol.trade.taker.models.TakerProcessModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +52,7 @@ public class BuyerAsTakerProtocol implements Protocol {
     private static final Logger log = LoggerFactory.getLogger(BuyerAsTakerProtocol.class);
 
     private final TakerAsBuyerTrade takerAsBuyerTrade;
-    private final TakerProcessModel takerTradeProcessModel;
+    private final ProcessModel processModel;
     private final MessageHandler messageHandler;
 
 
@@ -63,10 +63,10 @@ public class BuyerAsTakerProtocol implements Protocol {
     public BuyerAsTakerProtocol(TakerAsBuyerTrade takerTrade) {
         log.debug("New SellerAsTakerProtocol " + this);
         this.takerAsBuyerTrade = takerTrade;
-        takerTradeProcessModel = takerTrade.getProcessModel();
+        processModel = takerTrade.getProcessModel();
 
         messageHandler = this::handleMessage;
-        takerTradeProcessModel.getMessageService().addMessageHandler(messageHandler);
+        processModel.getMessageService().addMessageHandler(messageHandler);
     }
 
 
@@ -76,7 +76,7 @@ public class BuyerAsTakerProtocol implements Protocol {
 
     public void cleanup() {
         log.debug("cleanup " + this);
-        takerTradeProcessModel.getMessageService().removeMessageHandler(messageHandler);
+        processModel.getMessageService().removeMessageHandler(messageHandler);
     }
 
     public void setMailboxMessage(MailboxMessage mailboxMessage) {
@@ -113,7 +113,7 @@ public class BuyerAsTakerProtocol implements Protocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(RequestPublishDepositTxMessage tradeMessage) {
-        takerTradeProcessModel.setTradeMessage(tradeMessage);
+        processModel.setTradeMessage(tradeMessage);
 
         TaskRunner<TakerAsBuyerTrade> taskRunner = new TaskRunner<>(takerAsBuyerTrade,
                 () -> log.debug("taskRunner at handleRequestPublishDepositTxMessage completed"),
@@ -152,13 +152,13 @@ public class BuyerAsTakerProtocol implements Protocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(PayoutTxPublishedMessage tradeMessage) {
-        takerTradeProcessModel.setTradeMessage(tradeMessage);
+        processModel.setTradeMessage(tradeMessage);
 
         TaskRunner<TakerAsBuyerTrade> taskRunner = new TaskRunner<>(takerAsBuyerTrade,
                 () -> {
                     log.debug("taskRunner at handlePayoutTxPublishedMessage completed");
                     // we are done!
-                    takerTradeProcessModel.onComplete();
+                    processModel.onComplete();
                 },
                 this::handleTaskRunnerFault);
 
@@ -179,7 +179,7 @@ public class BuyerAsTakerProtocol implements Protocol {
             TradeMessage tradeMessage = (TradeMessage) message;
             nonEmptyStringOf(tradeMessage.tradeId);
 
-            if (tradeMessage.tradeId.equals(takerTradeProcessModel.getId())) {
+            if (tradeMessage.tradeId.equals(processModel.getId())) {
                 if (tradeMessage instanceof RequestPublishDepositTxMessage) {
                     handle((RequestPublishDepositTxMessage) tradeMessage);
                 }

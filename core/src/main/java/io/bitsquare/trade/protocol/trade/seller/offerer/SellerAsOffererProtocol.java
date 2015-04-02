@@ -27,11 +27,11 @@ import io.bitsquare.trade.OffererAsSellerTrade;
 import io.bitsquare.trade.protocol.Protocol;
 import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
+import io.bitsquare.trade.protocol.trade.ProcessModel;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererProcessModel;
 import io.bitsquare.trade.protocol.trade.seller.offerer.tasks.OffererCommitDepositTx;
 import io.bitsquare.trade.protocol.trade.seller.offerer.tasks.OffererCreatesAndSignsContract;
 import io.bitsquare.trade.protocol.trade.seller.offerer.tasks.OffererCreatesAndSignsDepositTx;
@@ -54,7 +54,7 @@ public class SellerAsOffererProtocol implements Protocol {
 
     private final MessageHandler messageHandler;
     private final OffererAsSellerTrade offererAsSellerTrade;
-    private final OffererProcessModel offererTradeProcessModel;
+    private final ProcessModel processModel;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -63,10 +63,10 @@ public class SellerAsOffererProtocol implements Protocol {
     public SellerAsOffererProtocol(OffererAsSellerTrade model) {
         log.debug("New OffererProtocol " + this);
         this.offererAsSellerTrade = model;
-        offererTradeProcessModel = offererAsSellerTrade.getProcessModel();
+        processModel = offererAsSellerTrade.getProcessModel();
         messageHandler = this::handleMessage;
 
-        offererTradeProcessModel.getMessageService().addMessageHandler(messageHandler);
+        processModel.getMessageService().addMessageHandler(messageHandler);
     }
 
 
@@ -88,7 +88,7 @@ public class SellerAsOffererProtocol implements Protocol {
     public void cleanup() {
         log.debug("cleanup " + this);
 
-        offererTradeProcessModel.getMessageService().removeMessageHandler(messageHandler);
+        processModel.getMessageService().removeMessageHandler(messageHandler);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -101,7 +101,7 @@ public class SellerAsOffererProtocol implements Protocol {
 
     private void handle(RequestIsOfferAvailableMessage tradeMessage, Peer sender) {
         try {
-            checkTradeId(offererTradeProcessModel.getId(), tradeMessage);
+            checkTradeId(processModel.getId(), tradeMessage);
 
             // We don't store anything in the offererTradeProcessModel as we might be in a trade process and receive that request from another peer who wants
             // to take the
@@ -109,8 +109,8 @@ public class SellerAsOffererProtocol implements Protocol {
             // at the same time
             boolean isOfferOpen = offererAsSellerTrade.lifeCycleStateProperty().get() == OffererAsSellerTrade.LifeCycleState.OFFER_OPEN;
 
-            ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(offererTradeProcessModel.getId(), isOfferOpen);
-            offererTradeProcessModel.getMessageService().sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
+            ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(processModel.getId(), isOfferOpen);
+            processModel.getMessageService().sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
                 @Override
                 public void handleResult() {
                     // Offerer does not do anything at that moment. Peer might only watch the offer and does not start a trade.
@@ -135,7 +135,7 @@ public class SellerAsOffererProtocol implements Protocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(RequestPayDepositMessage tradeMessage, Peer sender) {
-        offererTradeProcessModel.setTradeMessage(tradeMessage);
+        processModel.setTradeMessage(tradeMessage);
 
         offererAsSellerTrade.setTradingPeer(sender);
 
@@ -154,7 +154,7 @@ public class SellerAsOffererProtocol implements Protocol {
     }
 
     private void handle(DepositTxPublishedMessage tradeMessage) {
-        offererTradeProcessModel.setTradeMessage(tradeMessage);
+        processModel.setTradeMessage(tradeMessage);
 
         TaskRunner<OffererAsSellerTrade> taskRunner = new TaskRunner<>(offererAsSellerTrade,
                 () -> log.debug("taskRunner at handleDepositTxPublishedMessage completed"),
@@ -168,7 +168,7 @@ public class SellerAsOffererProtocol implements Protocol {
     }
 
     private void handle(FiatTransferStartedMessage tradeMessage) {
-        offererTradeProcessModel.setTradeMessage(tradeMessage);
+        processModel.setTradeMessage(tradeMessage);
 
         TaskRunner<OffererAsSellerTrade> taskRunner = new TaskRunner<>(offererAsSellerTrade,
                 () -> log.debug("taskRunner at handleFiatTransferStartedMessage completed"),
@@ -192,7 +192,7 @@ public class SellerAsOffererProtocol implements Protocol {
                     log.debug("taskRunner at handleFiatReceivedUIEvent completed");
 
                     // we are done!
-                    offererTradeProcessModel.onComplete();
+                    processModel.onComplete();
                 },
                 this::handleTaskRunnerFault);
 

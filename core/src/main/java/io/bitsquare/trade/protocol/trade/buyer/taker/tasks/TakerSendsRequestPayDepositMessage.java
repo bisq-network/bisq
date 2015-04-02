@@ -39,17 +39,17 @@ public class TakerSendsRequestPayDepositMessage extends TakerTradeTask {
     protected void doRun() {
         try {
             RequestPayDepositFromOffererMessage message = new RequestPayDepositFromOffererMessage(
-                    takerTradeProcessModel.getId(),
+                    processModel.getId(),
                     model.getTradeAmount(),
-                    takerTradeProcessModel.getConnectedOutputsForAllInputs(),
-                    takerTradeProcessModel.getOutputs(),
-                    takerTradeProcessModel.getTradeWalletPubKey(),
-                    takerTradeProcessModel.getP2pSigPubKey(),
-                    takerTradeProcessModel.getP2pEncryptPubKey(),
-                    takerTradeProcessModel.getFiatAccount(),
-                    takerTradeProcessModel.getAccountId());
+                    processModel.getConnectedOutputsForAllInputs(),
+                    processModel.getOutputs(),
+                    processModel.getTradeWalletPubKey(),
+                    processModel.getP2pSigPubKey(),
+                    processModel.getP2pEncryptPubKey(),
+                    processModel.getFiatAccount(),
+                    processModel.getAccountId());
 
-            takerTradeProcessModel.getMessageService().sendMessage(takerTrade.getTradingPeer(), message, new SendMessageListener() {
+            processModel.getMessageService().sendMessage(takerTrade.getTradingPeer(), message, new SendMessageListener() {
                 @Override
                 public void handleResult() {
                     log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");

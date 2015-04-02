@@ -38,21 +38,21 @@ public class TakerProcessRequestPublishDepositTxFromTakerMessage extends TakerTr
     @Override
     protected void doRun() {
         try {
-            RequestPublishDepositTxFromTakerMessage message = (RequestPublishDepositTxFromTakerMessage) takerTradeProcessModel.getTradeMessage();
-            checkTradeId(takerTradeProcessModel.getId(), message);
+            RequestPublishDepositTxFromTakerMessage message = (RequestPublishDepositTxFromTakerMessage) processModel.getTradeMessage();
+            checkTradeId(processModel.getId(), message);
             checkNotNull(message);
 
-            takerTradeProcessModel.tradingPeer.setFiatAccount(checkNotNull(message.takerFiatAccount));
-            takerTradeProcessModel.tradingPeer.setAccountId(nonEmptyStringOf(message.takerAccountId));
-            takerTradeProcessModel.tradingPeer.setP2pSigPubKey(checkNotNull(message.takerP2PSigPublicKey));
-            takerTradeProcessModel.tradingPeer.setP2pSigPubKey(checkNotNull(message.takerP2PSigPublicKey));
-            takerTradeProcessModel.tradingPeer.setTradeWalletPubKey(checkNotNull(message.sellerTradeWalletPubKey));
-            takerTradeProcessModel.tradingPeer.setP2pEncryptPubKey(checkNotNull(message.takerP2PEncryptPublicKey));
-            takerTradeProcessModel.tradingPeer.setContractAsJson(nonEmptyStringOf(message.takerContractAsJson));
-            takerTradeProcessModel.tradingPeer.setContractSignature(nonEmptyStringOf(message.takerContractSignature));
-            takerTradeProcessModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(message.takerPayoutAddressString));
-            takerTradeProcessModel.tradingPeer.setPreparedDepositTx(checkNotNull(message.takersPreparedDepositTx));
-            takerTradeProcessModel.tradingPeer.setConnectedOutputsForAllInputs(checkNotNull(message.takerConnectedOutputsForAllInputs));
+            processModel.tradingPeer.setFiatAccount(checkNotNull(message.takerFiatAccount));
+            processModel.tradingPeer.setAccountId(nonEmptyStringOf(message.takerAccountId));
+            processModel.tradingPeer.setP2pSigPubKey(checkNotNull(message.takerP2PSigPublicKey));
+            processModel.tradingPeer.setP2pSigPubKey(checkNotNull(message.takerP2PSigPublicKey));
+            processModel.tradingPeer.setTradeWalletPubKey(checkNotNull(message.sellerTradeWalletPubKey));
+            processModel.tradingPeer.setP2pEncryptPubKey(checkNotNull(message.takerP2PEncryptPublicKey));
+            processModel.tradingPeer.setContractAsJson(nonEmptyStringOf(message.takerContractAsJson));
+            processModel.tradingPeer.setContractSignature(nonEmptyStringOf(message.takerContractSignature));
+            processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(message.takerPayoutAddressString));
+            processModel.tradingPeer.setPreparedDepositTx(checkNotNull(message.takersPreparedDepositTx));
+            processModel.tradingPeer.setConnectedOutputsForAllInputs(checkNotNull(message.takerConnectedOutputsForAllInputs));
             checkArgument(message.takerConnectedOutputsForAllInputs.size() > 0);
 
             complete();

@@ -37,7 +37,7 @@ public class OffererCommitDepositTx extends OffererTradeTask {
     protected void doRun() {
         try {
             // To access tx confidence we need to add that tx into our wallet.
-            Transaction depositTx = offererTradeProcessModel.getTradeWalletService().commitTx(offererTrade.getDepositTx());
+            Transaction depositTx = processModel.getTradeWalletService().commitTx(offererTrade.getDepositTx());
 
             offererTrade.setDepositTx(depositTx);
 

@@ -37,9 +37,9 @@ public class VerifyTakerAccount extends OffererTradeTask {
     protected void doRun() {
         try {
             //TODO mocked yet
-            if (offererTradeProcessModel.getBlockChainService().verifyAccountRegistration()) {
-                if (offererTradeProcessModel.getBlockChainService().isAccountBlackListed(offererTradeProcessModel.tradingPeer.getAccountId(), 
-                        offererTradeProcessModel
+            if (processModel.getBlockChainService().verifyAccountRegistration()) {
+                if (processModel.getBlockChainService().isAccountBlackListed(processModel.tradingPeer.getAccountId(), 
+                        processModel
                         .tradingPeer
                         .getFiatAccount())) {
                     log.error("Taker is blacklisted");

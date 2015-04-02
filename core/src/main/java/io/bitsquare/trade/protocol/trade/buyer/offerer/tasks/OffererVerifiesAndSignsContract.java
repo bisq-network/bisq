@@ -39,23 +39,23 @@ public class OffererVerifiesAndSignsContract extends OffererTradeTask {
     protected void doRun() {
         try {
             Contract contract = new Contract(
-                    offererTradeProcessModel.getOffer(),
+                    processModel.getOffer(),
                     offererTrade.getTradeAmount(),
-                    offererTradeProcessModel.getTakeOfferFeeTxId(),
-                    offererTradeProcessModel.getAccountId(),
-                    offererTradeProcessModel.tradingPeer.getAccountId(),
-                    offererTradeProcessModel.getFiatAccount(),
-                    offererTradeProcessModel.tradingPeer.getFiatAccount(),
-                    offererTradeProcessModel.getP2pSigPubKey(),
-                    offererTradeProcessModel.tradingPeer.getP2pSigPubKey());
+                    processModel.getTakeOfferFeeTxId(),
+                    processModel.getAccountId(),
+                    processModel.tradingPeer.getAccountId(),
+                    processModel.getFiatAccount(),
+                    processModel.tradingPeer.getFiatAccount(),
+                    processModel.getP2pSigPubKey(),
+                    processModel.tradingPeer.getP2pSigPubKey());
             String contractAsJson = Utilities.objectToJson(contract);
-            String signature = offererTradeProcessModel.getSignatureService().signMessage(offererTradeProcessModel.getRegistrationKeyPair(),
+            String signature = processModel.getSignatureService().signMessage(processModel.getRegistrationKeyPair(),
                     contractAsJson);
 
             offererTrade.setContract(contract);
             offererTrade.setContractAsJson(contractAsJson);
             offererTrade.setOffererContractSignature(signature);
-            offererTrade.setTakerContractSignature(offererTradeProcessModel.tradingPeer.getContractSignature());
+            offererTrade.setTakerContractSignature(processModel.tradingPeer.getContractSignature());
 
             complete();
         } catch (Throwable t) {

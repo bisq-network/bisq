@@ -38,9 +38,9 @@ public class CreateTakeOfferFeeTx extends TakerTradeTask {
     @Override
     protected void doRun() {
         try {
-            Transaction createTakeOfferFeeTx = takerTradeProcessModel.getTradeWalletService().createTakeOfferFeeTx(takerTradeProcessModel.getAddressEntry());
+            Transaction createTakeOfferFeeTx = processModel.getTradeWalletService().createTakeOfferFeeTx(processModel.getAddressEntry());
 
-            takerTradeProcessModel.setTakeOfferFeeTx(createTakeOfferFeeTx);
+            processModel.setTakeOfferFeeTx(createTakeOfferFeeTx);
 
             if (takerTrade instanceof TakerAsBuyerTrade)
                 takerTrade.setProcessState(TakerAsBuyerTrade.ProcessState.TAKE_OFFER_FEE_TX_CREATED);

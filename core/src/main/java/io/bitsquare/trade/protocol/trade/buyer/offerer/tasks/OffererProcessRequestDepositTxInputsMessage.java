@@ -40,13 +40,13 @@ public class OffererProcessRequestDepositTxInputsMessage extends OffererTradeTas
     @Override
     protected void doRun() {
         try {
-            RequestDepositTxInputsMessage message = (RequestDepositTxInputsMessage) offererTradeProcessModel.getTradeMessage();
-            checkTradeId(offererTradeProcessModel.getId(), message);
+            RequestDepositTxInputsMessage message = (RequestDepositTxInputsMessage) processModel.getTradeMessage();
+            checkTradeId(processModel.getId(), message);
             checkNotNull(message);
 
             offererTrade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(message.tradeAmount)));
-            offererTradeProcessModel.setTakeOfferFeeTxId(nonEmptyStringOf(message.takeOfferFeeTxId));
-            offererTradeProcessModel.tradingPeer.setTradeWalletPubKey(checkNotNull(message.takerTradeWalletPubKey));
+            processModel.setTakeOfferFeeTxId(nonEmptyStringOf(message.takeOfferFeeTxId));
+            processModel.tradingPeer.setTradeWalletPubKey(checkNotNull(message.takerTradeWalletPubKey));
 
             complete();
         } catch (Throwable t) {

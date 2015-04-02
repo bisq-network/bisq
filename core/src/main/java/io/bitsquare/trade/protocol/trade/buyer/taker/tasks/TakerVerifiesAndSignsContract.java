@@ -37,23 +37,23 @@ public class TakerVerifiesAndSignsContract extends TakerTradeTask {
     protected void doRun() {
         try {
             Contract contract = new Contract(
-                    takerTradeProcessModel.getOffer(),
+                    processModel.getOffer(),
                     takerTrade.getTradeAmount(),
-                    takerTradeProcessModel.getTakeOfferFeeTx().getHashAsString(),
-                    takerTradeProcessModel.tradingPeer.getAccountId(),
-                    takerTradeProcessModel.getAccountId(),
-                    takerTradeProcessModel.tradingPeer.getFiatAccount(),
-                    takerTradeProcessModel.getFiatAccount(),
-                    takerTradeProcessModel.tradingPeer.getP2pSigPubKey(),
-                    takerTradeProcessModel.getP2pSigPubKey());
+                    processModel.getTakeOfferFeeTx().getHashAsString(),
+                    processModel.tradingPeer.getAccountId(),
+                    processModel.getAccountId(),
+                    processModel.tradingPeer.getFiatAccount(),
+                    processModel.getFiatAccount(),
+                    processModel.tradingPeer.getP2pSigPubKey(),
+                    processModel.getP2pSigPubKey());
             String contractAsJson = Utilities.objectToJson(contract);
-            String signature = takerTradeProcessModel.getSignatureService().signMessage(takerTradeProcessModel.getRegistrationKeyPair(),
+            String signature = processModel.getSignatureService().signMessage(processModel.getRegistrationKeyPair(),
                     contractAsJson);
 
             takerTrade.setContract(contract);
             takerTrade.setContractAsJson(contractAsJson);
             takerTrade.setOffererContractSignature(signature);
-            takerTrade.setOffererContractSignature(takerTradeProcessModel.tradingPeer.getContractSignature());
+            takerTrade.setOffererContractSignature(processModel.tradingPeer.getContractSignature());
 
             complete();
         } catch (Throwable t) {

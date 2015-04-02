@@ -36,19 +36,19 @@ public class OffererCreatesAndSignsContract extends OffererTradeTask {
     @Override
     protected void doRun() {
         try {
-            assert offererTradeProcessModel.getTakeOfferFeeTxId() != null;
+            assert processModel.getTakeOfferFeeTxId() != null;
             Contract contract = new Contract(
-                    offererTradeProcessModel.getOffer(),
+                    processModel.getOffer(),
                     model.getTradeAmount(),
-                    offererTradeProcessModel.getTakeOfferFeeTxId(),
-                    offererTradeProcessModel.getAccountId(),
-                    offererTradeProcessModel.getAccountId(),
-                    offererTradeProcessModel.getFiatAccount(),
-                    offererTradeProcessModel.getFiatAccount(),
-                    offererTradeProcessModel.getOffer().getP2PSigPubKey(),
-                    offererTradeProcessModel.getP2pSigPubKey());
+                    processModel.getTakeOfferFeeTxId(),
+                    processModel.getAccountId(),
+                    processModel.getAccountId(),
+                    processModel.getFiatAccount(),
+                    processModel.getFiatAccount(),
+                    processModel.getOffer().getP2PSigPubKey(),
+                    processModel.getP2pSigPubKey());
             String contractAsJson = Utilities.objectToJson(contract);
-            String signature = offererTradeProcessModel.getSignatureService().signMessage(offererTradeProcessModel.getRegistrationKeyPair(),
+            String signature = processModel.getSignatureService().signMessage(processModel.getRegistrationKeyPair(),
                     contractAsJson);
 
             model.setContract(contract);

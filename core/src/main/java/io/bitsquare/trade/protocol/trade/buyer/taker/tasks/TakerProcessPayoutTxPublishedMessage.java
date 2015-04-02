@@ -40,8 +40,8 @@ public class TakerProcessPayoutTxPublishedMessage extends TakerTradeTask {
     @Override
     protected void doRun() {
         try {
-            PayoutTxPublishedMessage message = (PayoutTxPublishedMessage) takerTradeProcessModel.getTradeMessage();
-            checkTradeId(takerTradeProcessModel.getId(), message);
+            PayoutTxPublishedMessage message = (PayoutTxPublishedMessage) processModel.getTradeMessage();
+            checkTradeId(processModel.getId(), message);
             checkNotNull(message);
 
             takerTrade.setPayoutTx(checkNotNull(message.payoutTx));
