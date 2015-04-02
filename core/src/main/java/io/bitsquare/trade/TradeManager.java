@@ -170,10 +170,10 @@ public class TradeManager {
             // continue the trade, but that might fail.
 
             boolean failed = false;
-            if (trade instanceof SellerAsTakerTrade)
+            if (trade instanceof TakerTrade)
                 failed = trade.lifeCycleState == TakerState.LifeCycleState.FAILED;
-            else if (trade instanceof BuyerAsTakerTrade)
-                failed = trade.lifeCycleState == TakerState.LifeCycleState.FAILED;
+            else if (trade instanceof OffererTrade)
+                failed = trade.lifeCycleState == OffererState.LifeCycleState.FAILED;
 
             if (failed) {
                 failedTrades.add(trade);
@@ -293,7 +293,7 @@ public class TradeManager {
     private void setupDepositPublishedListener(Trade trade) {
         trade.processStateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("setupDepositPublishedListener state = " + newValue);
-            if (newValue == OffererState.ProcessState.DEPOSIT_PUBLISHED || newValue == OffererState.ProcessState.DEPOSIT_PUBLISHED) {
+            if (newValue == OffererState.ProcessState.DEPOSIT_PUBLISHED) {
                 removeOpenOffer(trade.getOffer(),
                         () -> log.debug("remove offer was successful"),
                         log::error,
@@ -321,9 +321,7 @@ public class TradeManager {
                         openOfferTrades.remove(trade);
 
                         if (isCancelRequest) {
-                            if (trade instanceof BuyerAsOffererTrade)
-                                trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_CANCELED);
-                            else if (trade instanceof SellerAsOffererTrade)
+                            if (trade instanceof OffererTrade)
                                 trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_CANCELED);
                             closedTrades.add(trade);
                             trade.disposeProtocol();
@@ -387,7 +385,8 @@ public class TradeManager {
 
             initTrade(trade);
             pendingTrades.add(trade);
-            trade.takeAvailableOffer();
+            if (trade instanceof TakerTrade)
+                ((TakerTrade) trade).takeAvailableOffer();
             takeOfferResultHandler.handleResult(trade);
         }
     }
@@ -401,24 +400,14 @@ public class TradeManager {
         AddressEntry addressEntry = walletService.getAddressEntry(trade.getId());
         String fromAddress = addressEntry.getAddressString();
 
-        // TODO handle overpaid securityDeposit
-        Coin amountToWithdraw = trade.getSecurityDeposit();
-        assert trade.getTradeAmount() != null;
-        if (trade instanceof BuyerAsOffererTrade || trade instanceof BuyerAsTakerTrade)
-            amountToWithdraw = amountToWithdraw.add(trade.getTradeAmount());
-
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                 if (transaction != null) {
                     log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
-                    if (trade instanceof BuyerAsOffererTrade)
+                    if (trade instanceof OffererTrade)
                         trade.setLifeCycleState(OffererState.LifeCycleState.COMPLETED);
-                    else if (trade instanceof SellerAsTakerTrade)
-                        trade.setLifeCycleState(TakerState.LifeCycleState.COMPLETED);
-                    else if (trade instanceof SellerAsOffererTrade)
-                        trade.setLifeCycleState(OffererState.LifeCycleState.COMPLETED);
-                    else if (trade instanceof BuyerAsTakerTrade)
+                    else if (trade instanceof TakerTrade)
                         trade.setLifeCycleState(TakerState.LifeCycleState.COMPLETED);
 
                     pendingTrades.remove(trade);
@@ -436,7 +425,7 @@ public class TradeManager {
             }
         };
         try {
-            walletService.sendFunds(fromAddress, toAddress, amountToWithdraw, callback);
+            walletService.sendFunds(fromAddress, toAddress, trade.getPayoutAmount(), callback);
         } catch (AddressFormatException | InsufficientMoneyException e) {
             e.printStackTrace();
             log.error(e.getMessage());

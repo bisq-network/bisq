@@ -23,6 +23,8 @@ import io.bitsquare.trade.protocol.trade.buyer.BuyerAsOffererProtocol;
 import io.bitsquare.trade.states.OffererState;
 import io.bitsquare.trade.states.TradeState;
 
+import org.bitcoinj.core.Coin;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
@@ -30,7 +32,7 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BuyerAsOffererTrade extends Trade implements Serializable {
+public class BuyerAsOffererTrade extends Trade implements OffererTrade, BuyerTrade, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
@@ -68,12 +70,18 @@ public class BuyerAsOffererTrade extends Trade implements Serializable {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Fiat
+    // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     public void onFiatPaymentStarted() {
         assert tradeProtocol instanceof BuyerAsOffererProtocol;
         ((BuyerAsOffererProtocol) tradeProtocol).onFiatPaymentStarted();
+    }
+
+    @Override
+    public Coin getPayoutAmount() {
+        return getSecurityDeposit().add(getTradeAmount());
     }
 
 
@@ -107,10 +115,10 @@ public class BuyerAsOffererTrade extends Trade implements Serializable {
         }
     }
 
-
     @Override
     public void setThrowable(Throwable throwable) {
         super.setThrowable(throwable);
+
         setProcessState(OffererState.ProcessState.EXCEPTION);
     }
 

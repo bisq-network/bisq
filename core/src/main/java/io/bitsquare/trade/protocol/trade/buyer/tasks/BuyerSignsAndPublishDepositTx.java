@@ -19,10 +19,8 @@ package io.bitsquare.trade.protocol.trade.buyer.tasks;
 
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.BuyerAsOffererTrade;
-import io.bitsquare.trade.BuyerAsTakerTrade;
-import io.bitsquare.trade.SellerAsOffererTrade;
-import io.bitsquare.trade.SellerAsTakerTrade;
+import io.bitsquare.trade.OffererTrade;
+import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.states.OffererState;
@@ -66,11 +64,11 @@ public class BuyerSignsAndPublishDepositTx extends TradeTask {
 
                             trade.setDepositTx(transaction);
 
-                            if (trade instanceof BuyerAsTakerTrade || trade instanceof SellerAsTakerTrade) {
+                            if (trade instanceof TakerTrade) {
                                 trade.setProcessState(TakerState.ProcessState.DEPOSIT_PUBLISHED);
                                 trade.setLifeCycleState(TakerState.LifeCycleState.PENDING);
                             }
-                            else if (trade instanceof BuyerAsOffererTrade || trade instanceof SellerAsOffererTrade) {
+                            else if (trade instanceof OffererTrade) {
                                 trade.setProcessState(OffererState.ProcessState.DEPOSIT_PUBLISHED);
                                 trade.setLifeCycleState(OffererState.LifeCycleState.PENDING);
                             }
@@ -92,7 +90,7 @@ public class BuyerSignsAndPublishDepositTx extends TradeTask {
         t.printStackTrace();
         trade.setThrowable(t);
 
-        if (trade instanceof BuyerAsOffererTrade || trade instanceof SellerAsOffererTrade)
+        if (trade instanceof OffererTrade)
             trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
 
         failed(t);

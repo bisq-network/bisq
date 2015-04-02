@@ -44,8 +44,8 @@ public class RequestPublishDepositTxMessage extends TradeMessage implements Seri
     public final String sellerPayoutAddressString;
     public final Transaction sellersPreparedDepositTx;
     public final List<TransactionOutput> sellerConnectedOutputsForAllInputs;
-    public byte[] sellerTradeWalletPubKey;
-    
+    public final byte[] sellerTradeWalletPubKey;
+
     public RequestPublishDepositTxMessage(String tradeId,
                                           FiatAccount sellerFiatAccount,
                                           String sellerAccountId,

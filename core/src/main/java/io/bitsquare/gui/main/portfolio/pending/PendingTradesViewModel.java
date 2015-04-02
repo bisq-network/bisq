@@ -165,8 +165,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         withdrawalButtonDisable.set(!btcAddressValidator.validate(text).isValid);
     }
 
-    public String getAmountToWithdraw() {
-        return formatter.formatCoinWithCode(dataModel.getAmountToWithdraw());
+    public String getPayoutAmount() {
+        return formatter.formatCoinWithCode(dataModel.getPayoutAmount());
     }
 
     ObservableList<PendingTradesListItem> getList() {

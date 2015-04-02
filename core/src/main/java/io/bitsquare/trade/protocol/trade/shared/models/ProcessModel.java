@@ -63,7 +63,7 @@ public class ProcessModel implements Model, Serializable {
     transient private SignatureService signatureService;
     transient private ArbitrationRepository arbitrationRepository;
     transient private Offer offer;
-    transient protected User user;
+    private transient User user;
 
     // Mutable
     public final TradingPeer tradingPeer;

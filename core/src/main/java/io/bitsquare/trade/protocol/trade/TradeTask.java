@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 public class TradeTask extends Task<Trade> {
     private static final Logger log = LoggerFactory.getLogger(TradeTask.class);
-    
+
     protected final ProcessModel processModel;
     protected final Trade trade;
 

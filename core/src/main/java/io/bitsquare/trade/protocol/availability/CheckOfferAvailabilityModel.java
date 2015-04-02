@@ -61,7 +61,7 @@ public class CheckOfferAvailabilityModel implements Model {
 
     @Override
     public void persist() {
-        
+
     }
 
     @Override

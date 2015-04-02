@@ -25,9 +25,11 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.BuyerAsOffererTrade;
 import io.bitsquare.trade.BuyerAsTakerTrade;
+import io.bitsquare.trade.BuyerTrade;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.SellerAsOffererTrade;
 import io.bitsquare.trade.SellerAsTakerTrade;
+import io.bitsquare.trade.SellerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.states.TradeState;
@@ -136,6 +138,8 @@ class PendingTradesDataModel implements Activatable, DataModel {
 
             Trade trade = item.getTrade();
             isOfferer = trade.getOffer().getP2pSigPubKey().equals(user.getP2pSigPubKey());
+
+            // TODO merge states
             if (trade instanceof SellerAsTakerTrade)
                 takerAsSellerProcessState.bind(trade.processStateProperty());
             else if (trade instanceof BuyerAsOffererTrade)
@@ -151,17 +155,13 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     void fiatPaymentStarted() {
-        if (getTrade() instanceof BuyerAsOffererTrade)
-            ((BuyerAsOffererTrade) getTrade()).onFiatPaymentStarted();
-        else if (getTrade() instanceof BuyerAsTakerTrade)
-            ((BuyerAsTakerTrade) getTrade()).onFiatPaymentStarted();
+        if (getTrade() instanceof BuyerTrade)
+            ((BuyerTrade) getTrade()).onFiatPaymentStarted();
     }
 
     void fiatPaymentReceived() {
-        if (getTrade() instanceof SellerAsTakerTrade)
-            ((SellerAsTakerTrade) getTrade()).onFiatPaymentReceived();
-        else if (getTrade() instanceof SellerAsOffererTrade)
-            ((SellerAsOffererTrade) getTrade()).onFiatPaymentReceived();
+        if (getTrade() instanceof SellerTrade)
+            ((SellerTrade) getTrade()).onFiatPaymentReceived();
     }
 
     void withdraw(String toAddress) {
@@ -259,13 +259,8 @@ class PendingTradesDataModel implements Activatable, DataModel {
         offererAsSellerProcessState.unbind();
     }
 
-    public Coin getAmountToWithdraw() {
-        Trade trade = selectedItem.getTrade();
-        Coin amountToWithdraw = trade.getSecurityDeposit();
-        assert trade.getTradeAmount() != null;
-        if (trade instanceof BuyerAsOffererTrade || trade instanceof BuyerAsTakerTrade)
-            amountToWithdraw = amountToWithdraw.add(trade.getTradeAmount());
-        return amountToWithdraw;
+    public Coin getPayoutAmount() {
+        return getTrade().getPayoutAmount();
     }
 
     public Contract getContract() {

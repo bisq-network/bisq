@@ -247,6 +247,7 @@ public class Offer implements Serializable {
         return arbitratorIds;
     }
 
+    @NotNull
     public Coin getSecurityDeposit() {
         return securityDeposit;
     }

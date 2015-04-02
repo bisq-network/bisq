@@ -32,7 +32,7 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BuyerAsTakerTrade extends Trade implements Serializable {
+public class BuyerAsTakerTrade extends Trade implements TakerTrade, BuyerTrade, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
@@ -43,8 +43,7 @@ public class BuyerAsTakerTrade extends Trade implements Serializable {
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BuyerAsTakerTrade(Offer offer, Coin tradeAmount, Peer tradingPeer,
-                             Storage<? extends TradeList> storage) {
+    public BuyerAsTakerTrade(Offer offer, Coin tradeAmount, Peer tradingPeer, Storage<? extends TradeList> storage) {
         super(offer, tradeAmount, tradingPeer, storage);
         log.trace("Created by constructor");
     }
@@ -80,11 +79,16 @@ public class BuyerAsTakerTrade extends Trade implements Serializable {
         ((BuyerAsTakerProtocol) tradeProtocol).takeAvailableOffer();
     }
 
+    @Override
     public void onFiatPaymentStarted() {
         assert tradeProtocol instanceof BuyerAsTakerProtocol;
         ((BuyerAsTakerProtocol) tradeProtocol).onFiatPaymentStarted();
     }
 
+    @Override
+    public Coin getPayoutAmount() {
+        return getSecurityDeposit().add(getTradeAmount());
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setter for Mutable objects
@@ -119,6 +123,7 @@ public class BuyerAsTakerTrade extends Trade implements Serializable {
     @Override
     public void setThrowable(Throwable throwable) {
         super.setThrowable(throwable);
+
         setProcessState(TakerState.ProcessState.EXCEPTION);
     }
 

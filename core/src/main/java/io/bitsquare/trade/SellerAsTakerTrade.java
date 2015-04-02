@@ -32,7 +32,7 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SellerAsTakerTrade extends Trade implements Serializable {
+public class SellerAsTakerTrade extends Trade implements TakerTrade, SellerTrade, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
@@ -43,8 +43,7 @@ public class SellerAsTakerTrade extends Trade implements Serializable {
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SellerAsTakerTrade(Offer offer, Coin tradeAmount, Peer tradingPeer,
-                              Storage<? extends TradeList> storage) {
+    public SellerAsTakerTrade(Offer offer, Coin tradeAmount, Peer tradingPeer, Storage<? extends TradeList> storage) {
         super(offer, tradeAmount, tradingPeer, storage);
         log.trace("Created by constructor");
     }
@@ -55,6 +54,20 @@ public class SellerAsTakerTrade extends Trade implements Serializable {
 
         initStateProperties();
         initAmountProperty();
+    }
+
+    @Override
+    public void setLifeCycleState(TradeState.LifeCycleState lifeCycleState) {
+        super.setLifeCycleState(lifeCycleState);
+
+        switch ((TakerState.LifeCycleState) lifeCycleState) {
+            case FAILED:
+                disposeProtocol();
+                break;
+            case COMPLETED:
+                disposeProtocol();
+                break;
+        }
     }
 
     @Override
@@ -80,6 +93,7 @@ public class SellerAsTakerTrade extends Trade implements Serializable {
         ((SellerAsTakerProtocol) tradeProtocol).takeAvailableOffer();
     }
 
+    @Override
     public void onFiatPaymentReceived() {
         assert tradeProtocol instanceof SellerAsTakerProtocol;
         ((SellerAsTakerProtocol) tradeProtocol).onFiatPaymentReceived();
@@ -92,11 +106,9 @@ public class SellerAsTakerTrade extends Trade implements Serializable {
 
     @Override
     public void setProcessState(TradeState.ProcessState processState) {
-        TakerState.ProcessState state = (TakerState.ProcessState) processState;
-        this.processState = processState;
-        processStateProperty.set(processState);
+        super.setProcessState(processState);
 
-        switch (state) {
+        switch ((TakerState.ProcessState) processState) {
             case EXCEPTION:
                 disposeProtocol();
                 setLifeCycleState(TakerState.LifeCycleState.FAILED);
@@ -105,23 +117,9 @@ public class SellerAsTakerTrade extends Trade implements Serializable {
     }
 
     @Override
-    public void setLifeCycleState(TradeState.LifeCycleState lifeCycleState) {
-        TakerState.LifeCycleState state = (TakerState.LifeCycleState) lifeCycleState;
-        switch (state) {
-            case FAILED:
-                disposeProtocol();
-                break;
-            case COMPLETED:
-                disposeProtocol();
-                break;
-        }
-        this.lifeCycleState = lifeCycleState;
-        lifeCycleStateProperty.set(lifeCycleState);
-    }
-
-    @Override
     public void setThrowable(Throwable throwable) {
         super.setThrowable(throwable);
+
         setProcessState(TakerState.ProcessState.EXCEPTION);
     }
 

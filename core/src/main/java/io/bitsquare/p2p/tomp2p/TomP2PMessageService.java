@@ -120,7 +120,7 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
         });
     }
 
-    private void sendMailboxMessage(PublicKey recipientP2pSigPubKey, PublicKey recipientP2pEncryptPubKey, MailboxMessage message, SendMessageListener 
+    private void sendMailboxMessage(PublicKey recipientP2pSigPubKey, PublicKey recipientP2pEncryptPubKey, MailboxMessage message, SendMessageListener
             listener) {
         Bucket bucket = null;
         log.info("sendMailboxMessage called");

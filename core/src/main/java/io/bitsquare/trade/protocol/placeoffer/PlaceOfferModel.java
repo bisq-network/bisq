@@ -58,7 +58,7 @@ public class PlaceOfferModel implements Model {
 
     @Override
     public void persist() {
-        
+
     }
 
     @Override

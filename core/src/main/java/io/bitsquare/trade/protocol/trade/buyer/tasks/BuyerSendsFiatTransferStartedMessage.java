@@ -19,10 +19,8 @@ package io.bitsquare.trade.protocol.trade.buyer.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
-import io.bitsquare.trade.BuyerAsOffererTrade;
-import io.bitsquare.trade.BuyerAsTakerTrade;
-import io.bitsquare.trade.SellerAsOffererTrade;
-import io.bitsquare.trade.SellerAsTakerTrade;
+import io.bitsquare.trade.OffererTrade;
+import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.StateUtil;
 import io.bitsquare.trade.protocol.trade.TradeTask;
@@ -58,9 +56,9 @@ public class BuyerSendsFiatTransferStartedMessage extends TradeTask {
                         public void handleResult() {
                             log.trace("Sending FiatTransferStartedMessage succeeded.");
 
-                            if (trade instanceof BuyerAsOffererTrade || trade instanceof SellerAsOffererTrade)
+                            if (trade instanceof OffererTrade)
                                 trade.setProcessState(OffererState.ProcessState.FIAT_PAYMENT_STARTED);
-                            if (trade instanceof BuyerAsTakerTrade || trade instanceof SellerAsTakerTrade)
+                            if (trade instanceof TakerTrade)
                                 trade.setProcessState(TakerState.ProcessState.FIAT_PAYMENT_STARTED);
 
                             complete();

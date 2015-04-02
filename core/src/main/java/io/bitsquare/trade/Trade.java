@@ -71,10 +71,10 @@ abstract public class Trade implements Model, Serializable {
     private transient static final Logger log = LoggerFactory.getLogger(Trade.class);
 
     // Mutable
-    protected Coin tradeAmount;
-    protected Peer tradingPeer;
-    transient protected ObjectProperty<Coin> tradeAmountProperty;
-    transient protected ObjectProperty<Fiat> tradeVolumeProperty;
+    private Coin tradeAmount;
+    private Peer tradingPeer;
+    private transient ObjectProperty<Coin> tradeAmountProperty;
+    private transient ObjectProperty<Fiat> tradeVolumeProperty;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -82,21 +82,22 @@ abstract public class Trade implements Model, Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Transient/Immutable
-    transient protected ObjectProperty<TradeState.ProcessState> processStateProperty;
-    transient protected ObjectProperty<TradeState.LifeCycleState> lifeCycleStateProperty;
+    private transient ObjectProperty<TradeState.ProcessState> processStateProperty;
+    private transient ObjectProperty<TradeState.LifeCycleState> lifeCycleStateProperty;
+    // Trades are saved in the TradeList
     transient private Storage<? extends TradeList> storage;
     transient protected TradeProtocol tradeProtocol;
 
     // Immutable
-    protected final Offer offer;
+    private final Offer offer;
     private final Date date;
-    protected final ProcessModel processModel;
+    private final ProcessModel processModel;
 
     // Mutable
     protected TradeState.ProcessState processState;
     protected TradeState.LifeCycleState lifeCycleState;
     private MailboxMessage mailboxMessage;
-    protected Transaction depositTx;
+    private Transaction depositTx;
     private Contract contract;
     private String contractAsJson;
     private String sellerContractSignature;
@@ -118,7 +119,7 @@ abstract public class Trade implements Model, Serializable {
         this.storage = storage;
 
         date = new Date();
-        processModel = createProcessModel();
+        processModel = new ProcessModel();
         tradeVolumeProperty = new SimpleObjectProperty<>();
         tradeAmountProperty = new SimpleObjectProperty<>();
 
@@ -133,6 +134,8 @@ abstract public class Trade implements Model, Serializable {
         this(offer, storage);
         this.tradeAmount = tradeAmount;
         this.tradingPeer = tradingPeer;
+        tradeAmountProperty.set(tradeAmount);
+        tradeVolumeProperty.set(getTradeVolume());
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -171,6 +174,20 @@ abstract public class Trade implements Model, Serializable {
         lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
     }
 
+    protected void initAmountProperty() {
+        tradeAmountProperty = new SimpleObjectProperty<>();
+        tradeVolumeProperty = new SimpleObjectProperty<>();
+
+        if (tradeAmount != null) {
+            tradeAmountProperty.set(tradeAmount);
+            tradeVolumeProperty.set(getTradeVolume());
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     // The deserialized tx has not actual confidence data, so we need to get the fresh one from the wallet.
     public void updateDepositTxFromWallet(TradeWalletService tradeWalletService) {
@@ -215,58 +232,6 @@ abstract public class Trade implements Model, Serializable {
         storage.queueUpForSave();
     }
 
-    protected void setupConfidenceListener() {
-        if (depositTx != null) {
-            TransactionConfidence transactionConfidence = depositTx.getConfidence();
-            ListenableFuture<TransactionConfidence> future = transactionConfidence.getDepthFuture(1);
-            Futures.addCallback(future, new FutureCallback<TransactionConfidence>() {
-                @Override
-                public void onSuccess(TransactionConfidence result) {
-                    handleConfidenceResult();
-                }
-
-                @Override
-                public void onFailure(@NotNull Throwable t) {
-                    t.printStackTrace();
-                    log.error(t.getMessage());
-                    Throwables.propagate(t);
-                }
-            });
-        }
-    }
-
-    // taker only
-    public void takeAvailableOffer() {
-    }
-
-    abstract protected void createProtocol();
-
-    public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
-        return tradeAmountProperty;
-    }
-
-    public ReadOnlyObjectProperty<Fiat> tradeVolumeProperty() {
-        return tradeVolumeProperty;
-    }
-
-    protected void initAmountProperty() {
-        tradeAmountProperty = new SimpleObjectProperty<>();
-        tradeVolumeProperty = new SimpleObjectProperty<>();
-
-        if (tradeAmount != null) {
-            tradeAmountProperty.set(tradeAmount);
-            tradeVolumeProperty.set(getTradeVolume());
-        }
-    }
-
-    abstract protected void handleConfidenceResult();
-
-    abstract protected void initStates();
-
-    public ProcessModel createProcessModel() {
-        return new ProcessModel();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Storage
@@ -305,13 +270,47 @@ abstract public class Trade implements Model, Serializable {
         return depositTx;
     }
 
+    @NotNull
     public Coin getSecurityDeposit() {
         return offer.getSecurityDeposit();
+    }
+
+    public Coin getPayoutAmount() {
+        return getSecurityDeposit();
     }
 
     public ProcessModel getProcessModel() {
         return processModel;
     }
+
+    @Nullable
+    public Fiat getTradeVolume() {
+        if (tradeAmount != null)
+            return offer.getVolumeByAmount(tradeAmount);
+        else
+            return null;
+    }
+
+    public ReadOnlyObjectProperty<? extends TradeState.ProcessState> processStateProperty() {
+        return processStateProperty;
+    }
+
+    public ReadOnlyObjectProperty<? extends TradeState.LifeCycleState> lifeCycleStateProperty() {
+        return lifeCycleStateProperty;
+    }
+
+    public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
+        return tradeAmountProperty;
+    }
+
+    public ReadOnlyObjectProperty<Fiat> tradeVolumeProperty() {
+        return tradeVolumeProperty;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getter/Setter for Mutable objects
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setTradingPeer(Peer tradingPeer) {
         this.tradingPeer = tradingPeer;
@@ -332,27 +331,6 @@ abstract public class Trade implements Model, Serializable {
     public Coin getTradeAmount() {
         return tradeAmount;
     }
-
-    @Nullable
-    public Fiat getTradeVolume() {
-        if (tradeAmount != null)
-            return offer.getVolumeByAmount(tradeAmount);
-        else
-            return null;
-    }
-
-    public ReadOnlyObjectProperty<? extends TradeState.ProcessState> processStateProperty() {
-        return processStateProperty;
-    }
-
-    public ReadOnlyObjectProperty<? extends TradeState.LifeCycleState> lifeCycleStateProperty() {
-        return lifeCycleStateProperty;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getter/Setter for Mutable objects
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setSellerContractSignature(String takerSignature) {
         this.sellerContractSignature = takerSignature;
@@ -395,6 +373,7 @@ abstract public class Trade implements Model, Serializable {
     }
 
     // Not used now, but will be used in some reporting UI
+    @Nullable
     public Transaction getPayoutTx() {
         return payoutTx;
     }
@@ -408,7 +387,6 @@ abstract public class Trade implements Model, Serializable {
         return errorMessage;
     }
 
-
     public void setThrowable(Throwable throwable) {
         this.throwable = throwable;
     }
@@ -418,9 +396,49 @@ abstract public class Trade implements Model, Serializable {
         return throwable;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void setupConfidenceListener() {
+        if (depositTx != null) {
+            TransactionConfidence transactionConfidence = depositTx.getConfidence();
+            ListenableFuture<TransactionConfidence> future = transactionConfidence.getDepthFuture(1);
+            Futures.addCallback(future, new FutureCallback<TransactionConfidence>() {
+                @Override
+                public void onSuccess(TransactionConfidence result) {
+                    handleConfidenceResult();
+                }
+
+                @Override
+                public void onFailure(@NotNull Throwable t) {
+                    t.printStackTrace();
+                    log.error(t.getMessage());
+                    Throwables.propagate(t);
+                }
+            });
+        }
+    }
+
+    abstract protected void createProtocol();
+
+    abstract protected void handleConfidenceResult();
+
+    abstract protected void initStates();
+
+
     @Override
     public String toString() {
-        return ", protocol=" + tradeProtocol +
+        return "Trade{" +
+                "tradeAmount=" + tradeAmount +
+                ", tradingPeer=" + tradingPeer +
+                ", tradeAmountProperty=" + tradeAmountProperty +
+                ", tradeVolumeProperty=" + tradeVolumeProperty +
+                ", processStateProperty=" + processStateProperty +
+                ", lifeCycleStateProperty=" + lifeCycleStateProperty +
+                ", storage=" + storage +
+                ", tradeProtocol=" + tradeProtocol +
                 ", offer=" + offer +
                 ", date=" + date +
                 ", processModel=" + processModel +
@@ -430,8 +448,8 @@ abstract public class Trade implements Model, Serializable {
                 ", depositTx=" + depositTx +
                 ", contract=" + contract +
                 ", contractAsJson='" + contractAsJson + '\'' +
-                ", takerContractSignature='" + sellerContractSignature + '\'' +
-                ", offererContractSignature='" + buyerContractSignature + '\'' +
+                ", sellerContractSignature='" + sellerContractSignature + '\'' +
+                ", buyerContractSignature='" + buyerContractSignature + '\'' +
                 ", payoutTx=" + payoutTx +
                 ", errorMessage='" + errorMessage + '\'' +
                 ", throwable=" + throwable +

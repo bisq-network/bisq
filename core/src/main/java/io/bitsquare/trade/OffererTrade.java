@@ -15,20 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.messages;
+package io.bitsquare.trade;
 
-import java.io.Serializable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-public class ConfirmReserveOfferMessage extends TradeMessage implements Serializable {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = 1L;
-
-    private static final Logger log = LoggerFactory.getLogger(ConfirmReserveOfferMessage.class);
-
-    public ConfirmReserveOfferMessage(String tradeId) {
-        super(tradeId);
-    }
+public interface OffererTrade {
 }

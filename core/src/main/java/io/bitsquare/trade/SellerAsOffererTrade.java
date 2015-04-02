@@ -30,7 +30,7 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SellerAsOffererTrade extends Trade implements Serializable {
+public class SellerAsOffererTrade extends Trade implements OffererTrade, SellerTrade, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
@@ -68,9 +68,10 @@ public class SellerAsOffererTrade extends Trade implements Serializable {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Fiat
+    // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     public void onFiatPaymentReceived() {
         assert tradeProtocol instanceof SellerAsOffererProtocol;
         ((SellerAsOffererProtocol) tradeProtocol).onFiatPaymentReceived();
@@ -110,8 +111,10 @@ public class SellerAsOffererTrade extends Trade implements Serializable {
     @Override
     public void setThrowable(Throwable throwable) {
         super.setThrowable(throwable);
+
         setProcessState(OffererState.ProcessState.EXCEPTION);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected

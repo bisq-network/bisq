@@ -137,7 +137,7 @@ public class TakerAsSellerSubView extends TradeSubView {
                 completedView.setSummaryInfoDisplayText("Your security deposit has been refunded to you. " +
                         "You can review the details to that trade any time in the closed trades screen.");
 
-                completedView.setWithdrawAmountTextFieldText(model.getAmountToWithdraw());
+                completedView.setWithdrawAmountTextFieldText(model.getPayoutAmount());
                 break;
             case MESSAGE_SENDING_FAILED:
                 Popups.openWarningPopup("Sending message to trading peer failed.", model.getErrorMessage());
