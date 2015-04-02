@@ -29,8 +29,8 @@ import org.slf4j.LoggerFactory;
 public class TakerVerifiesAndSignsContract extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerVerifiesAndSignsContract.class);
 
-    public TakerVerifiesAndSignsContract(TaskRunner taskHandler, Trade takerTrade) {
-        super(taskHandler, takerTrade);
+    public TakerVerifiesAndSignsContract(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
@@ -38,7 +38,7 @@ public class TakerVerifiesAndSignsContract extends TakerTradeTask {
         try {
             Contract contract = new Contract(
                     processModel.getOffer(),
-                    takerTrade.getTradeAmount(),
+                    trade.getTradeAmount(),
                     processModel.getTakeOfferFeeTx().getHashAsString(),
                     processModel.tradingPeer.getAccountId(),
                     processModel.getAccountId(),
@@ -50,15 +50,15 @@ public class TakerVerifiesAndSignsContract extends TakerTradeTask {
             String signature = processModel.getSignatureService().signMessage(processModel.getRegistrationKeyPair(),
                     contractAsJson);
 
-            takerTrade.setContract(contract);
-            takerTrade.setContractAsJson(contractAsJson);
-            takerTrade.setOffererContractSignature(signature);
-            takerTrade.setOffererContractSignature(processModel.tradingPeer.getContractSignature());
+            trade.setContract(contract);
+            trade.setContractAsJson(contractAsJson);
+            trade.setOffererContractSignature(signature);
+            trade.setOffererContractSignature(processModel.tradingPeer.getContractSignature());
 
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            takerTrade.setThrowable(t);
+            trade.setThrowable(t);
 
             failed(t);
         }

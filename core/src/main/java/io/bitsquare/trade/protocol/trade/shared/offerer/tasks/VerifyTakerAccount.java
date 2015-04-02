@@ -29,8 +29,8 @@ import org.slf4j.LoggerFactory;
 public class VerifyTakerAccount extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(VerifyTakerAccount.class);
 
-    public VerifyTakerAccount(TaskRunner taskHandler, Trade offererTrade) {
-        super(taskHandler, offererTrade);
+    public VerifyTakerAccount(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
@@ -52,19 +52,19 @@ public class VerifyTakerAccount extends OffererTradeTask {
             else {
                 failed("Account registration validation for peer failed.");
 
-                if (offererTrade instanceof OffererAsBuyerTrade)
-                    offererTrade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
-                else if (offererTrade instanceof OffererAsSellerTrade)
-                    offererTrade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
+                if (trade instanceof OffererAsBuyerTrade)
+                    trade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
+                else if (trade instanceof OffererAsSellerTrade)
+                    trade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
             }
         } catch (Throwable t) {
             t.printStackTrace();
-            offererTrade.setThrowable(t);
+            trade.setThrowable(t);
 
-            if (offererTrade instanceof OffererAsBuyerTrade)
-                offererTrade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
-            else if (offererTrade instanceof OffererAsSellerTrade)
-                offererTrade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
+            if (trade instanceof OffererAsBuyerTrade)
+                trade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
+            else if (trade instanceof OffererAsSellerTrade)
+                trade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
 
             failed(t);
         }

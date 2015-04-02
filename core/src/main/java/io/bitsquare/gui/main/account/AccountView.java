@@ -118,7 +118,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         }
 
         // for IRC demo we deactivate the arbitratorSettingsTab
-       // arbitratorSettingsTab.setDisable(true);
+        // arbitratorSettingsTab.setDisable(true);
 
         tab.setContent(view.getRoot());
         root.getSelectionModel().select(tab);

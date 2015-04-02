@@ -62,10 +62,10 @@ public class SellerAsTakerProtocol implements Protocol {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SellerAsTakerProtocol(TakerAsSellerTrade takerTrade) {
+    public SellerAsTakerProtocol(TakerAsSellerTrade trade) {
         log.debug("New SellerAsTakerProtocol " + this);
-        this.takerAsSellerTrade = takerTrade;
-        processModel = takerTrade.getProcessModel();
+        this.takerAsSellerTrade = trade;
+        processModel = trade.getProcessModel();
 
         messageHandler = this::handleMessage;
         processModel.getMessageService().addMessageHandler(messageHandler);

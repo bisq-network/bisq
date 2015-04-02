@@ -54,7 +54,7 @@ public class ConfirmFiatReceivedView extends TradeStepDetailsView {
     public void activate() {
         super.activate();
 
-            model.txId.addListener(txIdChangeListener);
+        model.txId.addListener(txIdChangeListener);
         txIdTextField.setup(model.getWalletService(), model.txId.get());
     }
 
@@ -62,7 +62,7 @@ public class ConfirmFiatReceivedView extends TradeStepDetailsView {
     public void deactivate() {
         super.deactivate();
 
-            model.txId.removeListener(txIdChangeListener);
+        model.txId.removeListener(txIdChangeListener);
         txIdTextField.cleanup();
     }
 

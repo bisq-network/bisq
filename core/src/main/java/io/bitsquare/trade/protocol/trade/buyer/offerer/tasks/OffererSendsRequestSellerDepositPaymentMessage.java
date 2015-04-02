@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
 public class OffererSendsRequestSellerDepositPaymentMessage extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererSendsRequestSellerDepositPaymentMessage.class);
 
-    public OffererSendsRequestSellerDepositPaymentMessage(TaskRunner taskHandler, Trade offererTrade) {
-        super(taskHandler, offererTrade);
+    public OffererSendsRequestSellerDepositPaymentMessage(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
@@ -48,7 +48,7 @@ public class OffererSendsRequestSellerDepositPaymentMessage extends OffererTrade
                     processModel.getFiatAccount(),
                     processModel.getAccountId());
 
-            processModel.getMessageService().sendMessage(offererTrade.getTradingPeer(), tradeMessage, new SendMessageListener() {
+            processModel.getMessageService().sendMessage(trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
                 @Override
                 public void handleResult() {
                     log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");
@@ -58,14 +58,14 @@ public class OffererSendsRequestSellerDepositPaymentMessage extends OffererTrade
                 @Override
                 public void handleFault() {
                     appendToErrorMessage("Sending RequestTakerDepositPaymentMessage failed");
-                    offererTrade.setErrorMessage(errorMessage);
-                    if (offererTrade instanceof OffererAsBuyerTrade) {
-                        ((OffererAsBuyerTrade) offererTrade).setProcessState(OffererAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
-                        ((OffererAsBuyerTrade) offererTrade).setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
+                    trade.setErrorMessage(errorMessage);
+                    if (trade instanceof OffererAsBuyerTrade) {
+                        ((OffererAsBuyerTrade) trade).setProcessState(OffererAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                        ((OffererAsBuyerTrade) trade).setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
                     }
-                    else if (offererTrade instanceof OffererAsSellerTrade) {
-                        ((OffererAsSellerTrade) offererTrade).setProcessState(OffererAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
-                        ((OffererAsSellerTrade) offererTrade).setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
+                    else if (trade instanceof OffererAsSellerTrade) {
+                        ((OffererAsSellerTrade) trade).setProcessState(OffererAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                        ((OffererAsSellerTrade) trade).setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
                     }
 
                     failed();
@@ -73,15 +73,15 @@ public class OffererSendsRequestSellerDepositPaymentMessage extends OffererTrade
             });
         } catch (Throwable t) {
             t.printStackTrace();
-            offererTrade.setThrowable(t);
+            trade.setThrowable(t);
 
-            if (offererTrade instanceof OffererAsBuyerTrade) {
-                ((OffererAsBuyerTrade) offererTrade).setProcessState(OffererAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
-                ((OffererAsSellerTrade) offererTrade).setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
+            if (trade instanceof OffererAsBuyerTrade) {
+                ((OffererAsBuyerTrade) trade).setProcessState(OffererAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                ((OffererAsSellerTrade) trade).setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
             }
-            else if (offererTrade instanceof OffererAsSellerTrade) {
-                ((OffererAsSellerTrade) offererTrade).setProcessState(OffererAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
-                ((OffererAsSellerTrade) offererTrade).setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
+            else if (trade instanceof OffererAsSellerTrade) {
+                ((OffererAsSellerTrade) trade).setProcessState(OffererAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                ((OffererAsSellerTrade) trade).setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
             }
 
             failed(t);

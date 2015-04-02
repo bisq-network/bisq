@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
 public class TakerSendsRequestPayDepositMessage extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerSendsRequestPayDepositMessage.class);
 
-    public TakerSendsRequestPayDepositMessage(TaskRunner taskHandler, Trade takerTrade) {
-        super(taskHandler, takerTrade);
+    public TakerSendsRequestPayDepositMessage(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
@@ -49,7 +49,7 @@ public class TakerSendsRequestPayDepositMessage extends TakerTradeTask {
                     processModel.getFiatAccount(),
                     processModel.getAccountId());
 
-            processModel.getMessageService().sendMessage(takerTrade.getTradingPeer(), message, new SendMessageListener() {
+            processModel.getMessageService().sendMessage(trade.getTradingPeer(), message, new SendMessageListener() {
                 @Override
                 public void handleResult() {
                     log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");
@@ -59,24 +59,24 @@ public class TakerSendsRequestPayDepositMessage extends TakerTradeTask {
                 @Override
                 public void handleFault() {
                     appendToErrorMessage("Sending RequestTakerDepositPaymentMessage failed");
-                    takerTrade.setErrorMessage(errorMessage);
-                    if (takerTrade instanceof TakerAsBuyerTrade)
-                        takerTrade.setProcessState(TakerAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
-                    else if (takerTrade instanceof TakerAsSellerTrade)
-                        takerTrade.setProcessState(TakerAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                    trade.setErrorMessage(errorMessage);
+                    if (trade instanceof TakerAsBuyerTrade)
+                        trade.setProcessState(TakerAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                    else if (trade instanceof TakerAsSellerTrade)
+                        trade.setProcessState(TakerAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
 
                     failed();
                 }
             });
         } catch (Throwable t) {
             t.printStackTrace();
-            takerTrade.setThrowable(t);
+            trade.setThrowable(t);
 
-            if (takerTrade instanceof TakerAsBuyerTrade) {
-                takerTrade.setProcessState(TakerAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+            if (trade instanceof TakerAsBuyerTrade) {
+                trade.setProcessState(TakerAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
             }
-            else if (takerTrade instanceof TakerAsSellerTrade) {
-                takerTrade.setProcessState(TakerAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+            else if (trade instanceof TakerAsSellerTrade) {
+                trade.setProcessState(TakerAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
             }
 
             failed(t);

@@ -293,8 +293,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         totalToPayTextField.textProperty().bind(model.totalToPay);
         addressTextField.amountAsCoinProperty().bind(model.totalToPayAsCoin);
         amountDescriptionLabel.textProperty().bind(model.amountDescription);
-        
-                
+
+
         // Validation
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
 
@@ -442,8 +442,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     BSResources.get("takeOffer.fundsBox.amount"),
                     model.getAmount());
         }
-        
-      
+
+
         addPayInfoEntry(infoGridPane, i++,
                 BSResources.get("takeOffer.fundsBox.securityDeposit"),
                 model.securityDeposit.get());

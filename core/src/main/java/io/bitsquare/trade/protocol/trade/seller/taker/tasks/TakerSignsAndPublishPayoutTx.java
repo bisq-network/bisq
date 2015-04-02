@@ -35,15 +35,15 @@ import org.slf4j.LoggerFactory;
 public class TakerSignsAndPublishPayoutTx extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerSignsAndPublishPayoutTx.class);
 
-    public TakerSignsAndPublishPayoutTx(TaskRunner taskHandler, Trade takerTrade) {
-        super(taskHandler, takerTrade);
+    public TakerSignsAndPublishPayoutTx(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
             processModel.getTradeWalletService().signAndPublishPayoutTx(
-                    takerTrade.getDepositTx(),
+                    trade.getDepositTx(),
                     processModel.tradingPeer.getSignature(),
                     processModel.tradingPeer.getPayoutAmount(),
                     processModel.getPayoutAmount(),
@@ -57,10 +57,10 @@ public class TakerSignsAndPublishPayoutTx extends TakerTradeTask {
                         public void onSuccess(Transaction transaction) {
                             processModel.setPayoutTx(transaction);
 
-                            if (takerTrade instanceof TakerAsBuyerTrade)
-                                takerTrade.setProcessState(TakerAsBuyerTrade.ProcessState.PAYOUT_PUBLISHED);
-                            else if (takerTrade instanceof TakerAsSellerTrade)
-                                takerTrade.setProcessState(TakerAsSellerTrade.ProcessState.PAYOUT_PUBLISHED);
+                            if (trade instanceof TakerAsBuyerTrade)
+                                trade.setProcessState(TakerAsBuyerTrade.ProcessState.PAYOUT_PUBLISHED);
+                            else if (trade instanceof TakerAsSellerTrade)
+                                trade.setProcessState(TakerAsSellerTrade.ProcessState.PAYOUT_PUBLISHED);
 
                             complete();
                         }
@@ -68,13 +68,13 @@ public class TakerSignsAndPublishPayoutTx extends TakerTradeTask {
                         @Override
                         public void onFailure(@NotNull Throwable t) {
                             t.printStackTrace();
-                            takerTrade.setThrowable(t);
+                            trade.setThrowable(t);
                             failed(t);
                         }
                     });
         } catch (Throwable t) {
             t.printStackTrace();
-            takerTrade.setThrowable(t);
+            trade.setThrowable(t);
             failed(t);
         }
     }

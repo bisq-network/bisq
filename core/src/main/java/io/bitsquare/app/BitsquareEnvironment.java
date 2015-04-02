@@ -127,21 +127,22 @@ public class BitsquareEnvironment extends StandardEnvironment {
             private static final long serialVersionUID = -8478089705207326165L;
 
             {
-            setProperty(APP_DATA_DIR_KEY, appDataDir);
-            setProperty(APP_DATA_DIR_CLEAN_KEY, DEFAULT_APP_DATA_DIR_CLEAN);
+                setProperty(APP_DATA_DIR_KEY, appDataDir);
+                setProperty(APP_DATA_DIR_CLEAN_KEY, DEFAULT_APP_DATA_DIR_CLEAN);
 
-            setProperty(APP_NAME_KEY, appName);
+                setProperty(APP_NAME_KEY, appName);
 
-            setProperty(UserAgent.NAME_KEY, appName);
-            setProperty(UserAgent.VERSION_KEY, BitsquareAppMain.getVersion());
+                setProperty(UserAgent.NAME_KEY, appName);
+                setProperty(UserAgent.VERSION_KEY, BitsquareAppMain.getVersion());
 
-            setProperty(WalletService.DIR_KEY, appDataDir);
-            setProperty(WalletService.PREFIX_KEY, appName);
+                setProperty(WalletService.DIR_KEY, appDataDir);
+                setProperty(WalletService.PREFIX_KEY, appName);
 
-            setProperty(Storage.DIR_KEY, Paths.get(appDataDir, "db").toString());
+                setProperty(Storage.DIR_KEY, Paths.get(appDataDir, "db").toString());
 
-            setProperty(MainView.TITLE_KEY, appName);
-        }});
+                setProperty(MainView.TITLE_KEY, appName);
+            }
+        });
     }
 
 

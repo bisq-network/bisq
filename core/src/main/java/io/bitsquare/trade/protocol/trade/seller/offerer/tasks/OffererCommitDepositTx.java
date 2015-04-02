@@ -29,22 +29,22 @@ import org.slf4j.LoggerFactory;
 public class OffererCommitDepositTx extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererCommitDepositTx.class);
 
-    public OffererCommitDepositTx(TaskRunner taskHandler, Trade offererTrade) {
-        super(taskHandler, offererTrade);
+    public OffererCommitDepositTx(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
             // To access tx confidence we need to add that tx into our wallet.
-            Transaction depositTx = processModel.getTradeWalletService().commitTx(offererTrade.getDepositTx());
+            Transaction depositTx = processModel.getTradeWalletService().commitTx(trade.getDepositTx());
 
-            offererTrade.setDepositTx(depositTx);
+            trade.setDepositTx(depositTx);
 
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            offererTrade.setThrowable(t);
+            trade.setThrowable(t);
             failed(t);
         }
     }

@@ -33,8 +33,8 @@ import static io.bitsquare.util.Validator.*;
 public class OffererProcessFiatTransferStartedMessage extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererProcessFiatTransferStartedMessage.class);
 
-    public OffererProcessFiatTransferStartedMessage(TaskRunner taskHandler, Trade offererTrade) {
-        super(taskHandler, offererTrade);
+    public OffererProcessFiatTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
@@ -49,15 +49,15 @@ public class OffererProcessFiatTransferStartedMessage extends OffererTradeTask {
             processModel.tradingPeer.setPayoutAmount(positiveCoinOf(nonZeroCoinOf(message.buyerPayoutAmount)));
             processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(message.buyerPayoutAddress));
 
-            if (offererTrade instanceof OffererAsBuyerTrade)
-                offererTrade.setProcessState(OffererAsBuyerTrade.ProcessState.FIAT_PAYMENT_STARTED);
-            else if (offererTrade instanceof OffererAsSellerTrade)
-                offererTrade.setProcessState(OffererAsSellerTrade.ProcessState.FIAT_PAYMENT_STARTED);
+            if (trade instanceof OffererAsBuyerTrade)
+                trade.setProcessState(OffererAsBuyerTrade.ProcessState.FIAT_PAYMENT_STARTED);
+            else if (trade instanceof OffererAsSellerTrade)
+                trade.setProcessState(OffererAsSellerTrade.ProcessState.FIAT_PAYMENT_STARTED);
 
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            offererTrade.setThrowable(t);
+            trade.setThrowable(t);
             failed(t);
         }
     }

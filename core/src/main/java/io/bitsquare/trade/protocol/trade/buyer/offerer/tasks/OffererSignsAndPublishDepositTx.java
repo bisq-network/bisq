@@ -37,14 +37,14 @@ import org.slf4j.LoggerFactory;
 public class OffererSignsAndPublishDepositTx extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererSignsAndPublishDepositTx.class);
 
-    public OffererSignsAndPublishDepositTx(TaskRunner taskHandler, Trade offererTrade) {
-        super(taskHandler, offererTrade);
+    public OffererSignsAndPublishDepositTx(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            Coin inputAmount = offererTrade.getSecurityDeposit().add(FeePolicy.TX_FEE);
+            Coin inputAmount = trade.getSecurityDeposit().add(FeePolicy.TX_FEE);
 
             processModel.getTradeWalletService().signAndPublishDepositTx(
                     processModel.tradingPeer.getPreparedDepositTx(),
@@ -60,15 +60,15 @@ public class OffererSignsAndPublishDepositTx extends OffererTradeTask {
                         public void onSuccess(Transaction transaction) {
                             log.trace("offererSignAndPublishTx succeeded " + transaction);
 
-                            offererTrade.setDepositTx(transaction);
+                            trade.setDepositTx(transaction);
 
-                            if (offererTrade instanceof OffererAsBuyerTrade) {
-                                offererTrade.setProcessState(OffererAsBuyerTrade.ProcessState.DEPOSIT_PUBLISHED);
-                                offererTrade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.PENDING);
+                            if (trade instanceof OffererAsBuyerTrade) {
+                                trade.setProcessState(OffererAsBuyerTrade.ProcessState.DEPOSIT_PUBLISHED);
+                                trade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.PENDING);
                             }
-                            else if (offererTrade instanceof OffererAsSellerTrade) {
-                                offererTrade.setProcessState(OffererAsSellerTrade.ProcessState.DEPOSIT_PUBLISHED);
-                                offererTrade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.PENDING);
+                            else if (trade instanceof OffererAsSellerTrade) {
+                                trade.setProcessState(OffererAsSellerTrade.ProcessState.DEPOSIT_PUBLISHED);
+                                trade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.PENDING);
                             }
 
                             complete();
@@ -77,24 +77,24 @@ public class OffererSignsAndPublishDepositTx extends OffererTradeTask {
                         @Override
                         public void onFailure(@NotNull Throwable t) {
                             t.printStackTrace();
-                            offererTrade.setThrowable(t);
+                            trade.setThrowable(t);
 
-                            if (offererTrade instanceof OffererAsBuyerTrade)
-                                offererTrade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
-                            else if (offererTrade instanceof OffererAsSellerTrade)
-                                offererTrade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
+                            if (trade instanceof OffererAsBuyerTrade)
+                                trade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
+                            else if (trade instanceof OffererAsSellerTrade)
+                                trade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
 
                             failed(t);
                         }
                     });
         } catch (Throwable t) {
             t.printStackTrace();
-            offererTrade.setThrowable(t);
+            trade.setThrowable(t);
 
-            if (offererTrade instanceof OffererAsBuyerTrade)
-                offererTrade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
-            else if (offererTrade instanceof OffererAsSellerTrade)
-                offererTrade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
+            if (trade instanceof OffererAsBuyerTrade)
+                trade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
+            else if (trade instanceof OffererAsSellerTrade)
+                trade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
 
             failed(t);
         }

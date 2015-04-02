@@ -56,13 +56,14 @@ public abstract class TradeSubView extends HBox {
         applyState(model.viewState.get());
     }
 
-    public void deactivate() {  log.debug("deactivate");
+    public void deactivate() {
+        log.debug("deactivate");
         model.viewState.removeListener(offererStateChangeListener);
 
         if (tradeStepDetailsView != null)
             tradeStepDetailsView.deactivate();
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Misc

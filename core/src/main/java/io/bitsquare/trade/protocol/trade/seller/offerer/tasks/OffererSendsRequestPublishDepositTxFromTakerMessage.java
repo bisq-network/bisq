@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
 public class OffererSendsRequestPublishDepositTxFromTakerMessage extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererSendsRequestPublishDepositTxFromTakerMessage.class);
 
-    public OffererSendsRequestPublishDepositTxFromTakerMessage(TaskRunner taskHandler, Trade offererTrade) {
-        super(taskHandler, offererTrade);
+    public OffererSendsRequestPublishDepositTxFromTakerMessage(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
@@ -45,14 +45,14 @@ public class OffererSendsRequestPublishDepositTxFromTakerMessage extends Offerer
                     processModel.getTradeWalletPubKey(),
                     processModel.getP2pSigPubKey(),
                     processModel.getP2pEncryptPublicKey(),
-                    offererTrade.getContractAsJson(),
-                    offererTrade.getOffererContractSignature(),
+                    trade.getContractAsJson(),
+                    trade.getOffererContractSignature(),
                     processModel.getAddressEntry().getAddressString(),
                     processModel.getPreparedDepositTx(),
                     processModel.getConnectedOutputsForAllInputs()
             );
 
-            processModel.getMessageService().sendMessage(offererTrade.getTradingPeer(), tradeMessage, new SendMessageListener() {
+            processModel.getMessageService().sendMessage(trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
                 @Override
                 public void handleResult() {
                     complete();
@@ -61,19 +61,19 @@ public class OffererSendsRequestPublishDepositTxFromTakerMessage extends Offerer
                 @Override
                 public void handleFault() {
                     appendToErrorMessage("Sending RequestOffererPublishDepositTxMessage failed");
-                    offererTrade.setErrorMessage(errorMessage);
+                    trade.setErrorMessage(errorMessage);
 
-                    if (offererTrade instanceof OffererAsBuyerTrade)
-                        offererTrade.setProcessState(OffererAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
-                    else if (offererTrade instanceof OffererAsSellerTrade)
-                        offererTrade.setProcessState(OffererAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                    if (trade instanceof OffererAsBuyerTrade)
+                        trade.setProcessState(OffererAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                    else if (trade instanceof OffererAsSellerTrade)
+                        trade.setProcessState(OffererAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
 
                     failed();
                 }
             });
         } catch (Throwable t) {
             t.printStackTrace();
-            offererTrade.setThrowable(t);
+            trade.setThrowable(t);
             failed(t);
         }
     }

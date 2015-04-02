@@ -108,7 +108,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
         else {
             amountAsCoin.set(offer.getAmount());
         }
-       
+
         calculateVolume();
         calculateTotalToPay();
 

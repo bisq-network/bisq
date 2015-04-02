@@ -257,7 +257,7 @@ public class Utilities {
                         log.warn("can't delete file : " + tmpF);
                 }
             }
-            if (!folder.delete()) 
+            if (!folder.delete())
                 log.warn("can't delete folder : " + folder);
         }
     }

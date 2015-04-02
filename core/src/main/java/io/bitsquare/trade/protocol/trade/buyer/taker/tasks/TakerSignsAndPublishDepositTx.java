@@ -37,14 +37,14 @@ import org.slf4j.LoggerFactory;
 public class TakerSignsAndPublishDepositTx extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerSignsAndPublishDepositTx.class);
 
-    public TakerSignsAndPublishDepositTx(TaskRunner taskHandler, Trade takerTrade) {
-        super(taskHandler, takerTrade);
+    public TakerSignsAndPublishDepositTx(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            Coin inputAmount = takerTrade.getSecurityDeposit().add(FeePolicy.TX_FEE);
+            Coin inputAmount = trade.getSecurityDeposit().add(FeePolicy.TX_FEE);
 
             processModel.getTradeWalletService().signAndPublishDepositTx(
                     processModel.tradingPeer.getPreparedDepositTx(),
@@ -60,15 +60,15 @@ public class TakerSignsAndPublishDepositTx extends TakerTradeTask {
                         public void onSuccess(Transaction transaction) {
                             log.trace("takerSignAndPublishTx succeeded " + transaction);
 
-                            takerTrade.setDepositTx(transaction);
+                            trade.setDepositTx(transaction);
 
-                            if (takerTrade instanceof TakerAsBuyerTrade) {
-                                takerTrade.setProcessState(TakerAsBuyerTrade.ProcessState.DEPOSIT_PUBLISHED);
-                                takerTrade.setLifeCycleState(TakerAsBuyerTrade.LifeCycleState.PENDING);
+                            if (trade instanceof TakerAsBuyerTrade) {
+                                trade.setProcessState(TakerAsBuyerTrade.ProcessState.DEPOSIT_PUBLISHED);
+                                trade.setLifeCycleState(TakerAsBuyerTrade.LifeCycleState.PENDING);
                             }
-                            else if (takerTrade instanceof TakerAsSellerTrade) {
-                                takerTrade.setProcessState(TakerAsSellerTrade.ProcessState.DEPOSIT_PUBLISHED);
-                                takerTrade.setLifeCycleState(TakerAsSellerTrade.LifeCycleState.PENDING);
+                            else if (trade instanceof TakerAsSellerTrade) {
+                                trade.setProcessState(TakerAsSellerTrade.ProcessState.DEPOSIT_PUBLISHED);
+                                trade.setLifeCycleState(TakerAsSellerTrade.LifeCycleState.PENDING);
                             }
 
                             complete();
@@ -77,13 +77,13 @@ public class TakerSignsAndPublishDepositTx extends TakerTradeTask {
                         @Override
                         public void onFailure(@NotNull Throwable t) {
                             t.printStackTrace();
-                            takerTrade.setThrowable(t);
+                            trade.setThrowable(t);
                             failed(t);
                         }
                     });
         } catch (Throwable t) {
             t.printStackTrace();
-            takerTrade.setThrowable(t);
+            trade.setThrowable(t);
             failed(t);
         }
     }

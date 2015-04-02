@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
 public class CreateTakeOfferFeeTx extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(CreateTakeOfferFeeTx.class);
 
-    public CreateTakeOfferFeeTx(TaskRunner taskHandler, Trade takerTrade) {
-        super(taskHandler, takerTrade);
+    public CreateTakeOfferFeeTx(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
@@ -42,15 +42,15 @@ public class CreateTakeOfferFeeTx extends TakerTradeTask {
 
             processModel.setTakeOfferFeeTx(createTakeOfferFeeTx);
 
-            if (takerTrade instanceof TakerAsBuyerTrade)
-                takerTrade.setProcessState(TakerAsBuyerTrade.ProcessState.TAKE_OFFER_FEE_TX_CREATED);
-            else if (takerTrade instanceof TakerAsSellerTrade)
-                takerTrade.setProcessState(TakerAsSellerTrade.ProcessState.TAKE_OFFER_FEE_TX_CREATED);
+            if (trade instanceof TakerAsBuyerTrade)
+                trade.setProcessState(TakerAsBuyerTrade.ProcessState.TAKE_OFFER_FEE_TX_CREATED);
+            else if (trade instanceof TakerAsSellerTrade)
+                trade.setProcessState(TakerAsSellerTrade.ProcessState.TAKE_OFFER_FEE_TX_CREATED);
 
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            takerTrade.setThrowable(t);
+            trade.setThrowable(t);
             failed(t);
         }
     }

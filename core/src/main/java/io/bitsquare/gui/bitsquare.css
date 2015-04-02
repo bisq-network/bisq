@@ -472,7 +472,6 @@ textfield */
     -fx-background-radius: 3px, 3px, 2px, 1px;
 }
 
-
 /* Pending trades */
 #trade-wizard-item-background-disabled {
     -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
@@ -497,7 +496,7 @@ textfield */
     -fx-background-radius: 3px, 3px, 2px, 1px;
 }
 
-#trade-wizard-item-background-completed{
+#trade-wizard-item-background-completed {
     -fx-body-color: linear-gradient(to bottom, #f4f4f4, #E1E9E1);
     -fx-outer-border: linear-gradient(to bottom, #99ba9c, #619865);
     -fx-background-color: -fx-shadow-highlight-color,
@@ -507,7 +506,6 @@ textfield */
     -fx-background-insets: 0 0 -1 0, 0, 1, 2;
     -fx-background-radius: 3px, 3px, 2px, 1px;
 }
-
 
 /* TitledGroupBg */
 #titled-group-bg-label {

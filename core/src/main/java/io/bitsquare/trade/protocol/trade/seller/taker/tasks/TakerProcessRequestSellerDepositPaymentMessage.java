@@ -31,8 +31,8 @@ import static io.bitsquare.util.Validator.*;
 public class TakerProcessRequestSellerDepositPaymentMessage extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerProcessRequestSellerDepositPaymentMessage.class);
 
-    public TakerProcessRequestSellerDepositPaymentMessage(TaskRunner taskHandler, Trade takerTrade) {
-        super(taskHandler, takerTrade);
+    public TakerProcessRequestSellerDepositPaymentMessage(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
@@ -54,7 +54,7 @@ public class TakerProcessRequestSellerDepositPaymentMessage extends TakerTradeTa
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            takerTrade.setThrowable(t);
+            trade.setThrowable(t);
             failed(t);
         }
     }

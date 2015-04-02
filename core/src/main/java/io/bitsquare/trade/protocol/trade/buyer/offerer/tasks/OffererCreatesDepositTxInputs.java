@@ -33,15 +33,15 @@ import org.slf4j.LoggerFactory;
 public class OffererCreatesDepositTxInputs extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererCreatesDepositTxInputs.class);
 
-    public OffererCreatesDepositTxInputs(TaskRunner taskHandler, Trade offererTrade) {
-        super(taskHandler, offererTrade);
+    public OffererCreatesDepositTxInputs(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            log.debug("offererTrade.id" + offererTrade.getId());
-            Coin inputAmount = offererTrade.getSecurityDeposit().add(FeePolicy.TX_FEE);
+            log.debug("trade.id" + trade.getId());
+            Coin inputAmount = trade.getSecurityDeposit().add(FeePolicy.TX_FEE);
             TradeWalletService.Result result = processModel.getTradeWalletService().createDepositTxInputs(inputAmount,
                     processModel.getAddressEntry());
 
@@ -51,13 +51,13 @@ public class OffererCreatesDepositTxInputs extends OffererTradeTask {
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            offererTrade.setThrowable(t);
+            trade.setThrowable(t);
 
-            if (offererTrade instanceof OffererAsBuyerTrade) {
-                offererTrade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
+            if (trade instanceof OffererAsBuyerTrade) {
+                trade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
             }
-            else if (offererTrade instanceof OffererAsSellerTrade) {
-                offererTrade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
+            else if (trade instanceof OffererAsSellerTrade) {
+                trade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
             }
 
             failed(t);

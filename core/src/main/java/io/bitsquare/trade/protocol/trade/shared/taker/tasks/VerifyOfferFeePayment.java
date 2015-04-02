@@ -27,8 +27,8 @@ import org.slf4j.LoggerFactory;
 public class VerifyOfferFeePayment extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(VerifyOfferFeePayment.class);
 
-    public VerifyOfferFeePayment(TaskRunner taskHandler, Trade takerTrade) {
-        super(taskHandler, takerTrade);
+    public VerifyOfferFeePayment(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
@@ -42,7 +42,7 @@ public class VerifyOfferFeePayment extends TakerTradeTask {
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            takerTrade.setThrowable(t);
+            trade.setThrowable(t);
             failed(t);
         }
     }

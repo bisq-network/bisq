@@ -35,8 +35,8 @@ import org.slf4j.LoggerFactory;
 public class BroadcastTakeOfferFeeTx extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(BroadcastTakeOfferFeeTx.class);
 
-    public BroadcastTakeOfferFeeTx(TaskRunner taskHandler, Trade takerTrade) {
-        super(taskHandler, takerTrade);
+    public BroadcastTakeOfferFeeTx(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
@@ -48,10 +48,10 @@ public class BroadcastTakeOfferFeeTx extends TakerTradeTask {
                         public void onSuccess(Transaction transaction) {
                             log.debug("Take offer fee published successfully. Transaction ID = " + transaction.getHashAsString());
 
-                            if (takerTrade instanceof TakerAsBuyerTrade)
-                                takerTrade.setProcessState(TakerAsBuyerTrade.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
-                            else if (takerTrade instanceof TakerAsSellerTrade)
-                                takerTrade.setProcessState(TakerAsSellerTrade.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
+                            if (trade instanceof TakerAsBuyerTrade)
+                                trade.setProcessState(TakerAsBuyerTrade.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
+                            else if (trade instanceof TakerAsSellerTrade)
+                                trade.setProcessState(TakerAsSellerTrade.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
                             complete();
                         }
 
@@ -59,19 +59,19 @@ public class BroadcastTakeOfferFeeTx extends TakerTradeTask {
                         public void onFailure(@NotNull Throwable t) {
                             t.printStackTrace();
                             appendToErrorMessage("Take offer fee payment failed. Maybe your network connection was lost. Please try again.");
-                            takerTrade.setErrorMessage(errorMessage);
+                            trade.setErrorMessage(errorMessage);
 
-                            if (takerTrade instanceof TakerAsBuyerTrade)
-                                takerTrade.setProcessState(TakerAsBuyerTrade.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
-                            else if (takerTrade instanceof TakerAsSellerTrade)
-                                takerTrade.setProcessState(TakerAsSellerTrade.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
+                            if (trade instanceof TakerAsBuyerTrade)
+                                trade.setProcessState(TakerAsBuyerTrade.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
+                            else if (trade instanceof TakerAsSellerTrade)
+                                trade.setProcessState(TakerAsSellerTrade.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
 
                             failed(t);
                         }
                     });
         } catch (Throwable t) {
             t.printStackTrace();
-            takerTrade.setThrowable(t);
+            trade.setThrowable(t);
             failed(t);
         }
     }

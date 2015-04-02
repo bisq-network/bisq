@@ -51,7 +51,7 @@
                     <Insets bottom="10.0" left="10.0" right="10.0" top="20.0"/>
                 </GridPane.margin>
                 <ImageView fx:id="imageView" pickOnBounds="true"/>
-                <Label fx:id="buyLabel" id="direction-icon-label" 
+                <Label fx:id="buyLabel" id="direction-icon-label"
                        alignment="CENTER">
                     <padding>
                         <Insets top="-5.0"/>

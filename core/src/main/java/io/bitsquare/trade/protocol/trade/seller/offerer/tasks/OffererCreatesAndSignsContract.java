@@ -29,8 +29,8 @@ import org.slf4j.LoggerFactory;
 public class OffererCreatesAndSignsContract extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererCreatesAndSignsContract.class);
 
-    public OffererCreatesAndSignsContract(TaskRunner taskHandler, Trade offererTrade) {
-        super(taskHandler, offererTrade);
+    public OffererCreatesAndSignsContract(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class OffererCreatesAndSignsContract extends OffererTradeTask {
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            offererTrade.setThrowable(t);
+            trade.setThrowable(t);
             failed(t);
         }
     }

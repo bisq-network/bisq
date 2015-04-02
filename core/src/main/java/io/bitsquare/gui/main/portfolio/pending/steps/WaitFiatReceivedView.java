@@ -36,7 +36,7 @@ public class WaitFiatReceivedView extends TradeStepDetailsView {
     private TxIdTextField txIdTextField;
     private Label infoLabel;
     private InfoDisplay infoDisplay;
-    private final ChangeListener<String>  txIdChangeListener;
+    private final ChangeListener<String> txIdChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
 public class OffererVerifiesAndSignsContract extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererVerifiesAndSignsContract.class);
 
-    public OffererVerifiesAndSignsContract(TaskRunner taskHandler, Trade offererTrade) {
-        super(taskHandler, offererTrade);
+    public OffererVerifiesAndSignsContract(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
@@ -40,7 +40,7 @@ public class OffererVerifiesAndSignsContract extends OffererTradeTask {
         try {
             Contract contract = new Contract(
                     processModel.getOffer(),
-                    offererTrade.getTradeAmount(),
+                    trade.getTradeAmount(),
                     processModel.getTakeOfferFeeTxId(),
                     processModel.getAccountId(),
                     processModel.tradingPeer.getAccountId(),
@@ -52,20 +52,20 @@ public class OffererVerifiesAndSignsContract extends OffererTradeTask {
             String signature = processModel.getSignatureService().signMessage(processModel.getRegistrationKeyPair(),
                     contractAsJson);
 
-            offererTrade.setContract(contract);
-            offererTrade.setContractAsJson(contractAsJson);
-            offererTrade.setOffererContractSignature(signature);
-            offererTrade.setTakerContractSignature(processModel.tradingPeer.getContractSignature());
+            trade.setContract(contract);
+            trade.setContractAsJson(contractAsJson);
+            trade.setOffererContractSignature(signature);
+            trade.setTakerContractSignature(processModel.tradingPeer.getContractSignature());
 
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            offererTrade.setThrowable(t);
+            trade.setThrowable(t);
 
-            if (offererTrade instanceof OffererAsBuyerTrade)
-                offererTrade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
-            else if (offererTrade instanceof OffererAsSellerTrade)
-                offererTrade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
+            if (trade instanceof OffererAsBuyerTrade)
+                trade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
+            else if (trade instanceof OffererAsSellerTrade)
+                trade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
 
             failed(t);
         }

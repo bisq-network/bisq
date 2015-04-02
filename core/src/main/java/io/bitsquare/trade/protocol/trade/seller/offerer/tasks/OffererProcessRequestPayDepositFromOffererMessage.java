@@ -31,8 +31,8 @@ import static io.bitsquare.util.Validator.*;
 public class OffererProcessRequestPayDepositFromOffererMessage extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererProcessRequestPayDepositFromOffererMessage.class);
 
-    public OffererProcessRequestPayDepositFromOffererMessage(TaskRunner taskHandler, Trade offererTrade) {
-        super(taskHandler, offererTrade);
+    public OffererProcessRequestPayDepositFromOffererMessage(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
@@ -50,12 +50,12 @@ public class OffererProcessRequestPayDepositFromOffererMessage extends OffererTr
             processModel.tradingPeer.setP2pEncryptPubKey(checkNotNull(message.buyerP2PEncryptPublicKey));
             processModel.tradingPeer.setFiatAccount(checkNotNull(message.buyerFiatAccount));
             processModel.tradingPeer.setAccountId(nonEmptyStringOf(message.buyerAccountId));
-            offererTrade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(message.tradeAmount)));
+            trade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(message.tradeAmount)));
 
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            offererTrade.setThrowable(t);
+            trade.setThrowable(t);
             failed(t);
         }
     }

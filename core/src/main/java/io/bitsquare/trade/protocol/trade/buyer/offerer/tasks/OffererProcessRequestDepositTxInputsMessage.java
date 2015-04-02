@@ -33,8 +33,8 @@ import static io.bitsquare.util.Validator.*;
 public class OffererProcessRequestDepositTxInputsMessage extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererProcessRequestDepositTxInputsMessage.class);
 
-    public OffererProcessRequestDepositTxInputsMessage(TaskRunner taskHandler, Trade offererTrade) {
-        super(taskHandler, offererTrade);
+    public OffererProcessRequestDepositTxInputsMessage(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
@@ -44,19 +44,19 @@ public class OffererProcessRequestDepositTxInputsMessage extends OffererTradeTas
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);
 
-            offererTrade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(message.tradeAmount)));
+            trade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(message.tradeAmount)));
             processModel.setTakeOfferFeeTxId(nonEmptyStringOf(message.takeOfferFeeTxId));
             processModel.tradingPeer.setTradeWalletPubKey(checkNotNull(message.takerTradeWalletPubKey));
 
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            offererTrade.setThrowable(t);
+            trade.setThrowable(t);
 
-            if (offererTrade instanceof OffererAsBuyerTrade)
-                offererTrade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
-            else if (offererTrade instanceof OffererAsSellerTrade)
-                offererTrade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
+            if (trade instanceof OffererAsBuyerTrade)
+                trade.setLifeCycleState(OffererAsBuyerTrade.LifeCycleState.OFFER_OPEN);
+            else if (trade instanceof OffererAsSellerTrade)
+                trade.setLifeCycleState(OffererAsSellerTrade.LifeCycleState.OFFER_OPEN);
 
             failed(t);
         }

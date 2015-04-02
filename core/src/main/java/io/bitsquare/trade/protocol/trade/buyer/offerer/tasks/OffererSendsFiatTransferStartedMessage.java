@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
 public class OffererSendsFiatTransferStartedMessage extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererSendsFiatTransferStartedMessage.class);
 
-    public OffererSendsFiatTransferStartedMessage(TaskRunner taskHandler, Trade offererTrade) {
-        super(taskHandler, offererTrade);
+    public OffererSendsFiatTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
@@ -44,7 +44,7 @@ public class OffererSendsFiatTransferStartedMessage extends OffererTradeTask {
                     processModel.tradingPeer.getPayoutAmount(),
                     processModel.getAddressEntry().getAddressString());
 
-            processModel.getMessageService().sendMessage(offererTrade.getTradingPeer(), tradeMessage,
+            processModel.getMessageService().sendMessage(trade.getTradingPeer(), tradeMessage,
                     processModel.tradingPeer.getP2pSigPubKey(),
                     processModel.tradingPeer.getP2pEncryptPubKey(),
                     new SendMessageListener() {
@@ -52,11 +52,11 @@ public class OffererSendsFiatTransferStartedMessage extends OffererTradeTask {
                         public void handleResult() {
                             log.trace("Sending FiatTransferStartedMessage succeeded.");
 
-                            if (offererTrade instanceof OffererAsBuyerTrade) {
-                                ((OffererAsBuyerTrade) offererTrade).setProcessState(OffererAsBuyerTrade.ProcessState.FIAT_PAYMENT_STARTED);
+                            if (trade instanceof OffererAsBuyerTrade) {
+                                ((OffererAsBuyerTrade) trade).setProcessState(OffererAsBuyerTrade.ProcessState.FIAT_PAYMENT_STARTED);
                             }
-                            else if (offererTrade instanceof OffererAsSellerTrade) {
-                                ((OffererAsSellerTrade) offererTrade).setProcessState(OffererAsSellerTrade.ProcessState.FIAT_PAYMENT_STARTED);
+                            else if (trade instanceof OffererAsSellerTrade) {
+                                ((OffererAsSellerTrade) trade).setProcessState(OffererAsSellerTrade.ProcessState.FIAT_PAYMENT_STARTED);
                             }
 
                             complete();
@@ -65,13 +65,13 @@ public class OffererSendsFiatTransferStartedMessage extends OffererTradeTask {
                         @Override
                         public void handleFault() {
                             appendToErrorMessage("Sending FiatTransferStartedMessage failed");
-                            offererTrade.setErrorMessage(errorMessage);
+                            trade.setErrorMessage(errorMessage);
 
-                            if (offererTrade instanceof OffererAsBuyerTrade) {
-                                ((OffererAsBuyerTrade) offererTrade).setProcessState(OffererAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                            if (trade instanceof OffererAsBuyerTrade) {
+                                ((OffererAsBuyerTrade) trade).setProcessState(OffererAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
                             }
-                            else if (offererTrade instanceof OffererAsSellerTrade) {
-                                ((OffererAsSellerTrade) offererTrade).setProcessState(OffererAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                            else if (trade instanceof OffererAsSellerTrade) {
+                                ((OffererAsSellerTrade) trade).setProcessState(OffererAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
                             }
 
                             failed();
@@ -79,7 +79,7 @@ public class OffererSendsFiatTransferStartedMessage extends OffererTradeTask {
                     });
         } catch (Throwable t) {
             t.printStackTrace();
-            offererTrade.setThrowable(t);
+            trade.setThrowable(t);
             failed(t);
         }
     }

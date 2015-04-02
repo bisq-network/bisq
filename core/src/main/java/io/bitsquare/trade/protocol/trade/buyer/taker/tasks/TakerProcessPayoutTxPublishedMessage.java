@@ -33,8 +33,8 @@ import static io.bitsquare.util.Validator.checkTradeId;
 public class TakerProcessPayoutTxPublishedMessage extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerProcessPayoutTxPublishedMessage.class);
 
-    public TakerProcessPayoutTxPublishedMessage(TaskRunner taskHandler, Trade takerTrade) {
-        super(taskHandler, takerTrade);
+    public TakerProcessPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
@@ -44,17 +44,17 @@ public class TakerProcessPayoutTxPublishedMessage extends TakerTradeTask {
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);
 
-            takerTrade.setPayoutTx(checkNotNull(message.payoutTx));
+            trade.setPayoutTx(checkNotNull(message.payoutTx));
 
-            if (takerTrade instanceof TakerAsBuyerTrade)
-                takerTrade.setProcessState(TakerAsBuyerTrade.ProcessState.PAYOUT_PUBLISHED);
-            else if (takerTrade instanceof TakerAsSellerTrade)
-                takerTrade.setProcessState(TakerAsSellerTrade.ProcessState.PAYOUT_PUBLISHED);
+            if (trade instanceof TakerAsBuyerTrade)
+                trade.setProcessState(TakerAsBuyerTrade.ProcessState.PAYOUT_PUBLISHED);
+            else if (trade instanceof TakerAsSellerTrade)
+                trade.setProcessState(TakerAsSellerTrade.ProcessState.PAYOUT_PUBLISHED);
 
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            takerTrade.setThrowable(t);
+            trade.setThrowable(t);
             failed(t);
         }
     }

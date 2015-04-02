@@ -29,21 +29,21 @@ import org.slf4j.LoggerFactory;
 public class OffererCommitsPayoutTx extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererCommitsPayoutTx.class);
 
-    public OffererCommitsPayoutTx(TaskRunner taskHandler, Trade offererTrade) {
-        super(taskHandler, offererTrade);
+    public OffererCommitsPayoutTx(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            Transaction transaction = processModel.getTradeWalletService().commitTx(offererTrade.getPayoutTx());
+            Transaction transaction = processModel.getTradeWalletService().commitTx(trade.getPayoutTx());
 
-            offererTrade.setPayoutTx(transaction);
+            trade.setPayoutTx(transaction);
 
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            offererTrade.setThrowable(t);
+            trade.setThrowable(t);
             failed(t);
         }
     }

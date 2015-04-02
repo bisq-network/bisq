@@ -29,22 +29,22 @@ import org.slf4j.LoggerFactory;
 public class TakerCreatesAndSignsPayoutTx extends TakerTradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerCreatesAndSignsPayoutTx.class);
 
-    public TakerCreatesAndSignsPayoutTx(TaskRunner taskHandler, Trade takerTrade) {
-        super(taskHandler, takerTrade);
+    public TakerCreatesAndSignsPayoutTx(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            assert takerTrade.getTradeAmount() != null;
-            Coin securityDeposit = takerTrade.getSecurityDeposit();
+            assert trade.getTradeAmount() != null;
+            Coin securityDeposit = trade.getSecurityDeposit();
 
             Coin offererPayoutAmount = securityDeposit;
-            Coin takerPayoutAmount = securityDeposit.add(takerTrade.getTradeAmount());
+            Coin takerPayoutAmount = securityDeposit.add(trade.getTradeAmount());
 
 
             byte[] takerPayoutTxSignature = processModel.getTradeWalletService().createAndSignPayoutTx(
-                    takerTrade.getDepositTx(),
+                    trade.getDepositTx(),
                     takerPayoutAmount,
                     offererPayoutAmount,
                     processModel.getAddressEntry(),
@@ -60,7 +60,7 @@ public class TakerCreatesAndSignsPayoutTx extends TakerTradeTask {
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            takerTrade.setThrowable(t);
+            trade.setThrowable(t);
             failed(t);
         }
     }

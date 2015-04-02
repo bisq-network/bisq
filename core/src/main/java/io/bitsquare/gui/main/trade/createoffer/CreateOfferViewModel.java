@@ -118,7 +118,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     // setOfferBookFilter is a one time call
     void initWithData(Offer.Direction direction, Coin amount, Fiat price) {
-        dataModel.initWithData( direction,  amount,  price);
+        dataModel.initWithData(direction, amount, price);
 
         if (dataModel.getDirection() == Offer.Direction.BUY) {
             directionLabel.set(BSResources.get("shared.buyBitcoin"));
@@ -427,7 +427,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         return fiatValidator.validate(input);
     }
 
-     boolean isSeller() {
+    boolean isSeller() {
         return dataModel.getDirection() == Offer.Direction.SELL;
     }
 }

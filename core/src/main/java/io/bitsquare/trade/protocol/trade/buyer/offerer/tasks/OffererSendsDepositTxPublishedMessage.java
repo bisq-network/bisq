@@ -31,16 +31,16 @@ import org.slf4j.LoggerFactory;
 public class OffererSendsDepositTxPublishedMessage extends OffererTradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererSendsDepositTxPublishedMessage.class);
 
-    public OffererSendsDepositTxPublishedMessage(TaskRunner taskHandler, Trade offererTrade) {
-        super(taskHandler, offererTrade);
+    public OffererSendsDepositTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(processModel.getId(), offererTrade.getDepositTx());
+            DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(processModel.getId(), trade.getDepositTx());
 
-            processModel.getMessageService().sendMessage(offererTrade.getTradingPeer(), tradeMessage, new SendMessageListener() {
+            processModel.getMessageService().sendMessage(trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
                 @Override
                 public void handleResult() {
                     log.trace("DepositTxPublishedMessage successfully arrived at peer");
@@ -50,19 +50,19 @@ public class OffererSendsDepositTxPublishedMessage extends OffererTradeTask {
                 @Override
                 public void handleFault() {
                     appendToErrorMessage("Sending DepositTxPublishedMessage failed");
-                    offererTrade.setErrorMessage(errorMessage);
+                    trade.setErrorMessage(errorMessage);
 
-                    if (offererTrade instanceof OffererAsBuyerTrade)
-                        offererTrade.setProcessState(OffererAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
-                    else if (offererTrade instanceof OffererAsSellerTrade)
-                        offererTrade.setProcessState(OffererAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                    if (trade instanceof OffererAsBuyerTrade)
+                        trade.setProcessState(OffererAsBuyerTrade.ProcessState.MESSAGE_SENDING_FAILED);
+                    else if (trade instanceof OffererAsSellerTrade)
+                        trade.setProcessState(OffererAsSellerTrade.ProcessState.MESSAGE_SENDING_FAILED);
 
                     failed();
                 }
             });
         } catch (Throwable t) {
             t.printStackTrace();
-            offererTrade.setThrowable(t);
+            trade.setThrowable(t);
             failed(t);
         }
     }

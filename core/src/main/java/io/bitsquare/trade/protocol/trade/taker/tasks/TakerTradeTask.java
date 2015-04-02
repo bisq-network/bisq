@@ -28,13 +28,13 @@ import org.slf4j.LoggerFactory;
 public class TakerTradeTask extends Task<Trade> {
     private static final Logger log = LoggerFactory.getLogger(TakerTradeTask.class);
     protected final ProcessModel processModel;
-    protected final Trade takerTrade;
+    protected final Trade trade;
 
-    public TakerTradeTask(TaskRunner taskHandler, Trade takerTrade) {
-        super(taskHandler, takerTrade);
+    public TakerTradeTask(TaskRunner taskHandler, Trade trade) {
+        super(taskHandler, trade);
 
-        this.takerTrade = takerTrade;
-        processModel = takerTrade.getProcessModel();
+        this.trade = trade;
+        processModel = trade.getProcessModel();
     }
 
     @Override
