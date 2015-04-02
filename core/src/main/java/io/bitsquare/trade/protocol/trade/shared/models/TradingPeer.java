@@ -55,6 +55,7 @@ public class TradingPeer implements Serializable {
     private byte[] signature;
     private String contractAsJson;
     private String contractSignature;
+    private PublicKey p2PSigPubKey;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -196,5 +197,13 @@ public class TradingPeer implements Serializable {
                 ", contractAsJson='" + contractAsJson + '\'' +
                 ", contractSignature='" + contractSignature + '\'' +
                 '}';
+    }
+
+    public PublicKey getP2PSigPubKey() {
+        return p2PSigPubKey;
+    }
+
+    public void setP2PSigPubKey(PublicKey p2PSigPubKey) {
+        this.p2PSigPubKey = p2PSigPubKey;
     }
 }

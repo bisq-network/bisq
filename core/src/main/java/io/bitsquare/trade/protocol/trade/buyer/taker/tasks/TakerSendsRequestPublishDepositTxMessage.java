@@ -44,7 +44,7 @@ public class TakerSendsRequestPublishDepositTxMessage extends TradeTask {
                     processModel.getP2pSigPubKey(),
                     processModel.getP2pEncryptPublicKey(),
                     trade.getContractAsJson(),
-                    trade.getTakerContractSignature(),
+                    trade.getSellerContractSignature(),
                     processModel.getAddressEntry().getAddressString(),
                     processModel.getPreparedDepositTx(),
                     processModel.getConnectedOutputsForAllInputs()

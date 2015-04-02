@@ -50,8 +50,8 @@ public class BuyerVerifiesAndSignsContract extends TradeTask {
             String signature = processModel.getSignatureService().signMessage(processModel.getRegistrationKeyPair(), contractAsJson);
             trade.setContract(contract);
             trade.setContractAsJson(contractAsJson);
-            trade.setOffererContractSignature(signature);
-            trade.setOffererContractSignature(processModel.tradingPeer.getContractSignature());
+            trade.setBuyerContractSignature(signature);
+            trade.setBuyerContractSignature(processModel.tradingPeer.getContractSignature());
 
             complete();
         } catch (Throwable t) {

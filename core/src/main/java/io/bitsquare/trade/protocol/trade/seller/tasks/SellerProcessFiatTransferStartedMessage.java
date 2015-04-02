@@ -15,15 +15,18 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.seller.offerer.tasks;
+package io.bitsquare.trade.protocol.trade.seller.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.BuyerAsOffererTrade;
+import io.bitsquare.trade.BuyerAsTakerTrade;
 import io.bitsquare.trade.SellerAsOffererTrade;
+import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.states.OffererState;
+import io.bitsquare.trade.states.TakerState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,10 +34,10 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.*;
 
-public class OffererProcessFiatTransferStartedMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(OffererProcessFiatTransferStartedMessage.class);
+public class SellerProcessFiatTransferStartedMessage extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SellerProcessFiatTransferStartedMessage.class);
 
-    public OffererProcessFiatTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
+    public SellerProcessFiatTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -50,10 +53,10 @@ public class OffererProcessFiatTransferStartedMessage extends TradeTask {
             processModel.tradingPeer.setPayoutAmount(positiveCoinOf(nonZeroCoinOf(message.buyerPayoutAmount)));
             processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(message.buyerPayoutAddress));
 
-            if (trade instanceof BuyerAsOffererTrade)
+            if (trade instanceof BuyerAsOffererTrade || trade instanceof SellerAsOffererTrade)
                 trade.setProcessState(OffererState.ProcessState.FIAT_PAYMENT_STARTED);
-            else if (trade instanceof SellerAsOffererTrade)
-                trade.setProcessState(OffererState.ProcessState.FIAT_PAYMENT_STARTED);
+            else if (trade instanceof BuyerAsTakerTrade || trade instanceof SellerAsTakerTrade)
+                trade.setProcessState(TakerState.ProcessState.FIAT_PAYMENT_STARTED);
 
             complete();
         } catch (Throwable t) {

@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.seller.taker.tasks;
+package io.bitsquare.trade.protocol.trade.seller.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
@@ -28,10 +28,10 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.*;
 import static io.bitsquare.util.Validator.*;
 
-public class TakerProcessRequestSellerDepositPaymentMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(TakerProcessRequestSellerDepositPaymentMessage.class);
+public class SellerProcessRequestPayDepositMessage extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SellerProcessRequestPayDepositMessage.class);
 
-    public TakerProcessRequestSellerDepositPaymentMessage(TaskRunner taskHandler, Trade trade) {
+    public SellerProcessRequestPayDepositMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -50,6 +50,7 @@ public class TakerProcessRequestSellerDepositPaymentMessage extends TradeTask {
             processModel.tradingPeer.setP2pEncryptPubKey(checkNotNull(message.buyerP2PEncryptPublicKey));
             processModel.tradingPeer.setFiatAccount(checkNotNull(message.buyerFiatAccount));
             processModel.tradingPeer.setAccountId(nonEmptyStringOf(message.buyerAccountId));
+            trade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(message.tradeAmount)));
 
             complete();
         } catch (Throwable t) {

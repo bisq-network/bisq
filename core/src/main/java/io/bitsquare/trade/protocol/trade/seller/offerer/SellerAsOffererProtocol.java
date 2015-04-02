@@ -31,15 +31,15 @@ import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.seller.offerer.tasks.OffererCommitDepositTx;
-import io.bitsquare.trade.protocol.trade.seller.offerer.tasks.OffererCreatesAndSignsContract;
-import io.bitsquare.trade.protocol.trade.seller.offerer.tasks.OffererCreatesAndSignsDepositTx;
-import io.bitsquare.trade.protocol.trade.seller.offerer.tasks.OffererProcessDepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.seller.offerer.tasks.OffererProcessFiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.seller.offerer.tasks.OffererProcessRequestPayDepositFromOffererMessage;
 import io.bitsquare.trade.protocol.trade.seller.offerer.tasks.OffererSendsPayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.seller.offerer.tasks.OffererSendsRequestPublishDepositTxFromTakerMessage;
 import io.bitsquare.trade.protocol.trade.seller.offerer.tasks.OffererSignsAndPublishPayoutTx;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SellerCommitDepositTx;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SellerCreatesAndSignsContract;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SellerCreatesAndSignsDepositTx;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SellerProcessDepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SellerProcessFiatTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SellerProcessRequestPayDepositMessage;
 import io.bitsquare.trade.protocol.trade.shared.models.ProcessModel;
 import io.bitsquare.trade.protocol.trade.shared.offerer.tasks.VerifyTakeOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.shared.offerer.tasks.VerifyTakerAccount;
@@ -145,10 +145,10 @@ public class SellerAsOffererProtocol implements TradeProtocol {
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                OffererProcessRequestPayDepositFromOffererMessage.class,
+                SellerProcessRequestPayDepositMessage.class,
                 VerifyTakerAccount.class,
-                OffererCreatesAndSignsContract.class,
-                OffererCreatesAndSignsDepositTx.class,
+                SellerCreatesAndSignsContract.class,
+                SellerCreatesAndSignsDepositTx.class,
                 OffererSendsRequestPublishDepositTxFromTakerMessage.class
         );
         taskRunner.run();
@@ -162,8 +162,8 @@ public class SellerAsOffererProtocol implements TradeProtocol {
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                OffererProcessDepositTxPublishedMessage.class,
-                OffererCommitDepositTx.class
+                SellerProcessDepositTxPublishedMessage.class,
+                SellerCommitDepositTx.class
         );
         taskRunner.run();
     }
@@ -175,7 +175,7 @@ public class SellerAsOffererProtocol implements TradeProtocol {
                 () -> log.debug("taskRunner at handleFiatTransferStartedMessage completed"),
                 this::handleTaskRunnerFault);
 
-        taskRunner.addTasks(OffererProcessFiatTransferStartedMessage.class);
+        taskRunner.addTasks(SellerProcessFiatTransferStartedMessage.class);
         taskRunner.run();
     }
 

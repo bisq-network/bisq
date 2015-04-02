@@ -99,8 +99,8 @@ abstract public class Trade extends Model implements Serializable {
     protected Transaction depositTx;
     private Contract contract;
     private String contractAsJson;
-    private String takerContractSignature;
-    private String offererContractSignature;
+    private String sellerContractSignature;
+    private String buyerContractSignature;
     private Transaction payoutTx;
 
     // Transient/Mutable
@@ -354,22 +354,22 @@ abstract public class Trade extends Model implements Serializable {
     // Getter/Setter for Mutable objects
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setTakerContractSignature(String takerSignature) {
-        this.takerContractSignature = takerSignature;
+    public void setSellerContractSignature(String takerSignature) {
+        this.sellerContractSignature = takerSignature;
     }
 
     @Nullable
-    public String getTakerContractSignature() {
-        return takerContractSignature;
+    public String getSellerContractSignature() {
+        return sellerContractSignature;
     }
 
-    public void setOffererContractSignature(String offererContractSignature) {
-        this.offererContractSignature = offererContractSignature;
+    public void setBuyerContractSignature(String buyerContractSignature) {
+        this.buyerContractSignature = buyerContractSignature;
     }
 
     @Nullable
-    public String getOffererContractSignature() {
-        return offererContractSignature;
+    public String getBuyerContractSignature() {
+        return buyerContractSignature;
     }
 
     public void setContractAsJson(String contractAsJson) {
@@ -430,8 +430,8 @@ abstract public class Trade extends Model implements Serializable {
                 ", depositTx=" + depositTx +
                 ", contract=" + contract +
                 ", contractAsJson='" + contractAsJson + '\'' +
-                ", takerContractSignature='" + takerContractSignature + '\'' +
-                ", offererContractSignature='" + offererContractSignature + '\'' +
+                ", takerContractSignature='" + sellerContractSignature + '\'' +
+                ", offererContractSignature='" + buyerContractSignature + '\'' +
                 ", payoutTx=" + payoutTx +
                 ", errorMessage='" + errorMessage + '\'' +
                 ", throwable=" + throwable +

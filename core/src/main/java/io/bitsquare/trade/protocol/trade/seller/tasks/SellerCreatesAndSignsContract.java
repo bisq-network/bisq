@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.seller.taker.tasks;
+package io.bitsquare.trade.protocol.trade.seller.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Contract;
@@ -26,33 +26,33 @@ import io.bitsquare.util.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerCreatesAndSignContract extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(TakerCreatesAndSignContract.class);
+public class SellerCreatesAndSignsContract extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SellerCreatesAndSignsContract.class);
 
-    public TakerCreatesAndSignContract(TaskRunner taskHandler, Trade trade) {
+    public SellerCreatesAndSignsContract(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            assert processModel.getTakeOfferFeeTx() != null;
+            assert processModel.getTakeOfferFeeTxId() != null;
             Contract contract = new Contract(
                     processModel.getOffer(),
                     model.getTradeAmount(),
-                    processModel.getTakeOfferFeeTx().getHashAsString(),
+                    processModel.getTakeOfferFeeTxId(),
                     processModel.tradingPeer.getAccountId(),
                     processModel.getAccountId(),
                     processModel.tradingPeer.getFiatAccount(),
                     processModel.getFiatAccount(),
-                    processModel.getOffer().getP2PSigPubKey(),
+                    processModel.tradingPeer.getP2PSigPubKey(),
                     processModel.getP2pSigPubKey());
             String contractAsJson = Utilities.objectToJson(contract);
             String signature = processModel.getSignatureService().signMessage(processModel.getRegistrationKeyPair(), contractAsJson);
 
             model.setContract(contract);
             model.setContractAsJson(contractAsJson);
-            model.setTakerContractSignature(signature);
+            model.setSellerContractSignature(signature);
 
             complete();
         } catch (Throwable t) {

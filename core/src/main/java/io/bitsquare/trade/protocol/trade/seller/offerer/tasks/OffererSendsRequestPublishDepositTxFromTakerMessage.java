@@ -47,7 +47,7 @@ public class OffererSendsRequestPublishDepositTxFromTakerMessage extends TradeTa
                     processModel.getP2pSigPubKey(),
                     processModel.getP2pEncryptPublicKey(),
                     trade.getContractAsJson(),
-                    trade.getOffererContractSignature(),
+                    trade.getBuyerContractSignature(),
                     processModel.getAddressEntry().getAddressString(),
                     processModel.getPreparedDepositTx(),
                     processModel.getConnectedOutputsForAllInputs()

@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.seller.offerer.tasks;
+package io.bitsquare.trade.protocol.trade.seller.tasks;
 
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
@@ -28,10 +28,10 @@ import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererCreatesAndSignsDepositTx extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(OffererCreatesAndSignsDepositTx.class);
+public class SellerCreatesAndSignsDepositTx extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SellerCreatesAndSignsDepositTx.class);
 
-    public OffererCreatesAndSignsDepositTx(TaskRunner taskHandler, Trade trade) {
+    public SellerCreatesAndSignsDepositTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
