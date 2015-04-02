@@ -20,13 +20,13 @@ package io.bitsquare.trade.protocol.trade.seller.offerer.tasks;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
+import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.util.Utilities;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererCreatesAndSignsContract extends OffererTradeTask {
+public class OffererCreatesAndSignsContract extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererCreatesAndSignsContract.class);
 
     public OffererCreatesAndSignsContract(TaskRunner taskHandler, Trade trade) {

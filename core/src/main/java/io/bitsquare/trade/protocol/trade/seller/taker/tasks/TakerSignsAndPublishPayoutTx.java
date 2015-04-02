@@ -18,11 +18,11 @@
 package io.bitsquare.trade.protocol.trade.seller.taker.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.TakerAsBuyerTrade;
-import io.bitsquare.trade.TakerAsSellerTrade;
-import io.bitsquare.trade.TakerState;
+import io.bitsquare.trade.BuyerAsTakerTrade;
+import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.taker.tasks.TakerTradeTask;
+import io.bitsquare.trade.protocol.trade.TradeTask;
+import io.bitsquare.trade.states.TakerState;
 
 import org.bitcoinj.core.Transaction;
 
@@ -33,7 +33,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerSignsAndPublishPayoutTx extends TakerTradeTask {
+public class TakerSignsAndPublishPayoutTx extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerSignsAndPublishPayoutTx.class);
 
     public TakerSignsAndPublishPayoutTx(TaskRunner taskHandler, Trade trade) {
@@ -58,9 +58,9 @@ public class TakerSignsAndPublishPayoutTx extends TakerTradeTask {
                         public void onSuccess(Transaction transaction) {
                             processModel.setPayoutTx(transaction);
 
-                            if (trade instanceof TakerAsBuyerTrade)
+                            if (trade instanceof BuyerAsTakerTrade)
                                 trade.setProcessState(TakerState.ProcessState.PAYOUT_PUBLISHED);
-                            else if (trade instanceof TakerAsSellerTrade)
+                            else if (trade instanceof SellerAsTakerTrade)
                                 trade.setProcessState(TakerState.ProcessState.PAYOUT_PUBLISHED);
 
                             complete();

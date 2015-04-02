@@ -28,8 +28,9 @@ import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.trade.protocol.Protocol;
+import io.bitsquare.trade.protocol.trade.TradeProtocol;
 import io.bitsquare.trade.protocol.trade.shared.models.ProcessModel;
+import io.bitsquare.trade.states.TradeState;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;
@@ -68,6 +69,7 @@ abstract public class Trade extends Model implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private transient static final Logger log = LoggerFactory.getLogger(Trade.class);
+
     // Mutable
     protected Coin tradeAmount;
     protected Peer tradingPeer;
@@ -76,26 +78,14 @@ abstract public class Trade extends Model implements Serializable {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interfaces
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public interface LifeCycleState {
-    }
-
-    public interface ProcessState {
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Transient/Immutable
-    transient protected ObjectProperty<ProcessState> processStateProperty;
-    transient protected ObjectProperty<LifeCycleState> lifeCycleStateProperty;
-
+    transient protected ObjectProperty<TradeState.ProcessState> processStateProperty;
+    transient protected ObjectProperty<TradeState.LifeCycleState> lifeCycleStateProperty;
     transient private Storage<? extends TradeList> storage;
-    transient protected Protocol protocol;
+    transient protected TradeProtocol tradeProtocol;
 
     // Immutable
     protected final Offer offer;
@@ -103,8 +93,8 @@ abstract public class Trade extends Model implements Serializable {
     protected final ProcessModel processModel;
 
     // Mutable
-    protected ProcessState processState;
-    protected LifeCycleState lifeCycleState;
+    protected TradeState.ProcessState processState;
+    protected TradeState.LifeCycleState lifeCycleState;
     private MailboxMessage mailboxMessage;
     protected Transaction depositTx;
     private Contract contract;
@@ -173,7 +163,7 @@ abstract public class Trade extends Model implements Serializable {
         createProtocol();
 
         if (mailboxMessage != null)
-            protocol.setMailboxMessage(mailboxMessage);
+            tradeProtocol.setMailboxMessage(mailboxMessage);
     }
 
     protected void initStateProperties() {
@@ -195,16 +185,16 @@ abstract public class Trade extends Model implements Serializable {
     }
 
     public void disposeProtocol() {
-        if (protocol != null) {
-            protocol.cleanup();
-            protocol = null;
+        if (tradeProtocol != null) {
+            tradeProtocol.cleanup();
+            tradeProtocol = null;
         }
     }
 
     public void setMailboxMessage(MailboxMessage mailboxMessage) {
         this.mailboxMessage = mailboxMessage;
-        if (protocol != null)
-            protocol.setMailboxMessage(mailboxMessage);
+        if (tradeProtocol != null)
+            tradeProtocol.setMailboxMessage(mailboxMessage);
 
         storage.queueUpForSave();
     }
@@ -213,13 +203,13 @@ abstract public class Trade extends Model implements Serializable {
         this.storage = storage;
     }
 
-    public void setProcessState(Trade.ProcessState processState) {
+    public void setProcessState(TradeState.ProcessState processState) {
         this.processState = processState;
         processStateProperty.set(processState);
         storage.queueUpForSave();
     }
 
-    public void setLifeCycleState(Trade.LifeCycleState lifeCycleState) {
+    public void setLifeCycleState(TradeState.LifeCycleState lifeCycleState) {
         this.lifeCycleState = lifeCycleState;
         lifeCycleStateProperty.set(lifeCycleState);
         storage.queueUpForSave();
@@ -351,11 +341,11 @@ abstract public class Trade extends Model implements Serializable {
             return null;
     }
 
-    public ReadOnlyObjectProperty<? extends ProcessState> processStateProperty() {
+    public ReadOnlyObjectProperty<? extends TradeState.ProcessState> processStateProperty() {
         return processStateProperty;
     }
 
-    public ReadOnlyObjectProperty<? extends LifeCycleState> lifeCycleStateProperty() {
+    public ReadOnlyObjectProperty<? extends TradeState.LifeCycleState> lifeCycleStateProperty() {
         return lifeCycleStateProperty;
     }
 
@@ -430,7 +420,7 @@ abstract public class Trade extends Model implements Serializable {
 
     @Override
     public String toString() {
-        return ", protocol=" + protocol +
+        return ", protocol=" + tradeProtocol +
                 ", offer=" + offer +
                 ", date=" + date +
                 ", processModel=" + processModel +

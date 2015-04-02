@@ -43,6 +43,8 @@ import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityProtocol;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
+import io.bitsquare.trade.states.OffererState;
+import io.bitsquare.trade.states.TakerState;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
 
@@ -168,9 +170,9 @@ public class TradeManager {
             // continue the trade, but that might fail.
 
             boolean failed = false;
-            if (trade instanceof TakerAsSellerTrade)
+            if (trade instanceof SellerAsTakerTrade)
                 failed = trade.lifeCycleState == TakerState.LifeCycleState.FAILED;
-            else if (trade instanceof TakerAsBuyerTrade)
+            else if (trade instanceof BuyerAsTakerTrade)
                 failed = trade.lifeCycleState == TakerState.LifeCycleState.FAILED;
 
             if (failed) {
@@ -278,9 +280,9 @@ public class TradeManager {
     private void handlePlaceOfferResult(Transaction transaction, Offer offer, TransactionResultHandler resultHandler) {
         Trade trade;
         if (offer.getDirection() == Offer.Direction.BUY)
-            trade = new OffererAsBuyerTrade(offer, openOfferTradesStorage);
+            trade = new BuyerAsOffererTrade(offer, openOfferTradesStorage);
         else
-            trade = new OffererAsSellerTrade(offer, openOfferTradesStorage);
+            trade = new SellerAsOffererTrade(offer, openOfferTradesStorage);
 
         openOfferTrades.add(trade);
         initTrade(trade);
@@ -319,9 +321,9 @@ public class TradeManager {
                         openOfferTrades.remove(trade);
 
                         if (isCancelRequest) {
-                            if (trade instanceof OffererAsBuyerTrade)
+                            if (trade instanceof BuyerAsOffererTrade)
                                 trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_CANCELED);
-                            else if (trade instanceof OffererAsSellerTrade)
+                            else if (trade instanceof SellerAsOffererTrade)
                                 trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_CANCELED);
                             closedTrades.add(trade);
                             trade.disposeProtocol();
@@ -379,9 +381,9 @@ public class TradeManager {
         if (offer.getState() == Offer.State.AVAILABLE) {
             Trade trade;
             if (offer.getDirection() == Offer.Direction.BUY)
-                trade = new TakerAsSellerTrade(offer, amount, model.getPeer(), pendingTradesStorage);
+                trade = new SellerAsTakerTrade(offer, amount, model.getPeer(), pendingTradesStorage);
             else
-                trade = new TakerAsBuyerTrade(offer, amount, model.getPeer(), pendingTradesStorage);
+                trade = new BuyerAsTakerTrade(offer, amount, model.getPeer(), pendingTradesStorage);
 
             initTrade(trade);
             pendingTrades.add(trade);
@@ -402,7 +404,7 @@ public class TradeManager {
         // TODO handle overpaid securityDeposit
         Coin amountToWithdraw = trade.getSecurityDeposit();
         assert trade.getTradeAmount() != null;
-        if (trade instanceof OffererAsBuyerTrade || trade instanceof TakerAsBuyerTrade)
+        if (trade instanceof BuyerAsOffererTrade || trade instanceof BuyerAsTakerTrade)
             amountToWithdraw = amountToWithdraw.add(trade.getTradeAmount());
 
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
@@ -410,13 +412,13 @@ public class TradeManager {
             public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                 if (transaction != null) {
                     log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
-                    if (trade instanceof OffererAsBuyerTrade)
+                    if (trade instanceof BuyerAsOffererTrade)
                         trade.setLifeCycleState(OffererState.LifeCycleState.COMPLETED);
-                    else if (trade instanceof TakerAsSellerTrade)
+                    else if (trade instanceof SellerAsTakerTrade)
                         trade.setLifeCycleState(TakerState.LifeCycleState.COMPLETED);
-                    else if (trade instanceof OffererAsSellerTrade)
+                    else if (trade instanceof SellerAsOffererTrade)
                         trade.setLifeCycleState(OffererState.LifeCycleState.COMPLETED);
-                    else if (trade instanceof TakerAsBuyerTrade)
+                    else if (trade instanceof BuyerAsTakerTrade)
                         trade.setLifeCycleState(TakerState.LifeCycleState.COMPLETED);
 
                     pendingTrades.remove(trade);

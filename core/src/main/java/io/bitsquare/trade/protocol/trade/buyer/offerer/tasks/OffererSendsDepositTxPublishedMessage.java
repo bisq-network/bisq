@@ -19,17 +19,17 @@ package io.bitsquare.trade.protocol.trade.buyer.offerer.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
-import io.bitsquare.trade.OffererAsBuyerTrade;
-import io.bitsquare.trade.OffererAsSellerTrade;
-import io.bitsquare.trade.OffererState;
+import io.bitsquare.trade.BuyerAsOffererTrade;
+import io.bitsquare.trade.SellerAsOffererTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
+import io.bitsquare.trade.states.OffererState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererSendsDepositTxPublishedMessage extends OffererTradeTask {
+public class OffererSendsDepositTxPublishedMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererSendsDepositTxPublishedMessage.class);
 
     public OffererSendsDepositTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
@@ -53,9 +53,9 @@ public class OffererSendsDepositTxPublishedMessage extends OffererTradeTask {
                     appendToErrorMessage("Sending DepositTxPublishedMessage failed");
                     trade.setErrorMessage(errorMessage);
 
-                    if (trade instanceof OffererAsBuyerTrade)
+                    if (trade instanceof BuyerAsOffererTrade)
                         trade.setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
-                    else if (trade instanceof OffererAsSellerTrade)
+                    else if (trade instanceof SellerAsOffererTrade)
                         trade.setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
 
                     failed();

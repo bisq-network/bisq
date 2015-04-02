@@ -18,11 +18,11 @@
 package io.bitsquare.trade.protocol.trade.shared.taker.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.TakerAsBuyerTrade;
-import io.bitsquare.trade.TakerAsSellerTrade;
-import io.bitsquare.trade.TakerState;
+import io.bitsquare.trade.BuyerAsTakerTrade;
+import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.taker.tasks.TakerTradeTask;
+import io.bitsquare.trade.protocol.trade.TradeTask;
+import io.bitsquare.trade.states.TakerState;
 
 import org.bitcoinj.core.Transaction;
 
@@ -33,7 +33,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BroadcastTakeOfferFeeTx extends TakerTradeTask {
+public class BroadcastTakeOfferFeeTx extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(BroadcastTakeOfferFeeTx.class);
 
     public BroadcastTakeOfferFeeTx(TaskRunner taskHandler, Trade trade) {
@@ -49,9 +49,9 @@ public class BroadcastTakeOfferFeeTx extends TakerTradeTask {
                         public void onSuccess(Transaction transaction) {
                             log.debug("Take offer fee published successfully. Transaction ID = " + transaction.getHashAsString());
 
-                            if (trade instanceof TakerAsBuyerTrade)
+                            if (trade instanceof BuyerAsTakerTrade)
                                 trade.setProcessState(TakerState.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
-                            else if (trade instanceof TakerAsSellerTrade)
+                            else if (trade instanceof SellerAsTakerTrade)
                                 trade.setProcessState(TakerState.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
                             complete();
                         }
@@ -62,9 +62,9 @@ public class BroadcastTakeOfferFeeTx extends TakerTradeTask {
                             appendToErrorMessage("Take offer fee payment failed. Maybe your network connection was lost. Please try again.");
                             trade.setErrorMessage(errorMessage);
 
-                            if (trade instanceof TakerAsBuyerTrade)
+                            if (trade instanceof BuyerAsTakerTrade)
                                 trade.setProcessState(TakerState.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
-                            else if (trade instanceof TakerAsSellerTrade)
+                            else if (trade instanceof SellerAsTakerTrade)
                                 trade.setProcessState(TakerState.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
 
                             failed(t);

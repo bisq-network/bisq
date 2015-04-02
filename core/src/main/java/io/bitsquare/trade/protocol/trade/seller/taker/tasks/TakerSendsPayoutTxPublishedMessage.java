@@ -19,17 +19,17 @@ package io.bitsquare.trade.protocol.trade.seller.taker.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
-import io.bitsquare.trade.TakerAsBuyerTrade;
-import io.bitsquare.trade.TakerAsSellerTrade;
-import io.bitsquare.trade.TakerState;
+import io.bitsquare.trade.BuyerAsTakerTrade;
+import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.TakerTradeTask;
+import io.bitsquare.trade.states.TakerState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerSendsPayoutTxPublishedMessage extends TakerTradeTask {
+public class TakerSendsPayoutTxPublishedMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerSendsPayoutTxPublishedMessage.class);
 
     public TakerSendsPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
@@ -56,9 +56,9 @@ public class TakerSendsPayoutTxPublishedMessage extends TakerTradeTask {
                             appendToErrorMessage("Sending PayoutTxPublishedMessage failed");
                             trade.setErrorMessage(errorMessage);
 
-                            if (trade instanceof TakerAsBuyerTrade)
+                            if (trade instanceof BuyerAsTakerTrade)
                                 trade.setProcessState(TakerState.ProcessState.MESSAGE_SENDING_FAILED);
-                            else if (trade instanceof TakerAsSellerTrade)
+                            else if (trade instanceof SellerAsTakerTrade)
                                 trade.setProcessState(TakerState.ProcessState.MESSAGE_SENDING_FAILED);
 
                             failed();

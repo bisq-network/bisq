@@ -18,12 +18,12 @@
 package io.bitsquare.trade.protocol.trade.buyer.offerer.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.OffererAsBuyerTrade;
-import io.bitsquare.trade.OffererAsSellerTrade;
-import io.bitsquare.trade.OffererState;
+import io.bitsquare.trade.BuyerAsOffererTrade;
+import io.bitsquare.trade.SellerAsOffererTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
+import io.bitsquare.trade.states.OffererState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.checkTradeId;
 
-public class OffererProcessPayoutTxPublishedMessage extends OffererTradeTask {
+public class OffererProcessPayoutTxPublishedMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererProcessPayoutTxPublishedMessage.class);
 
     public OffererProcessPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
@@ -47,9 +47,9 @@ public class OffererProcessPayoutTxPublishedMessage extends OffererTradeTask {
 
             trade.setPayoutTx(checkNotNull(message.payoutTx));
 
-            if (trade instanceof OffererAsBuyerTrade)
+            if (trade instanceof BuyerAsOffererTrade)
                 trade.setProcessState(OffererState.ProcessState.PAYOUT_PUBLISHED);
-            else if (trade instanceof OffererAsSellerTrade)
+            else if (trade instanceof SellerAsOffererTrade)
                 trade.setProcessState(OffererState.ProcessState.PAYOUT_PUBLISHED);
 
             complete();

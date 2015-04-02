@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.taker.tasks;
+package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
@@ -25,12 +25,12 @@ import io.bitsquare.trade.protocol.trade.shared.models.ProcessModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerTradeTask extends Task<Trade> {
-    private static final Logger log = LoggerFactory.getLogger(TakerTradeTask.class);
+public class TradeTask extends Task<Trade> {
+    private static final Logger log = LoggerFactory.getLogger(TradeTask.class);
     protected final ProcessModel processModel;
     protected final Trade trade;
 
-    public TakerTradeTask(TaskRunner taskHandler, Trade trade) {
+    public TradeTask(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
 
         this.trade = trade;

@@ -20,7 +20,9 @@ package io.bitsquare.trade;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.trade.protocol.trade.seller.taker.SellerAsTakerProtocol;
+import io.bitsquare.trade.protocol.trade.buyer.taker.BuyerAsTakerProtocol;
+import io.bitsquare.trade.states.TakerState;
+import io.bitsquare.trade.states.TradeState;
 
 import org.bitcoinj.core.Coin;
 
@@ -30,19 +32,19 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerAsSellerTrade extends Trade implements Serializable {
+public class BuyerAsTakerTrade extends Trade implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
-    transient private static final Logger log = LoggerFactory.getLogger(TakerState.class);
+    transient private static final Logger log = LoggerFactory.getLogger(BuyerAsTakerTrade.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TakerAsSellerTrade(Offer offer, Coin tradeAmount, Peer tradingPeer,
-                              Storage<? extends TradeList> storage) {
+    public BuyerAsTakerTrade(Offer offer, Coin tradeAmount, Peer tradingPeer,
+                             Storage<? extends TradeList> storage) {
         super(offer, tradeAmount, tradingPeer, storage);
         log.trace("Created by constructor");
     }
@@ -64,7 +66,7 @@ public class TakerAsSellerTrade extends Trade implements Serializable {
 
     @Override
     public void createProtocol() {
-        protocol = new SellerAsTakerProtocol(this);
+        tradeProtocol = new BuyerAsTakerProtocol(this);
     }
 
 
@@ -74,13 +76,13 @@ public class TakerAsSellerTrade extends Trade implements Serializable {
 
     @Override
     public void takeAvailableOffer() {
-        assert protocol instanceof SellerAsTakerProtocol;
-        ((SellerAsTakerProtocol) protocol).takeAvailableOffer();
+        assert tradeProtocol instanceof BuyerAsTakerProtocol;
+        ((BuyerAsTakerProtocol) tradeProtocol).takeAvailableOffer();
     }
 
-    public void onFiatPaymentReceived() {
-        assert protocol instanceof SellerAsTakerProtocol;
-        ((SellerAsTakerProtocol) protocol).onFiatPaymentReceived();
+    public void onFiatPaymentStarted() {
+        assert tradeProtocol instanceof BuyerAsTakerProtocol;
+        ((BuyerAsTakerProtocol) tradeProtocol).onFiatPaymentStarted();
     }
 
 
@@ -89,12 +91,10 @@ public class TakerAsSellerTrade extends Trade implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setProcessState(Trade.ProcessState processState) {
-        TakerState.ProcessState state = (TakerState.ProcessState) processState;
-        this.processState = processState;
-        processStateProperty.set(processState);
+    public void setProcessState(TradeState.ProcessState processState) {
+        super.setProcessState(processState);
 
-        switch (state) {
+        switch ((TakerState.ProcessState) processState) {
             case EXCEPTION:
                 disposeProtocol();
                 setLifeCycleState(TakerState.LifeCycleState.FAILED);
@@ -103,9 +103,10 @@ public class TakerAsSellerTrade extends Trade implements Serializable {
     }
 
     @Override
-    public void setLifeCycleState(Trade.LifeCycleState lifeCycleState) {
-        TakerState.LifeCycleState state = (TakerState.LifeCycleState) lifeCycleState;
-        switch (state) {
+    public void setLifeCycleState(TradeState.LifeCycleState lifeCycleState) {
+        super.setLifeCycleState(lifeCycleState);
+
+        switch ((TakerState.LifeCycleState) lifeCycleState) {
             case FAILED:
                 disposeProtocol();
                 break;
@@ -113,8 +114,6 @@ public class TakerAsSellerTrade extends Trade implements Serializable {
                 disposeProtocol();
                 break;
         }
-        this.lifeCycleState = lifeCycleState;
-        lifeCycleStateProperty.set(lifeCycleState);
     }
 
     @Override

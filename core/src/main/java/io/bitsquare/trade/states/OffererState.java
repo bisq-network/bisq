@@ -15,12 +15,34 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol;
+package io.bitsquare.trade.states;
 
-import io.bitsquare.p2p.MailboxMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public interface Protocol {
-    void cleanup();
+public class OffererState {
+    private static final Logger log = LoggerFactory.getLogger(OffererState.class);
 
-    void setMailboxMessage(MailboxMessage mailboxMessage);
+    public enum LifeCycleState implements TradeState.LifeCycleState {
+        OFFER_OPEN,
+        OFFER_RESERVED,
+        OFFER_CANCELED,
+        PENDING,
+        COMPLETED,
+        FAILED
+    }
+
+    public enum ProcessState implements TradeState.ProcessState {
+        UNDEFINED,
+        DEPOSIT_PUBLISHED,
+        DEPOSIT_CONFIRMED,
+
+        FIAT_PAYMENT_STARTED,
+
+        FIAT_PAYMENT_RECEIVED,
+        PAYOUT_PUBLISHED,
+
+        MESSAGE_SENDING_FAILED,
+        EXCEPTION
+    }
 }

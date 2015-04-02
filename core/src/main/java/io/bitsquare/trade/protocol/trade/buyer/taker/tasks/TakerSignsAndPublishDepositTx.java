@@ -19,11 +19,11 @@ package io.bitsquare.trade.protocol.trade.buyer.taker.tasks;
 
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.TakerAsBuyerTrade;
-import io.bitsquare.trade.TakerAsSellerTrade;
-import io.bitsquare.trade.TakerState;
+import io.bitsquare.trade.BuyerAsTakerTrade;
+import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.taker.tasks.TakerTradeTask;
+import io.bitsquare.trade.protocol.trade.TradeTask;
+import io.bitsquare.trade.states.TakerState;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -35,7 +35,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerSignsAndPublishDepositTx extends TakerTradeTask {
+public class TakerSignsAndPublishDepositTx extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerSignsAndPublishDepositTx.class);
 
     public TakerSignsAndPublishDepositTx(TaskRunner taskHandler, Trade trade) {
@@ -63,11 +63,11 @@ public class TakerSignsAndPublishDepositTx extends TakerTradeTask {
 
                             trade.setDepositTx(transaction);
 
-                            if (trade instanceof TakerAsBuyerTrade) {
+                            if (trade instanceof BuyerAsTakerTrade) {
                                 trade.setProcessState(TakerState.ProcessState.DEPOSIT_PUBLISHED);
                                 trade.setLifeCycleState(TakerState.LifeCycleState.PENDING);
                             }
-                            else if (trade instanceof TakerAsSellerTrade) {
+                            else if (trade instanceof SellerAsTakerTrade) {
                                 trade.setProcessState(TakerState.ProcessState.DEPOSIT_PUBLISHED);
                                 trade.setLifeCycleState(TakerState.LifeCycleState.PENDING);
                             }

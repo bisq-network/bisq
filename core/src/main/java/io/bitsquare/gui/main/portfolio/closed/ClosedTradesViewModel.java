@@ -20,9 +20,9 @@ package io.bitsquare.gui.main.portfolio.closed;
 import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
 import io.bitsquare.common.viewfx.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.trade.OffererState;
-import io.bitsquare.trade.TakerState;
-import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.states.OffererState;
+import io.bitsquare.trade.states.TakerState;
+import io.bitsquare.trade.states.TradeState;
 
 import com.google.inject.Inject;
 
@@ -70,7 +70,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
 
     String getState(ClosedTradesListItem item) {
         if (item != null && item.getTrade() != null) {
-            Trade.LifeCycleState lifeCycleState = item.getTrade().lifeCycleStateProperty().get();
+            TradeState.LifeCycleState lifeCycleState = item.getTrade().lifeCycleStateProperty().get();
             if (lifeCycleState instanceof TakerState.LifeCycleState) {
                 switch ((TakerState.LifeCycleState) lifeCycleState) {
                     case COMPLETED:

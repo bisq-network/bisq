@@ -21,14 +21,14 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.taker.tasks.TakerTradeTask;
+import io.bitsquare.trade.protocol.trade.TradeTask;
 
 import org.bitcoinj.core.Coin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerCreatesDepositTxInputs extends TakerTradeTask {
+public class TakerCreatesDepositTxInputs extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerCreatesDepositTxInputs.class);
 
     public TakerCreatesDepositTxInputs(TaskRunner taskHandler, Trade trade) {

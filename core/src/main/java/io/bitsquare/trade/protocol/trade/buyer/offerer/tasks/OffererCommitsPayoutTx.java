@@ -19,14 +19,14 @@ package io.bitsquare.trade.protocol.trade.buyer.offerer.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
+import io.bitsquare.trade.protocol.trade.TradeTask;
 
 import org.bitcoinj.core.Transaction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererCommitsPayoutTx extends OffererTradeTask {
+public class OffererCommitsPayoutTx extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererCommitsPayoutTx.class);
 
     public OffererCommitsPayoutTx(TaskRunner taskHandler, Trade trade) {

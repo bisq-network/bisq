@@ -27,8 +27,8 @@ import io.bitsquare.gui.main.portfolio.closed.ClosedTradesView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.trade.OffererState;
-import io.bitsquare.trade.TakerState;
+import io.bitsquare.trade.states.OffererState;
+import io.bitsquare.trade.states.TakerState;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;

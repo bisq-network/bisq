@@ -23,13 +23,14 @@ import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.trade.BuyerAsOffererTrade;
+import io.bitsquare.trade.BuyerAsTakerTrade;
 import io.bitsquare.trade.Contract;
-import io.bitsquare.trade.OffererAsBuyerTrade;
-import io.bitsquare.trade.OffererAsSellerTrade;
-import io.bitsquare.trade.TakerAsBuyerTrade;
-import io.bitsquare.trade.TakerAsSellerTrade;
+import io.bitsquare.trade.SellerAsOffererTrade;
+import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.states.TradeState;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;
@@ -68,10 +69,10 @@ class PendingTradesDataModel implements Activatable, DataModel {
     final StringProperty txId = new SimpleStringProperty();
     final IntegerProperty selectedIndex = new SimpleIntegerProperty(-1);
 
-    final ObjectProperty<Trade.ProcessState> takerAsSellerProcessState = new SimpleObjectProperty<>();
-    final ObjectProperty<Trade.ProcessState> offererAsBuyerProcessState = new SimpleObjectProperty<>();
-    final ObjectProperty<Trade.ProcessState> takerAsBuyerProcessState = new SimpleObjectProperty<>();
-    final ObjectProperty<Trade.ProcessState> offererAsSellerProcessState = new SimpleObjectProperty<>();
+    final ObjectProperty<TradeState.ProcessState> takerAsSellerProcessState = new SimpleObjectProperty<>();
+    final ObjectProperty<TradeState.ProcessState> offererAsBuyerProcessState = new SimpleObjectProperty<>();
+    final ObjectProperty<TradeState.ProcessState> takerAsBuyerProcessState = new SimpleObjectProperty<>();
+    final ObjectProperty<TradeState.ProcessState> offererAsSellerProcessState = new SimpleObjectProperty<>();
 
     final ObjectProperty<Trade> currentTrade = new SimpleObjectProperty<>();
 
@@ -135,13 +136,13 @@ class PendingTradesDataModel implements Activatable, DataModel {
 
             Trade trade = item.getTrade();
             isOfferer = trade.getOffer().getP2PSigPubKey().equals(user.getP2PSigPubKey());
-            if (trade instanceof TakerAsSellerTrade)
+            if (trade instanceof SellerAsTakerTrade)
                 takerAsSellerProcessState.bind(trade.processStateProperty());
-            else if (trade instanceof OffererAsBuyerTrade)
+            else if (trade instanceof BuyerAsOffererTrade)
                 offererAsBuyerProcessState.bind(trade.processStateProperty());
-            else if (trade instanceof TakerAsBuyerTrade)
+            else if (trade instanceof BuyerAsTakerTrade)
                 takerAsBuyerProcessState.bind(trade.processStateProperty());
-            else if (trade instanceof OffererAsSellerTrade)
+            else if (trade instanceof SellerAsOffererTrade)
                 offererAsSellerProcessState.bind(trade.processStateProperty());
 
             if (trade.getDepositTx() != null)
@@ -150,17 +151,17 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     void fiatPaymentStarted() {
-        if (getTrade() instanceof OffererAsBuyerTrade)
-            ((OffererAsBuyerTrade) getTrade()).onFiatPaymentStarted();
-        else if (getTrade() instanceof TakerAsBuyerTrade)
-            ((TakerAsBuyerTrade) getTrade()).onFiatPaymentStarted();
+        if (getTrade() instanceof BuyerAsOffererTrade)
+            ((BuyerAsOffererTrade) getTrade()).onFiatPaymentStarted();
+        else if (getTrade() instanceof BuyerAsTakerTrade)
+            ((BuyerAsTakerTrade) getTrade()).onFiatPaymentStarted();
     }
 
     void fiatPaymentReceived() {
-        if (getTrade() instanceof TakerAsSellerTrade)
-            ((TakerAsSellerTrade) getTrade()).onFiatPaymentReceived();
-        else if (getTrade() instanceof OffererAsSellerTrade)
-            ((OffererAsSellerTrade) getTrade()).onFiatPaymentReceived();
+        if (getTrade() instanceof SellerAsTakerTrade)
+            ((SellerAsTakerTrade) getTrade()).onFiatPaymentReceived();
+        else if (getTrade() instanceof SellerAsOffererTrade)
+            ((SellerAsOffererTrade) getTrade()).onFiatPaymentReceived();
     }
 
     void withdraw(String toAddress) {
@@ -262,7 +263,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
         Trade trade = selectedItem.getTrade();
         Coin amountToWithdraw = trade.getSecurityDeposit();
         assert trade.getTradeAmount() != null;
-        if (trade instanceof OffererAsBuyerTrade || trade instanceof TakerAsBuyerTrade)
+        if (trade instanceof BuyerAsOffererTrade || trade instanceof BuyerAsTakerTrade)
             amountToWithdraw = amountToWithdraw.add(trade.getTradeAmount());
         return amountToWithdraw;
     }

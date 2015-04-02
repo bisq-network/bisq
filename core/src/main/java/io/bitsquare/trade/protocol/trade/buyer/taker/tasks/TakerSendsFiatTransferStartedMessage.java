@@ -19,17 +19,17 @@ package io.bitsquare.trade.protocol.trade.buyer.taker.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
-import io.bitsquare.trade.TakerAsBuyerTrade;
-import io.bitsquare.trade.TakerAsSellerTrade;
-import io.bitsquare.trade.TakerState;
+import io.bitsquare.trade.BuyerAsTakerTrade;
+import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.TakerTradeTask;
+import io.bitsquare.trade.states.TakerState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerSendsFiatTransferStartedMessage extends TakerTradeTask {
+public class TakerSendsFiatTransferStartedMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerSendsFiatTransferStartedMessage.class);
 
     public TakerSendsFiatTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
@@ -53,10 +53,10 @@ public class TakerSendsFiatTransferStartedMessage extends TakerTradeTask {
                         public void handleResult() {
                             log.trace("Sending FiatTransferStartedMessage succeeded.");
 
-                            if (trade instanceof TakerAsBuyerTrade) {
+                            if (trade instanceof BuyerAsTakerTrade) {
                                 trade.setProcessState(TakerState.ProcessState.FIAT_PAYMENT_STARTED);
                             }
-                            else if (trade instanceof TakerAsSellerTrade) {
+                            else if (trade instanceof SellerAsTakerTrade) {
                                 trade.setProcessState(TakerState.ProcessState.FIAT_PAYMENT_STARTED);
                             }
 
@@ -68,10 +68,10 @@ public class TakerSendsFiatTransferStartedMessage extends TakerTradeTask {
                             appendToErrorMessage("Sending FiatTransferStartedMessage failed");
                             trade.setErrorMessage(errorMessage);
 
-                            if (trade instanceof TakerAsBuyerTrade) {
-                                ((TakerAsBuyerTrade) trade).setProcessState(TakerState.ProcessState.MESSAGE_SENDING_FAILED);
+                            if (trade instanceof BuyerAsTakerTrade) {
+                                ((BuyerAsTakerTrade) trade).setProcessState(TakerState.ProcessState.MESSAGE_SENDING_FAILED);
                             }
-                            else if (trade instanceof TakerAsSellerTrade) {
+                            else if (trade instanceof SellerAsTakerTrade) {
                                 trade.setProcessState(TakerState.ProcessState.MESSAGE_SENDING_FAILED);
                             }
 

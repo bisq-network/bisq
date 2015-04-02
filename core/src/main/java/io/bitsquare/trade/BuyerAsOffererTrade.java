@@ -19,7 +19,9 @@ package io.bitsquare.trade;
 
 import io.bitsquare.offer.Offer;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.trade.protocol.trade.seller.offerer.SellerAsOffererProtocol;
+import io.bitsquare.trade.protocol.trade.buyer.offerer.BuyerAsOffererProtocol;
+import io.bitsquare.trade.states.OffererState;
+import io.bitsquare.trade.states.TradeState;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -28,18 +30,18 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererAsSellerTrade extends Trade implements Serializable {
+public class BuyerAsOffererTrade extends Trade implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
-    transient private static final Logger log = LoggerFactory.getLogger(OffererAsSellerTrade.class);
+    transient private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererTrade.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public OffererAsSellerTrade(Offer offer, Storage<? extends TradeList> storage) {
+    public BuyerAsOffererTrade(Offer offer, Storage<? extends TradeList> storage) {
         super(offer, storage);
         log.trace("Created by constructor");
     }
@@ -54,7 +56,7 @@ public class OffererAsSellerTrade extends Trade implements Serializable {
 
     @Override
     protected void createProtocol() {
-        protocol = new SellerAsOffererProtocol(this);
+        tradeProtocol = new BuyerAsOffererProtocol(this);
     }
 
     @Override
@@ -69,9 +71,9 @@ public class OffererAsSellerTrade extends Trade implements Serializable {
     // Fiat
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onFiatPaymentReceived() {
-        assert protocol instanceof SellerAsOffererProtocol;
-        ((SellerAsOffererProtocol) protocol).onFiatPaymentReceived();
+    public void onFiatPaymentStarted() {
+        assert tradeProtocol instanceof BuyerAsOffererProtocol;
+        ((BuyerAsOffererProtocol) tradeProtocol).onFiatPaymentStarted();
     }
 
 
@@ -80,7 +82,7 @@ public class OffererAsSellerTrade extends Trade implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setProcessState(Trade.ProcessState processState) {
+    public void setProcessState(TradeState.ProcessState processState) {
         super.setProcessState(processState);
 
         switch ((OffererState.ProcessState) processState) {
@@ -92,7 +94,7 @@ public class OffererAsSellerTrade extends Trade implements Serializable {
     }
 
     @Override
-    public void setLifeCycleState(Trade.LifeCycleState lifeCycleState) {
+    public void setLifeCycleState(TradeState.LifeCycleState lifeCycleState) {
         super.setLifeCycleState(lifeCycleState);
 
         switch ((OffererState.LifeCycleState) lifeCycleState) {
@@ -105,11 +107,13 @@ public class OffererAsSellerTrade extends Trade implements Serializable {
         }
     }
 
+
     @Override
     public void setThrowable(Throwable throwable) {
         super.setThrowable(throwable);
         setProcessState(OffererState.ProcessState.EXCEPTION);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
@@ -120,5 +124,4 @@ public class OffererAsSellerTrade extends Trade implements Serializable {
         if (((OffererState.ProcessState) processState).ordinal() < OffererState.ProcessState.DEPOSIT_CONFIRMED.ordinal())
             setProcessState(OffererState.ProcessState.DEPOSIT_CONFIRMED);
     }
-
 }

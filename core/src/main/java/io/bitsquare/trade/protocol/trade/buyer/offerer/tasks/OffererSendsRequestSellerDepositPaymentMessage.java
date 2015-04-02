@@ -19,17 +19,17 @@ package io.bitsquare.trade.protocol.trade.buyer.offerer.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
-import io.bitsquare.trade.OffererAsBuyerTrade;
-import io.bitsquare.trade.OffererAsSellerTrade;
-import io.bitsquare.trade.OffererState;
+import io.bitsquare.trade.BuyerAsOffererTrade;
+import io.bitsquare.trade.SellerAsOffererTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
+import io.bitsquare.trade.states.OffererState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererSendsRequestSellerDepositPaymentMessage extends OffererTradeTask {
+public class OffererSendsRequestSellerDepositPaymentMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererSendsRequestSellerDepositPaymentMessage.class);
 
     public OffererSendsRequestSellerDepositPaymentMessage(TaskRunner taskHandler, Trade trade) {
@@ -60,13 +60,13 @@ public class OffererSendsRequestSellerDepositPaymentMessage extends OffererTrade
                 public void handleFault() {
                     appendToErrorMessage("Sending RequestTakerDepositPaymentMessage failed");
                     trade.setErrorMessage(errorMessage);
-                    if (trade instanceof OffererAsBuyerTrade) {
-                        ((OffererAsBuyerTrade) trade).setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
-                        ((OffererAsBuyerTrade) trade).setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
+                    if (trade instanceof BuyerAsOffererTrade) {
+                        ((BuyerAsOffererTrade) trade).setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
+                        ((BuyerAsOffererTrade) trade).setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
                     }
-                    else if (trade instanceof OffererAsSellerTrade) {
-                        ((OffererAsSellerTrade) trade).setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
-                        ((OffererAsSellerTrade) trade).setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
+                    else if (trade instanceof SellerAsOffererTrade) {
+                        ((SellerAsOffererTrade) trade).setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
+                        ((SellerAsOffererTrade) trade).setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
                     }
 
                     failed();
@@ -76,13 +76,13 @@ public class OffererSendsRequestSellerDepositPaymentMessage extends OffererTrade
             t.printStackTrace();
             trade.setThrowable(t);
 
-            if (trade instanceof OffererAsBuyerTrade) {
-                ((OffererAsBuyerTrade) trade).setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
-                ((OffererAsSellerTrade) trade).setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
+            if (trade instanceof BuyerAsOffererTrade) {
+                ((BuyerAsOffererTrade) trade).setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
+                ((SellerAsOffererTrade) trade).setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
             }
-            else if (trade instanceof OffererAsSellerTrade) {
-                ((OffererAsSellerTrade) trade).setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
-                ((OffererAsSellerTrade) trade).setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
+            else if (trade instanceof SellerAsOffererTrade) {
+                ((SellerAsOffererTrade) trade).setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
+                ((SellerAsOffererTrade) trade).setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
             }
 
             failed(t);

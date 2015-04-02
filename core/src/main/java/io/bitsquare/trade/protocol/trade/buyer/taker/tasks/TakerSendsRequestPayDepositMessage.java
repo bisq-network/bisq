@@ -19,17 +19,17 @@ package io.bitsquare.trade.protocol.trade.buyer.taker.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
-import io.bitsquare.trade.TakerAsBuyerTrade;
-import io.bitsquare.trade.TakerAsSellerTrade;
-import io.bitsquare.trade.TakerState;
+import io.bitsquare.trade.BuyerAsTakerTrade;
+import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositFromOffererMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.TakerTradeTask;
+import io.bitsquare.trade.states.TakerState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerSendsRequestPayDepositMessage extends TakerTradeTask {
+public class TakerSendsRequestPayDepositMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerSendsRequestPayDepositMessage.class);
 
     public TakerSendsRequestPayDepositMessage(TaskRunner taskHandler, Trade trade) {
@@ -61,9 +61,9 @@ public class TakerSendsRequestPayDepositMessage extends TakerTradeTask {
                 public void handleFault() {
                     appendToErrorMessage("Sending RequestTakerDepositPaymentMessage failed");
                     trade.setErrorMessage(errorMessage);
-                    if (trade instanceof TakerAsBuyerTrade)
+                    if (trade instanceof BuyerAsTakerTrade)
                         trade.setProcessState(TakerState.ProcessState.MESSAGE_SENDING_FAILED);
-                    else if (trade instanceof TakerAsSellerTrade)
+                    else if (trade instanceof SellerAsTakerTrade)
                         trade.setProcessState(TakerState.ProcessState.MESSAGE_SENDING_FAILED);
 
                     failed();
@@ -73,10 +73,10 @@ public class TakerSendsRequestPayDepositMessage extends TakerTradeTask {
             t.printStackTrace();
             trade.setThrowable(t);
 
-            if (trade instanceof TakerAsBuyerTrade) {
+            if (trade instanceof BuyerAsTakerTrade) {
                 trade.setProcessState(TakerState.ProcessState.MESSAGE_SENDING_FAILED);
             }
-            else if (trade instanceof TakerAsSellerTrade) {
+            else if (trade instanceof SellerAsTakerTrade) {
                 trade.setProcessState(TakerState.ProcessState.MESSAGE_SENDING_FAILED);
             }
 

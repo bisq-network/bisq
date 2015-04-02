@@ -18,12 +18,12 @@
 package io.bitsquare.trade.protocol.trade.buyer.offerer.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.OffererAsBuyerTrade;
-import io.bitsquare.trade.OffererAsSellerTrade;
-import io.bitsquare.trade.OffererState;
+import io.bitsquare.trade.BuyerAsOffererTrade;
+import io.bitsquare.trade.SellerAsOffererTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
+import io.bitsquare.trade.states.OffererState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.*;
 import static io.bitsquare.util.Validator.*;
 
-public class OffererProcessRequestPublishDepositTxMessage extends OffererTradeTask {
+public class OffererProcessRequestPublishDepositTxMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererProcessRequestPublishDepositTxMessage.class);
 
     public OffererProcessRequestPublishDepositTxMessage(TaskRunner taskHandler, Trade trade) {
@@ -61,9 +61,9 @@ public class OffererProcessRequestPublishDepositTxMessage extends OffererTradeTa
             t.printStackTrace();
             trade.setThrowable(t);
 
-            if (trade instanceof OffererAsBuyerTrade)
+            if (trade instanceof BuyerAsOffererTrade)
                 trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
-            else if (trade instanceof OffererAsSellerTrade)
+            else if (trade instanceof SellerAsOffererTrade)
                 trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
 
             failed(t);

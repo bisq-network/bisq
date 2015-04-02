@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade;
+package io.bitsquare.trade.states;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,13 +23,13 @@ import org.slf4j.LoggerFactory;
 public class TakerState {
     private static final Logger log = LoggerFactory.getLogger(TakerState.class);
 
-    public enum LifeCycleState implements Trade.LifeCycleState {
+    public enum LifeCycleState implements TradeState.LifeCycleState {
         PENDING,
         COMPLETED,
         FAILED
     }
 
-    public enum ProcessState implements Trade.ProcessState {
+    public enum ProcessState implements TradeState.ProcessState {
         UNDEFINED,
         TAKE_OFFER_FEE_TX_CREATED,
         TAKE_OFFER_FEE_PUBLISHED,

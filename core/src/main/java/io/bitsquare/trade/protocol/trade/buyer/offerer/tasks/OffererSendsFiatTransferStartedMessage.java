@@ -19,17 +19,17 @@ package io.bitsquare.trade.protocol.trade.buyer.offerer.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
-import io.bitsquare.trade.OffererAsBuyerTrade;
-import io.bitsquare.trade.OffererAsSellerTrade;
-import io.bitsquare.trade.OffererState;
+import io.bitsquare.trade.BuyerAsOffererTrade;
+import io.bitsquare.trade.SellerAsOffererTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
+import io.bitsquare.trade.states.OffererState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererSendsFiatTransferStartedMessage extends OffererTradeTask {
+public class OffererSendsFiatTransferStartedMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererSendsFiatTransferStartedMessage.class);
 
     public OffererSendsFiatTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
@@ -53,11 +53,11 @@ public class OffererSendsFiatTransferStartedMessage extends OffererTradeTask {
                         public void handleResult() {
                             log.trace("Sending FiatTransferStartedMessage succeeded.");
 
-                            if (trade instanceof OffererAsBuyerTrade) {
-                                ((OffererAsBuyerTrade) trade).setProcessState(OffererState.ProcessState.FIAT_PAYMENT_STARTED);
+                            if (trade instanceof BuyerAsOffererTrade) {
+                                ((BuyerAsOffererTrade) trade).setProcessState(OffererState.ProcessState.FIAT_PAYMENT_STARTED);
                             }
-                            else if (trade instanceof OffererAsSellerTrade) {
-                                ((OffererAsSellerTrade) trade).setProcessState(OffererState.ProcessState.FIAT_PAYMENT_STARTED);
+                            else if (trade instanceof SellerAsOffererTrade) {
+                                ((SellerAsOffererTrade) trade).setProcessState(OffererState.ProcessState.FIAT_PAYMENT_STARTED);
                             }
 
                             complete();
@@ -68,11 +68,11 @@ public class OffererSendsFiatTransferStartedMessage extends OffererTradeTask {
                             appendToErrorMessage("Sending FiatTransferStartedMessage failed");
                             trade.setErrorMessage(errorMessage);
 
-                            if (trade instanceof OffererAsBuyerTrade) {
-                                ((OffererAsBuyerTrade) trade).setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
+                            if (trade instanceof BuyerAsOffererTrade) {
+                                ((BuyerAsOffererTrade) trade).setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
                             }
-                            else if (trade instanceof OffererAsSellerTrade) {
-                                ((OffererAsSellerTrade) trade).setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
+                            else if (trade instanceof SellerAsOffererTrade) {
+                                ((SellerAsOffererTrade) trade).setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
                             }
 
                             failed();

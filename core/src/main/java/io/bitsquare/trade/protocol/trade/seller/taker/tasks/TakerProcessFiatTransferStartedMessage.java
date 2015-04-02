@@ -18,12 +18,12 @@
 package io.bitsquare.trade.protocol.trade.seller.taker.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.TakerAsBuyerTrade;
-import io.bitsquare.trade.TakerAsSellerTrade;
-import io.bitsquare.trade.TakerState;
+import io.bitsquare.trade.BuyerAsTakerTrade;
+import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.taker.tasks.TakerTradeTask;
+import io.bitsquare.trade.states.TakerState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.*;
 
-public class TakerProcessFiatTransferStartedMessage extends TakerTradeTask {
+public class TakerProcessFiatTransferStartedMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(TakerProcessFiatTransferStartedMessage.class);
 
     public TakerProcessFiatTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
@@ -50,9 +50,9 @@ public class TakerProcessFiatTransferStartedMessage extends TakerTradeTask {
             processModel.setPayoutAmount(positiveCoinOf(nonZeroCoinOf(message.sellerPayoutAmount)));
             processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(message.buyerPayoutAddress));
 
-            if (trade instanceof TakerAsBuyerTrade)
+            if (trade instanceof BuyerAsTakerTrade)
                 trade.setProcessState(TakerState.ProcessState.FIAT_PAYMENT_STARTED);
-            else if (trade instanceof TakerAsSellerTrade)
+            else if (trade instanceof SellerAsTakerTrade)
                 trade.setProcessState(TakerState.ProcessState.FIAT_PAYMENT_STARTED);
 
             complete();

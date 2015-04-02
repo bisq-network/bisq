@@ -19,7 +19,9 @@ package io.bitsquare.trade;
 
 import io.bitsquare.offer.Offer;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.trade.protocol.trade.buyer.offerer.BuyerAsOffererProtocol;
+import io.bitsquare.trade.protocol.trade.seller.offerer.SellerAsOffererProtocol;
+import io.bitsquare.trade.states.OffererState;
+import io.bitsquare.trade.states.TradeState;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -28,23 +30,18 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererAsBuyerTrade extends Trade implements Serializable {
+public class SellerAsOffererTrade extends Trade implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
-    transient private static final Logger log = LoggerFactory.getLogger(OffererAsBuyerTrade.class);
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Enum
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    transient private static final Logger log = LoggerFactory.getLogger(SellerAsOffererTrade.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public OffererAsBuyerTrade(Offer offer, Storage<? extends TradeList> storage) {
+    public SellerAsOffererTrade(Offer offer, Storage<? extends TradeList> storage) {
         super(offer, storage);
         log.trace("Created by constructor");
     }
@@ -59,7 +56,7 @@ public class OffererAsBuyerTrade extends Trade implements Serializable {
 
     @Override
     protected void createProtocol() {
-        protocol = new BuyerAsOffererProtocol(this);
+        tradeProtocol = new SellerAsOffererProtocol(this);
     }
 
     @Override
@@ -74,9 +71,9 @@ public class OffererAsBuyerTrade extends Trade implements Serializable {
     // Fiat
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onFiatPaymentStarted() {
-        assert protocol instanceof BuyerAsOffererProtocol;
-        ((BuyerAsOffererProtocol) protocol).onFiatPaymentStarted();
+    public void onFiatPaymentReceived() {
+        assert tradeProtocol instanceof SellerAsOffererProtocol;
+        ((SellerAsOffererProtocol) tradeProtocol).onFiatPaymentReceived();
     }
 
 
@@ -85,7 +82,7 @@ public class OffererAsBuyerTrade extends Trade implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setProcessState(Trade.ProcessState processState) {
+    public void setProcessState(TradeState.ProcessState processState) {
         super.setProcessState(processState);
 
         switch ((OffererState.ProcessState) processState) {
@@ -97,7 +94,7 @@ public class OffererAsBuyerTrade extends Trade implements Serializable {
     }
 
     @Override
-    public void setLifeCycleState(Trade.LifeCycleState lifeCycleState) {
+    public void setLifeCycleState(TradeState.LifeCycleState lifeCycleState) {
         super.setLifeCycleState(lifeCycleState);
 
         switch ((OffererState.LifeCycleState) lifeCycleState) {
@@ -110,13 +107,11 @@ public class OffererAsBuyerTrade extends Trade implements Serializable {
         }
     }
 
-
     @Override
     public void setThrowable(Throwable throwable) {
         super.setThrowable(throwable);
         setProcessState(OffererState.ProcessState.EXCEPTION);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
@@ -127,4 +122,5 @@ public class OffererAsBuyerTrade extends Trade implements Serializable {
         if (((OffererState.ProcessState) processState).ordinal() < OffererState.ProcessState.DEPOSIT_CONFIRMED.ordinal())
             setProcessState(OffererState.ProcessState.DEPOSIT_CONFIRMED);
     }
+
 }

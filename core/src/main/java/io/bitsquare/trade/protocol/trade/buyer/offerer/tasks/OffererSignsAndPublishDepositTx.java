@@ -19,11 +19,11 @@ package io.bitsquare.trade.protocol.trade.buyer.offerer.tasks;
 
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.OffererAsBuyerTrade;
-import io.bitsquare.trade.OffererAsSellerTrade;
-import io.bitsquare.trade.OffererState;
+import io.bitsquare.trade.BuyerAsOffererTrade;
+import io.bitsquare.trade.SellerAsOffererTrade;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
+import io.bitsquare.trade.protocol.trade.TradeTask;
+import io.bitsquare.trade.states.OffererState;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -35,7 +35,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererSignsAndPublishDepositTx extends OffererTradeTask {
+public class OffererSignsAndPublishDepositTx extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererSignsAndPublishDepositTx.class);
 
     public OffererSignsAndPublishDepositTx(TaskRunner taskHandler, Trade trade) {
@@ -63,11 +63,11 @@ public class OffererSignsAndPublishDepositTx extends OffererTradeTask {
 
                             trade.setDepositTx(transaction);
 
-                            if (trade instanceof OffererAsBuyerTrade) {
+                            if (trade instanceof BuyerAsOffererTrade) {
                                 trade.setProcessState(OffererState.ProcessState.DEPOSIT_PUBLISHED);
                                 trade.setLifeCycleState(OffererState.LifeCycleState.PENDING);
                             }
-                            else if (trade instanceof OffererAsSellerTrade) {
+                            else if (trade instanceof SellerAsOffererTrade) {
                                 trade.setProcessState(OffererState.ProcessState.DEPOSIT_PUBLISHED);
                                 trade.setLifeCycleState(OffererState.LifeCycleState.PENDING);
                             }
@@ -80,9 +80,9 @@ public class OffererSignsAndPublishDepositTx extends OffererTradeTask {
                             t.printStackTrace();
                             trade.setThrowable(t);
 
-                            if (trade instanceof OffererAsBuyerTrade)
+                            if (trade instanceof BuyerAsOffererTrade)
                                 trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
-                            else if (trade instanceof OffererAsSellerTrade)
+                            else if (trade instanceof SellerAsOffererTrade)
                                 trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
 
                             failed(t);
@@ -92,9 +92,9 @@ public class OffererSignsAndPublishDepositTx extends OffererTradeTask {
             t.printStackTrace();
             trade.setThrowable(t);
 
-            if (trade instanceof OffererAsBuyerTrade)
+            if (trade instanceof BuyerAsOffererTrade)
                 trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
-            else if (trade instanceof OffererAsSellerTrade)
+            else if (trade instanceof SellerAsOffererTrade)
                 trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
 
             failed(t);
