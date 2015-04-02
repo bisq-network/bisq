@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.buyer.tasks;
+package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.trade.BuyerAsOffererTrade;
 import io.bitsquare.trade.BuyerAsTakerTrade;

@@ -24,6 +24,7 @@ import io.bitsquare.trade.BuyerAsTakerTrade;
 import io.bitsquare.trade.SellerAsOffererTrade;
 import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.StateUtil;
 import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.states.OffererState;

@@ -35,35 +35,38 @@ public class RequestPublishDepositTxMessage extends TradeMessage implements Seri
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
 
-    public final FiatAccount takerFiatAccount;
-    public final String takerAccountId;
-    public final PublicKey takerP2PSigPublicKey;
-    public final PublicKey takerP2PEncryptPublicKey;
-    public final String takerContractAsJson;
-    public final String takerContractSignature;
-    public final String takerPayoutAddressString;
-    public final Transaction takersPreparedDepositTx;
-    public final List<TransactionOutput> takerConnectedOutputsForAllInputs;
-
+    public final FiatAccount sellerFiatAccount;
+    public final String sellerAccountId;
+    public final PublicKey sellerP2pSigPublicKey;
+    public final PublicKey sellerP2pEncryptPublicKey;
+    public final String sellerContractAsJson;
+    public final String sellerContractSignature;
+    public final String sellerPayoutAddressString;
+    public final Transaction sellersPreparedDepositTx;
+    public final List<TransactionOutput> sellerConnectedOutputsForAllInputs;
+    public byte[] sellerTradeWalletPubKey;
+    
     public RequestPublishDepositTxMessage(String tradeId,
-                                          FiatAccount takerFiatAccount,
-                                          String takerAccountId,
-                                          PublicKey takerP2PSigPublicKey,
-                                          PublicKey takerP2PEncryptPublicKey,
-                                          String takerContractAsJson,
-                                          String takerContractSignature,
-                                          String takerPayoutAddressString,
-                                          Transaction takersPreparedDepositTx,
-                                          List<TransactionOutput> takerConnectedOutputsForAllInputs) {
+                                          FiatAccount sellerFiatAccount,
+                                          String sellerAccountId,
+                                          byte[] sellerTradeWalletPubKey,
+                                          PublicKey sellerP2pSigPublicKey,
+                                          PublicKey sellerP2pEncryptPublicKey,
+                                          String sellerContractAsJson,
+                                          String sellerContractSignature,
+                                          String sellerPayoutAddressString,
+                                          Transaction sellersPreparedDepositTx,
+                                          List<TransactionOutput> sellerConnectedOutputsForAllInputs) {
         super(tradeId);
-        this.takerFiatAccount = takerFiatAccount;
-        this.takerAccountId = takerAccountId;
-        this.takerP2PSigPublicKey = takerP2PSigPublicKey;
-        this.takerP2PEncryptPublicKey = takerP2PEncryptPublicKey;
-        this.takerContractAsJson = takerContractAsJson;
-        this.takerContractSignature = takerContractSignature;
-        this.takerPayoutAddressString = takerPayoutAddressString;
-        this.takersPreparedDepositTx = takersPreparedDepositTx;
-        this.takerConnectedOutputsForAllInputs = takerConnectedOutputsForAllInputs;
+        this.sellerFiatAccount = sellerFiatAccount;
+        this.sellerAccountId = sellerAccountId;
+        this.sellerTradeWalletPubKey = sellerTradeWalletPubKey;
+        this.sellerP2pSigPublicKey = sellerP2pSigPublicKey;
+        this.sellerP2pEncryptPublicKey = sellerP2pEncryptPublicKey;
+        this.sellerContractAsJson = sellerContractAsJson;
+        this.sellerContractSignature = sellerContractSignature;
+        this.sellerPayoutAddressString = sellerPayoutAddressString;
+        this.sellersPreparedDepositTx = sellersPreparedDepositTx;
+        this.sellerConnectedOutputsForAllInputs = sellerConnectedOutputsForAllInputs;
     }
 }

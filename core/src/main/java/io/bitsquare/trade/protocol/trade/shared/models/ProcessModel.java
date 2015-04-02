@@ -206,11 +206,7 @@ public class ProcessModel extends Model implements Serializable {
     }
 
     public PublicKey getP2pSigPubKey() {
-        return user.getP2PSigPubKey();
-    }
-
-    public PublicKey getP2pEncryptPublicKey() {
-        return user.getP2PEncryptPubKey();
+        return user.getP2pSigPubKey();
     }
 
     public byte[] getRegistrationPubKey() {
@@ -226,7 +222,7 @@ public class ProcessModel extends Model implements Serializable {
     }
 
     public PublicKey getP2pEncryptPubKey() {
-        return user.getP2PEncryptPubKey();
+        return user.getP2pEncryptPubKey();
     }
 
     @Nullable

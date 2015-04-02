@@ -190,7 +190,7 @@ public class TradeManager {
         }
 
         // if there are messages in our mailbox we apply it and remove them from the DHT
-        mailboxService.getAllMessages(user.getP2PSigPubKey(),
+        mailboxService.getAllMessages(user.getP2pSigPubKey(),
                 (encryptedMailboxMessages) -> {
                     setMailboxMessagesToTrades(encryptedMailboxMessages);
                     emptyMailbox();
@@ -217,7 +217,7 @@ public class TradeManager {
     }
 
     private void emptyMailbox() {
-        mailboxService.removeAllMessages(user.getP2PSigPubKey(),
+        mailboxService.removeAllMessages(user.getP2pSigPubKey(),
                 () -> log.debug("All mailbox entries removed"),
                 (errorMessage, fault) -> {
                     log.error(errorMessage);
@@ -252,7 +252,7 @@ public class TradeManager {
 
         FiatAccount fiatAccount = user.currentFiatAccountProperty().get();
         Offer offer = new Offer(id,
-                user.getP2PSigPubKey(),
+                user.getP2pSigPubKey(),
                 direction,
                 price.getValue(),
                 amount,

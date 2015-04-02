@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.trade.buyer.tasks;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.StateUtil;
 import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 

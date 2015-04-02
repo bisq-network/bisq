@@ -46,8 +46,8 @@ public class SellerProcessRequestPayDepositMessage extends TradeTask {
             checkArgument(message.buyerConnectedOutputsForAllInputs.size() > 0);
             processModel.tradingPeer.setOutputs(checkNotNull(message.buyerOutputs));
             processModel.tradingPeer.setTradeWalletPubKey(checkNotNull(message.buyerTradeWalletPubKey));
-            processModel.tradingPeer.setP2pSigPubKey(checkNotNull(message.buyerP2PSigPublicKey));
-            processModel.tradingPeer.setP2pEncryptPubKey(checkNotNull(message.buyerP2PEncryptPublicKey));
+            processModel.tradingPeer.setP2pSigPubKey(checkNotNull(message.buyerP2pSigPublicKey));
+            processModel.tradingPeer.setP2pEncryptPubKey(checkNotNull(message.buyerP2pEncryptPublicKey));
             processModel.tradingPeer.setFiatAccount(checkNotNull(message.buyerFiatAccount));
             processModel.tradingPeer.setAccountId(nonEmptyStringOf(message.buyerAccountId));
             trade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(message.tradeAmount)));

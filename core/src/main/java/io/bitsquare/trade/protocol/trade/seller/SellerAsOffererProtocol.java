@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.seller.offerer;
+package io.bitsquare.trade.protocol.trade.seller;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.MailboxMessage;
@@ -31,15 +31,15 @@ import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.seller.offerer.tasks.OffererSendsPayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.seller.offerer.tasks.OffererSendsRequestPublishDepositTxFromTakerMessage;
-import io.bitsquare.trade.protocol.trade.seller.offerer.tasks.OffererSignsAndPublishPayoutTx;
 import io.bitsquare.trade.protocol.trade.seller.tasks.SellerCommitDepositTx;
 import io.bitsquare.trade.protocol.trade.seller.tasks.SellerCreatesAndSignsContract;
 import io.bitsquare.trade.protocol.trade.seller.tasks.SellerCreatesAndSignsDepositTx;
 import io.bitsquare.trade.protocol.trade.seller.tasks.SellerProcessDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.seller.tasks.SellerProcessFiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.seller.tasks.SellerProcessRequestPayDepositMessage;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SellerSendsPayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SellerSendsRequestPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SellerSignsAndPublishPayoutTx;
 import io.bitsquare.trade.protocol.trade.shared.models.ProcessModel;
 import io.bitsquare.trade.protocol.trade.shared.offerer.tasks.VerifyTakeOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.shared.offerer.tasks.VerifyTakerAccount;
@@ -149,7 +149,7 @@ public class SellerAsOffererProtocol implements TradeProtocol {
                 VerifyTakerAccount.class,
                 SellerCreatesAndSignsContract.class,
                 SellerCreatesAndSignsDepositTx.class,
-                OffererSendsRequestPublishDepositTxFromTakerMessage.class
+                SellerSendsRequestPublishDepositTxMessage.class
         );
         taskRunner.run();
     }
@@ -199,8 +199,8 @@ public class SellerAsOffererProtocol implements TradeProtocol {
 
         taskRunner.addTasks(
                 VerifyTakeOfferFeePayment.class,
-                OffererSignsAndPublishPayoutTx.class,
-                OffererSendsPayoutTxPublishedMessage.class
+                SellerSignsAndPublishPayoutTx.class,
+                SellerSendsPayoutTxPublishedMessage.class
         );
         taskRunner.run();
     }

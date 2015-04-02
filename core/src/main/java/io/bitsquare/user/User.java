@@ -200,11 +200,11 @@ public class User implements Serializable {
         return p2pSigKeyPair;
     }
 
-    public PublicKey getP2PSigPubKey() {
+    public PublicKey getP2pSigPubKey() {
         return p2pSigKeyPair.getPublic();
     }
 
-    public PublicKey getP2PEncryptPubKey() {
+    public PublicKey getP2pEncryptPubKey() {
         return p2pEncryptKeyPair.getPublic();
     }
 

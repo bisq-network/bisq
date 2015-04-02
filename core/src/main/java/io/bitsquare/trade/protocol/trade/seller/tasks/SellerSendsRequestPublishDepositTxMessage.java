@@ -15,39 +15,37 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.seller.offerer.tasks;
+package io.bitsquare.trade.protocol.trade.seller.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
-import io.bitsquare.trade.BuyerAsOffererTrade;
-import io.bitsquare.trade.SellerAsOffererTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.StateUtil;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxFromSellerMessage;
-import io.bitsquare.trade.states.OffererState;
+import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererSendsRequestPublishDepositTxFromTakerMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(OffererSendsRequestPublishDepositTxFromTakerMessage.class);
+public class SellerSendsRequestPublishDepositTxMessage extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SellerSendsRequestPublishDepositTxMessage.class);
 
-    public OffererSendsRequestPublishDepositTxFromTakerMessage(TaskRunner taskHandler, Trade trade) {
+    public SellerSendsRequestPublishDepositTxMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            RequestPublishDepositTxFromSellerMessage tradeMessage = new RequestPublishDepositTxFromSellerMessage(
+            RequestPublishDepositTxMessage tradeMessage = new RequestPublishDepositTxMessage(
                     processModel.getId(),
                     processModel.getFiatAccount(),
                     processModel.getAccountId(),
                     processModel.getTradeWalletPubKey(),
                     processModel.getP2pSigPubKey(),
-                    processModel.getP2pEncryptPublicKey(),
+                    processModel.getP2pEncryptPubKey(),
                     trade.getContractAsJson(),
-                    trade.getBuyerContractSignature(),
+                    trade.getSellerContractSignature(),
                     processModel.getAddressEntry().getAddressString(),
                     processModel.getPreparedDepositTx(),
                     processModel.getConnectedOutputsForAllInputs()
@@ -64,10 +62,7 @@ public class OffererSendsRequestPublishDepositTxFromTakerMessage extends TradeTa
                     appendToErrorMessage("Sending RequestOffererPublishDepositTxMessage failed");
                     trade.setErrorMessage(errorMessage);
 
-                    if (trade instanceof BuyerAsOffererTrade)
-                        trade.setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
-                    else if (trade instanceof SellerAsOffererTrade)
-                        trade.setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
+                    StateUtil.setSendFailedState(trade);
 
                     failed();
                 }

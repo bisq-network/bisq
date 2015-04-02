@@ -144,7 +144,7 @@ public class Offer implements Serializable {
         checkNotNull(getCurrencyCode(), "Currency is null");
         checkNotNull(getDirection(), "Direction is null");
         checkNotNull(getId(), "Id is null");
-        checkNotNull(getP2PSigPubKey(), "p2pSigPubKey is null");
+        checkNotNull(getP2pSigPubKey(), "p2pSigPubKey is null");
         checkNotNull(getMinAmount(), "MinAmount is null");
         checkNotNull(getPrice(), "Price is null");
 
@@ -255,7 +255,7 @@ public class Offer implements Serializable {
         return bankAccountUID;
     }
 
-    public PublicKey getP2PSigPubKey() {
+    public PublicKey getP2pSigPubKey() {
         return p2pSigPubKey;
     }
 

@@ -15,12 +15,12 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.buyer.offerer.tasks;
+package io.bitsquare.trade.protocol.trade.buyer.tasks;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.StateUtil;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.protocol.trade.buyer.tasks.StateUtil;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
 
 import org.slf4j.Logger;
@@ -29,10 +29,10 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.*;
 
-public class OffererProcessRequestDepositTxInputsMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(OffererProcessRequestDepositTxInputsMessage.class);
+public class ProcessRequestDepositTxInputsMessage extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(ProcessRequestDepositTxInputsMessage.class);
 
-    public OffererProcessRequestDepositTxInputsMessage(TaskRunner taskHandler, Trade trade) {
+    public ProcessRequestDepositTxInputsMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -44,8 +44,8 @@ public class OffererProcessRequestDepositTxInputsMessage extends TradeTask {
             checkNotNull(message);
 
             trade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(message.tradeAmount)));
-            processModel.setTakeOfferFeeTxId(nonEmptyStringOf(message.takeOfferFeeTxId));
-            processModel.tradingPeer.setTradeWalletPubKey(checkNotNull(message.takerTradeWalletPubKey));
+            processModel.setTakeOfferFeeTxId(nonEmptyStringOf(message.sellerOfferFeeTxId));
+            processModel.tradingPeer.setTradeWalletPubKey(checkNotNull(message.sellerTradeWalletPubKey));
 
             complete();
         } catch (Throwable t) {

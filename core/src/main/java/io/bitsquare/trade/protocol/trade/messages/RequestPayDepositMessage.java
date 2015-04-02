@@ -38,8 +38,8 @@ public class RequestPayDepositMessage extends TradeMessage implements Serializab
     public final List<TransactionOutput> buyerConnectedOutputsForAllInputs;
     public final List<TransactionOutput> buyerOutputs;
     public final byte[] buyerTradeWalletPubKey;
-    public final PublicKey buyerP2PSigPublicKey;
-    public final PublicKey buyerP2PEncryptPublicKey;
+    public final PublicKey buyerP2pSigPublicKey;
+    public final PublicKey buyerP2pEncryptPublicKey;
     public final FiatAccount buyerFiatAccount;
     public final String buyerAccountId;
     public final Coin tradeAmount;
@@ -49,14 +49,14 @@ public class RequestPayDepositMessage extends TradeMessage implements Serializab
                                     List<TransactionOutput> buyerConnectedOutputsForAllInputs,
                                     List<TransactionOutput> buyerOutputs,
                                     byte[] buyerTradeWalletPubKey,
-                                    PublicKey buyerP2PSigPublicKey,
-                                    PublicKey buyerP2PEncryptPublicKey,
+                                    PublicKey buyerP2pSigPublicKey,
+                                    PublicKey buyerP2pEncryptPublicKey,
                                     FiatAccount buyerFiatAccount,
                                     String buyerAccountId) {
         super(tradeId);
         this.tradeAmount = tradeAmount;
-        this.buyerP2PSigPublicKey = buyerP2PSigPublicKey;
-        this.buyerP2PEncryptPublicKey = buyerP2PEncryptPublicKey;
+        this.buyerP2pSigPublicKey = buyerP2pSigPublicKey;
+        this.buyerP2pEncryptPublicKey = buyerP2pEncryptPublicKey;
         this.buyerConnectedOutputsForAllInputs = buyerConnectedOutputsForAllInputs;
         this.buyerOutputs = buyerOutputs;
         this.buyerTradeWalletPubKey = buyerTradeWalletPubKey;

@@ -15,43 +15,46 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.buyer.taker;
+package io.bitsquare.trade.protocol.trade.seller;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
-import io.bitsquare.trade.BuyerAsTakerTrade;
+import io.bitsquare.trade.SellerAsTakerTrade;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeProtocol;
-import io.bitsquare.trade.protocol.trade.buyer.taker.tasks.TakerProcessRequestPublishDepositTxFromSellerMessage;
-import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerCommitsPayoutTx;
-import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerCreatesAndSignPayoutTx;
-import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerCreatesDepositTxInputs;
-import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerProcessPayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerSendsDepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerSendsFiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerSendsRequestPayDepositMessage;
-import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerSignsAndPublishDepositTx;
-import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerVerifiesAndSignsContract;
-import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SellerCommitDepositTx;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SellerCreatesAndSignsContract;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SellerCreatesAndSignsDepositTx;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SellerProcessDepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SellerProcessFiatTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SellerProcessRequestPayDepositMessage;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SellerSendsPayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SellerSendsRequestPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SellerSignsAndPublishPayoutTx;
+import io.bitsquare.trade.protocol.trade.seller.tasks.SendRequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.shared.models.ProcessModel;
 import io.bitsquare.trade.protocol.trade.shared.taker.tasks.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.shared.taker.tasks.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.shared.taker.tasks.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.shared.taker.tasks.VerifyOffererAccount;
+import io.bitsquare.trade.states.TakerState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
-public class BuyerAsTakerProtocol implements TradeProtocol {
-    private static final Logger log = LoggerFactory.getLogger(BuyerAsTakerProtocol.class);
+public class SellerAsTakerProtocol implements TradeProtocol {
+    private static final Logger log = LoggerFactory.getLogger(SellerAsTakerProtocol.class);
 
-    private final BuyerAsTakerTrade buyerAsTakerTrade;
+    private final SellerAsTakerTrade sellerAsTakerTrade;
     private final ProcessModel processModel;
     private final MessageHandler messageHandler;
 
@@ -60,9 +63,9 @@ public class BuyerAsTakerProtocol implements TradeProtocol {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BuyerAsTakerProtocol(BuyerAsTakerTrade trade) {
+    public SellerAsTakerProtocol(SellerAsTakerTrade trade) {
         log.debug("New SellerAsTakerProtocol " + this);
-        this.buyerAsTakerTrade = trade;
+        this.sellerAsTakerTrade = trade;
         processModel = trade.getProcessModel();
 
         messageHandler = this::handleMessage;
@@ -82,27 +85,26 @@ public class BuyerAsTakerProtocol implements TradeProtocol {
     public void setMailboxMessage(MailboxMessage mailboxMessage) {
         log.debug("setMailboxMessage " + mailboxMessage);
         // Might be called twice, so check that its only processed once
-       /* if (takerTradeProcessModel.getMailboxMessage() == null) {
-            takerTradeProcessModel.setMailboxMessage(mailboxMessage);
+        if (processModel.getMailboxMessage() == null) {
+            processModel.setMailboxMessage(mailboxMessage);
             if (mailboxMessage instanceof FiatTransferStartedMessage) {
                 handleFiatTransferStartedMessage((FiatTransferStartedMessage) mailboxMessage);
             }
             else if (mailboxMessage instanceof DepositTxPublishedMessage) {
                 handleDepositTxPublishedMessage((DepositTxPublishedMessage) mailboxMessage);
             }
-        }*/
+        }
     }
 
     public void takeAvailableOffer() {
-        TaskRunner<BuyerAsTakerTrade> taskRunner = new TaskRunner<>(buyerAsTakerTrade,
+        TaskRunner<Trade> taskRunner = new TaskRunner<>(sellerAsTakerTrade,
                 () -> log.debug("taskRunner at takeAvailableOffer completed"),
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
                 CreateTakeOfferFeeTx.class,
                 BroadcastTakeOfferFeeTx.class,
-                BuyerCreatesDepositTxInputs.class,
-                BuyerSendsRequestPayDepositMessage.class
+                SendRequestDepositTxInputsMessage.class
         );
         taskRunner.run();
     }
@@ -112,19 +114,45 @@ public class BuyerAsTakerProtocol implements TradeProtocol {
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(RequestPublishDepositTxMessage tradeMessage) {
+    private void handleRequestTakerDepositPaymentMessage(RequestPayDepositMessage tradeMessage) {
         processModel.setTradeMessage(tradeMessage);
 
-        TaskRunner<BuyerAsTakerTrade> taskRunner = new TaskRunner<>(buyerAsTakerTrade,
-                () -> log.debug("taskRunner at handleRequestPublishDepositTxMessage completed"),
+        TaskRunner<Trade> taskRunner = new TaskRunner<>(sellerAsTakerTrade,
+                () -> log.debug("taskRunner at handleTakerDepositPaymentRequestMessage completed"),
                 this::handleTaskRunnerFault);
+
         taskRunner.addTasks(
-                TakerProcessRequestPublishDepositTxFromSellerMessage.class,
+                SellerProcessRequestPayDepositMessage.class,
                 VerifyOffererAccount.class,
-                BuyerVerifiesAndSignsContract.class,
-                BuyerSignsAndPublishDepositTx.class,
-                BuyerSendsDepositTxPublishedMessage.class
+                SellerCreatesAndSignsContract.class,
+                SellerCreatesAndSignsDepositTx.class,
+                SellerSendsRequestPublishDepositTxMessage.class
         );
+        taskRunner.run();
+    }
+
+    private void handleDepositTxPublishedMessage(DepositTxPublishedMessage tradeMessage) {
+        processModel.setTradeMessage(tradeMessage);
+
+        TaskRunner<SellerAsTakerTrade> taskRunner = new TaskRunner<>(sellerAsTakerTrade,
+                () -> log.debug("taskRunner at handleDepositTxPublishedMessage completed"),
+                this::handleTaskRunnerFault);
+
+        taskRunner.addTasks(
+                SellerProcessDepositTxPublishedMessage.class,
+                SellerCommitDepositTx.class
+        );
+        taskRunner.run();
+    }
+
+    private void handleFiatTransferStartedMessage(FiatTransferStartedMessage tradeMessage) {
+        processModel.setTradeMessage(tradeMessage);
+
+        TaskRunner<SellerAsTakerTrade> taskRunner = new TaskRunner<>(sellerAsTakerTrade,
+                () -> log.debug("taskRunner at handleFiatTransferStartedMessage completed"),
+                this::handleTaskRunnerFault);
+
+        taskRunner.addTasks(SellerProcessFiatTransferStartedMessage.class);
         taskRunner.run();
     }
 
@@ -133,41 +161,26 @@ public class BuyerAsTakerProtocol implements TradeProtocol {
     // Called from UI
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // User clicked the "bank transfer started" button
-    public void onFiatPaymentStarted() {
-        TaskRunner<BuyerAsTakerTrade> taskRunner = new TaskRunner<>(buyerAsTakerTrade,
-                () -> log.debug("taskRunner at onFiatPaymentStarted completed"),
-                this::handleTaskRunnerFault);
-        taskRunner.addTasks(
-                VerifyOfferFeePayment.class,
-                BuyerCreatesAndSignPayoutTx.class,
-                BuyerSendsFiatTransferStartedMessage.class
-        );
-        taskRunner.run();
-    }
+    // User clicked the "bank transfer received" button, so we release the funds for pay out
+    public void onFiatPaymentReceived() {
+        sellerAsTakerTrade.setProcessState(TakerState.ProcessState.FIAT_PAYMENT_RECEIVED);
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Incoming message handling
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void handle(PayoutTxPublishedMessage tradeMessage) {
-        processModel.setTradeMessage(tradeMessage);
-
-        TaskRunner<BuyerAsTakerTrade> taskRunner = new TaskRunner<>(buyerAsTakerTrade,
+        TaskRunner<SellerAsTakerTrade> taskRunner = new TaskRunner<>(sellerAsTakerTrade,
                 () -> {
-                    log.debug("taskRunner at handlePayoutTxPublishedMessage completed");
+                    log.debug("taskRunner at handleFiatReceivedUIEvent completed");
+
                     // we are done!
                     processModel.onComplete();
                 },
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                BuyerProcessPayoutTxPublishedMessage.class,
-                BuyerCommitsPayoutTx.class);
+                VerifyOfferFeePayment.class,
+                SellerSignsAndPublishPayoutTx.class,
+                SellerSendsPayoutTxPublishedMessage.class
+        );
         taskRunner.run();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Massage dispatcher
@@ -180,11 +193,14 @@ public class BuyerAsTakerProtocol implements TradeProtocol {
             nonEmptyStringOf(tradeMessage.tradeId);
 
             if (tradeMessage.tradeId.equals(processModel.getId())) {
-                if (tradeMessage instanceof RequestPublishDepositTxMessage) {
-                    handle((RequestPublishDepositTxMessage) tradeMessage);
+                if (tradeMessage instanceof RequestPayDepositMessage) {
+                    handleRequestTakerDepositPaymentMessage((RequestPayDepositMessage) tradeMessage);
                 }
-                else if (tradeMessage instanceof PayoutTxPublishedMessage) {
-                    handle((PayoutTxPublishedMessage) tradeMessage);
+                else if (tradeMessage instanceof DepositTxPublishedMessage) {
+                    handleDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
+                }
+                else if (tradeMessage instanceof FiatTransferStartedMessage) {
+                    handleFiatTransferStartedMessage((FiatTransferStartedMessage) tradeMessage);
                 }
                 else {
                     log.error("Incoming message not supported. " + tradeMessage);

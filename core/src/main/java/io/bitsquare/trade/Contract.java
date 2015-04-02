@@ -42,8 +42,8 @@ public class Contract implements Serializable {
     public final String sellerAccountID;
     public final FiatAccount buyerFiatAccount;
     public final FiatAccount sellerFiatAccount;
-    public final String buyerP2PSigPubKeyAsString;
-    public final String sellerP2PSigPubKeyAsString;
+    public final String buyerP2pSigPubKeyAsString;
+    public final String sellerP2pSigPubKeyAsString;
 
     public Contract(Offer offer,
                     Coin tradeAmount,
@@ -52,8 +52,8 @@ public class Contract implements Serializable {
                     String sellerAccountID,
                     FiatAccount buyerFiatAccount,
                     FiatAccount sellerFiatAccount,
-                    PublicKey buyerP2PSigPubKey,
-                    PublicKey sellerP2PSigPubKey) {
+                    PublicKey buyerP2pSigPubKey,
+                    PublicKey sellerP2pSigPubKey) {
         this.offer = offer;
         this.tradeAmount = tradeAmount;
         this.takeOfferFeeTxID = takeOfferFeeTxID;
@@ -61,8 +61,8 @@ public class Contract implements Serializable {
         this.sellerAccountID = sellerAccountID;
         this.buyerFiatAccount = buyerFiatAccount;
         this.sellerFiatAccount = sellerFiatAccount;
-        this.buyerP2PSigPubKeyAsString = Utilities.getHexFromPubKey(buyerP2PSigPubKey);
-        this.sellerP2PSigPubKeyAsString = Utilities.getHexFromPubKey(sellerP2PSigPubKey);
+        this.buyerP2pSigPubKeyAsString = Utilities.getHexFromPubKey(buyerP2pSigPubKey);
+        this.sellerP2pSigPubKeyAsString = Utilities.getHexFromPubKey(sellerP2pSigPubKey);
     }
 
     @Override
@@ -75,8 +75,8 @@ public class Contract implements Serializable {
                 ", sellerAccountID='" + sellerAccountID + '\'' +
                 ", buyerFiatAccount=" + buyerFiatAccount +
                 ", sellerFiatAccount=" + sellerFiatAccount +
-                ", buyerP2PSigPubKeyAsString='" + buyerP2PSigPubKeyAsString + '\'' +
-                ", sellerP2PSigPubKeyAsString='" + sellerP2PSigPubKeyAsString + '\'' +
+                ", buyerP2pSigPubKeyAsString='" + buyerP2pSigPubKeyAsString + '\'' +
+                ", sellerP2pSigPubKeyAsString='" + sellerP2pSigPubKeyAsString + '\'' +
                 '}';
     }
 }

@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.buyer.offerer;
+package io.bitsquare.trade.protocol.trade.buyer;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.MailboxMessage;
@@ -27,17 +27,17 @@ import io.bitsquare.trade.BuyerAsOffererTrade;
 import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
 import io.bitsquare.trade.protocol.trade.TradeProtocol;
-import io.bitsquare.trade.protocol.trade.buyer.offerer.tasks.OffererProcessRequestDepositTxInputsMessage;
-import io.bitsquare.trade.protocol.trade.buyer.offerer.tasks.OffererProcessRequestPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerCommitsPayoutTx;
 import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerCreatesAndSignPayoutTx;
 import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerCreatesDepositTxInputs;
 import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerProcessPayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerProcessRequestPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerSendsDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerSendsFiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerSendsRequestPayDepositMessage;
 import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerSignsAndPublishDepositTx;
 import io.bitsquare.trade.protocol.trade.buyer.tasks.BuyerVerifiesAndSignsContract;
+import io.bitsquare.trade.protocol.trade.buyer.tasks.ProcessRequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxMessage;
@@ -143,7 +143,7 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
                 () -> log.debug("taskRunner at handleRequestDepositTxInputsMessage completed"),
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
-                OffererProcessRequestDepositTxInputsMessage.class,
+                ProcessRequestDepositTxInputsMessage.class,
                 BuyerCreatesDepositTxInputs.class,
                 BuyerSendsRequestPayDepositMessage.class
         );
@@ -157,7 +157,7 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
                 () -> log.debug("taskRunner at handleRequestPublishDepositTxMessage completed"),
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
-                OffererProcessRequestPublishDepositTxMessage.class,
+                BuyerProcessRequestPublishDepositTxMessage.class,
                 VerifyTakerAccount.class,
                 BuyerVerifiesAndSignsContract.class,
                 BuyerSignsAndPublishDepositTx.class,
