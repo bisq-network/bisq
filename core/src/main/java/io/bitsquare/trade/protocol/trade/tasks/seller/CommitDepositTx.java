@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.tasks.buyer;
+package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
@@ -26,19 +26,20 @@ import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BuyerCommitsPayoutTx extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(BuyerCommitsPayoutTx.class);
+public class CommitDepositTx extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(CommitDepositTx.class);
 
-    public BuyerCommitsPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public CommitDepositTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            Transaction transaction = processModel.getTradeWalletService().commitTx(trade.getPayoutTx());
+            // To access tx confidence we need to add that tx into our wallet.
+            Transaction depositTx = processModel.getTradeWalletService().commitTx(trade.getDepositTx());
 
-            trade.setPayoutTx(transaction);
+            trade.setDepositTx(depositTx);
 
             complete();
         } catch (Throwable t) {

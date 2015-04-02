@@ -34,10 +34,10 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SellerSignsAndPublishPayoutTx extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SellerSignsAndPublishPayoutTx.class);
+public class SignAndPublishPayoutTx extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SignAndPublishPayoutTx.class);
 
-    public SellerSignsAndPublishPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public SignAndPublishPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

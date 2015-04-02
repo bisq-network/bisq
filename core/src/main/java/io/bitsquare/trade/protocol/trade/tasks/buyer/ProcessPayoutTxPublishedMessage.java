@@ -15,14 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.tasks.seller;
+package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
 import io.bitsquare.trade.states.OffererTradeState;
 import io.bitsquare.trade.states.TakerTradeState;
 
@@ -30,31 +30,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.bitsquare.util.Validator.*;
+import static io.bitsquare.util.Validator.checkTradeId;
 
-public class SellerProcessFiatTransferStartedMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SellerProcessFiatTransferStartedMessage.class);
+public class ProcessPayoutTxPublishedMessage extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(ProcessPayoutTxPublishedMessage.class);
 
-    public SellerProcessFiatTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
+    public ProcessPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            FiatTransferStartedMessage message = (FiatTransferStartedMessage) processModel.getTradeMessage();
+            PayoutTxPublishedMessage message = (PayoutTxPublishedMessage) processModel.getTradeMessage();
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);
 
-            processModel.tradingPeer.setSignature(checkNotNull(message.buyerSignature));
-            processModel.setPayoutAmount(positiveCoinOf(nonZeroCoinOf(message.sellerPayoutAmount)));
-            processModel.tradingPeer.setPayoutAmount(positiveCoinOf(nonZeroCoinOf(message.buyerPayoutAmount)));
-            processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(message.buyerPayoutAddress));
+            trade.setPayoutTx(checkNotNull(message.payoutTx));
 
             if (trade instanceof OffererTrade)
-                trade.setProcessState(OffererTradeState.ProcessState.FIAT_PAYMENT_STARTED);
+                trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_PUBLISHED);
             else if (trade instanceof TakerTrade)
-                trade.setProcessState(TakerTradeState.ProcessState.FIAT_PAYMENT_STARTED);
+                trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_PUBLISHED);
 
             complete();
         } catch (Throwable t) {

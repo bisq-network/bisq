@@ -27,16 +27,16 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.BuyerCommitsPayoutTx;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.BuyerCreatesAndSignPayoutTx;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.BuyerCreatesDepositTxInputs;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.BuyerProcessRequestPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.BuyerSendsDepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.BuyerSendsFiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.BuyerSendsRequestPayDepositMessage;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.BuyerSignsAndPublishDepositTx;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.BuyerVerifiesAndSignsContract;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.CommitPayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.CreateAndSignPayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.CreateDepositTxInputs;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.ProcessPayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.ProcessRequestPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.SendDepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.SendFiatTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.SendRequestPayDepositMessage;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.SignAndPublishDepositTx;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.VerifyAndSignContract;
 import io.bitsquare.trade.protocol.trade.tasks.taker.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOfferFeePayment;
@@ -100,8 +100,8 @@ public class BuyerAsTakerProtocol implements TradeProtocol {
         taskRunner.addTasks(
                 CreateTakeOfferFeeTx.class,
                 BroadcastTakeOfferFeeTx.class,
-                BuyerCreatesDepositTxInputs.class,
-                BuyerSendsRequestPayDepositMessage.class
+                CreateDepositTxInputs.class,
+                SendRequestPayDepositMessage.class
         );
         taskRunner.run();
     }
@@ -118,11 +118,11 @@ public class BuyerAsTakerProtocol implements TradeProtocol {
                 () -> log.debug("taskRunner at handleRequestPublishDepositTxMessage completed"),
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
-                BuyerProcessRequestPublishDepositTxMessage.class,
+                ProcessRequestPublishDepositTxMessage.class,
                 VerifyOffererAccount.class,
-                BuyerVerifiesAndSignsContract.class,
-                BuyerSignsAndPublishDepositTx.class,
-                BuyerSendsDepositTxPublishedMessage.class
+                VerifyAndSignContract.class,
+                SignAndPublishDepositTx.class,
+                SendDepositTxPublishedMessage.class
         );
         taskRunner.run();
     }
@@ -139,8 +139,8 @@ public class BuyerAsTakerProtocol implements TradeProtocol {
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
                 VerifyOfferFeePayment.class,
-                BuyerCreatesAndSignPayoutTx.class,
-                BuyerSendsFiatTransferStartedMessage.class
+                CreateAndSignPayoutTx.class,
+                SendFiatTransferStartedMessage.class
         );
         taskRunner.run();
     }
@@ -162,8 +162,8 @@ public class BuyerAsTakerProtocol implements TradeProtocol {
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                BuyerProcessPayoutTxPublishedMessage.class,
-                BuyerCommitsPayoutTx.class);
+                ProcessPayoutTxPublishedMessage.class,
+                CommitPayoutTx.class);
         taskRunner.run();
     }
 

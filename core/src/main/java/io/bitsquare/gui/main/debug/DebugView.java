@@ -30,25 +30,25 @@ import io.bitsquare.trade.protocol.placeoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.ValidateOffer;
 import io.bitsquare.trade.protocol.trade.BuyerAsOffererProtocol;
 import io.bitsquare.trade.protocol.trade.SellerAsTakerProtocol;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.BuyerCreatesAndSignPayoutTx;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.BuyerCreatesDepositTxInputs;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.BuyerProcessRequestPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.BuyerSendsDepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.BuyerSendsFiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.BuyerSendsRequestPayDepositMessage;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.BuyerSignsAndPublishDepositTx;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.CreateAndSignPayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.CreateDepositTxInputs;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.ProcessPayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.buyer.ProcessRequestDepositTxInputsMessage;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.ProcessRequestPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.SendDepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.SendFiatTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.SendRequestPayDepositMessage;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.SignAndPublishDepositTx;
 import io.bitsquare.trade.protocol.trade.tasks.offerer.VerifyTakeOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.tasks.offerer.VerifyTakerAccount;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SellerCommitDepositTx;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SellerCreatesAndSignsDepositTx;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SellerProcessDepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SellerProcessFiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SellerProcessRequestPayDepositMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SellerSendsPayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SellerSignsAndPublishPayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.seller.CommitDepositTx;
+import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignDepositTx;
+import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessDepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessFiatTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessRequestPayDepositMessage;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SendPayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.SendRequestDepositTxInputsMessage;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SignAndPublishPayoutTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOffererAccount;
@@ -99,19 +99,19 @@ public class DebugView extends InitializableView {
                         /*---- Protocol ----*/
                         BuyerAsOffererProtocol.class,
                         ProcessRequestDepositTxInputsMessage.class,
-                        BuyerCreatesDepositTxInputs.class,
-                        BuyerSendsRequestPayDepositMessage.class,
+                        CreateDepositTxInputs.class,
+                        SendRequestPayDepositMessage.class,
 
-                        BuyerProcessRequestPublishDepositTxMessage.class,
+                        ProcessRequestPublishDepositTxMessage.class,
                         VerifyTakerAccount.class,
-                        BuyerSignsAndPublishDepositTx.class,
-                        BuyerSendsDepositTxPublishedMessage.class,
+                        SignAndPublishDepositTx.class,
+                        SendDepositTxPublishedMessage.class,
 
-                        BuyerCreatesAndSignPayoutTx.class,
+                        CreateAndSignPayoutTx.class,
                         VerifyTakeOfferFeePayment.class,
-                        BuyerSendsFiatTransferStartedMessage.class,
+                        SendFiatTransferStartedMessage.class,
 
-                        BuyerProcessPayoutTxPublishedMessage.class,
+                        ProcessPayoutTxPublishedMessage.class,
                         Boolean.class, /* used as seperator*/
                         
 
@@ -120,18 +120,18 @@ public class DebugView extends InitializableView {
                         CreateTakeOfferFeeTx.class,
                         SendRequestDepositTxInputsMessage.class,
 
-                        SellerProcessRequestPayDepositMessage.class,
+                        ProcessRequestPayDepositMessage.class,
                         VerifyOffererAccount.class,
-                        SellerCreatesAndSignsDepositTx.class,
+                        CreateAndSignDepositTx.class,
 
-                        SellerProcessDepositTxPublishedMessage.class,
-                        SellerCommitDepositTx.class,
+                        ProcessDepositTxPublishedMessage.class,
+                        CommitDepositTx.class,
 
-                        SellerProcessFiatTransferStartedMessage.class,
+                        ProcessFiatTransferStartedMessage.class,
 
-                        SellerSignsAndPublishPayoutTx.class,
+                        SignAndPublishPayoutTx.class,
                         VerifyOfferFeePayment.class,
-                        SellerSendsPayoutTxPublishedMessage.class
+                        SendPayoutTxPublishedMessage.class
                 )
         );
 

@@ -17,44 +17,51 @@
 
 package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
-import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
+import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.states.StateUtil;
-
-import org.bitcoinj.core.Coin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BuyerCreatesDepositTxInputs extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(BuyerCreatesDepositTxInputs.class);
+public class SendDepositTxPublishedMessage extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SendDepositTxPublishedMessage.class);
 
-    public BuyerCreatesDepositTxInputs(TaskRunner taskHandler, Trade trade) {
+    public SendDepositTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            log.debug("trade.id" + trade.getId());
-            Coin inputAmount = trade.getSecurityDeposit().add(FeePolicy.TX_FEE);
-            TradeWalletService.Result result = processModel.getTradeWalletService().createDepositTxInputs(inputAmount,
-                    processModel.getAddressEntry());
+            DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(processModel.getId(), trade.getDepositTx());
 
-            processModel.setConnectedOutputsForAllInputs(result.getConnectedOutputsForAllInputs());
-            processModel.setOutputs(result.getOutputs());
+            processModel.getMessageService().sendMessage(trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
+                @Override
+                public void handleResult() {
+                    log.trace("DepositTxPublishedMessage successfully arrived at peer");
+                    complete();
+                }
 
-            complete();
+                @Override
+                public void handleFault() {
+                    appendToErrorMessage("Sending DepositTxPublishedMessage failed");
+                    trade.setErrorMessage(errorMessage);
+
+                    StateUtil.setSendFailedState(trade);
+
+                    failed();
+                }
+            });
         } catch (Throwable t) {
             t.printStackTrace();
             trade.setThrowable(t);
-
-            StateUtil.setOfferOpenState(trade);
-
             failed(t);
         }
     }
+
+
 }

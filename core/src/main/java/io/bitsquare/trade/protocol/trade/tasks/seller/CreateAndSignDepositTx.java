@@ -28,10 +28,10 @@ import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SellerCreatesAndSignsDepositTx extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SellerCreatesAndSignsDepositTx.class);
+public class CreateAndSignDepositTx extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(CreateAndSignDepositTx.class);
 
-    public SellerCreatesAndSignsDepositTx(TaskRunner taskHandler, Trade trade) {
+    public CreateAndSignDepositTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

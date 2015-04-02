@@ -15,52 +15,49 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.tasks.buyer;
+package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.states.StateUtil;
 import io.bitsquare.util.Utilities;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BuyerVerifiesAndSignsContract extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(BuyerVerifiesAndSignsContract.class);
+public class CreateAndSignContract extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(CreateAndSignContract.class);
 
-    public BuyerVerifiesAndSignsContract(TaskRunner taskHandler, Trade trade) {
+    public CreateAndSignContract(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
+            assert processModel.getTakeOfferFeeTxId() != null;
             Contract contract = new Contract(
                     processModel.getOffer(),
                     trade.getTradeAmount(),
                     processModel.getTakeOfferFeeTxId(),
-                    processModel.getAccountId(),
                     processModel.tradingPeer.getAccountId(),
-                    processModel.getFiatAccount(),
+                    processModel.getAccountId(),
                     processModel.tradingPeer.getFiatAccount(),
-                    processModel.getP2pSigPubKey(),
-                    processModel.tradingPeer.getP2pSigPubKey());
+                    processModel.getFiatAccount(),
+                    processModel.tradingPeer.getP2pSigPubKey(),
+                    processModel.getP2pSigPubKey());
             String contractAsJson = Utilities.objectToJson(contract);
             String signature = processModel.getSignatureService().signMessage(processModel.getRegistrationKeyPair(), contractAsJson);
+
             trade.setContract(contract);
             trade.setContractAsJson(contractAsJson);
-            trade.setBuyerContractSignature(signature);
-            trade.setBuyerContractSignature(processModel.tradingPeer.getContractSignature());
+            trade.setSellerContractSignature(signature);
 
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
             trade.setThrowable(t);
-
-            StateUtil.setOfferOpenState(trade);
-
             failed(t);
         }
     }

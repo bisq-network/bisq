@@ -29,10 +29,10 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.*;
 import static io.bitsquare.util.Validator.*;
 
-public class BuyerProcessRequestPublishDepositTxMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(BuyerProcessRequestPublishDepositTxMessage.class);
+public class ProcessRequestPublishDepositTxMessage extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(ProcessRequestPublishDepositTxMessage.class);
 
-    public BuyerProcessRequestPublishDepositTxMessage(TaskRunner taskHandler, Trade trade) {
+    public ProcessRequestPublishDepositTxMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

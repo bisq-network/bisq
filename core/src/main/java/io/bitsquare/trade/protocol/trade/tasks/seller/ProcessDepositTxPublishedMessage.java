@@ -15,14 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.tasks.buyer;
+package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.states.OffererTradeState;
 import io.bitsquare.trade.states.TakerTradeState;
 
@@ -32,26 +32,26 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.checkTradeId;
 
-public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(BuyerProcessPayoutTxPublishedMessage.class);
+public class ProcessDepositTxPublishedMessage extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(ProcessDepositTxPublishedMessage.class);
 
-    public BuyerProcessPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
+    public ProcessDepositTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            PayoutTxPublishedMessage message = (PayoutTxPublishedMessage) processModel.getTradeMessage();
+            DepositTxPublishedMessage message = (DepositTxPublishedMessage) processModel.getTradeMessage();
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);
 
-            trade.setPayoutTx(checkNotNull(message.payoutTx));
+            trade.setDepositTx(checkNotNull(message.depositTx));
 
             if (trade instanceof OffererTrade)
-                trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_PUBLISHED);
+                trade.setProcessState(OffererTradeState.ProcessState.DEPOSIT_PUBLISHED);
             else if (trade instanceof TakerTrade)
-                trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_PUBLISHED);
+                trade.setProcessState(TakerTradeState.ProcessState.DEPOSIT_PUBLISHED);
 
             complete();
         } catch (Throwable t) {

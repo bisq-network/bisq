@@ -28,16 +28,16 @@ import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SellerCommitDepositTx;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SellerCreatesAndSignsContract;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SellerCreatesAndSignsDepositTx;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SellerProcessDepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SellerProcessFiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SellerProcessRequestPayDepositMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SellerSendsPayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SellerSendsRequestPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SellerSignsAndPublishPayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.seller.CommitDepositTx;
+import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignContract;
+import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignDepositTx;
+import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessDepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessFiatTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessRequestPayDepositMessage;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SendPayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.SendRequestDepositTxInputsMessage;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SendRequestPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SignAndPublishPayoutTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOfferFeePayment;
@@ -120,11 +120,11 @@ public class SellerAsTakerProtocol implements TradeProtocol {
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                SellerProcessRequestPayDepositMessage.class,
+                ProcessRequestPayDepositMessage.class,
                 VerifyOffererAccount.class,
-                SellerCreatesAndSignsContract.class,
-                SellerCreatesAndSignsDepositTx.class,
-                SellerSendsRequestPublishDepositTxMessage.class
+                CreateAndSignContract.class,
+                CreateAndSignDepositTx.class,
+                SendRequestPublishDepositTxMessage.class
         );
         taskRunner.run();
     }
@@ -137,8 +137,8 @@ public class SellerAsTakerProtocol implements TradeProtocol {
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                SellerProcessDepositTxPublishedMessage.class,
-                SellerCommitDepositTx.class
+                ProcessDepositTxPublishedMessage.class,
+                CommitDepositTx.class
         );
         taskRunner.run();
     }
@@ -150,7 +150,7 @@ public class SellerAsTakerProtocol implements TradeProtocol {
                 () -> log.debug("taskRunner at handleFiatTransferStartedMessage completed"),
                 this::handleTaskRunnerFault);
 
-        taskRunner.addTasks(SellerProcessFiatTransferStartedMessage.class);
+        taskRunner.addTasks(ProcessFiatTransferStartedMessage.class);
         taskRunner.run();
     }
 
@@ -174,8 +174,8 @@ public class SellerAsTakerProtocol implements TradeProtocol {
 
         taskRunner.addTasks(
                 VerifyOfferFeePayment.class,
-                SellerSignsAndPublishPayoutTx.class,
-                SellerSendsPayoutTxPublishedMessage.class
+                SignAndPublishPayoutTx.class,
+                SendPayoutTxPublishedMessage.class
         );
         taskRunner.run();
     }

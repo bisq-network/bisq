@@ -27,10 +27,10 @@ import io.bitsquare.trade.states.StateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SellerSendsPayoutTxPublishedMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SellerSendsPayoutTxPublishedMessage.class);
+public class SendPayoutTxPublishedMessage extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SendPayoutTxPublishedMessage.class);
 
-    public SellerSendsPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
+    public SendPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

@@ -15,60 +15,61 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.tasks.buyer;
+package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxMessage;
 import io.bitsquare.trade.states.StateUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BuyerSendsRequestPayDepositMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(BuyerSendsRequestPayDepositMessage.class);
+public class SendRequestPublishDepositTxMessage extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SendRequestPublishDepositTxMessage.class);
 
-    public BuyerSendsRequestPayDepositMessage(TaskRunner taskHandler, Trade trade) {
+    public SendRequestPublishDepositTxMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            RequestPayDepositMessage tradeMessage = new RequestPayDepositMessage(
+            RequestPublishDepositTxMessage tradeMessage = new RequestPublishDepositTxMessage(
                     processModel.getId(),
-                    trade.getTradeAmount(),
-                    processModel.getConnectedOutputsForAllInputs(),
-                    processModel.getOutputs(),
+                    processModel.getFiatAccount(),
+                    processModel.getAccountId(),
                     processModel.getTradeWalletPubKey(),
                     processModel.getP2pSigPubKey(),
                     processModel.getP2pEncryptPubKey(),
-                    processModel.getFiatAccount(),
-                    processModel.getAccountId());
+                    trade.getContractAsJson(),
+                    trade.getSellerContractSignature(),
+                    processModel.getAddressEntry().getAddressString(),
+                    processModel.getPreparedDepositTx(),
+                    processModel.getConnectedOutputsForAllInputs()
+            );
 
             processModel.getMessageService().sendMessage(trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
                 @Override
                 public void handleResult() {
-                    log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");
                     complete();
                 }
 
                 @Override
                 public void handleFault() {
-                    appendToErrorMessage("Sending RequestTakerDepositPaymentMessage failed");
+                    appendToErrorMessage("Sending RequestOffererPublishDepositTxMessage failed");
                     trade.setErrorMessage(errorMessage);
-                    StateUtil.setOfferOpenState(trade);
+
                     StateUtil.setSendFailedState(trade);
+
                     failed();
                 }
             });
         } catch (Throwable t) {
             t.printStackTrace();
             trade.setThrowable(t);
-            StateUtil.setOfferOpenState(trade);
-            StateUtil.setSendFailedState(trade);
             failed(t);
         }
     }

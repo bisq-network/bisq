@@ -31,10 +31,10 @@ import io.bitsquare.trade.states.TakerTradeState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BuyerSendsFiatTransferStartedMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(BuyerSendsFiatTransferStartedMessage.class);
+public class SendFiatTransferStartedMessage extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SendFiatTransferStartedMessage.class);
 
-    public BuyerSendsFiatTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
+    public SendFiatTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
