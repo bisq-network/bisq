@@ -20,7 +20,7 @@ package io.bitsquare.trade;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.trade.protocol.trade.buyer.BuyerAsTakerProtocol;
+import io.bitsquare.trade.protocol.trade.BuyerAsTakerProtocol;
 import io.bitsquare.trade.states.TakerTradeState;
 import io.bitsquare.trade.states.TradeState;
 

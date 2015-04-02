@@ -17,16 +17,20 @@
 
 package io.bitsquare.trade.protocol.availability.messages;
 
+import io.bitsquare.p2p.Message;
+
 import java.io.Serializable;
 
-public class ReportOfferAvailabilityMessage extends OfferMessage implements Serializable {
+import javax.annotation.concurrent.Immutable;
+
+@Immutable
+public abstract class OfferMessage implements Message, Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
 
-    public final boolean isOfferOpen;
+    public final String offerId;
 
-    public ReportOfferAvailabilityMessage(String offerId, boolean isOfferOpen) {
-        super(offerId);
-        this.isOfferOpen = isOfferOpen;
+    protected OfferMessage(String offerId) {
+        this.offerId = offerId;
     }
 }

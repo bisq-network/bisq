@@ -15,29 +15,27 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade;
+package io.bitsquare.trade.states;
 
-import io.bitsquare.common.taskrunner.Task;
-import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.OffererTrade;
+import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TradeTask extends Task<Trade> {
-    private static final Logger log = LoggerFactory.getLogger(TradeTask.class);
+public class StateUtil {
+    private static final Logger log = LoggerFactory.getLogger(StateUtil.class);
 
-    protected final ProcessModel processModel;
-    protected final Trade trade;
-
-    public TradeTask(TaskRunner taskHandler, Trade trade) {
-        super(taskHandler, trade);
-
-        this.trade = trade;
-        processModel = trade.getProcessModel();
+    public static void setSendFailedState(Trade trade) {
+        if (trade instanceof OffererTrade)
+            trade.setProcessState(OffererTradeState.ProcessState.MESSAGE_SENDING_FAILED);
+        else if (trade instanceof TakerTrade)
+            trade.setProcessState(TakerTradeState.ProcessState.MESSAGE_SENDING_FAILED);
     }
 
-    @Override
-    protected void doRun() {
+    public static void setOfferOpenState(Trade trade) {
+        if (trade instanceof OffererTrade)
+            trade.setLifeCycleState(OffererTradeState.LifeCycleState.OFFER_OPEN);
     }
-}
+} 

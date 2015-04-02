@@ -28,8 +28,8 @@ import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
+import io.bitsquare.trade.protocol.trade.ProcessModel;
 import io.bitsquare.trade.protocol.trade.TradeProtocol;
-import io.bitsquare.trade.protocol.trade.shared.models.ProcessModel;
 import io.bitsquare.trade.states.TradeState;
 import io.bitsquare.user.User;
 

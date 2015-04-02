@@ -15,29 +15,35 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade;
+package io.bitsquare.trade.protocol.trade.tasks.taker;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.TradeTask;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TradeTask extends Task<Trade> {
-    private static final Logger log = LoggerFactory.getLogger(TradeTask.class);
+public class VerifyOfferFeePayment extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(VerifyOfferFeePayment.class);
 
-    protected final ProcessModel processModel;
-    protected final Trade trade;
-
-    public TradeTask(TaskRunner taskHandler, Trade trade) {
+    public VerifyOfferFeePayment(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
-
-        this.trade = trade;
-        processModel = trade.getProcessModel();
     }
 
     @Override
     protected void doRun() {
+        try {
+            //TODO impl. missing
+            int numOfPeersSeenTx = processModel.getWalletService().getNumOfPeersSeenTx(processModel.getTakeOfferFeeTx().getHashAsString());
+       /* if (numOfPeersSeenTx > 2) {
+            resultHandler.handleResult();
+        }*/
+            complete();
+        } catch (Throwable t) {
+            t.printStackTrace();
+            trade.setThrowable(t);
+            failed(t);
+        }
     }
 }
