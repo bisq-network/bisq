@@ -47,13 +47,13 @@ public class OffererSignsAndPublishDepositTx extends OffererTradeTask {
             Coin inputAmount = offererTrade.getSecurityDeposit().add(FeePolicy.TX_FEE);
 
             offererTradeProcessModel.getTradeWalletService().signAndPublishDepositTx(
-                    offererTradeProcessModel.taker.getPreparedDepositTx(),
-                    offererTradeProcessModel.offerer.getConnectedOutputsForAllInputs(),
-                    offererTradeProcessModel.taker.getConnectedOutputsForAllInputs(),
-                    offererTradeProcessModel.offerer.getOutputs(),
+                    offererTradeProcessModel.tradingPeer.getPreparedDepositTx(),
+                    offererTradeProcessModel.getConnectedOutputsForAllInputs(),
+                    offererTradeProcessModel.tradingPeer.getConnectedOutputsForAllInputs(),
+                    offererTradeProcessModel.getOutputs(),
                     inputAmount,
-                    offererTradeProcessModel.offerer.getTradeWalletPubKey(),
-                    offererTradeProcessModel.taker.getTradeWalletPubKey(),
+                    offererTradeProcessModel.getTradeWalletPubKey(),
+                    offererTradeProcessModel.tradingPeer.getTradeWalletPubKey(),
                     offererTradeProcessModel.getArbitratorPubKey(),
                     new FutureCallback<Transaction>() {
                         @Override

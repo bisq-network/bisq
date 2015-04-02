@@ -44,13 +44,13 @@ public class OffererSignsAndPublishPayoutTx extends OffererTradeTask {
         try {
             offererTradeProcessModel.getTradeWalletService().signAndPublishPayoutTx(
                     offererTrade.getDepositTx(),
-                    offererTradeProcessModel.taker.getSignature(),
-                    offererTradeProcessModel.taker.getPayoutAmount(),
-                    offererTradeProcessModel.offerer.getPayoutAmount(),
-                    offererTradeProcessModel.taker.getPayoutAddressString(),
-                    offererTradeProcessModel.offerer.getAddressEntry(),
-                    offererTradeProcessModel.taker.getTradeWalletPubKey(),
-                    offererTradeProcessModel.offerer.getTradeWalletPubKey(),
+                    offererTradeProcessModel.tradingPeer.getSignature(),
+                    offererTradeProcessModel.tradingPeer.getPayoutAmount(),
+                    offererTradeProcessModel.getPayoutAmount(),
+                    offererTradeProcessModel.tradingPeer.getPayoutAddressString(),
+                    offererTradeProcessModel.getAddressEntry(),
+                    offererTradeProcessModel.tradingPeer.getTradeWalletPubKey(),
+                    offererTradeProcessModel.getTradeWalletPubKey(),
                     offererTradeProcessModel.getArbitratorPubKey(),
                     new FutureCallback<Transaction>() {
                         @Override

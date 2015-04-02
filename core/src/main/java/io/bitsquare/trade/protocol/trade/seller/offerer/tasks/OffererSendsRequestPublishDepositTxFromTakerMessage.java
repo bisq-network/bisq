@@ -40,16 +40,16 @@ public class OffererSendsRequestPublishDepositTxFromTakerMessage extends Offerer
         try {
             RequestPublishDepositTxFromTakerMessage tradeMessage = new RequestPublishDepositTxFromTakerMessage(
                     offererTradeProcessModel.getId(),
-                    offererTradeProcessModel.offerer.getFiatAccount(),
-                    offererTradeProcessModel.offerer.getAccountId(),
-                    offererTradeProcessModel.offerer.getTradeWalletPubKey(),
-                    offererTradeProcessModel.offerer.getP2pSigPubKey(),
-                    offererTradeProcessModel.offerer.getP2pEncryptPublicKey(),
+                    offererTradeProcessModel.getFiatAccount(),
+                    offererTradeProcessModel.getAccountId(),
+                    offererTradeProcessModel.getTradeWalletPubKey(),
+                    offererTradeProcessModel.getP2pSigPubKey(),
+                    offererTradeProcessModel.getP2pEncryptPublicKey(),
                     offererTrade.getContractAsJson(),
                     offererTrade.getOffererContractSignature(),
-                    offererTradeProcessModel.offerer.getAddressEntry().getAddressString(),
-                    offererTradeProcessModel.offerer.getPreparedDepositTx(),
-                    offererTradeProcessModel.offerer.getConnectedOutputsForAllInputs()
+                    offererTradeProcessModel.getAddressEntry().getAddressString(),
+                    offererTradeProcessModel.getPreparedDepositTx(),
+                    offererTradeProcessModel.getConnectedOutputsForAllInputs()
             );
 
             offererTradeProcessModel.getMessageService().sendMessage(offererTrade.getTradingPeer(), tradeMessage, new SendMessageListener() {

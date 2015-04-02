@@ -40,13 +40,13 @@ public class OffererSendsRequestSellerDepositPaymentMessage extends OffererTrade
         try {
             RequestPayDepositMessage tradeMessage = new RequestPayDepositMessage(
                     offererTradeProcessModel.getId(),
-                    offererTradeProcessModel.offerer.getConnectedOutputsForAllInputs(),
-                    offererTradeProcessModel.offerer.getOutputs(),
-                    offererTradeProcessModel.offerer.getTradeWalletPubKey(),
-                    offererTradeProcessModel.offerer.getP2pSigPubKey(),
-                    offererTradeProcessModel.offerer.getP2pEncryptPubKey(),
-                    offererTradeProcessModel.offerer.getFiatAccount(),
-                    offererTradeProcessModel.offerer.getAccountId());
+                    offererTradeProcessModel.getConnectedOutputsForAllInputs(),
+                    offererTradeProcessModel.getOutputs(),
+                    offererTradeProcessModel.getTradeWalletPubKey(),
+                    offererTradeProcessModel.getP2pSigPubKey(),
+                    offererTradeProcessModel.getP2pEncryptPubKey(),
+                    offererTradeProcessModel.getFiatAccount(),
+                    offererTradeProcessModel.getAccountId());
 
             offererTradeProcessModel.getMessageService().sendMessage(offererTrade.getTradingPeer(), tradeMessage, new SendMessageListener() {
                 @Override

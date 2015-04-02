@@ -42,17 +42,17 @@ public class TakerProcessRequestPublishDepositTxFromTakerMessage extends TakerTr
             checkTradeId(takerTradeProcessModel.getId(), message);
             checkNotNull(message);
 
-            takerTradeProcessModel.offerer.setFiatAccount(checkNotNull(message.takerFiatAccount));
-            takerTradeProcessModel.offerer.setAccountId(nonEmptyStringOf(message.takerAccountId));
-            takerTradeProcessModel.offerer.setP2pSigPubKey(checkNotNull(message.takerP2PSigPublicKey));
-            takerTradeProcessModel.offerer.setP2pSigPubKey(checkNotNull(message.takerP2PSigPublicKey));
-            takerTradeProcessModel.offerer.setTradeWalletPubKey(checkNotNull(message.sellerTradeWalletPubKey));
-            takerTradeProcessModel.offerer.setP2pEncryptPubKey(checkNotNull(message.takerP2PEncryptPublicKey));
-            takerTradeProcessModel.offerer.setContractAsJson(nonEmptyStringOf(message.takerContractAsJson));
-            takerTradeProcessModel.offerer.setContractSignature(nonEmptyStringOf(message.takerContractSignature));
-            takerTradeProcessModel.offerer.setPayoutAddressString(nonEmptyStringOf(message.takerPayoutAddressString));
-            takerTradeProcessModel.offerer.setPreparedDepositTx(checkNotNull(message.takersPreparedDepositTx));
-            takerTradeProcessModel.offerer.setConnectedOutputsForAllInputs(checkNotNull(message.takerConnectedOutputsForAllInputs));
+            takerTradeProcessModel.tradingPeer.setFiatAccount(checkNotNull(message.takerFiatAccount));
+            takerTradeProcessModel.tradingPeer.setAccountId(nonEmptyStringOf(message.takerAccountId));
+            takerTradeProcessModel.tradingPeer.setP2pSigPubKey(checkNotNull(message.takerP2PSigPublicKey));
+            takerTradeProcessModel.tradingPeer.setP2pSigPubKey(checkNotNull(message.takerP2PSigPublicKey));
+            takerTradeProcessModel.tradingPeer.setTradeWalletPubKey(checkNotNull(message.sellerTradeWalletPubKey));
+            takerTradeProcessModel.tradingPeer.setP2pEncryptPubKey(checkNotNull(message.takerP2PEncryptPublicKey));
+            takerTradeProcessModel.tradingPeer.setContractAsJson(nonEmptyStringOf(message.takerContractAsJson));
+            takerTradeProcessModel.tradingPeer.setContractSignature(nonEmptyStringOf(message.takerContractSignature));
+            takerTradeProcessModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(message.takerPayoutAddressString));
+            takerTradeProcessModel.tradingPeer.setPreparedDepositTx(checkNotNull(message.takersPreparedDepositTx));
+            takerTradeProcessModel.tradingPeer.setConnectedOutputsForAllInputs(checkNotNull(message.takerConnectedOutputsForAllInputs));
             checkArgument(message.takerConnectedOutputsForAllInputs.size() > 0);
 
             complete();

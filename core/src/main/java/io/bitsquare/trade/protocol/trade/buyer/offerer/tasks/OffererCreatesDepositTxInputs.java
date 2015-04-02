@@ -43,10 +43,10 @@ public class OffererCreatesDepositTxInputs extends OffererTradeTask {
             log.debug("offererTrade.id" + offererTrade.getId());
             Coin inputAmount = offererTrade.getSecurityDeposit().add(FeePolicy.TX_FEE);
             TradeWalletService.Result result = offererTradeProcessModel.getTradeWalletService().createDepositTxInputs(inputAmount,
-                    offererTradeProcessModel.offerer.getAddressEntry());
+                    offererTradeProcessModel.getAddressEntry());
 
-            offererTradeProcessModel.offerer.setConnectedOutputsForAllInputs(result.getConnectedOutputsForAllInputs());
-            offererTradeProcessModel.offerer.setOutputs(result.getOutputs());
+            offererTradeProcessModel.setConnectedOutputsForAllInputs(result.getConnectedOutputsForAllInputs());
+            offererTradeProcessModel.setOutputs(result.getOutputs());
 
             complete();
         } catch (Throwable t) {

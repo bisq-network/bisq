@@ -47,7 +47,7 @@ public class TakerSendsRequestDepositTxInputsMessage extends TakerTradeTask {
                     takerTradeProcessModel.getId(),
                     takerTradeProcessModel.getTakeOfferFeeTx().getHashAsString(),
                     takerTrade.getTradeAmount(),
-                    takerTradeProcessModel.taker.getTradeWalletPubKey());
+                    takerTradeProcessModel.getTradeWalletPubKey());
 
             takerTradeProcessModel.getMessageService().sendMessage(takerTrade.getTradingPeer(), message, new SendMessageListener() {
                 @Override

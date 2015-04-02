@@ -46,7 +46,7 @@ public class OffererProcessRequestDepositTxInputsMessage extends OffererTradeTas
 
             offererTrade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(message.tradeAmount)));
             offererTradeProcessModel.setTakeOfferFeeTxId(nonEmptyStringOf(message.takeOfferFeeTxId));
-            offererTradeProcessModel.taker.setTradeWalletPubKey(checkNotNull(message.takerTradeWalletPubKey));
+            offererTradeProcessModel.tradingPeer.setTradeWalletPubKey(checkNotNull(message.takerTradeWalletPubKey));
 
             complete();
         } catch (Throwable t) {

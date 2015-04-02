@@ -45,15 +45,15 @@ public class TakerCreatesAndSignsDepositTx extends TakerTradeTask {
             TradeWalletService.Result result = takerTradeProcessModel.getTradeWalletService().createAndSignDepositTx(
                     inputAmount,
                     msOutputAmount,
-                    takerTradeProcessModel.offerer.getConnectedOutputsForAllInputs(),
-                    takerTradeProcessModel.offerer.getOutputs(),
-                    takerTradeProcessModel.taker.getAddressEntry(),
-                    takerTradeProcessModel.offerer.getTradeWalletPubKey(),
-                    takerTradeProcessModel.taker.getTradeWalletPubKey(),
+                    takerTradeProcessModel.tradingPeer.getConnectedOutputsForAllInputs(),
+                    takerTradeProcessModel.tradingPeer.getOutputs(),
+                    takerTradeProcessModel.getAddressEntry(),
+                    takerTradeProcessModel.tradingPeer.getTradeWalletPubKey(),
+                    takerTradeProcessModel.getTradeWalletPubKey(),
                     takerTradeProcessModel.getArbitratorPubKey());
 
-            takerTradeProcessModel.taker.setConnectedOutputsForAllInputs(result.getConnectedOutputsForAllInputs());
-            takerTradeProcessModel.taker.setPreparedDepositTx(result.getDepositTx());
+            takerTradeProcessModel.setConnectedOutputsForAllInputs(result.getConnectedOutputsForAllInputs());
+            takerTradeProcessModel.setPreparedDepositTx(result.getDepositTx());
 
             complete();
         } catch (Throwable t) {

@@ -44,15 +44,15 @@ public class OffererProcessRequestPublishDepositTxMessage extends OffererTradeTa
             checkTradeId(offererTradeProcessModel.getId(), message);
             checkNotNull(message);
 
-            offererTradeProcessModel.taker.setFiatAccount(checkNotNull(message.takerFiatAccount));
-            offererTradeProcessModel.taker.setAccountId(nonEmptyStringOf(message.takerAccountId));
-            offererTradeProcessModel.taker.setP2pSigPubKey(checkNotNull(message.takerP2PSigPublicKey));
-            offererTradeProcessModel.taker.setP2pEncryptPubKey(checkNotNull(message.takerP2PEncryptPublicKey));
-            offererTradeProcessModel.taker.setContractAsJson(nonEmptyStringOf(message.takerContractAsJson));
-            offererTradeProcessModel.taker.setContractSignature(nonEmptyStringOf(message.takerContractSignature));
-            offererTradeProcessModel.taker.setPayoutAddressString(nonEmptyStringOf(message.takerPayoutAddressString));
-            offererTradeProcessModel.taker.setPreparedDepositTx(checkNotNull(message.takersPreparedDepositTx));
-            offererTradeProcessModel.taker.setConnectedOutputsForAllInputs(checkNotNull(message.takerConnectedOutputsForAllInputs));
+            offererTradeProcessModel.tradingPeer.setFiatAccount(checkNotNull(message.takerFiatAccount));
+            offererTradeProcessModel.tradingPeer.setAccountId(nonEmptyStringOf(message.takerAccountId));
+            offererTradeProcessModel.tradingPeer.setP2pSigPubKey(checkNotNull(message.takerP2PSigPublicKey));
+            offererTradeProcessModel.tradingPeer.setP2pEncryptPubKey(checkNotNull(message.takerP2PEncryptPublicKey));
+            offererTradeProcessModel.tradingPeer.setContractAsJson(nonEmptyStringOf(message.takerContractAsJson));
+            offererTradeProcessModel.tradingPeer.setContractSignature(nonEmptyStringOf(message.takerContractSignature));
+            offererTradeProcessModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(message.takerPayoutAddressString));
+            offererTradeProcessModel.tradingPeer.setPreparedDepositTx(checkNotNull(message.takersPreparedDepositTx));
+            offererTradeProcessModel.tradingPeer.setConnectedOutputsForAllInputs(checkNotNull(message.takerConnectedOutputsForAllInputs));
             checkArgument(message.takerConnectedOutputsForAllInputs.size() > 0);
 
             complete();

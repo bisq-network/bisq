@@ -41,8 +41,8 @@ public class OffererSendsPayoutTxPublishedMessage extends OffererTradeTask {
             PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(offererTradeProcessModel.getId(), offererTradeProcessModel.getPayoutTx());
             offererTradeProcessModel.getMessageService().sendMessage(offererTrade.getTradingPeer(),
                     tradeMessage,
-                    offererTradeProcessModel.offerer.getP2pSigPubKey(),
-                    offererTradeProcessModel.offerer.getP2pEncryptPubKey(),
+                    offererTradeProcessModel.getP2pSigPubKey(),
+                    offererTradeProcessModel.getP2pEncryptPubKey(),
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {

@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.taker.models;
+package io.bitsquare.trade.protocol.trade.offerer.models;
 
 import io.bitsquare.fiat.FiatAccount;
 
@@ -32,41 +32,35 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Fully serializable, no transient fields
- */
-public class Offerer implements Serializable {
+public class TradingPeer implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
-    transient private static final Logger log = LoggerFactory.getLogger(Offerer.class);
+    transient private static final Logger log = LoggerFactory.getLogger(TradingPeer.class);
 
     // Mutable
-    private byte[] tradeWalletPubKey;
-    private Coin payoutAmount;
-    private String payoutAddressString;
-    private List<TransactionOutput> connectedOutputsForAllInputs;
-    private List<TransactionOutput> outputs;
-    private byte[] signature;
-    private FiatAccount fiatAccount;
     private String accountId;
+    private FiatAccount fiatAccount;
+    private PublicKey p2pSigPubKey;
     private PublicKey p2pEncryptPubKey;
     private String contractAsJson;
     private String contractSignature;
+    private Coin payoutAmount;
     private Transaction preparedDepositTx;
-    private PublicKey p2pSigPubKey;
-
+    private List<TransactionOutput> connectedOutputsForAllInputs;
+    private String payoutAddressString;
+    private byte[] tradeWalletPubKey;
+    private List<TransactionOutput> outputs;
+    private byte[] signature;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Offerer() {
+    public TradingPeer() {
         log.trace("Created by constructor");
     }
 
@@ -80,70 +74,6 @@ public class Offerer implements Serializable {
     // Getter/Setter for Mutable objects
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable
-    public byte[] getTradeWalletPubKey() {
-        return tradeWalletPubKey;
-    }
-
-    public void setTradeWalletPubKey(byte[] tradeWalletPubKey) {
-        this.tradeWalletPubKey = tradeWalletPubKey;
-    }
-
-    @Nullable
-    public Coin getPayoutAmount() {
-        return payoutAmount;
-    }
-
-    public void setPayoutAmount(Coin payoutAmount) {
-        this.payoutAmount = payoutAmount;
-    }
-
-    @Nullable
-    public String getPayoutAddressString() {
-        return payoutAddressString;
-    }
-
-    public void setPayoutAddressString(String payoutAddressString) {
-        this.payoutAddressString = payoutAddressString;
-    }
-
-    @Nullable
-    public List<TransactionOutput> getConnectedOutputsForAllInputs() {
-        return connectedOutputsForAllInputs;
-    }
-
-    public void setConnectedOutputsForAllInputs(List<TransactionOutput> connectedOutputsForAllInputs) {
-        this.connectedOutputsForAllInputs = connectedOutputsForAllInputs;
-    }
-
-    @Nullable
-    public List<TransactionOutput> getOutputs() {
-        return outputs;
-    }
-
-    public void setOutputs(List<TransactionOutput> outputs) {
-        this.outputs = outputs;
-    }
-
-    @Nullable
-    public byte[] getSignature() {
-        return signature;
-    }
-
-    public void setSignature(byte[] signature) {
-        this.signature = signature;
-    }
-
-    @Nullable
-    public FiatAccount getFiatAccount() {
-        return fiatAccount;
-    }
-
-    public void setFiatAccount(FiatAccount fiatAccount) {
-        this.fiatAccount = fiatAccount;
-    }
-
-    @Nullable
     public String getAccountId() {
         return accountId;
     }
@@ -152,43 +82,14 @@ public class Offerer implements Serializable {
         this.accountId = accountId;
     }
 
-    @Nullable
-    public PublicKey getP2pEncryptPubKey() {
-        return p2pEncryptPubKey;
+    public FiatAccount getFiatAccount() {
+        return fiatAccount;
     }
 
-    public void setP2pEncryptPubKey(PublicKey p2pEncryptPubKey) {
-        this.p2pEncryptPubKey = p2pEncryptPubKey;
+    public void setFiatAccount(FiatAccount fiatAccount) {
+        this.fiatAccount = fiatAccount;
     }
 
-    @Nullable
-    public String getContractAsJson() {
-        return contractAsJson;
-    }
-
-    public void setContractAsJson(String contractAsJson) {
-        this.contractAsJson = contractAsJson;
-    }
-
-    @Nullable
-    public String getContractSignature() {
-        return contractSignature;
-    }
-
-    public void setContractSignature(String contractSignature) {
-        this.contractSignature = contractSignature;
-    }
-
-    @Nullable
-    public Transaction getPreparedDepositTx() {
-        return preparedDepositTx;
-    }
-
-    public void setPreparedDepositTx(Transaction preparedDepositTx) {
-        this.preparedDepositTx = preparedDepositTx;
-    }
-
-    @Nullable
     public PublicKey getP2pSigPubKey() {
         return p2pSigPubKey;
     }
@@ -197,19 +98,102 @@ public class Offerer implements Serializable {
         this.p2pSigPubKey = p2pSigPubKey;
     }
 
+    public PublicKey getP2pEncryptPubKey() {
+        return p2pEncryptPubKey;
+    }
+
+    public void setP2pEncryptPubKey(PublicKey p2pEncryptPubKey) {
+        this.p2pEncryptPubKey = p2pEncryptPubKey;
+    }
+
+    public String getContractAsJson() {
+        return contractAsJson;
+    }
+
+    public void setContractAsJson(String contractAsJson) {
+        this.contractAsJson = contractAsJson;
+    }
+
+    public String getContractSignature() {
+        return contractSignature;
+    }
+
+    public void setContractSignature(String contractSignature) {
+        this.contractSignature = contractSignature;
+    }
+
+    public Coin getPayoutAmount() {
+        return payoutAmount;
+    }
+
+    public void setPayoutAmount(Coin payoutAmount) {
+        this.payoutAmount = payoutAmount;
+    }
+
+    public Transaction getPreparedDepositTx() {
+        return preparedDepositTx;
+    }
+
+    public void setPreparedDepositTx(Transaction preparedDepositTx) {
+        this.preparedDepositTx = preparedDepositTx;
+    }
+
+    public List<TransactionOutput> getConnectedOutputsForAllInputs() {
+        return connectedOutputsForAllInputs;
+    }
+
+    public void setConnectedOutputsForAllInputs(List<TransactionOutput> connectedOutputsForAllInputs) {
+        this.connectedOutputsForAllInputs = connectedOutputsForAllInputs;
+    }
+
+    public String getPayoutAddressString() {
+        return payoutAddressString;
+    }
+
+    public void setPayoutAddressString(String payoutAddressString) {
+        this.payoutAddressString = payoutAddressString;
+    }
+
+    public byte[] getTradeWalletPubKey() {
+        return tradeWalletPubKey;
+    }
+
+    public void setTradeWalletPubKey(byte[] tradeWalletPubKey) {
+        this.tradeWalletPubKey = tradeWalletPubKey;
+    }
+
+    public List<TransactionOutput> getOutputs() {
+        return outputs;
+    }
+
+    public void setOutputs(List<TransactionOutput> outputs) {
+        this.outputs = outputs;
+    }
+
+    public byte[] getSignature() {
+        return signature;
+    }
+
+    public void setSignature(byte[] signature) {
+        this.signature = signature;
+    }
+
     @Override
     public String toString() {
-        return "Offerer{" +
-                "tradeWalletPubKey=" + Arrays.toString(tradeWalletPubKey) +
-                ", payoutAmount=" + payoutAmount +
-                ", payoutAddressString='" + payoutAddressString + '\'' +
-                ", connectedOutputsForAllInputs=" + connectedOutputsForAllInputs +
-                ", outputs=" + outputs +
-                ", signature=" + Arrays.toString(signature) +
+        return "Taker{" +
+                "accountId='" + accountId + '\'' +
                 ", fiatAccount=" + fiatAccount +
-                ", accountId='" + accountId + '\'' +
                 ", p2pSigPubKey=" + p2pSigPubKey +
                 ", p2pEncryptPubKey=" + p2pEncryptPubKey +
+                ", contractAsJson='" + contractAsJson + '\'' +
+                ", contractSignature='" + contractSignature + '\'' +
+                ", payoutAmount=" + payoutAmount +
+                ", preparedDepositTx=" + preparedDepositTx +
+                ", connectedOutputsForAllInputs=" + connectedOutputsForAllInputs +
+                ", payoutAddressString='" + payoutAddressString + '\'' +
+                ", tradeWalletPubKey=" + Arrays.toString(tradeWalletPubKey) +
                 '}';
     }
+
+
 }

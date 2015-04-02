@@ -42,14 +42,14 @@ public class OffererProcessRequestPayDepositFromOffererMessage extends OffererTr
             checkTradeId(offererTradeProcessModel.getId(), message);
             checkNotNull(message);
 
-            offererTradeProcessModel.taker.setConnectedOutputsForAllInputs(checkNotNull(message.buyerConnectedOutputsForAllInputs));
+            offererTradeProcessModel.tradingPeer.setConnectedOutputsForAllInputs(checkNotNull(message.buyerConnectedOutputsForAllInputs));
             checkArgument(message.buyerConnectedOutputsForAllInputs.size() > 0);
-            offererTradeProcessModel.taker.setOutputs(checkNotNull(message.buyerOutputs));
-            offererTradeProcessModel.taker.setTradeWalletPubKey(checkNotNull(message.buyerTradeWalletPubKey));
-            offererTradeProcessModel.taker.setP2pSigPubKey(checkNotNull(message.buyerP2PSigPublicKey));
-            offererTradeProcessModel.taker.setP2pEncryptPubKey(checkNotNull(message.buyerP2PEncryptPublicKey));
-            offererTradeProcessModel.taker.setFiatAccount(checkNotNull(message.buyerFiatAccount));
-            offererTradeProcessModel.taker.setAccountId(nonEmptyStringOf(message.buyerAccountId));
+            offererTradeProcessModel.tradingPeer.setOutputs(checkNotNull(message.buyerOutputs));
+            offererTradeProcessModel.tradingPeer.setTradeWalletPubKey(checkNotNull(message.buyerTradeWalletPubKey));
+            offererTradeProcessModel.tradingPeer.setP2pSigPubKey(checkNotNull(message.buyerP2PSigPublicKey));
+            offererTradeProcessModel.tradingPeer.setP2pEncryptPubKey(checkNotNull(message.buyerP2PEncryptPublicKey));
+            offererTradeProcessModel.tradingPeer.setFiatAccount(checkNotNull(message.buyerFiatAccount));
+            offererTradeProcessModel.tradingPeer.setAccountId(nonEmptyStringOf(message.buyerAccountId));
             offererTrade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(message.tradeAmount)));
 
             complete();

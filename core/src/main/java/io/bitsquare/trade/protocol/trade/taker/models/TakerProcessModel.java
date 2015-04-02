@@ -18,19 +18,28 @@
 package io.bitsquare.trade.protocol.trade.taker.models;
 
 import io.bitsquare.arbitration.ArbitrationRepository;
+import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
+import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.trade.protocol.trade.ProcessModel;
 import io.bitsquare.user.User;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.crypto.DeterministicKey;
 
 import java.io.IOException;
 import java.io.Serializable;
+
+import java.security.PublicKey;
+
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -49,12 +58,21 @@ public class TakerProcessModel extends ProcessModel implements Serializable {
     transient private static final Logger log = LoggerFactory.getLogger(TakerProcessModel.class);
 
     // Immutable
-    public final Taker taker;
-    public final Offerer offerer;
+    public final TradingPeer tradingPeer;
+
+    // Transient/Immutable
+    transient private Offer offer;
+    transient private WalletService walletService;
+    transient private User user;
 
     // Mutable
     private Transaction takeOfferFeeTx;
     private Transaction payoutTx;
+    private List<TransactionOutput> connectedOutputsForAllInputs;
+    private Coin payoutAmount;
+    private Transaction preparedDepositTx;
+    private List<TransactionOutput> outputs; // used to verify amounts with change outputs
+    private byte[] payoutTxSignature;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -63,8 +81,7 @@ public class TakerProcessModel extends ProcessModel implements Serializable {
 
     public TakerProcessModel() {
         log.trace("Created by constructor");
-        taker = new Taker();
-        offerer = new Offerer();
+        tradingPeer = new TradingPeer();
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -91,7 +108,9 @@ public class TakerProcessModel extends ProcessModel implements Serializable {
                 arbitrationRepository,
                 user);
 
-        taker.onAllServicesInitialized(offer, walletService, user);
+        this.offer = offer;
+        this.walletService = walletService;
+        this.user = user;
     }
 
 
@@ -118,13 +137,95 @@ public class TakerProcessModel extends ProcessModel implements Serializable {
     }
 
 
-    @Override
-    public String toString() {
-        return "TakerProcessModel{" +
-                "taker=" + taker +
-                ", offerer=" + offerer +
-                ", takeOfferFeeTx=" + takeOfferFeeTx +
-                ", payoutTx=" + payoutTx +
-                '}';
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getter only
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public FiatAccount getFiatAccount() {
+        return user.getFiatAccount(offer.getBankAccountId());
     }
+
+    public DeterministicKey getRegistrationKeyPair() {
+        return walletService.getRegistrationAddressEntry().getKeyPair();
+    }
+
+    public String getAccountId() {
+        return user.getAccountId();
+    }
+
+    public PublicKey getP2pSigPubKey() {
+        return user.getP2PSigPubKey();
+    }
+
+    public PublicKey getP2pEncryptPublicKey() {
+        return user.getP2PEncryptPubKey();
+    }
+
+    public byte[] getRegistrationPubKey() {
+        return walletService.getRegistrationAddressEntry().getPubKey();
+    }
+
+    public AddressEntry getAddressEntry() {
+        return walletService.getAddressEntry(offer.getId());
+    }
+
+    public byte[] getTradeWalletPubKey() {
+        return getAddressEntry().getPubKey();
+    }
+
+    public PublicKey getP2pEncryptPubKey() {
+        return user.getP2PEncryptPubKey();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getter/Setter for Mutable objects
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Nullable
+    public List<TransactionOutput> getConnectedOutputsForAllInputs() {
+        return connectedOutputsForAllInputs;
+    }
+
+    public void setConnectedOutputsForAllInputs(List<TransactionOutput> connectedOutputsForAllInputs) {
+        this.connectedOutputsForAllInputs = connectedOutputsForAllInputs;
+    }
+
+    @Nullable
+    public Coin getPayoutAmount() {
+        return payoutAmount;
+    }
+
+    public void setPayoutAmount(Coin payoutAmount) {
+        this.payoutAmount = payoutAmount;
+    }
+
+    @Nullable
+    public Transaction getPreparedDepositTx() {
+        return preparedDepositTx;
+    }
+
+    public void setPreparedDepositTx(Transaction preparedDepositTx) {
+        this.preparedDepositTx = preparedDepositTx;
+    }
+
+    @Nullable
+    public List<TransactionOutput> getOutputs() {
+        return outputs;
+    }
+
+    public void setOutputs(List<TransactionOutput> outputs) {
+        this.outputs = outputs;
+    }
+
+    @Nullable
+    public byte[] getPayoutTxSignature() {
+        return payoutTxSignature;
+    }
+
+    public void setPayoutTxSignature(byte[] payoutTxSignature) {
+        this.payoutTxSignature = payoutTxSignature;
+    }
+
+
 }

@@ -40,15 +40,15 @@ public class TakerSendsRequestPublishDepositTxMessage extends TakerTradeTask {
         try {
             RequestPublishDepositTxMessage tradeMessage = new RequestPublishDepositTxMessage(
                     takerTradeProcessModel.getId(),
-                    takerTradeProcessModel.taker.getFiatAccount(),
-                    takerTradeProcessModel.taker.getAccountId(),
-                    takerTradeProcessModel.taker.getP2pSigPubKey(),
-                    takerTradeProcessModel.taker.getP2pEncryptPublicKey(),
+                    takerTradeProcessModel.getFiatAccount(),
+                    takerTradeProcessModel.getAccountId(),
+                    takerTradeProcessModel.getP2pSigPubKey(),
+                    takerTradeProcessModel.getP2pEncryptPublicKey(),
                     takerTrade.getContractAsJson(),
                     takerTrade.getTakerContractSignature(),
-                    takerTradeProcessModel.taker.getAddressEntry().getAddressString(),
-                    takerTradeProcessModel.taker.getPreparedDepositTx(),
-                    takerTradeProcessModel.taker.getConnectedOutputsForAllInputs()
+                    takerTradeProcessModel.getAddressEntry().getAddressString(),
+                    takerTradeProcessModel.getPreparedDepositTx(),
+                    takerTradeProcessModel.getConnectedOutputsForAllInputs()
             );
 
             takerTradeProcessModel.getMessageService().sendMessage(takerTrade.getTradingPeer(), tradeMessage, new SendMessageListener() {

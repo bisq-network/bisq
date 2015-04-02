@@ -41,13 +41,13 @@ public class TakerSendsRequestPayDepositMessage extends TakerTradeTask {
             RequestPayDepositFromOffererMessage message = new RequestPayDepositFromOffererMessage(
                     takerTradeProcessModel.getId(),
                     model.getTradeAmount(),
-                    takerTradeProcessModel.taker.getConnectedOutputsForAllInputs(),
-                    takerTradeProcessModel.taker.getOutputs(),
-                    takerTradeProcessModel.taker.getTradeWalletPubKey(),
-                    takerTradeProcessModel.taker.getP2pSigPubKey(),
-                    takerTradeProcessModel.taker.getP2pEncryptPubKey(),
-                    takerTradeProcessModel.taker.getFiatAccount(),
-                    takerTradeProcessModel.taker.getAccountId());
+                    takerTradeProcessModel.getConnectedOutputsForAllInputs(),
+                    takerTradeProcessModel.getOutputs(),
+                    takerTradeProcessModel.getTradeWalletPubKey(),
+                    takerTradeProcessModel.getP2pSigPubKey(),
+                    takerTradeProcessModel.getP2pEncryptPubKey(),
+                    takerTradeProcessModel.getFiatAccount(),
+                    takerTradeProcessModel.getAccountId());
 
             takerTradeProcessModel.getMessageService().sendMessage(takerTrade.getTradingPeer(), message, new SendMessageListener() {
                 @Override

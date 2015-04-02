@@ -40,20 +40,20 @@ public class TakerVerifiesAndSignsContract extends TakerTradeTask {
                     takerTradeProcessModel.getOffer(),
                     takerTrade.getTradeAmount(),
                     takerTradeProcessModel.getTakeOfferFeeTx().getHashAsString(),
-                    takerTradeProcessModel.offerer.getAccountId(),
-                    takerTradeProcessModel.taker.getAccountId(),
-                    takerTradeProcessModel.offerer.getFiatAccount(),
-                    takerTradeProcessModel.taker.getFiatAccount(),
-                    takerTradeProcessModel.offerer.getP2pSigPubKey(),
-                    takerTradeProcessModel.taker.getP2pSigPubKey());
+                    takerTradeProcessModel.tradingPeer.getAccountId(),
+                    takerTradeProcessModel.getAccountId(),
+                    takerTradeProcessModel.tradingPeer.getFiatAccount(),
+                    takerTradeProcessModel.getFiatAccount(),
+                    takerTradeProcessModel.tradingPeer.getP2pSigPubKey(),
+                    takerTradeProcessModel.getP2pSigPubKey());
             String contractAsJson = Utilities.objectToJson(contract);
-            String signature = takerTradeProcessModel.getSignatureService().signMessage(takerTradeProcessModel.taker.getRegistrationKeyPair(),
+            String signature = takerTradeProcessModel.getSignatureService().signMessage(takerTradeProcessModel.getRegistrationKeyPair(),
                     contractAsJson);
 
             takerTrade.setContract(contract);
             takerTrade.setContractAsJson(contractAsJson);
             takerTrade.setOffererContractSignature(signature);
-            takerTrade.setOffererContractSignature(takerTradeProcessModel.offerer.getContractSignature());
+            takerTrade.setOffererContractSignature(takerTradeProcessModel.tradingPeer.getContractSignature());
 
             complete();
         } catch (Throwable t) {

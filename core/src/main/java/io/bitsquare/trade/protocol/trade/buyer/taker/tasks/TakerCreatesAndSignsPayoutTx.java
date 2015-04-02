@@ -47,15 +47,15 @@ public class TakerCreatesAndSignsPayoutTx extends TakerTradeTask {
                     takerTrade.getDepositTx(),
                     takerPayoutAmount,
                     offererPayoutAmount,
-                    takerTradeProcessModel.taker.getAddressEntry(),
-                    takerTradeProcessModel.offerer.getPayoutAddressString(),
-                    takerTradeProcessModel.taker.getTradeWalletPubKey(),
-                    takerTradeProcessModel.offerer.getTradeWalletPubKey(),
+                    takerTradeProcessModel.getAddressEntry(),
+                    takerTradeProcessModel.tradingPeer.getPayoutAddressString(),
+                    takerTradeProcessModel.getTradeWalletPubKey(),
+                    takerTradeProcessModel.tradingPeer.getTradeWalletPubKey(),
                     takerTradeProcessModel.getArbitratorPubKey());
 
-            takerTradeProcessModel.taker.setPayoutTxSignature(takerPayoutTxSignature);
-            takerTradeProcessModel.taker.setPayoutAmount(takerPayoutAmount);
-            takerTradeProcessModel.offerer.setPayoutAmount(offererPayoutAmount);
+            takerTradeProcessModel.setPayoutTxSignature(takerPayoutTxSignature);
+            takerTradeProcessModel.setPayoutAmount(takerPayoutAmount);
+            takerTradeProcessModel.tradingPeer.setPayoutAmount(offererPayoutAmount);
 
             complete();
         } catch (Throwable t) {

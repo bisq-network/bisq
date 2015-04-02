@@ -41,14 +41,14 @@ public class OffererCreatesAndSignsContract extends OffererTradeTask {
                     offererTradeProcessModel.getOffer(),
                     model.getTradeAmount(),
                     offererTradeProcessModel.getTakeOfferFeeTxId(),
-                    offererTradeProcessModel.offerer.getAccountId(),
-                    offererTradeProcessModel.offerer.getAccountId(),
-                    offererTradeProcessModel.offerer.getFiatAccount(),
-                    offererTradeProcessModel.offerer.getFiatAccount(),
+                    offererTradeProcessModel.getAccountId(),
+                    offererTradeProcessModel.getAccountId(),
+                    offererTradeProcessModel.getFiatAccount(),
+                    offererTradeProcessModel.getFiatAccount(),
                     offererTradeProcessModel.getOffer().getP2PSigPubKey(),
-                    offererTradeProcessModel.offerer.getP2pSigPubKey());
+                    offererTradeProcessModel.getP2pSigPubKey());
             String contractAsJson = Utilities.objectToJson(contract);
-            String signature = offererTradeProcessModel.getSignatureService().signMessage(offererTradeProcessModel.offerer.getRegistrationKeyPair(), 
+            String signature = offererTradeProcessModel.getSignatureService().signMessage(offererTradeProcessModel.getRegistrationKeyPair(), 
                     contractAsJson);
 
             model.setContract(contract);
