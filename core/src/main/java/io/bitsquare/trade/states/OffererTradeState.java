@@ -20,8 +20,8 @@ package io.bitsquare.trade.states;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererState {
-    private static final Logger log = LoggerFactory.getLogger(OffererState.class);
+public class OffererTradeState {
+    private static final Logger log = LoggerFactory.getLogger(OffererTradeState.class);
 
     public enum LifeCycleState implements TradeState.LifeCycleState {
         OFFER_OPEN,

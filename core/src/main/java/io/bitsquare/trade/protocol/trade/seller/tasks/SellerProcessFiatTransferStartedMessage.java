@@ -23,8 +23,8 @@ import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
-import io.bitsquare.trade.states.OffererState;
-import io.bitsquare.trade.states.TakerState;
+import io.bitsquare.trade.states.OffererTradeState;
+import io.bitsquare.trade.states.TakerTradeState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,9 +52,9 @@ public class SellerProcessFiatTransferStartedMessage extends TradeTask {
             processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(message.buyerPayoutAddress));
 
             if (trade instanceof OffererTrade)
-                trade.setProcessState(OffererState.ProcessState.FIAT_PAYMENT_STARTED);
+                trade.setProcessState(OffererTradeState.ProcessState.FIAT_PAYMENT_STARTED);
             else if (trade instanceof TakerTrade)
-                trade.setProcessState(TakerState.ProcessState.FIAT_PAYMENT_STARTED);
+                trade.setProcessState(TakerTradeState.ProcessState.FIAT_PAYMENT_STARTED);
 
             complete();
         } catch (Throwable t) {

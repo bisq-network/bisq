@@ -20,8 +20,8 @@ package io.bitsquare.gui.main.portfolio.closed;
 import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
 import io.bitsquare.common.viewfx.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.trade.states.OffererState;
-import io.bitsquare.trade.states.TakerState;
+import io.bitsquare.trade.states.OffererTradeState;
+import io.bitsquare.trade.states.TakerTradeState;
 import io.bitsquare.trade.states.TradeState;
 
 import com.google.inject.Inject;
@@ -71,8 +71,8 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
     String getState(ClosedTradesListItem item) {
         if (item != null && item.getTrade() != null) {
             TradeState.LifeCycleState lifeCycleState = item.getTrade().lifeCycleStateProperty().get();
-            if (lifeCycleState instanceof TakerState.LifeCycleState) {
-                switch ((TakerState.LifeCycleState) lifeCycleState) {
+            if (lifeCycleState instanceof TakerTradeState.LifeCycleState) {
+                switch ((TakerTradeState.LifeCycleState) lifeCycleState) {
                     case COMPLETED:
                         return "Completed";
                     case FAILED:
@@ -81,8 +81,8 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                         throw new RuntimeException("That must not happen. We got a pending state but we are in the closed trades list.");
                 }
             }
-            else if (lifeCycleState instanceof OffererState.LifeCycleState) {
-                switch ((OffererState.LifeCycleState) lifeCycleState) {
+            else if (lifeCycleState instanceof OffererTradeState.LifeCycleState) {
+                switch ((OffererTradeState.LifeCycleState) lifeCycleState) {
                     case OFFER_CANCELED:
                         return "Canceled";
                     case COMPLETED:

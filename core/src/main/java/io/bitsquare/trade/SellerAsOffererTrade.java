@@ -20,7 +20,7 @@ package io.bitsquare.trade;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.protocol.trade.seller.SellerAsOffererProtocol;
-import io.bitsquare.trade.states.OffererState;
+import io.bitsquare.trade.states.OffererTradeState;
 import io.bitsquare.trade.states.TradeState;
 
 import java.io.IOException;
@@ -61,8 +61,8 @@ public class SellerAsOffererTrade extends Trade implements OffererTrade, SellerT
 
     @Override
     protected void initStates() {
-        processState = OffererState.ProcessState.UNDEFINED;
-        lifeCycleState = OffererState.LifeCycleState.OFFER_OPEN;
+        processState = OffererTradeState.ProcessState.UNDEFINED;
+        lifeCycleState = OffererTradeState.LifeCycleState.OFFER_OPEN;
         initStateProperties();
     }
 
@@ -86,10 +86,10 @@ public class SellerAsOffererTrade extends Trade implements OffererTrade, SellerT
     public void setProcessState(TradeState.ProcessState processState) {
         super.setProcessState(processState);
 
-        switch ((OffererState.ProcessState) processState) {
+        switch ((OffererTradeState.ProcessState) processState) {
             case EXCEPTION:
                 disposeProtocol();
-                setLifeCycleState(OffererState.LifeCycleState.FAILED);
+                setLifeCycleState(OffererTradeState.LifeCycleState.FAILED);
                 break;
         }
     }
@@ -98,7 +98,7 @@ public class SellerAsOffererTrade extends Trade implements OffererTrade, SellerT
     public void setLifeCycleState(TradeState.LifeCycleState lifeCycleState) {
         super.setLifeCycleState(lifeCycleState);
 
-        switch ((OffererState.LifeCycleState) lifeCycleState) {
+        switch ((OffererTradeState.LifeCycleState) lifeCycleState) {
             case FAILED:
                 disposeProtocol();
                 break;
@@ -112,7 +112,7 @@ public class SellerAsOffererTrade extends Trade implements OffererTrade, SellerT
     public void setThrowable(Throwable throwable) {
         super.setThrowable(throwable);
 
-        setProcessState(OffererState.ProcessState.EXCEPTION);
+        setProcessState(OffererTradeState.ProcessState.EXCEPTION);
     }
 
 
@@ -122,8 +122,8 @@ public class SellerAsOffererTrade extends Trade implements OffererTrade, SellerT
 
     @Override
     protected void handleConfidenceResult() {
-        if (((OffererState.ProcessState) processState).ordinal() < OffererState.ProcessState.DEPOSIT_CONFIRMED.ordinal())
-            setProcessState(OffererState.ProcessState.DEPOSIT_CONFIRMED);
+        if (((OffererTradeState.ProcessState) processState).ordinal() < OffererTradeState.ProcessState.DEPOSIT_CONFIRMED.ordinal())
+            setProcessState(OffererTradeState.ProcessState.DEPOSIT_CONFIRMED);
     }
 
 }

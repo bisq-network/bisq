@@ -22,8 +22,8 @@ import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.states.OffererState;
-import io.bitsquare.trade.states.TakerState;
+import io.bitsquare.trade.states.OffererTradeState;
+import io.bitsquare.trade.states.TakerTradeState;
 
 import org.bitcoinj.core.Transaction;
 
@@ -60,9 +60,9 @@ public class SellerSignsAndPublishPayoutTx extends TradeTask {
                             processModel.setPayoutTx(transaction);
 
                             if (trade instanceof TakerTrade)
-                                trade.setProcessState(TakerState.ProcessState.PAYOUT_PUBLISHED);
+                                trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_PUBLISHED);
                             else if (trade instanceof OffererTrade)
-                                trade.setProcessState(OffererState.ProcessState.PAYOUT_PUBLISHED);
+                                trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_PUBLISHED);
 
                             complete();
                         }

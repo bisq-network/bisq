@@ -23,8 +23,8 @@ import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
-import io.bitsquare.trade.states.OffererState;
-import io.bitsquare.trade.states.TakerState;
+import io.bitsquare.trade.states.OffererTradeState;
+import io.bitsquare.trade.states.TakerTradeState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,9 +49,9 @@ public class SellerProcessDepositTxPublishedMessage extends TradeTask {
             trade.setDepositTx(checkNotNull(message.depositTx));
 
             if (trade instanceof OffererTrade)
-                trade.setProcessState(OffererState.ProcessState.DEPOSIT_PUBLISHED);
+                trade.setProcessState(OffererTradeState.ProcessState.DEPOSIT_PUBLISHED);
             else if (trade instanceof TakerTrade)
-                trade.setProcessState(TakerState.ProcessState.DEPOSIT_PUBLISHED);
+                trade.setProcessState(TakerTradeState.ProcessState.DEPOSIT_PUBLISHED);
 
             complete();
         } catch (Throwable t) {

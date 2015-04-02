@@ -44,7 +44,7 @@ import io.bitsquare.trade.protocol.trade.seller.tasks.SellerSignsAndPublishPayou
 import io.bitsquare.trade.protocol.trade.shared.models.ProcessModel;
 import io.bitsquare.trade.protocol.trade.shared.offerer.tasks.VerifyTakeOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.shared.offerer.tasks.VerifyTakerAccount;
-import io.bitsquare.trade.states.OffererState;
+import io.bitsquare.trade.states.OffererTradeState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,7 +109,7 @@ public class SellerAsOffererProtocol implements TradeProtocol {
             // to take the
             // offer
             // at the same time
-            boolean isOfferOpen = trade.lifeCycleStateProperty().get() == OffererState.LifeCycleState.OFFER_OPEN;
+            boolean isOfferOpen = trade.lifeCycleStateProperty().get() == OffererTradeState.LifeCycleState.OFFER_OPEN;
 
             ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(processModel.getId(), isOfferOpen);
             processModel.getMessageService().sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
@@ -187,7 +187,7 @@ public class SellerAsOffererProtocol implements TradeProtocol {
 
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     public void onFiatPaymentReceived() {
-        trade.setProcessState(OffererState.ProcessState.FIAT_PAYMENT_RECEIVED);
+        trade.setProcessState(OffererTradeState.ProcessState.FIAT_PAYMENT_RECEIVED);
 
         TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
                 () -> {

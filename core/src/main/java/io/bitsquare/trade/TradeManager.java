@@ -43,8 +43,8 @@ import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityProtocol;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.states.OffererState;
-import io.bitsquare.trade.states.TakerState;
+import io.bitsquare.trade.states.OffererTradeState;
+import io.bitsquare.trade.states.TakerTradeState;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
 
@@ -171,9 +171,9 @@ public class TradeManager {
 
             boolean failed = false;
             if (trade instanceof TakerTrade)
-                failed = trade.lifeCycleState == TakerState.LifeCycleState.FAILED;
+                failed = trade.lifeCycleState == TakerTradeState.LifeCycleState.FAILED;
             else if (trade instanceof OffererTrade)
-                failed = trade.lifeCycleState == OffererState.LifeCycleState.FAILED;
+                failed = trade.lifeCycleState == OffererTradeState.LifeCycleState.FAILED;
 
             if (failed) {
                 failedTrades.add(trade);
@@ -293,7 +293,7 @@ public class TradeManager {
     private void setupDepositPublishedListener(Trade trade) {
         trade.processStateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("setupDepositPublishedListener state = " + newValue);
-            if (newValue == OffererState.ProcessState.DEPOSIT_PUBLISHED) {
+            if (newValue == OffererTradeState.ProcessState.DEPOSIT_PUBLISHED) {
                 removeOpenOffer(trade.getOffer(),
                         () -> log.debug("remove offer was successful"),
                         log::error,
@@ -322,7 +322,7 @@ public class TradeManager {
 
                         if (isCancelRequest) {
                             if (trade instanceof OffererTrade)
-                                trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_CANCELED);
+                                trade.setLifeCycleState(OffererTradeState.LifeCycleState.OFFER_CANCELED);
                             closedTrades.add(trade);
                             trade.disposeProtocol();
                         }
@@ -406,9 +406,9 @@ public class TradeManager {
                 if (transaction != null) {
                     log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
                     if (trade instanceof OffererTrade)
-                        trade.setLifeCycleState(OffererState.LifeCycleState.COMPLETED);
+                        trade.setLifeCycleState(OffererTradeState.LifeCycleState.COMPLETED);
                     else if (trade instanceof TakerTrade)
-                        trade.setLifeCycleState(TakerState.LifeCycleState.COMPLETED);
+                        trade.setLifeCycleState(TakerTradeState.LifeCycleState.COMPLETED);
 
                     pendingTrades.remove(trade);
                     closedTrades.add(trade);

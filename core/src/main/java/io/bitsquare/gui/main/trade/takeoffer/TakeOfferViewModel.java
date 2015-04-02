@@ -28,7 +28,7 @@ import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.BuyerAsTakerTrade;
 import io.bitsquare.trade.SellerAsTakerTrade;
-import io.bitsquare.trade.states.TakerState;
+import io.bitsquare.trade.states.TakerTradeState;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -235,7 +235,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     msg = "\nError message: " + trade.getErrorMessage();
 
                 if (trade instanceof BuyerAsTakerTrade) {
-                    switch ((TakerState.ProcessState) newValue) {
+                    switch ((TakerTradeState.ProcessState) newValue) {
                         case TAKE_OFFER_FEE_TX_CREATED:
                             break;
                         case DEPOSIT_PUBLISHED:
@@ -267,7 +267,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     }
                 }
                 else if (trade instanceof SellerAsTakerTrade) {
-                    switch ((TakerState.ProcessState) newValue) {
+                    switch ((TakerTradeState.ProcessState) newValue) {
                         case TAKE_OFFER_FEE_TX_CREATED:
                             break;
                         case DEPOSIT_PUBLISHED:

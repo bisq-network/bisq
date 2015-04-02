@@ -23,8 +23,8 @@ import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
-import io.bitsquare.trade.states.OffererState;
-import io.bitsquare.trade.states.TakerState;
+import io.bitsquare.trade.states.OffererTradeState;
+import io.bitsquare.trade.states.TakerTradeState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,9 +49,9 @@ public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
             trade.setPayoutTx(checkNotNull(message.payoutTx));
 
             if (trade instanceof OffererTrade)
-                trade.setProcessState(OffererState.ProcessState.PAYOUT_PUBLISHED);
+                trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_PUBLISHED);
             else if (trade instanceof TakerTrade)
-                trade.setProcessState(TakerState.ProcessState.PAYOUT_PUBLISHED);
+                trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_PUBLISHED);
 
             complete();
         } catch (Throwable t) {

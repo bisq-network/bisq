@@ -21,7 +21,7 @@ import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.protocol.trade.seller.SellerAsTakerProtocol;
-import io.bitsquare.trade.states.TakerState;
+import io.bitsquare.trade.states.TakerTradeState;
 import io.bitsquare.trade.states.TradeState;
 
 import org.bitcoinj.core.Coin;
@@ -36,7 +36,7 @@ public class SellerAsTakerTrade extends Trade implements TakerTrade, SellerTrade
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
-    transient private static final Logger log = LoggerFactory.getLogger(TakerState.class);
+    transient private static final Logger log = LoggerFactory.getLogger(TakerTradeState.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +60,7 @@ public class SellerAsTakerTrade extends Trade implements TakerTrade, SellerTrade
     public void setLifeCycleState(TradeState.LifeCycleState lifeCycleState) {
         super.setLifeCycleState(lifeCycleState);
 
-        switch ((TakerState.LifeCycleState) lifeCycleState) {
+        switch ((TakerTradeState.LifeCycleState) lifeCycleState) {
             case FAILED:
                 disposeProtocol();
                 break;
@@ -72,8 +72,8 @@ public class SellerAsTakerTrade extends Trade implements TakerTrade, SellerTrade
 
     @Override
     protected void initStates() {
-        processState = TakerState.ProcessState.UNDEFINED;
-        lifeCycleState = TakerState.LifeCycleState.PENDING;
+        processState = TakerTradeState.ProcessState.UNDEFINED;
+        lifeCycleState = TakerTradeState.LifeCycleState.PENDING;
         initStateProperties();
     }
 
@@ -108,10 +108,10 @@ public class SellerAsTakerTrade extends Trade implements TakerTrade, SellerTrade
     public void setProcessState(TradeState.ProcessState processState) {
         super.setProcessState(processState);
 
-        switch ((TakerState.ProcessState) processState) {
+        switch ((TakerTradeState.ProcessState) processState) {
             case EXCEPTION:
                 disposeProtocol();
-                setLifeCycleState(TakerState.LifeCycleState.FAILED);
+                setLifeCycleState(TakerTradeState.LifeCycleState.FAILED);
                 break;
         }
     }
@@ -120,7 +120,7 @@ public class SellerAsTakerTrade extends Trade implements TakerTrade, SellerTrade
     public void setThrowable(Throwable throwable) {
         super.setThrowable(throwable);
 
-        setProcessState(TakerState.ProcessState.EXCEPTION);
+        setProcessState(TakerTradeState.ProcessState.EXCEPTION);
     }
 
 
@@ -130,7 +130,7 @@ public class SellerAsTakerTrade extends Trade implements TakerTrade, SellerTrade
 
     @Override
     protected void handleConfidenceResult() {
-        if (((TakerState.ProcessState) processState).ordinal() < TakerState.ProcessState.DEPOSIT_CONFIRMED.ordinal())
-            setProcessState(TakerState.ProcessState.DEPOSIT_CONFIRMED);
+        if (((TakerTradeState.ProcessState) processState).ordinal() < TakerTradeState.ProcessState.DEPOSIT_CONFIRMED.ordinal())
+            setProcessState(TakerTradeState.ProcessState.DEPOSIT_CONFIRMED);
     }
 }

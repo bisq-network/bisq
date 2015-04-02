@@ -20,8 +20,8 @@ package io.bitsquare.trade.protocol.trade;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.states.OffererState;
-import io.bitsquare.trade.states.TakerState;
+import io.bitsquare.trade.states.OffererTradeState;
+import io.bitsquare.trade.states.TakerTradeState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,13 +31,13 @@ public class StateUtil {
 
     public static void setSendFailedState(Trade trade) {
         if (trade instanceof OffererTrade)
-            trade.setProcessState(OffererState.ProcessState.MESSAGE_SENDING_FAILED);
+            trade.setProcessState(OffererTradeState.ProcessState.MESSAGE_SENDING_FAILED);
         else if (trade instanceof TakerTrade)
-            trade.setProcessState(TakerState.ProcessState.MESSAGE_SENDING_FAILED);
+            trade.setProcessState(TakerTradeState.ProcessState.MESSAGE_SENDING_FAILED);
     }
 
     public static void setOfferOpenState(Trade trade) {
         if (trade instanceof OffererTrade)
-            trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_OPEN);
+            trade.setLifeCycleState(OffererTradeState.LifeCycleState.OFFER_OPEN);
     }
 } 

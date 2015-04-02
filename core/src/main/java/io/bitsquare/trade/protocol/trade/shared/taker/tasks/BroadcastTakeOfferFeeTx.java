@@ -21,7 +21,7 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.states.TakerState;
+import io.bitsquare.trade.states.TakerTradeState;
 
 import org.bitcoinj.core.Transaction;
 
@@ -49,7 +49,7 @@ public class BroadcastTakeOfferFeeTx extends TradeTask {
                             log.debug("Take offer fee published successfully. Transaction ID = " + transaction.getHashAsString());
 
                             if (trade instanceof TakerTrade)
-                                trade.setProcessState(TakerState.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
+                                trade.setProcessState(TakerTradeState.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
                             complete();
                         }
 
@@ -60,7 +60,7 @@ public class BroadcastTakeOfferFeeTx extends TradeTask {
                             trade.setErrorMessage(errorMessage);
 
                             if (trade instanceof TakerTrade)
-                                trade.setProcessState(TakerState.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
+                                trade.setProcessState(TakerTradeState.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
 
                             failed(t);
                         }

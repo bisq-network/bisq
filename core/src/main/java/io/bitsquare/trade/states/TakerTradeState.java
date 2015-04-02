@@ -20,8 +20,8 @@ package io.bitsquare.trade.states;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerState {
-    private static final Logger log = LoggerFactory.getLogger(TakerState.class);
+public class TakerTradeState {
+    private static final Logger log = LoggerFactory.getLogger(TakerTradeState.class);
 
     public enum LifeCycleState implements TradeState.LifeCycleState {
         PENDING,

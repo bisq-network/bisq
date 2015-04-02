@@ -44,7 +44,7 @@ import io.bitsquare.trade.protocol.trade.shared.taker.tasks.BroadcastTakeOfferFe
 import io.bitsquare.trade.protocol.trade.shared.taker.tasks.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.shared.taker.tasks.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.shared.taker.tasks.VerifyOffererAccount;
-import io.bitsquare.trade.states.TakerState;
+import io.bitsquare.trade.states.TakerTradeState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -163,7 +163,7 @@ public class SellerAsTakerProtocol implements TradeProtocol {
 
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     public void onFiatPaymentReceived() {
-        trade.setProcessState(TakerState.ProcessState.FIAT_PAYMENT_RECEIVED);
+        trade.setProcessState(TakerTradeState.ProcessState.FIAT_PAYMENT_RECEIVED);
 
         TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
                 () -> {

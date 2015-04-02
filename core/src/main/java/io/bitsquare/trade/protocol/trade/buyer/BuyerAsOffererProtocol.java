@@ -46,7 +46,7 @@ import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.shared.models.ProcessModel;
 import io.bitsquare.trade.protocol.trade.shared.offerer.tasks.VerifyTakeOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.shared.offerer.tasks.VerifyTakerAccount;
-import io.bitsquare.trade.states.OffererState;
+import io.bitsquare.trade.states.OffererTradeState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,7 +111,7 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
             // to take the
             // offer
             // at the same time
-            boolean isOfferOpen = trade.lifeCycleStateProperty().get() == OffererState.LifeCycleState.OFFER_OPEN;
+            boolean isOfferOpen = trade.lifeCycleStateProperty().get() == OffererTradeState.LifeCycleState.OFFER_OPEN;
             ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(processModel.getId(), isOfferOpen);
             processModel.getMessageService().sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
                 @Override
@@ -138,7 +138,7 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
         processModel.setTradeMessage(tradeMessage);
         trade.setTradingPeer(taker);
 
-        trade.setLifeCycleState(OffererState.LifeCycleState.OFFER_RESERVED);
+        trade.setLifeCycleState(OffererTradeState.LifeCycleState.OFFER_RESERVED);
 
         TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
                 () -> log.debug("taskRunner at handleRequestDepositTxInputsMessage completed"),
