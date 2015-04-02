@@ -15,29 +15,36 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.taker.tasks;
+package io.bitsquare.trade.protocol.trade.buyer.offerer.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.TakerTrade;
-import io.bitsquare.trade.protocol.trade.taker.models.TakerProcessModel;
+import io.bitsquare.trade.OffererTrade;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
+
+import org.bitcoinj.core.Transaction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerTradeTask extends Task<TakerTrade> {
-    private static final Logger log = LoggerFactory.getLogger(TakerTradeTask.class);
-    protected final TakerProcessModel takerTradeProcessModel;
-    protected final TakerTrade takerTrade;
+public class OffererCommitsPayoutTx extends OffererTradeTask {
+    private static final Logger log = LoggerFactory.getLogger(OffererCommitsPayoutTx.class);
 
-    public TakerTradeTask(TaskRunner taskHandler, TakerTrade takerTrade) {
-        super(taskHandler, takerTrade);
-
-        this.takerTrade = takerTrade;
-        takerTradeProcessModel = takerTrade.getProcessModel();
+    public OffererCommitsPayoutTx(TaskRunner taskHandler, OffererTrade offererTrade) {
+        super(taskHandler, offererTrade);
     }
 
     @Override
     protected void doRun() {
+        try {
+            Transaction transaction = offererTradeProcessModel.getTradeWalletService().commitTx(offererTrade.getPayoutTx());
+            
+            offererTrade.setPayoutTx(transaction);
+
+            complete();
+        } catch (Throwable t) {
+            t.printStackTrace();
+            offererTrade.setThrowable(t);
+            failed(t);
+        }
     }
 }

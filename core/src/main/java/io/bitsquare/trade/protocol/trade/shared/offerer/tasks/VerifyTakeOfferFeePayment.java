@@ -15,29 +15,36 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.offerer.tasks;
+package io.bitsquare.trade.protocol.trade.shared.offerer.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererProcessModel;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererTradeTask extends Task<OffererTrade> {
-    private static final Logger log = LoggerFactory.getLogger(OffererTradeTask.class);
-    protected final OffererProcessModel offererTradeProcessModel;
-    protected final OffererTrade offererTrade;
+public class VerifyTakeOfferFeePayment extends OffererTradeTask {
+    private static final Logger log = LoggerFactory.getLogger(VerifyTakeOfferFeePayment.class);
 
-    public OffererTradeTask(TaskRunner taskHandler, OffererTrade offererTrade) {
+    public VerifyTakeOfferFeePayment(TaskRunner taskHandler, OffererTrade offererTrade) {
         super(taskHandler, offererTrade);
-
-        this.offererTrade = offererTrade;
-        offererTradeProcessModel = offererTrade.getProcessModel();
     }
 
     @Override
     protected void doRun() {
+        try {
+            //TODO mocked yet, need a confidence listeners
+            int numOfPeersSeenTx = offererTradeProcessModel.getWalletService().getNumOfPeersSeenTx(offererTradeProcessModel.getTakeOfferFeeTxId());
+       /* if (numOfPeersSeenTx > 2) {
+            resultHandler.handleResult();
+        }*/
+
+            complete();
+        } catch (Throwable t) {
+            t.printStackTrace();
+            offererTrade.setThrowable(t);
+            failed(t);
+        }
     }
 }

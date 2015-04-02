@@ -15,29 +15,37 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.offerer.tasks;
+package io.bitsquare.trade.protocol.trade.seller.offerer.tasks;
 
-import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.protocol.trade.offerer.models.OffererProcessModel;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.OffererTradeTask;
+
+import org.bitcoinj.core.Transaction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererTradeTask extends Task<OffererTrade> {
-    private static final Logger log = LoggerFactory.getLogger(OffererTradeTask.class);
-    protected final OffererProcessModel offererTradeProcessModel;
-    protected final OffererTrade offererTrade;
+public class OffererCommitDepositTx extends OffererTradeTask {
+    private static final Logger log = LoggerFactory.getLogger(OffererCommitDepositTx.class);
 
-    public OffererTradeTask(TaskRunner taskHandler, OffererTrade offererTrade) {
+    public OffererCommitDepositTx(TaskRunner taskHandler, OffererTrade offererTrade) {
         super(taskHandler, offererTrade);
-
-        this.offererTrade = offererTrade;
-        offererTradeProcessModel = offererTrade.getProcessModel();
     }
 
     @Override
     protected void doRun() {
+        try {
+            // To access tx confidence we need to add that tx into our wallet.
+            Transaction depositTx = offererTradeProcessModel.getTradeWalletService().commitTx(offererTrade.getDepositTx());
+
+            offererTrade.setDepositTx(depositTx);
+
+            complete();
+        } catch (Throwable t) {
+            t.printStackTrace();
+            offererTrade.setThrowable(t);
+            failed(t);
+        }
     }
 }

@@ -20,7 +20,7 @@ package io.bitsquare.trade;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.trade.protocol.trade.taker.TakerAsBuyerProtocol;
+import io.bitsquare.trade.protocol.trade.buyer.taker.BuyerAsTakerProtocol;
 
 import org.bitcoinj.core.Coin;
 
@@ -93,7 +93,7 @@ public class TakerAsBuyerTrade extends TakerTrade implements Serializable {
 
     @Override
     public void createProtocol() {
-        protocol = new TakerAsBuyerProtocol(this);
+        protocol = new BuyerAsTakerProtocol(this);
     }
 
 
@@ -103,13 +103,13 @@ public class TakerAsBuyerTrade extends TakerTrade implements Serializable {
 
     @Override
     public void takeAvailableOffer() {
-        assert protocol instanceof TakerAsBuyerProtocol;
-        ((TakerAsBuyerProtocol) protocol).takeAvailableOffer();
+        assert protocol instanceof BuyerAsTakerProtocol;
+        ((BuyerAsTakerProtocol) protocol).takeAvailableOffer();
     }
 
     public void onFiatPaymentStarted() {
-        assert protocol instanceof TakerAsBuyerProtocol;
-        ((TakerAsBuyerProtocol) protocol).onFiatPaymentStarted();
+        assert protocol instanceof BuyerAsTakerProtocol;
+        ((BuyerAsTakerProtocol) protocol).onFiatPaymentStarted();
     }
 
 

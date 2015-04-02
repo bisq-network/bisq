@@ -19,7 +19,7 @@ package io.bitsquare.trade;
 
 import io.bitsquare.offer.Offer;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.trade.protocol.trade.offerer.OffererAsBuyerProtocol;
+import io.bitsquare.trade.protocol.trade.buyer.offerer.BuyerAsOffererProtocol;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -81,7 +81,7 @@ public class OffererAsBuyerTrade extends OffererTrade implements Serializable {
 
     @Override
     protected void createProtocol() {
-        protocol = new OffererAsBuyerProtocol(this);
+        protocol = new BuyerAsOffererProtocol(this);
     }
 
     @Override
@@ -97,8 +97,8 @@ public class OffererAsBuyerTrade extends OffererTrade implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onFiatPaymentStarted() {
-        assert protocol instanceof OffererAsBuyerProtocol;
-        ((OffererAsBuyerProtocol) protocol).onFiatPaymentStarted();
+        assert protocol instanceof BuyerAsOffererProtocol;
+        ((BuyerAsOffererProtocol) protocol).onFiatPaymentStarted();
     }
 
     
