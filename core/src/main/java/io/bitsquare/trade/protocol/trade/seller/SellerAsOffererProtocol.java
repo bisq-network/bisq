@@ -24,6 +24,7 @@ import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.SellerAsOffererTrade;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
 import io.bitsquare.trade.protocol.trade.TradeProtocol;
@@ -54,17 +55,17 @@ public class SellerAsOffererProtocol implements TradeProtocol {
     private static final Logger log = LoggerFactory.getLogger(SellerAsOffererProtocol.class);
 
     private final MessageHandler messageHandler;
-    private final SellerAsOffererTrade sellerAsOffererTrade;
+    private final SellerAsOffererTrade trade;
     private final ProcessModel processModel;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SellerAsOffererProtocol(SellerAsOffererTrade model) {
+    public SellerAsOffererProtocol(SellerAsOffererTrade trade) {
         log.debug("New OffererProtocol " + this);
-        this.sellerAsOffererTrade = model;
-        processModel = sellerAsOffererTrade.getProcessModel();
+        this.trade = trade;
+        processModel = this.trade.getProcessModel();
         messageHandler = this::handleMessage;
 
         processModel.getMessageService().addMessageHandler(messageHandler);
@@ -108,7 +109,7 @@ public class SellerAsOffererProtocol implements TradeProtocol {
             // to take the
             // offer
             // at the same time
-            boolean isOfferOpen = sellerAsOffererTrade.lifeCycleStateProperty().get() == OffererState.LifeCycleState.OFFER_OPEN;
+            boolean isOfferOpen = trade.lifeCycleStateProperty().get() == OffererState.LifeCycleState.OFFER_OPEN;
 
             ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(processModel.getId(), isOfferOpen);
             processModel.getMessageService().sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
@@ -138,9 +139,9 @@ public class SellerAsOffererProtocol implements TradeProtocol {
     private void handle(RequestPayDepositMessage tradeMessage, Peer sender) {
         processModel.setTradeMessage(tradeMessage);
 
-        sellerAsOffererTrade.setTradingPeer(sender);
+        trade.setTradingPeer(sender);
 
-        TaskRunner<SellerAsOffererTrade> taskRunner = new TaskRunner<>(sellerAsOffererTrade,
+        TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
                 () -> log.debug("taskRunner at handleTakerDepositPaymentRequestMessage completed"),
                 this::handleTaskRunnerFault);
 
@@ -157,7 +158,7 @@ public class SellerAsOffererProtocol implements TradeProtocol {
     private void handle(DepositTxPublishedMessage tradeMessage) {
         processModel.setTradeMessage(tradeMessage);
 
-        TaskRunner<SellerAsOffererTrade> taskRunner = new TaskRunner<>(sellerAsOffererTrade,
+        TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
                 () -> log.debug("taskRunner at handleDepositTxPublishedMessage completed"),
                 this::handleTaskRunnerFault);
 
@@ -171,7 +172,7 @@ public class SellerAsOffererProtocol implements TradeProtocol {
     private void handle(FiatTransferStartedMessage tradeMessage) {
         processModel.setTradeMessage(tradeMessage);
 
-        TaskRunner<SellerAsOffererTrade> taskRunner = new TaskRunner<>(sellerAsOffererTrade,
+        TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
                 () -> log.debug("taskRunner at handleFiatTransferStartedMessage completed"),
                 this::handleTaskRunnerFault);
 
@@ -186,9 +187,9 @@ public class SellerAsOffererProtocol implements TradeProtocol {
 
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     public void onFiatPaymentReceived() {
-        sellerAsOffererTrade.setProcessState(OffererState.ProcessState.FIAT_PAYMENT_RECEIVED);
+        trade.setProcessState(OffererState.ProcessState.FIAT_PAYMENT_RECEIVED);
 
-        TaskRunner<SellerAsOffererTrade> taskRunner = new TaskRunner<>(sellerAsOffererTrade,
+        TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
                 () -> {
                     log.debug("taskRunner at handleFiatReceivedUIEvent completed");
 
@@ -215,7 +216,7 @@ public class SellerAsOffererProtocol implements TradeProtocol {
         if (message instanceof TradeMessage) {
             TradeMessage tradeMessage = (TradeMessage) message;
             nonEmptyStringOf(tradeMessage.tradeId);
-            if (tradeMessage.tradeId.equals(sellerAsOffererTrade.getId())) {
+            if (tradeMessage.tradeId.equals(trade.getId())) {
                 if (tradeMessage instanceof RequestIsOfferAvailableMessage) {
                     handle((RequestIsOfferAvailableMessage) tradeMessage, sender);
                 }

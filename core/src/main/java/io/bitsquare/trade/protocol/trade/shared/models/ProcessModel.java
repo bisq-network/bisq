@@ -49,7 +49,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ProcessModel extends Model implements Serializable {
+public class ProcessModel implements Model, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
@@ -276,5 +276,15 @@ public class ProcessModel extends Model implements Serializable {
 
     public void setTakeOfferFeeTxId(String takeOfferFeeTxId) {
         this.takeOfferFeeTxId = takeOfferFeeTxId;
+    }
+
+    @Override
+    public void persist() {
+
+    }
+
+    @Override
+    public void onComplete() {
+
     }
 }

@@ -39,7 +39,7 @@ public class SellerCreatesAndSignsContract extends TradeTask {
             assert processModel.getTakeOfferFeeTxId() != null;
             Contract contract = new Contract(
                     processModel.getOffer(),
-                    model.getTradeAmount(),
+                    trade.getTradeAmount(),
                     processModel.getTakeOfferFeeTxId(),
                     processModel.tradingPeer.getAccountId(),
                     processModel.getAccountId(),
@@ -50,9 +50,9 @@ public class SellerCreatesAndSignsContract extends TradeTask {
             String contractAsJson = Utilities.objectToJson(contract);
             String signature = processModel.getSignatureService().signMessage(processModel.getRegistrationKeyPair(), contractAsJson);
 
-            model.setContract(contract);
-            model.setContractAsJson(contractAsJson);
-            model.setSellerContractSignature(signature);
+            trade.setContract(contract);
+            trade.setContractAsJson(contractAsJson);
+            trade.setSellerContractSignature(signature);
 
             complete();
         } catch (Throwable t) {

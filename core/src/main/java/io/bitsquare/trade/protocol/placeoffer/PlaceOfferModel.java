@@ -28,7 +28,7 @@ import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PlaceOfferModel extends Model {
+public class PlaceOfferModel implements Model {
     private static final Logger log = LoggerFactory.getLogger(PlaceOfferModel.class);
 
     public final Offer offer;
@@ -54,5 +54,15 @@ public class PlaceOfferModel extends Model {
 
     public Transaction getTransaction() {
         return transaction;
+    }
+
+    @Override
+    public void persist() {
+        
+    }
+
+    @Override
+    public void onComplete() {
+
     }
 }

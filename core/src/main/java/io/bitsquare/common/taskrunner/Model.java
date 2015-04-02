@@ -17,15 +17,8 @@
 
 package io.bitsquare.common.taskrunner;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+public interface Model {
+    void persist();
 
-public class Model {
-    private static final Logger log = LoggerFactory.getLogger(Model.class);
-
-    public void persist() {
-    }
-
-    public void onComplete() {
-    }
+    void onComplete();
 }

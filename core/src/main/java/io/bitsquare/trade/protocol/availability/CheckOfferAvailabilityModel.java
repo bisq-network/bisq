@@ -27,7 +27,7 @@ import io.bitsquare.trade.protocol.trade.messages.OfferMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CheckOfferAvailabilityModel extends Model {
+public class CheckOfferAvailabilityModel implements Model {
     private static final Logger log = LoggerFactory.getLogger(CheckOfferAvailabilityModel.class);
 
     public final Offer offer;
@@ -57,5 +57,15 @@ public class CheckOfferAvailabilityModel extends Model {
 
     public OfferMessage getMessage() {
         return message;
+    }
+
+    @Override
+    public void persist() {
+        
+    }
+
+    @Override
+    public void onComplete() {
+
     }
 }
