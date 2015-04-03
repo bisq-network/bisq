@@ -79,8 +79,11 @@ public class BuyerSubView extends TradeSubView {
         waitFiatReceived.inactive();
         completed.inactive();
 
+        if (tradeStepDetailsView != null)
+            tradeStepDetailsView.deactivate();
+
         switch (viewState) {
-            case EMPTY:
+            case UNDEFINED:
                 break;
             case BUYER_WAIT_TX_CONF:
                 showItem(waitTxInBlockchain);

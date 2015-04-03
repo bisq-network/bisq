@@ -75,7 +75,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class FileManager<T> {
     private static final Logger log = LoggerFactory.getLogger(FileManager.class);
-    private static final ReentrantLock lock = Threading.lock("FileUtil");
+    private static final ReentrantLock lock = Threading.lock("FileManager");
 
     private final File dir;
     private final File storageFile;
@@ -164,6 +164,7 @@ public class FileManager<T> {
     }
 
     public T read(File file) throws IOException, ClassNotFoundException {
+        log.debug("read" + file);
         lock.lock();
         try (final FileInputStream fileInputStream = new FileInputStream(file);
              final ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
@@ -256,6 +257,9 @@ public class FileManager<T> {
             fileOutputStream = new FileOutputStream(tempFile);
             objectOutputStream = new ObjectOutputStream(fileOutputStream);
 
+            // TODO ConcurrentModificationException happens sometimes at that line
+            //log.debug("serializable " + serializable.toString());
+            log.debug("storageFile " + storageFile.toString());
             objectOutputStream.writeObject(serializable);
 
             // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
@@ -271,6 +275,7 @@ public class FileManager<T> {
             renameTempFileToFile(tempFile, storageFile);
         } catch (Throwable t) {
             t.printStackTrace();
+            log.error("Error at saveToFile: " + t.getMessage());
         } finally {
             if (tempFile != null && tempFile.exists()) {
                 log.warn("Temp file still exists after failed save. storageFile=" + storageFile);
@@ -286,7 +291,7 @@ public class FileManager<T> {
             } catch (IOException e) {
                 // We swallow that
                 e.printStackTrace();
-                log.error("Cannot close resources.");
+                log.error("Cannot close resources." + e.getMessage());
             }
             lock.unlock();
         }

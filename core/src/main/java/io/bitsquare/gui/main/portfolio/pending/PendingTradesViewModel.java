@@ -20,13 +20,10 @@ package io.bitsquare.gui.main.portfolio.pending;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
 import io.bitsquare.common.viewfx.model.ViewModel;
-import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.main.MainView;
-import io.bitsquare.gui.main.portfolio.PortfolioView;
-import io.bitsquare.gui.main.portfolio.closed.ClosedTradesView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.states.OffererTradeState;
 import io.bitsquare.trade.states.TakerTradeState;
 
@@ -37,13 +34,10 @@ import com.google.inject.Inject;
 
 import java.util.Date;
 
-import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -56,7 +50,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     private static final Logger log = LoggerFactory.getLogger(PendingTradesViewModel.class);
 
     enum ViewState {
-        EMPTY,
+        UNDEFINED,
         SELLER_WAIT_TX_CONF,
         SELLER_WAIT_PAYMENT_STARTED,
         SELLER_CONFIRM_RECEIVE_PAYMENT,
@@ -71,25 +65,22 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         EXCEPTION
     }
 
-    private Navigation navigation;
+
     private final BSFormatter formatter;
     private final InvalidationListener sellerStateListener;
     private final InvalidationListener buyerStateListener;
-
 
     private final BtcAddressValidator btcAddressValidator;
 
     public final StringProperty txId = new SimpleStringProperty();
     public final BooleanProperty withdrawalButtonDisable = new SimpleBooleanProperty(true);
-    final IntegerProperty selectedIndex = new SimpleIntegerProperty(-1);
-    final ObjectProperty<ViewState> viewState = new SimpleObjectProperty<>(ViewState.EMPTY);
+    final ObjectProperty<ViewState> viewState = new SimpleObjectProperty<>(ViewState.UNDEFINED);
 
 
     @Inject
-    public PendingTradesViewModel(PendingTradesDataModel dataModel, Navigation navigation, BSFormatter formatter,
+    public PendingTradesViewModel(PendingTradesDataModel dataModel, BSFormatter formatter,
                                   BtcAddressValidator btcAddressValidator) {
         super(dataModel);
-        this.navigation = navigation;
 
         this.formatter = formatter;
         this.btcAddressValidator = btcAddressValidator;
@@ -100,7 +91,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     @Override
     public void doActivate() {
         txId.bind(dataModel.txId);
-        selectedIndex.bind(dataModel.selectedIndex);
 
         dataModel.sellerProcessState.addListener(sellerStateListener);
         dataModel.buyerProcessState.addListener(buyerStateListener);
@@ -112,7 +102,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     @Override
     public void doDeactivate() {
         txId.unbind();
-        selectedIndex.unbind();
 
         dataModel.sellerProcessState.removeListener(sellerStateListener);
         dataModel.buyerProcessState.removeListener(buyerStateListener);
@@ -123,10 +112,13 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         dataModel.selectTrade(item);
     }
 
-    boolean isBuyOffer() {
+    boolean isBuyOffer() throws NoTradeFoundException {
         return dataModel.isBuyOffer();
     }
 
+    ObjectProperty<Trade> currentTrade() {
+        return dataModel.currentTrade;
+    }
 
     public void fiatPaymentStarted() {
         dataModel.fiatPaymentStarted();
@@ -138,7 +130,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public void withdraw(String withdrawToAddress) {
         dataModel.withdraw(withdrawToAddress);
-        Platform.runLater(() -> navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class));
     }
 
     public void withdrawAddressFocusOut(String text) {
@@ -201,7 +192,11 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getFiatAmount() {
-        return formatter.formatFiatWithCode(dataModel.getTrade().getTradeVolume());
+        try {
+            return formatter.formatFiatWithCode(dataModel.getTrade().getTradeVolume());
+        } catch (NoTradeFoundException e) {
+            return "";
+        }
     }
 
     public String getHolderName() {
@@ -221,11 +216,19 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     // summary
     public String getTradeVolume() {
-        return dataModel.getTrade() != null ? formatter.formatCoinWithCode(dataModel.getTrade().getTradeAmount()) : "";
+        try {
+            return formatter.formatCoinWithCode(dataModel.getTrade().getTradeAmount());
+        } catch (NoTradeFoundException e) {
+            return "";
+        }
     }
 
     public String getFiatVolume() {
-        return formatter.formatFiatWithCode(dataModel.getTrade().getTradeVolume());
+        try {
+            return formatter.formatFiatWithCode(dataModel.getTrade().getTradeVolume());
+        } catch (NoTradeFoundException e) {
+            return "";
+        }
     }
 
     public String getTotalFees() {
@@ -235,10 +238,15 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     public String getSecurityDeposit() {
         // securityDeposit is handled different for offerer and taker.
         // Offerer have paid in the max amount, but taker might have taken less so also paid in less securityDeposit
-        if (dataModel.isOfferer())
-            return formatter.formatCoinWithCode(dataModel.getTrade().getOffer().getSecurityDeposit());
-        else
-            return formatter.formatCoinWithCode(dataModel.getTrade().getSecurityDeposit());
+        try {
+            if (dataModel.isOfferer())
+                return formatter.formatCoinWithCode(dataModel.getTrade().getOffer().getSecurityDeposit());
+            else
+                return formatter.formatCoinWithCode(dataModel.getTrade().getSecurityDeposit());
+
+        } catch (NoTradeFoundException e) {
+            return "";
+        }
     }
 
     public BtcAddressValidator getBtcAddressValidator() {

@@ -21,7 +21,11 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.portfolio.PortfolioView;
+import io.bitsquare.gui.main.portfolio.closed.ClosedTradesView;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.BuyerTrade;
 import io.bitsquare.trade.Contract;
@@ -37,9 +41,8 @@ import com.google.inject.Inject;
 
 import java.util.stream.Collectors;
 
-import javafx.beans.property.IntegerProperty;
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -56,6 +59,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
     private final TradeManager tradeManager;
     private final WalletService walletService;
     private final User user;
+    private Navigation navigation;
 
     private final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
 
@@ -65,7 +69,6 @@ class PendingTradesDataModel implements Activatable, DataModel {
     private final ListChangeListener<Trade> tradesListChangeListener;
 
     final StringProperty txId = new SimpleStringProperty();
-    final IntegerProperty selectedIndex = new SimpleIntegerProperty(-1);
 
     final ObjectProperty<TradeState.ProcessState> sellerProcessState = new SimpleObjectProperty<>();
     final ObjectProperty<TradeState.ProcessState> buyerProcessState = new SimpleObjectProperty<>();
@@ -73,23 +76,19 @@ class PendingTradesDataModel implements Activatable, DataModel {
     final ObjectProperty<Trade> currentTrade = new SimpleObjectProperty<>();
 
     @Inject
-    public PendingTradesDataModel(TradeManager tradeManager, WalletService walletService, User user) {
+    public PendingTradesDataModel(TradeManager tradeManager, WalletService walletService, User user, Navigation navigation) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
         this.user = user;
+        this.navigation = navigation;
 
         tradesListChangeListener = change -> onListChanged();
     }
 
     @Override
     public void activate() {
-        onListChanged();
         tradeManager.getPendingTrades().addListener(tradesListChangeListener);
-
-        if (list.size() > 0) {
-            selectTrade(list.get(0));
-            selectedIndex.set(0);
-        }
+        onListChanged();
     }
 
     @Override
@@ -105,20 +104,22 @@ class PendingTradesDataModel implements Activatable, DataModel {
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
 
-        if (list.size() > 0) {
+        log.debug("onListChanged {}", list.size());
+        if (list.size() > 0)
             selectTrade(list.get(0));
-            selectedIndex.set(0);
-        }
+        else if (list.size() == 0)
+            selectTrade(null);
     }
 
-    boolean isBuyOffer() {
+    boolean isBuyOffer() throws NoTradeFoundException {
         if (getTrade() != null)
             return getTrade().getOffer().getDirection() == Offer.Direction.BUY;
         else
-            return false;
+            throw new NoTradeFoundException();
     }
 
     void selectTrade(PendingTradesListItem item) {
+        log.debug("selectTrade {} {}", item != null, item != null ? item.getTrade().getId() : "null");
         // clean up previous selectedItem
         unbindStates();
 
@@ -144,52 +145,67 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     void fiatPaymentStarted() {
-        if (getTrade() instanceof BuyerTrade)
-            ((BuyerTrade) getTrade()).onFiatPaymentStarted();
+        try {
+            if (getTrade() instanceof BuyerTrade)
+                ((BuyerTrade) getTrade()).onFiatPaymentStarted();
+        } catch (NoTradeFoundException e) {
+            throw new MissingTradeException();
+        }
     }
 
     void fiatPaymentReceived() {
-        if (getTrade() instanceof SellerTrade)
-            ((SellerTrade) getTrade()).onFiatPaymentReceived();
+        try {
+            if (getTrade() instanceof SellerTrade)
+                ((SellerTrade) getTrade()).onFiatPaymentReceived();
+        } catch (NoTradeFoundException e) {
+            throw new MissingTradeException();
+        }
     }
 
     void withdraw(String toAddress) {
-        if (getTrade() != null) {
-            tradeManager.requestWithdraw(toAddress,
-                    getTrade(),
-                    () -> log.debug("requestWithdraw was successful"),
-                    (errorMessage, throwable) -> {
-                        log.error(errorMessage);
-                        Popups.openExceptionPopup(throwable);
-                    });
-        
-
-/*
-        Action response = Popups.openConfirmPopup(
-                "Withdrawal request", "Confirm your request",
-                "Your withdrawal request:\n\n" + "Amount: " + amountTextField.getText() + " BTC\n" + "Sending" +
-                        " address: " + withdrawFromTextField.getText() + "\n" + "Receiving address: " +
-                        withdrawToTextField.getText() + "\n" + "Transaction fee: " +
-                        formatter.formatCoinWithCode(FeePolicy.TX_FEE) + "\n" +
-                        "You receive in total: " +
-                        formatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
-                        "Are you sure you withdraw that amount?");
-
-        if (Popups.isOK(response)) {
-            try {
-                walletService.sendFunds(
-                        withdrawFromTextField.getText(), withdrawToTextField.getText(),
-                        changeAddressTextField.getText(), amount, callback);
-            } catch (AddressFormatException e) {
-                Popups.openErrorPopup("Address invalid",
-                        "The address is not correct. Please check the address format.");
-
-            } catch (InsufficientMoneyException e) {
-                Popups.openInsufficientMoneyPopup();
-            } catch (IllegalArgumentException e) {
-                Popups.openErrorPopup("Wrong inputs", "Please check the inputs.");
+        try {
+            if (getTrade() != null) {
+                tradeManager.requestWithdraw(toAddress,
+                        getTrade(),
+                        () -> {
+                            log.debug("requestWithdraw was successful");
+                            Platform.runLater(() -> navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class));
+                        },
+                        (errorMessage, throwable) -> {
+                            log.error(errorMessage);
+                            Popups.openExceptionPopup(throwable);
+                        });
+            
+    
+    /*
+            Action response = Popups.openConfirmPopup(
+                    "Withdrawal request", "Confirm your request",
+                    "Your withdrawal request:\n\n" + "Amount: " + amountTextField.getText() + " BTC\n" + "Sending" +
+                            " address: " + withdrawFromTextField.getText() + "\n" + "Receiving address: " +
+                            withdrawToTextField.getText() + "\n" + "Transaction fee: " +
+                            formatter.formatCoinWithCode(FeePolicy.TX_FEE) + "\n" +
+                            "You receive in total: " +
+                            formatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
+                            "Are you sure you withdraw that amount?");
+    
+            if (Popups.isOK(response)) {
+                try {
+                    walletService.sendFunds(
+                            withdrawFromTextField.getText(), withdrawToTextField.getText(),
+                            changeAddressTextField.getText(), amount, callback);
+                } catch (AddressFormatException e) {
+                    Popups.openErrorPopup("Address invalid",
+                            "The address is not correct. Please check the address format.");
+    
+                } catch (InsufficientMoneyException e) {
+                    Popups.openInsufficientMoneyPopup();
+                } catch (IllegalArgumentException e) {
+                    Popups.openErrorPopup("Wrong inputs", "Please check the inputs.");
+                }
+            }*/
             }
-        }*/
+        } catch (NoTradeFoundException e) {
+            throw new MissingTradeException();
         }
     }
 
@@ -223,17 +239,19 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     Throwable getTradeException() {
-        if (getTrade() != null)
+        try {
             return getTrade().getThrowable();
-        else
+        } catch (NoTradeFoundException e) {
             return null;
+        }
     }
 
     String getErrorMessage() {
-        if (getTrade() != null)
+        try {
             return getTrade().getErrorMessage();
-        else
+        } catch (NoTradeFoundException e) {
             return null;
+        }
     }
 
     public Offer.Direction getDirection(Offer offer) {
@@ -247,21 +265,26 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     public Coin getPayoutAmount() {
-        return getTrade().getPayoutAmount();
+        try {
+            return getTrade().getPayoutAmount();
+        } catch (NoTradeFoundException e) {
+            return Coin.ZERO;
+        }
     }
 
     public Contract getContract() {
-        if (getTrade() != null)
+        try {
             return getTrade().getContract();
-        else
-            return null;
+        } catch (NoTradeFoundException e) {
+            throw new MissingTradeException();
+        }
     }
 
-    public Trade getTrade() {
+    public Trade getTrade() throws NoTradeFoundException {
         if (currentTrade.get() != null)
             return currentTrade.get();
         else
-            return null;
+            throw new NoTradeFoundException();
     }
 }
 

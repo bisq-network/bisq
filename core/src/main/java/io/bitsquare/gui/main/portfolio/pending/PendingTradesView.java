@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.portfolio.pending;
 import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
 import io.bitsquare.common.viewfx.view.FxmlView;
 import io.bitsquare.gui.components.Popups;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -30,6 +31,7 @@ import java.util.Date;
 import javax.inject.Inject;
 
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -55,7 +57,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     private ChangeListener<PendingTradesListItem> selectedItemChangeListener;
     private TradeSubView currentSubView;
-
+    private ChangeListener<Boolean> appFocusChangeListener;
+    private ReadOnlyBooleanProperty appFocusProperty;
+    private ChangeListener<Trade> currentTradeChangeListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -79,17 +83,43 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         table.setPlaceholder(new Label("No pending trades available"));
 
         selectedItemChangeListener = (ov, oldValue, newValue) -> {
+            log.debug("selectedItemChangeListener {}", newValue);
+            model.selectTrade(newValue);
+
             if (newValue != null)
                 addSubView();
+            else
+                removeSubView();
+        };
 
-            model.selectTrade(newValue);
+        appFocusChangeListener = (observable, oldValue, newValue) -> {
+            log.debug("appFocusChangeListener {}", newValue);
+            if (newValue && model.getSelectedItem() != null) {
+                // Focus selectedItem from model
+                int index = table.getItems().indexOf(model.getSelectedItem());
+                Platform.runLater(() -> {
+                    table.requestFocus();
+                    Platform.runLater(() -> table.getFocusModel().focus(index));
+                });
+            }
+        };
+
+        currentTradeChangeListener = (observable, oldValue, newValue) -> {
+            log.debug("currentTradeChangeListener {} {}", newValue, model.getList().size());
+            if (newValue != null)
+                addSubView();
+            else
+                removeSubView();
         };
     }
 
+
     @Override
     public void doActivate() {
+        appFocusProperty = root.getScene().getWindow().focusedProperty();
+        appFocusProperty.addListener(appFocusChangeListener);
+        model.currentTrade().addListener(currentTradeChangeListener);
         table.setItems(model.getList());
-
         table.getSelectionModel().selectedItemProperty().addListener(selectedItemChangeListener);
         PendingTradesListItem selectedItem = model.getSelectedItem();
         if (selectedItem != null) {
@@ -117,6 +147,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         if (currentSubView != null)
             currentSubView.deactivate();
+
+        appFocusProperty.removeListener(appFocusChangeListener);
+        model.currentTrade().removeListener(currentTradeChangeListener);
     }
 
 
@@ -125,31 +158,48 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addSubView() {
+        log.debug("addSubView");
         removeSubView();
 
         if (model.isOfferer()) {
-            if (model.isBuyOffer())
-                currentSubView = new BuyerSubView(model);
-            else
-                currentSubView = new SellerSubView(model);
+            try {
+                if (model.isBuyOffer())
+                    currentSubView = new BuyerSubView(model);
+                else
+                    currentSubView = new SellerSubView(model);
+            } catch (NoTradeFoundException e) {
+                log.warn("No trade selected");
+            }
         }
         else {
-            if (model.isBuyOffer())
-                currentSubView = new SellerSubView(model);
-            else
-                currentSubView = new BuyerSubView(model);
+            try {
+                if (model.isBuyOffer())
+                    currentSubView = new SellerSubView(model);
+                else
+                    currentSubView = new BuyerSubView(model);
+            } catch (NoTradeFoundException e) {
+                log.warn("No trade selected");
+            }
         }
-        currentSubView.activate();
+        if (currentSubView != null) {
+            currentSubView.activate();
 
-        AnchorPane.setTopAnchor(currentSubView, 0d);
-        AnchorPane.setRightAnchor(currentSubView, 0d);
-        AnchorPane.setBottomAnchor(currentSubView, 0d);
-        AnchorPane.setLeftAnchor(currentSubView, 0d);
-        tradeStepPane.getChildren().setAll(currentSubView);
+            AnchorPane.setTopAnchor(currentSubView, 0d);
+            AnchorPane.setRightAnchor(currentSubView, 0d);
+            AnchorPane.setBottomAnchor(currentSubView, 0d);
+            AnchorPane.setLeftAnchor(currentSubView, 0d);
+            tradeStepPane.getChildren().setAll(currentSubView);
+            log.warn("currentSubView added");
+        }
+        else {
+            log.warn("currentSubView=null");
+        }
     }
 
     private void removeSubView() {
+        log.debug("removeSubView called");
         if (currentSubView != null) {
+            log.debug("remove currentSubView");
             currentSubView.deactivate();
             tradeStepPane.getChildren().remove(currentSubView);
             currentSubView = null;

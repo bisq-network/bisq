@@ -427,7 +427,6 @@ abstract public class Trade implements Model, Serializable {
 
     abstract protected void initStates();
 
-
     @Override
     public String toString() {
         return "Trade{" +
@@ -446,10 +445,10 @@ abstract public class Trade implements Model, Serializable {
                 ", lifeCycleState=" + lifeCycleState +
                 ", mailboxMessage=" + mailboxMessage +
                 ", depositTx=" + depositTx +
-                ", contract=" + contract +
-                ", contractAsJson='" + contractAsJson + '\'' +
-                ", sellerContractSignature='" + sellerContractSignature + '\'' +
-                ", buyerContractSignature='" + buyerContractSignature + '\'' +
+               /* ", contract=" + contract +
+                ", contractAsJson='" + contractAsJson + '\'' +*/
+              /*  ", sellerContractSignature='" + sellerContractSignature + '\'' +
+                ", buyerContractSignature='" + buyerContractSignature + '\'' +*/
                 ", payoutTx=" + payoutTx +
                 ", errorMessage='" + errorMessage + '\'' +
                 ", throwable=" + throwable +

@@ -33,8 +33,8 @@ public abstract class TradeSubView extends HBox {
     protected VBox leftVBox;
     protected AnchorPane contentPane;
     protected PendingTradesViewModel model;
-    protected ChangeListener<PendingTradesViewModel.ViewState> offererStateChangeListener;
     protected TradeStepDetailsView tradeStepDetailsView;
+    protected ChangeListener<PendingTradesViewModel.ViewState> offererStateChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

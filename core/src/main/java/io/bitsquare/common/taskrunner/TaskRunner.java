@@ -61,14 +61,7 @@ public class TaskRunner<T extends Model> {
                 try {
                     currentTask = tasks.poll();
                     log.trace("Run task: " + currentTask.getSimpleName());
-                    log.debug("sharedModel.getClass() " + sharedModel.getClass());
-                    log.debug("sharedModel.getClass().getSuperclass() " + sharedModel.getClass().getSuperclass());
-                   /* Object c = currentTask.getDeclaredConstructor(TaskRunner.class, sharedModel.getClass());
-                    log.debug("c " + c);
-                    Object c2 = currentTask.getDeclaredConstructor(TaskRunner.class, sharedModel.getClass().getSuperclass());
-                    log.debug("c getSuperclass " + c2);
-                    Object o = currentTask.getDeclaredConstructor(TaskRunner.class, sharedModel.getClass()).newInstance(this, sharedModel);*/
-                    //TODO solve in tasks problem with superclasses
+                    // We use also super class as type ein tasks, so we need to support both variants
                     try {
                         currentTask.getDeclaredConstructor(TaskRunner.class, sharedModel.getClass()).newInstance(this, sharedModel).run();
                     } catch (Throwable throwable) {

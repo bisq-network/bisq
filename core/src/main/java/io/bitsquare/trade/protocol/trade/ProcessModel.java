@@ -167,14 +167,6 @@ public class ProcessModel implements Model, Serializable {
         return mailboxMessage;
     }
 
-
-    @Override
-    public String toString() {
-        return "ProcessModel{" +
-                "offer=" + offer +
-                '}';
-    }
-
     @Nullable
     public Transaction getPayoutTx() {
         return payoutTx;
@@ -280,11 +272,9 @@ public class ProcessModel implements Model, Serializable {
 
     @Override
     public void persist() {
-
     }
 
     @Override
     public void onComplete() {
-
     }
 }

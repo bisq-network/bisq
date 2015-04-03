@@ -24,7 +24,6 @@ import io.bitsquare.gui.main.portfolio.pending.PendingTradesViewModel;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 
-import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.scene.control.*;
@@ -84,7 +83,7 @@ public class StartFiatView extends TradeStepDetailsView {
         super.activate();
 
         model.txId.addListener(txIdChangeListener);
-        Platform.runLater(() -> txIdTextField.setup(model.getWalletService(), model.txId.get()));
+        txIdTextField.setup(model.getWalletService(), model.txId.get());
     }
 
     @Override

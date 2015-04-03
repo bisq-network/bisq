@@ -54,6 +54,7 @@ public abstract class TradeStepDetailsView extends AnchorPane {
         buildGridEntries();
     }
 
+    // That is called at every state change!
     public void activate() {
         log.debug("activate");
     }

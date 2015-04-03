@@ -29,7 +29,6 @@ import java.io.Serializable;
 
 import java.security.PublicKey;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -178,24 +177,4 @@ public class TradingPeer implements Serializable {
     public void setContractSignature(String contractSignature) {
         this.contractSignature = contractSignature;
     }
-
-    @Override
-    public String toString() {
-        return "TradingPeer{" +
-                "accountId='" + accountId + '\'' +
-                ", p2pSigPubKey=" + p2pSigPubKey +
-                ", p2pEncryptPubKey=" + p2pEncryptPubKey +
-                ", tradeWalletPubKey=" + Arrays.toString(tradeWalletPubKey) +
-                ", fiatAccount=" + fiatAccount +
-                ", preparedDepositTx=" + preparedDepositTx +
-                ", connectedOutputsForAllInputs=" + connectedOutputsForAllInputs +
-                ", outputs=" + outputs +
-                ", payoutAmount=" + payoutAmount +
-                ", payoutAddressString='" + payoutAddressString + '\'' +
-                ", signature=" + Arrays.toString(signature) +
-                ", contractAsJson='" + contractAsJson + '\'' +
-                ", contractSignature='" + contractSignature + '\'' +
-                '}';
-    }
-
 }
