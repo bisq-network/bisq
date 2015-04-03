@@ -43,6 +43,7 @@ public class SendDepositTxPublishedMessage extends TradeTask {
                 @Override
                 public void handleResult() {
                     log.trace("DepositTxPublishedMessage successfully arrived at peer");
+
                     complete();
                 }
 

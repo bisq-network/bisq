@@ -75,11 +75,6 @@ public class SellerAsTakerProtocol implements TradeProtocol {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void cleanup() {
-        log.debug("cleanup " + this);
-        processModel.getMessageService().removeMessageHandler(messageHandler);
-    }
-
     public void setMailboxMessage(MailboxMessage mailboxMessage) {
         log.debug("setMailboxMessage " + mailboxMessage);
         // Might be called twice, so check that its only processed once
@@ -105,6 +100,11 @@ public class SellerAsTakerProtocol implements TradeProtocol {
                 SendRequestDepositTxInputsMessage.class
         );
         taskRunner.run();
+    }
+
+    public void cleanup() {
+        log.debug("cleanup " + this);
+        processModel.getMessageService().removeMessageHandler(messageHandler);
     }
 
 

@@ -195,6 +195,34 @@ public class ComponentBuilder {
         return button;
     }
 
+    public static ButtonWithProgressIndicatorAndLabelBucket getAndAddButtonWithStatus(GridPane gridPane,
+                                                                                      int rowIndex,
+                                                                                      String ButtonTitle,
+                                                                                      EventHandler<ActionEvent> onActionHandler) {
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        Button button = new Button(ButtonTitle);
+        button.setDefaultButton(true);
+        button.setOnAction(onActionHandler);
+
+        ProgressIndicator progressIndicator = new ProgressIndicator(0);
+        progressIndicator.setPrefHeight(24);
+        progressIndicator.setPrefWidth(24);
+        progressIndicator.setVisible(false);
+
+        Label label = new Label();
+        label.setPadding(new Insets(5, 0, 0, 0));
+
+        hBox.getChildren().addAll(button, progressIndicator, label);
+
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setColumnIndex(hBox, 1);
+        GridPane.setMargin(hBox, new Insets(15, 0, 40, 0));
+        gridPane.getChildren().add(hBox);
+
+        return new ButtonWithProgressIndicatorAndLabelBucket(button, progressIndicator, label);
+    }
+
     public static class LabelTextFieldPair {
         public Label label;
         public TextField textField;
@@ -232,6 +260,18 @@ public class ComponentBuilder {
         public LabelTextFieldWithCopyIconPair(Label label, TextFieldWithCopyIcon textFieldWithCopyIcon) {
             this.label = label;
             this.textFieldWithCopyIcon = textFieldWithCopyIcon;
+        }
+    }
+
+    public static class ButtonWithProgressIndicatorAndLabelBucket {
+        public Button button;
+        public ProgressIndicator progressIndicator;
+        public Label label;
+
+        public ButtonWithProgressIndicatorAndLabelBucket(Button button, ProgressIndicator progressIndicator, Label label) {
+            this.button = button;
+            this.progressIndicator = progressIndicator;
+            this.label = label;
         }
     }
 

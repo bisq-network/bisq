@@ -44,8 +44,10 @@ public class StartFiatView extends TradeStepDetailsView {
     private TextFieldWithCopyIcon secondaryIdTextField;
     private InfoDisplay paymentsInfoDisplay;
     private Button paymentStartedButton;
+    private Label statusLabel;
 
     private final ChangeListener<String> txIdChangeListener;
+    private ProgressIndicator statusProgressIndicator;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -102,6 +104,9 @@ public class StartFiatView extends TradeStepDetailsView {
         log.debug("onPaymentStarted");
         model.fiatPaymentStarted();
         paymentStartedButton.setDisable(true);
+        statusProgressIndicator.setVisible(true);
+        statusProgressIndicator.setProgress(-1);
+        statusLabel.setText("Sending message to trading partner...");
     }
 
 
@@ -122,6 +127,9 @@ public class StartFiatView extends TradeStepDetailsView {
         primaryIdTextField = getAndAddLabelTextFieldWithCopyIconPair(gridPane, gridRow++, "IBAN:").textFieldWithCopyIcon;
         secondaryIdTextField = getAndAddLabelTextFieldWithCopyIconPair(gridPane, gridRow++, "BIC:").textFieldWithCopyIcon;
         paymentsInfoDisplay = getAndAddInfoDisplay(gridPane, gridRow++, "infoDisplay", this::onOpenHelp);
-        paymentStartedButton = getAndAddButton(gridPane, gridRow++, "Payment started", this::onPaymentStarted);
+        ButtonWithProgressIndicatorAndLabelBucket bucket = getAndAddButtonWithStatus(gridPane, gridRow++, "Payment started", this::onPaymentStarted);
+        paymentStartedButton = bucket.button;
+        statusProgressIndicator = bucket.progressIndicator;
+        statusLabel = bucket.label;
     }
 }

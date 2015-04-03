@@ -38,6 +38,9 @@ public class ConfirmFiatReceivedView extends TradeStepDetailsView {
     private Label infoLabel;
     private InfoDisplay infoDisplay;
     private final ChangeListener<String> txIdChangeListener;
+    private Button confirmFiatReceivedButton;
+    private Label statusLabel;
+    private ProgressIndicator statusProgressIndicator;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -74,6 +77,10 @@ public class ConfirmFiatReceivedView extends TradeStepDetailsView {
     private void onPaymentReceived(ActionEvent actionEvent) {
         log.debug("onPaymentReceived");
         model.fiatPaymentReceived();
+
+        confirmFiatReceivedButton.setDisable(true);
+        statusProgressIndicator.setVisible(true);
+        statusProgressIndicator.setProgress(-1);
     }
 
 
@@ -91,6 +98,10 @@ public class ConfirmFiatReceivedView extends TradeStepDetailsView {
             infoDisplay.setText(text);
     }
 
+    public void setStatusText(String text) {
+        statusLabel.setText(text);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Build view
@@ -104,8 +115,14 @@ public class ConfirmFiatReceivedView extends TradeStepDetailsView {
         getAndAddTitledGroupBg(gridPane, gridRow, 1, "Information", Layout.GROUP_DISTANCE);
         infoLabel = getAndAddInfoLabel(gridPane, gridRow++, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
-        getAndAddButton(gridPane, gridRow++, "Confirm payment receipt", this::onPaymentReceived);
+        ButtonWithProgressIndicatorAndLabelBucket bucket = getAndAddButtonWithStatus(gridPane, gridRow++, "Confirm payment receipt", this::onPaymentReceived);
+        confirmFiatReceivedButton = bucket.button;
+        statusProgressIndicator = bucket.progressIndicator;
+        statusLabel = bucket.label;
+
     }
+
+
 }
 
 

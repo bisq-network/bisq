@@ -77,12 +77,15 @@ public class SellerAsOffererProtocol implements TradeProtocol {
     public void setMailboxMessage(MailboxMessage mailboxMessage) {
         log.debug("setMailboxMessage " + mailboxMessage);
         // Might be called twice, so check that its only processed once
-       /* if (offererTradeProcessModel.getMailboxMessage() == null) {
-            offererTradeProcessModel.setMailboxMessage(mailboxMessage);
-            if (mailboxMessage instanceof PayoutTxPublishedMessage) {
-                handlePayoutTxPublishedMessage((PayoutTxPublishedMessage) mailboxMessage);
+        if (processModel.getMailboxMessage() == null) {
+            processModel.setMailboxMessage(mailboxMessage);
+            if (mailboxMessage instanceof FiatTransferStartedMessage) {
+                handle((FiatTransferStartedMessage) mailboxMessage);
             }
-        }*/
+            else if (mailboxMessage instanceof DepositTxPublishedMessage) {
+                handle((DepositTxPublishedMessage) mailboxMessage);
+            }
+        }
     }
 
     public void cleanup() {

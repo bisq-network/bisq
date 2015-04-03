@@ -175,19 +175,25 @@ public class FileManager<T> {
     }
 
     public void removeFile(String fileName) {
+        log.debug("removeFile" + fileName);
         File file = new File(dir, fileName);
-        boolean result = file.delete();
-        if (!result)
-            log.warn("Could not delete file: " + file.toString());
+        lock.lock();
+        try {
+            boolean result = file.delete();
+            if (!result)
+                log.warn("Could not delete file: " + file.toString());
 
-        File backupDir = new File(Paths.get(dir.getAbsolutePath(), "backup").toString());
-        if (backupDir.exists()) {
-            File backupFile = new File(Paths.get(dir.getAbsolutePath(), "backup", fileName).toString());
-            if (backupFile.exists()) {
-                result = backupFile.delete();
-                if (!result)
-                    log.warn("Could not delete backupFile: " + file.toString());
+            File backupDir = new File(Paths.get(dir.getAbsolutePath(), "backup").toString());
+            if (backupDir.exists()) {
+                File backupFile = new File(Paths.get(dir.getAbsolutePath(), "backup", fileName).toString());
+                if (backupFile.exists()) {
+                    result = backupFile.delete();
+                    if (!result)
+                        log.warn("Could not delete backupFile: " + file.toString());
+                }
             }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -210,23 +216,33 @@ public class FileManager<T> {
     }
 
     public void removeAndBackupFile(String fileName) throws IOException {
-        File corruptedBackupDir = new File(Paths.get(dir.getAbsolutePath(), "corrupted").toString());
-        if (!corruptedBackupDir.exists())
-            if (!corruptedBackupDir.mkdir())
-                log.warn("make dir failed");
+        lock.lock();
+        try {
+            File corruptedBackupDir = new File(Paths.get(dir.getAbsolutePath(), "corrupted").toString());
+            if (!corruptedBackupDir.exists())
+                if (!corruptedBackupDir.mkdir())
+                    log.warn("make dir failed");
 
-        File corruptedFile = new File(Paths.get(dir.getAbsolutePath(), "corrupted", fileName).toString());
-        renameTempFileToFile(storageFile, corruptedFile);
+            File corruptedFile = new File(Paths.get(dir.getAbsolutePath(), "corrupted", fileName).toString());
+            renameTempFileToFile(storageFile, corruptedFile);
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void backupFile(String fileName) throws IOException {
-        File backupDir = new File(Paths.get(dir.getAbsolutePath(), "backup").toString());
-        if (!backupDir.exists())
-            if (!backupDir.mkdir())
-                log.warn("make dir failed");
+        lock.lock();
+        try {
+            File backupDir = new File(Paths.get(dir.getAbsolutePath(), "backup").toString());
+            if (!backupDir.exists())
+                if (!backupDir.mkdir())
+                    log.warn("make dir failed");
 
-        File backupFile = new File(Paths.get(dir.getAbsolutePath(), "backup", fileName).toString());
-        Files.copy(storageFile, backupFile);
+            File backupFile = new File(Paths.get(dir.getAbsolutePath(), "backup", fileName).toString());
+            Files.copy(storageFile, backupFile);
+        } finally {
+            lock.unlock();
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -258,8 +274,6 @@ public class FileManager<T> {
             objectOutputStream = new ObjectOutputStream(fileOutputStream);
 
             // TODO ConcurrentModificationException happens sometimes at that line
-            //log.debug("serializable " + serializable.toString());
-            log.debug("storageFile " + storageFile.toString());
             objectOutputStream.writeObject(serializable);
 
             // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
@@ -274,6 +288,8 @@ public class FileManager<T> {
 
             renameTempFileToFile(tempFile, storageFile);
         } catch (Throwable t) {
+            log.debug("storageFile " + storageFile.toString());
+            log.debug("currentThread " + Thread.currentThread());
             t.printStackTrace();
             log.error("Error at saveToFile: " + t.getMessage());
         } finally {

@@ -19,10 +19,14 @@ package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
+import io.bitsquare.trade.OffererTrade;
+import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
+import io.bitsquare.trade.states.OffererTradeState;
 import io.bitsquare.trade.states.StateUtil;
+import io.bitsquare.trade.states.TakerTradeState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +50,12 @@ public class SendPayoutTxPublishedMessage extends TradeTask {
                         @Override
                         public void handleResult() {
                             log.trace("PayoutTxPublishedMessage successfully arrived at peer");
+
+                            if (trade instanceof TakerTrade)
+                                trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_PUBLISHED_MSG_SENT);
+                            else if (trade instanceof OffererTrade)
+                                trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_PUBLISHED_MSG_SENT);
+                            
                             complete();
                         }
 

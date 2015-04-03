@@ -41,6 +41,7 @@ public class OffererTradeState {
 
         FIAT_PAYMENT_RECEIVED,
         PAYOUT_PUBLISHED,
+        PAYOUT_PUBLISHED_MSG_SENT,
 
         MESSAGE_SENDING_FAILED,
         EXCEPTION

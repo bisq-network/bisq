@@ -54,6 +54,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         SELLER_WAIT_TX_CONF,
         SELLER_WAIT_PAYMENT_STARTED,
         SELLER_CONFIRM_RECEIVE_PAYMENT,
+        SELLER_PUBLISH_PAYOUT_TX,
+        SELLER_SEND_PUBLISHED_MSG,
         SELLER_COMPLETED,
 
         BUYER_WAIT_TX_CONF,
@@ -287,7 +289,12 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                         break;
 
                     case FIAT_PAYMENT_RECEIVED:
+                        viewState.set(ViewState.SELLER_PUBLISH_PAYOUT_TX);
+                        break;
                     case PAYOUT_PUBLISHED:
+                        viewState.set(ViewState.SELLER_SEND_PUBLISHED_MSG);
+                        break;
+                    case PAYOUT_PUBLISHED_MSG_SENT:
                         viewState.set(ViewState.SELLER_COMPLETED);
                         break;
 
@@ -324,7 +331,12 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                         break;
 
                     case FIAT_PAYMENT_RECEIVED:
+                        viewState.set(ViewState.SELLER_PUBLISH_PAYOUT_TX);
+                        break;
                     case PAYOUT_PUBLISHED:
+                        viewState.set(ViewState.SELLER_SEND_PUBLISHED_MSG);
+                        break;
+                    case PAYOUT_PUBLISHED_MSG_SENT:
                         viewState.set(ViewState.SELLER_COMPLETED);
                         break;
 

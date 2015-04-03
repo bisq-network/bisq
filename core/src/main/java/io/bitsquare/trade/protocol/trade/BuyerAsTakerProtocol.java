@@ -73,23 +73,15 @@ public class BuyerAsTakerProtocol implements TradeProtocol {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void cleanup() {
-        log.debug("cleanup " + this);
-        processModel.getMessageService().removeMessageHandler(messageHandler);
-    }
-
     public void setMailboxMessage(MailboxMessage mailboxMessage) {
         log.debug("setMailboxMessage " + mailboxMessage);
         // Might be called twice, so check that its only processed once
-       /* if (takerTradeProcessModel.getMailboxMessage() == null) {
-            takerTradeProcessModel.setMailboxMessage(mailboxMessage);
-            if (mailboxMessage instanceof FiatTransferStartedMessage) {
-                handleFiatTransferStartedMessage((FiatTransferStartedMessage) mailboxMessage);
+        if (processModel.getMailboxMessage() == null) {
+            processModel.setMailboxMessage(mailboxMessage);
+            if (mailboxMessage instanceof PayoutTxPublishedMessage) {
+                handle((PayoutTxPublishedMessage) mailboxMessage);
             }
-            else if (mailboxMessage instanceof DepositTxPublishedMessage) {
-                handleDepositTxPublishedMessage((DepositTxPublishedMessage) mailboxMessage);
-            }
-        }*/
+        }
     }
 
     public void takeAvailableOffer() {
@@ -106,6 +98,10 @@ public class BuyerAsTakerProtocol implements TradeProtocol {
         taskRunner.run();
     }
 
+    public void cleanup() {
+        log.debug("cleanup " + this);
+        processModel.getMessageService().removeMessageHandler(messageHandler);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handling

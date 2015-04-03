@@ -80,7 +80,7 @@ public class SellerSubView extends TradeSubView {
 
         if (tradeStepDetailsView != null)
             tradeStepDetailsView.deactivate();
-        
+
         switch (viewState) {
             case UNDEFINED:
                 break;
@@ -123,6 +123,12 @@ public class SellerSubView extends TradeSubView {
                                 "your security deposit and the Bitcoin buyer receive the Bitcoin amount you sold.",
                         model.getCurrencyCode()));
 
+                break;
+            case SELLER_PUBLISH_PAYOUT_TX:
+                ((ConfirmFiatReceivedView) tradeStepDetailsView).setStatusText("Publishing transaction...");
+                break;
+            case SELLER_SEND_PUBLISHED_MSG:
+                ((ConfirmFiatReceivedView) tradeStepDetailsView).setStatusText("Sending message to trading partner...");
                 break;
             case SELLER_COMPLETED:
                 waitTxInBlockchain.done();
