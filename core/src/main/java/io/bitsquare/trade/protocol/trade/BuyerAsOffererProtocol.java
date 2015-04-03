@@ -20,7 +20,6 @@ package io.bitsquare.trade.protocol.trade;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.BuyerAsOffererTrade;
@@ -51,21 +50,19 @@ import org.slf4j.LoggerFactory;
 
 import static io.bitsquare.util.Validator.*;
 
-public class BuyerAsOffererProtocol implements TradeProtocol {
+public class BuyerAsOffererProtocol extends TradeProtocol {
     private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererProtocol.class);
 
-    private MessageHandler messageHandler;
-    private final BuyerAsOffererTrade trade;
-    private final ProcessModel processModel;
+    private final BuyerAsOffererTrade buyerAsOffererTrade;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BuyerAsOffererProtocol(BuyerAsOffererTrade trade) {
+        super(trade.getProcessModel());
         log.debug("New OffererProtocol " + this);
-        this.trade = trade;
-        processModel = this.trade.getProcessModel();
+        this.buyerAsOffererTrade = trade;
         messageHandler = this::handleMessage;
 
         processModel.getMessageService().addMessageHandler(messageHandler);
@@ -76,6 +73,7 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     public void setMailboxMessage(MailboxMessage mailboxMessage) {
         log.debug("setMailboxMessage " + mailboxMessage);
         // Might be called twice, so check that its only processed once
@@ -87,14 +85,6 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
         }
     }
 
-    public void cleanup() {
-        log.debug("cleanup " + this);
-
-        if (messageHandler != null) {
-            processModel.getMessageService().removeMessageHandler(messageHandler);
-            messageHandler = null;
-        }
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handling
@@ -109,7 +99,7 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
             // to take the
             // offer
             // at the same time
-            boolean isOfferOpen = trade.lifeCycleStateProperty().get() == OffererTradeState.LifeCycleState.OFFER_OPEN;
+            boolean isOfferOpen = buyerAsOffererTrade.lifeCycleStateProperty().get() == OffererTradeState.LifeCycleState.OFFER_OPEN;
             ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(processModel.getId(), isOfferOpen);
             processModel.getMessageService().sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
                 @Override
@@ -134,11 +124,11 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
     private void handle(RequestDepositTxInputsMessage tradeMessage, Peer taker) {
         checkTradeId(processModel.getId(), tradeMessage);
         processModel.setTradeMessage(tradeMessage);
-        trade.setTradingPeer(taker);
+        buyerAsOffererTrade.setTradingPeer(taker);
 
-        trade.setLifeCycleState(OffererTradeState.LifeCycleState.OFFER_RESERVED);
+        buyerAsOffererTrade.setLifeCycleState(OffererTradeState.LifeCycleState.OFFER_RESERVED);
 
-        TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
+        TaskRunner<Trade> taskRunner = new TaskRunner<>(buyerAsOffererTrade,
                 () -> log.debug("taskRunner at handleRequestDepositTxInputsMessage completed"),
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
@@ -152,7 +142,7 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
     private void handle(RequestPublishDepositTxMessage tradeMessage) {
         processModel.setTradeMessage(tradeMessage);
 
-        TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
+        TaskRunner<Trade> taskRunner = new TaskRunner<>(buyerAsOffererTrade,
                 () -> log.debug("taskRunner at handleRequestPublishDepositTxMessage completed"),
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
@@ -172,7 +162,7 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
 
     // User clicked the "bank transfer started" button
     public void onFiatPaymentStarted() {
-        TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
+        TaskRunner<Trade> taskRunner = new TaskRunner<>(buyerAsOffererTrade,
                 () -> log.debug("taskRunner at handleBankTransferStartedUIEvent completed"),
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
@@ -191,7 +181,7 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
     private void handle(PayoutTxPublishedMessage tradeMessage) {
         processModel.setTradeMessage(tradeMessage);
 
-        TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
+        TaskRunner<Trade> taskRunner = new TaskRunner<>(buyerAsOffererTrade,
                 () -> {
                     log.debug("taskRunner at handlePayoutTxPublishedMessage completed");
                     // we are done!
@@ -215,7 +205,7 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
             TradeMessage tradeMessage = (TradeMessage) message;
             nonEmptyStringOf(tradeMessage.tradeId);
 
-            if (tradeMessage.tradeId.equals(trade.getId())) {
+            if (tradeMessage.tradeId.equals(buyerAsOffererTrade.getId())) {
                 if (tradeMessage instanceof RequestIsOfferAvailableMessage) {
                     handle((RequestIsOfferAvailableMessage) tradeMessage, sender);
                 }
@@ -233,10 +223,5 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
                 }
             }
         }
-    }
-
-    private void handleTaskRunnerFault(String errorMessage) {
-        log.error(errorMessage);
-        cleanup();
     }
 }

@@ -45,6 +45,7 @@ public class TakerTradeState {
         PAYOUT_PUBLISHED_MSG_SENT,
 
         MESSAGE_SENDING_FAILED,
+        TIMEOUT,
         EXCEPTION
     }
 }

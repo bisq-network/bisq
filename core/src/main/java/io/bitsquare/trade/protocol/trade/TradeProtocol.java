@@ -18,9 +18,70 @@
 package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.p2p.MailboxMessage;
+import io.bitsquare.p2p.MessageHandler;
+import io.bitsquare.trade.TakerTrade;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.states.OffererTradeState;
+import io.bitsquare.trade.states.TakerTradeState;
 
-public interface TradeProtocol {
-    void cleanup();
+import java.util.Timer;
+import java.util.TimerTask;
 
-    void setMailboxMessage(MailboxMessage mailboxMessage);
+import javafx.application.Platform;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public abstract class TradeProtocol {
+    private static final Logger log = LoggerFactory.getLogger(TradeProtocol.class);
+
+    protected final ProcessModel processModel;
+    protected MessageHandler messageHandler;
+    protected Timer timeoutTimer;
+    protected Trade trade;
+
+    public TradeProtocol(ProcessModel processModel) {
+        this.processModel = processModel;
+    }
+
+    public void cleanup() {
+        log.debug("cleanup " + this);
+        processModel.getMessageService().removeMessageHandler(messageHandler);
+    }
+
+    abstract public void setMailboxMessage(MailboxMessage mailboxMessage);
+
+    protected void startTimeout() {
+        log.debug("startTimeout");
+        stopTimeout();
+
+        timeoutTimer = new Timer();
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                Platform.runLater(() -> {
+                    log.debug("Timeout reached");
+                    if (trade instanceof TakerTrade)
+                        trade.setProcessState(TakerTradeState.ProcessState.TIMEOUT);
+                    else
+                        trade.setProcessState(OffererTradeState.ProcessState.TIMEOUT);
+                });
+            }
+        };
+
+        timeoutTimer.schedule(task, 3000);
+    }
+
+    protected void stopTimeout() {
+        log.debug("stopTimeout");
+        if (timeoutTimer != null) {
+            timeoutTimer.cancel();
+            timeoutTimer = null;
+        }
+    }
+
+    protected void handleTaskRunnerFault(String errorMessage) {
+        log.error(errorMessage);
+        cleanup();
+    }
 }

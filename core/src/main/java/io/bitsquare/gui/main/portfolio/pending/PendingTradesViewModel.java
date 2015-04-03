@@ -64,6 +64,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         BUYER_COMPLETED,
 
         MESSAGE_SENDING_FAILED,
+        TIMEOUT,
         EXCEPTION
     }
 
@@ -301,6 +302,9 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                     case MESSAGE_SENDING_FAILED:
                         viewState.set(ViewState.MESSAGE_SENDING_FAILED);
                         break;
+                    case TIMEOUT:
+                        viewState.set(ViewState.TIMEOUT);
+                        break;
                     case EXCEPTION:
                         viewState.set(ViewState.EXCEPTION);
                         break;
@@ -342,6 +346,9 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
                     case MESSAGE_SENDING_FAILED:
                         viewState.set(ViewState.MESSAGE_SENDING_FAILED);
+                        break;
+                    case TIMEOUT:
+                        viewState.set(ViewState.TIMEOUT);
                         break;
                     case EXCEPTION:
                         viewState.set(ViewState.EXCEPTION);
@@ -388,6 +395,9 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                     case MESSAGE_SENDING_FAILED:
                         viewState.set(ViewState.MESSAGE_SENDING_FAILED);
                         break;
+                    case TIMEOUT:
+                        viewState.set(ViewState.TIMEOUT);
+                        break;
                     case EXCEPTION:
                         viewState.set(ViewState.EXCEPTION);
                         break;
@@ -423,6 +433,9 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
                     case MESSAGE_SENDING_FAILED:
                         viewState.set(ViewState.MESSAGE_SENDING_FAILED);
+                        break;
+                    case TIMEOUT:
+                        viewState.set(ViewState.TIMEOUT);
                         break;
                     case EXCEPTION:
                         viewState.set(ViewState.EXCEPTION);

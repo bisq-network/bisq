@@ -20,7 +20,6 @@ package io.bitsquare.trade.protocol.trade;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.Trade;
@@ -49,12 +48,10 @@ import org.slf4j.LoggerFactory;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
-public class SellerAsTakerProtocol implements TradeProtocol {
+public class SellerAsTakerProtocol extends TradeProtocol {
     private static final Logger log = LoggerFactory.getLogger(SellerAsTakerProtocol.class);
 
-    private final SellerAsTakerTrade trade;
-    private final ProcessModel processModel;
-    private final MessageHandler messageHandler;
+    private final SellerAsTakerTrade sellerAsTakerTrade;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -62,9 +59,9 @@ public class SellerAsTakerProtocol implements TradeProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public SellerAsTakerProtocol(SellerAsTakerTrade trade) {
+        super(trade.getProcessModel());
         log.debug("New SellerAsTakerProtocol " + this);
-        this.trade = trade;
-        processModel = trade.getProcessModel();
+        this.sellerAsTakerTrade = trade;
 
         messageHandler = this::handleMessage;
         processModel.getMessageService().addMessageHandler(messageHandler);
@@ -75,6 +72,7 @@ public class SellerAsTakerProtocol implements TradeProtocol {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     public void setMailboxMessage(MailboxMessage mailboxMessage) {
         log.debug("setMailboxMessage " + mailboxMessage);
         // Might be called twice, so check that its only processed once
@@ -90,8 +88,11 @@ public class SellerAsTakerProtocol implements TradeProtocol {
     }
 
     public void takeAvailableOffer() {
-        TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
-                () -> log.debug("taskRunner at takeAvailableOffer completed"),
+        TaskRunner<Trade> taskRunner = new TaskRunner<>(sellerAsTakerTrade,
+                () -> {
+                    log.debug("taskRunner at takeAvailableOffer completed");
+                    startTimeout();
+                },
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
@@ -102,20 +103,17 @@ public class SellerAsTakerProtocol implements TradeProtocol {
         taskRunner.run();
     }
 
-    public void cleanup() {
-        log.debug("cleanup " + this);
-        processModel.getMessageService().removeMessageHandler(messageHandler);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(RequestPayDepositMessage tradeMessage) {
+        log.debug("handle RequestPayDepositMessage");
+        stopTimeout();
         processModel.setTradeMessage(tradeMessage);
 
-        TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
+        TaskRunner<Trade> taskRunner = new TaskRunner<>(sellerAsTakerTrade,
                 () -> log.debug("taskRunner at handleTakerDepositPaymentRequestMessage completed"),
                 this::handleTaskRunnerFault);
 
@@ -132,7 +130,7 @@ public class SellerAsTakerProtocol implements TradeProtocol {
     private void handle(DepositTxPublishedMessage tradeMessage) {
         processModel.setTradeMessage(tradeMessage);
 
-        TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
+        TaskRunner<Trade> taskRunner = new TaskRunner<>(sellerAsTakerTrade,
                 () -> log.debug("taskRunner at handleDepositTxPublishedMessage completed"),
                 this::handleTaskRunnerFault);
 
@@ -146,7 +144,7 @@ public class SellerAsTakerProtocol implements TradeProtocol {
     private void handle(FiatTransferStartedMessage tradeMessage) {
         processModel.setTradeMessage(tradeMessage);
 
-        TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
+        TaskRunner<Trade> taskRunner = new TaskRunner<>(sellerAsTakerTrade,
                 () -> log.debug("taskRunner at handleFiatTransferStartedMessage completed"),
                 this::handleTaskRunnerFault);
 
@@ -161,9 +159,9 @@ public class SellerAsTakerProtocol implements TradeProtocol {
 
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     public void onFiatPaymentReceived() {
-        trade.setProcessState(TakerTradeState.ProcessState.FIAT_PAYMENT_RECEIVED);
+        sellerAsTakerTrade.setProcessState(TakerTradeState.ProcessState.FIAT_PAYMENT_RECEIVED);
 
-        TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
+        TaskRunner<Trade> taskRunner = new TaskRunner<>(sellerAsTakerTrade,
                 () -> {
                     log.debug("taskRunner at handleFiatReceivedUIEvent completed");
 
@@ -206,10 +204,4 @@ public class SellerAsTakerProtocol implements TradeProtocol {
             }
         }
     }
-
-    private void handleTaskRunnerFault(String errorMessage) {
-        log.error(errorMessage);
-        cleanup();
-    }
-
 }

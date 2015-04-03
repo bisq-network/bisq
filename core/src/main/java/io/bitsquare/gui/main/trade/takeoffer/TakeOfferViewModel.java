@@ -283,7 +283,12 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                             takeOfferRequested = false;
                             break;
                         case MESSAGE_SENDING_FAILED:
-                            errorMessage.set("An error occurred when sending a message to the offerer. Maybe there are connection problems. " +
+                            errorMessage.set("Sending a message to the offerer failed. Maybe there are connection problems. " +
+                                    "Please try later again." + msg);
+                            takeOfferRequested = false;
+                            break;
+                        case TIMEOUT:
+                            errorMessage.set("Timeout: We did not received a message from the offerer. Maybe there are connection problems. " +
                                     "Please try later again." + msg);
                             takeOfferRequested = false;
                             break;
