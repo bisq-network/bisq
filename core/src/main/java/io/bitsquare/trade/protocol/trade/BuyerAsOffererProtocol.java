@@ -82,7 +82,7 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
         if (processModel.getMailboxMessage() == null) {
             processModel.setMailboxMessage(mailboxMessage);
             if (mailboxMessage instanceof PayoutTxPublishedMessage) {
-                handlePayoutTxPublishedMessage((PayoutTxPublishedMessage) mailboxMessage);
+                handle((PayoutTxPublishedMessage) mailboxMessage);
             }
         }
     }
@@ -101,7 +101,7 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // OpenOffer requests
-    private void handleRequestIsOfferAvailableMessage(RequestIsOfferAvailableMessage tradeMessage, Peer sender) {
+    private void handle(RequestIsOfferAvailableMessage tradeMessage, Peer sender) {
         try {
             checkTradeId(processModel.getId(), tradeMessage);
 
@@ -131,7 +131,7 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
     }
 
     // Trade started. We reserve the offer for that taker. If anything goes wrong we reset the offer as open.
-    private void handleRequestDepositTxInputsMessage(RequestDepositTxInputsMessage tradeMessage, Peer taker) {
+    private void handle(RequestDepositTxInputsMessage tradeMessage, Peer taker) {
         checkTradeId(processModel.getId(), tradeMessage);
         processModel.setTradeMessage(tradeMessage);
         trade.setTradingPeer(taker);
@@ -149,7 +149,7 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
         taskRunner.run();
     }
 
-    private void handleRequestPublishDepositTxMessage(RequestPublishDepositTxMessage tradeMessage) {
+    private void handle(RequestPublishDepositTxMessage tradeMessage) {
         processModel.setTradeMessage(tradeMessage);
 
         TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
@@ -188,7 +188,7 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handlePayoutTxPublishedMessage(PayoutTxPublishedMessage tradeMessage) {
+    private void handle(PayoutTxPublishedMessage tradeMessage) {
         processModel.setTradeMessage(tradeMessage);
 
         TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
@@ -217,16 +217,16 @@ public class BuyerAsOffererProtocol implements TradeProtocol {
 
             if (tradeMessage.tradeId.equals(trade.getId())) {
                 if (tradeMessage instanceof RequestIsOfferAvailableMessage) {
-                    handleRequestIsOfferAvailableMessage((RequestIsOfferAvailableMessage) tradeMessage, sender);
+                    handle((RequestIsOfferAvailableMessage) tradeMessage, sender);
                 }
                 else if (tradeMessage instanceof RequestDepositTxInputsMessage) {
-                    handleRequestDepositTxInputsMessage((RequestDepositTxInputsMessage) tradeMessage, sender);
+                    handle((RequestDepositTxInputsMessage) tradeMessage, sender);
                 }
                 else if (tradeMessage instanceof RequestPublishDepositTxMessage) {
-                    handleRequestPublishDepositTxMessage((RequestPublishDepositTxMessage) tradeMessage);
+                    handle((RequestPublishDepositTxMessage) tradeMessage);
                 }
                 else if (tradeMessage instanceof PayoutTxPublishedMessage) {
-                    handlePayoutTxPublishedMessage((PayoutTxPublishedMessage) tradeMessage);
+                    handle((PayoutTxPublishedMessage) tradeMessage);
                 }
                 else {
                     log.error("Incoming tradeMessage not supported. " + tradeMessage);

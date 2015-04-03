@@ -28,8 +28,8 @@ import io.bitsquare.locale.BSResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererAsBuyerSubView extends TradeSubView {
-    private static final Logger log = LoggerFactory.getLogger(OffererAsBuyerSubView.class);
+public class BuyerSubView extends TradeSubView {
+    private static final Logger log = LoggerFactory.getLogger(BuyerSubView.class);
 
     private TradeWizardItem waitTxInBlockchain;
     private TradeWizardItem startFiat;
@@ -41,7 +41,7 @@ public class OffererAsBuyerSubView extends TradeSubView {
     // Constructor, Initialisation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public OffererAsBuyerSubView(PendingTradesViewModel model) {
+    public BuyerSubView(PendingTradesViewModel model) {
         super(model);
     }
 
@@ -82,7 +82,7 @@ public class OffererAsBuyerSubView extends TradeSubView {
         switch (viewState) {
             case EMPTY:
                 break;
-            case OFFERER_BUYER_WAIT_TX_CONF:
+            case BUYER_WAIT_TX_CONF:
                 showItem(waitTxInBlockchain);
 
                 ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText("Deposit transaction has been published. You need to wait for at least " +
@@ -91,11 +91,11 @@ public class OffererAsBuyerSubView extends TradeSubView {
                         " be sure that the deposit funding has not been double spent. For higher trade volumes we" +
                         " recommend to wait up to 6 confirmations.");
                 break;
-            case OFFERER_BUYER_START_PAYMENT:
+            case BUYER_START_PAYMENT:
                 waitTxInBlockchain.done();
                 showItem(startFiat);
                 break;
-            case OFFERER_BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED:
+            case BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED:
                 waitTxInBlockchain.done();
                 startFiat.done();
                 showItem(waitFiatReceived);
@@ -107,7 +107,7 @@ public class OffererAsBuyerSubView extends TradeSubView {
                                 "the Bitcoin sellers payment account, the payout transaction will be published.",
                         model.getCurrencyCode()));
                 break;
-            case OFFERER_BUYER_COMPLETED:
+            case BUYER_COMPLETED:
                 waitTxInBlockchain.done();
                 startFiat.done();
                 waitFiatReceived.done();

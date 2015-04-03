@@ -23,12 +23,8 @@ import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.trade.BuyerAsOffererTrade;
-import io.bitsquare.trade.BuyerAsTakerTrade;
 import io.bitsquare.trade.BuyerTrade;
 import io.bitsquare.trade.Contract;
-import io.bitsquare.trade.SellerAsOffererTrade;
-import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.SellerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -71,10 +67,8 @@ class PendingTradesDataModel implements Activatable, DataModel {
     final StringProperty txId = new SimpleStringProperty();
     final IntegerProperty selectedIndex = new SimpleIntegerProperty(-1);
 
-    final ObjectProperty<TradeState.ProcessState> takerAsSellerProcessState = new SimpleObjectProperty<>();
-    final ObjectProperty<TradeState.ProcessState> offererAsBuyerProcessState = new SimpleObjectProperty<>();
-    final ObjectProperty<TradeState.ProcessState> takerAsBuyerProcessState = new SimpleObjectProperty<>();
-    final ObjectProperty<TradeState.ProcessState> offererAsSellerProcessState = new SimpleObjectProperty<>();
+    final ObjectProperty<TradeState.ProcessState> sellerProcessState = new SimpleObjectProperty<>();
+    final ObjectProperty<TradeState.ProcessState> buyerProcessState = new SimpleObjectProperty<>();
 
     final ObjectProperty<Trade> currentTrade = new SimpleObjectProperty<>();
 
@@ -139,15 +133,10 @@ class PendingTradesDataModel implements Activatable, DataModel {
             Trade trade = item.getTrade();
             isOfferer = trade.getOffer().getP2pSigPubKey().equals(user.getP2pSigPubKey());
 
-            // TODO merge states
-            if (trade instanceof SellerAsTakerTrade)
-                takerAsSellerProcessState.bind(trade.processStateProperty());
-            else if (trade instanceof BuyerAsOffererTrade)
-                offererAsBuyerProcessState.bind(trade.processStateProperty());
-            else if (trade instanceof BuyerAsTakerTrade)
-                takerAsBuyerProcessState.bind(trade.processStateProperty());
-            else if (trade instanceof SellerAsOffererTrade)
-                offererAsSellerProcessState.bind(trade.processStateProperty());
+            if (trade instanceof SellerTrade)
+                sellerProcessState.bind(trade.processStateProperty());
+            else if (trade instanceof BuyerTrade)
+                buyerProcessState.bind(trade.processStateProperty());
 
             if (trade.getDepositTx() != null)
                 txId.set(trade.getDepositTx().getHashAsString());
@@ -253,10 +242,8 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     private void unbindStates() {
-        takerAsSellerProcessState.unbind();
-        takerAsBuyerProcessState.unbind();
-        offererAsBuyerProcessState.unbind();
-        offererAsSellerProcessState.unbind();
+        sellerProcessState.unbind();
+        buyerProcessState.unbind();
     }
 
     public Coin getPayoutAmount() {

@@ -86,10 +86,10 @@ public class SellerAsTakerProtocol implements TradeProtocol {
         if (processModel.getMailboxMessage() == null) {
             processModel.setMailboxMessage(mailboxMessage);
             if (mailboxMessage instanceof FiatTransferStartedMessage) {
-                handleFiatTransferStartedMessage((FiatTransferStartedMessage) mailboxMessage);
+                handle((FiatTransferStartedMessage) mailboxMessage);
             }
             else if (mailboxMessage instanceof DepositTxPublishedMessage) {
-                handleDepositTxPublishedMessage((DepositTxPublishedMessage) mailboxMessage);
+                handle((DepositTxPublishedMessage) mailboxMessage);
             }
         }
     }
@@ -112,7 +112,7 @@ public class SellerAsTakerProtocol implements TradeProtocol {
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handleRequestTakerDepositPaymentMessage(RequestPayDepositMessage tradeMessage) {
+    private void handle(RequestPayDepositMessage tradeMessage) {
         processModel.setTradeMessage(tradeMessage);
 
         TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
@@ -129,7 +129,7 @@ public class SellerAsTakerProtocol implements TradeProtocol {
         taskRunner.run();
     }
 
-    private void handleDepositTxPublishedMessage(DepositTxPublishedMessage tradeMessage) {
+    private void handle(DepositTxPublishedMessage tradeMessage) {
         processModel.setTradeMessage(tradeMessage);
 
         TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
@@ -143,7 +143,7 @@ public class SellerAsTakerProtocol implements TradeProtocol {
         taskRunner.run();
     }
 
-    private void handleFiatTransferStartedMessage(FiatTransferStartedMessage tradeMessage) {
+    private void handle(FiatTransferStartedMessage tradeMessage) {
         processModel.setTradeMessage(tradeMessage);
 
         TaskRunner<Trade> taskRunner = new TaskRunner<>(trade,
@@ -192,13 +192,13 @@ public class SellerAsTakerProtocol implements TradeProtocol {
 
             if (tradeMessage.tradeId.equals(processModel.getId())) {
                 if (tradeMessage instanceof RequestPayDepositMessage) {
-                    handleRequestTakerDepositPaymentMessage((RequestPayDepositMessage) tradeMessage);
+                    handle((RequestPayDepositMessage) tradeMessage);
                 }
                 else if (tradeMessage instanceof DepositTxPublishedMessage) {
-                    handleDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
+                    handle((DepositTxPublishedMessage) tradeMessage);
                 }
                 else if (tradeMessage instanceof FiatTransferStartedMessage) {
-                    handleFiatTransferStartedMessage((FiatTransferStartedMessage) tradeMessage);
+                    handle((FiatTransferStartedMessage) tradeMessage);
                 }
                 else {
                     log.error("Incoming message not supported. " + tradeMessage);

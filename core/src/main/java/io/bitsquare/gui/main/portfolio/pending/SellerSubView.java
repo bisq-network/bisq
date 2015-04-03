@@ -27,8 +27,8 @@ import io.bitsquare.locale.BSResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerAsSellerSubView extends TradeSubView {
-    private static final Logger log = LoggerFactory.getLogger(TakerAsSellerSubView.class);
+public class SellerSubView extends TradeSubView {
+    private static final Logger log = LoggerFactory.getLogger(SellerSubView.class);
 
     private TradeWizardItem waitTxInBlockchain;
     private TradeWizardItem waitFiatStarted;
@@ -40,7 +40,7 @@ public class TakerAsSellerSubView extends TradeSubView {
     // Constructor, Initialisation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TakerAsSellerSubView(PendingTradesViewModel model) {
+    public SellerSubView(PendingTradesViewModel model) {
         super(model);
     }
 
@@ -81,7 +81,7 @@ public class TakerAsSellerSubView extends TradeSubView {
         switch (viewState) {
             case EMPTY:
                 break;
-            case TAKER_SELLER_WAIT_TX_CONF:
+            case SELLER_WAIT_TX_CONF:
                 showItem(waitTxInBlockchain);
 
                 ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText("Deposit transaction has been published. " +
@@ -93,7 +93,7 @@ public class TakerAsSellerSubView extends TradeSubView {
                                 "For higher trade volumes it is recommended to wait up to 6 confirmations.",
                         model.getCurrencyCode()));
                 break;
-            case TAKER_SELLER_WAIT_PAYMENT_STARTED:
+            case SELLER_WAIT_PAYMENT_STARTED:
                 waitTxInBlockchain.done();
                 showItem(waitFiatStarted);
 
@@ -106,7 +106,7 @@ public class TakerAsSellerSubView extends TradeSubView {
                                 "the {0} payment has been started.",
                         model.getCurrencyCode()));
                 break;
-            case TAKER_SELLER_CONFIRM_RECEIVE_PAYMENT:
+            case SELLER_CONFIRM_RECEIVE_PAYMENT:
                 waitTxInBlockchain.done();
                 waitFiatStarted.done();
                 showItem(confirmFiatReceived);
@@ -121,7 +121,7 @@ public class TakerAsSellerSubView extends TradeSubView {
                         model.getCurrencyCode()));
 
                 break;
-            case TAKER_SELLER_COMPLETED:
+            case SELLER_COMPLETED:
                 waitTxInBlockchain.done();
                 waitFiatStarted.done();
                 confirmFiatReceived.done();

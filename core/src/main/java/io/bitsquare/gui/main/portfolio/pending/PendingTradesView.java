@@ -129,15 +129,15 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         if (model.isOfferer()) {
             if (model.isBuyOffer())
-                currentSubView = new OffererAsBuyerSubView(model);
+                currentSubView = new BuyerSubView(model);
             else
-                currentSubView = new OffererAsSellerSubView(model);
+                currentSubView = new SellerSubView(model);
         }
         else {
             if (model.isBuyOffer())
-                currentSubView = new TakerAsSellerSubView(model);
+                currentSubView = new SellerSubView(model);
             else
-                currentSubView = new TakerAsBuyerSubView(model);
+                currentSubView = new BuyerSubView(model);
         }
         currentSubView.activate();
 
