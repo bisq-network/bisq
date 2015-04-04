@@ -65,7 +65,7 @@ public class PendingTradesListItem {
     }
 
     public Date getDate() {
-        return trade.getDate();
+        return trade.getTakeOfferDate();
     }
 
     public String getId() {

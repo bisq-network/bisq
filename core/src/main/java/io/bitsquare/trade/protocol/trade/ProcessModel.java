@@ -26,7 +26,6 @@ import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.user.User;
@@ -67,7 +66,7 @@ public class ProcessModel implements Model, Serializable {
 
     // Mutable
     public final TradingPeer tradingPeer;
-    transient private MailboxMessage mailboxMessage;
+    transient private boolean mailboxMessageProcessed;
     transient private TradeMessage tradeMessage;
     private String takeOfferFeeTxId;
     private Transaction payoutTx;
@@ -158,13 +157,13 @@ public class ProcessModel implements Model, Serializable {
         return tradeMessage;
     }
 
-    public void setMailboxMessage(MailboxMessage mailboxMessage) {
-        this.mailboxMessage = mailboxMessage;
+    public void mailboxMessageProcessed() {
+        this.mailboxMessageProcessed = true;
     }
 
     @Nullable
-    public MailboxMessage getMailboxMessage() {
-        return mailboxMessage;
+    public boolean isMailboxMessageProcessed() {
+        return mailboxMessageProcessed;
     }
 
     @Nullable

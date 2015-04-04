@@ -40,7 +40,6 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-// TODO consider to use SealedObject
 public class EncryptionService<T> {
     private static final Logger log = LoggerFactory.getLogger(EncryptionService.class);
     private static final String ALGO_SYM = "AES";
@@ -55,15 +54,21 @@ public class EncryptionService<T> {
     }
 
     public KeyPair getGeneratedDSAKeyPair() throws NoSuchAlgorithmException {
+        long ts = System.currentTimeMillis();
         final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("DSA");
         keyPairGenerator.initialize(1024);
-        return keyPairGenerator.genKeyPair();
+        KeyPair keyPair = keyPairGenerator.genKeyPair();
+        log.debug("getGeneratedDSAKeyPair needed {} ms", System.currentTimeMillis() - ts);
+        return keyPair;
     }
 
     public KeyPair getGeneratedRSAKeyPair() throws NoSuchAlgorithmException {
+        long ts = System.currentTimeMillis();
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ALGO_ASYM);
         keyPairGenerator.initialize(KEY_SIZE_ASYM);
-        return keyPairGenerator.genKeyPair();
+        KeyPair keyPair = keyPairGenerator.genKeyPair();
+        log.debug("getGeneratedRSAKeyPair needed {} ms", System.currentTimeMillis() - ts);
+        return keyPair;
     }
 
     public Bucket encryptObject(PublicKey publicKey, Object object) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException,
@@ -78,6 +83,7 @@ public class EncryptionService<T> {
 
     public Bucket encrypt(PublicKey publicKey, byte[] payload) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
             BadPaddingException, IllegalBlockSizeException {
+        long ts = System.currentTimeMillis();
         // Create symmetric key and 
         KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGO_SYM);
         keyGenerator.init(KEY_SIZE_SYM);
@@ -95,11 +101,13 @@ public class EncryptionService<T> {
         cipherSym.init(Cipher.ENCRYPT_MODE, keySpec);
         log.debug("encrypt payload length: " + payload.length);
         byte[] encryptedPayload = cipherSym.doFinal(payload);
+        log.debug("Encryption needed {} ms", System.currentTimeMillis() - ts);
         return new Bucket(encryptedKey, encryptedPayload);
     }
 
     public byte[] decrypt(PrivateKey privateKey, Bucket bucket) throws NoSuchPaddingException, NoSuchAlgorithmException,
             InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        long ts = System.currentTimeMillis();
         byte[] encryptedPayload = bucket.encryptedPayload;
         byte[] encryptedKey = bucket.encryptedKey;
 
@@ -114,6 +122,7 @@ public class EncryptionService<T> {
         cipherSym.init(Cipher.DECRYPT_MODE, key);
         byte[] payload = cipherSym.doFinal(encryptedPayload);
         log.debug("decrypt payload length: " + payload.length);
+        log.debug("Decryption needed {} ms", System.currentTimeMillis() - ts);
         return payload;
     }
 }

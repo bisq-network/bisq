@@ -148,13 +148,13 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
     @Override
     public void addMessageHandler(MessageHandler listener) {
         if (!messageHandlers.add(listener))
-            throw new IllegalArgumentException("Add listener did not change list. Probably listener has been already added.");
+            log.error("Add listener did not change list. Probably listener has been already added.");
     }
 
     @Override
     public void removeMessageHandler(MessageHandler listener) {
         if (!messageHandlers.remove(listener))
-            throw new IllegalArgumentException("Try to remove listener which was never added.");
+            log.error("Try to remove listener which was never added.");
     }
 
 
@@ -171,10 +171,10 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
                 if (message instanceof Message)
                     executor.execute(() -> messageHandlers.stream().forEach(e -> e.handleMessage((Message) message, new TomP2PPeer(sender))));
                 else
-                    throw new RuntimeException("We got an object which is not type of Message. That must never happen. Request object = " + message);
+                    log.error("We got an object which is not type of Message. That must never happen. Request object = " + message);
             }
             else {
-                throw new RuntimeException("Received msg from myself. That must never happen.");
+                log.error("Received msg from myself. That must never happen.");
             }
 
             return true;

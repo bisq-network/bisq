@@ -74,11 +74,11 @@ public class BuyerAsOffererProtocol extends TradeProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setMailboxMessage(MailboxMessage mailboxMessage) {
+    public void applyMailboxMessage(MailboxMessage mailboxMessage) {
         log.debug("setMailboxMessage " + mailboxMessage);
         // Might be called twice, so check that its only processed once
-        if (processModel.getMailboxMessage() == null) {
-            processModel.setMailboxMessage(mailboxMessage);
+        if (!processModel.isMailboxMessageProcessed()) {
+            processModel.mailboxMessageProcessed();
             if (mailboxMessage instanceof PayoutTxPublishedMessage) {
                 handle((PayoutTxPublishedMessage) mailboxMessage);
             }
@@ -137,9 +137,11 @@ public class BuyerAsOffererProtocol extends TradeProtocol {
                 SendRequestPayDepositMessage.class
         );
         taskRunner.run();
+        startTimeout();
     }
 
     private void handle(RequestPublishDepositTxMessage tradeMessage) {
+        stopTimeout();
         processModel.setTradeMessage(tradeMessage);
 
         TaskRunner<Trade> taskRunner = new TaskRunner<>(buyerAsOffererTrade,

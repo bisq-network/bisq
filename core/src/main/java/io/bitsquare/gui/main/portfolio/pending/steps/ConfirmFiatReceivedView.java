@@ -24,6 +24,7 @@ import io.bitsquare.gui.util.Layout;
 
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
+import javafx.scene.*;
 import javafx.scene.control.*;
 
 import org.slf4j.Logger;
@@ -41,6 +42,7 @@ public class ConfirmFiatReceivedView extends TradeStepDetailsView {
     private Button confirmFiatReceivedButton;
     private Label statusLabel;
     private ProgressIndicator statusProgressIndicator;
+    private Parent root;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -67,6 +69,9 @@ public class ConfirmFiatReceivedView extends TradeStepDetailsView {
 
         model.txId.removeListener(txIdChangeListener);
         txIdTextField.cleanup();
+        statusLabel.setText("Publishing transaction...");
+        if (root != null)
+            root.setMouseTransparent(false);
     }
 
 
@@ -81,6 +86,8 @@ public class ConfirmFiatReceivedView extends TradeStepDetailsView {
         confirmFiatReceivedButton.setDisable(true);
         statusProgressIndicator.setVisible(true);
         statusProgressIndicator.setProgress(-1);
+        root = statusProgressIndicator.getScene().getRoot();
+        root.setMouseTransparent(true);
     }
 
 

@@ -26,6 +26,7 @@ import io.bitsquare.locale.BSResources;
 
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
+import javafx.scene.*;
 import javafx.scene.control.*;
 
 import org.slf4j.Logger;
@@ -48,6 +49,7 @@ public class StartFiatView extends TradeStepDetailsView {
 
     private final ChangeListener<String> txIdChangeListener;
     private ProgressIndicator statusProgressIndicator;
+    private Parent root;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -94,6 +96,8 @@ public class StartFiatView extends TradeStepDetailsView {
 
         model.txId.removeListener(txIdChangeListener);
         txIdTextField.cleanup();
+        if (root != null)
+            root.setMouseTransparent(false);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -107,6 +111,8 @@ public class StartFiatView extends TradeStepDetailsView {
         statusProgressIndicator.setVisible(true);
         statusProgressIndicator.setProgress(-1);
         statusLabel.setText("Sending message to trading partner...");
+        root = statusProgressIndicator.getScene().getRoot();
+        root.setMouseTransparent(true);
     }
 
 

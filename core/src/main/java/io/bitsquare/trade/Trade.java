@@ -90,10 +90,10 @@ abstract public class Trade implements Model, Serializable {
 
     // Immutable
     private final Offer offer;
-    private final Date date;
     private final ProcessModel processModel;
 
     // Mutable
+    private Date takeOfferDate;
     protected TradeState.ProcessState processState;
     protected TradeState.LifeCycleState lifeCycleState;
     private MailboxMessage mailboxMessage;
@@ -118,7 +118,6 @@ abstract public class Trade implements Model, Serializable {
         this.offer = offer;
         this.storage = storage;
 
-        date = new Date();
         processModel = new ProcessModel();
         tradeVolumeProperty = new SimpleObjectProperty<>();
         tradeAmountProperty = new SimpleObjectProperty<>();
@@ -165,8 +164,11 @@ abstract public class Trade implements Model, Serializable {
 
         createProtocol();
 
-        if (mailboxMessage != null)
-            tradeProtocol.setMailboxMessage(mailboxMessage);
+        if (mailboxMessage != null) {
+            tradeProtocol.applyMailboxMessage(mailboxMessage);
+            // After applied to protocol we remove it
+            mailboxMessage = null;
+        }
     }
 
     protected void initStateProperties() {
@@ -210,10 +212,6 @@ abstract public class Trade implements Model, Serializable {
 
     public void setMailboxMessage(MailboxMessage mailboxMessage) {
         this.mailboxMessage = mailboxMessage;
-        if (tradeProtocol != null)
-            tradeProtocol.setMailboxMessage(mailboxMessage);
-
-        storage.queueUpForSave();
     }
 
     public void setStorage(Storage<? extends TradeList> storage) {
@@ -252,10 +250,6 @@ abstract public class Trade implements Model, Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter only
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public Date getDate() {
-        return date;
-    }
 
     public String getId() {
         return offer.getId();
@@ -311,6 +305,14 @@ abstract public class Trade implements Model, Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter/Setter for Mutable objects
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Date getTakeOfferDate() {
+        return takeOfferDate;
+    }
+
+    public void setTakeOfferDate(Date takeOfferDate) {
+        this.takeOfferDate = takeOfferDate;
+    }
 
     public void setTradingPeer(Peer tradingPeer) {
         this.tradingPeer = tradingPeer;
@@ -439,7 +441,7 @@ abstract public class Trade implements Model, Serializable {
                 ", storage=" + storage +
                 ", tradeProtocol=" + tradeProtocol +
                 ", offer=" + offer +
-                ", date=" + date +
+                ", date=" + takeOfferDate +
                 ", processModel=" + processModel +
                 ", processState=" + processState +
                 ", lifeCycleState=" + lifeCycleState +

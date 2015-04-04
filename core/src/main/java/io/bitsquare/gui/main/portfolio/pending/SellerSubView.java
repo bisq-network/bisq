@@ -124,11 +124,14 @@ public class SellerSubView extends TradeSubView {
                         model.getCurrencyCode()));
 
                 break;
-            case SELLER_PUBLISH_PAYOUT_TX:
-                ((ConfirmFiatReceivedView) tradeStepDetailsView).setStatusText("Publishing transaction...");
-                break;
             case SELLER_SEND_PUBLISHED_MSG:
-                ((ConfirmFiatReceivedView) tradeStepDetailsView).setStatusText("Sending message to trading partner...");
+                if (confirmFiatReceived == null) {
+                    waitTxInBlockchain.done();
+                    waitFiatStarted.done();
+                    showItem(confirmFiatReceived);
+                }
+
+                ((ConfirmFiatReceivedView) tradeStepDetailsView).setStatusText("Sending message to trading peer transaction...");
                 break;
             case SELLER_COMPLETED:
                 waitTxInBlockchain.done();

@@ -54,7 +54,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         SELLER_WAIT_TX_CONF,
         SELLER_WAIT_PAYMENT_STARTED,
         SELLER_CONFIRM_RECEIVE_PAYMENT,
-        SELLER_PUBLISH_PAYOUT_TX,
         SELLER_SEND_PUBLISHED_MSG,
         SELLER_COMPLETED,
 
@@ -290,7 +289,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                         break;
 
                     case FIAT_PAYMENT_RECEIVED:
-                        viewState.set(ViewState.SELLER_PUBLISH_PAYOUT_TX);
                         break;
                     case PAYOUT_PUBLISHED:
                         viewState.set(ViewState.SELLER_SEND_PUBLISHED_MSG);
@@ -301,9 +299,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
                     case MESSAGE_SENDING_FAILED:
                         viewState.set(ViewState.MESSAGE_SENDING_FAILED);
-                        break;
-                    case TIMEOUT:
-                        viewState.set(ViewState.TIMEOUT);
                         break;
                     case EXCEPTION:
                         viewState.set(ViewState.EXCEPTION);
@@ -335,7 +330,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                         break;
 
                     case FIAT_PAYMENT_RECEIVED:
-                        viewState.set(ViewState.SELLER_PUBLISH_PAYOUT_TX);
                         break;
                     case PAYOUT_PUBLISHED:
                         viewState.set(ViewState.SELLER_SEND_PUBLISHED_MSG);
@@ -346,9 +340,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
                     case MESSAGE_SENDING_FAILED:
                         viewState.set(ViewState.MESSAGE_SENDING_FAILED);
-                        break;
-                    case TIMEOUT:
-                        viewState.set(ViewState.TIMEOUT);
                         break;
                     case EXCEPTION:
                         viewState.set(ViewState.EXCEPTION);
@@ -433,9 +424,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
                     case MESSAGE_SENDING_FAILED:
                         viewState.set(ViewState.MESSAGE_SENDING_FAILED);
-                        break;
-                    case TIMEOUT:
-                        viewState.set(ViewState.TIMEOUT);
                         break;
                     case EXCEPTION:
                         viewState.set(ViewState.EXCEPTION);

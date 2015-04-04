@@ -59,6 +59,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -152,6 +153,7 @@ public class TradeManager {
     // When all services are initialized we create the protocols for our open offers and persisted pendingTrades
     // OffererAsBuyerProtocol listens for take offer requests, so we need to instantiate it early.
     public void onAllServicesInitialized() {
+        log.trace("onAllServicesInitialized");
         for (Trade trade : openOfferTrades) {
             Offer offer = trade.getOffer();
             // We add own offers to offerbook when we go online again
@@ -161,8 +163,48 @@ public class TradeManager {
             setupDepositPublishedListener(trade);
             trade.setStorage(openOfferTradesStorage);
             initTrade(trade);
-
         }
+
+        // If there are messages in our mailbox we apply it and remove them from the DHT
+        // We run that before initializing the pending trades to be sure the state is correct
+        mailboxService.getAllMessages(user.getP2pSigPubKey(),
+                (encryptedMailboxMessages) -> {
+                    log.trace("mailboxService.getAllMessages success");
+                    setMailboxMessagesToTrades(encryptedMailboxMessages);
+                    emptyMailbox();
+                    initPendingTrades();
+                });
+    }
+
+    private void setMailboxMessagesToTrades(List<EncryptedMailboxMessage> encryptedMailboxMessages) {
+        log.trace("applyMailboxMessage encryptedMailboxMessage.size=" + encryptedMailboxMessages.size());
+        for (EncryptedMailboxMessage encrypted : encryptedMailboxMessages) {
+            try {
+                MailboxMessage mailboxMessage = encryptionService.decryptToObject(user.getP2pEncryptPrivateKey(), encrypted.getBucket());
+                if (mailboxMessage instanceof TradeMessage) {
+                    String tradeId = ((TradeMessage) mailboxMessage).tradeId;
+                    Optional<Trade> tradeOptional = pendingTrades.stream().filter(e -> e.getId().equals(tradeId)).findAny();
+                    if (tradeOptional.isPresent())
+                        tradeOptional.get().setMailboxMessage(mailboxMessage);
+                }
+            } catch (Throwable e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
+            }
+        }
+    }
+
+    private void emptyMailbox() {
+        mailboxService.removeAllMessages(user.getP2pSigPubKey(),
+                () -> log.debug("All mailbox entries removed"),
+                (errorMessage, fault) -> {
+                    log.error(errorMessage);
+                    log.error(fault.getMessage());
+                });
+    }
+
+    private void initPendingTrades() {
+        log.trace("initPendingTrades");
         List<Trade> failedTrades = new ArrayList<>();
         for (Trade trade : pendingTrades) {
             // We continue an interrupted trade.
@@ -188,42 +230,8 @@ public class TradeManager {
             pendingTrades.remove(trade);
             closedTrades.add(trade);
         }
-
-        // if there are messages in our mailbox we apply it and remove them from the DHT
-        mailboxService.getAllMessages(user.getP2pSigPubKey(),
-                (encryptedMailboxMessages) -> {
-                    setMailboxMessagesToTrades(encryptedMailboxMessages);
-                    emptyMailbox();
-                });
     }
 
-    private void setMailboxMessagesToTrades(List<EncryptedMailboxMessage> encryptedMailboxMessages) {
-        log.trace("applyMailboxMessage encryptedMailboxMessage.size=" + encryptedMailboxMessages.size());
-        for (EncryptedMailboxMessage encrypted : encryptedMailboxMessages) {
-            try {
-                MailboxMessage mailboxMessage = encryptionService.decryptToObject(user.getP2pEncryptPrivateKey(), encrypted.getBucket());
-
-                if (mailboxMessage instanceof TradeMessage) {
-                    String tradeId = ((TradeMessage) mailboxMessage).tradeId;
-                    Optional<Trade> tradeOptional = pendingTrades.stream().filter(e -> e.getId().equals(tradeId)).findAny();
-                    if (tradeOptional.isPresent())
-                        tradeOptional.get().setMailboxMessage(mailboxMessage);
-                }
-            } catch (Throwable e) {
-                e.printStackTrace();
-                log.error(e.getMessage());
-            }
-        }
-    }
-
-    private void emptyMailbox() {
-        mailboxService.removeAllMessages(user.getP2pSigPubKey(),
-                () -> log.debug("All mailbox entries removed"),
-                (errorMessage, fault) -> {
-                    log.error(errorMessage);
-                    log.error(fault.getMessage());
-                });
-    }
 
     public void shutDown() {
         if (!shutDownRequested) {
@@ -298,6 +306,7 @@ public class TradeManager {
                         () -> log.debug("remove offer was successful"),
                         log::error,
                         false);
+                trade.setTakeOfferDate(new Date());
                 pendingTrades.add(trade);
                 trade.setStorage(pendingTradesStorage);
             }
@@ -383,6 +392,7 @@ public class TradeManager {
             else
                 trade = new BuyerAsTakerTrade(offer, amount, model.getPeer(), pendingTradesStorage);
 
+            trade.setTakeOfferDate(new Date());
             initTrade(trade);
             pendingTrades.add(trade);
             if (trade instanceof TakerTrade)

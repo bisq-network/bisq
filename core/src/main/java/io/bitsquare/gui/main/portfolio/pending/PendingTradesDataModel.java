@@ -102,7 +102,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
         list.addAll(tradeManager.getPendingTrades().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
-        list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
+        list.sort((o1, o2) -> o2.getTrade().getTakeOfferDate().compareTo(o1.getTrade().getTakeOfferDate()));
 
         log.debug("onListChanged {}", list.size());
         if (list.size() > 0)

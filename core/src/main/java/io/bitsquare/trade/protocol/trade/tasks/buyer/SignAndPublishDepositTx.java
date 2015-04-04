@@ -31,6 +31,8 @@ import org.bitcoinj.core.Transaction;
 
 import com.google.common.util.concurrent.FutureCallback;
 
+import java.util.Date;
+
 import org.jetbrains.annotations.NotNull;
 
 import org.slf4j.Logger;
@@ -72,6 +74,8 @@ public class SignAndPublishDepositTx extends TradeTask {
                                 trade.setProcessState(OffererTradeState.ProcessState.DEPOSIT_PUBLISHED);
                                 trade.setLifeCycleState(OffererTradeState.LifeCycleState.PENDING);
                             }
+
+                            trade.setTakeOfferDate(new Date());
 
                             complete();
                         }

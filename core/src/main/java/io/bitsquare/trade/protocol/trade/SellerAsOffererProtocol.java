@@ -73,11 +73,11 @@ public class SellerAsOffererProtocol extends TradeProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setMailboxMessage(MailboxMessage mailboxMessage) {
+    public void applyMailboxMessage(MailboxMessage mailboxMessage) {
         log.debug("setMailboxMessage " + mailboxMessage);
         // Might be called twice, so check that its only processed once
-        if (processModel.getMailboxMessage() == null) {
-            processModel.setMailboxMessage(mailboxMessage);
+        if (!processModel.isMailboxMessageProcessed()) {
+            processModel.mailboxMessageProcessed();
             if (mailboxMessage instanceof FiatTransferStartedMessage) {
                 handle((FiatTransferStartedMessage) mailboxMessage);
             }
@@ -148,9 +148,11 @@ public class SellerAsOffererProtocol extends TradeProtocol {
                 SendRequestPublishDepositTxMessage.class
         );
         taskRunner.run();
+        startTimeout();
     }
 
     private void handle(DepositTxPublishedMessage tradeMessage) {
+        stopTimeout();
         processModel.setTradeMessage(tradeMessage);
 
         TaskRunner<Trade> taskRunner = new TaskRunner<>(sellerAsOffererTrade,
@@ -163,6 +165,11 @@ public class SellerAsOffererProtocol extends TradeProtocol {
         );
         taskRunner.run();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // After peer has started Fiat tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(FiatTransferStartedMessage tradeMessage) {
         processModel.setTradeMessage(tradeMessage);

@@ -73,11 +73,11 @@ public class SellerAsTakerProtocol extends TradeProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setMailboxMessage(MailboxMessage mailboxMessage) {
+    public void applyMailboxMessage(MailboxMessage mailboxMessage) {
         log.debug("setMailboxMessage " + mailboxMessage);
         // Might be called twice, so check that its only processed once
-        if (processModel.getMailboxMessage() == null) {
-            processModel.setMailboxMessage(mailboxMessage);
+        if (!processModel.isMailboxMessageProcessed()) {
+            processModel.mailboxMessageProcessed();
             if (mailboxMessage instanceof FiatTransferStartedMessage) {
                 handle((FiatTransferStartedMessage) mailboxMessage);
             }
@@ -89,10 +89,7 @@ public class SellerAsTakerProtocol extends TradeProtocol {
 
     public void takeAvailableOffer() {
         TaskRunner<Trade> taskRunner = new TaskRunner<>(sellerAsTakerTrade,
-                () -> {
-                    log.debug("taskRunner at takeAvailableOffer completed");
-                    startTimeout();
-                },
+                () -> log.debug("taskRunner at takeAvailableOffer completed"),
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
@@ -101,6 +98,7 @@ public class SellerAsTakerProtocol extends TradeProtocol {
                 SendRequestDepositTxInputsMessage.class
         );
         taskRunner.run();
+        startTimeout();
     }
 
 
@@ -125,9 +123,11 @@ public class SellerAsTakerProtocol extends TradeProtocol {
                 SendRequestPublishDepositTxMessage.class
         );
         taskRunner.run();
+        startTimeout();
     }
 
     private void handle(DepositTxPublishedMessage tradeMessage) {
+        stopTimeout();
         processModel.setTradeMessage(tradeMessage);
 
         TaskRunner<Trade> taskRunner = new TaskRunner<>(sellerAsTakerTrade,
@@ -140,6 +140,11 @@ public class SellerAsTakerProtocol extends TradeProtocol {
         );
         taskRunner.run();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // After peer has started Fiat tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(FiatTransferStartedMessage tradeMessage) {
         processModel.setTradeMessage(tradeMessage);

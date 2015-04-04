@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class TradeProtocol {
     private static final Logger log = LoggerFactory.getLogger(TradeProtocol.class);
+    private static final long TIMEOUT = 10000;
 
     protected final ProcessModel processModel;
     protected MessageHandler messageHandler;
@@ -46,10 +47,11 @@ public abstract class TradeProtocol {
 
     public void cleanup() {
         log.debug("cleanup " + this);
+        stopTimeout();
         processModel.getMessageService().removeMessageHandler(messageHandler);
     }
 
-    abstract public void setMailboxMessage(MailboxMessage mailboxMessage);
+    abstract public void applyMailboxMessage(MailboxMessage mailboxMessage);
 
     protected void startTimeout() {
         log.debug("startTimeout");
@@ -69,7 +71,7 @@ public abstract class TradeProtocol {
             }
         };
 
-        timeoutTimer.schedule(task, 3000);
+        timeoutTimer.schedule(task, TIMEOUT);
     }
 
     protected void stopTimeout() {

@@ -29,16 +29,24 @@ import io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress;
 import io.bitsquare.trade.protocol.availability.tasks.ProcessReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.tasks.RequestIsOfferAvailable;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
+import javafx.application.Platform;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class CheckOfferAvailabilityProtocol {
     private static final Logger log = LoggerFactory.getLogger(CheckOfferAvailabilityProtocol.class);
 
+    private static final long TIMEOUT = 10000;
+
     private final CheckOfferAvailabilityModel model;
     private final ResultHandler resultHandler;
     private final ErrorMessageHandler errorMessageHandler;
     private final MessageHandler messageHandler;
+    private Timer timeoutTimer;
 
     private boolean isCanceled;
     private TaskRunner<CheckOfferAvailabilityModel> taskRunner;
@@ -56,6 +64,7 @@ public class CheckOfferAvailabilityProtocol {
     }
 
     private void cleanup() {
+        stopTimeout();
         model.messageService.removeMessageHandler(messageHandler);
     }
 
@@ -78,6 +87,7 @@ public class CheckOfferAvailabilityProtocol {
                 GetPeerAddress.class,
                 RequestIsOfferAvailable.class
         );
+        startTimeout();
         taskRunner.run();
     }
 
@@ -95,11 +105,12 @@ public class CheckOfferAvailabilityProtocol {
     private void handleMessage(Message message, @SuppressWarnings("UnusedParameters") Peer sender) {
         if (!isCanceled) {
             if (message instanceof ReportOfferAvailabilityMessage && model.offer.getId().equals(((ReportOfferAvailabilityMessage) message).offerId))
-                handleReportOfferAvailabilityMessage((ReportOfferAvailabilityMessage) message);
+                handle((ReportOfferAvailabilityMessage) message);
         }
     }
 
-    private void handleReportOfferAvailabilityMessage(ReportOfferAvailabilityMessage message) {
+    private void handle(ReportOfferAvailabilityMessage message) {
+        stopTimeout();
         model.setMessage(message);
 
         taskRunner = new TaskRunner<>(model,
@@ -114,5 +125,31 @@ public class CheckOfferAvailabilityProtocol {
         );
         taskRunner.addTasks(ProcessReportOfferAvailabilityMessage.class);
         taskRunner.run();
+    }
+
+    protected void startTimeout() {
+        log.debug("startTimeout");
+        stopTimeout();
+
+        timeoutTimer = new Timer();
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                Platform.runLater(() -> {
+                    log.debug("Timeout reached");
+                    errorMessageHandler.handleErrorMessage("Timeout reached: Peer has not responded.");
+                });
+            }
+        };
+
+        timeoutTimer.schedule(task, TIMEOUT);
+    }
+
+    protected void stopTimeout() {
+        log.debug("stopTimeout");
+        if (timeoutTimer != null) {
+            timeoutTimer.cancel();
+            timeoutTimer = null;
+        }
     }
 }
