@@ -18,7 +18,7 @@
 package io.bitsquare.offer;
 
 import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.gui.main.trade.offerbook.OfferBookListItem;
+import io.bitsquare.gui.main.offer.offerbook.OfferBookListItem;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.trade.TradeManager;

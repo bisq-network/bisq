@@ -20,7 +20,7 @@ package io.bitsquare.gui;
 import io.bitsquare.common.viewfx.view.View;
 import io.bitsquare.common.viewfx.view.ViewPath;
 import io.bitsquare.gui.main.MainView;
-import io.bitsquare.gui.main.trade.BuyView;
+import io.bitsquare.gui.main.offer.BuyOfferView;
 import io.bitsquare.storage.Storage;
 
 import com.google.inject.Inject;
@@ -39,7 +39,7 @@ public class Navigation implements Serializable {
     private static final long serialVersionUID = 1L;
     transient private static final Logger log = LoggerFactory.getLogger(Navigation.class);
 
-    transient private static final ViewPath DEFAULT_VIEW_PATH = ViewPath.to(MainView.class, BuyView.class);
+    transient private static final ViewPath DEFAULT_VIEW_PATH = ViewPath.to(MainView.class, BuyOfferView.class);
 
 
     public interface Listener {

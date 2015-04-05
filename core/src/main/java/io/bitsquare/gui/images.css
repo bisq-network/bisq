@@ -22,11 +22,11 @@
     -fx-image: url("../../../images/remove.png");
 }
 
-#image-buy {
+#image-buyoffer {
     -fx-image: url("../../../images/buy.png");
 }
 
-#image-sell {
+#image-selloffer {
     -fx-image: url("../../../images/sell.png");
 }
 
@@ -55,20 +55,20 @@
     -fx-image: url("../../../images/nav/home_active.png");
 }
 
-#image-nav-buy {
-    -fx-image: url("../../../images/nav/buy.png");
+#image-nav-buyoffer {
+    -fx-image: url("../../../images/nav/buyoffer.png");
 }
 
-#image-nav-buy-active {
-    -fx-image: url("../../../images/nav/buy_active.png");
+#image-nav-buyoffer-active {
+    -fx-image: url("../../../images/nav/buyoffer_active.png");
 }
 
-#image-nav-sell {
-    -fx-image: url("../../../images/nav/sell.png");
+#image-nav-selloffer {
+    -fx-image: url("../../../images/nav/selloffer.png");
 }
 
-#image-nav-sell-active {
-    -fx-image: url("../../../images/nav/sell_active.png");
+#image-nav-selloffer-active {
+    -fx-image: url("../../../images/nav/selloffer_active.png");
 }
 
 #image-nav-portfolio {

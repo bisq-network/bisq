@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ This file is part of Bitsquare.
+  ~
+  ~ Bitsquare is free software: you can redistribute it and/or modify it
+  ~ under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or (at
+  ~ your option) any later version.
+  ~
+  ~ Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+  ~ License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<?import io.bitsquare.gui.components.TitledSeparator?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.portfolio.closedtrades.ClosedTradesView"
+          hgap="5.0" vgap="5"
+          xmlns:fx="http://javafx.com/fxml">
+    <padding>
+        <Insets bottom="20.0" left="25.0" top="30.0" right="25"/>
+    </padding>
+
+    <TitledSeparator text="Closed trades" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
+
+    <TableView fx:id="table" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2">
+        <GridPane.margin>
+            <Insets top="10.0" left="-10" right="-10" bottom="-15"/>
+        </GridPane.margin>
+        <columns>
+            <TableColumn text="Trade ID" fx:id="tradeIdColumn" minWidth="100" sortable="false"/>
+            <TableColumn text="Date" fx:id="dateColumn" minWidth="130"/>
+            <TableColumn text="Trade amount in BTC" fx:id="amountColumn" minWidth="130" sortable="false"/>
+            <TableColumn text="Price" fx:id="priceColumn" minWidth="100" sortable="false"/>
+            <TableColumn text="Trade amount in EUR" fx:id="volumeColumn" minWidth="130" sortable="false"/>
+            <TableColumn text="Trade type" fx:id="directionColumn" minWidth="80" sortable="false"/>
+            <TableColumn text="State" fx:id="stateColumn" minWidth="80" sortable="false"/>
+        </columns>
+    </TableView>
+
+    <columnConstraints>
+        <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="200"/>
+        <ColumnConstraints hgrow="ALWAYS"/>
+    </columnConstraints>
+
+    <rowConstraints>
+        <RowConstraints vgrow="ALWAYS"/>
+    </rowConstraints>
+
+</GridPane>

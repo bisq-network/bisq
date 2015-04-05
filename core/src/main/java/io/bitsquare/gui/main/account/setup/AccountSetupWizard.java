@@ -30,7 +30,7 @@ import io.bitsquare.gui.main.account.content.password.PasswordView;
 import io.bitsquare.gui.main.account.content.registration.RegistrationView;
 import io.bitsquare.gui.main.account.content.restrictions.RestrictionsView;
 import io.bitsquare.gui.main.account.content.seedwords.SeedWordsView;
-import io.bitsquare.gui.main.trade.BuyView;
+import io.bitsquare.gui.main.offer.BuyOfferView;
 
 import javax.inject.Inject;
 
@@ -142,7 +142,7 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
             if (navigation.getReturnPath() != null)
                 navigation.navigateTo(navigation.getReturnPath());
             else
-                navigation.navigateTo(MainView.class, BuyView.class);
+                navigation.navigateTo(MainView.class, BuyOfferView.class);
         }
     }
 

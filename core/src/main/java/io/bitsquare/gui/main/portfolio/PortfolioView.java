@@ -25,9 +25,9 @@ import io.bitsquare.common.viewfx.view.View;
 import io.bitsquare.common.viewfx.view.ViewLoader;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.main.MainView;
-import io.bitsquare.gui.main.portfolio.closed.ClosedTradesView;
-import io.bitsquare.gui.main.portfolio.offer.OffersView;
-import io.bitsquare.gui.main.portfolio.pending.PendingTradesView;
+import io.bitsquare.gui.main.portfolio.closedtrades.ClosedTradesView;
+import io.bitsquare.gui.main.portfolio.openoffer.OpenOffersView;
+import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
 import io.bitsquare.trade.TradeManager;
 
 import javax.inject.Inject;
@@ -63,7 +63,7 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == offersTab)
-                navigation.navigateTo(MainView.class, PortfolioView.class, OffersView.class);
+                navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class);
             else if (newValue == openTradesTab)
                 navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
             else if (newValue == closedTradesTab)
@@ -96,7 +96,7 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
 
         View view = viewLoader.load(viewClass);
 
-        if (view instanceof OffersView) currentTab = offersTab;
+        if (view instanceof OpenOffersView) currentTab = offersTab;
         else if (view instanceof PendingTradesView) currentTab = openTradesTab;
         else if (view instanceof ClosedTradesView) currentTab = closedTradesTab;
 

@@ -32,10 +32,10 @@ import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.home.HomeView;
 import io.bitsquare.gui.main.msg.MsgView;
+import io.bitsquare.gui.main.offer.BuyOfferView;
+import io.bitsquare.gui.main.offer.SellOfferView;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.settings.SettingsView;
-import io.bitsquare.gui.main.trade.BuyView;
-import io.bitsquare.gui.main.trade.SellView;
 import io.bitsquare.gui.util.Transitions;
 
 import javax.inject.Inject;
@@ -83,8 +83,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         ToggleButton homeButton = new NavButton(HomeView.class, "Overview") {{
             setDisable(true); // alpha
         }};
-        ToggleButton buyButton = new NavButton(BuyView.class, "Buy BTC");
-        ToggleButton sellButton = new NavButton(SellView.class, "Sell BTC");
+        ToggleButton buyButton = new NavButton(BuyOfferView.class, "Buy BTC");
+        ToggleButton sellButton = new NavButton(SellOfferView.class, "Sell BTC");
         ToggleButton portfolioButton = new NavButton(PortfolioView.class, "Portfolio");
         ToggleButton fundsButton = new NavButton(FundsView.class, "Funds");
         ToggleButton msgButton = new NavButton(MsgView.class, "Messages") {{

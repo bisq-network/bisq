@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ This file is part of Bitsquare.
+  ~
+  ~ Bitsquare is free software: you can redistribute it and/or modify it
+  ~ under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or (at
+  ~ your option) any later version.
+  ~
+  ~ Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+  ~ License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<?import io.bitsquare.gui.components.TitledSeparator?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.cell.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox fx:id="root" fx:controller="io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView"
+      xmlns:fx="http://javafx.com/fxml">
+
+    <AnchorPane minHeight="145" VBox.vgrow="SOMETIMES">
+        <VBox.margin>
+            <Insets top="20.0" left="20" right="20" bottom="0"/>
+        </VBox.margin>
+
+        <TitledSeparator text="Open trades" AnchorPane.topAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"/>
+
+        <TableView fx:id="table" AnchorPane.topAnchor="20" AnchorPane.bottomAnchor="20" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+
+            <columns>
+                <TableColumn text="Trade ID" fx:id="idColumn" minWidth="100" sortable="false">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="id"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn text="Date" fx:id="dateColumn" minWidth="130">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="date"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn text="Trade amount in BTC" fx:id="tradeAmountColumn" minWidth="130" sortable="false">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="tradeAmount"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn text="Price" fx:id="priceColumn" minWidth="100" sortable="false">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="price"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn text="Trade amount in EUR" fx:id="tradeVolumeColumn" minWidth="130" sortable="false">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="tradeVolume"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn text="Trade type" fx:id="directionColumn" minWidth="80" sortable="false"/>
+            </columns>
+        </TableView>
+    </AnchorPane>
+
+    <AnchorPane fx:id="tradeStepPane" minHeight="320" VBox.vgrow="SOMETIMES">
+        <VBox.margin>
+            <Insets top="0.0" left="20" right="20" bottom="20"/>
+        </VBox.margin>
+
+    </AnchorPane>
+</VBox>
