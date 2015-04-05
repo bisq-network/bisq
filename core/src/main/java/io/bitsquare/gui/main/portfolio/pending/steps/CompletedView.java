@@ -35,6 +35,8 @@ import static io.bitsquare.gui.util.ComponentBuilder.*;
 public class CompletedView extends TradeStepDetailsView {
     private static final Logger log = LoggerFactory.getLogger(WaitTxInBlockchainView.class);
 
+    private final ChangeListener<Boolean> focusedPropertyListener;
+    
     private Label btcTradeAmountLabel;
     private TextField btcTradeAmountTextField;
     private Label fiatTradeAmountLabel;
@@ -44,12 +46,9 @@ public class CompletedView extends TradeStepDetailsView {
     private Label securityDepositLabel;
     private TextField securityDepositTextField;
     private InfoDisplay summaryInfoDisplay;
-
     private InputTextField withdrawAddressTextField;
     private TextField withdrawAmountTextField;
     private Button withdrawButton;
-
-    private ChangeListener<Boolean> focusedPropertyListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -63,23 +62,6 @@ public class CompletedView extends TradeStepDetailsView {
             if (oldValue && !newValue)
                 model.withdrawAddressFocusOut(withdrawAddressTextField.getText());
         };
-
-      /*  statusTextField.setText("Congratulations! Trade has successfully completed.");
-        infoDisplay.setText("The trade is now completed and you can withdraw your Bitcoin to any external" +
-                "wallet. To protect your privacy you should take care that your trades are not merged " +
-                "in " +
-                "that external wallet. For more information about privacy see our help pages.");*/
-
-      /*  btcTradeAmountLabel.setText("You have bought:");
-        fiatTradeAmountLabel.setText("You have paid:");
-        btcTradeAmountTextField.setText(model.getTradeVolume());
-        fiatTradeAmountTextField.setText(model.getFiatVolume());
-        feesTextField.setText(model.getTotalFees());
-        securityDepositTextField.setText(model.getSecurityDeposit());
-        summaryInfoDisplay.setText("Your security deposit has been refunded to you. " +
-                "You can review the details to that trade any time in the closed trades screen.");*/
-
-        //   withdrawAmountTextField.setText(model.getAmountToWithdraw());
     }
 
     @Override
@@ -87,7 +69,7 @@ public class CompletedView extends TradeStepDetailsView {
         super.activate();
         withdrawAddressTextField.focusedProperty().addListener(focusedPropertyListener);
         withdrawAddressTextField.setValidator(model.getBtcAddressValidator());
-        withdrawButton.disableProperty().bind(model.withdrawalButtonDisable);
+        withdrawButton.disableProperty().bind(model.getWithdrawalButtonDisable());
 
         // We need to handle both cases: Address not set and address already set (when returning from other view)
         // We get address validation after focus out, so first make sure we loose focus and then set it again as hint for user to put address in
@@ -114,9 +96,8 @@ public class CompletedView extends TradeStepDetailsView {
     // UI Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onWithdraw(ActionEvent actionEvent) {
-        log.debug("onWithdraw");
-        model.withdraw(withdrawAddressTextField.getText());
+    private void onWithdrawRequest(ActionEvent actionEvent) {
+        model.onWithdrawRequest(withdrawAddressTextField.getText());
     }
 
 
@@ -148,23 +129,11 @@ public class CompletedView extends TradeStepDetailsView {
         getAndAddTitledGroupBg(gridPane, gridRow, 2, "Withdraw your bitcoins", Layout.GROUP_DISTANCE);
         withdrawAmountTextField = getAndAddLabelTextFieldPair(gridPane, gridRow++, "Amount to withdraw:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).textField;
         withdrawAddressTextField = getAndAddLabelInputTextFieldPair(gridPane, gridRow++, "Withdraw to address:").inputTextField;
-        withdrawButton = getAndAddButton(gridPane, gridRow++, "Withdraw to external wallet", this::onWithdraw);
-
+        withdrawButton = getAndAddButton(gridPane, gridRow++, "Withdraw to external wallet", this::onWithdrawRequest);
 
         //TODO just temp for testing
         withdrawAddressTextField.setText("mxmKZruv9x9JLcEj6rZx6Hnm4LLAcQHtcr");
     }
-
-
-   /* fiatTradeAmountLabel.setText("You have received:");
-    btcTradeAmountTextField.setText(model.getTradeVolume());
-    fiatTradeAmountTextField.setText(model.getFiatVolume());
-    feesTextField.setText(model.getTotalFees());
-    securityDepositTextField.setText(model.getSecurityDeposit());
-    summaryInfoDisplay.setText("Your security deposit has been refunded to you. "+
-            "You can review the details to that trade any time in the closed trades screen.");
-
-    withdrawAmountTextField.setText(model.getAmountToWithdraw());*/
 
     public void setBtcTradeAmountLabelText(String text) {
         btcTradeAmountLabel.setText(text);
@@ -198,14 +167,4 @@ public class CompletedView extends TradeStepDetailsView {
         withdrawAmountTextField.setText(text);
     }
 
-   /* completedView.setBtcTradeAmountLabelText("You have sold:");
-    completedView.setFiatTradeAmountLabelText("You have received:");
-    completedView.setBtcTradeAmountTextFieldText(model.getTradeVolume());
-    completedView.setFiatTradeAmountTextFieldText(model.getFiatVolume());
-    completedView.setFeesTextFieldText(model.getTotalFees());
-    completedView.setSecurityDepositTextFieldText(model.getSecurityDeposit());
-    completedView.setSummaryInfoDisplayText("Your security deposit has been refunded to you. "+
-            "You can review the details to that trade any time in the closed trades screen.");
-
-    completedView.setWithdrawAmountTextFieldText(model.getAmountToWithdraw());*/
 }

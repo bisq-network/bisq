@@ -181,8 +181,10 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
+                final Map<Number640, Data> dataMap = futureGet.dataMap();
                 if (future.isSuccess()) {
-                    final Map<Number640, Data> dataMap = futureGet.dataMap();
+                    log.trace("Get offers from DHT was successful. Received data: [key: " + locationKey
+                            + ", values: " + futureGet.dataMap() + "]");
                     final List<Offer> offers = new ArrayList<>();
                     if (dataMap != null) {
                         for (Data offerData : dataMap.values()) {
@@ -199,12 +201,8 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
                         executor.execute(() -> offerRepositoryListeners.stream().forEach(listener ->
                                 listener.onOffersReceived(offers)));
                     }
-
-                    log.trace("Get offers from DHT was successful. Received data: [key: " + locationKey
-                            + ", values: " + futureGet.dataMap() + "]");
                 }
                 else {
-                    final Map<Number640, Data> dataMap = futureGet.dataMap();
                     if (dataMap == null || dataMap.size() == 0) {
                         log.trace("Get offers from DHT delivered empty dataMap.");
                         executor.execute(() -> offerRepositoryListeners.stream().forEach(listener ->
@@ -282,14 +280,18 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
                             invalidationTimestamp.set(timeStamp);
                         });
                     }
+                    else if (data == null) {
+                        // OK for an empty list
+                        // log.trace("Get invalidationTimestamp from DHT returns null. That is ok for an empty list.");
+                    }
                     else if (data != null) {
                         log.error("Get invalidationTimestamp from DHT failed. Data = " + data);
                     }
                 }
-                /*else if (futureGet.data() == null) {
+                else if (futureGet.data() == null) {
                     // OK as nothing is set at the moment
-                     log.trace("Get invalidationTimestamp from DHT returns null. That is ok for the startup.");
-                }*/
+                    // log.trace("Get invalidationTimestamp from DHT returns null. That is ok for the startup.");
+                }
                 else {
                     log.error("Get invalidationTimestamp from DHT failed with reason:" + futureGet.failedReason());
                 }

@@ -20,8 +20,7 @@ package io.bitsquare.trade;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.protocol.trade.SellerAsOffererProtocol;
-import io.bitsquare.trade.states.OffererTradeState;
-import io.bitsquare.trade.states.TradeState;
+import io.bitsquare.trade.protocol.trade.SellerProtocol;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -30,7 +29,7 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SellerAsOffererTrade extends Trade implements OffererTrade, SellerTrade, Serializable {
+public class SellerAsOffererTrade extends OffererTrade implements SellerTrade, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
@@ -59,13 +58,6 @@ public class SellerAsOffererTrade extends Trade implements OffererTrade, SellerT
         tradeProtocol = new SellerAsOffererProtocol(this);
     }
 
-    @Override
-    protected void initStates() {
-        processState = OffererTradeState.ProcessState.UNDEFINED;
-        lifeCycleState = OffererTradeState.LifeCycleState.OFFER_OPEN;
-        initStateProperties();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -73,57 +65,7 @@ public class SellerAsOffererTrade extends Trade implements OffererTrade, SellerT
 
     @Override
     public void onFiatPaymentReceived() {
-        assert tradeProtocol instanceof SellerAsOffererProtocol;
-        ((SellerAsOffererProtocol) tradeProtocol).onFiatPaymentReceived();
+        assert tradeProtocol instanceof SellerProtocol;
+        ((SellerProtocol) tradeProtocol).onFiatPaymentReceived();
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setter for Mutable objects
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void setProcessState(TradeState.ProcessState processState) {
-        super.setProcessState(processState);
-
-        switch ((OffererTradeState.ProcessState) processState) {
-            case EXCEPTION:
-                disposeProtocol();
-                setLifeCycleState(OffererTradeState.LifeCycleState.FAILED);
-                break;
-        }
-    }
-
-    @Override
-    public void setLifeCycleState(TradeState.LifeCycleState lifeCycleState) {
-        super.setLifeCycleState(lifeCycleState);
-
-        switch ((OffererTradeState.LifeCycleState) lifeCycleState) {
-            case FAILED:
-                disposeProtocol();
-                break;
-            case COMPLETED:
-                disposeProtocol();
-                break;
-        }
-    }
-
-    @Override
-    public void setThrowable(Throwable throwable) {
-        super.setThrowable(throwable);
-
-        setProcessState(OffererTradeState.ProcessState.EXCEPTION);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected void handleConfidenceResult() {
-        if (((OffererTradeState.ProcessState) processState).ordinal() < OffererTradeState.ProcessState.DEPOSIT_CONFIRMED.ordinal())
-            setProcessState(OffererTradeState.ProcessState.DEPOSIT_CONFIRMED);
-    }
-
 }

@@ -30,11 +30,11 @@ import org.slf4j.LoggerFactory;
 public abstract class TradeSubView extends HBox {
     private static final Logger log = LoggerFactory.getLogger(TradeSubView.class);
 
+    protected final PendingTradesViewModel model;
+    protected final ChangeListener<PendingTradesViewModel.ViewState> offererStateChangeListener;
     protected VBox leftVBox;
     protected AnchorPane contentPane;
-    protected PendingTradesViewModel model;
     protected TradeStepDetailsView tradeStepDetailsView;
-    protected ChangeListener<PendingTradesViewModel.ViewState> offererStateChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -51,14 +51,12 @@ public abstract class TradeSubView extends HBox {
     }
 
     public void activate() {
-        log.debug("activate");
-        model.viewState.addListener(offererStateChangeListener);
-        applyState(model.viewState.get());
+        model.getViewState().addListener(offererStateChangeListener);
+        applyState(model.getViewState().get());
     }
 
     public void deactivate() {
-        log.debug("deactivate");
-        model.viewState.removeListener(offererStateChangeListener);
+        model.getViewState().removeListener(offererStateChangeListener);
 
         if (tradeStepDetailsView != null)
             tradeStepDetailsView.deactivate();
@@ -71,7 +69,7 @@ public abstract class TradeSubView extends HBox {
 
     protected abstract void applyState(PendingTradesViewModel.ViewState state);
 
-    protected void buildViews() {
+    private void buildViews() {
         addLeftBox();
         addContentPane();
         addWizards();
@@ -84,7 +82,7 @@ public abstract class TradeSubView extends HBox {
 
     abstract protected void addWizards();
 
-    protected void createAndAddTradeStepView(Class<? extends TradeStepDetailsView> viewClass) {
+    private void createAndAddTradeStepView(Class<? extends TradeStepDetailsView> viewClass) {
         try {
             tradeStepDetailsView = viewClass.getDeclaredConstructor(PendingTradesViewModel.class).newInstance(model);
         } catch (Exception e) {

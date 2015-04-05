@@ -33,6 +33,7 @@ public class TaskRunner<T extends Model> {
 
     private final Queue<Class<? extends Task>> tasks = new LinkedBlockingQueue<>();
     protected final T sharedModel;
+    private final Class<? extends Model> sharedModelClass;
     private final ResultHandler resultHandler;
     private final ErrorMessageHandler errorMessageHandler;
     private boolean failed = false;
@@ -40,10 +41,16 @@ public class TaskRunner<T extends Model> {
 
     private Class<? extends Task> currentTask;
 
+
     public TaskRunner(T sharedModel, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        this(sharedModel, sharedModel.getClass(), resultHandler, errorMessageHandler);
+    }
+
+    public TaskRunner(T sharedModel, Class<? extends Model> sharedModelClass, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         this.sharedModel = sharedModel;
         this.resultHandler = resultHandler;
         this.errorMessageHandler = errorMessageHandler;
+        this.sharedModelClass = sharedModelClass;
     }
 
     public final void addTasks(Class<? extends Task<? extends Model>>... items) {
@@ -61,12 +68,7 @@ public class TaskRunner<T extends Model> {
                 try {
                     currentTask = tasks.poll();
                     log.trace("Run task: " + currentTask.getSimpleName());
-                    // We use also super class as type ein tasks, so we need to support both variants
-                    try {
-                        currentTask.getDeclaredConstructor(TaskRunner.class, sharedModel.getClass()).newInstance(this, sharedModel).run();
-                    } catch (Throwable throwable) {
-                        currentTask.getDeclaredConstructor(TaskRunner.class, sharedModel.getClass().getSuperclass()).newInstance(this, sharedModel).run();
-                    }
+                    currentTask.getDeclaredConstructor(TaskRunner.class, sharedModelClass).newInstance(this, sharedModel).run();
                 } catch (Throwable throwable) {
                     throwable.printStackTrace();
                     handleErrorMessage("Error at taskRunner: " + throwable.getMessage());

@@ -49,7 +49,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class OfferBook {
 
     private static final Logger log = LoggerFactory.getLogger(OfferBook.class);
-    private static final int POLLING_INTERVAL = 1000;
+    private static final int POLLING_INTERVAL = 5000; // in ms
 
     private final OfferBookService offerBookService;
     private final User user;

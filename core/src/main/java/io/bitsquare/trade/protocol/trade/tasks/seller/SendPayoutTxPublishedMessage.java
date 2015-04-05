@@ -55,7 +55,7 @@ public class SendPayoutTxPublishedMessage extends TradeTask {
                                 trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_PUBLISHED_MSG_SENT);
                             else if (trade instanceof OffererTrade)
                                 trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_PUBLISHED_MSG_SENT);
-                            
+
                             complete();
                         }
 

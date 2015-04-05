@@ -35,10 +35,11 @@ import static io.bitsquare.gui.util.ComponentBuilder.*;
 public class ConfirmFiatReceivedView extends TradeStepDetailsView {
     private static final Logger log = LoggerFactory.getLogger(ConfirmFiatReceivedView.class);
 
+    private final ChangeListener<String> txIdChangeListener;
+    
     private TxIdTextField txIdTextField;
     private Label infoLabel;
     private InfoDisplay infoDisplay;
-    private final ChangeListener<String> txIdChangeListener;
     private Button confirmFiatReceivedButton;
     private Label statusLabel;
     private ProgressIndicator statusProgressIndicator;
@@ -59,17 +60,16 @@ public class ConfirmFiatReceivedView extends TradeStepDetailsView {
     public void activate() {
         super.activate();
 
-        model.txId.addListener(txIdChangeListener);
-        txIdTextField.setup(model.getWalletService(), model.txId.get());
+        model.getTxId().addListener(txIdChangeListener);
+        txIdTextField.setup(model.getWalletService(), model.getTxId().get());
     }
 
     @Override
     public void deactivate() {
         super.deactivate();
 
-        model.txId.removeListener(txIdChangeListener);
+        model.getTxId().removeListener(txIdChangeListener);
         txIdTextField.cleanup();
-        statusLabel.setText("Publishing transaction...");
         if (root != null)
             root.setMouseTransparent(false);
     }
@@ -82,11 +82,12 @@ public class ConfirmFiatReceivedView extends TradeStepDetailsView {
     private void onPaymentReceived(ActionEvent actionEvent) {
         log.debug("onPaymentReceived");
         model.fiatPaymentReceived();
-
         confirmFiatReceivedButton.setDisable(true);
+        statusLabel.setText("Publishing transaction...");
         statusProgressIndicator.setVisible(true);
         statusProgressIndicator.setProgress(-1);
         root = statusProgressIndicator.getScene().getRoot();
+        // We deactivate mouse interaction to avoid that user leaves screen
         root.setMouseTransparent(true);
     }
 

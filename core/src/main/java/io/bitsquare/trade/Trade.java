@@ -91,6 +91,7 @@ abstract public class Trade implements Model, Serializable {
     // Immutable
     private final Offer offer;
     private final ProcessModel processModel;
+    private final Date creationDate;
 
     // Mutable
     private Date takeOfferDate;
@@ -124,6 +125,9 @@ abstract public class Trade implements Model, Serializable {
 
         initStates();
         initStateProperties();
+
+        // That will only be used in case of a canceled open offer trade
+        creationDate = new Date();
     }
 
     // taker
@@ -306,8 +310,8 @@ abstract public class Trade implements Model, Serializable {
     // Getter/Setter for Mutable objects
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Date getTakeOfferDate() {
-        return takeOfferDate;
+    public Date getDate() {
+        return takeOfferDate != null ? takeOfferDate : creationDate;
     }
 
     public void setTakeOfferDate(Date takeOfferDate) {

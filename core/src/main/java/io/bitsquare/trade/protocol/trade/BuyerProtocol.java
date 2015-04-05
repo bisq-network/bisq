@@ -15,16 +15,8 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.portfolio.pending;
+package io.bitsquare.trade.protocol.trade;
 
-// That is used if trade is null and it is a valid state
-public class NoTradeFoundException extends Throwable {
-
-    public NoTradeFoundException(String msg) {
-        super(msg);
-    }
-
-    public NoTradeFoundException() {
-        super("Trade is null");
-    }
+public interface BuyerProtocol {
+    void onFiatPaymentStarted();
 }

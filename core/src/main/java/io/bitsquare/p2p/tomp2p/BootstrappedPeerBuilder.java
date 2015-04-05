@@ -121,7 +121,7 @@ public class BootstrappedPeerBuilder {
 
     public SettableFuture<PeerDHT> start() {
         try {
-            DefaultEventExecutorGroup eventExecutorGroup = new DefaultEventExecutorGroup(250);
+            DefaultEventExecutorGroup eventExecutorGroup = new DefaultEventExecutorGroup(20);
             ChannelClientConfiguration clientConf = PeerBuilder.createDefaultChannelClientConfiguration();
             clientConf.pipelineFilter(new PeerBuilder.EventExecutorGroupFilter(eventExecutorGroup));
 

@@ -45,9 +45,7 @@ import javafx.util.StringConverter;
 public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTradesViewModel> {
 
     @FXML AnchorPane tradeStepPane;
-
     @FXML TableView<PendingTradesListItem> table;
-
     @FXML TableColumn<PendingTradesListItem, Fiat> priceColumn;
     @FXML TableColumn<PendingTradesListItem, Fiat> tradeVolumeColumn;
     @FXML TableColumn<PendingTradesListItem, PendingTradesListItem> directionColumn;
@@ -60,6 +58,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private ChangeListener<Boolean> appFocusChangeListener;
     private ReadOnlyBooleanProperty appFocusProperty;
     private ChangeListener<Trade> currentTradeChangeListener;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -83,8 +82,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         table.setPlaceholder(new Label("No pending trades available"));
 
         selectedItemChangeListener = (ov, oldValue, newValue) -> {
-            log.debug("selectedItemChangeListener {}", newValue);
-            model.selectTrade(newValue);
+            model.onSelectTrade(newValue);
 
             if (newValue != null)
                 addSubView();
@@ -93,7 +91,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         };
 
         appFocusChangeListener = (observable, oldValue, newValue) -> {
-            log.debug("appFocusChangeListener {}", newValue);
             if (newValue && model.getSelectedItem() != null) {
                 // Focus selectedItem from model
                 int index = table.getItems().indexOf(model.getSelectedItem());
@@ -105,14 +102,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         };
 
         currentTradeChangeListener = (observable, oldValue, newValue) -> {
-            log.debug("currentTradeChangeListener {} {}", newValue, model.getList().size());
             if (newValue != null)
                 addSubView();
             else
                 removeSubView();
         };
     }
-
 
     @Override
     public void doActivate() {
@@ -144,42 +139,33 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @Override
     public void doDeactivate() {
         table.getSelectionModel().selectedItemProperty().removeListener(selectedItemChangeListener);
+        model.currentTrade().removeListener(currentTradeChangeListener);
+        appFocusProperty.removeListener(appFocusChangeListener);
+        appFocusProperty = null;
 
         if (currentSubView != null)
             currentSubView.deactivate();
-
-        appFocusProperty.removeListener(appFocusChangeListener);
-        model.currentTrade().removeListener(currentTradeChangeListener);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
+    // Subviews
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addSubView() {
-        log.debug("addSubView");
         removeSubView();
 
         if (model.isOfferer()) {
-            try {
-                if (model.isBuyOffer())
-                    currentSubView = new BuyerSubView(model);
-                else
-                    currentSubView = new SellerSubView(model);
-            } catch (NoTradeFoundException e) {
-                log.warn("No trade selected");
-            }
+            if (model.isBuyOffer())
+                currentSubView = new BuyerSubView(model);
+            else
+                currentSubView = new SellerSubView(model);
         }
         else {
-            try {
-                if (model.isBuyOffer())
-                    currentSubView = new SellerSubView(model);
-                else
-                    currentSubView = new BuyerSubView(model);
-            } catch (NoTradeFoundException e) {
-                log.warn("No trade selected");
-            }
+            if (model.isBuyOffer())
+                currentSubView = new SellerSubView(model);
+            else
+                currentSubView = new BuyerSubView(model);
         }
         if (currentSubView != null) {
             currentSubView.activate();
@@ -189,7 +175,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             AnchorPane.setBottomAnchor(currentSubView, 0d);
             AnchorPane.setLeftAnchor(currentSubView, 0d);
             tradeStepPane.getChildren().setAll(currentSubView);
-            log.warn("currentSubView added");
         }
         else {
             log.warn("currentSubView=null");
@@ -197,9 +182,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private void removeSubView() {
-        log.debug("removeSubView called");
         if (currentSubView != null) {
-            log.debug("remove currentSubView");
             currentSubView.deactivate();
             tradeStepPane.getChildren().remove(currentSubView);
             currentSubView = null;

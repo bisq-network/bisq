@@ -26,6 +26,7 @@ import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
 import io.bitsquare.common.viewfx.view.FxmlView;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.trade.TradeManager;
 import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.core.AddressFormatException;
@@ -37,6 +38,7 @@ import com.google.common.util.concurrent.FutureCallback;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -64,12 +66,14 @@ public class WithdrawalView extends ActivatableViewAndModel {
             confidenceColumn;
 
     private final WalletService walletService;
+    private TradeManager tradeManager;
     private final BSFormatter formatter;
     private final ObservableList<WithdrawalListItem> addressList = FXCollections.observableArrayList();
 
     @Inject
-    private WithdrawalView(WalletService walletService, BSFormatter formatter) {
+    private WithdrawalView(WalletService walletService, TradeManager tradeManager, BSFormatter formatter) {
         this.walletService = walletService;
+        this.tradeManager = tradeManager;
         this.formatter = formatter;
     }
 
@@ -77,7 +81,7 @@ public class WithdrawalView extends ActivatableViewAndModel {
     @Override
     public void initialize() {
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setPlaceholder(new Label("No funded wallets for withdrawal available"));
+        table.setPlaceholder(new Label("No funds for withdrawal available"));
 
         setLabelColumnCellFactory();
         setBalanceColumnCellFactory();
@@ -176,8 +180,14 @@ public class WithdrawalView extends ActivatableViewAndModel {
     private void fillList() {
         addressList.clear();
         List<AddressEntry> addressEntryList = walletService.getAddressEntryList();
+
+        List<String> reservedTrades = Stream.concat(tradeManager.getOpenOfferTrades().stream(), tradeManager.getPendingTrades().stream())
+                .map(trade -> trade.getId())
+                .collect(Collectors.toList());
+
         addressList.addAll(addressEntryList.stream()
                 .filter(e -> walletService.getBalanceForAddress(e.getAddress()).isPositive())
+                .filter(e -> !reservedTrades.contains(e.getOfferId()))
                 .map(anAddressEntryList -> new WithdrawalListItem(anAddressEntryList, walletService, formatter))
                 .collect(Collectors.toList()));
     }

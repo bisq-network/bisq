@@ -406,7 +406,7 @@ public class TradeManager {
     // Trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestWithdraw(String toAddress, Trade trade, ResultHandler resultHandler, FaultHandler faultHandler) {
+    public void onWithdrawRequest(String toAddress, Trade trade, ResultHandler resultHandler, FaultHandler faultHandler) {
         AddressEntry addressEntry = walletService.getAddressEntry(trade.getId());
         String fromAddress = addressEntry.getAddressString();
 

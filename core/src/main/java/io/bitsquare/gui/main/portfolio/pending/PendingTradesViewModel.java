@@ -37,6 +37,9 @@ import java.util.Date;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -67,17 +70,18 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         EXCEPTION
     }
 
-
     private final BSFormatter formatter;
     private final InvalidationListener sellerStateListener;
     private final InvalidationListener buyerStateListener;
-
     private final BtcAddressValidator btcAddressValidator;
+    private final ObjectProperty<ViewState> viewState = new SimpleObjectProperty<>(ViewState.UNDEFINED);
+    private final StringProperty txId = new SimpleStringProperty();
+    private final BooleanProperty withdrawalButtonDisable = new SimpleBooleanProperty(true);
 
-    public final StringProperty txId = new SimpleStringProperty();
-    public final BooleanProperty withdrawalButtonDisable = new SimpleBooleanProperty(true);
-    final ObjectProperty<ViewState> viewState = new SimpleObjectProperty<>(ViewState.UNDEFINED);
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, initialization
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
     public PendingTradesViewModel(PendingTradesDataModel dataModel, BSFormatter formatter,
@@ -92,46 +96,67 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     @Override
     public void doActivate() {
-        txId.bind(dataModel.txId);
+        txId.bind(dataModel.getTxId());
 
-        dataModel.sellerProcessState.addListener(sellerStateListener);
-        dataModel.buyerProcessState.addListener(buyerStateListener);
+        dataModel.getSellerProcessState().addListener(sellerStateListener);
+        dataModel.getBuyerProcessState().addListener(buyerStateListener);
 
-        updateSellerState();
-        updateBuyerState();
+        if (dataModel.getTrade() != null) {
+            updateSellerState();
+            updateBuyerState();
+        }
     }
 
     @Override
     public void doDeactivate() {
         txId.unbind();
 
-        dataModel.sellerProcessState.removeListener(sellerStateListener);
-        dataModel.buyerProcessState.removeListener(buyerStateListener);
+        dataModel.getSellerProcessState().removeListener(sellerStateListener);
+        dataModel.getBuyerProcessState().removeListener(buyerStateListener);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI actions
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void selectTrade(PendingTradesListItem item) {
-        dataModel.selectTrade(item);
+    void onSelectTrade(PendingTradesListItem item) {
+        dataModel.onSelectTrade(item);
     }
 
-    boolean isBuyOffer() throws NoTradeFoundException {
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    ReadOnlyObjectProperty<ViewState> getViewState() {
+        return viewState;
+    }
+
+    public ReadOnlyStringProperty getTxId() {
+        return txId;
+    }
+
+    public ReadOnlyBooleanProperty getWithdrawalButtonDisable() {
+        return withdrawalButtonDisable;
+    }
+
+    boolean isBuyOffer() {
         return dataModel.isBuyOffer();
     }
 
-    ObjectProperty<Trade> currentTrade() {
-        return dataModel.currentTrade;
+    ReadOnlyObjectProperty<Trade> currentTrade() {
+        return dataModel.getTradeProperty();
     }
 
     public void fiatPaymentStarted() {
-        dataModel.fiatPaymentStarted();
+        dataModel.onFiatPaymentStarted();
     }
 
     public void fiatPaymentReceived() {
-        dataModel.fiatPaymentReceived();
+        dataModel.onFiatPaymentReceived();
     }
 
-    public void withdraw(String withdrawToAddress) {
-        dataModel.withdraw(withdrawToAddress);
+    public void onWithdrawRequest(String withdrawToAddress) {
+        dataModel.onWithdrawRequest(withdrawToAddress);
     }
 
     public void withdrawAddressFocusOut(String text) {
@@ -147,7 +172,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public boolean isOfferer() {
-        return dataModel.isOfferer();
+        return dataModel.isOffererRole();
     }
 
     public WalletService getWalletService() {
@@ -160,6 +185,18 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public String getCurrencyCode() {
         return dataModel.getCurrencyCode();
+    }
+
+    public BtcAddressValidator getBtcAddressValidator() {
+        return btcAddressValidator;
+    }
+
+    Throwable getTradeException() {
+        return dataModel.getTradeException();
+    }
+
+    String getErrorMessage() {
+        return dataModel.getErrorMessage();
     }
 
     // columns
@@ -194,11 +231,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getFiatAmount() {
-        try {
-            return formatter.formatFiatWithCode(dataModel.getTrade().getTradeVolume());
-        } catch (NoTradeFoundException e) {
-            return "";
-        }
+        return formatter.formatFiatWithCode(dataModel.getTrade().getTradeVolume());
     }
 
     public String getHolderName() {
@@ -218,19 +251,11 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     // summary
     public String getTradeVolume() {
-        try {
-            return formatter.formatCoinWithCode(dataModel.getTrade().getTradeAmount());
-        } catch (NoTradeFoundException e) {
-            return "";
-        }
+        return formatter.formatCoinWithCode(dataModel.getTrade().getTradeAmount());
     }
 
     public String getFiatVolume() {
-        try {
-            return formatter.formatFiatWithCode(dataModel.getTrade().getTradeVolume());
-        } catch (NoTradeFoundException e) {
-            return "";
-        }
+        return formatter.formatFiatWithCode(dataModel.getTrade().getTradeVolume());
     }
 
     public String getTotalFees() {
@@ -240,32 +265,21 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     public String getSecurityDeposit() {
         // securityDeposit is handled different for offerer and taker.
         // Offerer have paid in the max amount, but taker might have taken less so also paid in less securityDeposit
-        try {
-            if (dataModel.isOfferer())
-                return formatter.formatCoinWithCode(dataModel.getTrade().getOffer().getSecurityDeposit());
-            else
-                return formatter.formatCoinWithCode(dataModel.getTrade().getSecurityDeposit());
+        if (dataModel.isOffererRole())
+            return formatter.formatCoinWithCode(dataModel.getTrade().getOffer().getSecurityDeposit());
+        else
+            return formatter.formatCoinWithCode(dataModel.getTrade().getSecurityDeposit());
 
-        } catch (NoTradeFoundException e) {
-            return "";
-        }
     }
 
-    public BtcAddressValidator getBtcAddressValidator() {
-        return btcAddressValidator;
-    }
 
-    Throwable getTradeException() {
-        return dataModel.getTradeException();
-    }
-
-    String getErrorMessage() {
-        return dataModel.getErrorMessage();
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // States
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateSellerState() {
-        if (dataModel.sellerProcessState.get() instanceof TakerTradeState.ProcessState) {
-            TakerTradeState.ProcessState processState = (TakerTradeState.ProcessState) dataModel.sellerProcessState.get();
+        if (dataModel.getSellerProcessState().get() instanceof TakerTradeState.ProcessState) {
+            TakerTradeState.ProcessState processState = (TakerTradeState.ProcessState) dataModel.getSellerProcessState().get();
             log.debug("updateSellerState (TakerTradeState) " + processState);
             if (processState != null) {
                 switch (processState) {
@@ -310,8 +324,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 }
             }
         }
-        else if (dataModel.sellerProcessState.get() instanceof OffererTradeState.ProcessState) {
-            OffererTradeState.ProcessState processState = (OffererTradeState.ProcessState) dataModel.sellerProcessState.get();
+        else if (dataModel.getSellerProcessState().get() instanceof OffererTradeState.ProcessState) {
+            OffererTradeState.ProcessState processState = (OffererTradeState.ProcessState) dataModel.getSellerProcessState().get();
             log.debug("updateSellerState (OffererTradeState) " + processState);
             if (processState != null) {
                 switch (processState) {
@@ -354,8 +368,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     private void updateBuyerState() {
-        if (dataModel.buyerProcessState.get() instanceof TakerTradeState.ProcessState) {
-            TakerTradeState.ProcessState processState = (TakerTradeState.ProcessState) dataModel.buyerProcessState.get();
+        if (dataModel.getBuyerProcessState().get() instanceof TakerTradeState.ProcessState) {
+            TakerTradeState.ProcessState processState = (TakerTradeState.ProcessState) dataModel.getBuyerProcessState().get();
             log.debug("updateBuyerState (TakerTradeState)" + processState);
             if (processState != null) {
                 switch (processState) {
@@ -399,8 +413,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 }
             }
         }
-        else if (dataModel.buyerProcessState.get() instanceof OffererTradeState.ProcessState) {
-            OffererTradeState.ProcessState processState = (OffererTradeState.ProcessState) dataModel.buyerProcessState.get();
+        else if (dataModel.getBuyerProcessState().get() instanceof OffererTradeState.ProcessState) {
+            OffererTradeState.ProcessState processState = (OffererTradeState.ProcessState) dataModel.getBuyerProcessState().get();
             log.debug("updateBuyerState (OffererTradeState) " + processState);
             if (processState != null) {
                 switch (processState) {
@@ -436,6 +450,4 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             }
         }
     }
-
-
 }

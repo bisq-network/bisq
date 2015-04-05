@@ -76,8 +76,6 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
 
-        // navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
-        
       /*  if (tradeManager.getPendingTrades().size() == 0)
             navigation.navigateTo(MainView.class, PortfolioView.class, OffersView.class);
         else

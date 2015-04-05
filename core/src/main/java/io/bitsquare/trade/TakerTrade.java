@@ -17,6 +17,89 @@
 
 package io.bitsquare.trade;
 
-public interface TakerTrade {
-    void takeAvailableOffer();
+import io.bitsquare.offer.Offer;
+import io.bitsquare.p2p.Peer;
+import io.bitsquare.storage.Storage;
+import io.bitsquare.trade.protocol.trade.TakerProtocol;
+import io.bitsquare.trade.states.TakerTradeState;
+import io.bitsquare.trade.states.TradeState;
+
+import org.bitcoinj.core.Coin;
+
+import java.io.Serializable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public abstract class TakerTrade extends Trade implements Serializable {
+    // That object is saved to disc. We need to take care of changes to not break deserialization.
+    private static final long serialVersionUID = 1L;
+
+    transient private static final Logger log = LoggerFactory.getLogger(BuyerAsTakerTrade.class);
+
+    public TakerTrade(Offer offer, Coin tradeAmount, Peer tradingPeer, Storage<? extends TradeList> storage) {
+        super(offer, tradeAmount, tradingPeer, storage);
+        log.trace("Created by constructor");
+    }
+
+    @Override
+    protected void initStates() {
+        processState = TakerTradeState.ProcessState.UNDEFINED;
+        lifeCycleState = TakerTradeState.LifeCycleState.PENDING;
+        initStateProperties();
+    }
+
+    public void takeAvailableOffer() {
+        assert tradeProtocol instanceof TakerProtocol;
+        ((TakerProtocol) tradeProtocol).takeAvailableOffer();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setter for Mutable objects
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void setProcessState(TradeState.ProcessState processState) {
+        super.setProcessState(processState);
+
+        switch ((TakerTradeState.ProcessState) processState) {
+            case EXCEPTION:
+                disposeProtocol();
+                setLifeCycleState(TakerTradeState.LifeCycleState.FAILED);
+                break;
+        }
+    }
+
+    @Override
+    public void setLifeCycleState(TradeState.LifeCycleState lifeCycleState) {
+        super.setLifeCycleState(lifeCycleState);
+
+        switch ((TakerTradeState.LifeCycleState) lifeCycleState) {
+            case FAILED:
+                disposeProtocol();
+                break;
+            case COMPLETED:
+                disposeProtocol();
+                break;
+        }
+    }
+
+    @Override
+    public void setThrowable(Throwable throwable) {
+        super.setThrowable(throwable);
+
+        setProcessState(TakerTradeState.ProcessState.EXCEPTION);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protected
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void handleConfidenceResult() {
+        if (((TakerTradeState.ProcessState) processState).ordinal() < TakerTradeState.ProcessState.DEPOSIT_CONFIRMED.ordinal())
+            setProcessState(TakerTradeState.ProcessState.DEPOSIT_CONFIRMED);
+    }
 }

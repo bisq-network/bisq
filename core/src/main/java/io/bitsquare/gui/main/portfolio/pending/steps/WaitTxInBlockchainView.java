@@ -33,10 +33,10 @@ import static io.bitsquare.gui.util.ComponentBuilder.*;
 public class WaitTxInBlockchainView extends TradeStepDetailsView {
     private static final Logger log = LoggerFactory.getLogger(WaitTxInBlockchainView.class);
 
+    private final ChangeListener<String> txIdChangeListener;
     private TxIdTextField txIdTextField;
     private Label infoLabel;
     private InfoDisplay infoDisplay;
-    private final ChangeListener<String> txIdChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -53,15 +53,15 @@ public class WaitTxInBlockchainView extends TradeStepDetailsView {
     public void activate() {
         super.activate();
 
-        model.txId.addListener(txIdChangeListener);
-        txIdTextField.setup(model.getWalletService(), model.txId.get());
+        model.getTxId().addListener(txIdChangeListener);
+        txIdTextField.setup(model.getWalletService(), model.getTxId().get());
     }
 
     @Override
     public void deactivate() {
         super.deactivate();
 
-        model.txId.removeListener(txIdChangeListener);
+        model.getTxId().removeListener(txIdChangeListener);
         txIdTextField.cleanup();
     }
 

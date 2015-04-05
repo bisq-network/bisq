@@ -86,15 +86,15 @@ public class StartFiatView extends TradeStepDetailsView {
         log.debug("activate ##");
         super.activate();
 
-        model.txId.addListener(txIdChangeListener);
-        txIdTextField.setup(model.getWalletService(), model.txId.get());
+        model.getTxId().addListener(txIdChangeListener);
+        txIdTextField.setup(model.getWalletService(), model.getTxId().get());
     }
 
     @Override
     public void deactivate() {
         super.deactivate();
 
-        model.txId.removeListener(txIdChangeListener);
+        model.getTxId().removeListener(txIdChangeListener);
         txIdTextField.cleanup();
         if (root != null)
             root.setMouseTransparent(false);
@@ -112,6 +112,7 @@ public class StartFiatView extends TradeStepDetailsView {
         statusProgressIndicator.setProgress(-1);
         statusLabel.setText("Sending message to trading partner...");
         root = statusProgressIndicator.getScene().getRoot();
+        // We deactivate mouse interaction to avoid that user leaves screen
         root.setMouseTransparent(true);
     }
 

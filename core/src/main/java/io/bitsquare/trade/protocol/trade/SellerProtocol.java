@@ -15,16 +15,8 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.portfolio.pending;
+package io.bitsquare.trade.protocol.trade;
 
-// That is used if trade is null but must not be null in that state
-public class MissingTradeException extends RuntimeException {
-
-    public MissingTradeException(String msg) {
-        super(msg);
-    }
-
-    public MissingTradeException() {
-        super("Trade is null.That must not happen.");
-    }
+public interface SellerProtocol {
+    void onFiatPaymentReceived();
 }

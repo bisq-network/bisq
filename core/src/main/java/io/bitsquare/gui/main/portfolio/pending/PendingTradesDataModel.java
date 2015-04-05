@@ -43,6 +43,8 @@ import java.util.stream.Collectors;
 
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -62,18 +64,20 @@ class PendingTradesDataModel implements Activatable, DataModel {
     private Navigation navigation;
 
     private final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
-
     private PendingTradesListItem selectedItem;
-    private boolean isOfferer;
-
     private final ListChangeListener<Trade> tradesListChangeListener;
+    private boolean isOffererRole;
 
-    final StringProperty txId = new SimpleStringProperty();
+    private final ObjectProperty<TradeState.ProcessState> sellerProcessState = new SimpleObjectProperty<>();
+    private final ObjectProperty<TradeState.ProcessState> buyerProcessState = new SimpleObjectProperty<>();
+    private final ObjectProperty<Trade> tradeProperty = new SimpleObjectProperty<>();
+    private final StringProperty txId = new SimpleStringProperty();
+    private Trade trade;
 
-    final ObjectProperty<TradeState.ProcessState> sellerProcessState = new SimpleObjectProperty<>();
-    final ObjectProperty<TradeState.ProcessState> buyerProcessState = new SimpleObjectProperty<>();
 
-    final ObjectProperty<Trade> currentTrade = new SimpleObjectProperty<>();
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, initialization
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
     public PendingTradesDataModel(TradeManager tradeManager, WalletService walletService, User user, Navigation navigation) {
@@ -102,23 +106,26 @@ class PendingTradesDataModel implements Activatable, DataModel {
         list.addAll(tradeManager.getPendingTrades().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
-        list.sort((o1, o2) -> o2.getTrade().getTakeOfferDate().compareTo(o1.getTrade().getTakeOfferDate()));
+        list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
 
         log.debug("onListChanged {}", list.size());
         if (list.size() > 0)
-            selectTrade(list.get(0));
+            onSelectTrade(list.get(0));
         else if (list.size() == 0)
-            selectTrade(null);
+            onSelectTrade(null);
     }
 
-    boolean isBuyOffer() throws NoTradeFoundException {
-        if (getTrade() != null)
-            return getTrade().getOffer().getDirection() == Offer.Direction.BUY;
-        else
-            throw new NoTradeFoundException();
+    private void unbindStates() {
+        sellerProcessState.unbind();
+        buyerProcessState.unbind();
     }
 
-    void selectTrade(PendingTradesListItem item) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI actions
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    void onSelectTrade(PendingTradesListItem item) {
         log.debug("selectTrade {} {}", item != null, item != null ? item.getTrade().getId() : "null");
         // clean up previous selectedItem
         unbindStates();
@@ -126,13 +133,14 @@ class PendingTradesDataModel implements Activatable, DataModel {
         selectedItem = item;
 
         if (item == null) {
-            currentTrade.set(null);
+            trade = null;
+            tradeProperty.set(null);
         }
         else {
-            currentTrade.set(item.getTrade());
+            trade = item.getTrade();
+            tradeProperty.set(trade);
 
-            Trade trade = item.getTrade();
-            isOfferer = trade.getOffer().getP2pSigPubKey().equals(user.getP2pSigPubKey());
+            isOffererRole = trade.getOffer().getP2pSigPubKey().equals(user.getP2pSigPubKey());
 
             if (trade instanceof SellerTrade)
                 sellerProcessState.bind(trade.processStateProperty());
@@ -144,37 +152,32 @@ class PendingTradesDataModel implements Activatable, DataModel {
         }
     }
 
-    void fiatPaymentStarted() {
-        try {
-            if (getTrade() instanceof BuyerTrade)
-                ((BuyerTrade) getTrade()).onFiatPaymentStarted();
-        } catch (NoTradeFoundException e) {
-            throw new MissingTradeException();
-        }
+
+    void onFiatPaymentStarted() {
+        assert trade != null;
+        if (trade instanceof BuyerTrade)
+            ((BuyerTrade) trade).onFiatPaymentStarted();
     }
 
-    void fiatPaymentReceived() {
-        try {
-            if (getTrade() instanceof SellerTrade)
-                ((SellerTrade) getTrade()).onFiatPaymentReceived();
-        } catch (NoTradeFoundException e) {
-            throw new MissingTradeException();
-        }
+    void onFiatPaymentReceived() {
+        assert trade != null;
+        if (trade instanceof SellerTrade)
+            ((SellerTrade) trade).onFiatPaymentReceived();
     }
 
-    void withdraw(String toAddress) {
-        try {
-            if (getTrade() != null) {
-                tradeManager.requestWithdraw(toAddress,
-                        getTrade(),
-                        () -> {
-                            log.debug("requestWithdraw was successful");
-                            Platform.runLater(() -> navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class));
-                        },
-                        (errorMessage, throwable) -> {
-                            log.error(errorMessage);
-                            Popups.openExceptionPopup(throwable);
-                        });
+    void onWithdrawRequest(String toAddress) {
+        assert trade != null;
+        tradeManager.onWithdrawRequest(
+                toAddress,
+                trade,
+                () -> {
+                    log.debug("requestWithdraw was successful");
+                    Platform.runLater(() -> navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class));
+                },
+                (errorMessage, throwable) -> {
+                    log.error(errorMessage);
+                    Popups.openExceptionPopup(throwable);
+                });
             
     
     /*
@@ -203,27 +206,27 @@ class PendingTradesDataModel implements Activatable, DataModel {
                     Popups.openErrorPopup("Wrong inputs", "Please check the inputs.");
                 }
             }*/
-            }
-        } catch (NoTradeFoundException e) {
-            throw new MissingTradeException();
-        }
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     ObservableList<PendingTradesListItem> getList() {
         return list;
     }
 
-    boolean isOfferer() {
-        return isOfferer;
+    boolean isBuyOffer() {
+        return trade.getOffer().getDirection() == Offer.Direction.BUY;
     }
 
-   /* @Nullable
-    Trade getTrade() {
-        return selectedItem != null ? selectedItem.getTrade() : null;
-    }*/
+    boolean isOffererRole() {
+        return isOffererRole;
+    }
 
     Coin getTotalFees() {
-        return FeePolicy.TX_FEE.add(isOfferer() ? FeePolicy.CREATE_OFFER_FEE : FeePolicy.TAKE_OFFER_FEE);
+        return FeePolicy.TX_FEE.add(isOffererRole() ? FeePolicy.CREATE_OFFER_FEE : FeePolicy.TAKE_OFFER_FEE);
     }
 
     WalletService getWalletService() {
@@ -235,56 +238,48 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     String getCurrencyCode() {
-        return selectedItem.getTrade().getOffer().getCurrencyCode();
+        return trade.getOffer().getCurrencyCode();
     }
 
     Throwable getTradeException() {
-        try {
-            return getTrade().getThrowable();
-        } catch (NoTradeFoundException e) {
-            return null;
-        }
+        return trade.getThrowable();
     }
 
     String getErrorMessage() {
-        try {
-            return getTrade().getErrorMessage();
-        } catch (NoTradeFoundException e) {
-            return null;
-        }
+        return trade.getErrorMessage();
     }
 
     public Offer.Direction getDirection(Offer offer) {
-        return offer.getP2pSigPubKey().equals(user.getP2pSigPubKey()) ?
-                offer.getDirection() : offer.getMirroredDirection();
+        return isOffererRole ? offer.getDirection() : offer.getMirroredDirection();
     }
 
-    private void unbindStates() {
-        sellerProcessState.unbind();
-        buyerProcessState.unbind();
+    Coin getPayoutAmount() {
+        return trade.getPayoutAmount();
     }
 
-    public Coin getPayoutAmount() {
-        try {
-            return getTrade().getPayoutAmount();
-        } catch (NoTradeFoundException e) {
-            return Coin.ZERO;
-        }
+    Contract getContract() {
+        return trade.getContract();
     }
 
-    public Contract getContract() {
-        try {
-            return getTrade().getContract();
-        } catch (NoTradeFoundException e) {
-            throw new MissingTradeException();
-        }
+    Trade getTrade() {
+        return trade;
     }
 
-    public Trade getTrade() throws NoTradeFoundException {
-        if (currentTrade.get() != null)
-            return currentTrade.get();
-        else
-            throw new NoTradeFoundException();
+    ReadOnlyObjectProperty<TradeState.ProcessState> getSellerProcessState() {
+        return sellerProcessState;
     }
+
+    ReadOnlyObjectProperty<TradeState.ProcessState> getBuyerProcessState() {
+        return buyerProcessState;
+    }
+
+    ReadOnlyObjectProperty<Trade> getTradeProperty() {
+        return tradeProperty;
+    }
+
+    ReadOnlyStringProperty getTxId() {
+        return txId;
+    }
+
 }
 

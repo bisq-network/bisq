@@ -15,21 +15,8 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare;
+package io.bitsquare.trade.protocol.trade;
 
-public class BitsquareException extends RuntimeException {
-
-    private static final long serialVersionUID = 556191645860856173L;
-
-    public BitsquareException(Throwable cause) {
-        super(cause);
-    }
-
-    public BitsquareException(String format, Object... args) {
-        super(String.format(format, args));
-    }
-
-    public BitsquareException(Throwable cause, String format, Object... args) {
-        super(String.format(format, args), cause);
-    }
+public interface TakerProtocol {
+    void takeAvailableOffer();
 }

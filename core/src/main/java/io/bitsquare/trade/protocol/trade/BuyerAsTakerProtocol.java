@@ -17,12 +17,10 @@
 
 package io.bitsquare.trade.protocol.trade;
 
-import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.trade.BuyerAsTakerTrade;
-import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
@@ -46,7 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
-public class BuyerAsTakerProtocol extends TradeProtocol {
+public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol, TakerProtocol {
     private static final Logger log = LoggerFactory.getLogger(BuyerAsTakerProtocol.class);
 
     private final BuyerAsTakerTrade buyerAsTakerTrade;
@@ -82,8 +80,9 @@ public class BuyerAsTakerProtocol extends TradeProtocol {
         }
     }
 
+    @Override
     public void takeAvailableOffer() {
-        TaskRunner<Trade> taskRunner = new TaskRunner<>(buyerAsTakerTrade,
+        TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
                 () -> log.debug("taskRunner at takeAvailableOffer completed"),
                 this::handleTaskRunnerFault);
 
@@ -106,7 +105,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol {
         stopTimeout();
         processModel.setTradeMessage(tradeMessage);
 
-        TaskRunner<Trade> taskRunner = new TaskRunner<>(buyerAsTakerTrade,
+        TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
                 () -> log.debug("taskRunner at handleRequestPublishDepositTxMessage completed"),
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
@@ -125,8 +124,9 @@ public class BuyerAsTakerProtocol extends TradeProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // User clicked the "bank transfer started" button
+    @Override
     public void onFiatPaymentStarted() {
-        TaskRunner<Trade> taskRunner = new TaskRunner<>(buyerAsTakerTrade,
+        TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
                 () -> log.debug("taskRunner at onFiatPaymentStarted completed"),
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
@@ -145,7 +145,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol {
     private void handle(PayoutTxPublishedMessage tradeMessage) {
         processModel.setTradeMessage(tradeMessage);
 
-        TaskRunner<Trade> taskRunner = new TaskRunner<>(buyerAsTakerTrade,
+        TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
                 () -> {
                     log.debug("taskRunner at handlePayoutTxPublishedMessage completed");
                     // we are done!

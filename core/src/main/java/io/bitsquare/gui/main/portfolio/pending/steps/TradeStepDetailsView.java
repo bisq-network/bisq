@@ -56,11 +56,9 @@ public abstract class TradeStepDetailsView extends AnchorPane {
 
     // That is called at every state change!
     public void activate() {
-        log.debug("activate");
     }
 
     public void deactivate() {
-        log.debug("deactivate");
     }
 
 

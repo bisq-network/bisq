@@ -65,7 +65,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
     }
 
     String getDate(ClosedTradesListItem item) {
-        return formatter.formatDateTime(item.getTrade().getTakeOfferDate());
+        return formatter.formatDateTime(item.getTrade().getDate());
     }
 
     String getState(ClosedTradesListItem item) {
