@@ -130,7 +130,10 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
      */
     public FutureRemove removeDataFromMyProtectedDomain(Number160 locationKey) {
         log.trace("removeDataOfProtectedDomain");
-        return peerDHT.remove(locationKey).domainKey(pubKeyHashForMyDomain).keyPair(keyPair).start();
+        if (peerDHT != null)
+            return peerDHT.remove(locationKey).domainKey(pubKeyHashForMyDomain).keyPair(keyPair).start();
+        else
+            return null;
     }
 
     /**

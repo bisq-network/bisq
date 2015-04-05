@@ -34,6 +34,7 @@ import javax.inject.Inject;
 
 import net.tomp2p.dht.FutureGet;
 import net.tomp2p.dht.FuturePut;
+import net.tomp2p.dht.FutureRemove;
 import net.tomp2p.futures.BaseFuture;
 import net.tomp2p.futures.BaseFutureAdapter;
 import net.tomp2p.futures.BaseFutureListener;
@@ -174,8 +175,11 @@ public class TomP2PAddressService extends TomP2PDHTService implements AddressSer
 
     private void removeAddress() {
         try {
-            boolean success = removeDataFromMyProtectedDomain(locationKey).awaitUninterruptibly(1000);
-            log.debug("removeDataFromMyProtectedDomain success=" + success);
+            FutureRemove futureRemove = removeDataFromMyProtectedDomain(locationKey);
+            if (futureRemove != null) {
+                boolean success = futureRemove.awaitUninterruptibly(1000);
+                log.debug("removeDataFromMyProtectedDomain success=" + success);
+            }
         } catch (Throwable t) {
             t.printStackTrace();
             log.error(t.getMessage());

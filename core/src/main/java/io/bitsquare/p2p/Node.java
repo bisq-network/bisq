@@ -85,6 +85,7 @@ public final class Node {
         try {
             ServerSocket server = new ServerSocket(0);
             port = server.getLocalPort();
+            log.debug("Random system port used for client: {}", port);
             server.close();
         } catch (IOException e) {
             e.printStackTrace();
