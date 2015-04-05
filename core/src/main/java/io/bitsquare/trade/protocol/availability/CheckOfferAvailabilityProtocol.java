@@ -138,6 +138,7 @@ public class CheckOfferAvailabilityProtocol {
                 Platform.runLater(() -> {
                     log.debug("Timeout reached");
                     errorMessageHandler.handleErrorMessage("Timeout reached: Peer has not responded.");
+                    model.offer.setState(Offer.State.OFFERER_OFFLINE);
                 });
             }
         };

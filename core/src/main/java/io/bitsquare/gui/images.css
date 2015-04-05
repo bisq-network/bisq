@@ -22,11 +22,11 @@
     -fx-image: url("../../../images/remove.png");
 }
 
-#image-buyoffer {
+#image-buy {
     -fx-image: url("../../../images/buy.png");
 }
 
-#image-selloffer {
+#image-sell {
     -fx-image: url("../../../images/sell.png");
 }
 
