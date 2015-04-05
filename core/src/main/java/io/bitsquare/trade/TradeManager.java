@@ -313,7 +313,7 @@ public class TradeManager {
         });
     }
 
-    public void cancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void onCancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         removeOpenOffer(offer, resultHandler, errorMessageHandler, true);
     }
 

@@ -65,8 +65,8 @@ class OffersDataModel implements Activatable, DataModel {
         tradeManager.getOpenOfferTrades().removeListener(tradesListChangeListener);
     }
 
-    void cancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        tradeManager.cancelOpenOffer(offer, resultHandler, errorMessageHandler);
+    void onCancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        tradeManager.onCancelOpenOffer(offer, resultHandler, errorMessageHandler);
     }
 
 

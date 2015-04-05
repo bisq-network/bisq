@@ -19,7 +19,11 @@ package io.bitsquare.gui.main.portfolio.offer;
 
 import io.bitsquare.common.viewfx.view.ActivatableViewAndModel;
 import io.bitsquare.common.viewfx.view.FxmlView;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.funds.FundsView;
+import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.util.Utilities;
 
@@ -38,10 +42,12 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
     @FXML TableView<OfferListItem> table;
     @FXML TableColumn<OfferListItem, OfferListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, offerIdColumn, removeItemColumn;
+    private Navigation navigation;
 
     @Inject
-    public OffersView(OffersViewModel model) {
+    public OffersView(OffersViewModel model, Navigation navigation) {
         super(model);
+        this.navigation = navigation;
     }
 
     @Override
@@ -63,8 +69,18 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
         table.setItems(model.getList());
     }
 
-    private void cancelOpenOffer(Offer offer) {
-        model.cancelOpenOffer(offer);
+    private void onCancelOpenOffer(Offer offer) {
+        model.onCancelOpenOffer(offer,
+                () -> {
+                    log.debug("Remove offer was successful");
+                    Popups.openInfoPopup("You can withdraw the funds you paid in from the funds screens.");
+                    navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
+                },
+                (message) -> {
+                    log.error(message);
+                    Popups.openWarningPopup("Remove offer failed", message);
+                });
+
     }
 
     private void openOfferDetails(OfferListItem item) {
@@ -233,7 +249,7 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
                                 super.updateItem(item, empty);
 
                                 if (item != null) {
-                                    button.setOnAction(event -> cancelOpenOffer(item.getOffer()));
+                                    button.setOnAction(event -> onCancelOpenOffer(item.getOffer()));
                                     setGraphic(button);
                                 }
                                 else {

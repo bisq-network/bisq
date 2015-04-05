@@ -28,6 +28,8 @@ import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.account.content.restrictions.RestrictionsView;
 import io.bitsquare.gui.main.account.settings.AccountSettingsView;
 import io.bitsquare.gui.main.account.setup.AccountSetupWizard;
+import io.bitsquare.gui.main.funds.FundsView;
+import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 import io.bitsquare.gui.main.trade.TradeView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.validation.OptionalBtcValidator;
@@ -233,6 +235,20 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         else {
             openSetupScreen();
         }
+    }
+
+    private void onCancelOpenOffer(Offer offer) {
+        model.onCancelOpenOffer(offer,
+                () -> {
+                    log.debug("Remove offer was successful");
+                    Popups.openInfoPopup("You can withdraw the funds you paid in from the funds screens.");
+                    navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
+                },
+                (message) -> {
+                    log.error(message);
+                    Popups.openWarningPopup("Remove offer failed", message);
+                });
+
     }
 
     private void openRestrictionsWarning(String restrictionsInfo) {
@@ -469,7 +485,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     if (model.isMyOffer(offer)) {
                                         iconView.setId("image-remove");
                                         title = "Remove";
-                                        button.setOnAction(event -> model.cancelOpenOffer(item.getOffer()));
+                                        button.setOnAction(event -> onCancelOpenOffer(item.getOffer()));
                                     }
                                     else {
                                         if (offer.getDirection() == Offer.Direction.SELL)

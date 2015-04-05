@@ -17,9 +17,10 @@
 
 package io.bitsquare.gui.main.trade.offerbook;
 
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
 import io.bitsquare.common.viewfx.model.ViewModel;
-import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.OptionalBtcValidator;
@@ -101,17 +102,8 @@ class OfferBookViewModel extends ActivatableWithDataModel<OfferBookDataModel> im
                 (newValue)));
     }
 
-    void cancelOpenOffer(Offer offer) {
-        dataModel.cancelOpenOffer(offer,
-                () -> {
-                    // visual feedback?
-                    log.debug("Remove offer was successful");
-                },
-                (message) -> {
-                    log.error(message);
-                    Popups.openWarningPopup("Remove offer failed", message);
-                }
-        );
+    void onCancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        dataModel.onCancelOpenOffer(offer, resultHandler, errorMessageHandler);
     }
 
     boolean isTradable(Offer offer) {

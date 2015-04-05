@@ -17,9 +17,10 @@
 
 package io.bitsquare.gui.main.portfolio.offer;
 
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.viewfx.model.ActivatableWithDataModel;
 import io.bitsquare.common.viewfx.model.ViewModel;
-import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.offer.Offer;
 
@@ -44,16 +45,8 @@ class OffersViewModel extends ActivatableWithDataModel<OffersDataModel> implemen
     }
 
 
-    void cancelOpenOffer(Offer offer) {
-        dataModel.cancelOpenOffer(offer,
-                () -> {
-                    // visual feedback?
-                    log.debug("Remove offer was successful");
-                },
-                (message) -> {
-                    log.error(message);
-                    Popups.openWarningPopup("Remove offer failed", message);
-                });
+    void onCancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        dataModel.onCancelOpenOffer(offer, resultHandler, errorMessageHandler);
     }
 
     public ObservableList<OfferListItem> getList() {
