@@ -23,6 +23,7 @@ import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.BitsquareExecutable;
 import io.bitsquare.app.UpdateProcess;
 import io.bitsquare.btc.BitcoinNetwork;
+import io.bitsquare.btc.RegTestHost;
 import io.bitsquare.p2p.BootstrapNodes;
 import io.bitsquare.p2p.Node;
 import io.bitsquare.util.joptsimple.EnumValueConverter;
@@ -134,6 +135,13 @@ public class BitsquareAppMain extends BitsquareExecutable {
                 .withRequiredArg()
                 .ofType(BitcoinNetwork.class)
                 .withValuesConvertedBy(new EnumValueConverter(BitcoinNetwork.class));
+
+        parser.accepts(RegTestHost.KEY, description("", RegTestHost.DEFAULT))
+                .withRequiredArg()
+                .ofType(RegTestHost.class)
+                .withValuesConvertedBy(new EnumValueConverter(RegTestHost.class));
+
+        
         parser.accepts(BOOTSTRAP_NODE_NAME_KEY, description("", BootstrapNodes.DEFAULT.getName()))
                 .withRequiredArg();
         parser.accepts(BOOTSTRAP_NODE_IP_KEY, description("", BootstrapNodes.DEFAULT.getIp()))

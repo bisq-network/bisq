@@ -29,6 +29,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.DownloadProgressTracker;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.PeerAddress;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
@@ -48,6 +49,9 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.Service;
 
 import java.io.File;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -87,6 +91,7 @@ public class WalletService {
     private final Observable<Double> downloadProgress = downloadListener.getObservable();
     private final WalletEventListener walletEventListener = new BitsquareWalletEventListener();
 
+    private RegTestHost regTestHost;
     private final TradeWalletService tradeWalletService;
     private final AddressEntryList addressEntryList;
     private final NetworkParameters params;
@@ -106,9 +111,10 @@ public class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletService(BitcoinNetwork bitcoinNetwork, SignatureService signatureService,
+    public WalletService(BitcoinNetwork bitcoinNetwork, RegTestHost regTestHost, SignatureService signatureService,
                          TradeWalletService tradeWalletService, AddressEntryList addressEntryList, UserAgent userAgent,
                          @Named(DIR_KEY) File walletDir, @Named(PREFIX_KEY) String walletPrefix) {
+        this.regTestHost = regTestHost;
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
         this.params = bitcoinNetwork.getParameters();
@@ -153,7 +159,16 @@ public class WalletService {
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
         if (params == RegTestParams.get()) {
-            walletAppKit.connectToLocalHost();   // You should run a regtest mode bitcoind locally.
+            if (regTestHost == RegTestHost.BITSQUARE) {
+                try {
+                    walletAppKit.setPeerNodes(new PeerAddress(InetAddress.getByName("188.226.179.109"), params.getPort()));
+                } catch (UnknownHostException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            else if (regTestHost == RegTestHost.LOCALHOST) {
+                walletAppKit.connectToLocalHost();   // You should run a regtest mode bitcoind locally.}
+            }
         }
         else if (params == MainNetParams.get()) {
             // Checkpoints are block headers that ship inside our app: for a new user, we pick the last header
