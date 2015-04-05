@@ -48,14 +48,16 @@ public class TradeWizardItem extends Button {
     public void inactive() {
         setId("trade-wizard-item-background-disabled");
         Label icon = new Label();
-        icon.setTextFill(Colors.MID_GREY);
-        AwesomeDude.setIcon(icon, AwesomeIcon.ANGLE_DOWN);
+        icon.setPadding(new Insets(-3, 6, 0, 0));
+        icon.setTextFill(Colors.LIGHT_GREY);
+        AwesomeDude.setIcon(icon, AwesomeIcon.SPINNER);
         setGraphic(icon);
     }
 
     public void active() {
         setId("trade-wizard-item-background-active");
         Label icon = new Label();
+        icon.setPadding(new Insets(-3, 6, 0, 0));
         icon.setTextFill(Colors.BLUE);
         AwesomeDude.setIcon(icon, AwesomeIcon.ARROW_RIGHT);
         setGraphic(icon);
@@ -64,6 +66,7 @@ public class TradeWizardItem extends Button {
     public void done() {
         setId("trade-wizard-item-background-completed");
         Label icon = new Label();
+        icon.setPadding(new Insets(-3, 6, 0, 0));
         icon.setTextFill(Colors.GREEN);
         AwesomeDude.setIcon(icon, AwesomeIcon.OK);
         setGraphic(icon);
