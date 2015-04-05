@@ -19,7 +19,16 @@ package io.bitsquare.p2p;
 
 import com.google.common.base.Objects;
 
+import java.io.IOException;
+
+import java.net.ServerSocket;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public final class Node {
+    private static final Logger log = LoggerFactory.getLogger(Node.class);
+
     public static final String NAME_KEY = "node.name";
     public static final String PORT_KEY = "node.port";
 
@@ -28,7 +37,7 @@ public final class Node {
      * href="https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?&page=103">
      * currently unassigned by IANA</a> (7366-7390).
      */
-    public static final int DEFAULT_PORT = 7366;
+    public static int DEFAULT_PORT = findFreeSystemPort();
 
     private final String name;
     private final String ip;
@@ -69,6 +78,19 @@ public final class Node {
      */
     public Node withPort(int newPort) {
         return Node.at(this.name, this.ip, newPort);
+    }
+
+    private static int findFreeSystemPort() {
+        int port = 7366;
+        try {
+            ServerSocket server = new ServerSocket(0);
+            port = server.getLocalPort();
+            server.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return port;
     }
 
     @Override

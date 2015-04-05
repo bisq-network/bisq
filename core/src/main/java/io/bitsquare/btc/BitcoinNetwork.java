@@ -29,7 +29,7 @@ public enum BitcoinNetwork {
     REGTEST(RegTestParams.get());
 
     public static final String KEY = "bitcoin.network";
-    public static final BitcoinNetwork DEFAULT = TESTNET;
+    public static final BitcoinNetwork DEFAULT = REGTEST;
 
     private final NetworkParameters parameters;
 
