@@ -137,7 +137,6 @@
             <!--<TableColumn text="Country" fx:id="countryColumn" minWidth="60"/>-->
             <TableColumn text="Bank transfer type" fx:id="bankAccountTypeColumn" minWidth="130"/>
             <TableColumn text="" fx:id="directionColumn" minWidth="80" sortable="false"/>
-            <TableColumn text="Online" fx:id="statusColumn" minWidth="20" sortable="false"/>
         </columns>
     </TableView>
 
