@@ -22,6 +22,7 @@ import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.SellerAsOffererTrade;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
@@ -36,9 +37,10 @@ import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignDepositTx;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessFiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessRequestPayDepositMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SendPayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SendPayoutTxFinalizedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.SendRequestPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SignAndPublishPayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SignAndFinalizePayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
 import io.bitsquare.trade.states.OffererTradeState;
 
 import org.slf4j.Logger;
@@ -71,7 +73,10 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void applyMailboxMessage(MailboxMessage mailboxMessage) {
+    public void applyMailboxMessage(MailboxMessage mailboxMessage, Trade trade) {
+        if (trade == null)
+            this.trade = trade;
+
         log.debug("setMailboxMessage " + mailboxMessage);
         // Might be called twice, so check that its only processed once
         if (!processModel.isMailboxMessageProcessed()) {
@@ -201,8 +206,9 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
 
         taskRunner.addTasks(
                 VerifyTakeOfferFeePayment.class,
-                SignAndPublishPayoutTx.class,
-                SendPayoutTxPublishedMessage.class
+                SignAndFinalizePayoutTx.class,
+                SendPayoutTxFinalizedMessage.class,
+                SetupPayoutTxLockTimeReachedListener.class
         );
         taskRunner.run();
     }

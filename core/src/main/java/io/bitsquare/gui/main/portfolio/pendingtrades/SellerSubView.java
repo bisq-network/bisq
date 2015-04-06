@@ -21,6 +21,7 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.CompletedView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.ConfirmFiatReceivedView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeWizardItem;
+import io.bitsquare.gui.main.portfolio.pendingtrades.steps.WaitPayoutLockTimeView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.WaitTxInBlockchainView;
 import io.bitsquare.locale.BSResources;
 
@@ -33,6 +34,7 @@ public class SellerSubView extends TradeSubView {
     private TradeWizardItem waitTxInBlockchain;
     private TradeWizardItem waitFiatStarted;
     private TradeWizardItem confirmFiatReceived;
+    private TradeWizardItem payoutUnlock;
     private TradeWizardItem completed;
 
 
@@ -59,9 +61,10 @@ public class SellerSubView extends TradeSubView {
         waitTxInBlockchain = new TradeWizardItem(WaitTxInBlockchainView.class, "Wait for blockchain confirmation");
         waitFiatStarted = new TradeWizardItem(WaitTxInBlockchainView.class, "Wait for payment started");
         confirmFiatReceived = new TradeWizardItem(ConfirmFiatReceivedView.class, "Confirm payment received");
+        payoutUnlock = new TradeWizardItem(WaitPayoutLockTimeView.class, "Wait for payout unlock");
         completed = new TradeWizardItem(CompletedView.class, "Completed");
 
-        leftVBox.getChildren().addAll(waitTxInBlockchain, waitFiatStarted, confirmFiatReceived, completed);
+        leftVBox.getChildren().addAll(waitTxInBlockchain, waitFiatStarted, confirmFiatReceived, payoutUnlock, completed);
     }
 
 
@@ -76,6 +79,7 @@ public class SellerSubView extends TradeSubView {
         waitTxInBlockchain.inactive();
         waitFiatStarted.inactive();
         confirmFiatReceived.inactive();
+        payoutUnlock.inactive();
         completed.inactive();
 
         if (tradeStepDetailsView != null)
@@ -129,14 +133,23 @@ public class SellerSubView extends TradeSubView {
                     waitTxInBlockchain.done();
                     waitFiatStarted.done();
                     showItem(confirmFiatReceived);
+                    ((ConfirmFiatReceivedView) tradeStepDetailsView).setStatusText("Sending message to trading peer transaction...");
                 }
+                break;
+            case SELLER_PAYOUT_FINALIZED:
+                waitTxInBlockchain.done();
+                waitFiatStarted.done();
+                confirmFiatReceived.done();
+                showItem(payoutUnlock);
 
-                ((ConfirmFiatReceivedView) tradeStepDetailsView).setStatusText("Sending message to trading peer transaction...");
+                ((WaitPayoutLockTimeView) tradeStepDetailsView).setInfoLabelText("The payout transaction is signed and finalized by both parties." +
+                        "\nFor reducing bank chargeback risks you need to wait until the payout gets unlocked to transfer your Bitcoin.");
                 break;
             case SELLER_COMPLETED:
                 waitTxInBlockchain.done();
                 waitFiatStarted.done();
                 confirmFiatReceived.done();
+                payoutUnlock.done();
                 showItem(completed);
 
                 CompletedView completedView = (CompletedView) tradeStepDetailsView;

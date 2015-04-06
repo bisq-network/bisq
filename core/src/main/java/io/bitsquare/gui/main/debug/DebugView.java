@@ -32,7 +32,7 @@ import io.bitsquare.trade.protocol.trade.BuyerAsOffererProtocol;
 import io.bitsquare.trade.protocol.trade.SellerAsTakerProtocol;
 import io.bitsquare.trade.protocol.trade.tasks.buyer.CreateAndSignPayoutTx;
 import io.bitsquare.trade.protocol.trade.tasks.buyer.CreateDepositTxInputs;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.ProcessPayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.ProcessPayoutTxFinalizedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.buyer.ProcessRequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.tasks.buyer.ProcessRequestPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.tasks.buyer.SendDepositTxPublishedMessage;
@@ -46,9 +46,9 @@ import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignDepositTx;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessFiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessRequestPayDepositMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SendPayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SendPayoutTxFinalizedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.SendRequestDepositTxInputsMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SignAndPublishPayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SignAndFinalizePayoutTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOffererAccount;
@@ -111,7 +111,7 @@ public class DebugView extends InitializableView {
                         VerifyTakeOfferFeePayment.class,
                         SendFiatTransferStartedMessage.class,
 
-                        ProcessPayoutTxPublishedMessage.class,
+                        ProcessPayoutTxFinalizedMessage.class,
                         Boolean.class, /* used as seperator*/
                         
 
@@ -129,9 +129,9 @@ public class DebugView extends InitializableView {
 
                         ProcessFiatTransferStartedMessage.class,
 
-                        SignAndPublishPayoutTx.class,
+                        SignAndFinalizePayoutTx.class,
                         VerifyOfferFeePayment.class,
-                        SendPayoutTxPublishedMessage.class
+                        SendPayoutTxFinalizedMessage.class
                 )
         );
 

@@ -47,6 +47,7 @@ public class CreateAndSignPayoutTx extends TradeTask {
                     sellerPayoutAmount,
                     processModel.getAddressEntry(),
                     processModel.tradingPeer.getPayoutAddressString(),
+                    trade.getLockTimeDelta(),
                     processModel.getTradeWalletPubKey(),
                     processModel.tradingPeer.getTradeWalletPubKey(),
                     processModel.getArbitratorPubKey());

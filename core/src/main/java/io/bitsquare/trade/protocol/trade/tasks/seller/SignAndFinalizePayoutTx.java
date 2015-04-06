@@ -27,53 +27,39 @@ import io.bitsquare.trade.states.TakerTradeState;
 
 import org.bitcoinj.core.Transaction;
 
-import com.google.common.util.concurrent.FutureCallback;
-
-import org.jetbrains.annotations.NotNull;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SignAndPublishPayoutTx extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SignAndPublishPayoutTx.class);
+public class SignAndFinalizePayoutTx extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SignAndFinalizePayoutTx.class);
 
-    public SignAndPublishPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public SignAndFinalizePayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            processModel.getTradeWalletService().signAndPublishPayoutTx(
+            Transaction transaction = processModel.getTradeWalletService().signAndFinalizePayoutTx(
                     trade.getDepositTx(),
                     processModel.tradingPeer.getSignature(),
                     processModel.tradingPeer.getPayoutAmount(),
                     processModel.getPayoutAmount(),
                     processModel.tradingPeer.getPayoutAddressString(),
                     processModel.getAddressEntry(),
+                    trade.getLockTimeDelta(),
                     processModel.tradingPeer.getTradeWalletPubKey(),
                     processModel.getTradeWalletPubKey(),
-                    processModel.getArbitratorPubKey(),
-                    new FutureCallback<Transaction>() {
-                        @Override
-                        public void onSuccess(Transaction transaction) {
-                            processModel.setPayoutTx(transaction);
+                    processModel.getArbitratorPubKey()
+            );
 
-                            if (trade instanceof TakerTrade)
-                                trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_PUBLISHED);
-                            else if (trade instanceof OffererTrade)
-                                trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_PUBLISHED);
+            trade.setPayoutTx(transaction);
+            if (trade instanceof TakerTrade)
+                trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_FINALIZED);
+            else if (trade instanceof OffererTrade)
+                trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_FINALIZED);
 
-                            complete();
-                        }
-
-                        @Override
-                        public void onFailure(@NotNull Throwable t) {
-                            t.printStackTrace();
-                            trade.setThrowable(t);
-                            failed(t);
-                        }
-                    });
+            complete();
         } catch (Throwable t) {
             t.printStackTrace();
             trade.setThrowable(t);

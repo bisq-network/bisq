@@ -32,21 +32,27 @@ public class FiatAccount implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
 
+    public static final long HOUR_IN_BLOCKS = 6;
+    public static final long DAY_IN_BLOCKS = HOUR_IN_BLOCKS * 24;
+    public static final long WEEK_IN_BLOCKS = DAY_IN_BLOCKS * 7;
+
     public enum Type {
-        IRC("", ""),
-        SEPA("IBAN", "BIC"),
-        WIRE("primary ID", "secondary ID"),
-        INTERNATIONAL("primary ID", "secondary ID"),
-        OK_PAY("primary ID", "secondary ID"),
-        NET_TELLER("primary ID", "secondary ID"),
-        PERFECT_MONEY("primary ID", "secondary ID");
+        IRC("", "", 1),
+        SEPA("IBAN", "BIC", WEEK_IN_BLOCKS),
+        WIRE("primary ID", "secondary ID", WEEK_IN_BLOCKS),
+        INTERNATIONAL("primary ID", "secondary ID", 2 * WEEK_IN_BLOCKS),
+        OK_PAY("primary ID", "secondary ID", HOUR_IN_BLOCKS),
+        NET_TELLER("primary ID", "secondary ID", HOUR_IN_BLOCKS),
+        PERFECT_MONEY("primary ID", "secondary ID", HOUR_IN_BLOCKS);
 
         public final String primaryId;
         public final String secondaryId;
+        public final long lockTimeDelta;
 
-        Type(String primaryId, String secondaryId) {
+        Type(String primaryId, String secondaryId, long lockTimeDelta) {
             this.primaryId = primaryId;
             this.secondaryId = secondaryId;
+            this.lockTimeDelta = lockTimeDelta;
         }
 
         public static ArrayList<Type> getAllBankAccountTypes() {

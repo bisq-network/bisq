@@ -23,7 +23,7 @@ import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
 import io.bitsquare.trade.states.OffererTradeState;
 import io.bitsquare.trade.states.StateUtil;
 import io.bitsquare.trade.states.TakerTradeState;
@@ -31,17 +31,17 @@ import io.bitsquare.trade.states.TakerTradeState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendPayoutTxPublishedMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SendPayoutTxPublishedMessage.class);
+public class SendPayoutTxFinalizedMessage extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SendPayoutTxFinalizedMessage.class);
 
-    public SendPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
+    public SendPayoutTxFinalizedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(processModel.getId(), processModel.getPayoutTx());
+            PayoutTxFinalizedMessage tradeMessage = new PayoutTxFinalizedMessage(processModel.getId(), trade.getPayoutTx());
             processModel.getMessageService().sendMessage(trade.getTradingPeer(),
                     tradeMessage,
                     processModel.tradingPeer.getP2pSigPubKey(),
@@ -52,9 +52,9 @@ public class SendPayoutTxPublishedMessage extends TradeTask {
                             log.trace("PayoutTxPublishedMessage successfully arrived at peer");
 
                             if (trade instanceof TakerTrade)
-                                trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_PUBLISHED_MSG_SENT);
+                                trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_FINALIZED_MSG_SENT);
                             else if (trade instanceof OffererTrade)
-                                trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_PUBLISHED_MSG_SENT);
+                                trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_FINALIZED_MSG_SENT);
 
                             complete();
                         }

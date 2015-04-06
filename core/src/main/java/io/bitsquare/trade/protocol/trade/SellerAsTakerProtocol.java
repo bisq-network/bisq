@@ -21,6 +21,7 @@ import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.trade.SellerAsTakerTrade;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositMessage;
@@ -31,10 +32,11 @@ import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignDepositTx;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessFiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessRequestPayDepositMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SendPayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SendPayoutTxFinalizedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.SendRequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.SendRequestPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SignAndPublishPayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SignAndFinalizePayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
 import io.bitsquare.trade.protocol.trade.tasks.taker.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOfferFeePayment;
@@ -71,7 +73,10 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void applyMailboxMessage(MailboxMessage mailboxMessage) {
+    public void applyMailboxMessage(MailboxMessage mailboxMessage, Trade trade) {
+        if (trade == null)
+            this.trade = trade;
+
         log.debug("setMailboxMessage " + mailboxMessage);
         // Might be called twice, so check that its only processed once
         if (!processModel.isMailboxMessageProcessed()) {
@@ -177,8 +182,9 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
         taskRunner.addTasks(
                 VerifyOfferFeePayment.class,
-                SignAndPublishPayoutTx.class,
-                SendPayoutTxPublishedMessage.class
+                SignAndFinalizePayoutTx.class,
+                SendPayoutTxFinalizedMessage.class,
+                SetupPayoutTxLockTimeReachedListener.class
         );
         taskRunner.run();
     }

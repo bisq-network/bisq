@@ -356,4 +356,11 @@ public class BSFormatter {
         Double.parseDouble(input);
         return input;
     }
+
+    public String getUnlockDate(long missingBlocks) {
+        DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
+        DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.SHORT, locale);
+        Date unlockDate = new Date(new Date().getTime() + missingBlocks * 10 * 60 * 1000);
+        return dateFormatter.format(unlockDate) + " " + timeFormatter.format(unlockDate);
+    }
 }

@@ -22,6 +22,7 @@ import io.bitsquare.gui.main.portfolio.pendingtrades.steps.CompletedView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.StartFiatView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.WaitFiatReceivedView;
+import io.bitsquare.gui.main.portfolio.pendingtrades.steps.WaitPayoutLockTimeView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.WaitTxInBlockchainView;
 import io.bitsquare.locale.BSResources;
 
@@ -34,6 +35,7 @@ public class BuyerSubView extends TradeSubView {
     private TradeWizardItem waitTxInBlockchain;
     private TradeWizardItem startFiat;
     private TradeWizardItem waitFiatReceived;
+    private TradeWizardItem payoutUnlock;
     private TradeWizardItem completed;
 
 
@@ -60,9 +62,10 @@ public class BuyerSubView extends TradeSubView {
         waitTxInBlockchain = new TradeWizardItem(WaitTxInBlockchainView.class, "Wait for blockchain confirmation");
         startFiat = new TradeWizardItem(StartFiatView.class, "Start payment");
         waitFiatReceived = new TradeWizardItem(WaitFiatReceivedView.class, "Wait until payment has arrived");
+        payoutUnlock = new TradeWizardItem(WaitPayoutLockTimeView.class, "Wait for payout unlock");
         completed = new TradeWizardItem(CompletedView.class, "Completed");
 
-        leftVBox.getChildren().addAll(waitTxInBlockchain, startFiat, waitFiatReceived, completed);
+        leftVBox.getChildren().addAll(waitTxInBlockchain, startFiat, waitFiatReceived, payoutUnlock, completed);
     }
 
 
@@ -110,10 +113,20 @@ public class BuyerSubView extends TradeSubView {
                                 "the Bitcoin sellers payment account, the payout transaction will be published.",
                         model.getCurrencyCode()));
                 break;
+            case BUYER_PAYOUT_FINALIZED:
+                waitTxInBlockchain.done();
+                startFiat.done();
+                waitFiatReceived.done();
+                showItem(payoutUnlock);
+
+                ((WaitPayoutLockTimeView) tradeStepDetailsView).setInfoLabelText("The payout transaction is signed and finalized by both parties." +
+                        "\nFor reducing bank chargeback risks you need to wait until the payout gets unlocked to transfer your Bitcoin.");
+                break;
             case BUYER_COMPLETED:
                 waitTxInBlockchain.done();
                 startFiat.done();
                 waitFiatReceived.done();
+                payoutUnlock.done();
                 showItem(completed);
 
                 CompletedView completedView = (CompletedView) tradeStepDetailsView;

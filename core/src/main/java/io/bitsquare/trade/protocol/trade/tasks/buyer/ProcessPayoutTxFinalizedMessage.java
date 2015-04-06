@@ -22,7 +22,7 @@ import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.protocol.trade.messages.PayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
 import io.bitsquare.trade.states.OffererTradeState;
 import io.bitsquare.trade.states.TakerTradeState;
 
@@ -32,26 +32,26 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.checkTradeId;
 
-public class ProcessPayoutTxPublishedMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(ProcessPayoutTxPublishedMessage.class);
+public class ProcessPayoutTxFinalizedMessage extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(ProcessPayoutTxFinalizedMessage.class);
 
-    public ProcessPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
+    public ProcessPayoutTxFinalizedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            PayoutTxPublishedMessage message = (PayoutTxPublishedMessage) processModel.getTradeMessage();
+            PayoutTxFinalizedMessage message = (PayoutTxFinalizedMessage) processModel.getTradeMessage();
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);
 
             trade.setPayoutTx(checkNotNull(message.payoutTx));
 
             if (trade instanceof OffererTrade)
-                trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_PUBLISHED);
+                trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_FINALIZED);
             else if (trade instanceof TakerTrade)
-                trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_PUBLISHED);
+                trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_FINALIZED);
 
             complete();
         } catch (Throwable t) {

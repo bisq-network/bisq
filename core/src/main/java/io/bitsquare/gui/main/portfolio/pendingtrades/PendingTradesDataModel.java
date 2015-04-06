@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
 import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.viewfx.model.Activatable;
 import io.bitsquare.common.viewfx.model.DataModel;
@@ -35,6 +36,7 @@ import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.states.TradeState;
 import io.bitsquare.user.User;
 
+import org.bitcoinj.core.BlockChainListener;
 import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
@@ -60,6 +62,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
 
     private final TradeManager tradeManager;
     private final WalletService walletService;
+    private TradeWalletService tradeWalletService;
     private final User user;
     private Navigation navigation;
 
@@ -80,9 +83,11 @@ class PendingTradesDataModel implements Activatable, DataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradesDataModel(TradeManager tradeManager, WalletService walletService, User user, Navigation navigation) {
+    public PendingTradesDataModel(TradeManager tradeManager, WalletService walletService, TradeWalletService tradeWalletService, User user, Navigation
+            navigation) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
+        this.tradeWalletService = tradeWalletService;
         this.user = user;
         this.navigation = navigation;
 
@@ -281,5 +286,24 @@ class PendingTradesDataModel implements Activatable, DataModel {
         return txId;
     }
 
+    String getPayoutTxId() {
+        return trade.getPayoutTx().getHashAsString();
+    }
+
+    void addBlockChainListener(BlockChainListener blockChainListener) {
+        tradeWalletService.addBlockChainListener(blockChainListener);
+    }
+
+    void removeBlockChainListener(BlockChainListener blockChainListener) {
+        tradeWalletService.removeBlockChainListener(blockChainListener);
+    }
+
+    public long getLockTime() {
+        return trade.getPayoutTx().getLockTime();
+    }
+
+    public int getBestChainHeight() {
+        return tradeWalletService.getBestChainHeight();
+    }
 }
 

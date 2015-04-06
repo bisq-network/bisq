@@ -42,7 +42,7 @@ public class BroadcastTakeOfferFeeTx extends TradeTask {
     @Override
     protected void doRun() {
         try {
-            processModel.getTradeWalletService().broadcastTakeOfferFeeTx(processModel.getTakeOfferFeeTx(),
+            processModel.getTradeWalletService().broadcastTx(processModel.getTakeOfferFeeTx(),
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {

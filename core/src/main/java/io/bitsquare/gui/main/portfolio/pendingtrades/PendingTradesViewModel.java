@@ -27,6 +27,7 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.states.OffererTradeState;
 import io.bitsquare.trade.states.TakerTradeState;
 
+import org.bitcoinj.core.BlockChainListener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
@@ -58,11 +59,13 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         SELLER_WAIT_PAYMENT_STARTED,
         SELLER_CONFIRM_RECEIVE_PAYMENT,
         SELLER_SEND_PUBLISHED_MSG,
+        SELLER_PAYOUT_FINALIZED,
         SELLER_COMPLETED,
 
         BUYER_WAIT_TX_CONF,
         BUYER_START_PAYMENT,
         BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED,
+        BUYER_PAYOUT_FINALIZED,
         BUYER_COMPLETED,
 
         MESSAGE_SENDING_FAILED,
@@ -133,6 +136,10 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public ReadOnlyStringProperty getTxId() {
         return txId;
+    }
+
+    public String getPayoutTxId() {
+        return dataModel.getPayoutTxId();
     }
 
     public ReadOnlyBooleanProperty getWithdrawalButtonDisable() {
@@ -224,6 +231,26 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return formatter.formatDateTime(value);
     }
 
+    public void addBlockChainListener(BlockChainListener blockChainListener) {
+        dataModel.addBlockChainListener(blockChainListener);
+    }
+
+    public void removeBlockChainListener(BlockChainListener blockChainListener) {
+        dataModel.removeBlockChainListener(blockChainListener);
+    }
+
+    public long getLockTime() {
+        return dataModel.getLockTime();
+    }
+
+    public int getBestChainHeight() {
+        return dataModel.getBestChainHeight();
+    }
+
+    public String getUnlockDate(long missingBlocks) {
+        return formatter.getUnlockDate(missingBlocks);
+    }
+
     // payment
     public String getPaymentMethod() {
         assert dataModel.getContract() != null;
@@ -304,11 +331,17 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
                     case FIAT_PAYMENT_RECEIVED:
                         break;
-                    case PAYOUT_PUBLISHED:
+                    case PAYOUT_FINALIZED:
                         viewState.set(ViewState.SELLER_SEND_PUBLISHED_MSG);
                         break;
-                    case PAYOUT_PUBLISHED_MSG_SENT:
+                    case PAYOUT_FINALIZED_MSG_SENT:
+                        viewState.set(ViewState.SELLER_PAYOUT_FINALIZED);
+                        break;
+                    case PAYOUT_BROAD_CASTED:
                         viewState.set(ViewState.SELLER_COMPLETED);
+                        break;
+                    case PAYOUT_BROAD_CASTED_FAILED:
+                        viewState.set(ViewState.EXCEPTION);
                         break;
 
                     case MESSAGE_SENDING_FAILED:
@@ -345,11 +378,17 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
                     case FIAT_PAYMENT_RECEIVED:
                         break;
-                    case PAYOUT_PUBLISHED:
+                    case PAYOUT_FINALIZED:
                         viewState.set(ViewState.SELLER_SEND_PUBLISHED_MSG);
                         break;
-                    case PAYOUT_PUBLISHED_MSG_SENT:
+                    case PAYOUT_FINALIZED_MSG_SENT:
+                        viewState.set(ViewState.SELLER_PAYOUT_FINALIZED);
+                        break;
+                    case PAYOUT_BROAD_CASTED:
                         viewState.set(ViewState.SELLER_COMPLETED);
+                        break;
+                    case PAYOUT_BROAD_CASTED_FAILED:
+                        viewState.set(ViewState.EXCEPTION);
                         break;
 
                     case MESSAGE_SENDING_FAILED:
@@ -393,8 +432,15 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                         break;
 
                     case FIAT_PAYMENT_RECEIVED:
-                    case PAYOUT_PUBLISHED:
+                    case PAYOUT_FINALIZED:
+                    case PAYOUT_FINALIZED_MSG_SENT:
+                        viewState.set(ViewState.BUYER_PAYOUT_FINALIZED);
+                        break;
+                    case PAYOUT_BROAD_CASTED:
                         viewState.set(ViewState.BUYER_COMPLETED);
+                        break;
+                    case PAYOUT_BROAD_CASTED_FAILED:
+                        viewState.set(ViewState.EXCEPTION);
                         break;
 
                     case MESSAGE_SENDING_FAILED:
@@ -432,8 +478,15 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                         break;
 
                     case FIAT_PAYMENT_RECEIVED:
-                    case PAYOUT_PUBLISHED:
+                    case PAYOUT_FINALIZED:
+                    case PAYOUT_FINALIZED_MSG_SENT:
+                        viewState.set(ViewState.BUYER_PAYOUT_FINALIZED);
+                        break;
+                    case PAYOUT_BROAD_CASTED:
                         viewState.set(ViewState.BUYER_COMPLETED);
+                        break;
+                    case PAYOUT_BROAD_CASTED_FAILED:
+                        viewState.set(ViewState.EXCEPTION);
                         break;
 
                     case MESSAGE_SENDING_FAILED:

@@ -255,7 +255,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                                     "Please try later again." + msg);
                             takeOfferRequested = false;
                             break;
-                        case PAYOUT_PUBLISHED:
+                        case PAYOUT_FINALIZED:
                             break;
                         case EXCEPTION:
                             errorMessage.set(msg);
@@ -292,7 +292,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                                     "Please try later again." + msg);
                             takeOfferRequested = false;
                             break;
-                        case PAYOUT_PUBLISHED:
+                        case PAYOUT_FINALIZED:
                             break;
                         case EXCEPTION:
                             errorMessage.set(msg);

@@ -54,7 +54,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
         Coin balance = model.walletService.getBalanceForAddress(addressEntry.getAddress());
         if (balance.compareTo(totalsNeeded) >= 0) {
 
-            model.tradeWalletService.broadcastCreateOfferFeeTx(model.getTransaction(), new FutureCallback<Transaction>() {
+            model.tradeWalletService.broadcastTx(model.getTransaction(), new FutureCallback<Transaction>() {
                 @Override
                 public void onSuccess(Transaction transaction) {
                     log.info("Broadcast of offer fee payment succeeded: transaction = " + transaction.toString());

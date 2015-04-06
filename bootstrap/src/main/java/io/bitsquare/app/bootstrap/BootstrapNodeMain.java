@@ -19,6 +19,7 @@ package io.bitsquare.app.bootstrap;
 
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.BitsquareExecutable;
+import io.bitsquare.p2p.BootstrapNodes;
 import io.bitsquare.p2p.Node;
 
 import joptsimple.OptionParser;
@@ -34,7 +35,7 @@ public class BootstrapNodeMain extends BitsquareExecutable {
         parser.accepts(Node.NAME_KEY, description("Name of this node", null))
                 .withRequiredArg()
                 .isRequired();
-        parser.accepts(Node.PORT_KEY, description("Port to listen on", Node.DEFAULT_PORT))
+        parser.accepts(Node.PORT_KEY, description("Port to listen on", BootstrapNodes.DEFAULT_PORT))
                 .withRequiredArg()
                 .ofType(int.class);
     }

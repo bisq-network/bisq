@@ -19,8 +19,10 @@ package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.MessageHandler;
+import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
 import io.bitsquare.trade.states.OffererTradeState;
 import io.bitsquare.trade.states.TakerTradeState;
 
@@ -51,7 +53,32 @@ public abstract class TradeProtocol {
         processModel.getMessageService().removeMessageHandler(messageHandler);
     }
 
-    abstract public void applyMailboxMessage(MailboxMessage mailboxMessage);
+    abstract public void applyMailboxMessage(MailboxMessage mailboxMessage, Trade trade);
+
+    public void checkPayoutTxTimeLock(Trade trade) {
+        if (trade == null)
+            this.trade = trade;
+
+        boolean needPayoutTxBroadcast = false;
+        if (trade instanceof TakerTrade)
+            needPayoutTxBroadcast = trade.processStateProperty().get() == TakerTradeState.ProcessState.PAYOUT_FINALIZED
+                    || trade.processStateProperty().get() == TakerTradeState.ProcessState.PAYOUT_FINALIZED_MSG_SENT;
+        else if (trade instanceof OffererTrade)
+            needPayoutTxBroadcast = trade.processStateProperty().get() == OffererTradeState.ProcessState.PAYOUT_FINALIZED
+                    || trade.processStateProperty().get() == OffererTradeState.ProcessState.PAYOUT_FINALIZED_MSG_SENT;
+
+        if (needPayoutTxBroadcast) {
+            TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
+                    () -> {
+                        log.debug("taskRunner needPayoutTxBroadcast completed");
+                        processModel.onComplete();
+                    },
+                    this::handleTaskRunnerFault);
+
+            taskRunner.addTasks(SetupPayoutTxLockTimeReachedListener.class);
+            taskRunner.run();
+        }
+    }
 
     protected void startTimeout() {
         log.debug("startTimeout");

@@ -169,10 +169,11 @@ abstract public class Trade implements Model, Serializable {
         createProtocol();
 
         if (mailboxMessage != null) {
-            tradeProtocol.applyMailboxMessage(mailboxMessage);
+            tradeProtocol.applyMailboxMessage(mailboxMessage, this);
             // After applied to protocol we remove it
             mailboxMessage = null;
         }
+        tradeProtocol.checkPayoutTxTimeLock(this);
     }
 
     protected void initStateProperties() {
@@ -331,6 +332,11 @@ abstract public class Trade implements Model, Serializable {
         this.tradeAmount = tradeAmount;
         tradeAmountProperty.set(tradeAmount);
         tradeVolumeProperty.set(getTradeVolume());
+    }
+
+    // TODO support case of multiple fiat accounts
+    public long getLockTimeDelta() {
+        return getOffer().getFiatAccountType().lockTimeDelta;
     }
 
     @Nullable

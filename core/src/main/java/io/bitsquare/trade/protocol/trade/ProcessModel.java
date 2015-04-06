@@ -69,7 +69,6 @@ public class ProcessModel implements Model, Serializable {
     transient private boolean mailboxMessageProcessed;
     transient private TradeMessage tradeMessage;
     private String takeOfferFeeTxId;
-    private Transaction payoutTx;
     private List<TransactionOutput> connectedOutputsForAllInputs;
     private Coin payoutAmount;
     private Transaction preparedDepositTx;
@@ -164,15 +163,6 @@ public class ProcessModel implements Model, Serializable {
     @Nullable
     public boolean isMailboxMessageProcessed() {
         return mailboxMessageProcessed;
-    }
-
-    @Nullable
-    public Transaction getPayoutTx() {
-        return payoutTx;
-    }
-
-    public void setPayoutTx(Transaction payoutTx) {
-        this.payoutTx = payoutTx;
     }
 
     @Nullable

@@ -26,13 +26,13 @@ import java.io.Serializable;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-public class PayoutTxPublishedMessage extends TradeMessage implements MailboxMessage, Serializable {
+public class PayoutTxFinalizedMessage extends TradeMessage implements MailboxMessage, Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
 
     public final Transaction payoutTx;
 
-    public PayoutTxPublishedMessage(String tradeId, Transaction payoutTx) {
+    public PayoutTxFinalizedMessage(String tradeId, Transaction payoutTx) {
         super(tradeId);
         this.payoutTx = payoutTx;
     }

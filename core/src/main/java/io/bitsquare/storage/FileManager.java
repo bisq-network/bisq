@@ -252,7 +252,7 @@ public class FileManager<T> {
     private void saveNowInternal(T serializable) {
         long now = System.currentTimeMillis();
         saveToFile(serializable, dir, storageFile);
-        log.info("Save {} completed in {}msec", storageFile, System.currentTimeMillis() - now);
+        Platform.runLater(() -> log.info("Save {} completed in {}msec", storageFile, System.currentTimeMillis() - now));
     }
 
     private void saveToFile(T serializable, File dir, File storageFile) {
@@ -289,7 +289,6 @@ public class FileManager<T> {
             renameTempFileToFile(tempFile, storageFile);
         } catch (Throwable t) {
             log.debug("storageFile " + storageFile.toString());
-            log.debug("currentThread " + Thread.currentThread());
             t.printStackTrace();
             log.error("Error at saveToFile: " + t.getMessage());
         } finally {

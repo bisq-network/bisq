@@ -23,11 +23,13 @@ import io.bitsquare.btc.exceptions.WalletException;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.BlockChainListener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.StoredBlock;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
@@ -118,11 +120,6 @@ public class TradeWalletService {
         return createOfferFeeTx;
     }
 
-    public void broadcastCreateOfferFeeTx(Transaction createOfferFeeTx, FutureCallback<Transaction> callback) {
-        ListenableFuture<Transaction> future = walletAppKit.peerGroup().broadcastTransaction(createOfferFeeTx).future();
-        Futures.addCallback(future, callback);
-    }
-
     public Transaction createTakeOfferFeeTx(AddressEntry sellerAddressEntry) throws InsufficientMoneyException {
         Transaction takeOfferFeeTx = new Transaction(params);
         Coin fee = FeePolicy.TAKE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
@@ -139,8 +136,8 @@ public class TradeWalletService {
         return takeOfferFeeTx;
     }
 
-    public void broadcastTakeOfferFeeTx(Transaction takeOfferFeeTx, FutureCallback<Transaction> callback) {
-        ListenableFuture<Transaction> future = walletAppKit.peerGroup().broadcastTransaction(takeOfferFeeTx).future();
+    public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback) {
+        ListenableFuture<Transaction> future = walletAppKit.peerGroup().broadcastTransaction(tx).future();
         Futures.addCallback(future, callback);
     }
 
@@ -419,6 +416,7 @@ public class TradeWalletService {
                                         Coin sellerPayoutAmount,
                                         AddressEntry buyerAddressEntry,
                                         String sellerPayoutAddressString,
+                                        long lockTimeDelta,
                                         byte[] buyerPubKey,
                                         byte[] sellerPubKey,
                                         byte[] arbitratorPubKey)
@@ -438,6 +436,8 @@ public class TradeWalletService {
                 sellerPayoutAmount,
                 buyerAddressEntry.getAddressString(),
                 sellerPayoutAddressString);
+        preparedPayoutTx.setLockTime(wallet.getLastBlockSeenHeight() + lockTimeDelta);
+        preparedPayoutTx.getInputs().stream().forEach(i -> i.setSequenceNumber(0));
         // MS redeemScript
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
         Sha256Hash sigHash = preparedPayoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
@@ -454,16 +454,16 @@ public class TradeWalletService {
         return buyerSignature.encodeToDER();
     }
 
-    public void signAndPublishPayoutTx(Transaction depositTx,
-                                       byte[] buyerSignature,
-                                       Coin buyerPayoutAmount,
-                                       Coin sellerPayoutAmount,
-                                       String buyerAddressString,
-                                       AddressEntry sellerAddressEntry,
-                                       byte[] buyerPubKey,
-                                       byte[] sellerPubKey,
-                                       byte[] arbitratorPubKey,
-                                       FutureCallback<Transaction> callback)
+    public Transaction signAndFinalizePayoutTx(Transaction depositTx,
+                                               byte[] buyerSignature,
+                                               Coin buyerPayoutAmount,
+                                               Coin sellerPayoutAmount,
+                                               String buyerAddressString,
+                                               AddressEntry sellerAddressEntry,
+                                               long lockTimeDelta,
+                                               byte[] buyerPubKey,
+                                               byte[] sellerPubKey,
+                                               byte[] arbitratorPubKey)
             throws AddressFormatException, TransactionVerificationException, WalletException, SigningException {
         log.trace("signAndPublishPayoutTx called");
         log.trace("depositTx " + depositTx.toString());
@@ -482,6 +482,8 @@ public class TradeWalletService {
                 sellerPayoutAmount,
                 buyerAddressString,
                 sellerAddressEntry.getAddressString());
+        payoutTx.setLockTime(wallet.getLastBlockSeenHeight() + lockTimeDelta);
+        payoutTx.getInputs().stream().forEach(i -> i.setSequenceNumber(0));
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
         Sha256Hash sigHash = payoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
         ECKey.ECDSASignature sellerSignature = sellerAddressEntry.getKeyPair().sign(sigHash).toCanonicalised();
@@ -508,8 +510,25 @@ public class TradeWalletService {
 
         printTxWithInputs("payoutTx", payoutTx);
 
-        ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(payoutTx).future();
-        Futures.addCallback(broadcastComplete, callback);
+        // As we use lockTime the tx will not be relayed as it is not considered standard.
+        // We need to broadcast on our own when we reahced the block height. Both peers will do the broadcast.
+        return payoutTx;
+    }
+
+    public ListenableFuture<StoredBlock> getBlockHeightFuture(Transaction transaction) {
+        return walletAppKit.chain().getHeightFuture((int) transaction.getLockTime());
+    }
+
+    public int getBestChainHeight() {
+        return walletAppKit.chain().getBestChainHeight();
+    }
+
+    public void addBlockChainListener(BlockChainListener blockChainListener) {
+        walletAppKit.chain().addListener(blockChainListener);
+    }
+
+    public void removeBlockChainListener(BlockChainListener blockChainListener) {
+        walletAppKit.chain().removeListener(blockChainListener);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -639,9 +658,9 @@ public class TradeWalletService {
     }
 
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// Inner classes
-///////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Inner classes
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public class Result {
         private final List<TransactionOutput> connectedOutputsForAllInputs;

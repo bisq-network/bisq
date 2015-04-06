@@ -17,6 +17,7 @@
 
 package io.bitsquare.app.bootstrap;
 
+import io.bitsquare.p2p.BootstrapNodes;
 import io.bitsquare.p2p.Node;
 
 import net.tomp2p.connection.ChannelClientConfiguration;
@@ -52,7 +53,7 @@ public class BootstrapNode {
 
     public void start() {
         String name = env.getRequiredProperty(Node.NAME_KEY);
-        int port = env.getProperty(Node.PORT_KEY, Integer.class, Node.DEFAULT_PORT);
+        int port = env.getProperty(Node.PORT_KEY, Integer.class, BootstrapNodes.DEFAULT_PORT);
         try {
             Number160 peerId = Number160.createHash(name);
 
