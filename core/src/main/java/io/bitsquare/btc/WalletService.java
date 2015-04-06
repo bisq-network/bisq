@@ -159,7 +159,7 @@ public class WalletService {
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
         if (params == RegTestParams.get()) {
-            if (regTestHost == RegTestHost.BITSQUARE) {
+            if (regTestHost == RegTestHost.DIGITAL_OCEAN_1) {
                 try {
                     walletAppKit.setPeerNodes(new PeerAddress(InetAddress.getByName("188.226.179.109"), params.getPort()));
                 } catch (UnknownHostException e) {

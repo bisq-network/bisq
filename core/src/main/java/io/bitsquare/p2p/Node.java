@@ -32,11 +32,6 @@ public final class Node {
     public static final String NAME_KEY = "node.name";
     public static final String PORT_KEY = "node.port";
 
-    /**
-     * Default port is one <a
-     * href="https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?&page=103">
-     * currently unassigned by IANA</a> (7366-7390).
-     */
     public static int DEFAULT_PORT = findFreeSystemPort();
 
     private final String name;

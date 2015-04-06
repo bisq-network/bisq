@@ -20,8 +20,8 @@ package io.bitsquare.btc;
 public enum RegTestHost {
 
     LOCALHOST(),
-    BITSQUARE(); // 188.226.179.109
+    DIGITAL_OCEAN_1(); // 188.226.179.109
 
     public static final String KEY = "bitcoin.regtest.host";
-    public static final RegTestHost DEFAULT = BITSQUARE;
+    public static final RegTestHost DEFAULT = DIGITAL_OCEAN_1;
 }

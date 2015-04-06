@@ -19,9 +19,13 @@ package io.bitsquare.app;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.app.gui.BitsquareAppMain;
+import io.bitsquare.btc.BitcoinNetwork;
+import io.bitsquare.btc.RegTestHost;
 import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.main.MainView;
+import io.bitsquare.p2p.BootstrapNodes;
+import io.bitsquare.p2p.tomp2p.TomP2PModule;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.util.Utilities;
 import io.bitsquare.util.spring.JOptCommandLinePropertySource;
@@ -67,6 +71,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
     private final String appName;
     private final String appDataDir;
+    private final String bootstrapNodePort;
 
     public BitsquareEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(options)));
@@ -85,6 +90,18 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(APP_DATA_DIR_KEY) :
                 appDataDir(userDataDir, appName);
 
+        String bitcoinNetwork = commandLineProperties.containsProperty(BitcoinNetwork.KEY) ?
+                (String) commandLineProperties.getProperty(BitcoinNetwork.KEY) :
+                BitcoinNetwork.DEFAULT.toString();
+
+        String regTestHost = commandLineProperties.containsProperty(RegTestHost.KEY) ?
+                (String) commandLineProperties.getProperty(RegTestHost.KEY) :
+                RegTestHost.DEFAULT.toString();
+
+        this.bootstrapNodePort = commandLineProperties.containsProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY) ?
+                (String) commandLineProperties.getProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY) :
+                getBootstrapNodePort(BitcoinNetwork.valueOf(bitcoinNetwork), RegTestHost.valueOf(regTestHost));
+
         MutablePropertySources propertySources = this.getPropertySources();
         propertySources.addFirst(commandLineProperties);
         try {
@@ -94,6 +111,19 @@ public class BitsquareEnvironment extends StandardEnvironment {
             propertySources.addLast(defaultProperties());
         } catch (Exception ex) {
             throw new BitsquareException(ex);
+        }
+    }
+
+    private String getBootstrapNodePort(BitcoinNetwork bitcoinNetwork, RegTestHost regTestHost) {
+        // We use default port 7366 for mainnet, 7367 for testnet and 7368 for regtest
+        if (bitcoinNetwork == BitcoinNetwork.REGTEST && regTestHost == RegTestHost.DIGITAL_OCEAN_1) {
+            return String.valueOf(BootstrapNodes.DEFAULT_PORT + 2);
+        }
+        else if (bitcoinNetwork == BitcoinNetwork.TESTNET) {
+            return String.valueOf(BootstrapNodes.DEFAULT_PORT + 1);
+        }
+        else {
+            return String.valueOf(BootstrapNodes.DEFAULT_PORT);
         }
     }
 
@@ -141,6 +171,8 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 setProperty(Storage.DIR_KEY, Paths.get(appDataDir, "db").toString());
 
                 setProperty(MainView.TITLE_KEY, appName);
+
+                setProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY, bootstrapNodePort);
             }
         });
     }

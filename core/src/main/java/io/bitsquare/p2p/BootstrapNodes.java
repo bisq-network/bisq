@@ -22,7 +22,9 @@ import java.util.List;
 
 public interface BootstrapNodes {
 
-    Node DIGITAL_OCEAN_1 = Node.at("digitalocean1.bitsquare.io", "188.226.179.109", 7366);
+    int DEFAULT_PORT = 7366;
+
+    Node DIGITAL_OCEAN_1 = Node.at("digitalocean1.bitsquare.io", "188.226.179.109", DEFAULT_PORT);
 
     /**
      * Alias to the default bootstrap node.
@@ -33,7 +35,7 @@ public interface BootstrapNodes {
      * A locally-running BootstrapNode instance.
      * Typically used only for testing. Not included in results from {@link #all()}.
      */
-    Node LOCALHOST = Node.at("localhost", "127.0.0.1", 7366);
+    Node LOCALHOST = Node.at("localhost", "127.0.0.1", DEFAULT_PORT);
 
     /**
      * All known public bootstrap nodes.
