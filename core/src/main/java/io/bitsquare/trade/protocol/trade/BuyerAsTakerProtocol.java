@@ -74,7 +74,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     public void applyMailboxMessage(MailboxMessage mailboxMessage, Trade trade) {
         if (trade == null)
             this.trade = trade;
-        
+
         log.debug("setMailboxMessage " + mailboxMessage);
         // Might be called twice, so check that its only processed once
         if (!processModel.isMailboxMessageProcessed()) {

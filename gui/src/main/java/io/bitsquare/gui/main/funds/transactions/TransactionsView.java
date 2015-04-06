@@ -18,8 +18,8 @@
 package io.bitsquare.gui.main.funds.transactions;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.common.view.ActivatableViewAndModel;
-import io.bitsquare.common.view.FxmlView;
+import io.bitsquare.gui.common.view.ActivatableViewAndModel;
+import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.util.Utilities;

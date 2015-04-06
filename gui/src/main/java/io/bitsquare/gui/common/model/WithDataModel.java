@@ -15,9 +15,15 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.common.view;
+package io.bitsquare.gui.common.model;
 
-import javafx.util.Callback;
+import static com.google.common.base.Preconditions.checkNotNull;
 
-public interface ViewFactory extends Callback<Class<?>, Object> {
+public abstract class WithDataModel<D> {
+
+    protected final D dataModel;
+
+    protected WithDataModel(D dataModel) {
+        this.dataModel = checkNotNull(dataModel, "Delegate object must not be null");
+    }
 }

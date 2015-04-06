@@ -30,7 +30,7 @@
 
     <logger name="io.bitsquare" level="TRACE"/>
     <logger name="io.bitsquare.btc.AddressBasedCoinSelector" level="OFF"/>
-    
+
     <logger name="io.bitsquare.gui.util.Profiler" level="ERROR"/>
     <logger name="io.bitsquare.locale.BSResources" level="ERROR"/>
 

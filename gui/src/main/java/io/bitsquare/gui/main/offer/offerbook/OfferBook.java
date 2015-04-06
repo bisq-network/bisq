@@ -18,13 +18,13 @@
 package io.bitsquare.gui.main.offer.offerbook;
 
 import io.bitsquare.fiat.FiatAccount;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
-import io.bitsquare.util.Utilities;
 
 import java.util.List;
 
@@ -182,7 +182,7 @@ public class OfferBook {
     private void startPolling() {
         addListeners();
         setBankAccount(user.currentFiatAccountProperty().get());
-        pollingTimer = Utilities.setInterval(POLLING_INTERVAL, (animationTimer) -> {
+        pollingTimer = GUIUtil.setInterval(POLLING_INTERVAL, (animationTimer) -> {
             offerBookService.requestInvalidationTimeStampFromDHT(fiatCode);
             return null;
         });

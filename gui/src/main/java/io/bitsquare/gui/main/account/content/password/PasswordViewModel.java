@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.account.content.password;
 
-import io.bitsquare.common.model.ViewModel;
+import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.PasswordValidator;
 

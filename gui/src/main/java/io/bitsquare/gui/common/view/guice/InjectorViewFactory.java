@@ -15,34 +15,25 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.common.view;
+package io.bitsquare.gui.common.view.guice;
 
-import java.net.URL;
+import io.bitsquare.gui.common.view.ViewFactory;
 
-import java.util.ResourceBundle;
+import com.google.common.base.Preconditions;
 
-import javafx.fxml.Initializable;
-import javafx.scene.*;
+import com.google.inject.Injector;
 
-public abstract class InitializableView<R extends Node, M> extends AbstractView<R, M> implements Initializable {
+public class InjectorViewFactory implements ViewFactory {
 
-    public InitializableView(M model) {
-        super(model);
-    }
+    private Injector injector;
 
-    public InitializableView() {
-        this(null);
+    public void setInjector(Injector injector) {
+        this.injector = injector;
     }
 
     @Override
-    public final void initialize(URL location, ResourceBundle resources) {
-        prepareInitialize();
-        initialize();
-    }
-
-    protected void prepareInitialize() {
-    }
-
-    protected void initialize() {
+    public Object call(Class<?> aClass) {
+        Preconditions.checkNotNull(injector, "Injector has not yet been provided");
+        return injector.getInstance(aClass);
     }
 }

@@ -15,14 +15,29 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.common.view;
+package io.bitsquare.gui.common.view;
 
-public interface Wizard extends View {
-    void nextStep(Step currentStep);
+import java.util.HashMap;
 
-    interface Step {
-        void hideWizardNavigation();
+import javax.inject.Inject;
 
-        void setWizard(Wizard wizard);
+public class CachingViewLoader implements ViewLoader {
+
+    private final HashMap<Object, View> cache = new HashMap<>();
+    private final ViewLoader viewLoader;
+
+    @Inject
+    public CachingViewLoader(ViewLoader viewLoader) {
+        this.viewLoader = viewLoader;
+    }
+
+    @Override
+    public View load(Class<? extends View> viewClass) {
+        if (cache.containsKey(viewClass))
+            return cache.get(viewClass);
+
+        View view = viewLoader.load(viewClass);
+        cache.put(viewClass, view);
+        return view;
     }
 }

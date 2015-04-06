@@ -137,7 +137,7 @@ public class BitsquareAppMain extends BitsquareExecutable {
                 .ofType(RegTestHost.class)
                 .withValuesConvertedBy(new EnumValueConverter(RegTestHost.class));
 
-        
+
         parser.accepts(BOOTSTRAP_NODE_NAME_KEY, description("", BootstrapNodes.DEFAULT.getName()))
                 .withRequiredArg();
         parser.accepts(BOOTSTRAP_NODE_IP_KEY, description("", BootstrapNodes.DEFAULT.getIp()))

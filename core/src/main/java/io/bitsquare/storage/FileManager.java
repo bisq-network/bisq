@@ -56,8 +56,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javafx.application.Platform;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -249,7 +247,7 @@ public class FileManager<T> {
     private void saveNowInternal(T serializable) {
         long now = System.currentTimeMillis();
         saveToFile(serializable, dir, storageFile);
-        Platform.runLater(() -> log.info("Save {} completed in {}msec", storageFile, System.currentTimeMillis() - now));
+        Threading.USER_THREAD.execute(() -> log.info("Save {} completed in {}msec", storageFile, System.currentTimeMillis() - now));
     }
 
     private void saveToFile(T serializable, File dir, File storageFile) {

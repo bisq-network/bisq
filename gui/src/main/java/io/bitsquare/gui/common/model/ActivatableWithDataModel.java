@@ -15,7 +15,29 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.common.model;
+package io.bitsquare.gui.common.model;
 
-public interface DataModel extends Model {
+public abstract class ActivatableWithDataModel<D extends Activatable> extends WithDataModel<D> implements Activatable {
+
+    public ActivatableWithDataModel(D dataModel) {
+        super(dataModel);
+    }
+
+    @Override
+    public final void activate() {
+        dataModel.activate();
+        this.doActivate();
+    }
+
+    protected void doActivate() {
+    }
+
+    @Override
+    public final void deactivate() {
+        dataModel.deactivate();
+        this.doDeactivate();
+    }
+
+    protected void doDeactivate() {
+    }
 }

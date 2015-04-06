@@ -19,8 +19,8 @@ package io.bitsquare.gui.main.portfolio.openoffer;
 
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.common.model.ActivatableWithDataModel;
-import io.bitsquare.common.model.ViewModel;
+import io.bitsquare.gui.common.model.ActivatableWithDataModel;
+import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.offer.Offer;
 

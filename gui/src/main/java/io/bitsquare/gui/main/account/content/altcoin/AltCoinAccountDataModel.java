@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.account.content.altcoin;
 
-import io.bitsquare.common.model.Activatable;
-import io.bitsquare.common.model.DataModel;
 import io.bitsquare.fiat.FiatAccount;
+import io.bitsquare.gui.common.model.Activatable;
+import io.bitsquare.gui.common.model.DataModel;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.user.User;

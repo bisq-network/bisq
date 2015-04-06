@@ -36,7 +36,7 @@ public class CompletedView extends TradeStepDetailsView {
     private static final Logger log = LoggerFactory.getLogger(WaitTxInBlockchainView.class);
 
     private final ChangeListener<Boolean> focusedPropertyListener;
-    
+
     private Label btcTradeAmountLabel;
     private TextField btcTradeAmountTextField;
     private Label fiatTradeAmountLabel;

@@ -19,9 +19,9 @@ package io.bitsquare.gui.main.offer.offerbook;
 
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.common.model.Activatable;
-import io.bitsquare.common.model.DataModel;
 import io.bitsquare.fiat.FiatAccount;
+import io.bitsquare.gui.common.model.Activatable;
+import io.bitsquare.gui.common.model.DataModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;

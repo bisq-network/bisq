@@ -161,14 +161,11 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 setProperty(APP_NAME_KEY, appName);
 
                 setProperty(UserAgent.NAME_KEY, appName);
-                // setProperty(UserAgent.VERSION_KEY, BitsquareAppMain.getVersion());
 
                 setProperty(WalletService.DIR_KEY, appDataDir);
                 setProperty(WalletService.PREFIX_KEY, appName);
 
                 setProperty(Storage.DIR_KEY, Paths.get(appDataDir, "db").toString());
-
-                // setProperty(MainView.TITLE_KEY, appName);
 
                 setProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY, bootstrapNodePort);
             }

@@ -17,7 +17,7 @@
 
 package io.bitsquare.app;
 
-import io.bitsquare.util.Utilities;
+import io.bitsquare.gui.util.GUIUtil;
 
 import com.google.inject.Inject;
 
@@ -95,7 +95,7 @@ public class UpdateProcess {
         log.info("UpdateFX current version " + BUILD_VERSION);
 
         // process.timeout() will cause an error state back but we don't want to break startup in case of an timeout
-        timeoutTimer = Utilities.setTimeout(10000, animationTimer -> {
+        timeoutTimer = GUIUtil.setTimeout(10000, animationTimer -> {
             process.onCompleted();
             return null;
         });

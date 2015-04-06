@@ -18,8 +18,8 @@
 package io.bitsquare.gui.main.settings.network;
 
 import io.bitsquare.btc.BitcoinNetwork;
-import io.bitsquare.common.view.FxmlView;
-import io.bitsquare.common.view.InitializableView;
+import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.common.view.InitializableView;
 import io.bitsquare.p2p.ClientNode;
 
 import javax.inject.Inject;

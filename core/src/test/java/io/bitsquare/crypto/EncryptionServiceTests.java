@@ -64,7 +64,7 @@ public class EncryptionServiceTests {
         byte[] result = encryptionService.decrypt(p2pEncryptKeyPair.getPrivate(), bucket);
         assertEquals("", result, data);
     }
-    
+
     @Test
     public void testEncryptionWithLargeData() throws Exception {
         EncryptionService encryptionService = new EncryptionService();
@@ -72,7 +72,7 @@ public class EncryptionServiceTests {
 
         byte[] data = new byte[2000];
         new Random().nextBytes(data);
-        
+
         Bucket bucket = encryptionService.encrypt(p2pEncryptKeyPair.getPublic(), data);
         byte[] result = encryptionService.decrypt(p2pEncryptKeyPair.getPrivate(), bucket);
         assertEquals("", result, data);

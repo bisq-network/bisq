@@ -17,15 +17,15 @@
 
 package io.bitsquare.gui.main.portfolio.openoffer;
 
-import io.bitsquare.common.view.ActivatableViewAndModel;
-import io.bitsquare.common.view.FxmlView;
 import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.common.view.ActivatableViewAndModel;
+import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.util.Utilities;
 
 import javax.inject.Inject;
 
@@ -86,7 +86,7 @@ public class OpenOffersView extends ActivatableViewAndModel<GridPane, OpenOffers
     private void openOfferDetails(OpenOfferListItem item) {
         // TODO Open popup with details view
         log.debug("openOfferDetails " + item);
-        Utilities.copyToClipboard(item.getOffer().getId());
+        GUIUtil.copyToClipboard(item.getOffer().getId());
         Popups.openWarningPopup("Under construction",
                 "The offer ID was copied to the clipboard. " +
                         "Use that to identify your trading peer in the IRC chat room \n\n" +

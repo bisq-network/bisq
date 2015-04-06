@@ -15,13 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.common.fxml;
+package io.bitsquare.gui.common.fxml;
 
-import io.bitsquare.common.ViewfxException;
-import io.bitsquare.common.view.FxmlView;
-import io.bitsquare.common.view.View;
-import io.bitsquare.common.view.ViewFactory;
-import io.bitsquare.common.view.ViewLoader;
+import io.bitsquare.gui.common.ViewfxException;
+import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.common.view.View;
+import io.bitsquare.gui.common.view.ViewFactory;
+import io.bitsquare.gui.common.view.ViewLoader;
 
 import java.io.IOException;
 

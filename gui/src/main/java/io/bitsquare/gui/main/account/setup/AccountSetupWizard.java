@@ -17,13 +17,13 @@
 
 package io.bitsquare.gui.main.account.setup;
 
-import io.bitsquare.common.view.ActivatableView;
-import io.bitsquare.common.view.CachingViewLoader;
-import io.bitsquare.common.view.FxmlView;
-import io.bitsquare.common.view.View;
-import io.bitsquare.common.view.ViewLoader;
-import io.bitsquare.common.view.Wizard;
 import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.common.view.ActivatableView;
+import io.bitsquare.gui.common.view.CachingViewLoader;
+import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.common.view.View;
+import io.bitsquare.gui.common.view.ViewLoader;
+import io.bitsquare.gui.common.view.Wizard;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.content.fiat.FiatAccountView;
 import io.bitsquare.gui.main.account.content.password.PasswordView;

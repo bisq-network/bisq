@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.account.content.seedwords;
 
-import io.bitsquare.common.view.FxmlView;
-import io.bitsquare.common.view.InitializableView;
-import io.bitsquare.common.view.Wizard;
+import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.common.view.InitializableView;
+import io.bitsquare.gui.common.view.Wizard;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 

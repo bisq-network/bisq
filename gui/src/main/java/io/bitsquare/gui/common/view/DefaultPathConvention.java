@@ -15,29 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.common.view;
+package io.bitsquare.gui.common.view;
 
-import java.util.HashMap;
+import org.springframework.util.ClassUtils;
 
-import javax.inject.Inject;
-
-public class CachingViewLoader implements ViewLoader {
-
-    private final HashMap<Object, View> cache = new HashMap<>();
-    private final ViewLoader viewLoader;
-
-    @Inject
-    public CachingViewLoader(ViewLoader viewLoader) {
-        this.viewLoader = viewLoader;
-    }
-
+public class DefaultPathConvention implements FxmlView.PathConvention {
     @Override
-    public View load(Class<? extends View> viewClass) {
-        if (cache.containsKey(viewClass))
-            return cache.get(viewClass);
-
-        View view = viewLoader.load(viewClass);
-        cache.put(viewClass, view);
-        return view;
+    public String apply(Class<? extends View> viewClass) {
+        return ClassUtils.convertClassNameToResourcePath(viewClass.getName()).concat(".fxml");
     }
 }

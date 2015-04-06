@@ -15,10 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.common.view;
+package io.bitsquare.gui.common.model;
 
-import javafx.scene.*;
-
-public interface View {
-    Node getRoot();
+public interface Model {
 }

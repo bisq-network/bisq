@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.components;
 
-import io.bitsquare.util.Utilities;
+import io.bitsquare.gui.util.GUIUtil;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -45,7 +45,7 @@ public class TextFieldWithCopyIcon extends AnchorPane {
         AnchorPane.setRightAnchor(copyIcon, 0.0);
         copyIcon.setOnMouseClicked(e -> {
             if (getText() != null && getText().length() > 0)
-                Utilities.copyToClipboard(getText());
+                GUIUtil.copyToClipboard(getText());
         });
         TextField txIdLabel = new TextField();
         txIdLabel.setEditable(false);

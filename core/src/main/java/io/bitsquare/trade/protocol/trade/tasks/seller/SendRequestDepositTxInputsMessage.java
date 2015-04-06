@@ -24,7 +24,7 @@ import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
 import io.bitsquare.trade.states.StateUtil;
 
-import javafx.application.Platform;
+import org.bitcoinj.utils.Threading;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +62,7 @@ public class SendRequestDepositTxInputsMessage extends TradeTask {
                     // We try to repeat once and if that fails as well we persist the state for a later retry.
                     if (retryCounter == 0) {
                         retryCounter++;
-                        Platform.runLater(SendRequestDepositTxInputsMessage.this::doRun);
+                        Threading.USER_THREAD.execute(SendRequestDepositTxInputsMessage.this::doRun);
                     }
                     else {
                         appendToErrorMessage("Sending TakeOfferFeePayedMessage to offerer failed. Maybe the network connection was " +

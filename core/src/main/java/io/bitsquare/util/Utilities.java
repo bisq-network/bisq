@@ -40,14 +40,9 @@ import java.net.URI;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 
-import java.util.function.Function;
-
-import javafx.animation.AnimationTimer;
-import javafx.application.Platform;
-import javafx.scene.input.*;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * General utilities
@@ -76,15 +71,6 @@ public class Utilities {
 
     private static String getOSName() {
         return System.getProperty("os.name").toLowerCase();
-    }
-
-    public static void copyToClipboard(String content) {
-        if (content != null && content.length() > 0) {
-            Clipboard clipboard = Clipboard.getSystemClipboard();
-            ClipboardContent clipboardContent = new ClipboardContent();
-            clipboardContent.putString(content);
-            clipboard.setContent(clipboardContent);
-        }
     }
 
     public static void openURI(URI uri) throws IOException {
@@ -260,38 +246,6 @@ public class Utilities {
             if (!folder.delete())
                 log.warn("can't delete folder : " + folder);
         }
-    }
-
-    public static AnimationTimer setTimeout(int delay, Function<AnimationTimer, Void> callback) {
-        AnimationTimer animationTimer = new AnimationTimer() {
-            final long lastTimeStamp = System.currentTimeMillis();
-
-            @Override
-            public void handle(long arg0) {
-                if (System.currentTimeMillis() > delay + lastTimeStamp) {
-                    Platform.runLater(() -> callback.apply(this));
-                    this.stop();
-                }
-            }
-        };
-        animationTimer.start();
-        return animationTimer;
-    }
-
-    public static AnimationTimer setInterval(int delay, Function<AnimationTimer, Void> callback) {
-        AnimationTimer animationTimer = new AnimationTimer() {
-            long lastTimeStamp = System.currentTimeMillis();
-
-            @Override
-            public void handle(long arg0) {
-                if (System.currentTimeMillis() > delay + lastTimeStamp) {
-                    lastTimeStamp = System.currentTimeMillis();
-                    callback.apply(this);
-                }
-            }
-        };
-        animationTimer.start();
-        return animationTimer;
     }
 
     public static String getHexFromPubKey(PublicKey publicKey) {

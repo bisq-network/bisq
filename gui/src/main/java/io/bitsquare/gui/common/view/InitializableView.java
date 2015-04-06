@@ -15,13 +15,34 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.common.view;
+package io.bitsquare.gui.common.view;
 
-import org.springframework.util.ClassUtils;
+import java.net.URL;
 
-public class DefaultPathConvention implements FxmlView.PathConvention {
+import java.util.ResourceBundle;
+
+import javafx.fxml.Initializable;
+import javafx.scene.*;
+
+public abstract class InitializableView<R extends Node, M> extends AbstractView<R, M> implements Initializable {
+
+    public InitializableView(M model) {
+        super(model);
+    }
+
+    public InitializableView() {
+        this(null);
+    }
+
     @Override
-    public String apply(Class<? extends View> viewClass) {
-        return ClassUtils.convertClassNameToResourcePath(viewClass.getName()).concat(".fxml");
+    public final void initialize(URL location, ResourceBundle resources) {
+        prepareInitialize();
+        initialize();
+    }
+
+    protected void prepareInitialize() {
+    }
+
+    protected void initialize() {
     }
 }

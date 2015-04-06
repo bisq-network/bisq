@@ -17,13 +17,13 @@
 
 package io.bitsquare.gui.main.funds;
 
-import io.bitsquare.common.model.Activatable;
-import io.bitsquare.common.view.ActivatableViewAndModel;
-import io.bitsquare.common.view.CachingViewLoader;
-import io.bitsquare.common.view.FxmlView;
-import io.bitsquare.common.view.View;
-import io.bitsquare.common.view.ViewLoader;
 import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.common.model.Activatable;
+import io.bitsquare.gui.common.view.ActivatableViewAndModel;
+import io.bitsquare.gui.common.view.CachingViewLoader;
+import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.common.view.View;
+import io.bitsquare.gui.common.view.ViewLoader;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.funds.reserved.ReservedView;
 import io.bitsquare.gui.main.funds.transactions.TransactionsView;

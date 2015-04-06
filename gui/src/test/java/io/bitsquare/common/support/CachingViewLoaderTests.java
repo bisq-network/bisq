@@ -17,9 +17,9 @@
 
 package io.bitsquare.common.support;
 
-import io.bitsquare.common.view.AbstractView;
-import io.bitsquare.common.view.CachingViewLoader;
-import io.bitsquare.common.view.ViewLoader;
+import io.bitsquare.gui.common.view.AbstractView;
+import io.bitsquare.gui.common.view.CachingViewLoader;
+import io.bitsquare.gui.common.view.ViewLoader;
 
 import org.junit.Test;
 

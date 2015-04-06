@@ -18,8 +18,8 @@
 package io.bitsquare.gui.main.account.content.restrictions;
 
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.common.model.Activatable;
-import io.bitsquare.common.model.DataModel;
+import io.bitsquare.gui.common.model.Activatable;
+import io.bitsquare.gui.common.model.DataModel;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.LanguageUtil;

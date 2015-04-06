@@ -17,11 +17,11 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
-import io.bitsquare.common.view.ActivatableViewAndModel;
-import io.bitsquare.common.view.FxmlView;
+import io.bitsquare.gui.common.view.ActivatableViewAndModel;
+import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -192,7 +192,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private void openOfferDetails(String id) {
         // TODO Open popup with details view
         log.debug("Trade details " + id);
-        Utilities.copyToClipboard(id);
+        GUIUtil.copyToClipboard(id);
         Popups.openWarningPopup("Under construction",
                 "The trader ID was copied to the clipboard. " +
                         "Use that to identify your trading peer in the IRC chat room \n\n" +

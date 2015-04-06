@@ -19,11 +19,11 @@ package io.bitsquare.gui.main.account.arbitrator.browser;
 
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorService;
-import io.bitsquare.common.view.ActivatableView;
-import io.bitsquare.common.view.CachingViewLoader;
-import io.bitsquare.common.view.FxmlView;
-import io.bitsquare.common.view.View;
-import io.bitsquare.common.view.ViewLoader;
+import io.bitsquare.gui.common.view.ActivatableView;
+import io.bitsquare.gui.common.view.CachingViewLoader;
+import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.common.view.View;
+import io.bitsquare.gui.common.view.ViewLoader;
 import io.bitsquare.gui.main.account.arbitrator.profile.ArbitratorProfileView;
 import io.bitsquare.user.AccountSettings;
 

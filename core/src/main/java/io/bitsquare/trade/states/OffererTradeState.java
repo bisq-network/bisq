@@ -44,7 +44,7 @@ public class OffererTradeState {
         PAYOUT_FINALIZED_MSG_SENT,
         PAYOUT_BROAD_CASTED,
         PAYOUT_BROAD_CASTED_FAILED,
-        
+
         MESSAGE_SENDING_FAILED,
         TIMEOUT,
         EXCEPTION

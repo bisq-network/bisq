@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui;
 
-import io.bitsquare.common.view.View;
-import io.bitsquare.common.view.ViewPath;
+import io.bitsquare.gui.common.view.View;
+import io.bitsquare.gui.common.view.ViewPath;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.offer.BuyOfferView;
 import io.bitsquare.storage.Storage;

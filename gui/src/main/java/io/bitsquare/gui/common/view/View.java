@@ -15,25 +15,10 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.common.view.guice;
+package io.bitsquare.gui.common.view;
 
-import io.bitsquare.common.view.ViewFactory;
+import javafx.scene.*;
 
-import com.google.common.base.Preconditions;
-
-import com.google.inject.Injector;
-
-public class InjectorViewFactory implements ViewFactory {
-
-    private Injector injector;
-
-    public void setInjector(Injector injector) {
-        this.injector = injector;
-    }
-
-    @Override
-    public Object call(Class<?> aClass) {
-        Preconditions.checkNotNull(injector, "Injector has not yet been provided");
-        return injector.getInstance(aClass);
-    }
+public interface View {
+    Node getRoot();
 }

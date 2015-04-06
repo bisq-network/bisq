@@ -17,10 +17,10 @@
 
 package io.bitsquare.gui.main.account.content.registration;
 
-import io.bitsquare.common.view.FxmlView;
-import io.bitsquare.common.view.InitializableView;
-import io.bitsquare.common.view.Wizard;
 import io.bitsquare.gui.OverlayManager;
+import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.common.view.InitializableView;
+import io.bitsquare.gui.common.view.Wizard;
 import io.bitsquare.gui.components.AddressTextField;
 import io.bitsquare.gui.components.BalanceTextField;
 import io.bitsquare.gui.components.Popups;

@@ -18,8 +18,8 @@
 package io.bitsquare.gui.main.debug;
 
 import io.bitsquare.common.taskrunner.Task;
-import io.bitsquare.common.view.FxmlView;
-import io.bitsquare.common.view.InitializableView;
+import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.common.view.InitializableView;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityProtocol;
 import io.bitsquare.trade.protocol.availability.tasks.ProcessReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.tasks.RequestIsOfferAvailable;

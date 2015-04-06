@@ -18,8 +18,8 @@
 package io.bitsquare.gui.main.account.arbitrator.profile;
 
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.common.view.AbstractView;
-import io.bitsquare.common.view.FxmlView;
+import io.bitsquare.gui.common.view.AbstractView;
+import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.util.BSFormatter;
 
 import javax.inject.Inject;

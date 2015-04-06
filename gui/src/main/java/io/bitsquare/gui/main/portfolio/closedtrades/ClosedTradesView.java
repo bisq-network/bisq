@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.main.portfolio.closedtrades;
 
-import io.bitsquare.common.view.ActivatableViewAndModel;
-import io.bitsquare.common.view.FxmlView;
+import io.bitsquare.gui.common.view.ActivatableViewAndModel;
+import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.Popups;
 
 import javax.inject.Inject;

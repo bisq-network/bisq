@@ -29,10 +29,10 @@ import io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress;
 import io.bitsquare.trade.protocol.availability.tasks.ProcessReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.tasks.RequestIsOfferAvailable;
 
+import org.bitcoinj.utils.Threading;
+
 import java.util.Timer;
 import java.util.TimerTask;
-
-import javafx.application.Platform;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,7 +135,7 @@ public class CheckOfferAvailabilityProtocol {
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                Platform.runLater(() -> {
+                Threading.USER_THREAD.execute(() -> {
                     log.debug("Timeout reached");
                     errorMessageHandler.handleErrorMessage("Timeout reached: Peer has not responded.");
                     model.offer.setState(Offer.State.OFFERER_OFFLINE);

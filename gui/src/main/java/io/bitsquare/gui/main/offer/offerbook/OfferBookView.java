@@ -17,10 +17,10 @@
 
 package io.bitsquare.gui.main.offer.offerbook;
 
-import io.bitsquare.common.view.ActivatableViewAndModel;
-import io.bitsquare.common.view.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
+import io.bitsquare.gui.common.view.ActivatableViewAndModel;
+import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.MainView;

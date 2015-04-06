@@ -18,11 +18,11 @@
 package io.bitsquare.gui;
 
 import io.bitsquare.BitsquareModule;
-import io.bitsquare.common.fxml.FxmlViewLoader;
-import io.bitsquare.common.view.CachingViewLoader;
-import io.bitsquare.common.view.ViewFactory;
-import io.bitsquare.common.view.ViewLoader;
-import io.bitsquare.common.view.guice.InjectorViewFactory;
+import io.bitsquare.gui.common.fxml.FxmlViewLoader;
+import io.bitsquare.gui.common.view.CachingViewLoader;
+import io.bitsquare.gui.common.view.ViewFactory;
+import io.bitsquare.gui.common.view.ViewLoader;
+import io.bitsquare.gui.common.view.guice.InjectorViewFactory;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.offer.offerbook.OfferBook;

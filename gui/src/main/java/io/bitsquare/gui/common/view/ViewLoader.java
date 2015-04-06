@@ -15,7 +15,8 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.common.model;
+package io.bitsquare.gui.common.view;
 
-public interface Model {
+public interface ViewLoader {
+    View load(Class<? extends View> viewClass);
 }

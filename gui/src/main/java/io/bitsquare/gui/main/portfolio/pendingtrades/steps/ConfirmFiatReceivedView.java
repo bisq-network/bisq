@@ -36,7 +36,7 @@ public class ConfirmFiatReceivedView extends TradeStepDetailsView {
     private static final Logger log = LoggerFactory.getLogger(ConfirmFiatReceivedView.class);
 
     private final ChangeListener<String> txIdChangeListener;
-    
+
     private TxIdTextField txIdTextField;
     private Label infoLabel;
     private InfoDisplay infoDisplay;

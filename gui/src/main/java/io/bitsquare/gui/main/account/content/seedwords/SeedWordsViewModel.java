@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.account.content.seedwords;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.common.model.ViewModel;
+import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 
 import com.google.inject.Inject;

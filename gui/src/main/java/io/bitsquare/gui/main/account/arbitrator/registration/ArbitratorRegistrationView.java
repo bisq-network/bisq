@@ -20,13 +20,13 @@ package io.bitsquare.gui.main.account.arbitrator.registration;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorService;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.common.view.ActivatableView;
-import io.bitsquare.common.view.FxmlView;
+import io.bitsquare.gui.common.view.ActivatableView;
+import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
@@ -284,7 +284,7 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
         securityDepositAddressTextField.setText(securityDepositAddress);
 
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
-        copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(securityDepositAddress));
+        copyIcon.setOnMouseClicked(e -> GUIUtil.copyToClipboard(securityDepositAddress));
 
         paymentDoneButton.setDisable(walletService.getArbitratorDepositBalance().isZero());
         log.debug("getArbitratorDepositBalance " + walletService.getArbitratorDepositBalance());

@@ -26,10 +26,10 @@ import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReach
 import io.bitsquare.trade.states.OffererTradeState;
 import io.bitsquare.trade.states.TakerTradeState;
 
+import org.bitcoinj.utils.Threading;
+
 import java.util.Timer;
 import java.util.TimerTask;
-
-import javafx.application.Platform;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,7 +88,7 @@ public abstract class TradeProtocol {
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                Platform.runLater(() -> {
+                Threading.USER_THREAD.execute(() -> {
                     log.debug("Timeout reached");
                     if (trade instanceof TakerTrade)
                         trade.setProcessState(TakerTradeState.ProcessState.TIMEOUT);

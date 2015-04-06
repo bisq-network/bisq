@@ -18,14 +18,14 @@
 package io.bitsquare.gui.main;
 
 import io.bitsquare.BitsquareException;
-import io.bitsquare.common.view.CachingViewLoader;
-import io.bitsquare.common.view.FxmlView;
-import io.bitsquare.common.view.InitializableView;
-import io.bitsquare.common.view.View;
-import io.bitsquare.common.view.ViewLoader;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
+import io.bitsquare.gui.common.view.CachingViewLoader;
+import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.common.view.InitializableView;
+import io.bitsquare.gui.common.view.View;
+import io.bitsquare.gui.common.view.ViewLoader;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.SystemNotification;
 import io.bitsquare.gui.main.account.AccountView;

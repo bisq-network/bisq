@@ -20,6 +20,7 @@ package io.bitsquare.gui.components;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.core.TransactionConfidence;
@@ -106,7 +107,7 @@ public class TxIdTextField extends AnchorPane {
             }
         });
 
-        copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(txID));
+        copyIcon.setOnMouseClicked(e -> GUIUtil.copyToClipboard(txID));
     }
 
     public void cleanup() {

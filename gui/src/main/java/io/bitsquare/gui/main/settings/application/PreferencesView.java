@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.main.settings.application;
 
-import io.bitsquare.common.view.ActivatableViewAndModel;
-import io.bitsquare.common.view.FxmlView;
+import io.bitsquare.gui.common.view.ActivatableViewAndModel;
+import io.bitsquare.gui.common.view.FxmlView;
 
 import javax.inject.Inject;
 

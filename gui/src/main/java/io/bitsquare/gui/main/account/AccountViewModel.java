@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.account;
 
-import io.bitsquare.common.model.ViewModel;
+import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.user.User;
 
 import com.google.inject.Inject;

@@ -15,7 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.common.model;
+package io.bitsquare.gui.common.view;
 
-public interface ViewModel extends Model {
+public interface Wizard extends View {
+    void nextStep(Step currentStep);
+
+    interface Step {
+        void hideWizardNavigation();
+
+        void setWizard(Wizard wizard);
+    }
 }

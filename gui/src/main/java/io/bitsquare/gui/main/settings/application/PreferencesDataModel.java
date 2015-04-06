@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.main.settings.application;
 
-import io.bitsquare.common.model.Activatable;
-import io.bitsquare.common.model.DataModel;
+import io.bitsquare.gui.common.model.Activatable;
+import io.bitsquare.gui.common.model.DataModel;
 import io.bitsquare.user.Preferences;
 
 import com.google.inject.Inject;

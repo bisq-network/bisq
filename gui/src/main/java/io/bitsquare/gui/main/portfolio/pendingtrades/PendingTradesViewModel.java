@@ -18,8 +18,8 @@
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.common.model.ActivatableWithDataModel;
-import io.bitsquare.common.model.ViewModel;
+import io.bitsquare.gui.common.model.ActivatableWithDataModel;
+import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;

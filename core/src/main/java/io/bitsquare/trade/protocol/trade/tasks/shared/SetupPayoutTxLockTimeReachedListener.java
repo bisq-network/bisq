@@ -27,13 +27,12 @@ import io.bitsquare.trade.states.TakerTradeState;
 
 import org.bitcoinj.core.StoredBlock;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.utils.Threading;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.concurrent.ExecutionException;
-
-import javafx.application.Platform;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -64,7 +63,7 @@ public class SetupPayoutTxLockTimeReachedListener extends TradeTask {
                             }
                             broadcastTx();
                         },
-                        Platform::runLater);
+                        Threading.USER_THREAD::execute);
             }
         } catch (Throwable t) {
             t.printStackTrace();

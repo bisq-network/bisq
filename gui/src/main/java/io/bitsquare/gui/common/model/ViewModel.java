@@ -15,13 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.msg;
+package io.bitsquare.gui.common.model;
 
-import io.bitsquare.gui.common.view.AbstractView;
-import io.bitsquare.gui.common.view.FxmlView;
-
-// will be probably only used for arbitration communication, will be renamed and the icon changed
-@FxmlView
-public class MsgView extends AbstractView {
+public interface ViewModel extends Model {
 }
-

@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.main.portfolio.closedtrades;
 
-import io.bitsquare.common.model.Activatable;
-import io.bitsquare.common.model.DataModel;
+import io.bitsquare.gui.common.model.Activatable;
+import io.bitsquare.gui.common.model.DataModel;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;

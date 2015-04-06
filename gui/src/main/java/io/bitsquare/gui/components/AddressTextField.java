@@ -18,6 +18,7 @@
 package io.bitsquare.gui.components;
 
 import io.bitsquare.gui.OverlayManager;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -86,7 +87,7 @@ public class AddressTextField extends AnchorPane {
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.setOnMouseClicked(e -> {
             if (address.get() != null && address.get().length() > 0)
-                Utilities.copyToClipboard(address.get());
+                GUIUtil.copyToClipboard(address.get());
         });
 
         Label qrCode = new Label();

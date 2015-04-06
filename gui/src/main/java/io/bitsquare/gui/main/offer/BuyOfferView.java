@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.offer;
 
-import io.bitsquare.common.view.FxmlView;
-import io.bitsquare.common.view.ViewLoader;
 import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.common.view.ViewLoader;
 
 import javax.inject.Inject;
 

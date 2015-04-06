@@ -17,17 +17,19 @@
 
 package io.bitsquare.app;
 
-import io.bitsquare.common.view.CachingViewLoader;
-import io.bitsquare.common.view.View;
-import io.bitsquare.common.view.ViewLoader;
-import io.bitsquare.common.view.guice.InjectorViewFactory;
 import io.bitsquare.gui.SystemTray;
+import io.bitsquare.gui.common.view.CachingViewLoader;
+import io.bitsquare.gui.common.view.View;
+import io.bitsquare.gui.common.view.ViewLoader;
+import io.bitsquare.gui.common.view.guice.InjectorViewFactory;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.storage.FileManager;
 import io.bitsquare.util.Utilities;
+
+import org.bitcoinj.utils.Threading;
 
 import com.google.common.base.Throwables;
 
@@ -73,6 +75,8 @@ public class BitsquareApp extends Application {
 
         log.trace("BitsquareApp.start");
         try {
+            Threading.USER_THREAD = Platform::runLater;
+
             bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
             injector = Guice.createInjector(bitsquareAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);

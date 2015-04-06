@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.account.content.fiat;
 
-import io.bitsquare.common.model.ActivatableWithDataModel;
-import io.bitsquare.common.model.ViewModel;
 import io.bitsquare.fiat.FiatAccount;
+import io.bitsquare.gui.common.model.ActivatableWithDataModel;
+import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
