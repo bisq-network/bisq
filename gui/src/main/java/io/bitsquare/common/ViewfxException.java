@@ -15,23 +15,19 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.common;
 
-import io.bitsquare.BitsquareModule;
+import static java.lang.String.format;
 
-import org.springframework.core.env.Environment;
+public class ViewfxException extends RuntimeException {
 
-public abstract class OfferModule extends BitsquareModule {
+    private static final long serialVersionUID = -6266047448442595372L;
 
-    protected OfferModule(Environment env) {
-        super(env);
+    public ViewfxException(Throwable cause, String format, Object... args) {
+        super(format(format, args), cause);
     }
 
-    @Override
-    protected final void configure() {
-        doConfigure();
-    }
-
-    protected void doConfigure() {
+    public ViewfxException(String format, Object... args) {
+        super(format(format, args));
     }
 }

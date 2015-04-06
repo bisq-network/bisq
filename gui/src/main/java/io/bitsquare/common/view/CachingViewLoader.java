@@ -15,23 +15,29 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.common.view;
 
-import io.bitsquare.BitsquareModule;
+import java.util.HashMap;
 
-import org.springframework.core.env.Environment;
+import javax.inject.Inject;
 
-public abstract class OfferModule extends BitsquareModule {
+public class CachingViewLoader implements ViewLoader {
 
-    protected OfferModule(Environment env) {
-        super(env);
+    private final HashMap<Object, View> cache = new HashMap<>();
+    private final ViewLoader viewLoader;
+
+    @Inject
+    public CachingViewLoader(ViewLoader viewLoader) {
+        this.viewLoader = viewLoader;
     }
 
     @Override
-    protected final void configure() {
-        doConfigure();
-    }
+    public View load(Class<? extends View> viewClass) {
+        if (cache.containsKey(viewClass))
+            return cache.get(viewClass);
 
-    protected void doConfigure() {
+        View view = viewLoader.load(viewClass);
+        cache.put(viewClass, view);
+        return view;
     }
 }

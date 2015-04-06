@@ -15,23 +15,15 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.common.model;
 
-import io.bitsquare.BitsquareModule;
+import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.springframework.core.env.Environment;
+public abstract class WithDataModel<D> {
 
-public abstract class OfferModule extends BitsquareModule {
+    protected final D dataModel;
 
-    protected OfferModule(Environment env) {
-        super(env);
-    }
-
-    @Override
-    protected final void configure() {
-        doConfigure();
-    }
-
-    protected void doConfigure() {
+    protected WithDataModel(D dataModel) {
+        this.dataModel = checkNotNull(dataModel, "Delegate object must not be null");
     }
 }

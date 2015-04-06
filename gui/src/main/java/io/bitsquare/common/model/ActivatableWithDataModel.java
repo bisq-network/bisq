@@ -15,23 +15,29 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.common.model;
 
-import io.bitsquare.BitsquareModule;
+public abstract class ActivatableWithDataModel<D extends Activatable> extends WithDataModel<D> implements Activatable {
 
-import org.springframework.core.env.Environment;
-
-public abstract class OfferModule extends BitsquareModule {
-
-    protected OfferModule(Environment env) {
-        super(env);
+    public ActivatableWithDataModel(D dataModel) {
+        super(dataModel);
     }
 
     @Override
-    protected final void configure() {
-        doConfigure();
+    public final void activate() {
+        dataModel.activate();
+        this.doActivate();
     }
 
-    protected void doConfigure() {
+    protected void doActivate() {
+    }
+
+    @Override
+    public final void deactivate() {
+        dataModel.deactivate();
+        this.doDeactivate();
+    }
+
+    protected void doDeactivate() {
     }
 }

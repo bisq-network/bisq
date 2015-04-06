@@ -15,23 +15,20 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.gui.main.offer;
 
-import io.bitsquare.BitsquareModule;
+import io.bitsquare.common.view.FxmlView;
+import io.bitsquare.common.view.ViewLoader;
+import io.bitsquare.gui.Navigation;
 
-import org.springframework.core.env.Environment;
+import javax.inject.Inject;
 
-public abstract class OfferModule extends BitsquareModule {
+@FxmlView
+public class SellOfferView extends OfferView {
 
-    protected OfferModule(Environment env) {
-        super(env);
-    }
-
-    @Override
-    protected final void configure() {
-        doConfigure();
-    }
-
-    protected void doConfigure() {
+    @Inject
+    public SellOfferView(ViewLoader viewLoader, Navigation navigation) {
+        super(viewLoader, navigation);
     }
 }
+

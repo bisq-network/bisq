@@ -15,23 +15,23 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.common.model;
 
-import io.bitsquare.BitsquareModule;
+public interface Activatable {
 
-import org.springframework.core.env.Environment;
+    void activate();
 
-public abstract class OfferModule extends BitsquareModule {
+    void deactivate();
 
-    protected OfferModule(Environment env) {
-        super(env);
-    }
 
-    @Override
-    protected final void configure() {
-        doConfigure();
-    }
+    Activatable NOOP_INSTANCE = new Activatable() {
+        @Override
+        public void activate() {
+        }
 
-    protected void doConfigure() {
-    }
+        @Override
+        public void deactivate() {
+        }
+    };
+
 }

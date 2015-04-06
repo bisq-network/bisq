@@ -15,23 +15,23 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.gui.main.account;
 
-import io.bitsquare.BitsquareModule;
+import io.bitsquare.common.model.ViewModel;
+import io.bitsquare.user.User;
 
-import org.springframework.core.env.Environment;
+import com.google.inject.Inject;
 
-public abstract class OfferModule extends BitsquareModule {
+class AccountViewModel implements ViewModel {
 
-    protected OfferModule(Environment env) {
-        super(env);
+    private final User user;
+
+    @Inject
+    public AccountViewModel(User user) {
+        this.user = user;
     }
 
-    @Override
-    protected final void configure() {
-        doConfigure();
-    }
-
-    protected void doConfigure() {
+    boolean getNeedRegistration() {
+        return user.getAccountId() == null;
     }
 }

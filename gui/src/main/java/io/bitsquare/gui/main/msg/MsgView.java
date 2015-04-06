@@ -15,23 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.gui.main.msg;
 
-import io.bitsquare.BitsquareModule;
+import io.bitsquare.common.view.AbstractView;
+import io.bitsquare.common.view.FxmlView;
 
-import org.springframework.core.env.Environment;
-
-public abstract class OfferModule extends BitsquareModule {
-
-    protected OfferModule(Environment env) {
-        super(env);
-    }
-
-    @Override
-    protected final void configure() {
-        doConfigure();
-    }
-
-    protected void doConfigure() {
-    }
+// will be probably only used for arbitration communication, will be renamed and the icon changed
+@FxmlView
+public class MsgView extends AbstractView {
 }
+

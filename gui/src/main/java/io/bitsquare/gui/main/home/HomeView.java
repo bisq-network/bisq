@@ -15,23 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.gui.main.home;
 
-import io.bitsquare.BitsquareModule;
+import io.bitsquare.common.view.AbstractView;
+import io.bitsquare.common.view.FxmlView;
 
-import org.springframework.core.env.Environment;
-
-public abstract class OfferModule extends BitsquareModule {
-
-    protected OfferModule(Environment env) {
-        super(env);
-    }
-
-    @Override
-    protected final void configure() {
-        doConfigure();
-    }
-
-    protected void doConfigure() {
-    }
+// home is just hosting the arbiters buttons yet, but that's just for dev, not clear yet what will be in home,
+// probably overview, event history, news, charts,... -> low prio
+@FxmlView
+public class HomeView extends AbstractView {
 }

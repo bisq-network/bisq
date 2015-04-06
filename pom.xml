@@ -40,6 +40,7 @@
     <modules>
         <module>core</module>
         <module>bootstrap</module>
+        <module>gui</module>
     </modules>
 
     <build>

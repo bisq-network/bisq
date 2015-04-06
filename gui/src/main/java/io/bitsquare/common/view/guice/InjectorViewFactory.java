@@ -15,23 +15,25 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.common.view.guice;
 
-import io.bitsquare.BitsquareModule;
+import io.bitsquare.common.view.ViewFactory;
 
-import org.springframework.core.env.Environment;
+import com.google.common.base.Preconditions;
 
-public abstract class OfferModule extends BitsquareModule {
+import com.google.inject.Injector;
 
-    protected OfferModule(Environment env) {
-        super(env);
+public class InjectorViewFactory implements ViewFactory {
+
+    private Injector injector;
+
+    public void setInjector(Injector injector) {
+        this.injector = injector;
     }
 
     @Override
-    protected final void configure() {
-        doConfigure();
-    }
-
-    protected void doConfigure() {
+    public Object call(Class<?> aClass) {
+        Preconditions.checkNotNull(injector, "Injector has not yet been provided");
+        return injector.getInstance(aClass);
     }
 }

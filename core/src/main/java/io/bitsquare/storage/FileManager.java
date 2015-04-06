@@ -35,12 +35,9 @@
 package io.bitsquare.storage;
 
 
-import io.bitsquare.gui.components.Popups;
-
 import org.bitcoinj.core.Utils;
 import org.bitcoinj.utils.Threading;
 
-import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -76,6 +73,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class FileManager<T> {
     private static final Logger log = LoggerFactory.getLogger(FileManager.class);
     private static final ReentrantLock lock = Threading.lock("FileManager");
+    private static Thread.UncaughtExceptionHandler uncaughtExceptionHandler;
 
     private final File dir;
     private final File storageFile;
@@ -86,6 +84,10 @@ public class FileManager<T> {
     private final Callable<Void> saver;
     private T serializable;
 
+    public static void setUncaughtExceptionHandler(Thread.UncaughtExceptionHandler uncaughtExceptionHandler) {
+        FileManager.uncaughtExceptionHandler = uncaughtExceptionHandler;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -95,18 +97,12 @@ public class FileManager<T> {
         this.dir = dir;
         this.storageFile = storageFile;
 
-        final ThreadFactoryBuilder builder = new ThreadFactoryBuilder()
+        ThreadFactoryBuilder builder = new ThreadFactoryBuilder()
                 .setDaemon(true)
                 .setNameFormat("FileManager thread")
                 .setPriority(Thread.MIN_PRIORITY);  // Avoid competing with the GUI thread.
 
-        //noinspection Convert2Lambda
-        builder.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread t, Throwable throwable) {
-                Platform.runLater(() -> Popups.handleUncaughtExceptions(Throwables.getRootCause(throwable)));
-            }
-        });
+        builder.setUncaughtExceptionHandler(uncaughtExceptionHandler);
 
         // An executor that starts up threads when needed and shuts them down later.
         this.executor = new ScheduledThreadPoolExecutor(1, builder.build());
@@ -141,8 +137,9 @@ public class FileManager<T> {
         });
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
+    // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**

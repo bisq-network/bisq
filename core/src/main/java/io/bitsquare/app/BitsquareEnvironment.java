@@ -18,12 +18,10 @@
 package io.bitsquare.app;
 
 import io.bitsquare.BitsquareException;
-import io.bitsquare.app.gui.BitsquareAppMain;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.RegTestHost;
 import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.main.MainView;
 import io.bitsquare.p2p.BootstrapNodes;
 import io.bitsquare.p2p.tomp2p.TomP2PModule;
 import io.bitsquare.storage.Storage;
@@ -69,15 +67,15 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
     private final ResourceLoader resourceLoader = new DefaultResourceLoader();
 
-    private final String appName;
-    private final String appDataDir;
-    private final String bootstrapNodePort;
+    protected final String appName;
+    protected final String appDataDir;
+    protected final String bootstrapNodePort;
 
     public BitsquareEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(options)));
     }
 
-    BitsquareEnvironment(PropertySource commandLineProperties) {
+    protected BitsquareEnvironment(PropertySource commandLineProperties) {
         String userDataDir = commandLineProperties.containsProperty(USER_DATA_DIR_KEY) ?
                 (String) commandLineProperties.getProperty(USER_DATA_DIR_KEY) :
                 DEFAULT_USER_DATA_DIR;
@@ -152,7 +150,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
         return new ResourcePropertySource(BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME, resource);
     }
 
-    PropertySource<?> defaultProperties() {
+    protected PropertySource<?> defaultProperties() {
         return new PropertiesPropertySource(BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
             private static final long serialVersionUID = -8478089705207326165L;
 
@@ -163,14 +161,14 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 setProperty(APP_NAME_KEY, appName);
 
                 setProperty(UserAgent.NAME_KEY, appName);
-                setProperty(UserAgent.VERSION_KEY, BitsquareAppMain.getVersion());
+                // setProperty(UserAgent.VERSION_KEY, BitsquareAppMain.getVersion());
 
                 setProperty(WalletService.DIR_KEY, appDataDir);
                 setProperty(WalletService.PREFIX_KEY, appName);
 
                 setProperty(Storage.DIR_KEY, Paths.get(appDataDir, "db").toString());
 
-                setProperty(MainView.TITLE_KEY, appName);
+                // setProperty(MainView.TITLE_KEY, appName);
 
                 setProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY, bootstrapNodePort);
             }

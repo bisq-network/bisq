@@ -15,23 +15,34 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.common.view;
 
-import io.bitsquare.BitsquareModule;
+import java.net.URL;
 
-import org.springframework.core.env.Environment;
+import java.util.ResourceBundle;
 
-public abstract class OfferModule extends BitsquareModule {
+import javafx.fxml.Initializable;
+import javafx.scene.*;
 
-    protected OfferModule(Environment env) {
-        super(env);
+public abstract class InitializableView<R extends Node, M> extends AbstractView<R, M> implements Initializable {
+
+    public InitializableView(M model) {
+        super(model);
+    }
+
+    public InitializableView() {
+        this(null);
     }
 
     @Override
-    protected final void configure() {
-        doConfigure();
+    public final void initialize(URL location, ResourceBundle resources) {
+        prepareInitialize();
+        initialize();
     }
 
-    protected void doConfigure() {
+    protected void prepareInitialize() {
+    }
+
+    protected void initialize() {
     }
 }

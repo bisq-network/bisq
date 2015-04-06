@@ -15,23 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.common.view;
 
-import io.bitsquare.BitsquareModule;
+import org.springframework.util.ClassUtils;
 
-import org.springframework.core.env.Environment;
-
-public abstract class OfferModule extends BitsquareModule {
-
-    protected OfferModule(Environment env) {
-        super(env);
-    }
-
+public class DefaultPathConvention implements FxmlView.PathConvention {
     @Override
-    protected final void configure() {
-        doConfigure();
-    }
-
-    protected void doConfigure() {
+    public String apply(Class<? extends View> viewClass) {
+        return ClassUtils.convertClassNameToResourcePath(viewClass.getName()).concat(".fxml");
     }
 }

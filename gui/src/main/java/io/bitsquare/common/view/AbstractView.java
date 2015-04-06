@@ -15,23 +15,30 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.common.view;
 
-import io.bitsquare.BitsquareModule;
+import javafx.fxml.FXML;
+import javafx.scene.*;
 
-import org.springframework.core.env.Environment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public abstract class OfferModule extends BitsquareModule {
+public abstract class AbstractView<R extends Node, M> implements View {
 
-    protected OfferModule(Environment env) {
-        super(env);
+    protected final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    protected @FXML R root;
+    protected final M model;
+
+    public AbstractView(M model) {
+        this.model = model;
     }
 
-    @Override
-    protected final void configure() {
-        doConfigure();
+    public AbstractView() {
+        this(null);
     }
 
-    protected void doConfigure() {
+    public R getRoot() {
+        return root;
     }
 }

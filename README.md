@@ -18,7 +18,8 @@ You can read about all of this and more in the [whitepaper](https://bitsquare.io
 
 Status
 ------
-Alpha and under heavy development.
+The software is Alpha version and still under heavy development.  
+For the latest version checkout our [release page](https://github.com/bitsquare/bitsquare/releases) at Github.
 
 Building from source
 --------------------

@@ -15,23 +15,35 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.common.view;
 
-import io.bitsquare.BitsquareModule;
+import javafx.scene.*;
 
-import org.springframework.core.env.Environment;
+public abstract class ActivatableView<R extends Node, M> extends InitializableView<R, M> {
 
-public abstract class OfferModule extends BitsquareModule {
+    public ActivatableView(M model) {
+        super(model);
+    }
 
-    protected OfferModule(Environment env) {
-        super(env);
+    public ActivatableView() {
+        this(null);
     }
 
     @Override
-    protected final void configure() {
-        doConfigure();
+    protected void prepareInitialize() {
+        if (root != null) {
+            root.sceneProperty().addListener((ov, oldValue, newValue) -> {
+                if (oldValue == null && newValue != null)
+                    activate();
+                else if (oldValue != null && newValue == null)
+                    deactivate();
+            });
+        }
     }
 
-    protected void doConfigure() {
+    protected void activate() {
+    }
+
+    protected void deactivate() {
     }
 }
