@@ -83,7 +83,6 @@ public class StartFiatView extends TradeStepDetailsView {
 
     @Override
     public void activate() {
-        log.debug("activate ##");
         super.activate();
 
         model.getTxId().addListener(txIdChangeListener);

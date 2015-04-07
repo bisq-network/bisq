@@ -67,7 +67,6 @@ public abstract class TradeStepDetailsView extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void onOpenHelp(ActionEvent actionEvent) {
-        log.debug("onOpenHelp");
         Help.openWindow(model.isOfferer() ? HelpId.PENDING_TRADE_OFFERER : HelpId.PENDING_TRADE_TAKER);
     }
 

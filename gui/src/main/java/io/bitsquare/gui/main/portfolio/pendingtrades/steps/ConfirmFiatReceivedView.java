@@ -83,7 +83,7 @@ public class ConfirmFiatReceivedView extends TradeStepDetailsView {
         log.debug("onPaymentReceived");
         model.fiatPaymentReceived();
         confirmFiatReceivedButton.setDisable(true);
-        statusLabel.setText("Publishing transaction...");
+        statusLabel.setText("Finalizing payout transaction...");
         statusProgressIndicator.setVisible(true);
         statusProgressIndicator.setProgress(-1);
         root = statusProgressIndicator.getScene().getRoot();

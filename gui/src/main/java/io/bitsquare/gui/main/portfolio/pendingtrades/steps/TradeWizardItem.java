@@ -42,10 +42,10 @@ public class TradeWizardItem extends Button {
         setPrefWidth(270);
         setPadding(new Insets(0, 20, 0, 10));
         setAlignment(Pos.CENTER_LEFT);
-        inactive();
+        setDisabled();
     }
 
-    public void inactive() {
+    public void setDisabled() {
         setId("trade-wizard-item-background-disabled");
         Label icon = new Label();
         icon.setPadding(new Insets(-3, 6, 0, 0));
@@ -54,7 +54,7 @@ public class TradeWizardItem extends Button {
         setGraphic(icon);
     }
 
-    public void active() {
+    public void setActive() {
         setId("trade-wizard-item-background-active");
         Label icon = new Label();
         icon.setPadding(new Insets(-3, 6, 0, 0));
@@ -63,7 +63,7 @@ public class TradeWizardItem extends Button {
         setGraphic(icon);
     }
 
-    public void done() {
+    public void setCompleted() {
         setId("trade-wizard-item-background-completed");
         Label icon = new Label();
         icon.setPadding(new Insets(-3, 6, 0, 0));

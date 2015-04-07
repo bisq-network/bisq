@@ -232,7 +232,6 @@ public class TradeManager {
         }
     }
 
-
     public void shutDown() {
         if (!shutDownRequested) {
             log.debug("shutDown");

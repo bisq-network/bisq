@@ -37,7 +37,7 @@ public class FiatAccount implements Serializable {
     public static final long WEEK_IN_BLOCKS = DAY_IN_BLOCKS * 7;
 
     public enum Type {
-        IRC("", "", 1),
+        IRC("", "", 0),
         SEPA("IBAN", "BIC", WEEK_IN_BLOCKS),
         WIRE("primary ID", "secondary ID", WEEK_IN_BLOCKS),
         INTERNATIONAL("primary ID", "secondary ID", 2 * WEEK_IN_BLOCKS),

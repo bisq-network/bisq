@@ -83,11 +83,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         selectedItemChangeListener = (ov, oldValue, newValue) -> {
             model.onSelectTrade(newValue);
-
-            if (newValue != null)
-                addSubView();
-            else
-                removeSubView();
+            log.debug("selectedItemChangeListener {} ", newValue);
+            setNewSubView(newValue != null && newValue.getTrade() != null);
         };
 
         appFocusChangeListener = (observable, oldValue, newValue) -> {
@@ -102,10 +99,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         };
 
         currentTradeChangeListener = (observable, oldValue, newValue) -> {
-            if (newValue != null)
-                addSubView();
-            else
-                removeSubView();
+            log.debug("currentTradeChangeListener {} ", newValue);
+            setNewSubView(newValue != null);
         };
     }
 
@@ -118,7 +113,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         table.getSelectionModel().selectedItemProperty().addListener(selectedItemChangeListener);
         PendingTradesListItem selectedItem = model.getSelectedItem();
         if (selectedItem != null) {
-            addSubView();
+            // addSubView();
 
             // Select and focus selectedItem from model
             int index = table.getItems().indexOf(selectedItem);
@@ -129,11 +124,11 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             });
         }
         else {
-            removeSubView();
+            //removeSubView();
         }
 
-        if (currentSubView != null)
-            currentSubView.activate();
+        /*if (currentSubView != null)
+            currentSubView.activate();*/
     }
 
     @Override
@@ -152,40 +147,37 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     // Subviews
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void addSubView() {
-        removeSubView();
-
-        if (model.isOfferer()) {
-            if (model.isBuyOffer())
-                currentSubView = new BuyerSubView(model);
-            else
-                currentSubView = new SellerSubView(model);
-        }
-        else {
-            if (model.isBuyOffer())
-                currentSubView = new SellerSubView(model);
-            else
-                currentSubView = new BuyerSubView(model);
-        }
+    private void setNewSubView(boolean isTradeSelected) {
+        log.debug("setNewSubView {}", isTradeSelected);
         if (currentSubView != null) {
-            currentSubView.activate();
+            currentSubView.deactivate();
 
+            if (!isTradeSelected) {
+                tradeStepPane.getChildren().remove(currentSubView);
+                currentSubView = null;
+            }
+        }
+
+        if (isTradeSelected) {
+            if (model.isOfferer()) {
+                if (model.isBuyOffer())
+                    currentSubView = new BuyerSubView(model);
+                else
+                    currentSubView = new SellerSubView(model);
+            }
+            else {
+                if (model.isBuyOffer())
+                    currentSubView = new SellerSubView(model);
+                else
+                    currentSubView = new BuyerSubView(model);
+            }
+
+            currentSubView.activate();
             AnchorPane.setTopAnchor(currentSubView, 0d);
             AnchorPane.setRightAnchor(currentSubView, 0d);
             AnchorPane.setBottomAnchor(currentSubView, 0d);
             AnchorPane.setLeftAnchor(currentSubView, 0d);
             tradeStepPane.getChildren().setAll(currentSubView);
-        }
-        else {
-            log.warn("currentSubView=null");
-        }
-    }
-
-    private void removeSubView() {
-        if (currentSubView != null) {
-            currentSubView.deactivate();
-            tradeStepPane.getChildren().remove(currentSubView);
-            currentSubView = null;
         }
     }
 

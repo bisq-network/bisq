@@ -48,16 +48,6 @@ public class BuyerSubView extends TradeSubView {
     }
 
     @Override
-    public void activate() {
-        super.activate();
-    }
-
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @Override
     protected void addWizards() {
         waitTxInBlockchain = new TradeWizardItem(WaitTxInBlockchainView.class, "Wait for blockchain confirmation");
         startFiat = new TradeWizardItem(StartFiatView.class, "Start payment");
@@ -65,7 +55,7 @@ public class BuyerSubView extends TradeSubView {
         payoutUnlock = new TradeWizardItem(WaitPayoutLockTimeView.class, "Wait for payout unlock");
         completed = new TradeWizardItem(CompletedView.class, "Completed");
 
-        leftVBox.getChildren().addAll(waitTxInBlockchain, startFiat, waitFiatReceived, payoutUnlock, completed);
+        leftVBox.getChildren().setAll(waitTxInBlockchain, startFiat, waitFiatReceived, payoutUnlock, completed);
     }
 
 
@@ -77,10 +67,11 @@ public class BuyerSubView extends TradeSubView {
     protected void applyState(PendingTradesViewModel.ViewState viewState) {
         log.debug("applyState " + viewState);
 
-        waitTxInBlockchain.inactive();
-        startFiat.inactive();
-        waitFiatReceived.inactive();
-        completed.inactive();
+        waitTxInBlockchain.setDisabled();
+        startFiat.setDisabled();
+        waitFiatReceived.setDisabled();
+        payoutUnlock.setDisabled();
+        completed.setDisabled();
 
         if (tradeStepDetailsView != null)
             tradeStepDetailsView.deactivate();
@@ -93,40 +84,40 @@ public class BuyerSubView extends TradeSubView {
 
                 ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText("Deposit transaction has been published. You need to wait for at least " +
                         "one block chain confirmation.");
-                ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoDisplayField("You need to wait for at least one block chain confirmation to" +
+               /* ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoDisplayField("You need to wait for at least one block chain confirmation to" +
                         " be sure that the deposit funding has not been double spent. For higher trade volumes we" +
-                        " recommend to wait up to 6 confirmations.");
+                        " recommend to wait up to 6 confirmations.");*/
                 break;
             case BUYER_START_PAYMENT:
-                waitTxInBlockchain.done();
+                waitTxInBlockchain.setCompleted();
                 showItem(startFiat);
                 break;
             case BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED:
-                waitTxInBlockchain.done();
-                startFiat.done();
+                waitTxInBlockchain.setCompleted();
+                startFiat.setCompleted();
                 showItem(waitFiatReceived);
 
                 ((WaitFiatReceivedView) tradeStepDetailsView).setInfoLabelText(BSResources.get("Waiting for the Bitcoin sellers confirmation " +
                                 "that the {0} payment has arrived.",
                         model.getCurrencyCode()));
-                ((WaitFiatReceivedView) tradeStepDetailsView).setInfoDisplayField(BSResources.get("When the confirmation that the {0} payment arrived at " +
+              /*  ((WaitFiatReceivedView) tradeStepDetailsView).setInfoDisplayField(BSResources.get("When the confirmation that the {0} payment arrived at " +
                                 "the Bitcoin sellers payment account, the payout transaction will be published.",
-                        model.getCurrencyCode()));
+                        model.getCurrencyCode()));*/
                 break;
             case BUYER_PAYOUT_FINALIZED:
-                waitTxInBlockchain.done();
-                startFiat.done();
-                waitFiatReceived.done();
+                waitTxInBlockchain.setCompleted();
+                startFiat.setCompleted();
+                waitFiatReceived.setCompleted();
                 showItem(payoutUnlock);
 
                 ((WaitPayoutLockTimeView) tradeStepDetailsView).setInfoLabelText("The payout transaction is signed and finalized by both parties." +
-                        "\nFor reducing bank chargeback risks you need to wait until the payout gets unlocked to transfer your Bitcoin.");
+                        "\nFor reducing bank charge back risks you need to wait until the payout gets unlocked to transfer your Bitcoin.");
                 break;
             case BUYER_COMPLETED:
-                waitTxInBlockchain.done();
-                startFiat.done();
-                waitFiatReceived.done();
-                payoutUnlock.done();
+                waitTxInBlockchain.setCompleted();
+                startFiat.setCompleted();
+                waitFiatReceived.setCompleted();
+                payoutUnlock.setCompleted();
                 showItem(completed);
 
                 CompletedView completedView = (CompletedView) tradeStepDetailsView;
@@ -146,6 +137,8 @@ public class BuyerSubView extends TradeSubView {
             case EXCEPTION:
                 if (model.getTradeException() != null)
                     Popups.openExceptionPopup(model.getTradeException());
+                else
+                    Popups.openErrorPopup("An error occurred", model.getErrorMessage());
                 break;
             default:
                 log.warn("unhandled viewState " + viewState);

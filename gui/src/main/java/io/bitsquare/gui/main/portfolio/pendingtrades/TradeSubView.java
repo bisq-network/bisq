@@ -76,7 +76,7 @@ public abstract class TradeSubView extends HBox {
     }
 
     protected void showItem(TradeWizardItem item) {
-        item.active();
+        item.setActive();
         createAndAddTradeStepView(item.getViewClass());
     }
 
