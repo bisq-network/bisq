@@ -26,6 +26,7 @@ import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.p2p.AddressService;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.user.User;
@@ -55,6 +56,7 @@ public class ProcessModel implements Model, Serializable {
 
     // Transient/Immutable
     transient private MessageService messageService;
+    transient private AddressService addressService;
     transient private WalletService walletService;
     transient private TradeWalletService tradeWalletService;
     transient private BlockChainService blockChainService;
@@ -65,7 +67,6 @@ public class ProcessModel implements Model, Serializable {
 
     // Mutable
     public final TradingPeer tradingPeer;
-    transient private boolean mailboxMessageProcessed;
     transient private TradeMessage tradeMessage;
     private String takeOfferFeeTxId;
     private List<TransactionOutput> connectedOutputsForAllInputs;
@@ -88,6 +89,7 @@ public class ProcessModel implements Model, Serializable {
 
     public void onAllServicesInitialized(Offer offer,
                                          MessageService messageService,
+                                         AddressService addressService,
                                          WalletService walletService,
                                          TradeWalletService tradeWalletService,
                                          BlockChainService blockChainService,
@@ -96,6 +98,7 @@ public class ProcessModel implements Model, Serializable {
                                          User user) {
         this.offer = offer;
         this.messageService = messageService;
+        this.addressService = addressService;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
         this.blockChainService = blockChainService;
@@ -153,15 +156,6 @@ public class ProcessModel implements Model, Serializable {
     @Nullable
     public TradeMessage getTradeMessage() {
         return tradeMessage;
-    }
-
-    public void mailboxMessageProcessed() {
-        this.mailboxMessageProcessed = true;
-    }
-
-    @Nullable
-    public boolean isMailboxMessageProcessed() {
-        return mailboxMessageProcessed;
     }
 
     @Nullable
@@ -264,5 +258,9 @@ public class ProcessModel implements Model, Serializable {
 
     @Override
     public void onComplete() {
+    }
+
+    public AddressService getAddressService() {
+        return addressService;
     }
 }

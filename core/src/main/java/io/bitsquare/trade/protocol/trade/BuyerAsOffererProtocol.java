@@ -76,17 +76,20 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
 
     @Override
     public void applyMailboxMessage(MailboxMessage mailboxMessage, Trade trade) {
-        if (trade == null)
-            this.trade = trade;
+        this.trade = trade;
 
         log.debug("setMailboxMessage " + mailboxMessage);
-        // Might be called twice, so check that its only processed once
-        if (!processModel.isMailboxMessageProcessed()) {
-            processModel.mailboxMessageProcessed();
-            if (mailboxMessage instanceof RequestFinalizePayoutTxMessage) {
-                handle((RequestFinalizePayoutTxMessage) mailboxMessage);
-            }
-        }
+
+        // Find first the actual peer address, as it might have changed in the meantime
+        findPeerAddress(processModel.tradingPeer.getP2pSigPubKey(),
+                () -> {
+                    if (mailboxMessage instanceof RequestFinalizePayoutTxMessage) {
+                        handle((RequestFinalizePayoutTxMessage) mailboxMessage);
+                    }
+                },
+                (errorMessage -> {
+                    log.error(errorMessage);
+                }));
     }
 
 

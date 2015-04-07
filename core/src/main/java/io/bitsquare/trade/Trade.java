@@ -24,6 +24,7 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.p2p.AddressService;
 import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
@@ -152,6 +153,7 @@ abstract public class Trade implements Model, Serializable {
 
     public void init(MessageService messageService,
                      WalletService walletService,
+                     AddressService addressService,
                      TradeWalletService tradeWalletService,
                      BlockChainService blockChainService,
                      SignatureService signatureService,
@@ -160,6 +162,7 @@ abstract public class Trade implements Model, Serializable {
 
         processModel.onAllServicesInitialized(offer,
                 messageService,
+                addressService,
                 walletService,
                 tradeWalletService,
                 blockChainService,
@@ -170,7 +173,7 @@ abstract public class Trade implements Model, Serializable {
         createProtocol();
 
         tradeProtocol.checkPayoutTxTimeLock(this);
-        
+
         if (mailboxMessage != null) {
             tradeProtocol.applyMailboxMessage(mailboxMessage, this);
             // After applied to protocol we remove it

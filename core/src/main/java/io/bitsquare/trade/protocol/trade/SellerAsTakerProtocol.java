@@ -76,23 +76,26 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
     @Override
     public void applyMailboxMessage(MailboxMessage mailboxMessage, Trade trade) {
-        if (trade == null)
-            this.trade = trade;
+        this.trade = trade;
 
         log.debug("setMailboxMessage " + mailboxMessage);
-        // Might be called twice, so check that its only processed once
-        if (!processModel.isMailboxMessageProcessed()) {
-            processModel.mailboxMessageProcessed();
-            if (mailboxMessage instanceof FiatTransferStartedMessage) {
-                handle((FiatTransferStartedMessage) mailboxMessage);
-            }
-            else if (mailboxMessage instanceof DepositTxPublishedMessage) {
-                handle((DepositTxPublishedMessage) mailboxMessage);
-            }
-            else if (mailboxMessage instanceof PayoutTxFinalizedMessage) {
-                handle((PayoutTxFinalizedMessage) mailboxMessage);
-            }
-        }
+
+        // Find first the actual peer address, as it might have changed in the meantime
+        findPeerAddress(trade.getOffer().getP2pSigPubKey(),
+                () -> {
+                    if (mailboxMessage instanceof FiatTransferStartedMessage) {
+                        handle((FiatTransferStartedMessage) mailboxMessage);
+                    }
+                    else if (mailboxMessage instanceof DepositTxPublishedMessage) {
+                        handle((DepositTxPublishedMessage) mailboxMessage);
+                    }
+                    else if (mailboxMessage instanceof PayoutTxFinalizedMessage) {
+                        handle((PayoutTxFinalizedMessage) mailboxMessage);
+                    }
+                },
+                (errorMessage -> {
+                    log.error(errorMessage);
+                }));
     }
 
     @Override

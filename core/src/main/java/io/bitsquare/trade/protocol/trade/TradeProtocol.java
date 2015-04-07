@@ -17,8 +17,12 @@
 
 package io.bitsquare.trade.protocol.trade;
 
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.MessageHandler;
+import io.bitsquare.p2p.Peer;
+import io.bitsquare.p2p.listener.GetPeerAddressListener;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
@@ -27,6 +31,8 @@ import io.bitsquare.trade.states.OffererTradeState;
 import io.bitsquare.trade.states.TakerTradeState;
 
 import org.bitcoinj.utils.Threading;
+
+import java.security.PublicKey;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -55,9 +61,27 @@ public abstract class TradeProtocol {
 
     abstract public void applyMailboxMessage(MailboxMessage mailboxMessage, Trade trade);
 
+    protected void findPeerAddress(PublicKey p2pSigPubKey, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        try {
+            processModel.getAddressService().findPeerAddress(p2pSigPubKey, new GetPeerAddressListener() {
+                @Override
+                public void onResult(Peer peer) {
+                    trade.setTradingPeer(peer);
+                    resultHandler.handleResult();
+                }
+
+                @Override
+                public void onFailed() {
+                    errorMessageHandler.handleErrorMessage("findPeerAddress failed");
+                }
+            });
+        } catch (Throwable t) {
+            errorMessageHandler.handleErrorMessage("findPeerAddress failed with error: " + t.getMessage());
+        }
+    }
+
     public void checkPayoutTxTimeLock(Trade trade) {
-        if (trade == null)
-            this.trade = trade;
+        this.trade = trade;
 
         boolean needPayoutTxBroadcast = false;
         if (trade instanceof TakerTrade)

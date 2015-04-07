@@ -484,6 +484,7 @@ public class TradeManager {
     private void initTrade(Trade trade) {
         trade.init(messageService,
                 walletService,
+                addressService,
                 tradeWalletService,
                 blockChainService,
                 signatureService,
