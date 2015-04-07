@@ -61,11 +61,9 @@ public abstract class TradeProtocol {
 
         boolean needPayoutTxBroadcast = false;
         if (trade instanceof TakerTrade)
-            needPayoutTxBroadcast = trade.processStateProperty().get() == TakerTradeState.ProcessState.PAYOUT_FINALIZED
-                    || trade.processStateProperty().get() == TakerTradeState.ProcessState.PAYOUT_FINALIZED_MSG_SENT;
+            needPayoutTxBroadcast = trade.processStateProperty().get() == TakerTradeState.ProcessState.PAYOUT_FINALIZED;
         else if (trade instanceof OffererTrade)
-            needPayoutTxBroadcast = trade.processStateProperty().get() == OffererTradeState.ProcessState.PAYOUT_FINALIZED
-                    || trade.processStateProperty().get() == OffererTradeState.ProcessState.PAYOUT_FINALIZED_MSG_SENT;
+            needPayoutTxBroadcast = trade.processStateProperty().get() == OffererTradeState.ProcessState.PAYOUT_FINALIZED;
 
         if (needPayoutTxBroadcast) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
@@ -92,7 +90,7 @@ public abstract class TradeProtocol {
                     log.debug("Timeout reached");
                     if (trade instanceof TakerTrade)
                         trade.setProcessState(TakerTradeState.ProcessState.TIMEOUT);
-                    else
+                    else if (trade instanceof OffererTrade)
                         trade.setProcessState(OffererTradeState.ProcessState.TIMEOUT);
                 });
             }

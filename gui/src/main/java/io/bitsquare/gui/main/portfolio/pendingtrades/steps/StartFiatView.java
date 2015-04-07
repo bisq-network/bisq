@@ -133,7 +133,7 @@ public class StartFiatView extends TradeStepDetailsView {
         primaryIdTextField = getAndAddLabelTextFieldWithCopyIconPair(gridPane, gridRow++, "IBAN:").textFieldWithCopyIcon;
         secondaryIdTextField = getAndAddLabelTextFieldWithCopyIconPair(gridPane, gridRow++, "BIC:").textFieldWithCopyIcon;
         paymentsInfoDisplay = getAndAddInfoDisplay(gridPane, gridRow++, "infoDisplay", this::onOpenHelp);
-        ButtonWithProgressIndicatorAndLabelBucket bucket = getAndAddButtonWithStatus(gridPane, gridRow++, "Payment started", this::onPaymentStarted);
+        ButtonWithProgressIndicatorAndLabel bucket = getAndAddButtonWithStatus(gridPane, gridRow++, "Payment started", this::onPaymentStarted);
         paymentStartedButton = bucket.button;
         statusProgressIndicator = bucket.progressIndicator;
         statusLabel = bucket.label;

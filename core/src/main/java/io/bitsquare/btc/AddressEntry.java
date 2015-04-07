@@ -23,8 +23,6 @@ import org.bitcoinj.crypto.DeterministicKey;
 
 import java.io.Serializable;
 
-import java.util.Arrays;
-
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -102,9 +100,10 @@ public class AddressEntry implements Serializable {
         return "AddressEntry{" +
                 "offerId='" + offerId + '\'' +
                 ", context=" + context +
-                ", pubKey=" + Arrays.toString(pubKey) +
+                ", address=" + getAddressString() +
+               /* ", pubKey=" + Arrays.toString(pubKey) +
                 ", pubKeyHash=" + Arrays.toString(pubKeyHash) +
-                ", params=" + params +
+                ", params=" + params +*/
                 '}';
     }
 }

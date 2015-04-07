@@ -18,46 +18,44 @@
 package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.states.OffererTradeState;
-import io.bitsquare.trade.states.TakerTradeState;
 
-import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.Coin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SignAndFinalizePayoutTx extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SignAndFinalizePayoutTx.class);
+public class SignPayoutTx extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SignPayoutTx.class);
 
-    public SignAndFinalizePayoutTx(TaskRunner taskHandler, Trade trade) {
+    public SignPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            Transaction transaction = processModel.getTradeWalletService().signAndFinalizePayoutTx(
+            assert trade.getTradeAmount() != null;
+            assert trade.getSecurityDeposit() != null;
+            Coin sellerPayoutAmount = trade.getSecurityDeposit();
+            Coin buyerPayoutAmount = sellerPayoutAmount.add(trade.getTradeAmount());
+
+            long lockTime = processModel.getTradeWalletService().getLastBlockSeenHeight() + trade.getOffer().getFiatAccountType().lockTimeDelta;
+            trade.setLockTime(lockTime);
+
+            byte[] payoutTxSignature = processModel.getTradeWalletService().signPayoutTx(
                     trade.getDepositTx(),
-                    processModel.tradingPeer.getSignature(),
-                    processModel.tradingPeer.getPayoutAmount(),
-                    processModel.getPayoutAmount(),
+                    buyerPayoutAmount,
+                    sellerPayoutAmount,
                     processModel.tradingPeer.getPayoutAddressString(),
                     processModel.getAddressEntry(),
-                    trade.getLockTimeDelta(),
+                    lockTime,
                     processModel.tradingPeer.getTradeWalletPubKey(),
                     processModel.getTradeWalletPubKey(),
-                    processModel.getArbitratorPubKey()
-            );
+                    processModel.getArbitratorPubKey());
 
-            trade.setPayoutTx(transaction);
-            if (trade instanceof TakerTrade)
-                trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_FINALIZED);
-            else if (trade instanceof OffererTrade)
-                trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_FINALIZED);
+            processModel.setPayoutTxSignature(payoutTxSignature);
 
             complete();
         } catch (Throwable t) {
@@ -67,3 +65,4 @@ public class SignAndFinalizePayoutTx extends TradeTask {
         }
     }
 }
+

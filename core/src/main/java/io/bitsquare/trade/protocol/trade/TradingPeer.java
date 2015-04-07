@@ -19,7 +19,6 @@ package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.fiat.FiatAccount;
 
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
@@ -49,11 +48,12 @@ public class TradingPeer implements Serializable {
     private Transaction preparedDepositTx;
     private List<TransactionOutput> connectedOutputsForAllInputs;
     private List<TransactionOutput> outputs;
-    private Coin payoutAmount;
+    // private Coin payoutAmount;
     private String payoutAddressString;
-    private byte[] signature;
+    // private byte[] signature;
     private String contractAsJson;
     private String contractSignature;
+    private byte[] signature;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -138,13 +138,13 @@ public class TradingPeer implements Serializable {
         this.outputs = outputs;
     }
 
-    public Coin getPayoutAmount() {
+   /* public Coin getPayoutAmount() {
         return payoutAmount;
     }
 
     public void setPayoutAmount(Coin payoutAmount) {
         this.payoutAmount = payoutAmount;
-    }
+    }*/
 
     public String getPayoutAddressString() {
         return payoutAddressString;
@@ -154,13 +154,13 @@ public class TradingPeer implements Serializable {
         this.payoutAddressString = payoutAddressString;
     }
 
-    public byte[] getSignature() {
+   /* public byte[] getSignature() {
         return signature;
     }
 
     public void setSignature(byte[] signature) {
         this.signature = signature;
-    }
+    }*/
 
     public String getContractAsJson() {
         return contractAsJson;
@@ -176,5 +176,13 @@ public class TradingPeer implements Serializable {
 
     public void setContractSignature(String contractSignature) {
         this.contractSignature = contractSignature;
+    }
+
+    public void setSignature(byte[] signature) {
+        this.signature = signature;
+    }
+
+    public byte[] getSignature() {
+        return signature;
     }
 }

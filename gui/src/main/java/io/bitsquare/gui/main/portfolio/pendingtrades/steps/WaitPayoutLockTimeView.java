@@ -46,7 +46,6 @@ public class WaitPayoutLockTimeView extends TradeStepDetailsView {
     private Label infoLabel;
     private TextField timeTextField;
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -113,6 +112,7 @@ public class WaitPayoutLockTimeView extends TradeStepDetailsView {
         blockTextField.setText(String.valueOf(missingBlocks));
         timeTextField.setText(model.getUnlockDate(missingBlocks));
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Build view

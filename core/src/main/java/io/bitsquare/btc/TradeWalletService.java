@@ -411,22 +411,27 @@ public class TradeWalletService {
         return wallet.getTransaction(tx.getHash());
     }
 
-    public byte[] createAndSignPayoutTx(Transaction depositTx,
-                                        Coin buyerPayoutAmount,
-                                        Coin sellerPayoutAmount,
-                                        AddressEntry buyerAddressEntry,
-                                        String sellerPayoutAddressString,
-                                        long lockTimeDelta,
-                                        byte[] buyerPubKey,
-                                        byte[] sellerPubKey,
-                                        byte[] arbitratorPubKey)
+    public int getLastBlockSeenHeight() {
+        return wallet.getLastBlockSeenHeight();
+    }
+
+    public byte[] signPayoutTx(Transaction depositTx,
+                               Coin buyerPayoutAmount,
+                               Coin sellerPayoutAmount,
+                               String buyerPayoutAddressString,
+                               AddressEntry sellerAddressEntry,
+                               long lockTime,
+                               byte[] buyerPubKey,
+                               byte[] sellerPubKey,
+                               byte[] arbitratorPubKey)
             throws AddressFormatException, TransactionVerificationException, SigningException {
         log.trace("createAndSignPayoutTx called");
         log.trace("depositTx " + depositTx.toString());
         log.trace("buyerPayoutAmount " + buyerPayoutAmount.toFriendlyString());
         log.trace("sellerPayoutAmount " + sellerPayoutAmount.toFriendlyString());
-        log.trace("buyerAddressEntry " + buyerAddressEntry.toString());
-        log.trace("sellerPayoutAddressString " + sellerPayoutAddressString);
+        log.trace("buyerPayoutAddressString " + buyerPayoutAddressString);
+        log.trace("sellerAddressEntry " + sellerAddressEntry.toString());
+        log.trace("lockTime " + lockTime);
         log.trace("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
         log.trace("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
         log.trace("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
@@ -434,45 +439,46 @@ public class TradeWalletService {
         Transaction preparedPayoutTx = createPayoutTx(depositTx,
                 buyerPayoutAmount,
                 sellerPayoutAmount,
-                buyerAddressEntry.getAddressString(),
-                sellerPayoutAddressString);
-        preparedPayoutTx.setLockTime(wallet.getLastBlockSeenHeight() + lockTimeDelta);
-        preparedPayoutTx.getInputs().stream().forEach(i -> i.setSequenceNumber(0));
+                buyerPayoutAddressString,
+                sellerAddressEntry.getAddressString(),
+                lockTime
+        );
         // MS redeemScript
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
         Sha256Hash sigHash = preparedPayoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
-        ECKey.ECDSASignature buyerSignature = buyerAddressEntry.getKeyPair().sign(sigHash).toCanonicalised();
+        ECKey.ECDSASignature sellerSignature = sellerAddressEntry.getKeyPair().sign(sigHash).toCanonicalised();
 
         verifyTransaction(preparedPayoutTx);
 
         printTxWithInputs("preparedPayoutTx", preparedPayoutTx);
-        log.trace("buyerSignature r " + buyerSignature.toCanonicalised().r.toString());
-        log.trace("buyerSignature s " + buyerSignature.toCanonicalised().s.toString());
+        log.trace("sellerSignature r " + sellerSignature.toCanonicalised().r.toString());
+        log.trace("sellerSignature s " + sellerSignature.toCanonicalised().s.toString());
         Sha256Hash hashForSignature = preparedPayoutTx.hashForSignature(0, redeemScript.getProgram(), (byte) 1);
         log.trace("hashForSignature " + Utils.HEX.encode(hashForSignature.getBytes()));
 
-        return buyerSignature.encodeToDER();
+        return sellerSignature.encodeToDER();
     }
 
     public Transaction signAndFinalizePayoutTx(Transaction depositTx,
-                                               byte[] buyerSignature,
+                                               byte[] sellerSignature,
                                                Coin buyerPayoutAmount,
                                                Coin sellerPayoutAmount,
-                                               String buyerAddressString,
-                                               AddressEntry sellerAddressEntry,
-                                               long lockTimeDelta,
+                                               AddressEntry buyerAddressEntry,
+                                               String sellerAddressString,
+                                               long lockTime,
                                                byte[] buyerPubKey,
                                                byte[] sellerPubKey,
                                                byte[] arbitratorPubKey)
             throws AddressFormatException, TransactionVerificationException, WalletException, SigningException {
         log.trace("signAndPublishPayoutTx called");
         log.trace("depositTx " + depositTx.toString());
-        log.trace("buyerSignature r " + ECKey.ECDSASignature.decodeFromDER(buyerSignature).r.toString());
-        log.trace("buyerSignature s " + ECKey.ECDSASignature.decodeFromDER(buyerSignature).s.toString());
+        log.trace("sellerSignature r " + ECKey.ECDSASignature.decodeFromDER(sellerSignature).r.toString());
+        log.trace("sellerSignature s " + ECKey.ECDSASignature.decodeFromDER(sellerSignature).s.toString());
         log.trace("buyerPayoutAmount " + buyerPayoutAmount.toFriendlyString());
         log.trace("sellerPayoutAmount " + sellerPayoutAmount.toFriendlyString());
-        log.trace("buyerAddressString " + buyerAddressString);
-        log.trace("sellerAddressEntry " + sellerAddressEntry);
+        log.trace("buyerAddressEntry " + buyerAddressEntry);
+        log.trace("sellerAddressString " + sellerAddressString);
+        log.trace("lockTime " + lockTime);
         log.trace("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
         log.trace("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
         log.trace("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
@@ -480,28 +486,26 @@ public class TradeWalletService {
         Transaction payoutTx = createPayoutTx(depositTx,
                 buyerPayoutAmount,
                 sellerPayoutAmount,
-                buyerAddressString,
-                sellerAddressEntry.getAddressString());
-        payoutTx.setLockTime(wallet.getLastBlockSeenHeight() + lockTimeDelta);
-        payoutTx.getInputs().stream().forEach(i -> i.setSequenceNumber(0));
+                buyerAddressEntry.getAddressString(),
+                sellerAddressString,
+                lockTime);
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
         Sha256Hash sigHash = payoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
-        ECKey.ECDSASignature sellerSignature = sellerAddressEntry.getKeyPair().sign(sigHash).toCanonicalised();
+        ECKey.ECDSASignature buyerSignature = buyerAddressEntry.getKeyPair().sign(sigHash).toCanonicalised();
 
-        log.trace("sellerSignature r " + sellerSignature.r.toString());
-        log.trace("sellerSignature s " + sellerSignature.s.toString());
+        log.trace("buyerSignature r " + buyerSignature.r.toString());
+        log.trace("buyerSignature s " + buyerSignature.s.toString());
 
         Sha256Hash hashForSignature = payoutTx.hashForSignature(0, redeemScript.getProgram(), (byte) 1);
         log.trace("hashForSignature " + Utils.HEX.encode(hashForSignature.getBytes()));
 
-        TransactionSignature buyerTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(buyerSignature),
-                Transaction.SigHash.ALL, false);
-        TransactionSignature sellerTxSig = new TransactionSignature(sellerSignature, Transaction.SigHash.ALL, false);
+        TransactionSignature sellerTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(sellerSignature), Transaction.SigHash.ALL, false);
+        TransactionSignature buyerTxSig = new TransactionSignature(buyerSignature, Transaction.SigHash.ALL, false);
         // Take care of order of signatures. See comment below at getMultiSigRedeemScript
         Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(sellerTxSig, buyerTxSig), redeemScript);
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
-
+        printTxWithInputs("payoutTx", payoutTx);
         verifyTransaction(payoutTx);
         checkWalletConsistency();
         checkScriptSig(payoutTx, input, 0);
@@ -561,13 +565,15 @@ public class TradeWalletService {
                                        Coin buyerPayoutAmount,
                                        Coin sellerPayoutAmount,
                                        String buyerAddressString,
-                                       String sellerAddressString) throws AddressFormatException {
-
+                                       String sellerAddressString,
+                                       long lockTime) throws AddressFormatException {
         TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
         Transaction transaction = new Transaction(params);
         transaction.addInput(p2SHMultiSigOutput);
         transaction.addOutput(buyerPayoutAmount, new Address(params, buyerAddressString));
         transaction.addOutput(sellerPayoutAmount, new Address(params, sellerAddressString));
+        transaction.setLockTime(lockTime);
+        transaction.getInputs().stream().forEach(i -> i.setSequenceNumber(0));
         return transaction;
     }
 

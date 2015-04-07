@@ -299,7 +299,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     public long getLockTime() {
-        return trade.getPayoutTx().getLockTime();
+        return trade.getLockTime();
     }
 
     public int getBestChainHeight() {

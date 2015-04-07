@@ -50,8 +50,8 @@ public class BuyerSubView extends TradeSubView {
     @Override
     protected void addWizards() {
         waitTxInBlockchain = new TradeWizardItem(WaitTxInBlockchainView.class, "Wait for blockchain confirmation");
-        startFiat = new TradeWizardItem(StartFiatView.class, "Start payment");
-        waitFiatReceived = new TradeWizardItem(WaitFiatReceivedView.class, "Wait until payment has arrived");
+        startFiat = new TradeWizardItem(StartFiatView.class, "Start EUR payment");
+        waitFiatReceived = new TradeWizardItem(WaitFiatReceivedView.class, "Wait until EUR payment arrived");
         payoutUnlock = new TradeWizardItem(WaitPayoutLockTimeView.class, "Wait for payout unlock");
         completed = new TradeWizardItem(CompletedView.class, "Completed");
 

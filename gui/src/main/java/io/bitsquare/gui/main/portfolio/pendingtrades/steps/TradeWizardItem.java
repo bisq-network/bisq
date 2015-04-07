@@ -39,7 +39,7 @@ public class TradeWizardItem extends Button {
         setMouseTransparent(true);
         setText(title);
         setPrefHeight(40);
-        setPrefWidth(270);
+        setPrefWidth(340);
         setPadding(new Insets(0, 20, 0, 10));
         setAlignment(Pos.CENTER_LEFT);
         setDisabled();

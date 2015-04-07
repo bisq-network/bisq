@@ -35,15 +35,15 @@ public class OffererTradeState {
     public enum ProcessState implements TradeState.ProcessState {
         UNDEFINED,
         DEPOSIT_PUBLISHED,
-        DEPOSIT_CONFIRMED,
+        DEPOSIT_CONFIRMED, 
 
         FIAT_PAYMENT_STARTED,
 
-        FIAT_PAYMENT_RECEIVED,
+        REQUEST_PAYOUT_FINALIZE_MSG_SENT, // seller only
         PAYOUT_FINALIZED,
-        PAYOUT_FINALIZED_MSG_SENT,
+
         PAYOUT_BROAD_CASTED,
-        PAYOUT_BROAD_CASTED_FAILED,
+        PAYOUT_BROAD_CASTED_FAILED, 
 
         MESSAGE_SENDING_FAILED,
         TIMEOUT,

@@ -49,7 +49,8 @@ public class SetupPayoutTxLockTimeReachedListener extends TradeTask {
     @Override
     protected void doRun() {
         try {
-            if (processModel.getTradeWalletService().getBestChainHeight() >= trade.getPayoutTx().getLockTime()) {
+            log.debug("ChainHeight/LockTime: {} / {}", processModel.getTradeWalletService().getBestChainHeight(), trade.getLockTime());
+            if (processModel.getTradeWalletService().getBestChainHeight() >= trade.getLockTime()) {
                 broadcastTx();
             }
             else {

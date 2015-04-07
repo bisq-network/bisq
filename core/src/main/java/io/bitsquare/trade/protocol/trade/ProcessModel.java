@@ -30,7 +30,6 @@ import io.bitsquare.p2p.MessageService;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.user.User;
 
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.DeterministicKey;
@@ -70,7 +69,7 @@ public class ProcessModel implements Model, Serializable {
     transient private TradeMessage tradeMessage;
     private String takeOfferFeeTxId;
     private List<TransactionOutput> connectedOutputsForAllInputs;
-    private Coin payoutAmount;
+    // private Coin payoutAmount;
     private Transaction preparedDepositTx;
     private List<TransactionOutput> outputs; // used to verify amounts with change outputs
     private byte[] payoutTxSignature;
@@ -215,14 +214,14 @@ public class ProcessModel implements Model, Serializable {
         this.connectedOutputsForAllInputs = connectedOutputsForAllInputs;
     }
 
-    @Nullable
+   /* @Nullable
     public Coin getPayoutAmount() {
         return payoutAmount;
     }
 
     public void setPayoutAmount(Coin payoutAmount) {
         this.payoutAmount = payoutAmount;
-    }
+    }*/
 
     @Nullable
     public Transaction getPreparedDepositTx() {

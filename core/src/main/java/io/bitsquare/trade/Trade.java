@@ -104,6 +104,7 @@ abstract public class Trade implements Model, Serializable {
     private String sellerContractSignature;
     private String buyerContractSignature;
     private Transaction payoutTx;
+    private long lockTime;
 
     // Transient/Mutable
     transient private String errorMessage;
@@ -168,12 +169,13 @@ abstract public class Trade implements Model, Serializable {
 
         createProtocol();
 
+        tradeProtocol.checkPayoutTxTimeLock(this);
+        
         if (mailboxMessage != null) {
             tradeProtocol.applyMailboxMessage(mailboxMessage, this);
             // After applied to protocol we remove it
             mailboxMessage = null;
         }
-        tradeProtocol.checkPayoutTxTimeLock(this);
     }
 
     protected void initStateProperties() {
@@ -334,14 +336,17 @@ abstract public class Trade implements Model, Serializable {
         tradeVolumeProperty.set(getTradeVolume());
     }
 
-    // TODO support case of multiple fiat accounts
-    public long getLockTimeDelta() {
-        return getOffer().getFiatAccountType().lockTimeDelta;
-    }
-
     @Nullable
     public Coin getTradeAmount() {
         return tradeAmount;
+    }
+
+    public void setLockTime(long lockTime) {
+        this.lockTime = lockTime;
+    }
+
+    public long getLockTime() {
+        return lockTime;
     }
 
     public void setSellerContractSignature(String takerSignature) {
@@ -466,4 +471,5 @@ abstract public class Trade implements Model, Serializable {
                 ", throwable=" + throwable +
                 '}';
     }
+
 }

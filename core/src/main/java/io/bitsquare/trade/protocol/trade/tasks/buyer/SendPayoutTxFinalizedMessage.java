@@ -15,18 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.tasks.seller;
+package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
-import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
-import io.bitsquare.trade.states.OffererTradeState;
 import io.bitsquare.trade.states.StateUtil;
-import io.bitsquare.trade.states.TakerTradeState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,19 +45,14 @@ public class SendPayoutTxFinalizedMessage extends TradeTask {
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {
-                            log.trace("PayoutTxPublishedMessage successfully arrived at peer");
-
-                            if (trade instanceof TakerTrade)
-                                trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_FINALIZED_MSG_SENT);
-                            else if (trade instanceof OffererTrade)
-                                trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_FINALIZED_MSG_SENT);
+                            log.trace("PayoutTxFinalizedMessage successfully arrived at peer");
 
                             complete();
                         }
 
                         @Override
                         public void handleFault() {
-                            appendToErrorMessage("Sending PayoutTxPublishedMessage failed");
+                            appendToErrorMessage("Sending PayoutTxFinalizedMessage failed");
                             trade.setErrorMessage(errorMessage);
                             StateUtil.setSendFailedState(trade);
                             failed();

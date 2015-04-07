@@ -24,6 +24,7 @@ import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.CommitDepositTx;
@@ -31,17 +32,18 @@ import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignContract;
 import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignDepositTx;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessFiatTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessPayoutTxFinalizedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessRequestPayDepositMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SendPayoutTxFinalizedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.SendRequestDepositTxInputsMessage;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SendRequestFinalizePayoutTxMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.SendRequestPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SignAndFinalizePayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SignPayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.shared.CommitPayoutTx;
 import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
 import io.bitsquare.trade.protocol.trade.tasks.taker.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOffererAccount;
-import io.bitsquare.trade.states.TakerTradeState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +89,9 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
             else if (mailboxMessage instanceof DepositTxPublishedMessage) {
                 handle((DepositTxPublishedMessage) mailboxMessage);
             }
+            else if (mailboxMessage instanceof PayoutTxFinalizedMessage) {
+                handle((PayoutTxFinalizedMessage) mailboxMessage);
+            }
         }
     }
 
@@ -116,7 +121,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         processModel.setTradeMessage(tradeMessage);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
-                () -> log.debug("taskRunner at handleTakerDepositPaymentRequestMessage completed"),
+                () -> log.debug("taskRunner at RequestPayDepositMessage completed"),
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
@@ -135,7 +140,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         processModel.setTradeMessage(tradeMessage);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
-                () -> log.debug("taskRunner at handleDepositTxPublishedMessage completed"),
+                () -> log.debug("taskRunner at DepositTxPublishedMessage completed"),
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
@@ -154,7 +159,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         processModel.setTradeMessage(tradeMessage);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
-                () -> log.debug("taskRunner at handleFiatTransferStartedMessage completed"),
+                () -> log.debug("taskRunner at FiatTransferStartedMessage completed"),
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(ProcessFiatTransferStartedMessage.class);
@@ -169,11 +174,9 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     @Override
     public void onFiatPaymentReceived() {
-        sellerAsTakerTrade.setProcessState(TakerTradeState.ProcessState.FIAT_PAYMENT_RECEIVED);
-
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
                 () -> {
-                    log.debug("taskRunner at handleFiatReceivedUIEvent completed");
+                    log.debug("taskRunner at onFiatPaymentReceived completed");
 
                     // we are done!
                     processModel.onComplete();
@@ -182,12 +185,27 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
         taskRunner.addTasks(
                 VerifyOfferFeePayment.class,
-                SignAndFinalizePayoutTx.class,
-                SendPayoutTxFinalizedMessage.class,
+                SignPayoutTx.class,
+                SendRequestFinalizePayoutTxMessage.class
+        );
+        taskRunner.run();
+    }
+
+    private void handle(PayoutTxFinalizedMessage tradeMessage) {
+        processModel.setTradeMessage(tradeMessage);
+
+        TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
+                () -> log.debug("taskRunner at PayoutTxFinalizedMessage completed"),
+                this::handleTaskRunnerFault);
+
+        taskRunner.addTasks(
+                ProcessPayoutTxFinalizedMessage.class,
+                CommitPayoutTx.class,
                 SetupPayoutTxLockTimeReachedListener.class
         );
         taskRunner.run();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Massage dispatcher
@@ -209,7 +227,11 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 else if (tradeMessage instanceof FiatTransferStartedMessage) {
                     handle((FiatTransferStartedMessage) tradeMessage);
                 }
+                else if (tradeMessage instanceof PayoutTxFinalizedMessage) {
+                    handle((PayoutTxFinalizedMessage) tradeMessage);
+                }
                 else {
+
                     log.error("Incoming message not supported. " + tradeMessage);
                 }
             }

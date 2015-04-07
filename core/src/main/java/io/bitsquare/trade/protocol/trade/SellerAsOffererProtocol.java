@@ -27,6 +27,7 @@ import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailability
 import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.tasks.offerer.VerifyTakeOfferFeePayment;
@@ -36,10 +37,12 @@ import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignContract;
 import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignDepositTx;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessFiatTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessPayoutTxFinalizedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessRequestPayDepositMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SendPayoutTxFinalizedMessage;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SendRequestFinalizePayoutTxMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.SendRequestPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SignAndFinalizePayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SignPayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.shared.CommitPayoutTx;
 import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
 import io.bitsquare.trade.states.OffererTradeState;
 
@@ -193,8 +196,6 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     @Override
     public void onFiatPaymentReceived() {
-        sellerAsOffererTrade.setProcessState(OffererTradeState.ProcessState.FIAT_PAYMENT_RECEIVED);
-
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsOffererTrade,
                 () -> {
                     log.debug("taskRunner at handleFiatReceivedUIEvent completed");
@@ -206,13 +207,26 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
 
         taskRunner.addTasks(
                 VerifyTakeOfferFeePayment.class,
-                SignAndFinalizePayoutTx.class,
-                SendPayoutTxFinalizedMessage.class,
-                SetupPayoutTxLockTimeReachedListener.class
+                SignPayoutTx.class,
+                SendRequestFinalizePayoutTxMessage.class
         );
         taskRunner.run();
     }
 
+    private void handle(PayoutTxFinalizedMessage tradeMessage) {
+        processModel.setTradeMessage(tradeMessage);
+
+        TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsOffererTrade,
+                () -> log.debug("taskRunner at handleFiatTransferStartedMessage completed"),
+                this::handleTaskRunnerFault);
+
+        taskRunner.addTasks(
+                ProcessPayoutTxFinalizedMessage.class,
+                CommitPayoutTx.class,
+                SetupPayoutTxLockTimeReachedListener.class
+        );
+        taskRunner.run();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Massage dispatcher
@@ -235,6 +249,9 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
                 }
                 else if (tradeMessage instanceof FiatTransferStartedMessage) {
                     handle((FiatTransferStartedMessage) tradeMessage);
+                }
+                else if (tradeMessage instanceof PayoutTxFinalizedMessage) {
+                    handle((PayoutTxFinalizedMessage) tradeMessage);
                 }
                 else {
                     log.error("Incoming tradeMessage not supported. " + tradeMessage);

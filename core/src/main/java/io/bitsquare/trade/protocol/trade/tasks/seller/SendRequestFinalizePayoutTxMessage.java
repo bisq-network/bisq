@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.tasks.buyer;
+package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
@@ -23,7 +23,7 @@ import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.messages.RequestFinalizePayoutTxMessage;
 import io.bitsquare.trade.states.OffererTradeState;
 import io.bitsquare.trade.states.StateUtil;
 import io.bitsquare.trade.states.TakerTradeState;
@@ -31,47 +31,48 @@ import io.bitsquare.trade.states.TakerTradeState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendFiatTransferStartedMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SendFiatTransferStartedMessage.class);
+public class SendRequestFinalizePayoutTxMessage extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SendRequestFinalizePayoutTxMessage.class);
 
-    public SendFiatTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
+    public SendRequestFinalizePayoutTxMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            FiatTransferStartedMessage tradeMessage = new FiatTransferStartedMessage(processModel.getId(),
-                    processModel.getAddressEntry().getAddressString()
+            RequestFinalizePayoutTxMessage message = new RequestFinalizePayoutTxMessage(
+                    processModel.getId(),
+                    processModel.getPayoutTxSignature(),
+                    processModel.getAddressEntry().getAddressString(),
+                    trade.getLockTime()
             );
 
-            processModel.getMessageService().sendMessage(trade.getTradingPeer(), tradeMessage,
+            processModel.getMessageService().sendMessage(trade.getTradingPeer(),
+                    message,
                     processModel.tradingPeer.getP2pSigPubKey(),
                     processModel.tradingPeer.getP2pEncryptPubKey(),
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {
-                            log.trace("Sending FiatTransferStartedMessage succeeded.");
+                            log.trace("PayoutTxPublishedMessage successfully arrived at peer");
 
-                            if (trade instanceof OffererTrade)
-                                trade.setProcessState(OffererTradeState.ProcessState.FIAT_PAYMENT_STARTED);
                             if (trade instanceof TakerTrade)
-                                trade.setProcessState(TakerTradeState.ProcessState.FIAT_PAYMENT_STARTED);
+                                trade.setProcessState(TakerTradeState.ProcessState.REQUEST_PAYOUT_FINALIZE_MSG_SENT);
+                            else if (trade instanceof OffererTrade)
+                                trade.setProcessState(OffererTradeState.ProcessState.REQUEST_PAYOUT_FINALIZE_MSG_SENT);
 
                             complete();
                         }
 
                         @Override
                         public void handleFault() {
-                            appendToErrorMessage("Sending FiatTransferStartedMessage failed");
+                            appendToErrorMessage("Sending PayoutTxPublishedMessage failed");
                             trade.setErrorMessage(errorMessage);
-
                             StateUtil.setSendFailedState(trade);
-
                             failed();
                         }
-                    }
-            );
+                    });
         } catch (Throwable t) {
             t.printStackTrace();
             trade.setThrowable(t);

@@ -58,7 +58,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         SELLER_WAIT_TX_CONF,
         SELLER_WAIT_PAYMENT_STARTED,
         SELLER_CONFIRM_RECEIVE_PAYMENT,
-        SELLER_SEND_PUBLISHED_MSG,
+        SELLER_REQUEST_PAYOUT_FINALIZE_MSG_SENT,
         SELLER_PAYOUT_FINALIZED,
         SELLER_COMPLETED,
 
@@ -329,14 +329,13 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                         viewState.set(ViewState.SELLER_CONFIRM_RECEIVE_PAYMENT);
                         break;
 
-                    case FIAT_PAYMENT_RECEIVED:
+                    case REQUEST_PAYOUT_FINALIZE_MSG_SENT:
+                        viewState.set(ViewState.SELLER_REQUEST_PAYOUT_FINALIZE_MSG_SENT);
                         break;
                     case PAYOUT_FINALIZED:
-                        viewState.set(ViewState.SELLER_SEND_PUBLISHED_MSG);
-                        break;
-                    case PAYOUT_FINALIZED_MSG_SENT:
                         viewState.set(ViewState.SELLER_PAYOUT_FINALIZED);
                         break;
+
                     case PAYOUT_BROAD_CASTED:
                         viewState.set(ViewState.SELLER_COMPLETED);
                         break;
@@ -376,14 +375,13 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                         viewState.set(ViewState.SELLER_CONFIRM_RECEIVE_PAYMENT);
                         break;
 
-                    case FIAT_PAYMENT_RECEIVED:
+                    case REQUEST_PAYOUT_FINALIZE_MSG_SENT:
+                        viewState.set(ViewState.SELLER_REQUEST_PAYOUT_FINALIZE_MSG_SENT);
                         break;
                     case PAYOUT_FINALIZED:
-                        viewState.set(ViewState.SELLER_SEND_PUBLISHED_MSG);
-                        break;
-                    case PAYOUT_FINALIZED_MSG_SENT:
                         viewState.set(ViewState.SELLER_PAYOUT_FINALIZED);
                         break;
+
                     case PAYOUT_BROAD_CASTED:
                         viewState.set(ViewState.SELLER_COMPLETED);
                         break;
@@ -431,11 +429,10 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                         viewState.set(ViewState.BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED);
                         break;
 
-                    case FIAT_PAYMENT_RECEIVED:
-                    case PAYOUT_FINALIZED:
-                    case PAYOUT_FINALIZED_MSG_SENT:
+                    case PAYOUT_FINALIZED: 
                         viewState.set(ViewState.BUYER_PAYOUT_FINALIZED);
                         break;
+
                     case PAYOUT_BROAD_CASTED:
                         viewState.set(ViewState.BUYER_COMPLETED);
                         break;
@@ -477,11 +474,10 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                         viewState.set(ViewState.BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED);
                         break;
 
-                    case FIAT_PAYMENT_RECEIVED:
-                    case PAYOUT_FINALIZED:
-                    case PAYOUT_FINALIZED_MSG_SENT:
+                    case PAYOUT_FINALIZED: 
                         viewState.set(ViewState.BUYER_PAYOUT_FINALIZED);
                         break;
+
                     case PAYOUT_BROAD_CASTED:
                         viewState.set(ViewState.BUYER_COMPLETED);
                         break;

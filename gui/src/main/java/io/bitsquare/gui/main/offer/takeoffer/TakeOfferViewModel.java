@@ -255,8 +255,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                                     "Please try later again." + msg);
                             takeOfferRequested = false;
                             break;
-                        case PAYOUT_FINALIZED:
-                            break;
                         case EXCEPTION:
                             errorMessage.set(msg);
                             takeOfferRequested = false;
@@ -291,8 +289,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                             errorMessage.set("Timeout: We did not received a message from the offerer. Maybe there are connection problems. " +
                                     "Please try later again." + msg);
                             takeOfferRequested = false;
-                            break;
-                        case PAYOUT_FINALIZED:
                             break;
                         case EXCEPTION:
                             errorMessage.set(msg);

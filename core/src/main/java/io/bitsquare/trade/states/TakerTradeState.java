@@ -40,9 +40,9 @@ public class TakerTradeState {
 
         FIAT_PAYMENT_STARTED,
 
-        FIAT_PAYMENT_RECEIVED,
+        REQUEST_PAYOUT_FINALIZE_MSG_SENT, // seller only
         PAYOUT_FINALIZED,
-        PAYOUT_FINALIZED_MSG_SENT,
+
         PAYOUT_BROAD_CASTED,
         PAYOUT_BROAD_CASTED_FAILED,
 

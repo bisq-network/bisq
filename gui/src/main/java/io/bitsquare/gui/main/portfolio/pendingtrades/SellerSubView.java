@@ -21,6 +21,7 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.CompletedView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.ConfirmFiatReceivedView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeWizardItem;
+import io.bitsquare.gui.main.portfolio.pendingtrades.steps.WaitPayoutFinalizedView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.WaitPayoutLockTimeView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.WaitTxInBlockchainView;
 import io.bitsquare.locale.BSResources;
@@ -49,8 +50,8 @@ public class SellerSubView extends TradeSubView {
     @Override
     protected void addWizards() {
         waitTxInBlockchain = new TradeWizardItem(WaitTxInBlockchainView.class, "Wait for blockchain confirmation");
-        waitFiatStarted = new TradeWizardItem(WaitTxInBlockchainView.class, "Wait for payment started");
-        confirmFiatReceived = new TradeWizardItem(ConfirmFiatReceivedView.class, "Confirm payment received");
+        waitFiatStarted = new TradeWizardItem(WaitTxInBlockchainView.class, "Wait until EUR payment has started");
+        confirmFiatReceived = new TradeWizardItem(ConfirmFiatReceivedView.class, "Confirm EUR payment received");
         payoutUnlock = new TradeWizardItem(WaitPayoutLockTimeView.class, "Wait for payout unlock");
         completed = new TradeWizardItem(CompletedView.class, "Completed");
 
@@ -118,14 +119,18 @@ public class SellerSubView extends TradeSubView {
                         model.getCurrencyCode()));*/
 
                 break;
-            case SELLER_SEND_PUBLISHED_MSG:
-                if (tradeStepDetailsView == null) {
-                    waitTxInBlockchain.setCompleted();
-                    waitFiatStarted.setCompleted();
-                    showItem(confirmFiatReceived);
-                }
+            case SELLER_REQUEST_PAYOUT_FINALIZE_MSG_SENT:
+                waitTxInBlockchain.setCompleted();
+                waitFiatStarted.setCompleted();
+                confirmFiatReceived.setCompleted();
+                showItem(payoutUnlock);
 
-                ((ConfirmFiatReceivedView) tradeStepDetailsView).setStatusText("Sending message to trading peer transaction...");
+                // We dont use a wizard for that step as it only gets displayed in case the other peer is offline
+                tradeStepDetailsView = new WaitPayoutFinalizedView(model);
+                contentPane.getChildren().setAll(tradeStepDetailsView);
+
+                ((WaitPayoutFinalizedView) tradeStepDetailsView).setInfoLabelText("We requested the trading peer to sign and finalize the payout transaction." +
+                        "\nIt might be that the other peer is offline, so we need to wait until he finalize the transaction when he goes online again.");
                 break;
             case SELLER_PAYOUT_FINALIZED:
                 waitTxInBlockchain.setCompleted();

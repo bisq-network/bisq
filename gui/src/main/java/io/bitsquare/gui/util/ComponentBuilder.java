@@ -195,7 +195,7 @@ public class ComponentBuilder {
         return button;
     }
 
-    public static ButtonWithProgressIndicatorAndLabelBucket getAndAddButtonWithStatus(GridPane gridPane,
+    public static ButtonWithProgressIndicatorAndLabel getAndAddButtonWithStatus(GridPane gridPane,
                                                                                       int rowIndex,
                                                                                       String ButtonTitle,
                                                                                       EventHandler<ActionEvent> onActionHandler) {
@@ -220,7 +220,7 @@ public class ComponentBuilder {
         GridPane.setMargin(hBox, new Insets(15, 0, 40, 0));
         gridPane.getChildren().add(hBox);
 
-        return new ButtonWithProgressIndicatorAndLabelBucket(button, progressIndicator, label);
+        return new ButtonWithProgressIndicatorAndLabel(button, progressIndicator, label);
     }
 
     public static class LabelTextFieldPair {
@@ -263,12 +263,12 @@ public class ComponentBuilder {
         }
     }
 
-    public static class ButtonWithProgressIndicatorAndLabelBucket {
+    public static class ButtonWithProgressIndicatorAndLabel {
         public Button button;
         public ProgressIndicator progressIndicator;
         public Label label;
 
-        public ButtonWithProgressIndicatorAndLabelBucket(Button button, ProgressIndicator progressIndicator, Label label) {
+        public ButtonWithProgressIndicatorAndLabel(Button button, ProgressIndicator progressIndicator, Label label) {
             this.button = button;
             this.progressIndicator = progressIndicator;
             this.label = label;

@@ -24,15 +24,21 @@ import java.io.Serializable;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-public class FiatTransferStartedMessage extends TradeMessage implements MailboxMessage, Serializable {
+public class RequestFinalizePayoutTxMessage extends TradeMessage implements MailboxMessage, Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
 
-    public final String buyerPayoutAddress;
+    public final byte[] sellerSignature;
+    public final String sellerPayoutAddress;
+    public final long lockTime;
 
-    public FiatTransferStartedMessage(String tradeId,
-                                      String buyerPayoutAddress) {
+    public RequestFinalizePayoutTxMessage(String tradeId,
+                                          byte[] sellerSignature,
+                                          String sellerPayoutAddress,
+                                          long lockTime) {
         super(tradeId);
-        this.buyerPayoutAddress = buyerPayoutAddress;
+        this.sellerSignature = sellerSignature;
+        this.sellerPayoutAddress = sellerPayoutAddress;
+        this.lockTime = lockTime;
     }
 }
