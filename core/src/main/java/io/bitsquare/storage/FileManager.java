@@ -82,10 +82,6 @@ public class FileManager<T> {
     private final Callable<Void> saver;
     private T serializable;
 
-    public static void setUncaughtExceptionHandler(Thread.UncaughtExceptionHandler uncaughtExceptionHandler) {
-        FileManager.uncaughtExceptionHandler = uncaughtExceptionHandler;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -99,8 +95,6 @@ public class FileManager<T> {
                 .setDaemon(true)
                 .setNameFormat("FileManager thread")
                 .setPriority(Thread.MIN_PRIORITY);  // Avoid competing with the GUI thread.
-
-        builder.setUncaughtExceptionHandler(uncaughtExceptionHandler);
 
         // An executor that starts up threads when needed and shuts them down later.
         this.executor = new ScheduledThreadPoolExecutor(1, builder.build());

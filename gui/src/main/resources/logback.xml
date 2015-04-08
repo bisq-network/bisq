@@ -6,26 +6,8 @@
         </encoder>
     </appender>
 
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>.bitsquare/bitsquare.log</file>
-        <append>false</append>
-        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>.bitsquare_logs/bitsquare_%i.log</fileNamePattern>
-            <minIndex>1</minIndex>
-            <maxIndex>10</maxIndex>
-        </rollingPolicy>
-
-        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-            <maxFileSize>1MB</maxFileSize>
-        </triggeringPolicy>
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg %xEx%n</pattern>
-        </encoder>
-    </appender>
-
     <root level="WARN">
         <appender-ref ref="CONSOLE_APPENDER"/>
-        <appender-ref ref="FILE"/>
     </root>
 
     <logger name="io.bitsquare" level="TRACE"/>

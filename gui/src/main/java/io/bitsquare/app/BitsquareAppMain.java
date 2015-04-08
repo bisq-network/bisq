@@ -47,12 +47,6 @@ import static java.util.Arrays.asList;
 public class BitsquareAppMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(BitsquareAppMain.class);
 
-    private static final String VERSION = "0.1";
-
-    public static String getVersion() {
-        return VERSION + "." + UpdateProcess.getBuildVersion();
-    }
-
     public static void main(String[] args) throws Exception {
         // We don't want to do the full argument parsing here as that might easily change in update versions
         // So we only handle the absolute minimum which is APP_NAME, APP_DATA_DIR_KEY and USER_DATA_DIR
@@ -76,6 +70,8 @@ public class BitsquareAppMain extends BitsquareExecutable {
         BitsquareAppEnvironment bitsquareEnvironment = new BitsquareAppEnvironment(options);
         String updatesDirectory = bitsquareEnvironment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY);
 
+        Logging.setup(Paths.get(bitsquareEnvironment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString());
+        
         // app dir need to be setup before UpdateFX bootstrap
         initAppDir(updatesDirectory);
 

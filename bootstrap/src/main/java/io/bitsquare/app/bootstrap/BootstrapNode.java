@@ -17,6 +17,7 @@
 
 package io.bitsquare.app.bootstrap;
 
+import io.bitsquare.app.Logging;
 import io.bitsquare.p2p.BootstrapNodes;
 import io.bitsquare.p2p.Node;
 
@@ -52,8 +53,10 @@ public class BootstrapNode {
     }
 
     public void start() {
-        String name = env.getRequiredProperty(Node.NAME_KEY);
         int port = env.getProperty(Node.PORT_KEY, Integer.class, BootstrapNodes.DEFAULT_PORT);
+        String name = env.getRequiredProperty(Node.NAME_KEY);
+        Logging.setup(name + "_" + port);
+
         try {
             Number160 peerId = Number160.createHash(name);
 

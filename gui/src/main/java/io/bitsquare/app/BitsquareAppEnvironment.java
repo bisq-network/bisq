@@ -53,7 +53,7 @@ public class BitsquareAppEnvironment extends BitsquareEnvironment {
                 setProperty(APP_NAME_KEY, appName);
 
                 setProperty(UserAgent.NAME_KEY, appName);
-                setProperty(UserAgent.VERSION_KEY, BitsquareAppMain.getVersion());
+                setProperty(UserAgent.VERSION_KEY, Version.VERSION);
 
                 setProperty(WalletService.DIR_KEY, appDataDir);
                 setProperty(WalletService.PREFIX_KEY, appName);

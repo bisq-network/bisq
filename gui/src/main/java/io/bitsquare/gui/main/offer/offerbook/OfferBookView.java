@@ -163,7 +163,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     @FXML
-    void createOffer() {
+    void createOffer() { 
         if (model.isRegistered()) {
             createOfferButton.setDisable(true);
             offerActionHandler.createOffer(model.getAmountAsCoin(), model.getPriceAsCoin());

@@ -20,14 +20,9 @@ package io.bitsquare.gui.components;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.locale.BSResources;
 
-import org.bitcoinj.store.BlockStoreException;
-
-import com.google.common.base.Throwables;
-
 import java.util.ArrayList;
 import java.util.List;
 
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.stage.Stage;
 
@@ -213,33 +208,6 @@ public class Popups {
         removeBlurContent();
     }
 
-    // Support handling of uncaught exception from any thread (also non gui thread)
-    public static void handleUncaughtExceptions(Throwable throwable) {
-        // while dev
-        log.error(throwable.getMessage());
-        log.error(throwable.toString());
-        throwable.printStackTrace();
-
-        Runnable runnable = () -> {
-            if (Throwables.getRootCause(throwable) instanceof BlockStoreException) {
-                Popups.openErrorPopup("Error", "Application already running",
-                        "This application is already running and cannot be started twice.\n\n " +
-                                "Check your system tray to reopen the window of the running application.");
-                Platform.exit();
-            }
-            else {
-                Popups.openExceptionPopup(throwable, "Exception", "A critical error has occurred.",
-                        "Please copy the exception details and open a bug report at:\n " +
-                                "https://github.com/bitsquare/bitsquare/issues.");
-                Platform.exit();
-            }
-        };
-
-        if (Platform.isFxApplicationThread())
-            runnable.run();
-        else
-            Platform.runLater(runnable);
-    }
 
     // custom
     public static void openInsufficientMoneyPopup() {

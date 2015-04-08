@@ -22,22 +22,17 @@ import io.bitsquare.gui.common.view.CachingViewLoader;
 import io.bitsquare.gui.common.view.View;
 import io.bitsquare.gui.common.view.ViewLoader;
 import io.bitsquare.gui.common.view.guice.InjectorViewFactory;
-import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.storage.FileManager;
 import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.utils.Threading;
-
-import com.google.common.base.Throwables;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import java.io.IOException;
-import java.io.InvalidObjectException;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -48,15 +43,17 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.qos.logback.classic.Logger;
+import com.vinumeris.crashfx.CrashFX;
+import com.vinumeris.crashfx.CrashWindow;
 import org.springframework.core.env.Environment;
 
 import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
 
 public class BitsquareApp extends Application {
-    private static final Logger log = LoggerFactory.getLogger(BitsquareApp.class);
+    private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BitsquareApp.class);
 
     private static Environment env;
 
@@ -72,26 +69,25 @@ public class BitsquareApp extends Application {
     @Override
     public void start(Stage primaryStage) throws IOException {
         this.primaryStage = primaryStage;
-
-        log.trace("BitsquareApp.start");
         try {
+            log.trace("BitsquareApp.start");
+
+            // Set user thread for callbacks from backend threads
             Threading.USER_THREAD = Platform::runLater;
 
+            // Use CrashFX for report crash logs
+           /* CrashFX.setup("Bitsquare/" + Version.VERSION,
+                    Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "crashes"),
+                    URI.create("http://188.226.179.109/crashfx/upload"));*/
+            // Server not setup yet, so we use client side only support
+            CrashFX.setup();
+
+            // Guice
             bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
             injector = Guice.createInjector(bitsquareAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 
-            FileManager.setUncaughtExceptionHandler(
-                    (t, throwable) -> Platform.runLater(
-                            () -> Popups.handleUncaughtExceptions(Throwables.getRootCause(throwable))
-                    )
-            );
-
-            Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) ->
-                    Popups.handleUncaughtExceptions(Throwables.getRootCause(throwable)));
-
             // load the main view and create the main scene
-            log.trace("viewLoader.load(MainView.class)");
             CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
             View view = viewLoader.load(MainView.class);
 
@@ -100,9 +96,7 @@ public class BitsquareApp extends Application {
                     "/io/bitsquare/gui/bitsquare.css",
                     "/io/bitsquare/gui/images.css");
 
-
             // configure the system tray
-
             SystemTray.create(primaryStage, this::stop);
             primaryStage.setOnCloseRequest(e -> {
                 e.consume();
@@ -119,9 +113,7 @@ public class BitsquareApp extends Application {
                     showDebugWindow();
             });
 
-
             // configure the primary stage
-
             primaryStage.setTitle(env.getRequiredProperty(APP_NAME_KEY));
             primaryStage.setScene(scene);
             primaryStage.setMinWidth(750);
@@ -139,23 +131,17 @@ public class BitsquareApp extends Application {
 
             primaryStage.getIcons().add(new Image(getClass().getResourceAsStream(iconPath)));
 
-
             // make the UI visible
-
-            log.trace("primaryStage.show");
             primaryStage.show();
 
             //TODO just temp.
             //showDebugWindow();
         } catch (Throwable t) {
-            if (t instanceof InvalidObjectException) {
-                Popups.openErrorPopup("There is a problem with different version of persisted objects. " +
-                        "Please delete the db directory inside the app directory.");
-            }
-            log.error(t.toString());
+            CrashWindow.open(t);
         }
     }
 
+    //TODO just temp.
     private void showDebugWindow() {
         ViewLoader viewLoader = injector.getInstance(ViewLoader.class);
         View debugView = viewLoader.load(DebugView.class);
