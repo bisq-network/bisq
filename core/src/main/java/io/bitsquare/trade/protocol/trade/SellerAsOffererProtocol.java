@@ -81,18 +81,23 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
 
         log.debug("setMailboxMessage " + mailboxMessage);
         // Find first the actual peer address, as it might have changed in the meantime
-        findPeerAddress(processModel.tradingPeer.getP2pSigPubKey(),
-                () -> {
-                    if (mailboxMessage instanceof FiatTransferStartedMessage) {
-                        handle((FiatTransferStartedMessage) mailboxMessage);
-                    }
-                    else if (mailboxMessage instanceof DepositTxPublishedMessage) {
-                        handle((DepositTxPublishedMessage) mailboxMessage);
-                    }
-                },
-                (errorMessage -> {
-                    log.error(errorMessage);
-                }));
+        if (mailboxMessage instanceof PayoutTxFinalizedMessage) {
+            handle((PayoutTxFinalizedMessage) mailboxMessage);
+        }
+        else {
+            findPeerAddress(processModel.tradingPeer.getP2pSigPubKey(),
+                    () -> {
+                        if (mailboxMessage instanceof FiatTransferStartedMessage) {
+                            handle((FiatTransferStartedMessage) mailboxMessage);
+                        }
+                        else if (mailboxMessage instanceof DepositTxPublishedMessage) {
+                            handle((DepositTxPublishedMessage) mailboxMessage);
+                        }
+                    },
+                    (errorMessage -> {
+                        log.error(errorMessage);
+                    }));
+        }
     }
 
 

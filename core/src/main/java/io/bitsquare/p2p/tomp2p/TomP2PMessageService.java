@@ -17,7 +17,6 @@
 
 package io.bitsquare.p2p.tomp2p;
 
-import io.bitsquare.crypto.Bucket;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.p2p.EncryptedMailboxMessage;
 import io.bitsquare.p2p.MailboxMessage;
@@ -27,6 +26,8 @@ import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.p2p.listener.SendMessageListener;
+
+import org.bitcoinj.core.ECKey;
 
 import java.security.PublicKey;
 
@@ -74,11 +75,11 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
 
     @Override
     public void sendMessage(Peer peer, Message message, SendMessageListener listener) {
-        sendMessage(peer, message, null, null, listener);
+        sendMessage(peer, message, null, null, null, listener);
     }
 
     @Override
-    public void sendMessage(Peer peer, Message message, PublicKey recipientP2pSigPubKey, PublicKey recipientP2pEncryptPubKey,
+    public void sendMessage(Peer peer, Message message, PublicKey recipientP2pSigPubKey, PublicKey recipientP2pEncryptPubKey, ECKey registrationKeyPair,
                             SendMessageListener listener) {
 
         if (peer == null)
@@ -97,7 +98,7 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
                 else {
                     if (recipientP2pSigPubKey != null && recipientP2pEncryptPubKey != null) {
                         log.info("sendMessage failed. We will try to send the message to the mailbox. Fault reason:  " + futureDirect.failedReason());
-                        sendMailboxMessage(recipientP2pSigPubKey, recipientP2pEncryptPubKey, (MailboxMessage) message, listener);
+                        sendMailboxMessage(recipientP2pSigPubKey, recipientP2pEncryptPubKey, registrationKeyPair, (MailboxMessage) message, listener);
                     }
                     else {
                         log.error("sendMessage failed with reason " + futureDirect.failedReason());
@@ -110,7 +111,7 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
             public void exceptionCaught(Throwable t) throws Exception {
                 if (recipientP2pSigPubKey != null && recipientP2pEncryptPubKey != null) {
                     log.info("sendMessage failed with exception. We will try to send the message to the mailbox. Exception: " + t.getMessage());
-                    sendMailboxMessage(recipientP2pSigPubKey, recipientP2pEncryptPubKey, (MailboxMessage) message, listener);
+                    sendMailboxMessage(recipientP2pSigPubKey, recipientP2pEncryptPubKey, registrationKeyPair, (MailboxMessage) message, listener);
                 }
                 else {
                     log.error("sendMessage failed with exception " + t.getMessage());
@@ -120,18 +121,19 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
         });
     }
 
-    private void sendMailboxMessage(PublicKey recipientP2pSigPubKey, PublicKey recipientP2pEncryptPubKey, MailboxMessage message, SendMessageListener
-            listener) {
-        Bucket bucket = null;
+    private void sendMailboxMessage(PublicKey recipientP2pSigPubKey, PublicKey recipientP2pEncryptPubKey, ECKey registrationKeyPair, MailboxMessage message,
+                                    SendMessageListener
+                                            listener) {
+        byte[] result = null;
         log.info("sendMailboxMessage called");
         try {
-            bucket = encryptionService.encryptObject(recipientP2pEncryptPubKey, message);
+            result = encryptionService.encryptMessage(recipientP2pEncryptPubKey, registrationKeyPair, message);
         } catch (Throwable t) {
             t.printStackTrace();
             log.error(t.getMessage());
             executor.execute(listener::handleFault);
         }
-        EncryptedMailboxMessage encrypted = new EncryptedMailboxMessage(bucket);
+        EncryptedMailboxMessage encrypted = new EncryptedMailboxMessage(result);
         mailboxService.addMessage(recipientP2pSigPubKey,
                 encrypted,
                 () -> {

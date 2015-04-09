@@ -52,6 +52,7 @@ public class SendRequestFinalizePayoutTxMessage extends TradeTask {
                     message,
                     processModel.tradingPeer.getP2pSigPubKey(),
                     processModel.tradingPeer.getP2pEncryptPubKey(),
+                    processModel.getRegistrationKeyPair(),
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {

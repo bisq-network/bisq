@@ -20,13 +20,16 @@ package io.bitsquare.p2p;
 
 import io.bitsquare.p2p.listener.SendMessageListener;
 
+import org.bitcoinj.core.ECKey;
+
 import java.security.PublicKey;
 
 public interface MessageService extends P2PService {
 
     void sendMessage(Peer peer, Message message, SendMessageListener listener);
 
-    void sendMessage(Peer peer, Message message, PublicKey recipientP2pSigPubKey, PublicKey recipientP2pEncryptPubKey, SendMessageListener listener);
+    void sendMessage(Peer peer, Message message, PublicKey recipientP2pSigPubKey, PublicKey recipientP2pEncryptPubKey, ECKey registrationKeyPair,
+                     SendMessageListener listener);
 
     void addMessageHandler(MessageHandler listener);
 

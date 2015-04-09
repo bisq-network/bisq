@@ -33,6 +33,15 @@ public class SignatureService {
         return signMessage(key, hash);
     }
 
+    public ECKey.ECDSASignature signBytes(ECKey key, byte[] data) {
+        return key.sign(Sha256Hash.hashTwice(data), null);
+    }
+
+    public String signMessage(ECKey key, byte[] data) {
+        Sha256Hash hash = Sha256Hash.hashTwice(data);
+        return signMessage(key, hash);
+    }
+
     public String signMessage(ECKey key, Sha256Hash hash) {
         ECKey.ECDSASignature sig = key.sign(hash, null);
         // Now we have to work backwards to figure out the recId needed to recover the signature.
@@ -54,12 +63,13 @@ public class SignatureService {
         return new String(Base64.encode(sigData), Charsets.UTF_8);
     }
 
+
     public byte[] digestMessageWithSignature(ECKey key, String message) {
         String signedMessage = signMessage(key, message);
         return Utils.sha256hash160(message.concat(signedMessage).getBytes(Charsets.UTF_8));
     }
 
-    public boolean verify(ECKey key, Sha256Hash hash, ECKey.ECDSASignature signature) {
-        return key.verify(hash, signature);
+    public boolean verify(byte[] signaturePubKey, byte[] data, ECKey.ECDSASignature sig) {
+        return ECKey.fromPublicOnly(signaturePubKey).verify(Sha256Hash.hashTwice(data), sig);
     }
 }

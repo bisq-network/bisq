@@ -15,21 +15,30 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.app;
+package io.bitsquare.crypto;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Version {
-    private static final Logger log = LoggerFactory.getLogger(Version.class);
+public class CryptoException extends Exception {
+    private static final Logger log = LoggerFactory.getLogger(CryptoException.class);
 
-    public static final int MAJOR_VERSION = 0;
-    public static final int MINOR_VERSION = 1;
-    public static final int PATCH_VERSION = 3; // Will be used by UpdatedFX
+    public CryptoException() {
+    }
 
-    public static final byte[] NETWORK_PROTOCOL_VERSION = new byte[]{0x01};
-    public static final int LOCLA_DB_VERSION = 1;
+    public CryptoException(String message) {
+        super(message);
+    }
 
-    public static final String VERSION = MAJOR_VERSION + "." + MINOR_VERSION + "." + PATCH_VERSION;
+    public CryptoException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
+    public CryptoException(Throwable cause) {
+        super(cause);
+    }
+
+    public CryptoException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
 }

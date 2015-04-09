@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.util;
+package io.bitsquare.crypto;
 
 import org.bitcoinj.core.Utils;
 
@@ -28,10 +28,15 @@ import java.security.spec.X509EncodedKeySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DSAKeyUtil {
-    private static final Logger log = LoggerFactory.getLogger(DSAKeyUtil.class);
+public class Util {
+    private static final Logger log = LoggerFactory.getLogger(Util.class);
 
-    public static PublicKey decodePubKeyHex(String pubKeyHex) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public static String getHexFromPubKey(PublicKey publicKey) {
+        final X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
+        return Utils.HEX.encode(x509EncodedKeySpec.getEncoded());
+    }
+
+    public static PublicKey decodeDSAPubKeyHex(String pubKeyHex) throws NoSuchAlgorithmException, InvalidKeySpecException {
         X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Utils.HEX.decode(pubKeyHex));
         KeyFactory keyFactory = KeyFactory.getInstance("DSA");
         return keyFactory.generatePublic(pubKeySpec);
@@ -40,5 +45,4 @@ public class DSAKeyUtil {
     public static String encodePubKeyToHex(PublicKey pubKey) {
         return Utils.HEX.encode(pubKey.getEncoded());
     }
-
 }

@@ -17,8 +17,6 @@
 
 package io.bitsquare.util;
 
-import org.bitcoinj.core.Utils;
-
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -36,9 +34,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import java.net.URI;
-
-import java.security.PublicKey;
-import java.security.spec.X509EncodedKeySpec;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,6 +86,20 @@ public class Utilities {
         openURI(new URI(target));
     }
 
+    public static byte[] concatByteArrays(byte[]... arrays) {
+        int totalLength = 0;
+        for (int i = 0; i < arrays.length; i++) {
+            totalLength += arrays[i].length;
+        }
+
+        byte[] result = new byte[totalLength];
+        int currentIndex = 0;
+        for (int i = 0; i < arrays.length; i++) {
+            System.arraycopy(arrays[i], 0, result, currentIndex, arrays[i].length);
+            currentIndex += arrays[i].length;
+        }
+        return result;
+    }
 
     public static <T> T jsonToObject(String jsonString, Class<T> classOfT) {
         Gson gson =
@@ -248,8 +257,4 @@ public class Utilities {
         }
     }
 
-    public static String getHexFromPubKey(PublicKey publicKey) {
-        final X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
-        return Utils.HEX.encode(x509EncodedKeySpec.getEncoded());
-    }
 }

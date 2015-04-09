@@ -180,7 +180,7 @@ public class TradeManager {
         log.trace("applyMailboxMessage encryptedMailboxMessage.size=" + encryptedMailboxMessages.size());
         for (EncryptedMailboxMessage encrypted : encryptedMailboxMessages) {
             try {
-                MailboxMessage mailboxMessage = encryptionService.decryptToObject(user.getP2pEncryptPrivateKey(), encrypted.getBucket());
+                MailboxMessage mailboxMessage = encryptionService.decryptToMessage(user.getP2pEncryptPrivateKey(), encrypted.getBytes());
                 if (mailboxMessage instanceof TradeMessage) {
                     String tradeId = ((TradeMessage) mailboxMessage).tradeId;
                     Optional<Trade> tradeOptional = pendingTrades.stream().filter(e -> e.getId().equals(tradeId)).findAny();

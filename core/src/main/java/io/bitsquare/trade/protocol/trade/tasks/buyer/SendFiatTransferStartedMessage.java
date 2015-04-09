@@ -48,6 +48,7 @@ public class SendFiatTransferStartedMessage extends TradeTask {
             processModel.getMessageService().sendMessage(trade.getTradingPeer(), tradeMessage,
                     processModel.tradingPeer.getP2pSigPubKey(),
                     processModel.tradingPeer.getP2pEncryptPubKey(),
+                    processModel.getRegistrationKeyPair(),
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {
