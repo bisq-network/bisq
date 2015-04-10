@@ -43,8 +43,9 @@ public class ProcessRequestDepositTxInputsMessage extends TradeTask {
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);
 
-            trade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(message.tradeAmount)));
+            processModel.tradingPeer.setPubKeyRing(checkNotNull(message.sellerPubKeyRing));
             processModel.setTakeOfferFeeTxId(nonEmptyStringOf(message.sellerOfferFeeTxId));
+            trade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(message.tradeAmount)));
             processModel.tradingPeer.setTradeWalletPubKey(checkNotNull(message.sellerTradeWalletPubKey));
 
             complete();

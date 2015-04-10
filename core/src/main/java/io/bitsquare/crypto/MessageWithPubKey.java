@@ -17,13 +17,30 @@
 
 package io.bitsquare.crypto;
 
-import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.core.Utils;
+import io.bitsquare.p2p.Message;
 
-public class HashService {
+import java.security.PublicKey;
 
-    public Sha256Hash hash(String message) {
-        byte[] data = Utils.formatMessageForSigning(message);
-        return Sha256Hash.hashTwice(data);
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class MessageWithPubKey implements Message {
+    private static final Logger log = LoggerFactory.getLogger(MessageWithPubKey.class);
+
+    public Message getMessage() {
+        return message;
+    }
+
+    public PublicKey getSignaturePubKey() {
+        return signaturePubKey;
+    }
+
+    private final Message message;
+    private final PublicKey signaturePubKey;
+
+
+    public MessageWithPubKey(Message message, PublicKey signaturePubKey) {
+        this.message = message;
+        this.signaturePubKey = signaturePubKey;
     }
 }

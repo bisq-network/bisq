@@ -45,9 +45,7 @@ public class ProcessRequestPublishDepositTxMessage extends TradeTask {
 
             processModel.tradingPeer.setFiatAccount(checkNotNull(message.sellerFiatAccount));
             processModel.tradingPeer.setAccountId(nonEmptyStringOf(message.sellerAccountId));
-            processModel.tradingPeer.setP2pSigPubKey(checkNotNull(message.sellerP2pSigPublicKey));
             processModel.tradingPeer.setTradeWalletPubKey(checkNotNull(message.sellerTradeWalletPubKey));
-            processModel.tradingPeer.setP2pEncryptPubKey(checkNotNull(message.sellerP2pEncryptPublicKey));
             processModel.tradingPeer.setContractAsJson(nonEmptyStringOf(message.sellerContractAsJson));
             processModel.tradingPeer.setContractSignature(nonEmptyStringOf(message.sellerContractSignature));
             processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(message.sellerPayoutAddressString));

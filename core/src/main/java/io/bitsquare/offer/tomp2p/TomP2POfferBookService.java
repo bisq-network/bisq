@@ -19,11 +19,11 @@ package io.bitsquare.offer.tomp2p;
 
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.crypto.KeyRing;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.p2p.tomp2p.TomP2PDHTService;
 import io.bitsquare.p2p.tomp2p.TomP2PNode;
-import io.bitsquare.user.User;
 
 import java.io.IOException;
 
@@ -58,8 +58,8 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
 
 
     @Inject
-    public TomP2POfferBookService(TomP2PNode tomP2PNode, User user) {
-        super(tomP2PNode, user);
+    public TomP2POfferBookService(TomP2PNode tomP2PNode, KeyRing keyRing) {
+        super(tomP2PNode, keyRing);
     }
 
     @Override

@@ -20,14 +20,16 @@ package io.bitsquare.trade.protocol.availability;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.crypto.MessageWithPubKey;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.p2p.DecryptedMessageHandler;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.Peer;
+import io.bitsquare.trade.protocol.availability.messages.OfferMessage;
 import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress;
 import io.bitsquare.trade.protocol.availability.tasks.ProcessReportOfferAvailabilityMessage;
-import io.bitsquare.trade.protocol.availability.tasks.RequestIsOfferAvailable;
+import io.bitsquare.trade.protocol.availability.tasks.SendRequestIsOfferAvailableMessage;
 
 import org.bitcoinj.utils.Threading;
 
@@ -37,6 +39,8 @@ import java.util.TimerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static io.bitsquare.util.Validator.nonEmptyStringOf;
+
 public class CheckOfferAvailabilityProtocol {
     private static final Logger log = LoggerFactory.getLogger(CheckOfferAvailabilityProtocol.class);
 
@@ -45,7 +49,7 @@ public class CheckOfferAvailabilityProtocol {
     private final CheckOfferAvailabilityModel model;
     private final ResultHandler resultHandler;
     private final ErrorMessageHandler errorMessageHandler;
-    private final MessageHandler messageHandler;
+    private final DecryptedMessageHandler decryptedMessageHandler;
     private Timer timeoutTimer;
 
     private boolean isCanceled;
@@ -60,12 +64,12 @@ public class CheckOfferAvailabilityProtocol {
         this.model = model;
         this.resultHandler = resultHandler;
         this.errorMessageHandler = errorMessageHandler;
-        messageHandler = this::handleMessage;
+        decryptedMessageHandler = this::handleDecryptedMessageWithPubKey;
     }
 
     private void cleanup() {
         stopTimeout();
-        model.messageService.removeMessageHandler(messageHandler);
+        model.messageService.removeDecryptedMessageHandler(decryptedMessageHandler);
     }
 
 
@@ -77,7 +81,7 @@ public class CheckOfferAvailabilityProtocol {
         // reset
         model.offer.setState(Offer.State.UNKNOWN);
 
-        model.messageService.addMessageHandler(messageHandler);
+        model.messageService.addDecryptedMessageHandler(decryptedMessageHandler);
 
         taskRunner = new TaskRunner<>(model,
                 () -> log.debug("sequence at onCheckOfferAvailability completed"),
@@ -85,7 +89,7 @@ public class CheckOfferAvailabilityProtocol {
         );
         taskRunner.addTasks(
                 GetPeerAddress.class,
-                RequestIsOfferAvailable.class
+                SendRequestIsOfferAvailableMessage.class
         );
         startTimeout();
         taskRunner.run();
@@ -102,14 +106,18 @@ public class CheckOfferAvailabilityProtocol {
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handleMessage(Message message, @SuppressWarnings("UnusedParameters") Peer sender) {
-        if (!isCanceled) {
-            if (message instanceof ReportOfferAvailabilityMessage && model.offer.getId().equals(((ReportOfferAvailabilityMessage) message).offerId))
-                handle((ReportOfferAvailabilityMessage) message);
+    protected void handleDecryptedMessageWithPubKey(MessageWithPubKey messageWithPubKey, Peer sender) {
+        Message message = messageWithPubKey.getMessage();
+        log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + sender);
+        if (message instanceof OfferMessage) {
+            nonEmptyStringOf(((OfferMessage) message).offerId);
+            if (message instanceof ReportOfferAvailabilityMessage && model.offer.getId().equals(((OfferMessage) message).offerId))
+                handleDecryptedMessage((ReportOfferAvailabilityMessage) message);
         }
     }
 
-    private void handle(ReportOfferAvailabilityMessage message) {
+
+    private void handleDecryptedMessage(ReportOfferAvailabilityMessage message) {
         stopTimeout();
         model.setMessage(message);
 

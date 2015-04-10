@@ -45,10 +45,10 @@ public class SendFiatTransferStartedMessage extends TradeTask {
                     processModel.getAddressEntry().getAddressString()
             );
 
-            processModel.getMessageService().sendMessage(trade.getTradingPeer(), tradeMessage,
-                    processModel.tradingPeer.getP2pSigPubKey(),
-                    processModel.tradingPeer.getP2pEncryptPubKey(),
-                    processModel.getRegistrationKeyPair(),
+            processModel.getMessageService().sendEncryptedMessage(
+                    trade.getTradingPeer(),
+                    processModel.tradingPeer.getPubKeyRing(),
+                    tradeMessage,
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {

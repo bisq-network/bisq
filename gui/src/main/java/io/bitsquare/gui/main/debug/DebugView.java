@@ -22,7 +22,7 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.common.view.InitializableView;
 import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityProtocol;
 import io.bitsquare.trade.protocol.availability.tasks.ProcessReportOfferAvailabilityMessage;
-import io.bitsquare.trade.protocol.availability.tasks.RequestIsOfferAvailable;
+import io.bitsquare.trade.protocol.availability.tasks.SendRequestIsOfferAvailableMessage;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
 import io.bitsquare.trade.protocol.placeoffer.tasks.AddOfferToRemoteOfferBook;
 import io.bitsquare.trade.protocol.placeoffer.tasks.BroadcastCreateOfferFeeTx;
@@ -82,7 +82,7 @@ public class DebugView extends InitializableView {
                         /*---- Protocol ----*/
                         CheckOfferAvailabilityProtocol.class,
                         io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress.class,
-                        RequestIsOfferAvailable.class,
+                        SendRequestIsOfferAvailableMessage.class,
                         ProcessReportOfferAvailabilityMessage.class,
                         Boolean.class, /* used as seperator*/
 

@@ -21,9 +21,9 @@ import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.crypto.KeyRing;
 import io.bitsquare.p2p.tomp2p.TomP2PDHTService;
 import io.bitsquare.p2p.tomp2p.TomP2PNode;
-import io.bitsquare.user.User;
 
 import java.io.IOException;
 
@@ -53,8 +53,8 @@ public class TomP2PArbitratorService extends TomP2PDHTService implements Arbitra
     private final CopyOnWriteArrayList<Listener> listeners = new CopyOnWriteArrayList<>();
 
     @Inject
-    public TomP2PArbitratorService(TomP2PNode tomP2PNode, User user) {
-        super(tomP2PNode, user);
+    public TomP2PArbitratorService(TomP2PNode tomP2PNode, KeyRing keyRing) {
+        super(tomP2PNode, keyRing);
     }
 
     public void addArbitrator(Arbitrator arbitrator, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {

@@ -39,24 +39,28 @@ public class SendDepositTxPublishedMessage extends TradeTask {
         try {
             DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(processModel.getId(), trade.getDepositTx());
 
-            processModel.getMessageService().sendMessage(trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
-                @Override
-                public void handleResult() {
-                    log.trace("DepositTxPublishedMessage successfully arrived at peer");
+            processModel.getMessageService().sendEncryptedMessage(
+                    trade.getTradingPeer(),
+                    processModel.tradingPeer.getPubKeyRing(),
+                    tradeMessage,
+                    new SendMessageListener() {
+                        @Override
+                        public void handleResult() {
+                            log.trace("DepositTxPublishedMessage successfully arrived at peer");
 
-                    complete();
-                }
+                            complete();
+                        }
 
-                @Override
-                public void handleFault() {
-                    appendToErrorMessage("Sending DepositTxPublishedMessage failed");
-                    trade.setErrorMessage(errorMessage);
+                        @Override
+                        public void handleFault() {
+                            appendToErrorMessage("Sending DepositTxPublishedMessage failed");
+                            trade.setErrorMessage(errorMessage);
 
-                    StateUtil.setSendFailedState(trade);
+                            StateUtil.setSendFailedState(trade);
 
-                    failed();
-                }
-            });
+                            failed();
+                        }
+                    });
         } catch (Throwable t) {
             t.printStackTrace();
             trade.setThrowable(t);

@@ -19,14 +19,14 @@ package io.bitsquare.p2p;
 
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-
-import java.security.PublicKey;
+import io.bitsquare.crypto.PubKeyRing;
+import io.bitsquare.crypto.SealedAndSignedMessage;
 
 public interface MailboxService {
-    void addMessage(PublicKey recipientP2pSigPubKey, EncryptedMailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler);
+    void addMessage(PubKeyRing pubKeyRing, SealedAndSignedMessage message, ResultHandler resultHandler, FaultHandler faultHandler);
 
-    void getAllMessages(PublicKey p2pSigPubKey, MailboxMessagesResultHandler resultHandler);
+    void getAllMessages(MailboxMessagesResultHandler resultHandler);
 
-    void removeAllMessages(PublicKey p2pSigPubKey, ResultHandler resultHandler, FaultHandler faultHandler);
+    void removeAllMessages(ResultHandler resultHandler, FaultHandler faultHandler);
 
 }

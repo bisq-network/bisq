@@ -210,7 +210,7 @@ class OfferBookDataModel implements Activatable, DataModel {
     }
 
     boolean isMyOffer(Offer offer) {
-        return offer.getP2pSigPubKey() != null && offer.getP2pSigPubKey().equals(user.getP2pSigPubKey());
+        return tradeManager.isMyOffer(offer);
     }
 
     Coin getAmountAsCoin() {

@@ -45,10 +45,10 @@ public class VerifyAndSignContract extends TradeTask {
                     processModel.tradingPeer.getAccountId(),
                     processModel.getFiatAccount(),
                     processModel.tradingPeer.getFiatAccount(),
-                    processModel.getP2pSigPubKey(),
-                    processModel.tradingPeer.getP2pSigPubKey());
+                    processModel.getPubKeyRing(),
+                    processModel.tradingPeer.getPubKeyRing());
             String contractAsJson = Utilities.objectToJson(contract);
-            String signature = processModel.getSignatureService().signMessage(processModel.getRegistrationKeyPair(), contractAsJson);
+            String signature = processModel.getCryptoService().signMessage(processModel.getRegistrationKeyPair(), contractAsJson);
             trade.setContract(contract);
             trade.setContractAsJson(contractAsJson);
             trade.setBuyerContractSignature(signature);

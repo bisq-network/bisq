@@ -21,6 +21,7 @@ import io.bitsquare.app.UpdateProcess;
 import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.crypto.KeyRing;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
@@ -85,6 +86,7 @@ class MainViewModel implements ViewModel {
     final String bitcoinNetworkAsString;
 
     private final User user;
+    private KeyRing keyRing;
     private final WalletService walletService;
     private final ArbitrationRepository arbitrationRepository;
     private final ClientNode clientNode;
@@ -93,10 +95,11 @@ class MainViewModel implements ViewModel {
     private final BSFormatter formatter;
 
     @Inject
-    public MainViewModel(User user, WalletService walletService, ArbitrationRepository arbitrationRepository, ClientNode clientNode,
+    public MainViewModel(User user, KeyRing keyRing, WalletService walletService, ArbitrationRepository arbitrationRepository, ClientNode clientNode,
                          TradeManager tradeManager, BitcoinNetwork bitcoinNetwork, UpdateProcess updateProcess,
                          BSFormatter formatter) {
         this.user = user;
+        this.keyRing = keyRing;
         this.walletService = walletService;
         this.arbitrationRepository = arbitrationRepository;
         this.clientNode = clientNode;
@@ -137,7 +140,7 @@ class MainViewModel implements ViewModel {
         // Set executor for all P2PServices
         BaseP2PService.setUserThread(Platform::runLater);
 
-        Observable<BootstrapState> bootstrapStateAsObservable = clientNode.bootstrap(user.getP2pSigKeyPair());
+        Observable<BootstrapState> bootstrapStateAsObservable = clientNode.bootstrap(keyRing.getDhtSignatureKeyPair());
         bootstrapStateAsObservable.publish();
         bootstrapStateAsObservable.subscribe(
                 state -> Platform.runLater(() -> setBootstrapState(state)),

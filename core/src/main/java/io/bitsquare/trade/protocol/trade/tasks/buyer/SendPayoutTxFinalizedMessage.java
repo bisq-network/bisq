@@ -38,11 +38,10 @@ public class SendPayoutTxFinalizedMessage extends TradeTask {
     protected void doRun() {
         try {
             PayoutTxFinalizedMessage tradeMessage = new PayoutTxFinalizedMessage(processModel.getId(), trade.getPayoutTx());
-            processModel.getMessageService().sendMessage(trade.getTradingPeer(),
+            processModel.getMessageService().sendEncryptedMessage(
+                    trade.getTradingPeer(),
+                    processModel.tradingPeer.getPubKeyRing(),
                     tradeMessage,
-                    processModel.tradingPeer.getP2pSigPubKey(),
-                    processModel.tradingPeer.getP2pEncryptPubKey(),
-                    processModel.getRegistrationKeyPair(),
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {

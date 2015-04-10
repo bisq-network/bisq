@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade;
 
+import io.bitsquare.crypto.PubKeyRing;
 import io.bitsquare.fiat.FiatAccount;
 
 import org.bitcoinj.core.Transaction;
@@ -25,8 +26,6 @@ import org.bitcoinj.core.TransactionOutput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-
-import java.security.PublicKey;
 
 import java.util.List;
 
@@ -41,9 +40,6 @@ public class TradingPeer implements Serializable {
 
     // Mutable
     private String accountId;
-    private PublicKey p2pSigPubKey;
-    private PublicKey p2pEncryptPubKey;
-    private byte[] tradeWalletPubKey;
     private FiatAccount fiatAccount;
     private Transaction preparedDepositTx;
     private List<TransactionOutput> connectedOutputsForAllInputs;
@@ -54,6 +50,8 @@ public class TradingPeer implements Serializable {
     private String contractAsJson;
     private String contractSignature;
     private byte[] signature;
+    private PubKeyRing pubKeyRing;
+    private byte[] tradeWalletPubKey;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -81,23 +79,7 @@ public class TradingPeer implements Serializable {
     public void setAccountId(String accountId) {
         this.accountId = accountId;
     }
-
-    public PublicKey getP2pSigPubKey() {
-        return p2pSigPubKey;
-    }
-
-    public void setP2pSigPubKey(PublicKey p2pSigPubKey) {
-        this.p2pSigPubKey = p2pSigPubKey;
-    }
-
-    public PublicKey getP2pEncryptPubKey() {
-        return p2pEncryptPubKey;
-    }
-
-    public void setP2pEncryptPubKey(PublicKey p2pEncryptPubKey) {
-        this.p2pEncryptPubKey = p2pEncryptPubKey;
-    }
-
+    
     public byte[] getTradeWalletPubKey() {
         return tradeWalletPubKey;
     }
@@ -105,7 +87,7 @@ public class TradingPeer implements Serializable {
     public void setTradeWalletPubKey(byte[] tradeWalletPubKey) {
         this.tradeWalletPubKey = tradeWalletPubKey;
     }
-
+    
     public FiatAccount getFiatAccount() {
         return fiatAccount;
     }
@@ -184,5 +166,13 @@ public class TradingPeer implements Serializable {
 
     public byte[] getSignature() {
         return signature;
+    }
+
+    public PubKeyRing getPubKeyRing() {
+        return pubKeyRing;
+    }
+
+    public void setPubKeyRing(PubKeyRing pubKeyRing) {
+        this.pubKeyRing = pubKeyRing;
     }
 }

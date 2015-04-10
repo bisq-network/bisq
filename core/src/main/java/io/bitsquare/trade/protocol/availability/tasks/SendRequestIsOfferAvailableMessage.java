@@ -27,17 +27,21 @@ import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailable
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RequestIsOfferAvailable extends Task<CheckOfferAvailabilityModel> {
-    private static final Logger log = LoggerFactory.getLogger(RequestIsOfferAvailable.class);
+public class SendRequestIsOfferAvailableMessage extends Task<CheckOfferAvailabilityModel> {
+    private static final Logger log = LoggerFactory.getLogger(SendRequestIsOfferAvailableMessage.class);
+    private static final long serialVersionUID = 1L;
 
-    public RequestIsOfferAvailable(TaskRunner taskHandler, CheckOfferAvailabilityModel model) {
+    public SendRequestIsOfferAvailableMessage(TaskRunner taskHandler, CheckOfferAvailabilityModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void doRun() {
         try {
-            model.messageService.sendMessage(model.getPeer(), new RequestIsOfferAvailableMessage(model.offer.getId()),
+            RequestIsOfferAvailableMessage message = new RequestIsOfferAvailableMessage(model.offer.getId(), model.getPubKeyRing());
+            model.messageService.sendEncryptedMessage(model.getPeer(),
+                    model.offer.getPubKeyRing(),
+                    message,
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {

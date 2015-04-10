@@ -64,8 +64,7 @@ class ClosedTradesDataModel implements Activatable, DataModel {
     }
 
     public Offer.Direction getDirection(Offer offer) {
-        return offer.getP2pSigPubKey().equals(user.getP2pSigPubKey()) ?
-                offer.getDirection() : offer.getMirroredDirection();
+        return tradeManager.isMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
     }
 
     private void applyList() {

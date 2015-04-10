@@ -26,6 +26,7 @@ import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
@@ -198,6 +199,15 @@ public class Utilities {
             }
         }
         return result;
+    }
+
+    public static void deleteDirectory(File file) throws IOException {
+        if (file.isDirectory()) {
+            for (File c : file.listFiles())
+                deleteDirectory(c);
+        }
+        if (!file.delete())
+            throw new FileNotFoundException("Failed to delete file: " + file);
     }
 
     private static void printElapsedTime(String msg) {

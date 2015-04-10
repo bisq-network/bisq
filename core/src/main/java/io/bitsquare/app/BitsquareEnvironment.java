@@ -22,6 +22,7 @@ import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.RegTestHost;
 import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.crypto.KeyStorage;
 import io.bitsquare.p2p.BootstrapNodes;
 import io.bitsquare.p2p.tomp2p.TomP2PModule;
 import io.bitsquare.storage.Storage;
@@ -166,6 +167,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 setProperty(WalletService.PREFIX_KEY, appName);
 
                 setProperty(Storage.DIR_KEY, Paths.get(appDataDir, "db").toString());
+                setProperty(KeyStorage.DIR_KEY, Paths.get(appDataDir, "keys").toString());
 
                 setProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY, bootstrapNodePort);
             }

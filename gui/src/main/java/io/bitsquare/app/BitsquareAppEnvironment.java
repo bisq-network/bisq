@@ -19,6 +19,7 @@ package io.bitsquare.app;
 
 import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.crypto.KeyStorage;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.p2p.tomp2p.TomP2PModule;
 import io.bitsquare.storage.Storage;
@@ -59,6 +60,7 @@ public class BitsquareAppEnvironment extends BitsquareEnvironment {
                 setProperty(WalletService.PREFIX_KEY, appName);
 
                 setProperty(Storage.DIR_KEY, Paths.get(appDataDir, "db").toString());
+                setProperty(KeyStorage.DIR_KEY, Paths.get(appDataDir, "keys").toString());
 
                 setProperty(MainView.TITLE_KEY, appName);
 

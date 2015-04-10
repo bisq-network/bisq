@@ -17,7 +17,6 @@
 
 package io.bitsquare.trade.protocol.trade;
 
-import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.p2p.listener.SendMessageListener;
@@ -49,12 +48,13 @@ import io.bitsquare.trade.states.OffererTradeState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.util.Validator.*;
+import static io.bitsquare.util.Validator.checkTradeId;
 
 public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtocol, OffererProtocol {
     private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererProtocol.class);
 
     private final BuyerAsOffererTrade buyerAsOffererTrade;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -62,11 +62,9 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
 
     public BuyerAsOffererProtocol(BuyerAsOffererTrade trade) {
         super(trade.getProcessModel());
+
         log.debug("New OffererProtocol " + this);
         this.buyerAsOffererTrade = trade;
-        messageHandler = this::handleMessage;
-
-        processModel.getMessageService().addMessageHandler(messageHandler);
     }
 
 
@@ -75,16 +73,14 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void applyMailboxMessage(MailboxMessage mailboxMessage, Trade trade) {
+    public void doApplyMailboxMessage(Message message, Trade trade) {
         this.trade = trade;
 
-        log.debug("setMailboxMessage " + mailboxMessage);
-
         // Find first the actual peer address, as it might have changed in the meantime
-        findPeerAddress(processModel.tradingPeer.getP2pSigPubKey(),
+        findPeerAddress(processModel.tradingPeer.getPubKeyRing(),
                 () -> {
-                    if (mailboxMessage instanceof RequestFinalizePayoutTxMessage) {
-                        handle((RequestFinalizePayoutTxMessage) mailboxMessage);
+                    if (message instanceof RequestFinalizePayoutTxMessage) {
+                        handle((RequestFinalizePayoutTxMessage) message);
                     }
                 },
                 (errorMessage -> {
@@ -98,28 +94,33 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // OpenOffer requests
-    private void handle(RequestIsOfferAvailableMessage tradeMessage, Peer sender) {
+    // We get an encrypted message but don't do the signature check as we don't know the peer yet.
+    // A basic sig check is in done also at decryption time
+    private void handle(RequestIsOfferAvailableMessage message, Peer sender) {
         try {
-            checkTradeId(processModel.getId(), tradeMessage);
+            checkTradeId(processModel.getId(), message);
 
             // We don't store anything in the offererTradeProcessModel as we might be in a trade process and receive that request from another peer who wants
-            // to take the
-            // offer
-            // at the same time
+            // to take the offer at the same time
             boolean isOfferOpen = buyerAsOffererTrade.lifeCycleStateProperty().get() == OffererTradeState.LifeCycleState.OFFER_OPEN;
-            ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(processModel.getId(), isOfferOpen);
-            processModel.getMessageService().sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
-                @Override
-                public void handleResult() {
-                    // Offerer does not do anything at that moment. Peer might only watch the offer and does not start a trade.
-                    log.trace("ReportOfferAvailabilityMessage successfully arrived at peer");
-                }
 
-                @Override
-                public void handleFault() {
-                    log.warn("Sending ReportOfferAvailabilityMessage failed.");
-                }
-            });
+            ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(processModel.getId(), isOfferOpen);
+            processModel.getMessageService().sendEncryptedMessage(sender,
+                    message.getPubKeyRing(),
+                    reportOfferAvailabilityMessage,
+                    new SendMessageListener() {
+                        @Override
+                        public void handleResult() {
+                            // Offerer does not do anything at that moment. Peer might only watch the offer and does not start a trade.
+                            log.trace("ReportOfferAvailabilityMessage successfully arrived at peer");
+                        }
+
+                        @Override
+                        public void handleFault() {
+                            // We don't handle the error as we might be in a trade process with another trader
+                            log.warn("Sending ReportOfferAvailabilityMessage failed.");
+                        }
+                    });
         } catch (Throwable t) {
             // We don't handle the error as we might be in a trade process with another trader
             t.printStackTrace();
@@ -214,29 +215,22 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     // Massage dispatcher
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handleMessage(Message message, Peer sender) {
-        log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + sender);
-        if (message instanceof TradeMessage) {
-            TradeMessage tradeMessage = (TradeMessage) message;
-            nonEmptyStringOf(tradeMessage.tradeId);
-
-            if (tradeMessage.tradeId.equals(buyerAsOffererTrade.getId())) {
-                if (tradeMessage instanceof RequestIsOfferAvailableMessage) {
-                    handle((RequestIsOfferAvailableMessage) tradeMessage, sender);
-                }
-                else if (tradeMessage instanceof RequestDepositTxInputsMessage) {
-                    handle((RequestDepositTxInputsMessage) tradeMessage, sender);
-                }
-                else if (tradeMessage instanceof RequestPublishDepositTxMessage) {
-                    handle((RequestPublishDepositTxMessage) tradeMessage);
-                }
-                else if (tradeMessage instanceof RequestFinalizePayoutTxMessage) {
-                    handle((RequestFinalizePayoutTxMessage) tradeMessage);
-                }
-                else {
-                    log.error("Incoming tradeMessage not supported. " + tradeMessage);
-                }
-            }
+    @Override
+    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, Peer sender) {
+        if (tradeMessage instanceof RequestIsOfferAvailableMessage) {
+            handle((RequestIsOfferAvailableMessage) tradeMessage, sender);
+        }
+        else if (tradeMessage instanceof RequestDepositTxInputsMessage) {
+            handle((RequestDepositTxInputsMessage) tradeMessage, sender);
+        }
+        else if (tradeMessage instanceof RequestPublishDepositTxMessage) {
+            handle((RequestPublishDepositTxMessage) tradeMessage);
+        }
+        else if (tradeMessage instanceof RequestFinalizePayoutTxMessage) {
+            handle((RequestFinalizePayoutTxMessage) tradeMessage);
+        }
+        else {
+            log.error("Incoming decrypted tradeMessage not supported. " + tradeMessage);
         }
     }
 }

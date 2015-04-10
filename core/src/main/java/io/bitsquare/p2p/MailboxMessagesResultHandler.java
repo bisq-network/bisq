@@ -17,8 +17,10 @@
 
 package io.bitsquare.p2p;
 
+import io.bitsquare.crypto.SealedAndSignedMessage;
+
 import java.util.List;
 
 public interface MailboxMessagesResultHandler {
-    void handleResult(List<EncryptedMailboxMessage> encryptedMailboxMessages);
+    void handleResult(List<SealedAndSignedMessage> encryptedMessages);
 }

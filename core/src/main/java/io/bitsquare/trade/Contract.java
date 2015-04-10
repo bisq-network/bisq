@@ -17,15 +17,13 @@
 
 package io.bitsquare.trade;
 
-import io.bitsquare.crypto.Util;
+import io.bitsquare.crypto.PubKeyRing;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.offer.Offer;
 
 import org.bitcoinj.core.Coin;
 
 import java.io.Serializable;
-
-import java.security.PublicKey;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -52,8 +50,8 @@ public class Contract implements Serializable {
                     String sellerAccountID,
                     FiatAccount buyerFiatAccount,
                     FiatAccount sellerFiatAccount,
-                    PublicKey buyerP2pSigPubKey,
-                    PublicKey sellerP2pSigPubKey) {
+                    PubKeyRing buyerPubKeyRing,
+                    PubKeyRing sellerPubKeyRing) {
         this.offer = offer;
         this.tradeAmount = tradeAmount;
         this.takeOfferFeeTxID = takeOfferFeeTxID;
@@ -61,8 +59,8 @@ public class Contract implements Serializable {
         this.sellerAccountID = sellerAccountID;
         this.buyerFiatAccount = buyerFiatAccount;
         this.sellerFiatAccount = sellerFiatAccount;
-        this.buyerP2pSigPubKeyAsString = Util.getHexFromPubKey(buyerP2pSigPubKey);
-        this.sellerP2pSigPubKeyAsString = Util.getHexFromPubKey(sellerP2pSigPubKey);
+        this.buyerP2pSigPubKeyAsString = buyerPubKeyRing.toString();
+        this.sellerP2pSigPubKeyAsString = sellerPubKeyRing.toString();
     }
 
     @Override

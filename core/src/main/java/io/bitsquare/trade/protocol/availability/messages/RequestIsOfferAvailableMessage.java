@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.availability.messages;
 
+import io.bitsquare.crypto.PubKeyRing;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 
 import java.io.Serializable;
@@ -25,7 +26,14 @@ public class RequestIsOfferAvailableMessage extends TradeMessage implements Seri
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
 
-    public RequestIsOfferAvailableMessage(String tradeId) {
+    private final PubKeyRing pubKeyRing;
+
+    public RequestIsOfferAvailableMessage(String tradeId, PubKeyRing pubKeyRing) {
         super(tradeId);
+        this.pubKeyRing = pubKeyRing;
+    }
+
+    public PubKeyRing getPubKeyRing() {
+        return pubKeyRing;
     }
 }

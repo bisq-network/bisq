@@ -43,27 +43,30 @@ public class SendRequestPayDepositMessage extends TradeTask {
                     processModel.getConnectedOutputsForAllInputs(),
                     processModel.getOutputs(),
                     processModel.getTradeWalletPubKey(),
-                    processModel.getP2pSigPubKey(),
-                    processModel.getP2pEncryptPubKey(),
+                    processModel.getPubKeyRing(),
                     processModel.getFiatAccount(),
                     processModel.getAccountId());
 
-            processModel.getMessageService().sendMessage(trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
-                @Override
-                public void handleResult() {
-                    log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");
-                    complete();
-                }
+            processModel.getMessageService().sendEncryptedMessage(
+                    trade.getTradingPeer(),
+                    processModel.tradingPeer.getPubKeyRing(),
+                    tradeMessage,
+                    new SendMessageListener() {
+                        @Override
+                        public void handleResult() {
+                            log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");
+                            complete();
+                        }
 
-                @Override
-                public void handleFault() {
-                    appendToErrorMessage("Sending RequestTakerDepositPaymentMessage failed");
-                    trade.setErrorMessage(errorMessage);
-                    StateUtil.setOfferOpenState(trade);
-                    StateUtil.setSendFailedState(trade);
-                    failed();
-                }
-            });
+                        @Override
+                        public void handleFault() {
+                            appendToErrorMessage("Sending RequestTakerDepositPaymentMessage failed");
+                            trade.setErrorMessage(errorMessage);
+                            StateUtil.setOfferOpenState(trade);
+                            StateUtil.setSendFailedState(trade);
+                            failed();
+                        }
+                    });
         } catch (Throwable t) {
             t.printStackTrace();
             trade.setThrowable(t);

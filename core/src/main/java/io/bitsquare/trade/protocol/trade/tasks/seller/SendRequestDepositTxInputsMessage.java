@@ -44,37 +44,42 @@ public class SendRequestDepositTxInputsMessage extends TradeTask {
             assert processModel.getTakeOfferFeeTx() != null;
             RequestDepositTxInputsMessage message = new RequestDepositTxInputsMessage(
                     processModel.getId(),
+                    processModel.getPubKeyRing(),
                     processModel.getTakeOfferFeeTx().getHashAsString(),
                     trade.getTradeAmount(),
                     processModel.getTradeWalletPubKey());
 
-            processModel.getMessageService().sendMessage(trade.getTradingPeer(), message, new SendMessageListener() {
-                @Override
-                public void handleResult() {
-                    log.trace("Sending TakeOfferFeePayedMessage succeeded.");
-                    complete();
-                }
+            processModel.getMessageService().sendEncryptedMessage(
+                    trade.getTradingPeer(),
+                    processModel.tradingPeer.getPubKeyRing(),
+                    message,
+                    new SendMessageListener() {
+                        @Override
+                        public void handleResult() {
+                            log.trace("Sending TakeOfferFeePayedMessage succeeded.");
+                            complete();
+                        }
 
-                @Override
-                public void handleFault() {
-                    log.warn("Sending TakeOfferFeePayedMessage failed. We try a second time.");
-                    // Take offer fee is already paid, so we need to try to get that trade to succeed.
-                    // We try to repeat once and if that fails as well we persist the state for a later retry.
-                    if (retryCounter == 0) {
-                        retryCounter++;
-                        Threading.USER_THREAD.execute(SendRequestDepositTxInputsMessage.this::doRun);
-                    }
-                    else {
-                        appendToErrorMessage("Sending TakeOfferFeePayedMessage to offerer failed. Maybe the network connection was " +
-                                "lost or the offerer lost his connection. We persisted the state of the trade, please try again later " +
-                                "or cancel that trade.");
+                        @Override
+                        public void handleFault() {
+                            log.warn("Sending TakeOfferFeePayedMessage failed. We try a second time.");
+                            // Take offer fee is already paid, so we need to try to get that trade to succeed.
+                            // We try to repeat once and if that fails as well we persist the state for a later retry.
+                            if (retryCounter == 0) {
+                                retryCounter++;
+                                Threading.USER_THREAD.execute(SendRequestDepositTxInputsMessage.this::doRun);
+                            }
+                            else {
+                                appendToErrorMessage("Sending TakeOfferFeePayedMessage to offerer failed. Maybe the network connection was " +
+                                        "lost or the offerer lost his connection. We persisted the state of the trade, please try again later " +
+                                        "or cancel that trade.");
 
-                        trade.setErrorMessage(errorMessage);
-                        StateUtil.setSendFailedState(trade);
-                        failed();
-                    }
-                }
-            });
+                                trade.setErrorMessage(errorMessage);
+                                StateUtil.setSendFailedState(trade);
+                                failed();
+                            }
+                        }
+                    });
         } catch (Throwable t) {
             t.printStackTrace();
             trade.setThrowable(t);

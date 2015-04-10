@@ -17,7 +17,6 @@
 
 package io.bitsquare.trade.protocol.trade;
 
-import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.trade.BuyerAsTakerTrade;
@@ -46,8 +45,6 @@ import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOffererAccount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.util.Validator.nonEmptyStringOf;
-
 public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol, TakerProtocol {
     private static final Logger log = LoggerFactory.getLogger(BuyerAsTakerProtocol.class);
 
@@ -60,11 +57,11 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
 
     public BuyerAsTakerProtocol(BuyerAsTakerTrade trade) {
         super(trade.getProcessModel());
+
         log.debug("New SellerAsTakerProtocol " + this);
         this.buyerAsTakerTrade = trade;
 
-        messageHandler = this::handleMessage;
-        processModel.getMessageService().addMessageHandler(messageHandler);
+        processModel.tradingPeer.setPubKeyRing(trade.getOffer().getPubKeyRing());
     }
 
 
@@ -73,16 +70,14 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void applyMailboxMessage(MailboxMessage mailboxMessage, Trade trade) {
+    public void doApplyMailboxMessage(Message message, Trade trade) {
         this.trade = trade;
 
-        log.debug("setMailboxMessage " + mailboxMessage);
-
         // Find first the actual peer address, as it might have changed in the meantime
-        findPeerAddress(trade.getOffer().getP2pSigPubKey(),
+        findPeerAddress(trade.getOffer().getPubKeyRing(),
                 () -> {
-                    if (mailboxMessage instanceof RequestFinalizePayoutTxMessage) {
-                        handle((RequestFinalizePayoutTxMessage) mailboxMessage);
+                    if (message instanceof RequestFinalizePayoutTxMessage) {
+                        handle((RequestFinalizePayoutTxMessage) message);
                     }
                 },
                 (errorMessage -> {
@@ -177,23 +172,16 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     // Massage dispatcher
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handleMessage(Message message, Peer sender) {
-        log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + sender);
-        if (message instanceof TradeMessage) {
-            TradeMessage tradeMessage = (TradeMessage) message;
-            nonEmptyStringOf(tradeMessage.tradeId);
-
-            if (tradeMessage.tradeId.equals(processModel.getId())) {
-                if (tradeMessage instanceof RequestPublishDepositTxMessage) {
-                    handle((RequestPublishDepositTxMessage) tradeMessage);
-                }
-                else if (tradeMessage instanceof RequestFinalizePayoutTxMessage) {
-                    handle((RequestFinalizePayoutTxMessage) tradeMessage);
-                }
-                else {
-                    log.error("Incoming message not supported. " + tradeMessage);
-                }
-            }
+    @Override
+    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, Peer sender) {
+        if (tradeMessage instanceof RequestPublishDepositTxMessage) {
+            handle((RequestPublishDepositTxMessage) tradeMessage);
+        }
+        else if (tradeMessage instanceof RequestFinalizePayoutTxMessage) {
+            handle((RequestFinalizePayoutTxMessage) tradeMessage);
+        }
+        else {
+            log.error("Incoming message not supported. " + tradeMessage);
         }
     }
 }

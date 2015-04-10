@@ -17,18 +17,12 @@
 
 package io.bitsquare.user;
 
-import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.storage.Storage;
 
-import com.google.common.base.Throwables;
-
 import java.io.Serializable;
 
-import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,28 +50,24 @@ public class User implements Serializable {
 
     transient private static final Logger log = LoggerFactory.getLogger(User.class);
 
-    transient private Storage<User> storage;
+    // Transient immutable fields
+    transient final private Storage<User> storage;
 
     // Persisted fields
-    private KeyPair p2pSigKeyPair;
-    private KeyPair p2pEncryptKeyPair;
     private String accountID;
     private List<FiatAccount> fiatAccounts = new ArrayList<>();
     private FiatAccount currentFiatAccount;
 
     // Observable wrappers
-    final transient private ObservableList<FiatAccount> fiatAccountsObservableList = FXCollections.observableArrayList(fiatAccounts);
-    final transient private ObjectProperty<FiatAccount> currentFiatAccountProperty = new SimpleObjectProperty<>(currentFiatAccount);
+    transient final private ObservableList<FiatAccount> fiatAccountsObservableList = FXCollections.observableArrayList(fiatAccounts);
+    transient final private ObjectProperty<FiatAccount> currentFiatAccountProperty = new SimpleObjectProperty<>(currentFiatAccount);
 
     @Inject
-    public User(Storage<User> storage, EncryptionService encryptionService) {
+    public User(Storage<User> storage) throws NoSuchAlgorithmException {
         this.storage = storage;
-        EncryptionService encryptionService1 = encryptionService;
 
         User persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
-            p2pSigKeyPair = persisted.getP2pSigKeyPair();
-            p2pEncryptKeyPair = persisted.getP2pEncryptKeyPair();
             accountID = persisted.getAccountId();
 
             fiatAccounts = new ArrayList<>(persisted.getFiatAccounts());
@@ -85,17 +75,6 @@ public class User implements Serializable {
 
             currentFiatAccount = persisted.getCurrentFiatAccount();
             currentFiatAccountProperty.set(currentFiatAccount);
-        }
-        else {
-            // First time we create key pairs
-            try {
-                p2pSigKeyPair = encryptionService.getGeneratedDSAKeyPair();
-                p2pEncryptKeyPair = encryptionService.getGeneratedRSAKeyPair();
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-                log.error(e.getMessage());
-                Throwables.propagate(e);
-            }
         }
         storage.queueUpForSave();
         // Use that to guarantee update of the serializable field and to make a storage update in case of a change
@@ -111,6 +90,7 @@ public class User implements Serializable {
 
     // for unit tests
     public User() {
+        this.storage = null;
     }
 
 
@@ -196,26 +176,6 @@ public class User implements Serializable {
         return getAccountId() != null;
     }
 
-    public KeyPair getP2pSigKeyPair() {
-        return p2pSigKeyPair;
-    }
-
-    public PublicKey getP2pSigPubKey() {
-        return p2pSigKeyPair.getPublic();
-    }
-
-    public PublicKey getP2pEncryptPubKey() {
-        return p2pEncryptKeyPair.getPublic();
-    }
-
-    public PrivateKey getP2pEncryptPrivateKey() {
-        return p2pEncryptKeyPair.getPrivate();
-    }
-
-    private KeyPair getP2pEncryptKeyPair() {
-        return p2pEncryptKeyPair;
-    }
-
     private List<FiatAccount> getFiatAccounts() {
         return fiatAccounts;
     }
@@ -231,5 +191,4 @@ public class User implements Serializable {
     public ObservableList<FiatAccount> fiatAccountsObservableList() {
         return fiatAccountsObservableList;
     }
-
 }

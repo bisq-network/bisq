@@ -22,10 +22,11 @@ import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.taskrunner.Model;
-import io.bitsquare.crypto.SignatureService;
+import io.bitsquare.crypto.CryptoService;
+import io.bitsquare.crypto.KeyRing;
+import io.bitsquare.crypto.MessageWithPubKey;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.AddressService;
-import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
@@ -95,10 +96,10 @@ abstract public class Trade implements Model, Serializable {
     private final Date creationDate;
 
     // Mutable
+    private MessageWithPubKey messageWithPubKey;
     private Date takeOfferDate;
     protected TradeState.ProcessState processState;
     protected TradeState.LifeCycleState lifeCycleState;
-    private MailboxMessage mailboxMessage;
     private Transaction depositTx;
     private Contract contract;
     private String contractAsJson;
@@ -156,9 +157,10 @@ abstract public class Trade implements Model, Serializable {
                      AddressService addressService,
                      TradeWalletService tradeWalletService,
                      BlockChainService blockChainService,
-                     SignatureService signatureService,
+                     CryptoService cryptoService,
                      ArbitrationRepository arbitrationRepository,
-                     User user) {
+                     User user,
+                     KeyRing keyRing) {
 
         processModel.onAllServicesInitialized(offer,
                 messageService,
@@ -166,18 +168,19 @@ abstract public class Trade implements Model, Serializable {
                 walletService,
                 tradeWalletService,
                 blockChainService,
-                signatureService,
+                cryptoService,
                 arbitrationRepository,
-                user);
+                user,
+                keyRing);
 
         createProtocol();
 
         tradeProtocol.checkPayoutTxTimeLock(this);
 
-        if (mailboxMessage != null) {
-            tradeProtocol.applyMailboxMessage(mailboxMessage, this);
+        if (messageWithPubKey != null) {
+            tradeProtocol.applyMailboxMessage(messageWithPubKey, this);
             // After applied to protocol we remove it
-            mailboxMessage = null;
+            messageWithPubKey = null;
         }
     }
 
@@ -220,8 +223,8 @@ abstract public class Trade implements Model, Serializable {
         }
     }
 
-    public void setMailboxMessage(MailboxMessage mailboxMessage) {
-        this.mailboxMessage = mailboxMessage;
+    public void setMailboxMessage(MessageWithPubKey messageWithPubKey) {
+        this.messageWithPubKey = messageWithPubKey;
     }
 
     public void setStorage(Storage<? extends TradeList> storage) {
@@ -463,7 +466,7 @@ abstract public class Trade implements Model, Serializable {
                 ", processModel=" + processModel +
                 ", processState=" + processState +
                 ", lifeCycleState=" + lifeCycleState +
-                ", mailboxMessage=" + mailboxMessage +
+                ", messageWithPubKey=" + messageWithPubKey +
                 ", depositTx=" + depositTx +
                /* ", contract=" + contract +
                 ", contractAsJson='" + contractAsJson + '\'' +*/

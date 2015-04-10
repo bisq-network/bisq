@@ -48,11 +48,10 @@ public class SendRequestFinalizePayoutTxMessage extends TradeTask {
                     trade.getLockTime()
             );
 
-            processModel.getMessageService().sendMessage(trade.getTradingPeer(),
+            processModel.getMessageService().sendEncryptedMessage(
+                    trade.getTradingPeer(),
+                    processModel.tradingPeer.getPubKeyRing(),
                     message,
-                    processModel.tradingPeer.getP2pSigPubKey(),
-                    processModel.tradingPeer.getP2pEncryptPubKey(),
-                    processModel.getRegistrationKeyPair(),
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {

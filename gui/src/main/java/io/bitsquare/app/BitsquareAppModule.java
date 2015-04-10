@@ -22,6 +22,8 @@ import io.bitsquare.arbitration.ArbitratorModule;
 import io.bitsquare.arbitration.tomp2p.TomP2PArbitratorModule;
 import io.bitsquare.btc.BitcoinModule;
 import io.bitsquare.crypto.CryptoModule;
+import io.bitsquare.crypto.KeyRing;
+import io.bitsquare.crypto.KeyStorage;
 import io.bitsquare.gui.GuiModule;
 import io.bitsquare.offer.OfferModule;
 import io.bitsquare.offer.tomp2p.TomP2POfferModule;
@@ -59,12 +61,17 @@ class BitsquareAppModule extends BitsquareModule {
 
     @Override
     protected void configure() {
+        bind(KeyStorage.class).in(Singleton.class);
+        bind(KeyRing.class).in(Singleton.class);
         bind(User.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);
         bind(AccountSettings.class).in(Singleton.class);
 
         File storageDir = new File(env.getRequiredProperty(Storage.DIR_KEY));
         bind(File.class).annotatedWith(named(Storage.DIR_KEY)).toInstance(storageDir);
+        
+        File keyStorageDir = new File(env.getRequiredProperty(KeyStorage.DIR_KEY));
+        bind(File.class).annotatedWith(named(KeyStorage.DIR_KEY)).toInstance(keyStorageDir);
 
         bind(Environment.class).toInstance(env);
         bind(UpdateProcess.class).in(Singleton.class);

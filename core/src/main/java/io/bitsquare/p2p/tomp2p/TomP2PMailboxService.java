@@ -19,14 +19,16 @@ package io.bitsquare.p2p.tomp2p;
 
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.crypto.KeyRing;
+import io.bitsquare.crypto.PubKeyRing;
+import io.bitsquare.crypto.SealedAndSignedMessage;
 import io.bitsquare.offer.OfferBookService;
-import io.bitsquare.p2p.EncryptedMailboxMessage;
 import io.bitsquare.p2p.MailboxMessagesResultHandler;
 import io.bitsquare.p2p.MailboxService;
-import io.bitsquare.user.User;
 
 import java.io.IOException;
 
+import java.security.KeyPair;
 import java.security.PublicKey;
 
 import java.util.ArrayList;
@@ -53,10 +55,13 @@ public class TomP2PMailboxService extends TomP2PDHTService implements MailboxSer
     private static final int TTL = 21 * 24 * 60 * 60;    // the message is default 21 days valid, as a max trade period might be about 2 weeks.
 
     private final List<OfferBookService.Listener> offerRepositoryListeners = new ArrayList<>();
+    private final KeyPair dhtSignatureKeyPair;
 
     @Inject
-    public TomP2PMailboxService(TomP2PNode tomP2PNode, User user) {
-        super(tomP2PNode, user);
+    public TomP2PMailboxService(TomP2PNode tomP2PNode, KeyRing keyRing) {
+        super(tomP2PNode, keyRing);
+
+        dhtSignatureKeyPair = keyRing.getDhtSignatureKeyPair();
     }
 
     @Override
@@ -70,24 +75,32 @@ public class TomP2PMailboxService extends TomP2PDHTService implements MailboxSer
     }
 
     @Override
-    public void addMessage(PublicKey recipientP2pSigPubKey, EncryptedMailboxMessage message, ResultHandler resultHandler, FaultHandler faultHandler) {
+    public void addMessage(PubKeyRing pubKeyRing, SealedAndSignedMessage message, ResultHandler resultHandler, FaultHandler faultHandler) {
         try {
             final Data data = new Data(message);
             data.ttlSeconds(TTL);
-            log.trace("Add message to DHT requested. Added data: [locationKey: " + getLocationKey(recipientP2pSigPubKey) +
+            Number160 locationKey = getLocationKey(pubKeyRing.getDhtSignaturePubKey());
+            log.trace("Add message to DHT requested. Added data: [locationKey: " + locationKey +
                     ", hash: " + data.hash().toString() + "]");
 
-            FuturePut futurePut = addDataToMapOfProtectedDomain(getLocationKey(recipientP2pSigPubKey), data, recipientP2pSigPubKey);
+            FuturePut futurePut = addDataToMapOfProtectedDomain(locationKey,
+                    data, pubKeyRing.getDhtSignaturePubKey());
             futurePut.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
                     if (future.isSuccess()) {
                         executor.execute(() -> {
+                            log.trace("Add message to mailbox was successful. Added data: [locationKey: " + locationKey + ", value: " + data + "]");
                             resultHandler.handleResult();
-
-                            log.trace("Add message to mailbox was successful. Added data: [locationKey: " + getLocationKey(recipientP2pSigPubKey) +
-                                    ", value: " + data + "]");
                         });
+                    }
+                    else {
+                        // Seems to be a bug in TomP2P that when one peer shuts down the expected nr of peers and the delivered are not matching
+                        // As far tested the storage succeeded, so seems to be a wrong message.
+                        //Future (compl/canc):true/false, FAILED, Expected 3 result, but got 2 
+
+                        log.warn("Ignoring isSuccess=false case. failedReason: {}", future.failedReason());
+                        resultHandler.handleResult();
                     }
                 }
 
@@ -102,21 +115,21 @@ public class TomP2PMailboxService extends TomP2PDHTService implements MailboxSer
     }
 
     @Override
-    public void getAllMessages(PublicKey p2pSigPubKey, MailboxMessagesResultHandler resultHandler) {
-        log.trace("Get messages from DHT requested for locationKey: " + getLocationKey(p2pSigPubKey));
-        FutureGet futureGet = getDataFromMapOfMyProtectedDomain(getLocationKey(p2pSigPubKey));
+    public void getAllMessages(MailboxMessagesResultHandler resultHandler) {
+        log.trace("Get messages from DHT requested for locationKey: " + getLocationKey(dhtSignatureKeyPair.getPublic()));
+        FutureGet futureGet = getDataFromMapOfMyProtectedDomain(getLocationKey(dhtSignatureKeyPair.getPublic()));
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
                     final Map<Number640, Data> dataMap = futureGet.dataMap();
-                    List<EncryptedMailboxMessage> messages = new ArrayList<>();
+                    List<SealedAndSignedMessage> messages = new ArrayList<>();
                     if (dataMap != null) {
                         for (Data messageData : dataMap.values()) {
                             try {
                                 Object messageDataObject = messageData.object();
-                                if (messageDataObject instanceof EncryptedMailboxMessage) {
-                                    messages.add((EncryptedMailboxMessage) messageDataObject);
+                                if (messageDataObject instanceof SealedAndSignedMessage) {
+                                    messages.add((SealedAndSignedMessage) messageDataObject);
                                 }
                             } catch (ClassNotFoundException | IOException e) {
                                 e.printStackTrace();
@@ -125,7 +138,7 @@ public class TomP2PMailboxService extends TomP2PDHTService implements MailboxSer
                         executor.execute(() -> resultHandler.handleResult(messages));
                     }
 
-                    log.trace("Get messages from DHT was successful. Stored data: [key: " + getLocationKey(p2pSigPubKey)
+                    log.trace("Get messages from DHT was successful. Stored data: [key: " + getLocationKey(dhtSignatureKeyPair.getPublic())
                             + ", values: " + futureGet.dataMap() + "]");
                 }
                 else {
@@ -143,9 +156,9 @@ public class TomP2PMailboxService extends TomP2PDHTService implements MailboxSer
     }
 
     @Override
-    public void removeAllMessages(PublicKey p2pSigPubKey, ResultHandler resultHandler, FaultHandler faultHandler) {
-        log.trace("Remove all messages from DHT requested. locationKey: " + getLocationKey(p2pSigPubKey));
-        FutureRemove futureRemove = removeAllDataFromMapOfMyProtectedDomain(getLocationKey(p2pSigPubKey));
+    public void removeAllMessages(ResultHandler resultHandler, FaultHandler faultHandler) {
+        log.trace("Remove all messages from DHT requested. locationKey: " + getLocationKey(dhtSignatureKeyPair.getPublic()));
+        FutureRemove futureRemove = removeAllDataFromMapOfMyProtectedDomain(getLocationKey(dhtSignatureKeyPair.getPublic()));
         futureRemove.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {

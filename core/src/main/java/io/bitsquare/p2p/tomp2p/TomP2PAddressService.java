@@ -17,15 +17,14 @@
 
 package io.bitsquare.p2p.tomp2p;
 
+import io.bitsquare.crypto.KeyRing;
+import io.bitsquare.crypto.PubKeyRing;
 import io.bitsquare.p2p.AddressService;
 import io.bitsquare.p2p.NetworkException;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.p2p.listener.GetPeerAddressListener;
-import io.bitsquare.user.User;
 
 import java.io.IOException;
-
-import java.security.PublicKey;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -63,10 +62,10 @@ public class TomP2PAddressService extends TomP2PDHTService implements AddressSer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TomP2PAddressService(TomP2PNode tomP2PNode, User user) {
-        super(tomP2PNode, user);
+    public TomP2PAddressService(TomP2PNode tomP2PNode, KeyRing keyRing) {
+        super(tomP2PNode, keyRing);
 
-        locationKey = Utils.makeSHAHash(user.getP2pSigKeyPair().getPublic().getEncoded());
+        locationKey = Utils.makeSHAHash(keyRing.getPubKeyRing().getDhtSignaturePubKey().getEncoded());
     }
 
     @Override
@@ -92,9 +91,9 @@ public class TomP2PAddressService extends TomP2PDHTService implements AddressSer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void findPeerAddress(PublicKey p2pSigPubKey, GetPeerAddressListener listener) {
-        final Number160 locationKey = Utils.makeSHAHash(p2pSigPubKey.getEncoded());
-        FutureGet futureGet = getDataOfProtectedDomain(locationKey, p2pSigPubKey);
+    public void findPeerAddress(PubKeyRing pubKeyRing, GetPeerAddressListener listener) {
+        final Number160 locationKey = Utils.makeSHAHash(pubKeyRing.getDhtSignaturePubKey().getEncoded());
+        FutureGet futureGet = getDataOfProtectedDomain(locationKey, pubKeyRing.getDhtSignaturePubKey());
         log.trace("findPeerAddress called");
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override

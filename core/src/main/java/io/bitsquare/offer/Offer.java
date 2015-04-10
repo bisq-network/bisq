@@ -18,6 +18,7 @@
 package io.bitsquare.offer;
 
 import io.bitsquare.btc.Restrictions;
+import io.bitsquare.crypto.PubKeyRing;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.locale.Country;
 
@@ -27,8 +28,6 @@ import org.bitcoinj.utils.Fiat;
 
 import java.io.IOException;
 import java.io.Serializable;
-
-import java.security.PublicKey;
 
 import java.util.Date;
 import java.util.List;
@@ -47,6 +46,7 @@ public class Offer implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
     private transient static final Logger log = LoggerFactory.getLogger(Offer.class);
+
 
     public enum Direction {BUY, SELL}
 
@@ -71,7 +71,7 @@ public class Offer implements Serializable {
     private final long fiatPrice;
     private final Coin amount;
     private final Coin minAmount;
-    private final PublicKey p2pSigPubKey;
+    private final PubKeyRing pubKeyRing;
     private final FiatAccount.Type fiatAccountType;
     private final Country bankAccountCountry;
 
@@ -95,7 +95,7 @@ public class Offer implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Offer(String id,
-                 PublicKey p2pSigPubKey,
+                 PubKeyRing pubKeyRing,
                  Direction direction,
                  long fiatPrice,
                  Coin amount,
@@ -109,7 +109,7 @@ public class Offer implements Serializable {
                  List<Country> acceptedCountries,
                  List<String> acceptedLanguageCodes) {
         this.id = id;
-        this.p2pSigPubKey = p2pSigPubKey;
+        this.pubKeyRing = pubKeyRing;
         this.direction = direction;
         this.fiatPrice = fiatPrice;
         this.amount = amount;
@@ -144,7 +144,7 @@ public class Offer implements Serializable {
         checkNotNull(getCurrencyCode(), "Currency is null");
         checkNotNull(getDirection(), "Direction is null");
         checkNotNull(getId(), "Id is null");
-        checkNotNull(getP2pSigPubKey(), "p2pSigPubKey is null");
+        checkNotNull(getPubKeyRing(), "pubKeyRing is null");
         checkNotNull(getMinAmount(), "MinAmount is null");
         checkNotNull(getPrice(), "Price is null");
 
@@ -198,6 +198,11 @@ public class Offer implements Serializable {
     public String getId() {
         return id;
     }
+
+    public PubKeyRing getPubKeyRing() {
+        return pubKeyRing;
+    }
+
 
     public Fiat getPrice() {
         return Fiat.valueOf(currencyCode, fiatPrice);
@@ -256,10 +261,6 @@ public class Offer implements Serializable {
         return bankAccountUID;
     }
 
-    public PublicKey getP2pSigPubKey() {
-        return p2pSigPubKey;
-    }
-
     public Date getCreationDate() {
         return creationDate;
     }
@@ -282,7 +283,7 @@ public class Offer implements Serializable {
                 ", fiatPrice=" + fiatPrice +
                 ", amount=" + amount +
                 ", minAmount=" + minAmount +
-               /* ", p2pSigPubKey=" + p2pSigPubKey +*/
+               /* ", pubKeyRing=" + pubKeyRing +*/
                 ", fiatAccountType=" + fiatAccountType +
                 ", bankAccountCountry=" + bankAccountCountry +
                 ", securityDeposit=" + securityDeposit +

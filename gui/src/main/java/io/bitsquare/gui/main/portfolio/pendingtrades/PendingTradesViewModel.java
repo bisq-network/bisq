@@ -402,6 +402,9 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 }
             }
         }
+        else {
+            log.error("Unhandled state " + dataModel.getSellerProcessState().get());
+        }
     }
 
     private void updateBuyerState() {
@@ -429,7 +432,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                         viewState.set(ViewState.BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED);
                         break;
 
-                    case PAYOUT_FINALIZED: 
+                    case PAYOUT_FINALIZED:
                         viewState.set(ViewState.BUYER_PAYOUT_FINALIZED);
                         break;
 
@@ -474,7 +477,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                         viewState.set(ViewState.BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED);
                         break;
 
-                    case PAYOUT_FINALIZED: 
+                    case PAYOUT_FINALIZED:
                         viewState.set(ViewState.BUYER_PAYOUT_FINALIZED);
                         break;
 
@@ -497,6 +500,9 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                         break;
                 }
             }
+        }
+        else {
+            log.error("Unhandled state " + dataModel.getBuyerProcessState().get());
         }
     }
 }

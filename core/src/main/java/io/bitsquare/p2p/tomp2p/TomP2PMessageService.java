@@ -17,8 +17,12 @@
 
 package io.bitsquare.p2p.tomp2p;
 
-import io.bitsquare.crypto.EncryptionService;
-import io.bitsquare.p2p.EncryptedMailboxMessage;
+import io.bitsquare.crypto.CryptoException;
+import io.bitsquare.crypto.CryptoService;
+import io.bitsquare.crypto.MessageWithPubKey;
+import io.bitsquare.crypto.PubKeyRing;
+import io.bitsquare.crypto.SealedAndSignedMessage;
+import io.bitsquare.p2p.DecryptedMessageHandler;
 import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.Message;
@@ -26,10 +30,7 @@ import io.bitsquare.p2p.MessageHandler;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.p2p.listener.SendMessageListener;
-
-import org.bitcoinj.core.ECKey;
-
-import java.security.PublicKey;
+import io.bitsquare.util.Utilities;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -44,10 +45,12 @@ import org.slf4j.LoggerFactory;
 
 public class TomP2PMessageService extends TomP2PService implements MessageService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PMessageService.class);
+    private static final int MAX_MESSAGE_SIZE = 100 * 1024; // 34 kb is currently the max size used
 
     private final CopyOnWriteArrayList<MessageHandler> messageHandlers = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<DecryptedMessageHandler> decryptedMessageHandlers = new CopyOnWriteArrayList<>();
     private final MailboxService mailboxService;
-    private final EncryptionService<MailboxMessage> encryptionService;
+    private final CryptoService<MailboxMessage> cryptoService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -55,10 +58,10 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TomP2PMessageService(TomP2PNode tomP2PNode, MailboxService mailboxService, EncryptionService<MailboxMessage> encryptionService) {
+    public TomP2PMessageService(TomP2PNode tomP2PNode, MailboxService mailboxService, CryptoService<MailboxMessage> cryptoService) {
         super(tomP2PNode);
         this.mailboxService = mailboxService;
-        this.encryptionService = encryptionService;
+        this.cryptoService = cryptoService;
     }
 
 
@@ -75,73 +78,73 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
 
     @Override
     public void sendMessage(Peer peer, Message message, SendMessageListener listener) {
-        sendMessage(peer, message, null, null, null, listener);
+        doSendMessage(peer, null, message, listener);
     }
 
     @Override
-    public void sendMessage(Peer peer, Message message, PublicKey recipientP2pSigPubKey, PublicKey recipientP2pEncryptPubKey, ECKey registrationKeyPair,
-                            SendMessageListener listener) {
-
-        if (peer == null)
-            throw new IllegalArgumentException("Peer must not be null");
-        else if (!(peer instanceof TomP2PPeer))
-            throw new IllegalArgumentException("Peer must be of type TomP2PPeer");
-
-        FutureDirect futureDirect = peerDHT.peer().sendDirect(((TomP2PPeer) peer).getPeerAddress()).object(message).start();
-        futureDirect.addListener(new BaseFutureListener<BaseFuture>() {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception {
-                if (future.isSuccess()) {
-                    log.debug("sendMessage completed");
-                    executor.execute(listener::handleResult);
-                }
-                else {
-                    if (recipientP2pSigPubKey != null && recipientP2pEncryptPubKey != null) {
-                        log.info("sendMessage failed. We will try to send the message to the mailbox. Fault reason:  " + futureDirect.failedReason());
-                        sendMailboxMessage(recipientP2pSigPubKey, recipientP2pEncryptPubKey, registrationKeyPair, (MailboxMessage) message, listener);
-                    }
-                    else {
-                        log.error("sendMessage failed with reason " + futureDirect.failedReason());
-                        executor.execute(listener::handleFault);
-                    }
-                }
-            }
-
-            @Override
-            public void exceptionCaught(Throwable t) throws Exception {
-                if (recipientP2pSigPubKey != null && recipientP2pEncryptPubKey != null) {
-                    log.info("sendMessage failed with exception. We will try to send the message to the mailbox. Exception: " + t.getMessage());
-                    sendMailboxMessage(recipientP2pSigPubKey, recipientP2pEncryptPubKey, registrationKeyPair, (MailboxMessage) message, listener);
-                }
-                else {
-                    log.error("sendMessage failed with exception " + t.getMessage());
-                    executor.execute(listener::handleFault);
-                }
-            }
-        });
-    }
-
-    private void sendMailboxMessage(PublicKey recipientP2pSigPubKey, PublicKey recipientP2pEncryptPubKey, ECKey registrationKeyPair, MailboxMessage message,
-                                    SendMessageListener
-                                            listener) {
-        byte[] result = null;
-        log.info("sendMailboxMessage called");
+    public void sendEncryptedMessage(Peer peer, PubKeyRing pubKeyRing, Message message, SendMessageListener listener) {
+        assert pubKeyRing != null;
         try {
-            result = encryptionService.encryptMessage(recipientP2pEncryptPubKey, registrationKeyPair, message);
+            doSendMessage(peer, pubKeyRing, cryptoService.encryptAndSignMessage(pubKeyRing, message), listener);
         } catch (Throwable t) {
             t.printStackTrace();
             log.error(t.getMessage());
             executor.execute(listener::handleFault);
         }
-        EncryptedMailboxMessage encrypted = new EncryptedMailboxMessage(result);
-        mailboxService.addMessage(recipientP2pSigPubKey,
-                encrypted,
+    }
+
+    private void doSendMessage(Peer peer, PubKeyRing pubKeyRing, Message message, SendMessageListener listener) {
+        log.debug("sendMessage called");
+        if (peer == null)
+            throw new IllegalArgumentException("Peer must not be null");
+        else if (!(peer instanceof TomP2PPeer))
+            throw new IllegalArgumentException("Peer must be of type TomP2PPeer");
+
+        try {
+            FutureDirect futureDirect = peerDHT.peer().sendDirect(((TomP2PPeer) peer).getPeerAddress()).object(message).start();
+            futureDirect.addListener(new BaseFutureListener<BaseFuture>() {
+                                         @Override
+                                         public void operationComplete(BaseFuture future) throws Exception {
+                                             if (future.isSuccess()) {
+                                                 log.debug("sendMessage completed");
+                                                 executor.execute(listener::handleResult);
+                                             }
+                                             else {
+                                                 log.info("sendMessage failed. We will try to send the message to the mailbox. Fault reason:  " +
+                                                         futureDirect.failedReason());
+                                                 if (pubKeyRing != null)
+                                                     sendMailboxMessage(pubKeyRing, (SealedAndSignedMessage) message, listener);
+                                             }
+                                         }
+
+                                         @Override
+                                         public void exceptionCaught(Throwable t) throws Exception {
+                                             log.info("sendMessage failed with exception. We will try to send the message to the mailbox. Exception: "
+                                                     + t.getMessage());
+                                             if (pubKeyRing != null)
+                                                 sendMailboxMessage(pubKeyRing, (SealedAndSignedMessage) message, listener);
+                                         }
+                                     }
+            );
+        } catch (Throwable t) {
+            t.printStackTrace();
+            log.error(t.getMessage());
+            executor.execute(listener::handleFault);
+        }
+    }
+
+
+    private void sendMailboxMessage(PubKeyRing pubKeyRing, SealedAndSignedMessage message, SendMessageListener listener) {
+        log.info("sendMailboxMessage called");
+        mailboxService.addMessage(
+                pubKeyRing,
+                message,
                 () -> {
                     log.debug("Message successfully added to peers mailbox.");
                     executor.execute(listener::handleResult);
                 },
                 (errorMessage, throwable) -> {
-                    log.error("Message failed to  add to peers mailbox.");
+                    log.error("Message failed to add to peers mailbox.");
                     executor.execute(listener::handleFault);
                 }
         );
@@ -159,6 +162,18 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
             log.error("Try to remove listener which was never added.");
     }
 
+    @Override
+    public void addDecryptedMessageHandler(DecryptedMessageHandler listener) {
+        if (!decryptedMessageHandlers.add(listener))
+            log.error("Add listener did not change list. Probably listener has been already added.");
+    }
+
+    @Override
+    public void removeDecryptedMessageHandler(DecryptedMessageHandler listener) {
+        if (!decryptedMessageHandlers.remove(listener))
+            log.error("Try to remove listener which was never added.");
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -166,21 +181,47 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
 
     private void setupReplyHandler() {
         peerDHT.peer().objectDataReply((sender, message) -> {
-            log.debug("handleMessage peerAddress " + sender);
-            log.debug("handleMessage message " + message);
+            log.debug("Incoming message with peerAddress " + sender);
+            log.debug("Incoming message with type " + message);
+
+            int messageSize = 0;
+            if (message != null)
+                messageSize = Utilities.objectToBytArray(message).length;
+
+            log.debug("Incoming message with size " + messageSize);
 
             if (!sender.equals(peerDHT.peer().peerAddress())) {
-                if (message instanceof Message)
+                if (messageSize == 0)
+                    log.warn("Received msg is null");
+                else if (messageSize > MAX_MESSAGE_SIZE)
+                    log.warn("Received msg size of  {} is exceeding the max message size of {}.",
+                            Utilities.objectToBytArray(message).length, MAX_MESSAGE_SIZE);
+                else if (message instanceof SealedAndSignedMessage)
+                    executor.execute(() -> decryptedMessageHandlers.stream().forEach(e -> {
+                                MessageWithPubKey messageWithPubKey = null;
+                                try {
+                                    messageWithPubKey = getDecryptedMessageWithPubKey((SealedAndSignedMessage) message);
+                                    log.debug("decrypted message " + messageWithPubKey.getMessage());
+                                    e.handleMessage(messageWithPubKey, new TomP2PPeer(sender));
+                                } catch (CryptoException e1) {
+                                    e1.printStackTrace();
+                                    log.warn("decryptAndVerifyMessage msg failed", e1.getMessage());
+                                }
+                            }
+                    ));
+                else if (message instanceof Message)
                     executor.execute(() -> messageHandlers.stream().forEach(e -> e.handleMessage((Message) message, new TomP2PPeer(sender))));
                 else
-                    log.error("We got an object which is not type of Message. That must never happen. Request object = " + message);
+                    log.warn("We got an object which is not type of Message. Object = " + message);
             }
             else {
                 log.error("Received msg from myself. That must never happen.");
             }
-
             return true;
         });
     }
 
+    private MessageWithPubKey getDecryptedMessageWithPubKey(SealedAndSignedMessage message) throws CryptoException {
+        return cryptoService.decryptAndVerifyMessage((SealedAndSignedMessage) message);
+    }
 }

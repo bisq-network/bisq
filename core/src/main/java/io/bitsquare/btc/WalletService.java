@@ -20,7 +20,7 @@ package io.bitsquare.btc;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
-import io.bitsquare.crypto.SignatureService;
+import io.bitsquare.crypto.CryptoService;
 
 import org.bitcoinj.core.AbstractWalletEventListener;
 import org.bitcoinj.core.Address;
@@ -95,7 +95,7 @@ public class WalletService {
     private final TradeWalletService tradeWalletService;
     private final AddressEntryList addressEntryList;
     private final NetworkParameters params;
-    private final SignatureService signatureService;
+    private final CryptoService cryptoService;
     private final File walletDir;
     private final String walletPrefix;
     private final UserAgent userAgent;
@@ -111,14 +111,14 @@ public class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletService(BitcoinNetwork bitcoinNetwork, RegTestHost regTestHost, SignatureService signatureService,
+    public WalletService(BitcoinNetwork bitcoinNetwork, RegTestHost regTestHost, CryptoService cryptoService,
                          TradeWalletService tradeWalletService, AddressEntryList addressEntryList, UserAgent userAgent,
                          @Named(DIR_KEY) File walletDir, @Named(PREFIX_KEY) String walletPrefix) {
         this.regTestHost = regTestHost;
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
         this.params = bitcoinNetwork.getParameters();
-        this.signatureService = signatureService;
+        this.cryptoService = cryptoService;
         this.walletDir = walletDir;
         this.walletPrefix = walletPrefix;
         this.userAgent = userAgent;
@@ -208,7 +208,8 @@ public class WalletService {
         }, Threading.USER_THREAD);
         walletAppKit.startAsync();
 
-        return status.mergeWith(downloadProgress).timeout(30, TimeUnit.SECONDS);
+        return status.timeout(30, TimeUnit.SECONDS);
+        //return status.mergeWith(downloadProgress).timeout(30, TimeUnit.SECONDS);
     }
 
     private void initWallet() {
@@ -457,7 +458,7 @@ public class WalletService {
 
         Transaction tx = new Transaction(params);
 
-        byte[] data = signatureService.digestMessageWithSignature(getRegistrationAddressEntry().getKeyPair(), stringifiedFiatAccounts);
+        byte[] data = cryptoService.digestMessageWithSignature(getRegistrationAddressEntry().getKeyPair(), stringifiedFiatAccounts);
         tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, new ScriptBuilder().op(OP_RETURN).data(data).build());
 
         // We don't take a fee at the moment

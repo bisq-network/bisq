@@ -17,14 +17,13 @@
 
 package io.bitsquare.trade.protocol.trade.messages;
 
+import io.bitsquare.crypto.PubKeyRing;
 import io.bitsquare.fiat.FiatAccount;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionOutput;
 
 import java.io.Serializable;
-
-import java.security.PublicKey;
 
 import java.util.List;
 
@@ -38,8 +37,7 @@ public class RequestPayDepositMessage extends TradeMessage implements Serializab
     public final List<TransactionOutput> buyerConnectedOutputsForAllInputs;
     public final List<TransactionOutput> buyerOutputs;
     public final byte[] buyerTradeWalletPubKey;
-    public final PublicKey buyerP2pSigPublicKey;
-    public final PublicKey buyerP2pEncryptPublicKey;
+    public final PubKeyRing buyerPubKeyRing;
     public final FiatAccount buyerFiatAccount;
     public final String buyerAccountId;
     public final Coin tradeAmount;
@@ -49,14 +47,12 @@ public class RequestPayDepositMessage extends TradeMessage implements Serializab
                                     List<TransactionOutput> buyerConnectedOutputsForAllInputs,
                                     List<TransactionOutput> buyerOutputs,
                                     byte[] buyerTradeWalletPubKey,
-                                    PublicKey buyerP2pSigPublicKey,
-                                    PublicKey buyerP2pEncryptPublicKey,
+                                    PubKeyRing buyerPubKeyRing,
                                     FiatAccount buyerFiatAccount,
                                     String buyerAccountId) {
         super(tradeId);
         this.tradeAmount = tradeAmount;
-        this.buyerP2pSigPublicKey = buyerP2pSigPublicKey;
-        this.buyerP2pEncryptPublicKey = buyerP2pEncryptPublicKey;
+        this.buyerPubKeyRing = buyerPubKeyRing;
         this.buyerConnectedOutputsForAllInputs = buyerConnectedOutputsForAllInputs;
         this.buyerOutputs = buyerOutputs;
         this.buyerTradeWalletPubKey = buyerTradeWalletPubKey;

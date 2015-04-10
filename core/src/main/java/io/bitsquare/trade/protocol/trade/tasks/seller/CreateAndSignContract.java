@@ -45,10 +45,10 @@ public class CreateAndSignContract extends TradeTask {
                     processModel.getAccountId(),
                     processModel.tradingPeer.getFiatAccount(),
                     processModel.getFiatAccount(),
-                    processModel.tradingPeer.getP2pSigPubKey(),
-                    processModel.getP2pSigPubKey());
+                    processModel.tradingPeer.getPubKeyRing(),
+                    processModel.getPubKeyRing());
             String contractAsJson = Utilities.objectToJson(contract);
-            String signature = processModel.getSignatureService().signMessage(processModel.getRegistrationKeyPair(), contractAsJson);
+            String signature = processModel.getCryptoService().signMessage(processModel.getRegistrationKeyPair(), contractAsJson);
 
             trade.setContract(contract);
             trade.setContractAsJson(contractAsJson);

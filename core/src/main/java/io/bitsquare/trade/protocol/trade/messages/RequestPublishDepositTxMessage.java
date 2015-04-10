@@ -24,8 +24,6 @@ import org.bitcoinj.core.TransactionOutput;
 
 import java.io.Serializable;
 
-import java.security.PublicKey;
-
 import java.util.List;
 
 import javax.annotation.concurrent.Immutable;
@@ -37,8 +35,6 @@ public class RequestPublishDepositTxMessage extends TradeMessage implements Seri
 
     public final FiatAccount sellerFiatAccount;
     public final String sellerAccountId;
-    public final PublicKey sellerP2pSigPublicKey;
-    public final PublicKey sellerP2pEncryptPublicKey;
     public final String sellerContractAsJson;
     public final String sellerContractSignature;
     public final String sellerPayoutAddressString;
@@ -50,8 +46,6 @@ public class RequestPublishDepositTxMessage extends TradeMessage implements Seri
                                           FiatAccount sellerFiatAccount,
                                           String sellerAccountId,
                                           byte[] sellerTradeWalletPubKey,
-                                          PublicKey sellerP2pSigPublicKey,
-                                          PublicKey sellerP2pEncryptPublicKey,
                                           String sellerContractAsJson,
                                           String sellerContractSignature,
                                           String sellerPayoutAddressString,
@@ -61,8 +55,6 @@ public class RequestPublishDepositTxMessage extends TradeMessage implements Seri
         this.sellerFiatAccount = sellerFiatAccount;
         this.sellerAccountId = sellerAccountId;
         this.sellerTradeWalletPubKey = sellerTradeWalletPubKey;
-        this.sellerP2pSigPublicKey = sellerP2pSigPublicKey;
-        this.sellerP2pEncryptPublicKey = sellerP2pEncryptPublicKey;
         this.sellerContractAsJson = sellerContractAsJson;
         this.sellerContractSignature = sellerContractSignature;
         this.sellerPayoutAddressString = sellerPayoutAddressString;

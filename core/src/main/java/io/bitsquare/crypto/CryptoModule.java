@@ -31,8 +31,6 @@ public class CryptoModule extends BitsquareModule {
 
     @Override
     protected void configure() {
-        bind(SignatureService.class).in(Singleton.class);
-        bind(HashService.class).in(Singleton.class);
-        bind(EncryptionService.class).in(Singleton.class);
+        bind(CryptoService.class).in(Singleton.class);
     }
 }

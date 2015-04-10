@@ -42,8 +42,6 @@ public class SendRequestPublishDepositTxMessage extends TradeTask {
                     processModel.getFiatAccount(),
                     processModel.getAccountId(),
                     processModel.getTradeWalletPubKey(),
-                    processModel.getP2pSigPubKey(),
-                    processModel.getP2pEncryptPubKey(),
                     trade.getContractAsJson(),
                     trade.getSellerContractSignature(),
                     processModel.getAddressEntry().getAddressString(),
@@ -51,22 +49,26 @@ public class SendRequestPublishDepositTxMessage extends TradeTask {
                     processModel.getConnectedOutputsForAllInputs()
             );
 
-            processModel.getMessageService().sendMessage(trade.getTradingPeer(), tradeMessage, new SendMessageListener() {
-                @Override
-                public void handleResult() {
-                    complete();
-                }
+            processModel.getMessageService().sendEncryptedMessage(
+                    trade.getTradingPeer(),
+                    processModel.tradingPeer.getPubKeyRing(),
+                    tradeMessage,
+                    new SendMessageListener() {
+                        @Override
+                        public void handleResult() {
+                            complete();
+                        }
 
-                @Override
-                public void handleFault() {
-                    appendToErrorMessage("Sending RequestOffererPublishDepositTxMessage failed");
-                    trade.setErrorMessage(errorMessage);
+                        @Override
+                        public void handleFault() {
+                            appendToErrorMessage("Sending RequestOffererPublishDepositTxMessage failed");
+                            trade.setErrorMessage(errorMessage);
 
-                    StateUtil.setSendFailedState(trade);
+                            StateUtil.setSendFailedState(trade);
 
-                    failed();
-                }
-            });
+                            failed();
+                        }
+                    });
         } catch (Throwable t) {
             t.printStackTrace();
             trade.setThrowable(t);

@@ -25,15 +25,17 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.crypto.EncryptionService;
-import io.bitsquare.crypto.SignatureService;
+import io.bitsquare.crypto.CryptoService;
+import io.bitsquare.crypto.KeyRing;
+import io.bitsquare.crypto.MessageWithPubKey;
+import io.bitsquare.crypto.SealedAndSignedMessage;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.p2p.AddressService;
-import io.bitsquare.p2p.EncryptedMailboxMessage;
 import io.bitsquare.p2p.MailboxMessage;
 import io.bitsquare.p2p.MailboxService;
+import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.handlers.TakeOfferResultHandler;
@@ -79,6 +81,7 @@ public class TradeManager {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
     private final User user;
+    private KeyRing keyRing;
     private final AccountSettings accountSettings;
     private final MessageService messageService;
     private final MailboxService mailboxService;
@@ -86,8 +89,7 @@ public class TradeManager {
     private final BlockChainService blockChainService;
     private final WalletService walletService;
     private final TradeWalletService tradeWalletService;
-    private final SignatureService signatureService;
-    private final EncryptionService<MailboxMessage> encryptionService;
+    private final CryptoService<MailboxMessage> cryptoService;
     private final OfferBookService offerBookService;
     private final ArbitrationRepository arbitrationRepository;
 
@@ -107,6 +109,7 @@ public class TradeManager {
 
     @Inject
     public TradeManager(User user,
+                        KeyRing keyRing,
                         AccountSettings accountSettings,
                         MessageService messageService,
                         MailboxService mailboxService,
@@ -114,12 +117,12 @@ public class TradeManager {
                         BlockChainService blockChainService,
                         WalletService walletService,
                         TradeWalletService tradeWalletService,
-                        SignatureService signatureService,
-                        EncryptionService<MailboxMessage> encryptionService,
+                        CryptoService<MailboxMessage> cryptoService,
                         OfferBookService offerBookService,
                         ArbitrationRepository arbitrationRepository,
                         @Named("storage.dir") File storageDir) {
         this.user = user;
+        this.keyRing = keyRing;
         this.accountSettings = accountSettings;
         this.messageService = messageService;
         this.mailboxService = mailboxService;
@@ -127,8 +130,7 @@ public class TradeManager {
         this.blockChainService = blockChainService;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
-        this.signatureService = signatureService;
-        this.encryptionService = encryptionService;
+        this.cryptoService = cryptoService;
         this.offerBookService = offerBookService;
         this.arbitrationRepository = arbitrationRepository;
 
@@ -167,25 +169,27 @@ public class TradeManager {
 
         // If there are messages in our mailbox we apply it and remove them from the DHT
         // We run that before initializing the pending trades to be sure the state is correct
-        mailboxService.getAllMessages(user.getP2pSigPubKey(),
+        mailboxService.getAllMessages(
                 (encryptedMailboxMessages) -> {
                     log.trace("mailboxService.getAllMessages success");
                     setMailboxMessagesToTrades(encryptedMailboxMessages);
-                    emptyMailbox();
+                    //TODO testing
+                    //emptyMailbox();
                     initPendingTrades();
                 });
     }
 
-    private void setMailboxMessagesToTrades(List<EncryptedMailboxMessage> encryptedMailboxMessages) {
-        log.trace("applyMailboxMessage encryptedMailboxMessage.size=" + encryptedMailboxMessages.size());
-        for (EncryptedMailboxMessage encrypted : encryptedMailboxMessages) {
+    private void setMailboxMessagesToTrades(List<SealedAndSignedMessage> encryptedMessages) {
+        log.trace("applyMailboxMessage encryptedMailboxMessage.size=" + encryptedMessages.size());
+        for (SealedAndSignedMessage encrypted : encryptedMessages) {
             try {
-                MailboxMessage mailboxMessage = encryptionService.decryptToMessage(user.getP2pEncryptPrivateKey(), encrypted.getBytes());
-                if (mailboxMessage instanceof TradeMessage) {
-                    String tradeId = ((TradeMessage) mailboxMessage).tradeId;
+                MessageWithPubKey messageWithPubKey = cryptoService.decryptAndVerifyMessage(encrypted);
+                Message message = messageWithPubKey.getMessage();
+                if (message instanceof MailboxMessage && message instanceof TradeMessage) {
+                    String tradeId = ((TradeMessage) message).tradeId;
                     Optional<Trade> tradeOptional = pendingTrades.stream().filter(e -> e.getId().equals(tradeId)).findAny();
                     if (tradeOptional.isPresent())
-                        tradeOptional.get().setMailboxMessage(mailboxMessage);
+                        tradeOptional.get().setMailboxMessage(messageWithPubKey);
                 }
             } catch (Throwable e) {
                 e.printStackTrace();
@@ -195,7 +199,7 @@ public class TradeManager {
     }
 
     private void emptyMailbox() {
-        mailboxService.removeAllMessages(user.getP2pSigPubKey(),
+        mailboxService.removeAllMessages(
                 () -> log.debug("All mailbox entries removed"),
                 (errorMessage, fault) -> {
                     log.error(errorMessage);
@@ -259,7 +263,7 @@ public class TradeManager {
 
         FiatAccount fiatAccount = user.currentFiatAccountProperty().get();
         Offer offer = new Offer(id,
-                user.getP2pSigPubKey(),
+                keyRing.getPubKeyRing(),
                 direction,
                 price.getValue(),
                 amount,
@@ -352,6 +356,7 @@ public class TradeManager {
         if (!checkOfferAvailabilityProtocolMap.containsKey(offer.getId())) {
             CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(
                     offer,
+                    keyRing.getPubKeyRing(),
                     messageService,
                     addressService);
 
@@ -373,15 +378,15 @@ public class TradeManager {
 
     // First we check if offer is still available then we create the trade with the protocol
     public void requestTakeOffer(Coin amount, Offer offer, TakeOfferResultHandler takeOfferResultHandler) {
-        CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(offer, messageService, addressService);
+        CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(offer, keyRing.getPubKeyRing(), messageService, addressService);
         CheckOfferAvailabilityProtocol availabilityProtocol = new CheckOfferAvailabilityProtocol(model,
-                () -> handleCheckOfferAvailabilityResult(amount, offer, model, takeOfferResultHandler),
+                () -> createTrade(amount, offer, model, takeOfferResultHandler),
                 (errorMessage) -> disposeCheckOfferAvailabilityRequest(offer));
         checkOfferAvailabilityProtocolMap.put(offer.getId(), availabilityProtocol);
         availabilityProtocol.checkOfferAvailability();
     }
 
-    private void handleCheckOfferAvailabilityResult(Coin amount, Offer offer, CheckOfferAvailabilityModel model, TakeOfferResultHandler
+    private void createTrade(Coin amount, Offer offer, CheckOfferAvailabilityModel model, TakeOfferResultHandler
             takeOfferResultHandler) {
         disposeCheckOfferAvailabilityRequest(offer);
         if (offer.getState() == Offer.State.AVAILABLE) {
@@ -487,9 +492,13 @@ public class TradeManager {
                 addressService,
                 tradeWalletService,
                 blockChainService,
-                signatureService,
+                cryptoService,
                 arbitrationRepository,
-                user);
+                user,
+                keyRing);
     }
 
+    public boolean isMyOffer(Offer offer) {
+        return offer.getPubKeyRing().getHashString().equals(keyRing.getPubKeyRing().getHashString());
+    }
 }

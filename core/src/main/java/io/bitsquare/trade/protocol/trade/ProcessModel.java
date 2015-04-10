@@ -23,7 +23,9 @@ import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.taskrunner.Model;
-import io.bitsquare.crypto.SignatureService;
+import io.bitsquare.crypto.CryptoService;
+import io.bitsquare.crypto.KeyRing;
+import io.bitsquare.crypto.PubKeyRing;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.AddressService;
@@ -38,8 +40,6 @@ import org.bitcoinj.crypto.DeterministicKey;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-
-import java.security.PublicKey;
 
 import java.util.List;
 
@@ -60,10 +60,11 @@ public class ProcessModel implements Model, Serializable {
     transient private WalletService walletService;
     transient private TradeWalletService tradeWalletService;
     transient private BlockChainService blockChainService;
-    transient private SignatureService signatureService;
+    transient private CryptoService cryptoService;
     transient private ArbitrationRepository arbitrationRepository;
     transient private Offer offer;
-    private transient User user;
+    transient private User user;
+    transient private KeyRing keyRing;
 
     // Mutable
     public final TradingPeer tradingPeer;
@@ -93,18 +94,20 @@ public class ProcessModel implements Model, Serializable {
                                          WalletService walletService,
                                          TradeWalletService tradeWalletService,
                                          BlockChainService blockChainService,
-                                         SignatureService signatureService,
+                                         CryptoService cryptoService,
                                          ArbitrationRepository arbitrationRepository,
-                                         User user) {
+                                         User user,
+                                         KeyRing keyRing) {
         this.offer = offer;
         this.messageService = messageService;
         this.addressService = addressService;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
         this.blockChainService = blockChainService;
-        this.signatureService = signatureService;
+        this.cryptoService = cryptoService;
         this.arbitrationRepository = arbitrationRepository;
         this.user = user;
+        this.keyRing = keyRing;
     }
 
 
@@ -126,10 +129,6 @@ public class ProcessModel implements Model, Serializable {
 
     public BlockChainService getBlockChainService() {
         return blockChainService;
-    }
-
-    public SignatureService getSignatureService() {
-        return signatureService;
     }
 
     public byte[] getArbitratorPubKey() {
@@ -179,10 +178,6 @@ public class ProcessModel implements Model, Serializable {
         return user.getAccountId();
     }
 
-    public PublicKey getP2pSigPubKey() {
-        return user.getP2pSigPubKey();
-    }
-
     public byte[] getRegistrationPubKey() {
         return walletService.getRegistrationAddressEntry().getPubKey();
     }
@@ -193,10 +188,6 @@ public class ProcessModel implements Model, Serializable {
 
     public byte[] getTradeWalletPubKey() {
         return getAddressEntry().getPubKey();
-    }
-
-    public PublicKey getP2pEncryptPubKey() {
-        return user.getP2pEncryptPubKey();
     }
 
     @Nullable
@@ -262,5 +253,17 @@ public class ProcessModel implements Model, Serializable {
 
     public AddressService getAddressService() {
         return addressService;
+    }
+
+    public PubKeyRing getPubKeyRing() {
+        return keyRing.getPubKeyRing();
+    }
+
+    public CryptoService getCryptoService() {
+        return cryptoService;
+    }
+
+    public void setCryptoService(CryptoService cryptoService) {
+        this.cryptoService = cryptoService;
     }
 }

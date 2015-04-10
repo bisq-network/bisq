@@ -17,6 +17,8 @@
 
 package io.bitsquare.trade.protocol.trade.messages;
 
+import io.bitsquare.crypto.PubKeyRing;
+
 import org.bitcoinj.core.Coin;
 
 import java.io.Serializable;
@@ -29,11 +31,14 @@ public class RequestDepositTxInputsMessage extends TradeMessage implements Seria
     private static final long serialVersionUID = 1L;
 
     public final Coin tradeAmount;
+    public final PubKeyRing sellerPubKeyRing;
     public final String sellerOfferFeeTxId;
     public final byte[] sellerTradeWalletPubKey;
 
-    public RequestDepositTxInputsMessage(String tradeId, String sellerOfferFeeTxId, Coin tradeAmount, byte[] sellerTradeWalletPubKey) {
+    public RequestDepositTxInputsMessage(String tradeId, PubKeyRing sellerPubKeyRing, String sellerOfferFeeTxId, Coin tradeAmount, byte[]
+            sellerTradeWalletPubKey) {
         super(tradeId);
+        this.sellerPubKeyRing = sellerPubKeyRing;
         this.sellerOfferFeeTxId = sellerOfferFeeTxId;
         this.tradeAmount = tradeAmount;
         this.sellerTradeWalletPubKey = sellerTradeWalletPubKey;

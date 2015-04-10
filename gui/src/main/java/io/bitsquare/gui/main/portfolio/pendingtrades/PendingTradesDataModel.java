@@ -145,7 +145,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
             trade = item.getTrade();
             tradeProperty.set(trade);
 
-            isOffererRole = trade.getOffer().getP2pSigPubKey().equals(user.getP2pSigPubKey());
+            isOffererRole = tradeManager.isMyOffer(trade.getOffer());
 
             if (trade instanceof SellerTrade)
                 sellerProcessState.bind(trade.processStateProperty());

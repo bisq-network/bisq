@@ -17,8 +17,8 @@
 
 package io.bitsquare.p2p.tomp2p;
 
+import io.bitsquare.crypto.KeyRing;
 import io.bitsquare.p2p.DHTService;
-import io.bitsquare.user.User;
 
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 
 public class TomP2PDHTService extends TomP2PService implements DHTService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PDHTService.class);
-    private final KeyPair keyPair;
+    private final KeyPair dhtSignatureKeyPair;
     private final Number160 pubKeyHashForMyDomain;
 
 
@@ -47,10 +47,11 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TomP2PDHTService(TomP2PNode tomP2PNode, User user) {
+    public TomP2PDHTService(TomP2PNode tomP2PNode, KeyRing keyRing) {
         super(tomP2PNode);
-        keyPair = user.getP2pSigKeyPair();
-        pubKeyHashForMyDomain = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
+
+        dhtSignatureKeyPair = keyRing.getDhtSignatureKeyPair();
+        pubKeyHashForMyDomain = Utils.makeSHAHash(dhtSignatureKeyPair.getPublic().getEncoded());
     }
 
     @Override
@@ -117,7 +118,7 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
      */
     public FuturePut putDataToMyProtectedDomain(Number160 locationKey, Data data) {
         log.trace("putDataToMyProtectedDomain");
-        data.protectEntry(keyPair);
+        data.protectEntry(dhtSignatureKeyPair);
         return peerDHT.put(locationKey).data(data).protectDomain().domainKey(pubKeyHashForMyDomain).start();
     }
 
@@ -131,7 +132,7 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
     public FutureRemove removeDataFromMyProtectedDomain(Number160 locationKey) {
         log.trace("removeDataOfProtectedDomain");
         if (peerDHT != null)
-            return peerDHT.remove(locationKey).domainKey(pubKeyHashForMyDomain).keyPair(keyPair).start();
+            return peerDHT.remove(locationKey).domainKey(pubKeyHashForMyDomain).keyPair(dhtSignatureKeyPair).start();
         else
             return null;
     }
@@ -167,10 +168,10 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
      */
     public FuturePut addProtectedDataToMap(Number160 locationKey, Data data) {
         log.trace("addProtectedDataToMap locationKey = " + locationKey);
-        data.protectEntry(keyPair);
+        data.protectEntry(dhtSignatureKeyPair);
         log.trace("addProtectedDataToMap with contentKey " + data.hash().toString());
 
-        return peerDHT.add(locationKey).data(data).keyPair(keyPair).start();
+        return peerDHT.add(locationKey).data(data).keyPair(dhtSignatureKeyPair).start();
     }
 
     /**
@@ -185,7 +186,7 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
         log.trace("removeProtectedDataFromMap locationKey = " + locationKey);
         Number160 contentKey = data.hash();
         log.trace("removeProtectedDataFromMap with contentKey " + contentKey.toString());
-        return peerDHT.remove(locationKey).contentKey(contentKey).keyPair(keyPair).start();
+        return peerDHT.remove(locationKey).contentKey(contentKey).keyPair(dhtSignatureKeyPair).start();
     }
 
     /**
@@ -221,8 +222,8 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
         log.trace("addDataToMapOfProtectedDomain");
         log.trace("addDataToMapOfProtectedDomain with contentKey " + data.hash().toString());
         final Number160 pubKeyHashOfDomainOwner = Utils.makeSHAHash(publicKey.getEncoded());
-        return peerDHT.add(locationKey).protectDomain().domainKey(pubKeyHashOfDomainOwner).keyPair(keyPair)
-                .data(data).protectDomain().domainKey(pubKeyHashOfDomainOwner).keyPair(keyPair).start();
+        return peerDHT.add(locationKey).protectDomain().domainKey(pubKeyHashOfDomainOwner).keyPair(dhtSignatureKeyPair)
+                .data(data).protectDomain().domainKey(pubKeyHashOfDomainOwner).keyPair(dhtSignatureKeyPair).start();
     }
 
     /**
@@ -237,7 +238,7 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
         log.trace("removeDataFromMapOfMyProtectedDomain");
         Number160 contentKey = data.hash();
         log.trace("removeDataFromMapOfMyProtectedDomain with contentKey " + contentKey.toString());
-        return peerDHT.remove(locationKey).contentKey(contentKey).domainKey(pubKeyHashForMyDomain).keyPair(keyPair).start();
+        return peerDHT.remove(locationKey).contentKey(contentKey).domainKey(pubKeyHashForMyDomain).keyPair(dhtSignatureKeyPair).start();
     }
 
     /**
@@ -261,7 +262,8 @@ public class TomP2PDHTService extends TomP2PService implements DHTService {
      */
     public FutureRemove removeAllDataFromMapOfMyProtectedDomain(Number160 locationKey) {
         log.trace("getDataFromMapOfMyProtectedDomain");
-        return peerDHT.remove(locationKey).domainKey(pubKeyHashForMyDomain).keyPair(keyPair).all().domainKey(pubKeyHashForMyDomain).keyPair(keyPair).start();
+        return peerDHT.remove(locationKey).domainKey(pubKeyHashForMyDomain).keyPair(dhtSignatureKeyPair).all().domainKey(pubKeyHashForMyDomain).keyPair
+                (dhtSignatureKeyPair).start();
     }
 
 
