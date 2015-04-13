@@ -23,8 +23,6 @@ import io.bitsquare.p2p.listener.SendMessageListener;
 
 public interface MessageService extends P2PService {
 
-    void sendMessage(Peer peer, Message message, SendMessageListener listener);
-
     void sendEncryptedMessage(Peer peer, PubKeyRing pubKeyRing, Message message, SendMessageListener listener);
 
     void addMessageHandler(MessageHandler listener);

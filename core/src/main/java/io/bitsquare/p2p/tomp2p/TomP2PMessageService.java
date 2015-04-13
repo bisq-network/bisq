@@ -76,24 +76,11 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
     // MessageService implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public void sendMessage(Peer peer, Message message, SendMessageListener listener) {
-        doSendMessage(peer, null, message, listener);
-    }
 
     @Override
     public void sendEncryptedMessage(Peer peer, PubKeyRing pubKeyRing, Message message, SendMessageListener listener) {
         assert pubKeyRing != null;
-        try {
-            doSendMessage(peer, pubKeyRing, cryptoService.encryptAndSignMessage(pubKeyRing, message), listener);
-        } catch (Throwable t) {
-            t.printStackTrace();
-            log.error(t.getMessage());
-            executor.execute(listener::handleFault);
-        }
-    }
 
-    private void doSendMessage(Peer peer, PubKeyRing pubKeyRing, Message message, SendMessageListener listener) {
         log.debug("sendMessage called");
         if (peer == null)
             throw new IllegalArgumentException("Peer must not be null");
@@ -101,7 +88,9 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
             throw new IllegalArgumentException("Peer must be of type TomP2PPeer");
 
         try {
-            FutureDirect futureDirect = peerDHT.peer().sendDirect(((TomP2PPeer) peer).getPeerAddress()).object(message).start();
+            final Message encryptedMessage = cryptoService.encryptAndSignMessage(pubKeyRing, message);
+
+            FutureDirect futureDirect = peerDHT.peer().sendDirect(((TomP2PPeer) peer).getPeerAddress()).object(encryptedMessage).start();
             futureDirect.addListener(new BaseFutureListener<BaseFuture>() {
                                          @Override
                                          public void operationComplete(BaseFuture future) throws Exception {
@@ -113,7 +102,7 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
                                                  log.info("sendMessage failed. We will try to send the message to the mailbox. Fault reason:  " +
                                                          futureDirect.failedReason());
                                                  if (pubKeyRing != null)
-                                                     sendMailboxMessage(pubKeyRing, (SealedAndSignedMessage) message, listener);
+                                                     sendMailboxMessage(pubKeyRing, (SealedAndSignedMessage) encryptedMessage, listener);
                                              }
                                          }
 
@@ -122,7 +111,7 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
                                              log.info("sendMessage failed with exception. We will try to send the message to the mailbox. Exception: "
                                                      + t.getMessage());
                                              if (pubKeyRing != null)
-                                                 sendMailboxMessage(pubKeyRing, (SealedAndSignedMessage) message, listener);
+                                                 sendMailboxMessage(pubKeyRing, (SealedAndSignedMessage) encryptedMessage, listener);
                                          }
                                      }
             );

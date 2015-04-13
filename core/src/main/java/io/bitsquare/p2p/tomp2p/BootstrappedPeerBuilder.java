@@ -103,6 +103,8 @@ public class BootstrappedPeerBuilder {
         this.useManualPortForwarding = useManualPortForwarding;
         this.bootstrapNode = bootstrapNode;
         this.networkInterface = networkInterface;
+
+        log.debug("Bootstrap to {}", bootstrapNode.toString());
     }
 
 
