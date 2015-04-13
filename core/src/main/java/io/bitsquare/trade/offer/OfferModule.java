@@ -15,13 +15,20 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.trade.offer;
 
 import io.bitsquare.BitsquareModule;
+
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.core.env.Environment;
 
 public abstract class OfferModule extends BitsquareModule {
+    private static final Logger log = LoggerFactory.getLogger(OfferModule.class);
 
     protected OfferModule(Environment env) {
         super(env);
@@ -29,9 +36,16 @@ public abstract class OfferModule extends BitsquareModule {
 
     @Override
     protected final void configure() {
+        bind(OpenOfferManager.class).in(Singleton.class);
         doConfigure();
     }
 
     protected void doConfigure() {
+    }
+
+    @Override
+    protected void doClose(Injector injector) {
+        log.trace("doClose " + getClass().getSimpleName());
+        injector.getInstance(OpenOfferManager.class).shutDown();
     }
 }

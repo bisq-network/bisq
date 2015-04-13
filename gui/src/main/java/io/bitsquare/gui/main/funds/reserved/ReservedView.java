@@ -24,6 +24,7 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.offer.OpenOfferManager;
 
 import org.bitcoinj.core.Coin;
 
@@ -51,13 +52,15 @@ public class ReservedView extends ActivatableViewAndModel {
 
     private final WalletService walletService;
     private final TradeManager tradeManager;
+    private OpenOfferManager openOfferManager;
     private final BSFormatter formatter;
     private final ObservableList<ReservedListItem> addressList = FXCollections.observableArrayList();
 
     @Inject
-    private ReservedView(WalletService walletService, TradeManager tradeManager, BSFormatter formatter) {
+    private ReservedView(WalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager, BSFormatter formatter) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
+        this.openOfferManager = openOfferManager;
         this.formatter = formatter;
     }
 
@@ -94,8 +97,8 @@ public class ReservedView extends ActivatableViewAndModel {
 
     private void fillList() {
         addressList.clear();
-        addressList.addAll(Stream.concat(tradeManager.getOpenOfferTrades().stream(), tradeManager.getPendingTrades().stream())
-                .map(trade -> new ReservedListItem(walletService.getAddressEntry(trade.getId()), walletService, formatter))
+        addressList.addAll(Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getPendingTrades().stream())
+                .map(tradable -> new ReservedListItem(walletService.getAddressEntry(tradable.getOffer().getId()), walletService, formatter))
                 .collect(Collectors.toList()));
 
         // List<AddressEntry> addressEntryList = walletService.getAddressEntryList();

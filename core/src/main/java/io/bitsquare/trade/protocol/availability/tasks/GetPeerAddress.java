@@ -19,18 +19,18 @@ package io.bitsquare.trade.protocol.availability.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.p2p.listener.GetPeerAddressListener;
-import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityModel;
+import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GetPeerAddress extends Task<CheckOfferAvailabilityModel> {
+public class GetPeerAddress extends Task<OfferAvailabilityModel> {
     private static final Logger log = LoggerFactory.getLogger(GetPeerAddress.class);
 
-    public GetPeerAddress(TaskRunner taskHandler, CheckOfferAvailabilityModel model) {
+    public GetPeerAddress(TaskRunner taskHandler, OfferAvailabilityModel model) {
         super(taskHandler, model);
 
         errorMessage = "DHT lookup for peer address failed. Maybe the offerer was offline for too long time.";
@@ -55,8 +55,6 @@ public class GetPeerAddress extends Task<CheckOfferAvailabilityModel> {
                 }
             });
         } catch (Throwable t) {
-            model.offer.setState(Offer.State.FAULT);
-
             failed(t);
         }
     }

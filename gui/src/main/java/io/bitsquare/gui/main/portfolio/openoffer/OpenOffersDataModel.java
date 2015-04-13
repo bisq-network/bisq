@@ -21,10 +21,9 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.model.DataModel;
-import io.bitsquare.offer.Offer;
-import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeManager;
-import io.bitsquare.user.User;
+import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.trade.offer.OpenOffer;
+import io.bitsquare.trade.offer.OpenOfferManager;
 
 import com.google.inject.Inject;
 
@@ -40,16 +39,14 @@ import org.slf4j.LoggerFactory;
 class OpenOffersDataModel implements Activatable, DataModel {
     private static final Logger log = LoggerFactory.getLogger(OpenOffersDataModel.class);
 
-    private final TradeManager tradeManager;
-    private final User user;
+    private final OpenOfferManager openOfferManager;
 
     private final ObservableList<OpenOfferListItem> list = FXCollections.observableArrayList();
-    private final ListChangeListener<Trade> tradesListChangeListener;
+    private final ListChangeListener<OpenOffer> tradesListChangeListener;
 
     @Inject
-    public OpenOffersDataModel(TradeManager tradeManager, User user) {
-        this.tradeManager = tradeManager;
-        this.user = user;
+    public OpenOffersDataModel(OpenOfferManager openOfferManager) {
+        this.openOfferManager = openOfferManager;
 
         tradesListChangeListener = change -> applyList();
     }
@@ -57,16 +54,16 @@ class OpenOffersDataModel implements Activatable, DataModel {
     @Override
     public void activate() {
         applyList();
-        tradeManager.getOpenOfferTrades().addListener(tradesListChangeListener);
+        openOfferManager.getOpenOffers().addListener(tradesListChangeListener);
     }
 
     @Override
     public void deactivate() {
-        tradeManager.getOpenOfferTrades().removeListener(tradesListChangeListener);
+        openOfferManager.getOpenOffers().removeListener(tradesListChangeListener);
     }
 
-    void onCancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        tradeManager.onCancelOpenOffer(offer, resultHandler, errorMessageHandler);
+    void onCancelOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        openOfferManager.onCancelOpenOffer(openOffer, resultHandler, errorMessageHandler);
     }
 
 
@@ -75,13 +72,13 @@ class OpenOffersDataModel implements Activatable, DataModel {
     }
 
     public Offer.Direction getDirection(Offer offer) {
-        return tradeManager.isMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
+        return openOfferManager.isMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
     }
 
     private void applyList() {
         list.clear();
 
-        list.addAll(tradeManager.getOpenOfferTrades().stream().map(OpenOfferListItem::new).collect(Collectors.toList()));
+        list.addAll(openOfferManager.getOpenOffers().stream().map(OpenOfferListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getOffer().getCreationDate().compareTo(o1.getOffer().getCreationDate()));

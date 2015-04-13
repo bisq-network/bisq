@@ -19,36 +19,34 @@ package io.bitsquare.trade.protocol.availability.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.offer.Offer;
-import io.bitsquare.trade.protocol.availability.CheckOfferAvailabilityModel;
-import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
+import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
+import io.bitsquare.trade.protocol.availability.messages.OfferAvailabilityResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ProcessReportOfferAvailabilityMessage extends Task<CheckOfferAvailabilityModel> {
-    private static final Logger log = LoggerFactory.getLogger(ProcessReportOfferAvailabilityMessage.class);
+public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityModel> {
+    private static final Logger log = LoggerFactory.getLogger(ProcessOfferAvailabilityResponse.class);
 
-    public ProcessReportOfferAvailabilityMessage(TaskRunner taskHandler, CheckOfferAvailabilityModel model) {
+    public ProcessOfferAvailabilityResponse(TaskRunner taskHandler, OfferAvailabilityModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void doRun() {
         try {
-            ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = (ReportOfferAvailabilityMessage) model.getMessage();
+            OfferAvailabilityResponse offerAvailabilityResponse = (OfferAvailabilityResponse) model.getMessage();
 
             if (model.offer.getState() != Offer.State.REMOVED) {
-                if (reportOfferAvailabilityMessage.isOfferOpen)
+                if (offerAvailabilityResponse.isAvailable)
                     model.offer.setState(Offer.State.AVAILABLE);
                 else
-                    model.offer.setState(Offer.State.RESERVED);
+                    model.offer.setState(Offer.State.NOT_AVAILABLE);
             }
 
             complete();
         } catch (Throwable t) {
-            model.offer.setState(Offer.State.FAULT);
-
             failed(t);
         }
     }

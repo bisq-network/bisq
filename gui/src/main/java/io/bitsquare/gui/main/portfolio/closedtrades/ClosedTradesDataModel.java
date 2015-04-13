@@ -19,10 +19,9 @@ package io.bitsquare.gui.main.portfolio.closedtrades;
 
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.model.DataModel;
-import io.bitsquare.offer.Offer;
-import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeManager;
-import io.bitsquare.user.User;
+import io.bitsquare.trade.Tradable;
+import io.bitsquare.trade.closed.ClosedTradableManager;
+import io.bitsquare.trade.offer.Offer;
 
 import com.google.inject.Inject;
 
@@ -34,16 +33,14 @@ import javafx.collections.ObservableList;
 
 class ClosedTradesDataModel implements Activatable, DataModel {
 
-    private final TradeManager tradeManager;
-    private final User user;
+    private final ClosedTradableManager closedTradableManager;
 
     private final ObservableList<ClosedTradesListItem> list = FXCollections.observableArrayList();
-    private final ListChangeListener<Trade> tradesListChangeListener;
+    private final ListChangeListener<Tradable> tradesListChangeListener;
 
     @Inject
-    public ClosedTradesDataModel(TradeManager tradeManager, User user) {
-        this.tradeManager = tradeManager;
-        this.user = user;
+    public ClosedTradesDataModel(ClosedTradableManager closedTradableManager) {
+        this.closedTradableManager = closedTradableManager;
 
         tradesListChangeListener = change -> applyList();
     }
@@ -51,12 +48,12 @@ class ClosedTradesDataModel implements Activatable, DataModel {
     @Override
     public void activate() {
         applyList();
-        tradeManager.getClosedTrades().addListener(tradesListChangeListener);
+        closedTradableManager.getClosedTrades().addListener(tradesListChangeListener);
     }
 
     @Override
     public void deactivate() {
-        tradeManager.getClosedTrades().removeListener(tradesListChangeListener);
+        closedTradableManager.getClosedTrades().removeListener(tradesListChangeListener);
     }
 
     public ObservableList<ClosedTradesListItem> getList() {
@@ -64,16 +61,16 @@ class ClosedTradesDataModel implements Activatable, DataModel {
     }
 
     public Offer.Direction getDirection(Offer offer) {
-        return tradeManager.isMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
+        return closedTradableManager.wasMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
     }
 
     private void applyList() {
         list.clear();
 
-        list.addAll(tradeManager.getClosedTrades().stream().map(ClosedTradesListItem::new).collect(Collectors.toList()));
+        list.addAll(closedTradableManager.getClosedTrades().stream().map(ClosedTradesListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
-        list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
+        list.sort((o1, o2) -> o2.getTradable().getDate().compareTo(o1.getTradable().getDate()));
     }
 
 }

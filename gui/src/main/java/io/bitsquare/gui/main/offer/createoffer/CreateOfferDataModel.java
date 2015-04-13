@@ -28,8 +28,8 @@ import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.model.DataModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
-import io.bitsquare.offer.Offer;
-import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
@@ -67,7 +67,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 class CreateOfferDataModel implements Activatable, DataModel {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferDataModel.class);
 
-    private final TradeManager tradeManager;
+    private OpenOfferManager openOfferManager;
     private final WalletService walletService;
     private final AccountSettings accountSettings;
     private final Preferences preferences;
@@ -106,11 +106,10 @@ class CreateOfferDataModel implements Activatable, DataModel {
 
     // non private for testing
     @Inject
-    public CreateOfferDataModel(TradeManager tradeManager, WalletService walletService, ArbitratorService arbitratorService,
+    public CreateOfferDataModel(OpenOfferManager openOfferManager, WalletService walletService, ArbitratorService arbitratorService,
                                 AccountSettings accountSettings, Preferences preferences, User user, BSFormatter formatter) {
-        this.tradeManager = tradeManager;
+        this.openOfferManager = openOfferManager;
         this.walletService = walletService;
-        ArbitratorService arbitratorService1 = arbitratorService;
         this.accountSettings = accountSettings;
         this.preferences = preferences;
         this.formatter = formatter;
@@ -163,9 +162,9 @@ class CreateOfferDataModel implements Activatable, DataModel {
         // no-op
     }
 
-    void placeOffer() {
+    void onPlaceOffer() {
         // data validation is done in the trade domain
-        tradeManager.placeOffer(offerId,
+        openOfferManager.onPlaceOffer(offerId,
                 direction,
                 priceAsFiat.get(),
                 amountAsCoin.get(),

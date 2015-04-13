@@ -37,6 +37,7 @@ public class RequestPayDepositMessage extends TradeMessage implements Serializab
     public final List<TransactionOutput> buyerConnectedOutputsForAllInputs;
     public final List<TransactionOutput> buyerOutputs;
     public final byte[] buyerTradeWalletPubKey;
+    public final boolean isInitialRequest;
     public final PubKeyRing buyerPubKeyRing;
     public final FiatAccount buyerFiatAccount;
     public final String buyerAccountId;
@@ -44,6 +45,7 @@ public class RequestPayDepositMessage extends TradeMessage implements Serializab
 
     public RequestPayDepositMessage(String tradeId,
                                     Coin tradeAmount,
+                                    boolean isInitialRequest,
                                     List<TransactionOutput> buyerConnectedOutputsForAllInputs,
                                     List<TransactionOutput> buyerOutputs,
                                     byte[] buyerTradeWalletPubKey,
@@ -52,6 +54,7 @@ public class RequestPayDepositMessage extends TradeMessage implements Serializab
                                     String buyerAccountId) {
         super(tradeId);
         this.tradeAmount = tradeAmount;
+        this.isInitialRequest = isInitialRequest;
         this.buyerPubKeyRing = buyerPubKeyRing;
         this.buyerConnectedOutputsForAllInputs = buyerConnectedOutputsForAllInputs;
         this.buyerOutputs = buyerOutputs;

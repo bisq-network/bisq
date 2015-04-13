@@ -20,15 +20,18 @@ package io.bitsquare.gui.main.portfolio.closedtrades;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.trade.states.OffererTradeState;
-import io.bitsquare.trade.states.TakerTradeState;
-import io.bitsquare.trade.states.TradeState;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.offer.OpenOffer;
 
 import com.google.inject.Inject;
 
 import javafx.collections.ObservableList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataModel> implements ViewModel {
+    private static final Logger log = LoggerFactory.getLogger(ClosedTradesViewModel.class);
 
     private final BSFormatter formatter;
 
@@ -45,34 +48,39 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
     }
 
     String getTradeId(ClosedTradesListItem item) {
-        return item.getTrade().getId();
+        return item.getTradable().getId();
     }
 
     String getAmount(ClosedTradesListItem item) {
-        return (item != null) ? formatter.formatCoinWithCode(item.getTrade().getTradeAmount()) : "";
+        if (item != null && item.getTradable() instanceof Trade)
+            return formatter.formatCoinWithCode(((Trade) item.getTradable()).getTradeAmount());
+        else
+            return "";
     }
 
     String getPrice(ClosedTradesListItem item) {
-        return (item != null) ? formatter.formatFiat(item.getTrade().getOffer().getPrice()) : "";
+        return (item != null) ? formatter.formatFiat(item.getTradable().getOffer().getPrice()) : "";
     }
 
     String getVolume(ClosedTradesListItem item) {
-        return (item != null) ? formatter.formatFiatWithCode(item.getTrade().getTradeVolume()) : "";
+        if (item != null && item.getTradable() instanceof Trade)
+            return formatter.formatFiatWithCode(((Trade) item.getTradable()).getTradeVolume());
+        else
+            return "";
     }
 
     String getDirectionLabel(ClosedTradesListItem item) {
-        return (item != null) ? formatter.formatDirection(dataModel.getDirection(item.getTrade().getOffer())) : "";
+        return (item != null) ? formatter.formatDirection(dataModel.getDirection(item.getTradable().getOffer())) : "";
     }
 
     String getDate(ClosedTradesListItem item) {
-        return formatter.formatDateTime(item.getTrade().getDate());
+        return formatter.formatDateTime(item.getTradable().getDate());
     }
 
     String getState(ClosedTradesListItem item) {
-        if (item != null && item.getTrade() != null) {
-            TradeState.LifeCycleState lifeCycleState = item.getTrade().lifeCycleStateProperty().get();
-            if (lifeCycleState instanceof TakerTradeState.LifeCycleState) {
-                switch ((TakerTradeState.LifeCycleState) lifeCycleState) {
+        if (item != null) {
+            if (item.getTradable() instanceof Trade) {
+                switch (((Trade) item.getTradable()).lifeCycleStateProperty().get()) {
                     case COMPLETED:
                         return "Completed";
                     case FAILED:
@@ -81,17 +89,22 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                         throw new RuntimeException("That must not happen. We got a pending state but we are in the closed trades list.");
                 }
             }
-            else if (lifeCycleState instanceof OffererTradeState.LifeCycleState) {
-                switch ((OffererTradeState.LifeCycleState) lifeCycleState) {
-                    case OFFER_CANCELED:
+            else if (item.getTradable() instanceof OpenOffer) {
+                OpenOffer.State state = ((OpenOffer) item.getTradable()).getState();
+                log.trace("OpenOffer state {}", state);
+                switch (state) {
+                    case AVAILABLE:
+                    case RESERVED:
+                    case CLOSED:
+                        log.error("Invalid state {}", state);
+                        return state.toString();
+                    case CANCELED:
                         return "Canceled";
-                    case COMPLETED:
-                        return "Completed";
-                    case FAILED:
-                        return "Failed";
-                    case OFFER_OPEN:
-                    case PENDING:
-                        throw new RuntimeException("That must not happen. We got a pending state but we are in the closed trades list.");
+                 /*   case FAILED:
+                        return "Failed";*/
+                    default:
+                        log.error("Unhandled state {}", state);
+                        return state.toString();
                 }
             }
         }

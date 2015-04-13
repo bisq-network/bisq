@@ -19,17 +19,17 @@ package io.bitsquare.trade.protocol.availability;
 
 import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.crypto.PubKeyRing;
-import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.AddressService;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
+import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.availability.messages.OfferMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CheckOfferAvailabilityModel implements Model {
-    private static final Logger log = LoggerFactory.getLogger(CheckOfferAvailabilityModel.class);
+public class OfferAvailabilityModel implements Model {
+    private static final Logger log = LoggerFactory.getLogger(OfferAvailabilityModel.class);
 
     public final Offer offer;
     private final PubKeyRing pubKeyRing;
@@ -39,7 +39,7 @@ public class CheckOfferAvailabilityModel implements Model {
     private Peer peer;
     private OfferMessage message;
 
-    public CheckOfferAvailabilityModel(Offer offer, PubKeyRing pubKeyRing, MessageService messageService, AddressService addressService) {
+    public OfferAvailabilityModel(Offer offer, PubKeyRing pubKeyRing, MessageService messageService, AddressService addressService) {
         this.offer = offer;
         this.pubKeyRing = pubKeyRing;
         this.messageService = messageService;
@@ -64,12 +64,10 @@ public class CheckOfferAvailabilityModel implements Model {
 
     @Override
     public void persist() {
-
     }
 
     @Override
     public void onComplete() {
-
     }
 
     public PubKeyRing getPubKeyRing() {

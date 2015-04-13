@@ -15,9 +15,10 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.trade.offer;
 
 import io.bitsquare.btc.Restrictions;
+import io.bitsquare.crypto.KeyRing;
 import io.bitsquare.crypto.PubKeyRing;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.locale.Country;
@@ -51,12 +52,11 @@ public class Offer implements Serializable {
     public enum Direction {BUY, SELL}
 
     public enum State {
-        UNKNOWN,
+        UNDEFINED,
         AVAILABLE,
-        RESERVED,
+        NOT_AVAILABLE,
         REMOVED,
-        OFFERER_OFFLINE,
-        FAULT
+        OFFERER_OFFLINE
     }
 
 
@@ -83,7 +83,7 @@ public class Offer implements Serializable {
 
     // Mutable property. Has to be set before offer is save in DHT as it changes the objects hash!
     private String offerFeePaymentTxID;
-    private State state = State.UNKNOWN;
+    private State state = State.UNDEFINED;
 
     // Those state properties are transient and only used at runtime! 
     // don't access directly as it might be null; use getStateProperty() which creates an object if not instantiated
@@ -125,7 +125,7 @@ public class Offer implements Serializable {
         this.acceptedLanguageCodes = acceptedLanguageCodes;
 
         creationDate = new Date();
-        setState(State.UNKNOWN);
+        setState(State.UNDEFINED);
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -160,6 +160,10 @@ public class Offer implements Serializable {
         // TODO check upper and lower bounds for fiat
     }
 
+    public boolean isMyOffer(KeyRing keyRing) {
+        return getPubKeyRing().getHashString().equals(keyRing.getPubKeyRing().getHashString());
+    }
+    
     public Fiat getVolumeByAmount(Coin amount) {
         if (fiatPrice != 0 && amount != null && !amount.isZero())
             return new ExchangeRate(Fiat.valueOf(currencyCode, fiatPrice)).coinToFiat(amount);

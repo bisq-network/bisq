@@ -17,22 +17,22 @@
 
 package io.bitsquare.gui.main.portfolio.closedtrades;
 
-import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.Tradable;
 
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.
  */
 class ClosedTradesListItem {
 
-    private final Trade trade;
+    private final Tradable tradable;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    ClosedTradesListItem(Trade trade) {
-        this.trade = trade;
+    ClosedTradesListItem(Tradable tradable) {
+        this.tradable = tradable;
     }
 
 
@@ -40,7 +40,7 @@ class ClosedTradesListItem {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    Trade getTrade() {
-        return trade;
+    Tradable getTradable() {
+        return tradable;
     }
 }

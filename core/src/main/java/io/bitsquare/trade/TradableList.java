@@ -31,13 +31,13 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TradeList<T> extends ArrayList<T> implements Serializable {
+public class TradableList<T extends Tradable> extends ArrayList<T> implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
-    transient private static final Logger log = LoggerFactory.getLogger(TradeList.class);
+    transient private static final Logger log = LoggerFactory.getLogger(TradableList.class);
 
-    transient final private Storage<TradeList> storage;
+    transient final private Storage<TradableList<T>> storage;
     // Use getObservableList() also class locally, to be sure that object exists in case we use the object as deserialized form
     transient private ObservableList<T> observableList;
 
@@ -47,11 +47,12 @@ public class TradeList<T> extends ArrayList<T> implements Serializable {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TradeList(Storage<TradeList> storage, String fileName) {
+    public TradableList(Storage<TradableList<T>> storage, String fileName) {
         log.trace("Created by constructor");
+
         this.storage = storage;
 
-        TradeList persisted = storage.initAndGetPersisted(this, fileName);
+        TradableList persisted = storage.initAndGetPersisted(this, fileName);
         if (persisted != null) {
             this.addAll(persisted);
         }
@@ -64,17 +65,17 @@ public class TradeList<T> extends ArrayList<T> implements Serializable {
     }
 
     @Override
-    public boolean add(T trade) {
-        boolean result = super.add(trade);
-        getObservableList().add(trade);
+    public boolean add(T tradable) {
+        boolean result = super.add(tradable);
+        getObservableList().add(tradable);
         storage.queueUpForSave();
         return result;
     }
 
     @Override
-    public boolean remove(Object trade) {
-        boolean result = super.remove(trade);
-        getObservableList().remove(trade);
+    public boolean remove(Object tradable) {
+        boolean result = super.remove(tradable);
+        getObservableList().remove(tradable);
         storage.queueUpForSave();
         return result;
     }

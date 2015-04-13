@@ -15,23 +15,18 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer.tomp2p;
+package io.bitsquare.trade.protocol.availability.messages;
 
-import io.bitsquare.offer.OfferBookService;
-import io.bitsquare.offer.OfferModule;
+import java.io.Serializable;
 
-import com.google.inject.Singleton;
+public class OfferAvailabilityResponse extends OfferMessage implements Serializable {
+    // That object is sent over the wire, so we need to take care of version compatibility.
+    private static final long serialVersionUID = 1L;
 
-import org.springframework.core.env.Environment;
+    public final boolean isAvailable;
 
-public class TomP2POfferModule extends OfferModule {
-
-    public TomP2POfferModule(Environment env) {
-        super(env);
-    }
-
-    @Override
-    protected void doConfigure() {
-        bind(OfferBookService.class).to(TomP2POfferBookService.class).in(Singleton.class);
+    public OfferAvailabilityResponse(String offerId, boolean isAvailable) {
+        super(offerId);
+        this.isAvailable = isAvailable;
     }
 }

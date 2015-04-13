@@ -31,6 +31,7 @@ import io.bitsquare.p2p.BootstrapState;
 import io.bitsquare.p2p.ClientNode;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
@@ -91,12 +92,13 @@ class MainViewModel implements ViewModel {
     private final ArbitrationRepository arbitrationRepository;
     private final ClientNode clientNode;
     private final TradeManager tradeManager;
+    private OpenOfferManager openOfferManager;
     private final UpdateProcess updateProcess;
     private final BSFormatter formatter;
 
     @Inject
     public MainViewModel(User user, KeyRing keyRing, WalletService walletService, ArbitrationRepository arbitrationRepository, ClientNode clientNode,
-                         TradeManager tradeManager, BitcoinNetwork bitcoinNetwork, UpdateProcess updateProcess,
+                         TradeManager tradeManager, OpenOfferManager openOfferManager, BitcoinNetwork bitcoinNetwork, UpdateProcess updateProcess,
                          BSFormatter formatter) {
         this.user = user;
         this.keyRing = keyRing;
@@ -104,6 +106,7 @@ class MainViewModel implements ViewModel {
         this.arbitrationRepository = arbitrationRepository;
         this.clientNode = clientNode;
         this.tradeManager = tradeManager;
+        this.openOfferManager = openOfferManager;
         this.updateProcess = updateProcess;
         this.formatter = formatter;
 
@@ -211,6 +214,7 @@ class MainViewModel implements ViewModel {
         log.debug("loadAllArbitrators");
         arbitrationRepository.loadAllArbitrators();
         tradeManager.onAllServicesInitialized();
+        openOfferManager.onAllServicesInitialized();
     }
 
     private void applyUpdateState(UpdateProcess.State state) {

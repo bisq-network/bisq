@@ -15,18 +15,18 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.availability.messages;
+package io.bitsquare.trade;
+
+import io.bitsquare.trade.offer.Offer;
 
 import java.io.Serializable;
 
-public class ReportOfferAvailabilityMessage extends OfferMessage implements Serializable {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = 1L;
+import java.util.Date;
 
-    public final boolean isOfferOpen;
+public interface Tradable extends Serializable {
+    Offer getOffer();
 
-    public ReportOfferAvailabilityMessage(String offerId, boolean isOfferOpen) {
-        super(offerId);
-        this.isOfferOpen = isOfferOpen;
-    }
+    Date getDate();
+
+    String getId();
 }

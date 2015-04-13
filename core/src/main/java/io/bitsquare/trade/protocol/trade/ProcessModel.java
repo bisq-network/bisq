@@ -27,9 +27,9 @@ import io.bitsquare.crypto.CryptoService;
 import io.bitsquare.crypto.KeyRing;
 import io.bitsquare.crypto.PubKeyRing;
 import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.AddressService;
 import io.bitsquare.p2p.MessageService;
+import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.user.User;
 

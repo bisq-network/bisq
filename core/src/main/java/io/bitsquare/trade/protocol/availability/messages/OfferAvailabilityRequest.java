@@ -18,22 +18,29 @@
 package io.bitsquare.trade.protocol.availability.messages;
 
 import io.bitsquare.crypto.PubKeyRing;
-import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 
 import java.io.Serializable;
 
-public class RequestIsOfferAvailableMessage extends TradeMessage implements Serializable {
+public class OfferAvailabilityRequest extends OfferMessage implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
 
     private final PubKeyRing pubKeyRing;
 
-    public RequestIsOfferAvailableMessage(String tradeId, PubKeyRing pubKeyRing) {
-        super(tradeId);
+    public OfferAvailabilityRequest(String offerId, PubKeyRing pubKeyRing) {
+        super(offerId);
         this.pubKeyRing = pubKeyRing;
     }
 
     public PubKeyRing getPubKeyRing() {
         return pubKeyRing;
+    }
+
+    @Override
+    public String toString() {
+        return "RequestIsOfferAvailableMessage{" +
+                "offerId=" + offerId +
+                "pubKeyRing=" + pubKeyRing != null ? pubKeyRing.toString() : "null" +
+                '}';
     }
 }

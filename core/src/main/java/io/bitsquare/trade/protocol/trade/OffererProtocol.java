@@ -17,5 +17,9 @@
 
 package io.bitsquare.trade.protocol.trade;
 
+import io.bitsquare.p2p.Peer;
+import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
+
 public interface OffererProtocol {
+    void handleTakeOfferRequest(TradeMessage message, Peer taker);
 }

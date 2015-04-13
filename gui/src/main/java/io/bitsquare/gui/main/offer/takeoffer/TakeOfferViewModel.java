@@ -25,9 +25,9 @@ import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.BuyerAsTakerTrade;
 import io.bitsquare.trade.SellerAsTakerTrade;
+import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.states.TakerTradeState;
 
 import org.bitcoinj.core.Address;
@@ -173,13 +173,13 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         log.debug("offer state = " + state);
 
         switch (state) {
-            case UNKNOWN:
+            case UNDEFINED:
                 // TODO set spinner?
                 break;
             case AVAILABLE:
                 this.state.set(State.AMOUNT_SCREEN);
                 break;
-            case RESERVED:
+            case NOT_AVAILABLE:
                 if (takeOfferRequested)
                     errorMessage.set("Take offer request failed because offer is not available anymore. " +
                             "Maybe another trader has taken the offer in the meantime.");
@@ -200,14 +200,14 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     errorMessage.set("You cannot take that offer because the offerer is offline.");
                 takeOfferRequested = false;
                 break;
-            case FAULT:
+           /* case FAULT:
                 if (takeOfferRequested)
                     errorMessage.set("Take offer request failed.");
                 else
                     errorMessage.set("The check for the offer availability failed.");
 
                 takeOfferRequested = false;
-                break;
+                break;*/
             default:
                 log.error("Unhandled offer state: " + state);
                 break;

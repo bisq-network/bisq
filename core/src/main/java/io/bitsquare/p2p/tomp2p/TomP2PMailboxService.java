@@ -22,9 +22,9 @@ import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.crypto.KeyRing;
 import io.bitsquare.crypto.PubKeyRing;
 import io.bitsquare.crypto.SealedAndSignedMessage;
-import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.p2p.MailboxMessagesResultHandler;
 import io.bitsquare.p2p.MailboxService;
+import io.bitsquare.trade.offer.OfferBookService;
 
 import java.io.IOException;
 

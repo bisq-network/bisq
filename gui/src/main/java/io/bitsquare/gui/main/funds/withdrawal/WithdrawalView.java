@@ -28,6 +28,7 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.offer.OpenOfferManager;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
@@ -67,13 +68,15 @@ public class WithdrawalView extends ActivatableViewAndModel {
 
     private final WalletService walletService;
     private TradeManager tradeManager;
+    private OpenOfferManager openOfferManager;
     private final BSFormatter formatter;
     private final ObservableList<WithdrawalListItem> addressList = FXCollections.observableArrayList();
 
     @Inject
-    private WithdrawalView(WalletService walletService, TradeManager tradeManager, BSFormatter formatter) {
+    private WithdrawalView(WalletService walletService, TradeManager tradeManager,  OpenOfferManager openOfferManager, BSFormatter formatter) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
+        this.openOfferManager = openOfferManager;
         this.formatter = formatter;
     }
 
@@ -181,8 +184,8 @@ public class WithdrawalView extends ActivatableViewAndModel {
         addressList.clear();
         List<AddressEntry> addressEntryList = walletService.getAddressEntryList();
 
-        List<String> reservedTrades = Stream.concat(tradeManager.getOpenOfferTrades().stream(), tradeManager.getPendingTrades().stream())
-                .map(trade -> trade.getId())
+        List<String> reservedTrades = Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getPendingTrades().stream())
+                .map(tradable -> tradable.getOffer().getId())
                 .collect(Collectors.toList());
 
         addressList.addAll(addressEntryList.stream()

@@ -23,9 +23,6 @@ import org.slf4j.LoggerFactory;
 public class TradeState {
     private static final Logger log = LoggerFactory.getLogger(TradeState.class);
 
-    public interface LifeCycleState {
-    }
-
     public interface ProcessState {
     }
 }

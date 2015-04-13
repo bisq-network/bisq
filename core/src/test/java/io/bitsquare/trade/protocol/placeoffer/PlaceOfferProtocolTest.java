@@ -18,10 +18,10 @@
 package io.bitsquare.trade.protocol.placeoffer;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.tomp2p.BootstrappedPeerBuilder;
 import io.bitsquare.p2p.tomp2p.TomP2PNode;
+import io.bitsquare.trade.offer.OfferBookService;
 
 import org.bitcoinj.core.Address;
 

@@ -25,7 +25,7 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 import io.bitsquare.gui.util.GUIUtil;
-import io.bitsquare.offer.Offer;
+import io.bitsquare.trade.offer.OpenOffer;
 
 import javax.inject.Inject;
 
@@ -69,8 +69,8 @@ public class OpenOffersView extends ActivatableViewAndModel<GridPane, OpenOffers
         table.setItems(model.getList());
     }
 
-    private void onCancelOpenOffer(Offer offer) {
-        model.onCancelOpenOffer(offer,
+    private void onCancelOpenOffer(OpenOffer openOffer) {
+        model.onCancelOpenOffer(openOffer,
                 () -> {
                     log.debug("Remove offer was successful");
                     Popups.openInfoPopup("You can withdraw the funds you paid in from the funds screens.");
@@ -249,7 +249,7 @@ public class OpenOffersView extends ActivatableViewAndModel<GridPane, OpenOffers
                                 super.updateItem(item, empty);
 
                                 if (item != null) {
-                                    button.setOnAction(event -> onCancelOpenOffer(item.getOffer()));
+                                    button.setOnAction(event -> onCancelOpenOffer(item.getOpenOffer()));
                                     setGraphic(button);
                                 }
                                 else {

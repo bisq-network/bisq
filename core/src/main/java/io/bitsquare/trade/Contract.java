@@ -19,7 +19,7 @@ package io.bitsquare.trade;
 
 import io.bitsquare.crypto.PubKeyRing;
 import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.offer.Offer;
+import io.bitsquare.trade.offer.Offer;
 
 import org.bitcoinj.core.Coin;
 

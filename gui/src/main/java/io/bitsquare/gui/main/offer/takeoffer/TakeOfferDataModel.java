@@ -23,9 +23,9 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.model.DataModel;
-import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.handlers.TakeOfferResultHandler;
+import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
 
 import org.bitcoinj.core.Coin;

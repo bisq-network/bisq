@@ -66,14 +66,11 @@ public class SignAndPublishDepositTx extends TradeTask {
 
                             trade.setDepositTx(transaction);
 
-                            if (trade instanceof TakerTrade) {
+                            trade.setLifeCycleState(Trade.LifeCycleState.PENDING);
+                            if (trade instanceof TakerTrade)
                                 trade.setProcessState(TakerTradeState.ProcessState.DEPOSIT_PUBLISHED);
-                                trade.setLifeCycleState(TakerTradeState.LifeCycleState.PENDING);
-                            }
-                            else if (trade instanceof OffererTrade) {
+                            else if (trade instanceof OffererTrade)
                                 trade.setProcessState(OffererTradeState.ProcessState.DEPOSIT_PUBLISHED);
-                                trade.setLifeCycleState(OffererTradeState.LifeCycleState.PENDING);
-                            }
 
                             trade.setTakeOfferDate(new Date());
 
@@ -95,7 +92,7 @@ public class SignAndPublishDepositTx extends TradeTask {
         trade.setThrowable(t);
 
         if (trade instanceof OffererTrade)
-            trade.setLifeCycleState(OffererTradeState.LifeCycleState.OFFER_OPEN);
+            trade.setLifeCycleState(Trade.LifeCycleState.PREPARATION);
 
         failed(t);
     }

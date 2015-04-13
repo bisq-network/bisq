@@ -23,7 +23,7 @@ import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.offer.Offer;
+import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;

@@ -17,8 +17,11 @@
 
 package io.bitsquare.trade;
 
-import io.bitsquare.offer.Offer;
+import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
+import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.trade.protocol.trade.OffererProtocol;
+import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.states.OffererTradeState;
 import io.bitsquare.trade.states.TradeState;
 
@@ -33,7 +36,7 @@ public abstract class OffererTrade extends Trade implements Serializable {
 
     transient private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererTrade.class);
 
-    public OffererTrade(Offer offer, Storage<? extends TradeList> storage) {
+    public OffererTrade(Offer offer, Storage<? extends TradableList> storage) {
         super(offer, storage);
         log.trace("Created by constructor");
     }
@@ -41,8 +44,12 @@ public abstract class OffererTrade extends Trade implements Serializable {
     @Override
     protected void initStates() {
         processState = OffererTradeState.ProcessState.UNDEFINED;
-        lifeCycleState = OffererTradeState.LifeCycleState.OFFER_OPEN;
+        lifeCycleState = Trade.LifeCycleState.PREPARATION;
         initStateProperties();
+    }
+
+    public void handleTakeOfferRequest(TradeMessage message, Peer taker) {
+        ((OffererProtocol) tradeProtocol).handleTakeOfferRequest(message, taker);
     }
 
 
@@ -57,16 +64,16 @@ public abstract class OffererTrade extends Trade implements Serializable {
         switch ((OffererTradeState.ProcessState) processState) {
             case EXCEPTION:
                 disposeProtocol();
-                setLifeCycleState(OffererTradeState.LifeCycleState.FAILED);
+                setLifeCycleState(Trade.LifeCycleState.FAILED);
                 break;
         }
     }
 
     @Override
-    public void setLifeCycleState(TradeState.LifeCycleState lifeCycleState) {
+    public void setLifeCycleState(Trade.LifeCycleState lifeCycleState) {
         super.setLifeCycleState(lifeCycleState);
 
-        switch ((OffererTradeState.LifeCycleState) lifeCycleState) {
+        switch (lifeCycleState) {
             case FAILED:
                 disposeProtocol();
                 break;

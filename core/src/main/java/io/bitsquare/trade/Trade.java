@@ -25,11 +25,11 @@ import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.crypto.CryptoService;
 import io.bitsquare.crypto.KeyRing;
 import io.bitsquare.crypto.MessageWithPubKey;
-import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.AddressService;
 import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
+import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.ProcessModel;
 import io.bitsquare.trade.protocol.trade.TradeProtocol;
 import io.bitsquare.trade.states.TradeState;
@@ -66,12 +66,19 @@ import org.slf4j.LoggerFactory;
  * Holds all data which are relevant to the trade, but not those which are only needed in the trade process as shared data between tasks. Those data are
  * stored in the task model.
  */
-abstract public class Trade implements Model, Serializable {
+abstract public class Trade implements Tradable, Model, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
     private transient static final Logger log = LoggerFactory.getLogger(Trade.class);
 
+    public enum LifeCycleState {
+        PREPARATION,
+        PENDING,
+        COMPLETED,
+        FAILED
+    }
+    
     // Mutable
     private Coin tradeAmount;
     private Peer tradingPeer;
@@ -85,9 +92,9 @@ abstract public class Trade implements Model, Serializable {
 
     // Transient/Immutable
     private transient ObjectProperty<TradeState.ProcessState> processStateProperty;
-    private transient ObjectProperty<TradeState.LifeCycleState> lifeCycleStateProperty;
+    private transient ObjectProperty<Trade.LifeCycleState> lifeCycleStateProperty;
     // Trades are saved in the TradeList
-    transient private Storage<? extends TradeList> storage;
+    transient private Storage<? extends TradableList> storage;
     transient protected TradeProtocol tradeProtocol;
 
     // Immutable
@@ -99,7 +106,7 @@ abstract public class Trade implements Model, Serializable {
     private MessageWithPubKey messageWithPubKey;
     private Date takeOfferDate;
     protected TradeState.ProcessState processState;
-    protected TradeState.LifeCycleState lifeCycleState;
+    protected Trade.LifeCycleState lifeCycleState;
     private Transaction depositTx;
     private Contract contract;
     private String contractAsJson;
@@ -117,7 +124,7 @@ abstract public class Trade implements Model, Serializable {
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected Trade(Offer offer, Storage<? extends TradeList> storage) {
+    protected Trade(Offer offer, Storage<? extends TradableList> storage) {
         log.trace("Created by constructor");
         this.offer = offer;
         this.storage = storage;
@@ -135,7 +142,7 @@ abstract public class Trade implements Model, Serializable {
 
     // taker
     protected Trade(Offer offer, Coin tradeAmount, Peer tradingPeer,
-                    Storage<? extends TradeList> storage) {
+                    Storage<? extends TradableList> storage) {
 
         this(offer, storage);
         this.tradeAmount = tradeAmount;
@@ -227,7 +234,7 @@ abstract public class Trade implements Model, Serializable {
         this.messageWithPubKey = messageWithPubKey;
     }
 
-    public void setStorage(Storage<? extends TradeList> storage) {
+    public void setStorage(Storage<? extends TradableList> storage) {
         this.storage = storage;
     }
 
@@ -237,7 +244,7 @@ abstract public class Trade implements Model, Serializable {
         storage.queueUpForSave();
     }
 
-    public void setLifeCycleState(TradeState.LifeCycleState lifeCycleState) {
+    public void setLifeCycleState(Trade.LifeCycleState lifeCycleState) {
         this.lifeCycleState = lifeCycleState;
         lifeCycleStateProperty.set(lifeCycleState);
         storage.queueUpForSave();
@@ -302,7 +309,7 @@ abstract public class Trade implements Model, Serializable {
         return processStateProperty;
     }
 
-    public ReadOnlyObjectProperty<? extends TradeState.LifeCycleState> lifeCycleStateProperty() {
+    public ReadOnlyObjectProperty<Trade.LifeCycleState> lifeCycleStateProperty() {
         return lifeCycleStateProperty;
     }
 

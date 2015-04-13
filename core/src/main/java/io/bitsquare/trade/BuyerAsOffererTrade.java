@@ -17,8 +17,8 @@
 
 package io.bitsquare.trade;
 
-import io.bitsquare.offer.Offer;
 import io.bitsquare.storage.Storage;
+import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.BuyerAsOffererProtocol;
 import io.bitsquare.trade.protocol.trade.BuyerProtocol;
 
@@ -42,7 +42,7 @@ public class BuyerAsOffererTrade extends OffererTrade implements BuyerTrade, Ser
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BuyerAsOffererTrade(Offer offer, Storage<? extends TradeList> storage) {
+    public BuyerAsOffererTrade(Offer offer, Storage<? extends TradableList> storage) {
         super(offer, storage);
         log.trace("Created by constructor");
     }

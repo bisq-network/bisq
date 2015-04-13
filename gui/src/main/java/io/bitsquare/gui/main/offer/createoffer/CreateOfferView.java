@@ -38,7 +38,7 @@ import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.openoffer.OpenOffersView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.offer.Offer;
+import io.bitsquare.trade.offer.Offer;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -141,7 +141,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     @FXML
     void onPlaceOffer() {
-        model.placeOffer();
+        model.onPlaceOffer();
     }
 
     @FXML

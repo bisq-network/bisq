@@ -19,6 +19,7 @@ package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
+import io.bitsquare.trade.BuyerAsTakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositMessage;
@@ -37,9 +38,11 @@ public class SendRequestPayDepositMessage extends TradeTask {
     @Override
     protected void doRun() {
         try {
+            boolean isInitialRequest = trade instanceof BuyerAsTakerTrade;
             RequestPayDepositMessage tradeMessage = new RequestPayDepositMessage(
                     processModel.getId(),
                     trade.getTradeAmount(),
+                    isInitialRequest,
                     processModel.getConnectedOutputsForAllInputs(),
                     processModel.getOutputs(),
                     processModel.getTradeWalletPubKey(),

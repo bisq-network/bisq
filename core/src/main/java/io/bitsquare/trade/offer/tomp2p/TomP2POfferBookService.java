@@ -15,15 +15,15 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer.tomp2p;
+package io.bitsquare.trade.offer.tomp2p;
 
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.crypto.KeyRing;
-import io.bitsquare.offer.Offer;
-import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.p2p.tomp2p.TomP2PDHTService;
 import io.bitsquare.p2p.tomp2p.TomP2PNode;
+import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.trade.offer.OfferBookService;
 
 import java.io.IOException;
 

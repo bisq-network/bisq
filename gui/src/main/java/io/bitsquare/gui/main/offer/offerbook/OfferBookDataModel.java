@@ -25,8 +25,8 @@ import io.bitsquare.gui.common.model.DataModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.offer.Offer;
-import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
 
@@ -58,7 +58,7 @@ class OfferBookDataModel implements Activatable, DataModel {
     private final OfferBook offerBook;
     private final Preferences preferences;
     private final BSFormatter formatter;
-    private final TradeManager tradeManager;
+    private final OpenOfferManager openOfferManager;
 
     private final FilteredList<OfferBookListItem> filteredItems;
     private final SortedList<OfferBookListItem> sortedItems;
@@ -77,9 +77,9 @@ class OfferBookDataModel implements Activatable, DataModel {
 
 
     @Inject
-    public OfferBookDataModel(User user, TradeManager tradeManager, OfferBook offerBook, Preferences preferences,
+    public OfferBookDataModel(User user, OpenOfferManager openOfferManager, OfferBook offerBook, Preferences preferences,
                               BSFormatter formatter) {
-        this.tradeManager = tradeManager;
+        this.openOfferManager = openOfferManager;
         this.user = user;
         this.offerBook = offerBook;
         this.preferences = preferences;
@@ -112,7 +112,7 @@ class OfferBookDataModel implements Activatable, DataModel {
     }
 
     void onCancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        tradeManager.onCancelOpenOffer(offer, resultHandler, errorMessageHandler);
+        openOfferManager.onCancelOpenOffer(offer, resultHandler, errorMessageHandler);
     }
 
     void calculateVolume() {
@@ -210,7 +210,7 @@ class OfferBookDataModel implements Activatable, DataModel {
     }
 
     boolean isMyOffer(Offer offer) {
-        return tradeManager.isMyOffer(offer);
+        return openOfferManager.isMyOffer(offer);
     }
 
     Coin getAmountAsCoin() {

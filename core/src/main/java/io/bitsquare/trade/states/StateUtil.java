@@ -36,6 +36,6 @@ public class StateUtil {
 
     public static void setOfferOpenState(Trade trade) {
         if (trade instanceof OffererTrade)
-            trade.setLifeCycleState(OffererTradeState.LifeCycleState.OFFER_OPEN);
+            trade.setLifeCycleState(Trade.LifeCycleState.PREPARATION);
     }
 } 

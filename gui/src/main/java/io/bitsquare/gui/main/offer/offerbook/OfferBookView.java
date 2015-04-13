@@ -35,7 +35,7 @@ import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.validation.OptionalBtcValidator;
 import io.bitsquare.gui.util.validation.OptionalFiatValidator;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.offer.Offer;
+import io.bitsquare.trade.offer.Offer;
 
 import java.util.ArrayList;
 import java.util.List;

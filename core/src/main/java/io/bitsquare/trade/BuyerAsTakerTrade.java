@@ -17,9 +17,9 @@
 
 package io.bitsquare.trade;
 
-import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
+import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.BuyerAsTakerProtocol;
 import io.bitsquare.trade.protocol.trade.BuyerProtocol;
 
@@ -43,7 +43,7 @@ public class BuyerAsTakerTrade extends TakerTrade implements BuyerTrade, Seriali
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BuyerAsTakerTrade(Offer offer, Coin tradeAmount, Peer tradingPeer, Storage<? extends TradeList> storage) {
+    public BuyerAsTakerTrade(Offer offer, Coin tradeAmount, Peer tradingPeer, Storage<? extends TradableList> storage) {
         super(offer, tradeAmount, tradingPeer, storage);
         log.trace("Created by constructor");
     }

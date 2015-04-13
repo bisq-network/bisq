@@ -25,7 +25,7 @@ import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.offer.Offer;
+import io.bitsquare.trade.offer.Offer;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -154,13 +154,13 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
 
-    void placeOffer() {
+    void onPlaceOffer() {
         dataModel.requestPlaceOfferErrorMessage.set(null);
         dataModel.requestPlaceOfferSuccess.set(false);
 
         isPlaceOfferSpinnerVisible.set(true);
 
-        dataModel.placeOffer();
+        dataModel.onPlaceOffer();
     }
 
 

@@ -21,9 +21,9 @@ import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.offer.Offer;
-import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.trade.offer.OfferBookService;
 import io.bitsquare.user.User;
 
 import java.util.List;
@@ -95,7 +95,7 @@ public class OfferBook {
                 // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
                 offer.setState(Offer.State.REMOVED);
 
-                // clean up possible references in tradeManager 
+                // clean up possible references in openOfferManager 
                 tradeManager.onOfferRemovedFromRemoteOfferBook(offer);
 
                 offerBookListItems.removeIf(item -> item.getOffer().getId().equals(offer.getId()));

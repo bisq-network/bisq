@@ -17,9 +17,9 @@
 
 package io.bitsquare.trade;
 
-import io.bitsquare.offer.Offer;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
+import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.TakerProtocol;
 import io.bitsquare.trade.states.TakerTradeState;
 import io.bitsquare.trade.states.TradeState;
@@ -37,7 +37,7 @@ public abstract class TakerTrade extends Trade implements Serializable {
 
     transient private static final Logger log = LoggerFactory.getLogger(BuyerAsTakerTrade.class);
 
-    public TakerTrade(Offer offer, Coin tradeAmount, Peer tradingPeer, Storage<? extends TradeList> storage) {
+    public TakerTrade(Offer offer, Coin tradeAmount, Peer tradingPeer, Storage<? extends TradableList> storage) {
         super(offer, tradeAmount, tradingPeer, storage);
         log.trace("Created by constructor");
     }
@@ -45,7 +45,7 @@ public abstract class TakerTrade extends Trade implements Serializable {
     @Override
     protected void initStates() {
         processState = TakerTradeState.ProcessState.UNDEFINED;
-        lifeCycleState = TakerTradeState.LifeCycleState.PENDING;
+        lifeCycleState = Trade.LifeCycleState.PENDING;
         initStateProperties();
     }
 
@@ -66,16 +66,16 @@ public abstract class TakerTrade extends Trade implements Serializable {
         switch ((TakerTradeState.ProcessState) processState) {
             case EXCEPTION:
                 disposeProtocol();
-                setLifeCycleState(TakerTradeState.LifeCycleState.FAILED);
+                setLifeCycleState(Trade.LifeCycleState.FAILED);
                 break;
         }
     }
 
     @Override
-    public void setLifeCycleState(TradeState.LifeCycleState lifeCycleState) {
+    public void setLifeCycleState(Trade.LifeCycleState lifeCycleState) {
         super.setLifeCycleState(lifeCycleState);
 
-        switch ((TakerTradeState.LifeCycleState) lifeCycleState) {
+        switch (lifeCycleState) {
             case FAILED:
                 disposeProtocol();
                 break;

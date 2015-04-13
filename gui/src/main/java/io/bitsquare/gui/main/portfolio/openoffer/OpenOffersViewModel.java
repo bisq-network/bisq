@@ -22,7 +22,7 @@ import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.offer.Offer;
+import io.bitsquare.trade.offer.OpenOffer;
 
 import com.google.inject.Inject;
 
@@ -45,8 +45,8 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
 
-    void onCancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        dataModel.onCancelOpenOffer(offer, resultHandler, errorMessageHandler);
+    void onCancelOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        dataModel.onCancelOpenOffer(openOffer, resultHandler, errorMessageHandler);
     }
 
     public ObservableList<OpenOfferListItem> getList() {

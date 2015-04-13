@@ -15,29 +15,23 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.states;
+package io.bitsquare.trade.offer.tomp2p;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.bitsquare.trade.offer.OfferBookService;
+import io.bitsquare.trade.offer.OfferModule;
 
-public class OffererTradeState {
-    private static final Logger log = LoggerFactory.getLogger(OffererTradeState.class);
+import com.google.inject.Singleton;
 
-    public enum ProcessState implements TradeState.ProcessState {
-        UNDEFINED,
-        DEPOSIT_PUBLISHED,
-        DEPOSIT_CONFIRMED,
+import org.springframework.core.env.Environment;
 
-        FIAT_PAYMENT_STARTED,
+public class TomP2POfferModule extends OfferModule {
 
-        REQUEST_PAYOUT_FINALIZE_MSG_SENT, // seller only
-        PAYOUT_FINALIZED,
+    public TomP2POfferModule(Environment env) {
+        super(env);
+    }
 
-        PAYOUT_BROAD_CASTED,
-        PAYOUT_BROAD_CASTED_FAILED,
-
-        MESSAGE_SENDING_FAILED,
-        TIMEOUT,
-        EXCEPTION
+    @Override
+    protected void doConfigure() {
+        bind(OfferBookService.class).to(TomP2POfferBookService.class).in(Singleton.class);
     }
 }

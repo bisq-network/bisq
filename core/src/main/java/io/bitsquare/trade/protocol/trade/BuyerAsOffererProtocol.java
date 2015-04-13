@@ -19,12 +19,8 @@ package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.Peer;
-import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.BuyerAsOffererTrade;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.availability.messages.ReportOfferAvailabilityMessage;
-import io.bitsquare.trade.protocol.availability.messages.RequestIsOfferAvailableMessage;
-import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestFinalizePayoutTxMessage;
 import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
@@ -43,7 +39,6 @@ import io.bitsquare.trade.protocol.trade.tasks.offerer.VerifyTakeOfferFeePayment
 import io.bitsquare.trade.protocol.trade.tasks.offerer.VerifyTakerAccount;
 import io.bitsquare.trade.protocol.trade.tasks.shared.CommitPayoutTx;
 import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
-import io.bitsquare.trade.states.OffererTradeState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,6 +68,26 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
+    public void handleTakeOfferRequest(TradeMessage message, Peer taker) {
+        checkTradeId(processModel.getId(), message);
+        processModel.setTradeMessage(message);
+        buyerAsOffererTrade.setTradingPeer(taker);
+
+        //buyerAsOffererTrade.setLifeCycleState(OffererTradeState.LifeCycleState.OFFER_RESERVED);
+
+        TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
+                () -> log.debug("taskRunner at handleRequestDepositTxInputsMessage completed"),
+                this::handleTaskRunnerFault);
+        taskRunner.addTasks(
+                ProcessRequestDepositTxInputsMessage.class,
+                CreateDepositTxInputs.class,
+                SendRequestPayDepositMessage.class
+        );
+        taskRunner.run();
+        startTimeout();
+    }
+
+    @Override
     public void doApplyMailboxMessage(Message message, Trade trade) {
         this.trade = trade;
 
@@ -92,61 +107,6 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // OpenOffer requests
-    // We get an encrypted message but don't do the signature check as we don't know the peer yet.
-    // A basic sig check is in done also at decryption time
-    private void handle(RequestIsOfferAvailableMessage message, Peer sender) {
-        try {
-            checkTradeId(processModel.getId(), message);
-
-            // We don't store anything in the offererTradeProcessModel as we might be in a trade process and receive that request from another peer who wants
-            // to take the offer at the same time
-            boolean isOfferOpen = buyerAsOffererTrade.lifeCycleStateProperty().get() == OffererTradeState.LifeCycleState.OFFER_OPEN;
-
-            ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(processModel.getId(), isOfferOpen);
-            processModel.getMessageService().sendEncryptedMessage(sender,
-                    message.getPubKeyRing(),
-                    reportOfferAvailabilityMessage,
-                    new SendMessageListener() {
-                        @Override
-                        public void handleResult() {
-                            // Offerer does not do anything at that moment. Peer might only watch the offer and does not start a trade.
-                            log.trace("ReportOfferAvailabilityMessage successfully arrived at peer");
-                        }
-
-                        @Override
-                        public void handleFault() {
-                            // We don't handle the error as we might be in a trade process with another trader
-                            log.warn("Sending ReportOfferAvailabilityMessage failed.");
-                        }
-                    });
-        } catch (Throwable t) {
-            // We don't handle the error as we might be in a trade process with another trader
-            t.printStackTrace();
-            log.warn("Exception at handleRequestIsOfferAvailableMessage " + t.getMessage());
-        }
-    }
-
-    // Trade started. We reserve the offer for that taker. If anything goes wrong we reset the offer as open.
-    private void handle(RequestDepositTxInputsMessage tradeMessage, Peer taker) {
-        checkTradeId(processModel.getId(), tradeMessage);
-        processModel.setTradeMessage(tradeMessage);
-        buyerAsOffererTrade.setTradingPeer(taker);
-
-        buyerAsOffererTrade.setLifeCycleState(OffererTradeState.LifeCycleState.OFFER_RESERVED);
-
-        TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
-                () -> log.debug("taskRunner at handleRequestDepositTxInputsMessage completed"),
-                this::handleTaskRunnerFault);
-        taskRunner.addTasks(
-                ProcessRequestDepositTxInputsMessage.class,
-                CreateDepositTxInputs.class,
-                SendRequestPayDepositMessage.class
-        );
-        taskRunner.run();
-        startTimeout();
-    }
 
     private void handle(RequestPublishDepositTxMessage tradeMessage) {
         stopTimeout();
@@ -217,13 +177,7 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
 
     @Override
     protected void doHandleDecryptedMessage(TradeMessage tradeMessage, Peer sender) {
-        if (tradeMessage instanceof RequestIsOfferAvailableMessage) {
-            handle((RequestIsOfferAvailableMessage) tradeMessage, sender);
-        }
-        else if (tradeMessage instanceof RequestDepositTxInputsMessage) {
-            handle((RequestDepositTxInputsMessage) tradeMessage, sender);
-        }
-        else if (tradeMessage instanceof RequestPublishDepositTxMessage) {
+        if (tradeMessage instanceof RequestPublishDepositTxMessage) {
             handle((RequestPublishDepositTxMessage) tradeMessage);
         }
         else if (tradeMessage instanceof RequestFinalizePayoutTxMessage) {

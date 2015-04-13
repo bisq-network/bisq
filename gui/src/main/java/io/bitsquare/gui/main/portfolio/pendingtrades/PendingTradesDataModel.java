@@ -27,12 +27,12 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.closedtrades.ClosedTradesView;
-import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.BuyerTrade;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.SellerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.states.TradeState;
 import io.bitsquare.user.User;
 

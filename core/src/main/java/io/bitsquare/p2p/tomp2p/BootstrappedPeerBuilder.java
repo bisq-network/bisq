@@ -252,11 +252,13 @@ public class BootstrappedPeerBuilder {
     }
 
     private void bootstrap() {
+        log.trace("start bootstrap");
         FutureBootstrap futureBootstrap = peer.bootstrap().peerAddress(getBootstrapAddress()).start();
         futureBootstrap.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
                 if (futureBootstrap.isSuccess()) {
+                    log.trace("bootstrap complete");
                     settableFuture.set(peerDHT);
                 }
                 else {

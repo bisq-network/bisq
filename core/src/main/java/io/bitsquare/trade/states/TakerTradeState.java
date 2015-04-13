@@ -23,12 +23,6 @@ import org.slf4j.LoggerFactory;
 public class TakerTradeState {
     private static final Logger log = LoggerFactory.getLogger(TakerTradeState.class);
 
-    public enum LifeCycleState implements TradeState.LifeCycleState {
-        PENDING,
-        COMPLETED,
-        FAILED
-    }
-
     public enum ProcessState implements TradeState.ProcessState {
         UNDEFINED,
         TAKE_OFFER_FEE_TX_CREATED,
