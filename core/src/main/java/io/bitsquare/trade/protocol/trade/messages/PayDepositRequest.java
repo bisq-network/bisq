@@ -30,7 +30,7 @@ import java.util.List;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-public class RequestPayDepositMessage extends TradeMessage implements Serializable {
+public class PayDepositRequest extends TradeMessage implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
 
@@ -43,15 +43,15 @@ public class RequestPayDepositMessage extends TradeMessage implements Serializab
     public final String buyerAccountId;
     public final Coin tradeAmount;
 
-    public RequestPayDepositMessage(String tradeId,
-                                    Coin tradeAmount,
-                                    boolean isInitialRequest,
-                                    List<TransactionOutput> buyerConnectedOutputsForAllInputs,
-                                    List<TransactionOutput> buyerOutputs,
-                                    byte[] buyerTradeWalletPubKey,
-                                    PubKeyRing buyerPubKeyRing,
-                                    FiatAccount buyerFiatAccount,
-                                    String buyerAccountId) {
+    public PayDepositRequest(String tradeId,
+                             Coin tradeAmount,
+                             boolean isInitialRequest,
+                             List<TransactionOutput> buyerConnectedOutputsForAllInputs,
+                             List<TransactionOutput> buyerOutputs,
+                             byte[] buyerTradeWalletPubKey,
+                             PubKeyRing buyerPubKeyRing,
+                             FiatAccount buyerFiatAccount,
+                             String buyerAccountId) {
         super(tradeId);
         this.tradeAmount = tradeAmount;
         this.isInitialRequest = isInitialRequest;

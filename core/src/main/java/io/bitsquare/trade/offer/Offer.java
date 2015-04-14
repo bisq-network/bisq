@@ -18,10 +18,13 @@
 package io.bitsquare.trade.offer;
 
 import io.bitsquare.btc.Restrictions;
+import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.crypto.KeyRing;
 import io.bitsquare.crypto.PubKeyRing;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.locale.Country;
+import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
+import io.bitsquare.trade.protocol.availability.OfferAvailabilityProtocol;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
@@ -46,8 +49,7 @@ import static com.google.common.base.Preconditions.*;
 public class Offer implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
-    private transient static final Logger log = LoggerFactory.getLogger(Offer.class);
-
+    transient private static final Logger log = LoggerFactory.getLogger(Offer.class);
 
     public enum Direction {BUY, SELL}
 
@@ -88,6 +90,7 @@ public class Offer implements Serializable {
     // Those state properties are transient and only used at runtime! 
     // don't access directly as it might be null; use getStateProperty() which creates an object if not instantiated
     transient private ObjectProperty<State> stateProperty = new SimpleObjectProperty<>(state);
+    transient private OfferAvailabilityProtocol availabilityProtocol;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -163,7 +166,7 @@ public class Offer implements Serializable {
     public boolean isMyOffer(KeyRing keyRing) {
         return getPubKeyRing().getHashString().equals(keyRing.getPubKeyRing().getHashString());
     }
-    
+
     public Fiat getVolumeByAmount(Coin amount) {
         if (fiatPrice != 0 && amount != null && !amount.isZero())
             return new ExchangeRate(Fiat.valueOf(currencyCode, fiatPrice)).coinToFiat(amount);
@@ -179,6 +182,33 @@ public class Offer implements Serializable {
         return getVolumeByAmount(minAmount);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Availability
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void checkOfferAvailability(OfferAvailabilityModel model) {
+        availabilityProtocol = new OfferAvailabilityProtocol(model,
+                () -> cancelAvailabilityRequest(),
+                (errorMessage) -> cancelAvailabilityRequest());
+        availabilityProtocol.checkOfferAvailability();
+    }
+
+
+    public void checkOfferAvailability(OfferAvailabilityModel model, ResultHandler resultHandler) {
+        availabilityProtocol = new OfferAvailabilityProtocol(model,
+                () -> {
+                    cancelAvailabilityRequest();
+                    resultHandler.handleResult();
+                },
+                (errorMessage) -> availabilityProtocol.cancel());
+        availabilityProtocol.checkOfferAvailability();
+    }
+
+
+    public void cancelAvailabilityRequest() {
+        availabilityProtocol.cancel();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters

@@ -21,7 +21,7 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
+import io.bitsquare.trade.protocol.trade.messages.DepositTxInputsRequest;
 import io.bitsquare.trade.states.StateUtil;
 
 import org.bitcoinj.utils.Threading;
@@ -29,10 +29,10 @@ import org.bitcoinj.utils.Threading;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendRequestDepositTxInputsMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SendRequestDepositTxInputsMessage.class);
+public class SendDepositTxInputsRequest extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SendDepositTxInputsRequest.class);
 
-    public SendRequestDepositTxInputsMessage(TaskRunner taskHandler, Trade trade) {
+    public SendDepositTxInputsRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -42,7 +42,7 @@ public class SendRequestDepositTxInputsMessage extends TradeTask {
     protected void doRun() {
         try {
             assert processModel.getTakeOfferFeeTx() != null;
-            RequestDepositTxInputsMessage message = new RequestDepositTxInputsMessage(
+            DepositTxInputsRequest message = new DepositTxInputsRequest(
                     processModel.getId(),
                     processModel.getPubKeyRing(),
                     processModel.getTakeOfferFeeTx().getHashAsString(),
@@ -67,7 +67,7 @@ public class SendRequestDepositTxInputsMessage extends TradeTask {
                             // We try to repeat once and if that fails as well we persist the state for a later retry.
                             if (retryCounter == 0) {
                                 retryCounter++;
-                                Threading.USER_THREAD.execute(SendRequestDepositTxInputsMessage.this::doRun);
+                                Threading.USER_THREAD.execute(SendDepositTxInputsRequest.this::doRun);
                             }
                             else {
                                 appendToErrorMessage("Sending TakeOfferFeePayedMessage to offerer failed. Maybe the network connection was " +

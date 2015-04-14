@@ -18,10 +18,8 @@
 package io.bitsquare.trade.protocol.trade.tasks.taker;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.states.TakerTradeState;
 
 import org.bitcoinj.core.Transaction;
 
@@ -48,8 +46,9 @@ public class BroadcastTakeOfferFeeTx extends TradeTask {
                         public void onSuccess(Transaction transaction) {
                             log.debug("Take offer fee published successfully. Transaction ID = " + transaction.getHashAsString());
 
-                            if (trade instanceof TakerTrade)
-                                trade.setProcessState(TakerTradeState.ProcessState.TAKE_OFFER_FEE_PUBLISHED);
+                           /* if (trade instanceof SellerTrade)
+                                trade.setProcessState(TakerTradeState.ProcessState.TAKE_OFFER_FEE_PUBLISHED);*/
+                            
                             complete();
                         }
 
@@ -59,8 +58,8 @@ public class BroadcastTakeOfferFeeTx extends TradeTask {
                             appendToErrorMessage("Take offer fee payment failed. Maybe your network connection was lost. Please try again.");
                             trade.setErrorMessage(errorMessage);
 
-                            if (trade instanceof TakerTrade)
-                                trade.setProcessState(TakerTradeState.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);
+                          /*  if (trade instanceof SellerTrade)
+                                trade.setProcessState(TakerTradeState.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);*/
 
                             failed(t);
                         }

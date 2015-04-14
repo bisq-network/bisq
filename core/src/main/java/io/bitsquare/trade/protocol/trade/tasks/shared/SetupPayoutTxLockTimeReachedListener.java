@@ -18,12 +18,12 @@
 package io.bitsquare.trade.protocol.trade.tasks.shared;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.TakerTrade;
+import io.bitsquare.trade.BuyerTrade;
+import io.bitsquare.trade.SellerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.states.OffererTradeState;
-import io.bitsquare.trade.states.TakerTradeState;
+import io.bitsquare.trade.states.BuyerTradeState;
+import io.bitsquare.trade.states.SellerTradeState;
 
 import org.bitcoinj.core.StoredBlock;
 import org.bitcoinj.core.Transaction;
@@ -79,10 +79,11 @@ public class SetupPayoutTxLockTimeReachedListener extends TradeTask {
             public void onSuccess(Transaction transaction) {
                 log.debug("BroadcastTx succeeded. Transaction:" + transaction);
 
-                if (trade instanceof TakerTrade)
-                    trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_BROAD_CASTED);
-                else if (trade instanceof OffererTrade)
-                    trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_BROAD_CASTED);
+                if (trade instanceof BuyerTrade)
+                    trade.setProcessState(BuyerTradeState.ProcessState.PAYOUT_BROAD_CASTED);
+                else if (trade instanceof SellerTrade)
+                    trade.setProcessState(SellerTradeState.ProcessState.PAYOUT_BROAD_CASTED);
+
 
                 complete();
             }
@@ -91,11 +92,11 @@ public class SetupPayoutTxLockTimeReachedListener extends TradeTask {
             public void onFailure(@NotNull Throwable t) {
                 t.printStackTrace();
                 trade.setThrowable(t);
-
+/*
                 if (trade instanceof TakerTrade)
                     trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_BROAD_CASTED_FAILED);
                 else if (trade instanceof OffererTrade)
-                    trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_BROAD_CASTED_FAILED);
+                    trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_BROAD_CASTED_FAILED);*/
 
 
                 failed(t);

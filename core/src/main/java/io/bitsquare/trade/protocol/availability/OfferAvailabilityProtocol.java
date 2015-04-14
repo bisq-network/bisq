@@ -112,12 +112,12 @@ public class OfferAvailabilityProtocol {
         if (message instanceof OfferMessage) {
             nonEmptyStringOf(((OfferMessage) message).offerId);
             if (message instanceof OfferAvailabilityResponse && model.offer.getId().equals(((OfferMessage) message).offerId))
-                handleDecryptedMessage((OfferAvailabilityResponse) message);
+                handle((OfferAvailabilityResponse) message);
         }
     }
 
 
-    private void handleDecryptedMessage(OfferAvailabilityResponse message) {
+    private void handle(OfferAvailabilityResponse message) {
         stopTimeout();
         model.setMessage(message);
 

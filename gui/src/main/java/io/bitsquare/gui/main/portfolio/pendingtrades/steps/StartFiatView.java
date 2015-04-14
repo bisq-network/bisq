@@ -105,7 +105,6 @@ public class StartFiatView extends TradeStepDetailsView {
 
     private void onPaymentStarted(ActionEvent actionEvent) {
         log.debug("onPaymentStarted");
-        model.fiatPaymentStarted();
         paymentStartedButton.setDisable(true);
         statusProgressIndicator.setVisible(true);
         statusProgressIndicator.setProgress(-1);
@@ -113,6 +112,8 @@ public class StartFiatView extends TradeStepDetailsView {
         root = statusProgressIndicator.getScene().getRoot();
         // We deactivate mouse interaction to avoid that user leaves screen
         root.setMouseTransparent(true);
+
+        model.fiatPaymentStarted();
     }
 
 

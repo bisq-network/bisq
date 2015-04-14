@@ -158,7 +158,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     @FXML
     void onTakeOffer() {
-        model.takeOffer();
+        model.onTakeOffer();
     }
 
     @FXML

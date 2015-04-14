@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
-import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.CompletedView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.ConfirmFiatReceivedView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeWizardItem;
@@ -25,6 +24,8 @@ import io.bitsquare.gui.main.portfolio.pendingtrades.steps.WaitPayoutFinalizedVi
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.WaitPayoutLockTimeView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.WaitTxInBlockchainView;
 import io.bitsquare.locale.BSResources;
+
+import javafx.beans.value.ChangeListener;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,7 @@ public class SellerSubView extends TradeSubView {
     private TradeWizardItem payoutUnlock;
     private TradeWizardItem completed;
 
+    private final ChangeListener<PendingTradesViewModel.SellerState> stateChangeListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -45,6 +47,20 @@ public class SellerSubView extends TradeSubView {
 
     public SellerSubView(PendingTradesViewModel model) {
         super(model);
+        stateChangeListener = (ov, oldValue, newValue) -> applyState(newValue);
+    }
+
+    @Override
+    public void activate() {
+        super.activate();
+        model.getSellerState().addListener(stateChangeListener);
+        applyState(model.getSellerState().get());
+    }
+
+    @Override
+    public void deactivate() {
+        super.deactivate();
+        model.getSellerState().removeListener(stateChangeListener);
     }
 
     @Override
@@ -63,8 +79,7 @@ public class SellerSubView extends TradeSubView {
     // State
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    protected void applyState(PendingTradesViewModel.ViewState viewState) {
+    protected void applyState(PendingTradesViewModel.SellerState viewState) {
         log.debug("applyState " + viewState);
 
         waitTxInBlockchain.setDisabled();
@@ -77,9 +92,7 @@ public class SellerSubView extends TradeSubView {
             tradeStepDetailsView.deactivate();
 
         switch (viewState) {
-            case UNDEFINED:
-                break;
-            case SELLER_WAIT_TX_CONF:
+            case WAIT_FOR_BLOCKCHAIN_CONFIRMATION:
                 showItem(waitTxInBlockchain);
 
                 ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText("Deposit transaction has been published. " +
@@ -91,7 +104,7 @@ public class SellerSubView extends TradeSubView {
                                 "For higher trade volumes it is recommended to wait up to 6 confirmations.",
                         model.getCurrencyCode()));*/
                 break;
-            case SELLER_WAIT_PAYMENT_STARTED:
+            case WAIT_FOR_FIAT_PAYMENT_STARTED:
                 waitTxInBlockchain.setCompleted();
                 showItem(waitFiatStarted);
 
@@ -104,7 +117,7 @@ public class SellerSubView extends TradeSubView {
                                 "the {0} payment has been started.",
                         model.getCurrencyCode()));*/
                 break;
-            case SELLER_CONFIRM_RECEIVE_PAYMENT:
+            case REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED:
                 waitTxInBlockchain.setCompleted();
                 waitFiatStarted.setCompleted();
                 showItem(confirmFiatReceived);
@@ -119,7 +132,7 @@ public class SellerSubView extends TradeSubView {
                         model.getCurrencyCode()));*/
 
                 break;
-            case SELLER_REQUEST_PAYOUT_FINALIZE_MSG_SENT:
+            case WAIT_FOR_PAYOUT_TX:
                 waitTxInBlockchain.setCompleted();
                 waitFiatStarted.setCompleted();
                 confirmFiatReceived.setCompleted();
@@ -132,7 +145,7 @@ public class SellerSubView extends TradeSubView {
                 ((WaitPayoutFinalizedView) tradeStepDetailsView).setInfoLabelText("We requested the trading peer to sign and finalize the payout transaction." +
                         "\nIt might be that the other peer is offline, so we need to wait until he finalize the transaction when he goes online again.");
                 break;
-            case SELLER_PAYOUT_FINALIZED:
+            case WAIT_FOR_UNLOCK_PAYOUT:
                 waitTxInBlockchain.setCompleted();
                 waitFiatStarted.setCompleted();
                 confirmFiatReceived.setCompleted();
@@ -141,7 +154,7 @@ public class SellerSubView extends TradeSubView {
                 ((WaitPayoutLockTimeView) tradeStepDetailsView).setInfoLabelText("The payout transaction is signed and finalized by both parties." +
                         "\nFor reducing bank charge back risks you need to wait until the payout gets unlocked to transfer your Bitcoin.");
                 break;
-            case SELLER_COMPLETED:
+            case REQUEST_WITHDRAWAL:
                 waitTxInBlockchain.setCompleted();
                 waitFiatStarted.setCompleted();
                 confirmFiatReceived.setCompleted();
@@ -160,7 +173,7 @@ public class SellerSubView extends TradeSubView {
 
                 completedView.setWithdrawAmountTextFieldText(model.getPayoutAmount());
                 break;
-            case MESSAGE_SENDING_FAILED:
+           /* case MESSAGE_SENDING_FAILED:
                 Popups.openWarningPopup("Sending message to trading peer failed.", model.getErrorMessage());
                 break;
             case EXCEPTION:
@@ -168,7 +181,7 @@ public class SellerSubView extends TradeSubView {
                     Popups.openExceptionPopup(model.getTradeException());
                 else
                     Popups.openErrorPopup("An error occurred", model.getErrorMessage());
-                break;
+                break;*/
             default:
                 log.warn("unhandled viewState " + viewState);
                 break;

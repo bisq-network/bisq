@@ -42,11 +42,10 @@ import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOffer;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
-import io.bitsquare.trade.protocol.availability.OfferAvailabilityProtocol;
-import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
-import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositMessage;
+import io.bitsquare.trade.protocol.trade.messages.DepositTxInputsRequest;
+import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.states.OffererTradeState;
+import io.bitsquare.trade.states.BuyerTradeState;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.AddressFormatException;
@@ -60,9 +59,7 @@ import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -89,11 +86,10 @@ public class TradeManager {
     private final WalletService walletService;
     private final TradeWalletService tradeWalletService;
     private final CryptoService<MailboxMessage> cryptoService;
-    private OpenOfferManager openOfferManager;
-    private ClosedTradableManager closedTradableManager;
+    private final OpenOfferManager openOfferManager;
+    private final ClosedTradableManager closedTradableManager;
     private final ArbitrationRepository arbitrationRepository;
 
-    private final Map<String, OfferAvailabilityProtocol> checkOfferAvailabilityProtocolMap = new HashMap<>();
     private final Storage<TradableList<Trade>> pendingTradesStorage;
     private final TradableList<Trade> pendingTrades;
 
@@ -162,8 +158,8 @@ public class TradeManager {
                 Message message = messageWithPubKey.getMessage();
                 // Those 2 messages are initial request form the taker.
                 // RequestPayDepositMessage is used also in case of SellerAsTaker but there it is handled in the protocol as it is not an initial request
-                if (message instanceof RequestDepositTxInputsMessage ||
-                        (message instanceof RequestPayDepositMessage && ((RequestPayDepositMessage) message).isInitialRequest))
+                if (message instanceof DepositTxInputsRequest ||
+                        (message instanceof PayDepositRequest && ((PayDepositRequest) message).isInitialRequest))
                     handleInitialTakeOfferRequest((TradeMessage) message, sender);
             }
         });
@@ -183,7 +179,7 @@ public class TradeManager {
             Offer offer = openOfferOptional.get().getOffer();
             openOfferManager.reserveOpenOffer(openOfferOptional.get());
 
-            OffererTrade trade;
+            Trade trade;
             if (offer.getDirection() == Offer.Direction.BUY)
                 trade = new BuyerAsOffererTrade(offer, pendingTradesStorage);
             else
@@ -192,7 +188,7 @@ public class TradeManager {
             trade.setStorage(pendingTradesStorage);
             pendingTrades.add(trade);
             initTrade(trade);
-            trade.handleTakeOfferRequest(message, sender);
+            ((OffererTrade) trade).handleTakeOfferRequest(message, sender);
             setupDepositPublishedListener(trade);
         }
         else {
@@ -203,11 +199,23 @@ public class TradeManager {
         }
     }
 
+    private void initTrade(Trade trade) {
+        trade.init(messageService,
+                walletService,
+                addressService,
+                tradeWalletService,
+                blockChainService,
+                cryptoService,
+                arbitrationRepository,
+                user,
+                keyRing);
+    }
+
     // Only after published we consider the openOffer as closed and the trade as completely initialized
     private void setupDepositPublishedListener(Trade trade) {
         trade.processStateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("setupDepositPublishedListener state = " + newValue);
-            if (newValue == OffererTradeState.ProcessState.DEPOSIT_PUBLISHED) {
+            if (newValue == BuyerTradeState.ProcessState.DEPOSIT_PUBLISHED) {
                 openOfferManager.closeOpenOffer(trade.getOffer());
                 trade.setTakeOfferDate(new Date());
             }
@@ -270,125 +278,52 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onOfferRemovedFromRemoteOfferBook(Offer offer) {
-        disposeCheckOfferAvailabilityRequest(offer);
+        offer.cancelAvailabilityRequest();
     }
-
-
-  /*  private void handlePlaceOfferResult(Transaction transaction, Offer offer, TransactionResultHandler resultHandler) {
-        Trade trade;
-        if (offer.getDirection() == Offer.Direction.BUY)
-            trade = new BuyerAsOffererTrade(offer, openOfferTradesStorage);
-        else
-            trade = new SellerAsOffererTrade(offer, openOfferTradesStorage);
-
-        openOfferTrades.add(trade);
-        initTrade(trade);
-        setupDepositPublishedListener(trade);
-        resultHandler.handleResult(transaction);
-    }*/
-
-  /*  private void setupDepositPublishedListener(Trade trade) {
-        trade.processStateProperty().addListener((ov, oldValue, newValue) -> {
-            log.debug("setupDepositPublishedListener state = " + newValue);
-            if (newValue == OffererTradeState.ProcessState.DEPOSIT_PUBLISHED) {
-                removeOpenOffer(trade.getOffer(),
-                        () -> log.debug("remove offer was successful"),
-                        log::error,
-                        false);
-                trade.setTakeOfferDate(new Date());
-                pendingTrades.add(trade);
-                trade.setStorage(pendingTradesStorage);
-            }
-        });
-    }*/
-
-  /*  public void onCancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        removeOpenOffer(offer, resultHandler, errorMessageHandler, true);
-    }
-*/
-   /* private void removeOpenOffer(Offer offer,
-                                 ResultHandler resultHandler,
-                                 ErrorMessageHandler errorMessageHandler,
-                                 boolean isCancelRequest) {
-        offerBookService.removeOffer(offer,
-                () -> {
-                    offer.setState(Offer.State.REMOVED);
-                    Optional<Trade> offererTradeOptional = openOfferTrades.stream().filter(e -> e.getId().equals(offer.getId())).findAny();
-                    if (offererTradeOptional.isPresent()) {
-                        Trade trade = offererTradeOptional.get();
-                        openOfferTrades.remove(trade);
-
-                        if (isCancelRequest) {
-                            if (trade instanceof OffererTrade)
-                                trade.setLifeCycleState(OffererTradeState.LifeCycleState.OFFER_CANCELED);
-                            closedTrades.add(trade);
-                            trade.disposeProtocol();
-                        }
-                    }
-
-                    disposeCheckOfferAvailabilityRequest(offer);
-
-                    resultHandler.handleResult();
-                },
-                (message, throwable) -> errorMessageHandler.handleErrorMessage(message));
-    }*/
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Take offer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void checkOfferAvailability(Offer offer) {
-        if (!checkOfferAvailabilityProtocolMap.containsKey(offer.getId())) {
-            OfferAvailabilityModel model = new OfferAvailabilityModel(
-                    offer,
-                    keyRing.getPubKeyRing(),
-                    messageService,
-                    addressService);
-
-            OfferAvailabilityProtocol protocol = new OfferAvailabilityProtocol(model,
-                    () -> disposeCheckOfferAvailabilityRequest(offer),
-                    (errorMessage) -> disposeCheckOfferAvailabilityRequest(offer));
-            checkOfferAvailabilityProtocolMap.put(offer.getId(), protocol);
-            protocol.checkOfferAvailability();
-        }
-        else {
-            log.error("That should never happen: onCheckOfferAvailability already called for offer with ID:" + offer.getId());
-        }
+    public void onCheckOfferAvailability(Offer offer) {
+        offer.checkOfferAvailability(getOfferAvailabilityModel(offer));
     }
 
     // When closing take offer view, we are not interested in the onCheckOfferAvailability result anymore, so remove from the map
-    public void cancelCheckOfferAvailabilityRequest(Offer offer) {
-        disposeCheckOfferAvailabilityRequest(offer);
+    public void onCancelAvailabilityRequest(Offer offer) {
+        offer.cancelAvailabilityRequest();
     }
 
     // First we check if offer is still available then we create the trade with the protocol
-    public void requestTakeOffer(Coin amount, Offer offer, TakeOfferResultHandler takeOfferResultHandler) {
-        OfferAvailabilityModel model = new OfferAvailabilityModel(offer, keyRing.getPubKeyRing(), messageService, addressService);
-        OfferAvailabilityProtocol availabilityProtocol = new OfferAvailabilityProtocol(model,
-                () -> createTrade(amount, offer, model, takeOfferResultHandler),
-                (errorMessage) -> disposeCheckOfferAvailabilityRequest(offer));
-        checkOfferAvailabilityProtocolMap.put(offer.getId(), availabilityProtocol);
-        availabilityProtocol.checkOfferAvailability();
+    public void onTakeOffer(Coin amount, Offer offer, TakeOfferResultHandler takeOfferResultHandler) {
+        final OfferAvailabilityModel model = getOfferAvailabilityModel(offer);
+        offer.checkOfferAvailability(model, () -> {
+            if (offer.getState() == Offer.State.AVAILABLE)
+                createTrade(amount, offer, model, takeOfferResultHandler);
+        });
     }
 
-    private void createTrade(Coin amount, Offer offer, OfferAvailabilityModel model, TakeOfferResultHandler
-            takeOfferResultHandler) {
-        disposeCheckOfferAvailabilityRequest(offer);
-        if (offer.getState() == Offer.State.AVAILABLE) {
-            Trade trade;
-            if (offer.getDirection() == Offer.Direction.BUY)
-                trade = new SellerAsTakerTrade(offer, amount, model.getPeer(), pendingTradesStorage);
-            else
-                trade = new BuyerAsTakerTrade(offer, amount, model.getPeer(), pendingTradesStorage);
+    private void createTrade(Coin amount, Offer offer, OfferAvailabilityModel model, TakeOfferResultHandler takeOfferResultHandler) {
+        Trade trade;
+        if (offer.getDirection() == Offer.Direction.BUY)
+            trade = new SellerAsTakerTrade(offer, amount, model.getPeer(), pendingTradesStorage);
+        else
+            trade = new BuyerAsTakerTrade(offer, amount, model.getPeer(), pendingTradesStorage);
 
-            trade.setTakeOfferDate(new Date());
-            initTrade(trade);
-            pendingTrades.add(trade);
-            if (trade instanceof TakerTrade)
-                ((TakerTrade) trade).takeAvailableOffer();
-            takeOfferResultHandler.handleResult(trade);
-        }
+        trade.setTakeOfferDate(new Date());
+        initTrade(trade);
+        pendingTrades.add(trade);
+        ((TakerTrade) trade).takeAvailableOffer();
+        takeOfferResultHandler.handleResult(trade);
+    }
+
+    private OfferAvailabilityModel getOfferAvailabilityModel(Offer offer) {
+        return new OfferAvailabilityModel(
+                offer,
+                keyRing.getPubKeyRing(),
+                messageService,
+                addressService);
     }
 
 
@@ -432,56 +367,16 @@ public class TradeManager {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Called from Offerbook when offer gets removed from DHT
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-   /* public void onOfferRemovedFromRemoteOfferBook(Offer offer) {
-        disposeCheckOfferAvailabilityRequest(offer);
-    }
-*/
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-   /* public ObservableList<Trade> getOpenOfferTrades() {
-        return openOfferTrades.getObservableList();
-    }*/
 
     public ObservableList<Trade> getPendingTrades() {
         return pendingTrades.getObservableList();
     }
 
-   /* public ObservableList<Trade> getClosedTrades() {
-        return closedTrades.getObservableList();
-    }
-*/
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Misc
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void disposeCheckOfferAvailabilityRequest(Offer offer) {
-        if (checkOfferAvailabilityProtocolMap.containsKey(offer.getId())) {
-            OfferAvailabilityProtocol protocol = checkOfferAvailabilityProtocolMap.get(offer.getId());
-            protocol.cancel();
-            checkOfferAvailabilityProtocolMap.remove(offer.getId());
-        }
-    }
-
-    private void initTrade(Trade trade) {
-        trade.init(messageService,
-                walletService,
-                addressService,
-                tradeWalletService,
-                blockChainService,
-                cryptoService,
-                arbitrationRepository,
-                user,
-                keyRing);
-    }
-
     public boolean isMyOffer(Offer offer) {
         return offer.isMyOffer(keyRing);
     }
+
+
 }

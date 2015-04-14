@@ -21,8 +21,7 @@ import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.SellerAsTakerProtocol;
-import io.bitsquare.trade.protocol.trade.SellerProtocol;
-import io.bitsquare.trade.states.TakerTradeState;
+import io.bitsquare.trade.protocol.trade.TakerProtocol;
 
 import org.bitcoinj.core.Coin;
 
@@ -32,11 +31,11 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SellerAsTakerTrade extends TakerTrade implements SellerTrade, Serializable {
+public class SellerAsTakerTrade extends SellerTrade implements TakerTrade, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = 1L;
 
-    transient private static final Logger log = LoggerFactory.getLogger(TakerTradeState.class);
+    transient private static final Logger log = LoggerFactory.getLogger(SellerAsTakerTrade.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -67,8 +66,8 @@ public class SellerAsTakerTrade extends TakerTrade implements SellerTrade, Seria
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onFiatPaymentReceived() {
-        assert tradeProtocol instanceof SellerProtocol;
-        ((SellerProtocol) tradeProtocol).onFiatPaymentReceived();
+    public void takeAvailableOffer() {
+        assert tradeProtocol instanceof TakerProtocol;
+        ((TakerProtocol) tradeProtocol).takeAvailableOffer();
     }
 }

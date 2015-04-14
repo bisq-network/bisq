@@ -22,16 +22,16 @@ import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.BuyerAsTakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositMessage;
+import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
 import io.bitsquare.trade.states.StateUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendRequestPayDepositMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SendRequestPayDepositMessage.class);
+public class SendPayDepositRequest extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SendPayDepositRequest.class);
 
-    public SendRequestPayDepositMessage(TaskRunner taskHandler, Trade trade) {
+    public SendPayDepositRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -39,7 +39,7 @@ public class SendRequestPayDepositMessage extends TradeTask {
     protected void doRun() {
         try {
             boolean isInitialRequest = trade instanceof BuyerAsTakerTrade;
-            RequestPayDepositMessage tradeMessage = new RequestPayDepositMessage(
+            PayDepositRequest tradeMessage = new PayDepositRequest(
                     processModel.getId(),
                     trade.getTradeAmount(),
                     isInitialRequest,

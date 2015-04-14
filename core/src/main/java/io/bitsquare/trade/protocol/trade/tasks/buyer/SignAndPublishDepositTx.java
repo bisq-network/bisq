@@ -19,12 +19,10 @@ package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.TakerTrade;
+import io.bitsquare.trade.BuyerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.states.OffererTradeState;
-import io.bitsquare.trade.states.TakerTradeState;
+import io.bitsquare.trade.states.BuyerTradeState;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -67,11 +65,7 @@ public class SignAndPublishDepositTx extends TradeTask {
                             trade.setDepositTx(transaction);
 
                             trade.setLifeCycleState(Trade.LifeCycleState.PENDING);
-                            if (trade instanceof TakerTrade)
-                                trade.setProcessState(TakerTradeState.ProcessState.DEPOSIT_PUBLISHED);
-                            else if (trade instanceof OffererTrade)
-                                trade.setProcessState(OffererTradeState.ProcessState.DEPOSIT_PUBLISHED);
-
+                            trade.setProcessState(BuyerTradeState.ProcessState.DEPOSIT_PUBLISHED);
                             trade.setTakeOfferDate(new Date());
 
                             complete();
@@ -91,7 +85,7 @@ public class SignAndPublishDepositTx extends TradeTask {
         t.printStackTrace();
         trade.setThrowable(t);
 
-        if (trade instanceof OffererTrade)
+        if (trade instanceof BuyerTrade)
             trade.setLifeCycleState(Trade.LifeCycleState.PREPARATION);
 
         failed(t);

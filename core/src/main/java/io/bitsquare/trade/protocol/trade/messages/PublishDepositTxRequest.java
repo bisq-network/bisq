@@ -29,7 +29,7 @@ import java.util.List;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-public class RequestPublishDepositTxMessage extends TradeMessage implements Serializable {
+public class PublishDepositTxRequest extends TradeMessage implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
 
@@ -42,15 +42,15 @@ public class RequestPublishDepositTxMessage extends TradeMessage implements Seri
     public final List<TransactionOutput> sellerConnectedOutputsForAllInputs;
     public final byte[] sellerTradeWalletPubKey;
 
-    public RequestPublishDepositTxMessage(String tradeId,
-                                          FiatAccount sellerFiatAccount,
-                                          String sellerAccountId,
-                                          byte[] sellerTradeWalletPubKey,
-                                          String sellerContractAsJson,
-                                          String sellerContractSignature,
-                                          String sellerPayoutAddressString,
-                                          Transaction sellersPreparedDepositTx,
-                                          List<TransactionOutput> sellerConnectedOutputsForAllInputs) {
+    public PublishDepositTxRequest(String tradeId,
+                                   FiatAccount sellerFiatAccount,
+                                   String sellerAccountId,
+                                   byte[] sellerTradeWalletPubKey,
+                                   String sellerContractAsJson,
+                                   String sellerContractSignature,
+                                   String sellerPayoutAddressString,
+                                   Transaction sellersPreparedDepositTx,
+                                   List<TransactionOutput> sellerConnectedOutputsForAllInputs) {
         super(tradeId);
         this.sellerFiatAccount = sellerFiatAccount;
         this.sellerAccountId = sellerAccountId;

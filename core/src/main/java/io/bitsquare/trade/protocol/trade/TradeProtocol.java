@@ -25,13 +25,13 @@ import io.bitsquare.p2p.DecryptedMessageHandler;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.p2p.listener.GetPeerAddressListener;
-import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.TakerTrade;
+import io.bitsquare.trade.BuyerTrade;
+import io.bitsquare.trade.SellerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
-import io.bitsquare.trade.states.OffererTradeState;
-import io.bitsquare.trade.states.TakerTradeState;
+import io.bitsquare.trade.states.BuyerTradeState;
+import io.bitsquare.trade.states.SellerTradeState;
 
 import org.bitcoinj.utils.Threading;
 
@@ -122,10 +122,10 @@ public abstract class TradeProtocol {
         this.trade = trade;
 
         boolean needPayoutTxBroadcast = false;
-        if (trade instanceof TakerTrade)
-            needPayoutTxBroadcast = trade.processStateProperty().get() == TakerTradeState.ProcessState.PAYOUT_FINALIZED;
-        else if (trade instanceof OffererTrade)
-            needPayoutTxBroadcast = trade.processStateProperty().get() == OffererTradeState.ProcessState.PAYOUT_FINALIZED;
+        if (trade instanceof SellerTrade)
+            needPayoutTxBroadcast = trade.processStateProperty().get() == SellerTradeState.ProcessState.PAYOUT_TX_COMMITTED;
+        else if (trade instanceof BuyerTrade)
+            needPayoutTxBroadcast = trade.processStateProperty().get() == BuyerTradeState.ProcessState.PAYOUT_TX_COMMITTED;
 
         if (needPayoutTxBroadcast) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
@@ -150,10 +150,10 @@ public abstract class TradeProtocol {
             public void run() {
                 Threading.USER_THREAD.execute(() -> {
                     log.debug("Timeout reached");
-                    if (trade instanceof TakerTrade)
-                        trade.setProcessState(TakerTradeState.ProcessState.TIMEOUT);
-                    else if (trade instanceof OffererTrade)
-                        trade.setProcessState(OffererTradeState.ProcessState.TIMEOUT);
+                   /* if (trade instanceof SellerTrade)
+                        trade.setProcessState(SellerTradeState.ProcessState.TIMEOUT);
+                    else if (trade instanceof BuyerTrade)
+                        trade.setProcessState(BuyerTradeState.ProcessState.TIMEOUT);*/
                 });
             }
         };

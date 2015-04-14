@@ -24,8 +24,8 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.states.OffererTradeState;
-import io.bitsquare.trade.states.TakerTradeState;
+import io.bitsquare.trade.states.BuyerTradeState;
+import io.bitsquare.trade.states.SellerTradeState;
 
 import org.bitcoinj.core.BlockChainListener;
 import org.bitcoinj.core.Coin;
@@ -53,16 +53,16 @@ import org.slf4j.LoggerFactory;
 public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataModel> implements ViewModel {
     private static final Logger log = LoggerFactory.getLogger(PendingTradesViewModel.class);
 
-    enum ViewState {
+   /* enum ViewState {
         UNDEFINED,
-        SELLER_WAIT_TX_CONF,
-        SELLER_WAIT_PAYMENT_STARTED,
-        SELLER_CONFIRM_RECEIVE_PAYMENT,
+        WAIT_FOR_BLOCKCHAIN_CONFIRMATION,
+        WAIT_FOR_FIAT_PAYMENT_STARTED,
+        REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED,
         SELLER_REQUEST_PAYOUT_FINALIZE_MSG_SENT,
         SELLER_PAYOUT_FINALIZED,
         SELLER_COMPLETED,
 
-        BUYER_WAIT_TX_CONF,
+        WAIT_FOR_BLOCKCHAIN_CONFIRMATION,
         BUYER_START_PAYMENT,
         BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED,
         BUYER_PAYOUT_FINALIZED,
@@ -71,13 +71,36 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         MESSAGE_SENDING_FAILED,
         TIMEOUT,
         EXCEPTION
+    }*/
+
+    interface State {
+    }
+
+    enum BuyerState implements State {
+        WAIT_FOR_BLOCKCHAIN_CONFIRMATION,
+        REQUEST_START_FIAT_PAYMENT,
+        WAIT_FOR_FIAT_PAYMENT_RECEIPT,
+        WAIT_FOR_UNLOCK_PAYOUT,
+        REQUEST_WITHDRAWAL
+    }
+
+    enum SellerState implements State {
+        WAIT_FOR_BLOCKCHAIN_CONFIRMATION,
+        WAIT_FOR_FIAT_PAYMENT_STARTED,
+        REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED,
+        WAIT_FOR_PAYOUT_TX,
+        WAIT_FOR_UNLOCK_PAYOUT,
+        REQUEST_WITHDRAWAL
     }
 
     private final BSFormatter formatter;
     private final InvalidationListener sellerStateListener;
     private final InvalidationListener buyerStateListener;
     private final BtcAddressValidator btcAddressValidator;
-    private final ObjectProperty<ViewState> viewState = new SimpleObjectProperty<>(ViewState.UNDEFINED);
+
+    private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>(BuyerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
+    private final ObjectProperty<SellerState> sellerState = new SimpleObjectProperty<>(SellerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
+
     private final StringProperty txId = new SimpleStringProperty();
     private final BooleanProperty withdrawalButtonDisable = new SimpleBooleanProperty(true);
 
@@ -93,8 +116,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
         this.formatter = formatter;
         this.btcAddressValidator = btcAddressValidator;
-        this.sellerStateListener = (ov) -> updateSellerState();
-        this.buyerStateListener = (ov) -> updateBuyerState();
+        this.sellerStateListener = (ov) -> applySellerState();
+        this.buyerStateListener = (ov) -> applyBuyerState();
     }
 
     @Override
@@ -105,8 +128,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         dataModel.getBuyerProcessState().addListener(buyerStateListener);
 
         if (dataModel.getTrade() != null) {
-            updateSellerState();
-            updateBuyerState();
+            applySellerState();
+            applyBuyerState();
         }
     }
 
@@ -130,8 +153,12 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    ReadOnlyObjectProperty<ViewState> getViewState() {
-        return viewState;
+    ReadOnlyObjectProperty<BuyerState> getBuyerState() {
+        return buyerState;
+    }
+
+    ReadOnlyObjectProperty<SellerState> getSellerState() {
+        return sellerState;
     }
 
     public ReadOnlyStringProperty getTxId() {
@@ -304,97 +331,58 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     // States
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void updateSellerState() {
-        if (dataModel.getSellerProcessState().get() instanceof TakerTradeState.ProcessState) {
-            TakerTradeState.ProcessState processState = (TakerTradeState.ProcessState) dataModel.getSellerProcessState().get();
-            log.debug("updateSellerState (TakerTradeState) " + processState);
+    private void applySellerState() {
+        if (dataModel.getSellerProcessState().get() instanceof SellerTradeState.ProcessState) {
+            SellerTradeState.ProcessState processState = (SellerTradeState.ProcessState) dataModel.getSellerProcessState().get();
+            log.debug("updateSellerState (SellerTradeState) " + processState);
             if (processState != null) {
                 switch (processState) {
                     case UNDEFINED:
-                    case TAKE_OFFER_FEE_TX_CREATED:
-                    case TAKE_OFFER_FEE_PUBLISHED:
-                        break;
-                    case TAKE_OFFER_FEE_PUBLISH_FAILED:
-                        viewState.set(ViewState.EXCEPTION);
+
+                    case DEPOSIT_PUBLISHED_MSG_RECEIVED:
+                        sellerState.set(SellerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
                         break;
 
-                    case DEPOSIT_PUBLISHED:
-                        viewState.set(ViewState.SELLER_WAIT_TX_CONF);
-                        break;
+
                     case DEPOSIT_CONFIRMED:
-                        viewState.set(ViewState.SELLER_WAIT_PAYMENT_STARTED);
+                        sellerState.set(SellerState.WAIT_FOR_FIAT_PAYMENT_STARTED);
                         break;
 
-                    case FIAT_PAYMENT_STARTED:
-                        viewState.set(ViewState.SELLER_CONFIRM_RECEIVE_PAYMENT);
+
+                    case FIAT_PAYMENT_STARTED_MSG_RECEIVED:
+                        sellerState.set(SellerState.REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED);
                         break;
 
-                    case REQUEST_PAYOUT_FINALIZE_MSG_SENT:
-                        viewState.set(ViewState.SELLER_REQUEST_PAYOUT_FINALIZE_MSG_SENT);
+
+                    case FIAT_PAYMENT_RECEIPT:
                         break;
-                    case PAYOUT_FINALIZED:
-                        viewState.set(ViewState.SELLER_PAYOUT_FINALIZED);
+                    case FIAT_PAYMENT_RECEIPT_MSG_SENT:
+                        sellerState.set(SellerState.WAIT_FOR_PAYOUT_TX);
                         break;
+
+
+                    case PAYOUT_TX_RECEIVED:
+                        break;
+                    case PAYOUT_TX_COMMITTED:
+                        sellerState.set(SellerState.WAIT_FOR_UNLOCK_PAYOUT);
+                        break;
+
 
                     case PAYOUT_BROAD_CASTED:
-                        viewState.set(ViewState.SELLER_COMPLETED);
+                        sellerState.set(SellerState.REQUEST_WITHDRAWAL);
                         break;
-                    case PAYOUT_BROAD_CASTED_FAILED:
-                        viewState.set(ViewState.EXCEPTION);
+
+
+                   /* case PAYOUT_BROAD_CASTED_FAILED:
+                        // sellerState.set(SellerState.EXCEPTION);
                         break;
 
                     case MESSAGE_SENDING_FAILED:
-                        viewState.set(ViewState.MESSAGE_SENDING_FAILED);
+                        //sellerState.set(SellerState.MESSAGE_SENDING_FAILED);
                         break;
                     case EXCEPTION:
-                        viewState.set(ViewState.EXCEPTION);
-                        break;
-
-                    default:
-                        log.warn("unhandled processState " + processState);
-                        break;
-                }
-            }
-        }
-        else if (dataModel.getSellerProcessState().get() instanceof OffererTradeState.ProcessState) {
-            OffererTradeState.ProcessState processState = (OffererTradeState.ProcessState) dataModel.getSellerProcessState().get();
-            log.debug("updateSellerState (OffererTradeState) " + processState);
-            if (processState != null) {
-                switch (processState) {
-                    case UNDEFINED:
-                        break;
-
-                    case DEPOSIT_PUBLISHED:
-                        viewState.set(ViewState.SELLER_WAIT_TX_CONF);
-                        break;
-                    case DEPOSIT_CONFIRMED:
-                        viewState.set(ViewState.SELLER_WAIT_PAYMENT_STARTED);
-                        break;
-
-                    case FIAT_PAYMENT_STARTED:
-                        viewState.set(ViewState.SELLER_CONFIRM_RECEIVE_PAYMENT);
-                        break;
-
-                    case REQUEST_PAYOUT_FINALIZE_MSG_SENT:
-                        viewState.set(ViewState.SELLER_REQUEST_PAYOUT_FINALIZE_MSG_SENT);
-                        break;
-                    case PAYOUT_FINALIZED:
-                        viewState.set(ViewState.SELLER_PAYOUT_FINALIZED);
-                        break;
-
-                    case PAYOUT_BROAD_CASTED:
-                        viewState.set(ViewState.SELLER_COMPLETED);
-                        break;
-                    case PAYOUT_BROAD_CASTED_FAILED:
-                        viewState.set(ViewState.EXCEPTION);
-                        break;
-
-                    case MESSAGE_SENDING_FAILED:
-                        viewState.set(ViewState.MESSAGE_SENDING_FAILED);
-                        break;
-                    case EXCEPTION:
-                        viewState.set(ViewState.EXCEPTION);
-                        break;
+                        // sellerState.set(SellerState.EXCEPTION);
+                        break;*/
 
                     default:
                         log.warn("unhandled processState " + processState);
@@ -407,94 +395,59 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         }
     }
 
-    private void updateBuyerState() {
-        if (dataModel.getBuyerProcessState().get() instanceof TakerTradeState.ProcessState) {
-            TakerTradeState.ProcessState processState = (TakerTradeState.ProcessState) dataModel.getBuyerProcessState().get();
-            log.debug("updateBuyerState (TakerTradeState)" + processState);
-            if (processState != null) {
-                switch (processState) {
-                    case UNDEFINED:
-                    case TAKE_OFFER_FEE_TX_CREATED:
-                    case TAKE_OFFER_FEE_PUBLISHED:
-                        break;
-                    case TAKE_OFFER_FEE_PUBLISH_FAILED:
-                        viewState.set(ViewState.EXCEPTION);
-                        break;
-
-                    case DEPOSIT_PUBLISHED:
-                        viewState.set(ViewState.BUYER_WAIT_TX_CONF);
-                        break;
-                    case DEPOSIT_CONFIRMED:
-                        viewState.set(ViewState.BUYER_START_PAYMENT);
-                        break;
-
-                    case FIAT_PAYMENT_STARTED:
-                        viewState.set(ViewState.BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED);
-                        break;
-
-                    case PAYOUT_FINALIZED:
-                        viewState.set(ViewState.BUYER_PAYOUT_FINALIZED);
-                        break;
-
-                    case PAYOUT_BROAD_CASTED:
-                        viewState.set(ViewState.BUYER_COMPLETED);
-                        break;
-                    case PAYOUT_BROAD_CASTED_FAILED:
-                        viewState.set(ViewState.EXCEPTION);
-                        break;
-
-                    case MESSAGE_SENDING_FAILED:
-                        viewState.set(ViewState.MESSAGE_SENDING_FAILED);
-                        break;
-                    case TIMEOUT:
-                        viewState.set(ViewState.TIMEOUT);
-                        break;
-                    case EXCEPTION:
-                        viewState.set(ViewState.EXCEPTION);
-                        break;
-
-                    default:
-                        log.warn("unhandled viewState " + processState);
-                        break;
-                }
-            }
-        }
-        else if (dataModel.getBuyerProcessState().get() instanceof OffererTradeState.ProcessState) {
-            OffererTradeState.ProcessState processState = (OffererTradeState.ProcessState) dataModel.getBuyerProcessState().get();
-            log.debug("updateBuyerState (OffererTradeState) " + processState);
+    private void applyBuyerState() {
+        if (dataModel.getBuyerProcessState().get() instanceof BuyerTradeState.ProcessState) {
+            BuyerTradeState.ProcessState processState = (BuyerTradeState.ProcessState) dataModel.getBuyerProcessState().get();
+            log.debug("updateBuyerState (BuyerTradeState) " + processState);
             if (processState != null) {
                 switch (processState) {
                     case UNDEFINED:
                         break;
+
+
                     case DEPOSIT_PUBLISHED:
-                        viewState.set(ViewState.BUYER_WAIT_TX_CONF);
+                    case DEPOSIT_PUBLISHED_MSG_SENT:
+                        buyerState.set(BuyerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
                         break;
+
+
                     case DEPOSIT_CONFIRMED:
-                        viewState.set(ViewState.BUYER_START_PAYMENT);
+                        buyerState.set(BuyerState.REQUEST_START_FIAT_PAYMENT);
                         break;
+
 
                     case FIAT_PAYMENT_STARTED:
-                        viewState.set(ViewState.BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED);
+                        break;
+                    case FIAT_PAYMENT_STARTED_MSG_SENT:
+                        buyerState.set(BuyerState.WAIT_FOR_FIAT_PAYMENT_RECEIPT);
                         break;
 
-                    case PAYOUT_FINALIZED:
-                        viewState.set(ViewState.BUYER_PAYOUT_FINALIZED);
+
+                    case FIAT_PAYMENT_RECEIPT_MSG_RECEIVED:
+                    case PAYOUT_TX_COMMITTED:
                         break;
+                    case PAYOUT_TX_SENT:
+                        buyerState.set(BuyerState.WAIT_FOR_UNLOCK_PAYOUT);
+                        break;
+
 
                     case PAYOUT_BROAD_CASTED:
-                        viewState.set(ViewState.BUYER_COMPLETED);
+                        buyerState.set(BuyerState.REQUEST_WITHDRAWAL);
                         break;
-                    case PAYOUT_BROAD_CASTED_FAILED:
-                        viewState.set(ViewState.EXCEPTION);
+
+
+                   /* case PAYOUT_BROAD_CASTED_FAILED:
+                        // buyerState.set(BuyerState.EXCEPTION);
                         break;
+
 
                     case MESSAGE_SENDING_FAILED:
-                        viewState.set(ViewState.MESSAGE_SENDING_FAILED);
+                        // buyerState.set(BuyerState.MESSAGE_SENDING_FAILED);
                         break;
                     case EXCEPTION:
-                        viewState.set(ViewState.EXCEPTION);
+                        // buyerState.set(BuyerState.EXCEPTION);
                         break;
-
+*/
                     default:
                         log.warn("unhandled viewState " + processState);
                         break;

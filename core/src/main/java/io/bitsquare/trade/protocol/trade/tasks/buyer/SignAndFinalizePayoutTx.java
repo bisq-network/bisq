@@ -18,12 +18,8 @@
 package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.states.OffererTradeState;
-import io.bitsquare.trade.states.TakerTradeState;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -60,10 +56,6 @@ public class SignAndFinalizePayoutTx extends TradeTask {
             );
 
             trade.setPayoutTx(transaction);
-            if (trade instanceof TakerTrade)
-                trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_FINALIZED);
-            else if (trade instanceof OffererTrade)
-                trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_FINALIZED);
 
             complete();
         } catch (Throwable t) {

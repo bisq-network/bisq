@@ -18,86 +18,8 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.p2p.Peer;
-import io.bitsquare.storage.Storage;
-import io.bitsquare.trade.offer.Offer;
-import io.bitsquare.trade.protocol.trade.OffererProtocol;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.states.OffererTradeState;
-import io.bitsquare.trade.states.TradeState;
 
-import java.io.Serializable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-public abstract class OffererTrade extends Trade implements Serializable {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = 1L;
-
-    transient private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererTrade.class);
-
-    public OffererTrade(Offer offer, Storage<? extends TradableList> storage) {
-        super(offer, storage);
-        log.trace("Created by constructor");
-    }
-
-    @Override
-    protected void initStates() {
-        processState = OffererTradeState.ProcessState.UNDEFINED;
-        lifeCycleState = Trade.LifeCycleState.PREPARATION;
-        initStateProperties();
-    }
-
-    public void handleTakeOfferRequest(TradeMessage message, Peer taker) {
-        ((OffererProtocol) tradeProtocol).handleTakeOfferRequest(message, taker);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setter for Mutable objects
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void setProcessState(TradeState.ProcessState processState) {
-        super.setProcessState(processState);
-
-        switch ((OffererTradeState.ProcessState) processState) {
-            case EXCEPTION:
-                disposeProtocol();
-                setLifeCycleState(Trade.LifeCycleState.FAILED);
-                break;
-        }
-    }
-
-    @Override
-    public void setLifeCycleState(Trade.LifeCycleState lifeCycleState) {
-        super.setLifeCycleState(lifeCycleState);
-
-        switch (lifeCycleState) {
-            case FAILED:
-                disposeProtocol();
-                break;
-            case COMPLETED:
-                disposeProtocol();
-                break;
-        }
-    }
-
-    @Override
-    public void setThrowable(Throwable throwable) {
-        super.setThrowable(throwable);
-
-        setProcessState(OffererTradeState.ProcessState.EXCEPTION);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected void handleConfidenceResult() {
-        if (((OffererTradeState.ProcessState) processState).ordinal() < OffererTradeState.ProcessState.DEPOSIT_CONFIRMED.ordinal())
-            setProcessState(OffererTradeState.ProcessState.DEPOSIT_CONFIRMED);
-    }
+public interface OffererTrade {
+    void handleTakeOfferRequest(TradeMessage message, Peer taker);
 }

@@ -21,7 +21,6 @@ import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepDetailsView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import io.bitsquare.gui.util.Layout;
 
-import javafx.beans.value.ChangeListener;
 import javafx.scene.layout.*;
 
 import org.slf4j.Logger;
@@ -31,7 +30,6 @@ public abstract class TradeSubView extends HBox {
     private static final Logger log = LoggerFactory.getLogger(TradeSubView.class);
 
     protected final PendingTradesViewModel model;
-    protected final ChangeListener<PendingTradesViewModel.ViewState> offererStateChangeListener;
     protected VBox leftVBox;
     protected AnchorPane contentPane;
     protected TradeStepDetailsView tradeStepDetailsView;
@@ -47,17 +45,12 @@ public abstract class TradeSubView extends HBox {
         setSpacing(Layout.PADDING_WINDOW);
         buildViews();
 
-        offererStateChangeListener = (ov, oldValue, newValue) -> applyState(newValue);
     }
 
     public void activate() {
-        model.getViewState().addListener(offererStateChangeListener);
-        applyState(model.getViewState().get());
     }
 
     public void deactivate() {
-        model.getViewState().removeListener(offererStateChangeListener);
-
         if (tradeStepDetailsView != null)
             tradeStepDetailsView.deactivate();
     }
@@ -66,8 +59,6 @@ public abstract class TradeSubView extends HBox {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Misc
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    protected abstract void applyState(PendingTradesViewModel.ViewState state);
 
     private void buildViews() {
         addLeftBox();

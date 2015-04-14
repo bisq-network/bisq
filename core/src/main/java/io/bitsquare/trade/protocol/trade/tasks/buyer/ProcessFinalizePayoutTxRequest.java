@@ -20,7 +20,8 @@ package io.bitsquare.trade.protocol.trade.tasks.buyer;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.protocol.trade.messages.RequestDepositTxInputsMessage;
+import io.bitsquare.trade.protocol.trade.messages.FinalizePayoutTxRequest;
+import io.bitsquare.trade.states.BuyerTradeState;
 import io.bitsquare.trade.states.StateUtil;
 
 import org.slf4j.Logger;
@@ -29,24 +30,25 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.*;
 
-public class ProcessRequestDepositTxInputsMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(ProcessRequestDepositTxInputsMessage.class);
+public class ProcessFinalizePayoutTxRequest extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(ProcessFinalizePayoutTxRequest.class);
 
-    public ProcessRequestDepositTxInputsMessage(TaskRunner taskHandler, Trade trade) {
+    public ProcessFinalizePayoutTxRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            RequestDepositTxInputsMessage message = (RequestDepositTxInputsMessage) processModel.getTradeMessage();
+            FinalizePayoutTxRequest message = (FinalizePayoutTxRequest) processModel.getTradeMessage();
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);
 
-            processModel.tradingPeer.setPubKeyRing(checkNotNull(message.sellerPubKeyRing));
-            processModel.setTakeOfferFeeTxId(nonEmptyStringOf(message.sellerOfferFeeTxId));
-            trade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(message.tradeAmount)));
-            processModel.tradingPeer.setTradeWalletPubKey(checkNotNull(message.sellerTradeWalletPubKey));
+            processModel.tradingPeer.setSignature(checkNotNull(message.sellerSignature));
+            processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(message.sellerPayoutAddress));
+            trade.setLockTime(nonNegativeLongOf(message.lockTime));
+
+            trade.setProcessState(BuyerTradeState.ProcessState.FIAT_PAYMENT_RECEIPT_MSG_RECEIVED);
 
             complete();
         } catch (Throwable t) {

@@ -20,24 +20,23 @@ package io.bitsquare.trade.states;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffererTradeState {
-    private static final Logger log = LoggerFactory.getLogger(OffererTradeState.class);
+public class SellerTradeState {
+    private static final Logger log = LoggerFactory.getLogger(SellerTradeState.class);
 
     public enum ProcessState implements TradeState.ProcessState {
         UNDEFINED,
-        DEPOSIT_PUBLISHED,
+
+        DEPOSIT_PUBLISHED_MSG_RECEIVED,
         DEPOSIT_CONFIRMED,
 
-        FIAT_PAYMENT_STARTED,
+        FIAT_PAYMENT_STARTED_MSG_RECEIVED,
 
-        REQUEST_PAYOUT_FINALIZE_MSG_SENT, // seller only
-        PAYOUT_FINALIZED,
+        FIAT_PAYMENT_RECEIPT,
+        FIAT_PAYMENT_RECEIPT_MSG_SENT,
 
-        PAYOUT_BROAD_CASTED,
-        PAYOUT_BROAD_CASTED_FAILED,
+        PAYOUT_TX_RECEIVED,
+        PAYOUT_TX_COMMITTED,
 
-        MESSAGE_SENDING_FAILED,
-        TIMEOUT,
-        EXCEPTION
+        PAYOUT_BROAD_CASTED
     }
 }

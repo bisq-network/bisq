@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.tasks.buyer;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.protocol.trade.messages.RequestPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.messages.PublishDepositTxRequest;
 import io.bitsquare.trade.states.StateUtil;
 
 import org.slf4j.Logger;
@@ -29,17 +29,17 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.*;
 import static io.bitsquare.util.Validator.*;
 
-public class ProcessRequestPublishDepositTxMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(ProcessRequestPublishDepositTxMessage.class);
+public class ProcessPublishDepositTxRequest extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(ProcessPublishDepositTxRequest.class);
 
-    public ProcessRequestPublishDepositTxMessage(TaskRunner taskHandler, Trade trade) {
+    public ProcessPublishDepositTxRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            RequestPublishDepositTxMessage message = (RequestPublishDepositTxMessage) processModel.getTradeMessage();
+            PublishDepositTxRequest message = (PublishDepositTxRequest) processModel.getTradeMessage();
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);
 

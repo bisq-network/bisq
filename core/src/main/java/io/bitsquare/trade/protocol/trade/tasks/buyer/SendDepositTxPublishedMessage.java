@@ -22,6 +22,7 @@ import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
+import io.bitsquare.trade.states.BuyerTradeState;
 import io.bitsquare.trade.states.StateUtil;
 
 import org.slf4j.Logger;
@@ -47,6 +48,8 @@ public class SendDepositTxPublishedMessage extends TradeTask {
                         @Override
                         public void handleResult() {
                             log.trace("DepositTxPublishedMessage successfully arrived at peer");
+
+                            trade.setProcessState(BuyerTradeState.ProcessState.DEPOSIT_PUBLISHED_MSG_SENT);
 
                             complete();
                         }

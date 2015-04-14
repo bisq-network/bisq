@@ -22,6 +22,7 @@ import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
+import io.bitsquare.trade.states.BuyerTradeState;
 import io.bitsquare.trade.states.StateUtil;
 
 import org.slf4j.Logger;
@@ -46,6 +47,8 @@ public class SendPayoutTxFinalizedMessage extends TradeTask {
                         @Override
                         public void handleResult() {
                             log.trace("PayoutTxFinalizedMessage successfully arrived at peer");
+
+                            trade.setProcessState(BuyerTradeState.ProcessState.PAYOUT_TX_SENT);
 
                             complete();
                         }

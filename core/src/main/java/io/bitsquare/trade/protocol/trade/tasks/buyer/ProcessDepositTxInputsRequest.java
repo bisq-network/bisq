@@ -15,46 +15,44 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.tasks.seller;
+package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.protocol.trade.messages.RequestPayDepositMessage;
+import io.bitsquare.trade.protocol.trade.messages.DepositTxInputsRequest;
+import io.bitsquare.trade.states.StateUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.*;
 
-public class ProcessRequestPayDepositMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(ProcessRequestPayDepositMessage.class);
+public class ProcessDepositTxInputsRequest extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(ProcessDepositTxInputsRequest.class);
 
-    public ProcessRequestPayDepositMessage(TaskRunner taskHandler, Trade trade) {
+    public ProcessDepositTxInputsRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            RequestPayDepositMessage message = (RequestPayDepositMessage) processModel.getTradeMessage();
+            DepositTxInputsRequest message = (DepositTxInputsRequest) processModel.getTradeMessage();
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);
 
-            processModel.tradingPeer.setConnectedOutputsForAllInputs(checkNotNull(message.buyerConnectedOutputsForAllInputs));
-            checkArgument(message.buyerConnectedOutputsForAllInputs.size() > 0);
-            processModel.tradingPeer.setOutputs(checkNotNull(message.buyerOutputs));
-            processModel.tradingPeer.setTradeWalletPubKey(checkNotNull(message.buyerTradeWalletPubKey));
-            processModel.tradingPeer.setPubKeyRing(checkNotNull(message.buyerPubKeyRing));
-            processModel.tradingPeer.setFiatAccount(checkNotNull(message.buyerFiatAccount));
-            processModel.tradingPeer.setAccountId(nonEmptyStringOf(message.buyerAccountId));
+            processModel.tradingPeer.setPubKeyRing(checkNotNull(message.sellerPubKeyRing));
+            processModel.setTakeOfferFeeTxId(nonEmptyStringOf(message.sellerOfferFeeTxId));
             trade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(message.tradeAmount)));
+            processModel.tradingPeer.setTradeWalletPubKey(checkNotNull(message.sellerTradeWalletPubKey));
 
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
             trade.setThrowable(t);
+            StateUtil.setOfferOpenState(trade);
             failed(t);
         }
     }

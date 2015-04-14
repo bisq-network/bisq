@@ -32,13 +32,15 @@ import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignContract;
 import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignDepositTx;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessFiatTransferStartedMessage;
+import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessPayDepositRequest;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessPayoutTxFinalizedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessRequestPayDepositMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SendRequestFinalizePayoutTxMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SendRequestPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SendFinalizePayoutTxRequest;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SendPublishDepositTxRequest;
 import io.bitsquare.trade.protocol.trade.tasks.seller.SignPayoutTx;
 import io.bitsquare.trade.protocol.trade.tasks.shared.CommitPayoutTx;
 import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
+import io.bitsquare.trade.states.SellerTradeState;
+import io.bitsquare.trade.states.TradeState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +60,23 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
 
         log.debug("New OffererProtocol " + this);
         this.sellerAsOffererTrade = trade;
+
+        // If we are after the timelock state we need to setup the listener again
+        TradeState.ProcessState state = trade.processStateProperty().get();
+        if (state == SellerTradeState.ProcessState.PAYOUT_TX_RECEIVED ||
+                state == SellerTradeState.ProcessState.PAYOUT_TX_COMMITTED ||
+                state == SellerTradeState.ProcessState.PAYOUT_BROAD_CASTED) {
+            TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
+                    () -> {
+                        log.debug("taskRunner completed");
+                        // we are done!
+                        processModel.onComplete();
+                    },
+                    this::handleTaskRunnerFault);
+
+            taskRunner.addTasks(SetupPayoutTxLockTimeReachedListener.class);
+            taskRunner.run();
+        }
     }
 
 
@@ -75,11 +94,11 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                ProcessRequestPayDepositMessage.class,
+                ProcessPayDepositRequest.class,
                 VerifyTakerAccount.class,
                 CreateAndSignContract.class,
                 CreateAndSignDepositTx.class,
-                SendRequestPublishDepositTxMessage.class
+                SendPublishDepositTxRequest.class
         );
         taskRunner.run();
         startTimeout();
@@ -153,6 +172,8 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     @Override
     public void onFiatPaymentReceived() {
+        sellerAsOffererTrade.setProcessState(SellerTradeState.ProcessState.FIAT_PAYMENT_RECEIPT);
+
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsOffererTrade,
                 () -> {
                     log.debug("taskRunner at handleFiatReceivedUIEvent completed");
@@ -165,7 +186,7 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
         taskRunner.addTasks(
                 VerifyTakeOfferFeePayment.class,
                 SignPayoutTx.class,
-                SendRequestFinalizePayoutTxMessage.class
+                SendFinalizePayoutTxRequest.class
         );
         taskRunner.run();
     }

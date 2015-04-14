@@ -253,6 +253,10 @@ public class BootstrappedPeerBuilder {
 
     private void bootstrap() {
         log.trace("start bootstrap");
+
+        // We don't wait until bootstrap is done for speeding up startup process
+        // settableFuture.set(peerDHT);
+
         FutureBootstrap futureBootstrap = peer.bootstrap().peerAddress(getBootstrapAddress()).start();
         futureBootstrap.addListener(new BaseFutureListener<BaseFuture>() {
             @Override

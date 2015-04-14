@@ -17,30 +17,28 @@
 
 package io.bitsquare.trade.protocol.trade.messages;
 
-import io.bitsquare.crypto.PubKeyRing;
-
-import org.bitcoinj.core.Coin;
+import io.bitsquare.p2p.MailboxMessage;
 
 import java.io.Serializable;
 
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-public class RequestDepositTxInputsMessage extends TradeMessage implements Serializable {
+public class FinalizePayoutTxRequest extends TradeMessage implements MailboxMessage, Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = 1L;
 
-    public final Coin tradeAmount;
-    public final PubKeyRing sellerPubKeyRing;
-    public final String sellerOfferFeeTxId;
-    public final byte[] sellerTradeWalletPubKey;
+    public final byte[] sellerSignature;
+    public final String sellerPayoutAddress;
+    public final long lockTime;
 
-    public RequestDepositTxInputsMessage(String tradeId, PubKeyRing sellerPubKeyRing, String sellerOfferFeeTxId, Coin tradeAmount, byte[]
-            sellerTradeWalletPubKey) {
+    public FinalizePayoutTxRequest(String tradeId,
+                                   byte[] sellerSignature,
+                                   String sellerPayoutAddress,
+                                   long lockTime) {
         super(tradeId);
-        this.sellerPubKeyRing = sellerPubKeyRing;
-        this.sellerOfferFeeTxId = sellerOfferFeeTxId;
-        this.tradeAmount = tradeAmount;
-        this.sellerTradeWalletPubKey = sellerTradeWalletPubKey;
+        this.sellerSignature = sellerSignature;
+        this.sellerPayoutAddress = sellerPayoutAddress;
+        this.lockTime = lockTime;
     }
 }

@@ -28,7 +28,8 @@ import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.trade.BuyerAsTakerTrade;
 import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.offer.Offer;
-import io.bitsquare.trade.states.TakerTradeState;
+import io.bitsquare.trade.states.BuyerTradeState;
+import io.bitsquare.trade.states.SellerTradeState;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -220,13 +221,13 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         evaluateState();
     }
 
-    void takeOffer() {
+    void onTakeOffer() {
         takeOfferRequested = true;
         applyTakeOfferRequestResult(false);
 
         isTakeOfferSpinnerVisible.set(true);
 
-        dataModel.takeOffer((trade) -> {
+        dataModel.onTakeOffer((trade) -> {
             trade.processStateProperty().addListener((ov, oldValue, newValue) -> {
                 log.debug("trade state = " + newValue);
 
@@ -234,19 +235,24 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 if (trade.getErrorMessage() != null)
                     msg = "\nError message: " + trade.getErrorMessage();
 
-                if (trade instanceof BuyerAsTakerTrade) {
-                    switch ((TakerTradeState.ProcessState) newValue) {
-                        case TAKE_OFFER_FEE_TX_CREATED:
+                if (trade instanceof SellerAsTakerTrade) {
+                    switch ((SellerTradeState.ProcessState) newValue) {
+                        case UNDEFINED:
                             break;
-                        case DEPOSIT_PUBLISHED:
-                        case DEPOSIT_CONFIRMED:
+                        case DEPOSIT_PUBLISHED_MSG_RECEIVED:
                             assert trade.getDepositTx() != null;
                             transactionId.set(trade.getDepositTx().getHashAsString());
                             applyTakeOfferRequestResult(true);
                             break;
-                        case FIAT_PAYMENT_STARTED:
+                        case DEPOSIT_CONFIRMED:
+                        case FIAT_PAYMENT_STARTED_MSG_RECEIVED:
+                        case FIAT_PAYMENT_RECEIPT:
+                        case FIAT_PAYMENT_RECEIPT_MSG_SENT:
+                        case PAYOUT_TX_RECEIVED:
+                        case PAYOUT_TX_COMMITTED:
+                        case PAYOUT_BROAD_CASTED:
                             break;
-                        case TAKE_OFFER_FEE_PUBLISH_FAILED:
+                       /* case TAKE_OFFER_FEE_PUBLISH_FAILED:
                             errorMessage.set("An error occurred when paying the trade fee." + msg);
                             takeOfferRequested = false;
                             break;
@@ -258,25 +264,31 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                         case EXCEPTION:
                             errorMessage.set(msg);
                             takeOfferRequested = false;
-                            break;
+                            break;*/
                         default:
                             log.warn("Unhandled trade state: " + newValue);
                             break;
                     }
                 }
-                else if (trade instanceof SellerAsTakerTrade) {
-                    switch ((TakerTradeState.ProcessState) newValue) {
-                        case TAKE_OFFER_FEE_TX_CREATED:
+                else if (trade instanceof BuyerAsTakerTrade) {
+                    switch ((BuyerTradeState.ProcessState) newValue) {
+                        case UNDEFINED:
                             break;
                         case DEPOSIT_PUBLISHED:
-                        case DEPOSIT_CONFIRMED:
                             assert trade.getDepositTx() != null;
                             transactionId.set(trade.getDepositTx().getHashAsString());
                             applyTakeOfferRequestResult(true);
                             break;
+                        case DEPOSIT_PUBLISHED_MSG_SENT:
+                        case DEPOSIT_CONFIRMED:
                         case FIAT_PAYMENT_STARTED:
+                        case FIAT_PAYMENT_STARTED_MSG_SENT:
+                        case FIAT_PAYMENT_RECEIPT_MSG_RECEIVED:
+                        case PAYOUT_TX_COMMITTED:
+                        case PAYOUT_TX_SENT:
+                        case PAYOUT_BROAD_CASTED:
                             break;
-                        case TAKE_OFFER_FEE_PUBLISH_FAILED:
+                       /* case TAKE_OFFER_FEE_PUBLISH_FAILED:
                             errorMessage.set("An error occurred when paying the trade fee." + msg);
                             takeOfferRequested = false;
                             break;
@@ -293,7 +305,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                         case EXCEPTION:
                             errorMessage.set(msg);
                             takeOfferRequested = false;
-                            break;
+                            break;*/
                         default:
                             log.warn("Unhandled trade state: " + newValue);
                             break;

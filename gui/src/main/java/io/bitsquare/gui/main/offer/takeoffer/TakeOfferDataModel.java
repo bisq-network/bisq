@@ -93,7 +93,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
     @Override
     public void deactivate() {
         btcCode.unbind();
-        tradeManager.cancelCheckOfferAvailabilityRequest(offer);
+        tradeManager.onCancelAvailabilityRequest(offer);
     }
 
     void initWithData(Coin amount, Offer offer) {
@@ -121,11 +121,11 @@ class TakeOfferDataModel implements Activatable, DataModel {
         });
         updateBalance(walletService.getBalanceForAddress(addressEntry.getAddress()));
 
-        tradeManager.checkOfferAvailability(offer);
+        tradeManager.onCheckOfferAvailability(offer);
     }
 
-    void takeOffer(TakeOfferResultHandler handler) {
-        tradeManager.requestTakeOffer(amountAsCoin.get(), offer, handler::handleResult);
+    void onTakeOffer(TakeOfferResultHandler handler) {
+        tradeManager.onTakeOffer(amountAsCoin.get(), offer, handler::handleResult);
     }
 
     void calculateVolume() {

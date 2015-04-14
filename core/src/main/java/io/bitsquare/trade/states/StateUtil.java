@@ -17,8 +17,7 @@
 
 package io.bitsquare.trade.states;
 
-import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.TakerTrade;
+import io.bitsquare.trade.BuyerTrade;
 import io.bitsquare.trade.Trade;
 
 import org.slf4j.Logger;
@@ -28,14 +27,14 @@ public class StateUtil {
     private static final Logger log = LoggerFactory.getLogger(StateUtil.class);
 
     public static void setSendFailedState(Trade trade) {
-        if (trade instanceof OffererTrade)
-            trade.setProcessState(OffererTradeState.ProcessState.MESSAGE_SENDING_FAILED);
-        else if (trade instanceof TakerTrade)
-            trade.setProcessState(TakerTradeState.ProcessState.MESSAGE_SENDING_FAILED);
+       /* if (trade instanceof BuyerTrade)
+            trade.setProcessState(BuyerTradeState.ProcessState.MESSAGE_SENDING_FAILED);
+        else if (trade instanceof SellerTrade)
+            trade.setProcessState(SellerTradeState.ProcessState.MESSAGE_SENDING_FAILED);*/
     }
 
     public static void setOfferOpenState(Trade trade) {
-        if (trade instanceof OffererTrade)
+        if (trade instanceof BuyerTrade)
             trade.setLifeCycleState(Trade.LifeCycleState.PREPARATION);
     }
 } 

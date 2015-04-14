@@ -19,57 +19,53 @@ package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
-import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeTask;
-import io.bitsquare.trade.protocol.trade.messages.RequestFinalizePayoutTxMessage;
-import io.bitsquare.trade.states.OffererTradeState;
+import io.bitsquare.trade.protocol.trade.messages.PublishDepositTxRequest;
 import io.bitsquare.trade.states.StateUtil;
-import io.bitsquare.trade.states.TakerTradeState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendRequestFinalizePayoutTxMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SendRequestFinalizePayoutTxMessage.class);
+public class SendPublishDepositTxRequest extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SendPublishDepositTxRequest.class);
 
-    public SendRequestFinalizePayoutTxMessage(TaskRunner taskHandler, Trade trade) {
+    public SendPublishDepositTxRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void doRun() {
         try {
-            RequestFinalizePayoutTxMessage message = new RequestFinalizePayoutTxMessage(
+            PublishDepositTxRequest tradeMessage = new PublishDepositTxRequest(
                     processModel.getId(),
-                    processModel.getPayoutTxSignature(),
+                    processModel.getFiatAccount(),
+                    processModel.getAccountId(),
+                    processModel.getTradeWalletPubKey(),
+                    trade.getContractAsJson(),
+                    trade.getSellerContractSignature(),
                     processModel.getAddressEntry().getAddressString(),
-                    trade.getLockTime()
+                    processModel.getPreparedDepositTx(),
+                    processModel.getConnectedOutputsForAllInputs()
             );
 
             processModel.getMessageService().sendEncryptedMessage(
                     trade.getTradingPeer(),
                     processModel.tradingPeer.getPubKeyRing(),
-                    message,
+                    tradeMessage,
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {
-                            log.trace("PayoutTxPublishedMessage successfully arrived at peer");
-
-                            if (trade instanceof TakerTrade)
-                                trade.setProcessState(TakerTradeState.ProcessState.REQUEST_PAYOUT_FINALIZE_MSG_SENT);
-                            else if (trade instanceof OffererTrade)
-                                trade.setProcessState(OffererTradeState.ProcessState.REQUEST_PAYOUT_FINALIZE_MSG_SENT);
-
                             complete();
                         }
 
                         @Override
                         public void handleFault() {
-                            appendToErrorMessage("Sending PayoutTxPublishedMessage failed");
+                            appendToErrorMessage("Sending RequestOffererPublishDepositTxMessage failed");
                             trade.setErrorMessage(errorMessage);
+
                             StateUtil.setSendFailedState(trade);
+
                             failed();
                         }
                     });
