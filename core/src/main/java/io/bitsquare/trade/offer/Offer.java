@@ -207,7 +207,8 @@ public class Offer implements Serializable {
 
 
     public void cancelAvailabilityRequest() {
-        availabilityProtocol.cancel();
+        if (availabilityProtocol != null)
+            availabilityProtocol.cancel();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

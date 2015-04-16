@@ -261,11 +261,15 @@ class MainViewModel implements ViewModel {
             case DISCOVERY_MANUAL_PORT_FORWARDING_SUCCEEDED:
             case DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED:
             case RELAY_SUCCEEDED:
+                bootstrapInfo.set("Bootstrapping to P2P network: " + state.getMessage());
+                bootstrapProgress.set(-1);
+                break;
+            case BOOT_STRAP_SUCCEEDED:
                 bootstrapInfo.set("Successfully connected to P2P network: " + state.getMessage());
                 bootstrapProgress.set(1);
                 break;
             default:
-                bootstrapInfo.set("Connecting to the Bitsquare network: " + state.getMessage());
+                bootstrapInfo.set("Connecting to P2P network: " + state.getMessage());
                 bootstrapProgress.set(-1);
                 break;
         }

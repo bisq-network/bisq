@@ -4,25 +4,34 @@ cd ../../
 
 set -e
 
-# Extract the version number. buildVersion is used for ever increasing integer at UpdateFX. fullVersion contains major and minor version + buildVersion 
-buildVersion=$( sed -n 's/^.*final int BUILD_VERSION = //p' core/src/main/java/io/bitsquare/app/UpdateProcess.java )
-# remove trailing;
-buildVersion="${buildVersion:0:${#buildVersion}-1}"
-fullVersion=$( sed -n 's/^.*final String VERSION = "//p' core/src/main/java/io/bitsquare/app/BitsquareAppMain.java )
-# remove trailing ";
-fullVersion="${fullVersion:0:${#fullVersion}-2}".$buildVersion
+# Extract the version numbers. 
+majorVersion=$( sed -n 's/^.*final int MAJOR_VERSION = //p' core/src/main/java/io/bitsquare/app/Version.java )
+minorVersion=$( sed -n 's/^.*final int MINOR_VERSION = //p' core/src/main/java/io/bitsquare/app/Version.java )
+# PatchVersion is used for ever increasing integer at UpdateFX. fullVersion contains major and minor version + patchVersion 
+patchVersion=$( sed -n 's/^.*final int PATCH_VERSION = //p' core/src/main/java/io/bitsquare/app/Version.java )
 
-echo buildVersion = $buildVersion
+# remove trailing;
+majorVersion="${majorVersion:0:${#majorVersion}-1}"
+minorVersion="${minorVersion:0:${#minorVersion}-1}"
+patchVersion="${patchVersion:0:${#patchVersion}-1}"
+
+fullVersion=$( sed -n 's/^.*final String VERSION = "//p' core/src/main/java/io/bitsquare/app/Version.java )
+# remove trailing ";
+fullVersion=$majorVersion.$minorVersion.$patchVersion
+
+echo majorVersion = $majorVersion
+echo minorVersion = $minorVersion
+echo patchVersion = $patchVersion
 echo fullVersion = $fullVersion
 
 # Generate the plist from the template
-sed "s|JAR_NAME_STRING_GOES_HERE|$buildVersion.jar|" package/mac/Info.template.plist >package/mac/Info.plist
+sed "s|JAR_NAME_STRING_GOES_HERE|$patchVersion.jar|" package/mac/Info.template.plist >package/mac/Info.plist
 
 
 mvn clean package -DskipTests -Dmaven.javadoc.skip=true
-cp core/target/shaded.jar core/updatefx/builds/$buildVersion.jar
+cp gui/target/shaded.jar gui/updatefx/builds/$patchVersion.jar
 
-java -jar ./updatefx/updatefx-app-1.2.jar --url=http://bitsquare.io/updateFX/ core/updatefx
+java -jar ./updatefx/updatefx-app-1.2.jar --url=http://bitsquare.io/updateFX/ gui/updatefx
 
 $JAVA_HOME/bin/javapackager \
     -deploy \
@@ -35,9 +44,9 @@ $JAVA_HOME/bin/javapackager \
     -name Bitsquare \
     -title Bitsquare \
     -vendor Bitsquare \
-    -outdir core/deploy \
-    -srcfiles core/updatefx/builds/processed/$buildVersion.jar \
-    -appclass io.bitsquare.app.core.BitsquareAppMain \
+    -outdir gui/deploy \
+    -srcfiles gui/updatefx/builds/processed/$patchVersion.jar \
+    -appclass io.bitsquare.app.BitsquareAppMain \
     -outfile Bitsquare
     
 cd package/mac

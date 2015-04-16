@@ -1,9 +1,9 @@
 cd ..\..\
 
 :: setup dirs
-mkdir core\updatefx
-mkdir core\updatefx\builds
-mkdir core\updatefx\builds\processed
-mkdir core\deploy
+mkdir gui\updatefx
+mkdir gui\updatefx\builds
+mkdir gui\updatefx\builds\processed
+mkdir gui\deploy
 
 cd package\windows

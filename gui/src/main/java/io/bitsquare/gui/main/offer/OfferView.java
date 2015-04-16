@@ -53,6 +53,8 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private final Offer.Direction direction;
+    private Tab createOfferTab;
+    private Tab takeOfferTab;
 
     protected OfferView(ViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
@@ -153,14 +155,13 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             createOfferView = (CreateOfferView) view;
             createOfferView.initWithData(direction, amount, price);
             createOfferPane = ((CreateOfferView) view).getRoot();
-            final Tab tab = new Tab("Create offer");
+            createOfferTab = new Tab("Create offer");
             createOfferView.setCloseHandler(() -> {
-                if (tabPane.getTabs().size() == 2)
-                    tabPane.getTabs().remove(1);
+                tabPane.getTabs().remove(createOfferTab);
             });
-            tab.setContent(createOfferPane);
-            tabPane.getTabs().add(tab);
-            tabPane.getSelectionModel().select(tab);
+            createOfferTab.setContent(createOfferPane);
+            tabPane.getTabs().add(createOfferTab);
+            tabPane.getSelectionModel().select(createOfferTab);
         }
         else if (viewClass == TakeOfferView.class && takeOfferView == null && offer != null) {
             view = viewLoader.load(viewClass);
@@ -169,14 +170,13 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             takeOfferView = (TakeOfferView) view;
             takeOfferView.initWithData(amount, offer);
             takeOfferPane = ((TakeOfferView) view).getRoot();
-            final Tab tab = new Tab("Take offer");
+            takeOfferTab = new Tab("Take offer");
             takeOfferView.setCloseHandler(() -> {
-                if (tabPane.getTabs().size() == 2)
-                    tabPane.getTabs().remove(1);
+                tabPane.getTabs().remove(takeOfferTab);
             });
-            tab.setContent(takeOfferPane);
-            tabPane.getTabs().add(tab);
-            tabPane.getSelectionModel().select(tab);
+            takeOfferTab.setContent(takeOfferPane);
+            tabPane.getTabs().add(takeOfferTab);
+            tabPane.getSelectionModel().select(takeOfferTab);
         }
     }
 

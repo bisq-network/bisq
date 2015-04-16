@@ -29,6 +29,7 @@ public enum BootstrapState {
     RELAY_STARTED,
     RELAY_SUCCEEDED,
     RELAY_FAILED,
+    BOOT_STRAP_SUCCEEDED,
     BOOT_STRAP_FAILED;
 
     private String message;

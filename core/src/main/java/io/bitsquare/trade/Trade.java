@@ -355,6 +355,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     }
 
     public void setLockTime(long lockTime) {
+        log.debug("lockTime " + lockTime);
         this.lockTime = lockTime;
     }
 

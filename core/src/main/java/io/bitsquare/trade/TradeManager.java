@@ -46,6 +46,7 @@ import io.bitsquare.trade.protocol.trade.messages.DepositTxInputsRequest;
 import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.states.BuyerTradeState;
+import io.bitsquare.trade.states.SellerTradeState;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.AddressFormatException;
@@ -215,7 +216,8 @@ public class TradeManager {
     private void setupDepositPublishedListener(Trade trade) {
         trade.processStateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("setupDepositPublishedListener state = " + newValue);
-            if (newValue == BuyerTradeState.ProcessState.DEPOSIT_PUBLISHED) {
+            if (newValue == BuyerTradeState.ProcessState.DEPOSIT_PUBLISHED ||
+                    newValue == SellerTradeState.ProcessState.DEPOSIT_PUBLISHED_MSG_RECEIVED) {
                 openOfferManager.closeOpenOffer(trade.getOffer());
                 trade.setTakeOfferDate(new Date());
             }

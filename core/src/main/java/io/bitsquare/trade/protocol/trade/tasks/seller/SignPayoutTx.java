@@ -42,6 +42,7 @@ public class SignPayoutTx extends TradeTask {
             Coin buyerPayoutAmount = sellerPayoutAmount.add(trade.getTradeAmount());
 
             long lockTime = processModel.getTradeWalletService().getLastBlockSeenHeight() + trade.getOffer().getFiatAccountType().lockTimeDelta;
+            log.debug("lockTime getLastBlockSeenHeight " + processModel.getTradeWalletService().getLastBlockSeenHeight());
             trade.setLockTime(lockTime);
 
             byte[] payoutTxSignature = processModel.getTradeWalletService().signPayoutTx(

@@ -259,9 +259,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             bootstrapIcon.setId(newValue);
             bootstrapIcon.setVisible(true);
             bootstrapIcon.setManaged(true);
-
-            bootstrapIndicator.setVisible(false);
-            bootstrapIndicator.setManaged(false);
+        });
+        model.bootstrapProgress.addListener((ov, oldValue, newValue) -> {
+            if ((double) newValue >= 1) {
+                bootstrapIndicator.setVisible(false);
+                bootstrapIndicator.setManaged(false);
+            }
         });
 
         HBox bootstrapBox = new HBox();

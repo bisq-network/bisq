@@ -263,6 +263,7 @@ public class BootstrappedPeerBuilder {
             public void operationComplete(BaseFuture future) throws Exception {
                 if (futureBootstrap.isSuccess()) {
                     log.trace("bootstrap complete");
+                    setState(BootstrapState.BOOT_STRAP_SUCCEEDED, "Bootstrap using relay was successful.");
                     settableFuture.set(peerDHT);
                 }
                 else {

@@ -24,8 +24,8 @@ public class Version {
     private static final Logger log = LoggerFactory.getLogger(Version.class);
 
     public static final int MAJOR_VERSION = 0;
-    public static final int MINOR_VERSION = 1;
-    public static final int PATCH_VERSION = 3; // Will be used by UpdatedFX
+    public static final int MINOR_VERSION = 2;
+    public static final int PATCH_VERSION = 1;
 
     public static final byte[] NETWORK_PROTOCOL_VERSION = new byte[]{0x01};
     public static final int LOCLA_DB_VERSION = 1;
