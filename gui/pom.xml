@@ -39,13 +39,6 @@
                     <include>**/*.css</include>
                 </includes>
             </resource>
-            <resource>
-                <filtering>false</filtering>
-                <directory>${basedir}/src/main/resources</directory>
-                <includes>
-                    <include>**/*.*</include>
-                </includes>
-            </resource>
         </resources>
 
         <plugins>

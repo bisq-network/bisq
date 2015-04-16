@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.settings.network;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.common.view.InitializableView;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.ClientNode;
 
 import javax.inject.Inject;
@@ -30,19 +31,19 @@ import javafx.scene.control.*;
 @FxmlView
 public class NetworkSettingsView extends InitializableView {
 
-    private final String bitcoinNetworkValue;
+    private final String bitcoinNetworkString;
     private final ClientNode clientNode;
 
     @FXML TextField bitcoinNetwork, connectionType, nodeAddress, bootstrapNodeAddress;
 
     @Inject
-    public NetworkSettingsView(BitcoinNetwork bitcoinNetwork, ClientNode clientNode) {
-        this.bitcoinNetworkValue = bitcoinNetwork.toString();
+    public NetworkSettingsView(BitcoinNetwork bitcoinNetwork, ClientNode clientNode, BSFormatter formatter) {
+        this.bitcoinNetworkString = formatter.formatBitcoinNetwork(bitcoinNetwork);
         this.clientNode = clientNode;
     }
 
     public void initialize() {
-        bitcoinNetwork.setText(bitcoinNetworkValue);
+        bitcoinNetwork.setText(bitcoinNetworkString);
         connectionType.setText(clientNode.getConnectionType().toString());
         nodeAddress.setText(clientNode.getAddress().toString());
         bootstrapNodeAddress.setText(clientNode.getBootstrapNodeAddress().toString());

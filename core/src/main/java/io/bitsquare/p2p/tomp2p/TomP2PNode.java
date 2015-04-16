@@ -19,9 +19,7 @@ package io.bitsquare.p2p.tomp2p;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.p2p.BootstrapState;
 import io.bitsquare.p2p.ClientNode;
-import io.bitsquare.p2p.ConnectionType;
 import io.bitsquare.p2p.Node;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -54,7 +52,7 @@ public class TomP2PNode implements ClientNode {
 
     private PeerDHT peerDHT;
     private BootstrappedPeerBuilder bootstrappedPeerBuilder;
-    private final Subject<BootstrapState, BootstrapState> bootstrapStateSubject;
+    private final Subject<BootstrappedPeerBuilder.State, BootstrappedPeerBuilder.State> bootstrapStateSubject;
     private final List<ResultHandler> resultHandlers = new CopyOnWriteArrayList<>();
 
 
@@ -80,10 +78,10 @@ public class TomP2PNode implements ClientNode {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Observable<BootstrapState> bootstrap(KeyPair keyPair) {
+    public Observable<BootstrappedPeerBuilder.State> bootstrap(KeyPair keyPair) {
         bootstrappedPeerBuilder.setKeyPair(keyPair);
 
-        bootstrappedPeerBuilder.getBootstrapState().addListener((ov, oldValue, newValue) -> {
+        bootstrappedPeerBuilder.getState().addListener((ov, oldValue, newValue) -> {
             log.debug("BootstrapState changed " + newValue);
             bootstrapStateSubject.onNext(newValue);
         });
@@ -118,20 +116,8 @@ public class TomP2PNode implements ClientNode {
     }
 
     @Override
-    public ConnectionType getConnectionType() {
-        BootstrapState bootstrapState = bootstrappedPeerBuilder.getBootstrapState().get();
-        switch (bootstrapState) {
-            case DISCOVERY_DIRECT_SUCCEEDED:
-                return ConnectionType.DIRECT;
-            case DISCOVERY_MANUAL_PORT_FORWARDING_SUCCEEDED:
-                return ConnectionType.MANUAL_PORT_FORWARDING;
-            case DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED:
-                return ConnectionType.AUTO_PORT_FORWARDING;
-            case RELAY_SUCCEEDED:
-                return ConnectionType.RELAY;
-            default:
-                throw new BitsquareException("Invalid bootstrap state: %s", bootstrapState);
-        }
+    public BootstrappedPeerBuilder.ConnectionType getConnectionType() {
+        return bootstrappedPeerBuilder.getConnectionType();
     }
 
     @Override

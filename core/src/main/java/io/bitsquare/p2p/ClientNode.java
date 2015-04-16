@@ -17,16 +17,18 @@
 
 package io.bitsquare.p2p;
 
+import io.bitsquare.p2p.tomp2p.BootstrappedPeerBuilder;
+
 import java.security.KeyPair;
 
 import rx.Observable;
 
 public interface ClientNode {
-    ConnectionType getConnectionType();
+    BootstrappedPeerBuilder.ConnectionType getConnectionType();
 
     Node getAddress();
 
     Node getBootstrapNodeAddress();
 
-    Observable<BootstrapState> bootstrap(KeyPair keyPair);
+    Observable<BootstrappedPeerBuilder.State> bootstrap(KeyPair keyPair);
 }

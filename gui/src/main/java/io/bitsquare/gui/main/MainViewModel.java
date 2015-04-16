@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main;
 
 import io.bitsquare.app.UpdateProcess;
+import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
@@ -27,8 +28,8 @@ import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.p2p.BaseP2PService;
-import io.bitsquare.p2p.BootstrapState;
 import io.bitsquare.p2p.ClientNode;
+import io.bitsquare.p2p.tomp2p.BootstrappedPeerBuilder;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOfferManager;
@@ -61,18 +62,22 @@ class MainViewModel implements ViewModel {
 
     // BTC network
     final StringProperty blockchainSyncInfo = new SimpleStringProperty("Initializing");
+    final StringProperty blockchainSyncInfoFooter = new SimpleStringProperty("Initializing");
     final DoubleProperty blockchainSyncProgress = new SimpleDoubleProperty(-1);
     final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
     final StringProperty blockchainSyncIconId = new SimpleStringProperty();
 
     // P2P network
-    final StringProperty bootstrapInfo = new SimpleStringProperty();
+    final StringProperty bootstrapInfo = new SimpleStringProperty("Connecting to P2P network...");
+    final StringProperty bootstrapInfoFooter = new SimpleStringProperty();
     final DoubleProperty bootstrapProgress = new SimpleDoubleProperty(-1);
     final StringProperty bootstrapErrorMsg = new SimpleStringProperty();
     final StringProperty bootstrapIconId = new SimpleStringProperty();
 
     // software update
     final StringProperty updateInfo = new SimpleStringProperty();
+    String version = "v." + Version.VERSION;
+
     final BooleanProperty showRestartButton = new SimpleBooleanProperty(false);
     final StringProperty updateIconId = new SimpleStringProperty();
 
@@ -110,7 +115,7 @@ class MainViewModel implements ViewModel {
         this.updateProcess = updateProcess;
         this.formatter = formatter;
 
-        bitcoinNetworkAsString = bitcoinNetwork.toString();
+        bitcoinNetworkAsString = formatter.formatBitcoinNetwork(bitcoinNetwork);
 
         updateProcess.state.addListener((observableValue, oldValue, newValue) -> applyUpdateState(newValue));
         applyUpdateState(updateProcess.state.get());
@@ -131,26 +136,22 @@ class MainViewModel implements ViewModel {
     public void initBackend() {
         Platform.runLater(updateProcess::init);
 
-        setBitcoinNetworkSyncProgress(-1);
-        walletService.getDownloadProgress().subscribe(
-                percentage -> Platform.runLater(() -> {
-                    if (percentage > 0)
-                        setBitcoinNetworkSyncProgress(percentage / 100.0);
-                }),
-                error -> log.error(error.toString()),
-                () -> Platform.runLater(() -> setBitcoinNetworkSyncProgress(1.0)));
+        walletService.downloadPercentageProperty().addListener((ov, oldValue, newValue) -> {
+            setBitcoinNetworkSyncProgress((double) newValue);
+        });
+        setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get());
 
         // Set executor for all P2PServices
         BaseP2PService.setUserThread(Platform::runLater);
 
-        Observable<BootstrapState> bootstrapStateAsObservable = clientNode.bootstrap(keyRing.getDhtSignatureKeyPair());
+        Observable<BootstrappedPeerBuilder.State> bootstrapStateAsObservable = clientNode.bootstrap(keyRing.getDhtSignatureKeyPair());
         bootstrapStateAsObservable.publish();
         bootstrapStateAsObservable.subscribe(
                 state -> Platform.runLater(() -> setBootstrapState(state)),
                 error -> Platform.runLater(() -> {
                     log.error(error.toString());
                     bootstrapErrorMsg.set(error.getMessage());
-                    bootstrapInfo.set("Connecting to the Bitsquare network failed.");
+                    bootstrapInfo.set("Connecting to the P2P network failed.");
                     bootstrapProgress.set(0);
 
                 }),
@@ -220,7 +221,7 @@ class MainViewModel implements ViewModel {
     private void applyUpdateState(UpdateProcess.State state) {
         switch (state) {
             case CHECK_FOR_UPDATES:
-                updateInfo.set("Checking for updates...");
+                updateInfo.set("Check for updates...");
                 updateIconId.set("image-update-in-progress");
                 break;
             case UPDATE_AVAILABLE:
@@ -229,30 +230,33 @@ class MainViewModel implements ViewModel {
                 showRestartButton.set(true);
                 break;
             case UP_TO_DATE:
-                updateInfo.set("Software is up to date.");
+                updateInfo.set("Software is up to date. Version: " + Version.VERSION);
                 updateIconId.set("image-update-up-to-date");
                 break;
             case FAILURE:
-                updateInfo.set(updateProcess.getErrorMessage());
+                log.error(updateProcess.getErrorMessage());
+                updateInfo.set("Check for updates failed. ");
                 updateIconId.set("image-update-failed");
                 break;
         }
     }
 
-    private void setBootstrapState(BootstrapState state) {
+    private void setBootstrapState(BootstrappedPeerBuilder.State state) {
         switch (state) {
             case DISCOVERY_DIRECT_SUCCEEDED:
                 bootstrapIconId.set("image-connection-direct");
+                bootstrapInfoFooter.set("Direct connection");
                 break;
             case DISCOVERY_MANUAL_PORT_FORWARDING_SUCCEEDED:
             case DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED:
                 bootstrapIconId.set("image-connection-nat");
+                bootstrapInfoFooter.set("Connected with port forwarding");
                 break;
             case RELAY_SUCCEEDED:
                 bootstrapIconId.set("image-connection-relay");
+                bootstrapInfoFooter.set("Connected with relay node");
                 break;
             default:
-                bootstrapIconId.set(null);
                 break;
         }
 
@@ -261,15 +265,13 @@ class MainViewModel implements ViewModel {
             case DISCOVERY_MANUAL_PORT_FORWARDING_SUCCEEDED:
             case DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED:
             case RELAY_SUCCEEDED:
-                bootstrapInfo.set("Bootstrapping to P2P network: " + state.getMessage());
+                bootstrapInfo.set(state.getMessage());
                 bootstrapProgress.set(-1);
                 break;
             case BOOT_STRAP_SUCCEEDED:
-                bootstrapInfo.set("Successfully connected to P2P network: " + state.getMessage());
                 bootstrapProgress.set(1);
                 break;
             default:
-                bootstrapInfo.set("Connecting to P2P network: " + state.getMessage());
                 bootstrapProgress.set(-1);
                 break;
         }
@@ -278,6 +280,7 @@ class MainViewModel implements ViewModel {
     private void setWalletServiceException(Throwable error) {
         setBitcoinNetworkSyncProgress(0);
         blockchainSyncInfo.set("Connecting to the bitcoin network failed.");
+        blockchainSyncInfoFooter.set("Connection failed.");
         if (error instanceof TimeoutException) {
             walletServiceErrorMsg.set("Please check your network connection.\n\n" +
                     "You must allow outgoing TCP connections to port 18333 for the bitcoin testnet.\n\n" +
@@ -332,9 +335,11 @@ class MainViewModel implements ViewModel {
         }
         else if (value > 0.0) {
             blockchainSyncInfo.set("Synchronizing blockchain: " + formatter.formatToPercent(value));
+            blockchainSyncInfoFooter.set("Synchronizing: " + formatter.formatToPercent(value));
         }
         else {
             blockchainSyncInfo.set("Connecting to the bitcoin network...");
+            blockchainSyncInfoFooter.set("Connecting...");
         }
     }
 

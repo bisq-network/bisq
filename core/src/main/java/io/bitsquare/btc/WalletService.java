@@ -66,6 +66,10 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+
 import org.jetbrains.annotations.NotNull;
 
 import org.slf4j.Logger;
@@ -87,8 +91,7 @@ public class WalletService {
     private final List<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArrayList<>();
     private final List<BalanceListener> balanceListeners = new CopyOnWriteArrayList<>();
 
-    private final ObservableDownloadListener downloadListener = new ObservableDownloadListener();
-    private final Observable<Double> downloadProgress = downloadListener.getObservable();
+    private final DownloadListener downloadListener = new DownloadListener();
     private final WalletEventListener walletEventListener = new BitsquareWalletEventListener();
 
     private RegTestHost regTestHost;
@@ -209,7 +212,6 @@ public class WalletService {
         walletAppKit.startAsync();
 
         return status.timeout(30, TimeUnit.SECONDS);
-        //return status.mergeWith(downloadProgress).timeout(30, TimeUnit.SECONDS);
     }
 
     private void initWallet() {
@@ -227,8 +229,8 @@ public class WalletService {
             walletAppKit.stopAsync();
     }
 
-    public Observable<Double> getDownloadProgress() {
-        return downloadProgress;
+    public ReadOnlyDoubleProperty downloadPercentageProperty() {
+        return downloadListener.percentageProperty();
     }
 
     public Wallet getWallet() {
@@ -536,24 +538,23 @@ public class WalletService {
     // Inner classes
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static class ObservableDownloadListener extends DownloadProgressTracker {
-
-        private final Subject<Double, Double> subject = BehaviorSubject.create(0d);
+    private static class DownloadListener extends DownloadProgressTracker {
+        private final DoubleProperty percentage = new SimpleDoubleProperty(-1);
 
         @Override
         protected void progress(double percentage, int blocksLeft, Date date) {
             super.progress(percentage, blocksLeft, date);
-            subject.onNext(percentage);
+            Threading.USER_THREAD.execute(() -> this.percentage.set(percentage / 100d));
         }
 
         @Override
         protected void doneDownload() {
             super.doneDownload();
-            subject.onCompleted();
+            Threading.USER_THREAD.execute(() -> this.percentage.set(1));
         }
 
-        public Observable<Double> getObservable() {
-            return subject.asObservable();
+        public ReadOnlyDoubleProperty percentageProperty() {
+            return percentage;
         }
     }
 

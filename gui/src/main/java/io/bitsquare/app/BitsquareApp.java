@@ -91,7 +91,7 @@ public class BitsquareApp extends Application {
             CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
             View view = viewLoader.load(MainView.class);
 
-            scene = new Scene((Parent) view.getRoot(), 1000, 620);
+            scene = new Scene((Parent) view.getRoot(), 1000, 650);
             scene.getStylesheets().setAll(
                     "/io/bitsquare/gui/bitsquare.css",
                     "/io/bitsquare/gui/images.css");

@@ -56,6 +56,21 @@ lower gradient color on tab: dddddd
     -fx-background-color: #f4f4f4;
 }
 
+#footer-pane {
+    -fx-background-color: #ddd;
+    -fx-font-size: 12;
+    -fx-text-fill: #333;
+}
+
+#footer-pane-line {
+    -fx-background: #bbb;
+}
+
+#footer-bitcoin-network-label {
+    -fx-text-fill: -fx-accent;
+    -fx-font-size: 12;
+}
+
 #headline-label {
     -fx-font-weight: bold;
     -fx-font-size: 18;

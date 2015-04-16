@@ -17,7 +17,6 @@
 
 package io.bitsquare.p2p.tomp2p;
 
-import io.bitsquare.p2p.BootstrapState;
 import io.bitsquare.p2p.Node;
 
 import com.google.common.util.concurrent.SettableFuture;
@@ -34,6 +33,7 @@ import java.security.KeyPair;
 import javax.inject.Inject;
 
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import net.tomp2p.connection.Bindings;
@@ -76,6 +76,40 @@ public class BootstrappedPeerBuilder {
     static final String NETWORK_INTERFACE_UNSPECIFIED = "<unspecified>";
     static final String USE_MANUAL_PORT_FORWARDING_KEY = "node.useManualPortForwarding";
 
+    public enum ConnectionType {
+        UNDEFINED, DIRECT, MANUAL_PORT_FORWARDING, AUTO_PORT_FORWARDING, RELAY
+    }
+
+    public enum State {
+        UNDEFINED,
+        PEER_CREATION_FAILED,
+        DISCOVERY_STARTED,
+        DISCOVERY_DIRECT_SUCCEEDED,
+        DISCOVERY_MANUAL_PORT_FORWARDING_SUCCEEDED,
+        DISCOVERY_FAILED,
+        DISCOVERY_AUTO_PORT_FORWARDING_STARTED,
+        DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED,
+        DISCOVERY_AUTO_PORT_FORWARDING_FAILED,
+        RELAY_STARTED,
+        RELAY_SUCCEEDED,
+        RELAY_FAILED,
+        BOOT_STRAP_SUCCEEDED,
+        BOOT_STRAP_FAILED;
+
+        private String message;
+
+        State() {
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+    }
+
     private KeyPair keyPair;
     private final int port;
     private final boolean useManualPortForwarding;
@@ -84,7 +118,8 @@ public class BootstrappedPeerBuilder {
 
     private final SettableFuture<PeerDHT> settableFuture = SettableFuture.create();
 
-    private final ObjectProperty<BootstrapState> bootstrapState = new SimpleObjectProperty<>();
+    private final ObjectProperty<State> state = new SimpleObjectProperty<>(State.UNDEFINED);
+    private final ObjectProperty<ConnectionType> connectionType = new SimpleObjectProperty<>(ConnectionType.UNDEFINED);
 
     private Peer peer;
     private PeerDHT peerDHT;
@@ -175,7 +210,7 @@ public class BootstrappedPeerBuilder {
 
             discoverExternalAddress();
         } catch (IOException e) {
-            handleError(BootstrapState.PEER_CREATION_FAILED, "Cannot create a peer with port: " +
+            handleError(State.PEER_CREATION_FAILED, "Cannot create a peer with port: " +
                     port + ". Exception: " + e);
         }
 
@@ -202,7 +237,7 @@ public class BootstrappedPeerBuilder {
 
     private void discoverExternalAddress() {
         FutureDiscover futureDiscover = peer.discover().peerAddress(getBootstrapAddress()).start();
-        setState(BootstrapState.DISCOVERY_STARTED, "Starting discovery...");
+        setState(State.DISCOVERY_STARTED);
         PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
         FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
         FutureRelayNAT futureRelayNAT = peerNAT.startRelay(new TCPRelayClientConfig(), futureDiscover, futureNAT);
@@ -212,32 +247,35 @@ public class BootstrappedPeerBuilder {
             public void operationComplete(BaseFuture futureRelayNAT) throws Exception {
                 if (futureDiscover.isSuccess()) {
                     if (useManualPortForwarding) {
-                        setState(BootstrapState.DISCOVERY_MANUAL_PORT_FORWARDING_SUCCEEDED,
-                                "Now visible to the Bitsquare network (with manual port forwarding).");
+                        setState(State.DISCOVERY_MANUAL_PORT_FORWARDING_SUCCEEDED,
+                                "NAT traversal successful with manual port forwarding.");
+                        setConnectionType(ConnectionType.MANUAL_PORT_FORWARDING);
                         bootstrap();
                     }
                     else {
-                        setState(BootstrapState.DISCOVERY_DIRECT_SUCCEEDED, "Now visible to the Bitsquare network.");
+                        setState(State.DISCOVERY_DIRECT_SUCCEEDED, "Visible to the network. No NAT traversal needed.");
+                        setConnectionType(ConnectionType.DIRECT);
                         bootstrap();
                     }
                 }
                 else {
-                    setState(BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_STARTED,
-                            "Configuring automatic port forwarding");
+                    setState(State.DISCOVERY_AUTO_PORT_FORWARDING_STARTED);
                     if (futureNAT.isSuccess()) {
-                        setState(BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED,
-                                "Now visible to the Bitsquare network (with automatic port forwarding).");
+                        setState(State.DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED,
+                                "NAT traversal successful with automatic port forwarding.");
+                        setConnectionType(ConnectionType.AUTO_PORT_FORWARDING);
                         bootstrap();
                     }
                     else {
                         if (futureRelayNAT.isSuccess()) {
                             // relay mode succeeded
-                            setState(BootstrapState.RELAY_SUCCEEDED, "Bootstrap using relay was successful.");
+                            setState(State.RELAY_SUCCEEDED, "NAT traversal not successful. Using relay mode.");
+                            setConnectionType(ConnectionType.RELAY);
                             bootstrap();
                         }
                         else {
                             // All attempts failed. Give up...
-                            handleError(BootstrapState.RELAY_FAILED, "Bootstrap using relay has failed " +
+                            handleError(State.RELAY_FAILED, "NAT traversal using relay mode failed " +
                                     futureRelayNAT.failedReason());
                         }
                     }
@@ -246,7 +284,7 @@ public class BootstrappedPeerBuilder {
 
             @Override
             public void exceptionCaught(Throwable t) throws Exception {
-                handleError(BootstrapState.RELAY_FAILED, "Exception at bootstrap: " + t.getMessage());
+                handleError(State.RELAY_FAILED, "Exception at bootstrap: " + t.getMessage());
             }
         });
     }
@@ -263,18 +301,18 @@ public class BootstrappedPeerBuilder {
             public void operationComplete(BaseFuture future) throws Exception {
                 if (futureBootstrap.isSuccess()) {
                     log.trace("bootstrap complete");
-                    setState(BootstrapState.BOOT_STRAP_SUCCEEDED, "Bootstrap using relay was successful.");
+                    setState(State.BOOT_STRAP_SUCCEEDED, "Bootstrap was successful.");
                     settableFuture.set(peerDHT);
                 }
                 else {
-                    handleError(BootstrapState.BOOT_STRAP_FAILED, "Bootstrapping failed. " +
+                    handleError(State.BOOT_STRAP_FAILED, "Bootstrap failed. " +
                             futureBootstrap.failedReason());
                 }
             }
 
             @Override
             public void exceptionCaught(Throwable t) throws Exception {
-                handleError(BootstrapState.BOOT_STRAP_FAILED, "Exception at bootstrap: " + t.getMessage());
+                handleError(State.BOOT_STRAP_FAILED, "Exception at bootstrap: " + t.getMessage());
             }
         });
     }
@@ -295,25 +333,41 @@ public class BootstrappedPeerBuilder {
         return bootstrapNode;
     }
 
-    public ObjectProperty<BootstrapState> getBootstrapState() {
-        return bootstrapState;
+    public ConnectionType getConnectionType() {
+        return connectionType.get();
     }
 
-    private void setState(BootstrapState bootstrapState, String message) {
-        setState(bootstrapState, message, true);
+    public ReadOnlyObjectProperty<ConnectionType> connectionTypeProperty() {
+        return connectionType;
     }
 
-    private void setState(BootstrapState bootstrapState, String message, boolean isSuccess) {
+    private void setConnectionType(ConnectionType discoveryState) {
+        this.connectionType.set(discoveryState);
+    }
+
+    public ObjectProperty<State> getState() {
+        return state;
+    }
+
+    private void setState(State state) {
+        setState(state, "", true);
+    }
+
+    private void setState(State state, String message) {
+        setState(state, message, true);
+    }
+
+    private void setState(State state, String message, boolean isSuccess) {
         if (isSuccess)
             log.info(message);
         else
             log.error(message);
 
-        bootstrapState.setMessage(message);
-        this.bootstrapState.set(bootstrapState);
+        state.setMessage(message);
+        this.state.set(state);
     }
 
-    private void handleError(BootstrapState state, String errorMessage) {
+    private void handleError(State state, String errorMessage) {
         setState(state, errorMessage, false);
         peerDHT.shutdown();
         settableFuture.setException(new Exception(errorMessage));

@@ -114,7 +114,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             setLeftAnchor(this, 0d);
             setRightAnchor(this, 0d);
             setTopAnchor(this, 60d);
-            setBottomAnchor(this, 25d);
+            setBottomAnchor(this, 10d);
         }};
 
         AnchorPane applicationContainer = new AnchorPane(leftNavPane, rightNavPane, contentContainer) {{
@@ -124,6 +124,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         BorderPane baseApplicationContainer = new BorderPane(applicationContainer) {{
             setId("base-content-container");
         }};
+        baseApplicationContainer.setBottom(createFooter());
 
         setupNotificationIcon(portfolioButtonHolder);
 
@@ -187,15 +188,84 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         });
     }
 
-    private VBox createSplashScreen() {
-        VBox vBox = new VBox();
-        vBox.setAlignment(Pos.CENTER);
-        vBox.setSpacing(0);
-        vBox.setId("splash");
+    private AnchorPane createFooter() {
+        // BTC
+        Label blockchainSyncLabel = new Label();
+        blockchainSyncLabel.setId("footer-pane");
+        blockchainSyncLabel.textProperty().bind(model.blockchainSyncInfoFooter);
+        model.walletServiceErrorMsg.addListener((ov, oldValue, newValue) -> {
+            blockchainSyncLabel.setId("splash-error-state-msg");
+            Popups.openErrorPopup("Error", "Connecting to the bitcoin network failed. \n\nReason: " +
+                    newValue);
+        });
 
-        ImageView logo = new ImageView();
-        logo.setId("image-splash-logo");
+        ProgressBar blockchainSyncIndicator = new ProgressBar(-1);
+        blockchainSyncIndicator.setPrefWidth(120);
+        blockchainSyncIndicator.setMaxHeight(10);
+        blockchainSyncIndicator.progressProperty().bind(model.blockchainSyncProgress);
 
+        Label bitcoinNetworkLabel = new Label();
+        bitcoinNetworkLabel.setId("footer-bitcoin-network-label");
+        bitcoinNetworkLabel.setText(model.bitcoinNetworkAsString);
+
+        model.blockchainSyncProgress.addListener((ov, oldValue, newValue) -> {
+            if ((double) newValue >= 1) {
+                blockchainSyncIndicator.setVisible(false);
+                blockchainSyncIndicator.setManaged(false);
+                blockchainSyncLabel.setVisible(false);
+                blockchainSyncLabel.setManaged(false);
+            }
+        });
+
+        HBox blockchainSyncBox = new HBox();
+        blockchainSyncBox.setSpacing(10);
+        blockchainSyncBox.setAlignment(Pos.CENTER);
+        blockchainSyncBox.getChildren().addAll(blockchainSyncLabel, blockchainSyncIndicator, bitcoinNetworkLabel);
+        setLeftAnchor(blockchainSyncBox, 20d);
+        setBottomAnchor(blockchainSyncBox, 7d);
+
+        // version
+        Label versionLabel = new Label();
+        versionLabel.setId("footer-pane");
+        versionLabel.setTextAlignment(TextAlignment.CENTER);
+        versionLabel.setAlignment(Pos.BASELINE_CENTER);
+        versionLabel.setText(model.version);
+        root.widthProperty().addListener((ov, oldValue, newValue) -> {
+            versionLabel.setLayoutX(((double) newValue - versionLabel.getWidth()) / 2);
+        });
+        setBottomAnchor(versionLabel, 7d);
+
+
+        // P2P
+        Label bootstrapLabel = new Label();
+        bootstrapLabel.setId("footer-pane");
+        setRightAnchor(bootstrapLabel, 60d);
+        setBottomAnchor(bootstrapLabel, 7d);
+        bootstrapLabel.textProperty().bind(model.bootstrapInfoFooter);
+
+        ImageView bootstrapIcon = new ImageView();
+        setRightAnchor(bootstrapIcon, 20d);
+        setBottomAnchor(bootstrapIcon, 9d);
+        bootstrapIcon.idProperty().bind(model.bootstrapIconId);
+
+        // line
+        Separator separator = new Separator();
+        separator.setId("footer-pane-line");
+        separator.setPrefHeight(1);
+        setLeftAnchor(separator, 0d);
+        setRightAnchor(separator, 0d);
+        setTopAnchor(separator, 0d);
+
+        AnchorPane footerContainer = new AnchorPane(separator, blockchainSyncBox, versionLabel, bootstrapLabel, bootstrapIcon) {{
+            setId("footer-pane");
+            setMinHeight(30);
+            setMaxHeight(30);
+        }};
+
+        return footerContainer;
+    }
+
+    private HBox createBitcoinInfoBox() {
         Label blockchainSyncLabel = new Label();
         blockchainSyncLabel.textProperty().bind(model.blockchainSyncInfo);
         model.walletServiceErrorMsg.addListener((ov, oldValue, newValue) -> {
@@ -232,7 +302,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         blockchainSyncBox.setPrefHeight(50);
         blockchainSyncBox.getChildren().addAll(blockchainSyncLabel, blockchainSyncIndicator,
                 blockchainSyncIcon, bitcoinNetworkLabel);
+        return blockchainSyncBox;
+    }
 
+    private HBox createP2PNetworkBox() {
         Label bootstrapStateLabel = new Label();
         bootstrapStateLabel.setWrapText(true);
         bootstrapStateLabel.setMaxWidth(500);
@@ -272,8 +345,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         bootstrapBox.setAlignment(Pos.CENTER);
         bootstrapBox.setPrefHeight(50);
         bootstrapBox.getChildren().addAll(bootstrapStateLabel, bootstrapIndicator, bootstrapIcon);
+        return bootstrapBox;
+    }
 
-        // software update
+    private HBox createUpdateBox() {
         Label updateInfoLabel = new Label();
         updateInfoLabel.setTextAlignment(TextAlignment.RIGHT);
         updateInfoLabel.textProperty().bind(model.updateInfo);
@@ -297,8 +372,121 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         updateBox.setAlignment(Pos.CENTER);
         updateBox.setPrefHeight(20);
         updateBox.getChildren().addAll(updateInfoLabel, restartButton, updateIcon);
+        return updateBox;
+    }
 
-        vBox.getChildren().addAll(logo, blockchainSyncBox, bootstrapBox, updateBox);
+    private VBox createSplashScreen() {
+        VBox vBox = new VBox();
+        vBox.setAlignment(Pos.CENTER);
+        vBox.setSpacing(0);
+        vBox.setId("splash");
+
+        ImageView logo = new ImageView();
+        logo.setId("image-splash-logo");
+
+        /*Label blockchainSyncLabel = new Label();
+        blockchainSyncLabel.textProperty().bind(model.blockchainSyncInfo);
+        model.walletServiceErrorMsg.addListener((ov, oldValue, newValue) -> {
+            blockchainSyncLabel.setId("splash-error-state-msg");
+            Popups.openErrorPopup("Error", "Connecting to the bitcoin network failed. \n\nReason: " +
+                    newValue);
+        });
+
+        ProgressBar blockchainSyncIndicator = new ProgressBar(-1);
+        blockchainSyncIndicator.setPrefWidth(120);
+        blockchainSyncIndicator.progressProperty().bind(model.blockchainSyncProgress);
+
+        ImageView blockchainSyncIcon = new ImageView();
+        blockchainSyncIcon.setVisible(false);
+        blockchainSyncIcon.setManaged(false);
+
+        model.blockchainSyncIconId.addListener((ov, oldValue, newValue) -> {
+            blockchainSyncIcon.setId(newValue);
+            blockchainSyncIcon.setVisible(true);
+            blockchainSyncIcon.setManaged(true);
+
+            blockchainSyncIndicator.setVisible(false);
+            blockchainSyncIndicator.setManaged(false);
+        });
+
+        Label bitcoinNetworkLabel = new Label();
+        bitcoinNetworkLabel.setText(model.bitcoinNetworkAsString);
+        bitcoinNetworkLabel.setId("splash-bitcoin-network-label");
+
+        HBox blockchainSyncBox = new HBox();
+        blockchainSyncBox.setSpacing(10);
+        blockchainSyncBox.setAlignment(Pos.CENTER);
+        blockchainSyncBox.setPadding(new Insets(40, 0, 0, 0));
+        blockchainSyncBox.setPrefHeight(50);
+        blockchainSyncBox.getChildren().addAll(blockchainSyncLabel, blockchainSyncIndicator,
+                blockchainSyncIcon, bitcoinNetworkLabel);*/
+
+       /* Label bootstrapStateLabel = new Label();
+        bootstrapStateLabel.setWrapText(true);
+        bootstrapStateLabel.setMaxWidth(500);
+        bootstrapStateLabel.setTextAlignment(TextAlignment.CENTER);
+        bootstrapStateLabel.textProperty().bind(model.bootstrapInfo);
+
+        ProgressIndicator bootstrapIndicator = new ProgressIndicator();
+        bootstrapIndicator.setMaxSize(24, 24);
+        bootstrapIndicator.progressProperty().bind(model.bootstrapProgress);
+
+        model.bootstrapErrorMsg.addListener((ov, oldValue, newValue) -> {
+            bootstrapStateLabel.setId("splash-error-state-msg");
+            bootstrapIndicator.setVisible(false);
+
+            Popups.openErrorPopup("Error", "Connecting to the Bitsquare network failed. \n\nReason: " +
+                    model.bootstrapErrorMsg.get());
+        });
+
+        ImageView bootstrapIcon = new ImageView();
+        bootstrapIcon.setVisible(false);
+        bootstrapIcon.setManaged(false);
+
+        model.bootstrapIconId.addListener((ov, oldValue, newValue) -> {
+            bootstrapIcon.setId(newValue);
+            bootstrapIcon.setVisible(true);
+            bootstrapIcon.setManaged(true);
+        });
+        model.bootstrapProgress.addListener((ov, oldValue, newValue) -> {
+            if ((double) newValue >= 1) {
+                bootstrapIndicator.setVisible(false);
+                bootstrapIndicator.setManaged(false);
+            }
+        });
+
+        HBox bootstrapBox = new HBox();
+        bootstrapBox.setSpacing(10);
+        bootstrapBox.setAlignment(Pos.CENTER);
+        bootstrapBox.setPrefHeight(50);
+        bootstrapBox.getChildren().addAll(bootstrapStateLabel, bootstrapIndicator, bootstrapIcon);*/
+
+        // software update
+       /* Label updateInfoLabel = new Label();
+        updateInfoLabel.setTextAlignment(TextAlignment.RIGHT);
+        updateInfoLabel.textProperty().bind(model.updateInfo);
+
+        Button restartButton = new Button("Restart");
+        restartButton.setDefaultButton(true);
+        restartButton.visibleProperty().bind(model.showRestartButton);
+        restartButton.managedProperty().bind(model.showRestartButton);
+        restartButton.setOnAction(e -> model.restart());
+
+        ImageView updateIcon = new ImageView();
+        updateIcon.setId(model.updateIconId.get());
+        model.updateIconId.addListener((ov, oldValue, newValue) -> {
+            updateIcon.setId(newValue);
+            updateIcon.setVisible(true);
+            updateIcon.setManaged(true);
+        });
+
+        HBox updateBox = new HBox();
+        updateBox.setSpacing(10);
+        updateBox.setAlignment(Pos.CENTER);
+        updateBox.setPrefHeight(20);
+        updateBox.getChildren().addAll(updateInfoLabel, restartButton, updateIcon);*/
+
+        vBox.getChildren().addAll(logo, createBitcoinInfoBox(), createP2PNetworkBox(), createUpdateBox());
         return vBox;
     }
 

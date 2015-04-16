@@ -19,6 +19,7 @@ package io.bitsquare.gui.util;
 
 import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
@@ -362,5 +363,18 @@ public class BSFormatter {
         DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.SHORT, locale);
         Date unlockDate = new Date(new Date().getTime() + missingBlocks * 10 * 60 * 1000);
         return dateFormatter.format(unlockDate) + " " + timeFormatter.format(unlockDate);
+    }
+
+    public String formatBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {
+        switch (bitcoinNetwork) {
+            case MAINNET:
+                return "Mainnet";
+            case TESTNET:
+                return "Testnet";
+            case REGTEST:
+                return "Regtest";
+            default:
+                return "";
+        }
     }
 }

@@ -18,8 +18,8 @@
 package io.bitsquare.msg;
 
 import io.bitsquare.p2p.BootstrapNodes;
-import io.bitsquare.p2p.ConnectionType;
 import io.bitsquare.p2p.Node;
+import io.bitsquare.p2p.tomp2p.BootstrappedPeerBuilder;
 import io.bitsquare.util.Repeat;
 import io.bitsquare.util.RepeatRule;
 
@@ -84,11 +84,11 @@ public class TomP2PTests {
     private static final Logger log = LoggerFactory.getLogger(TomP2PTests.class);
 
     // If you want to test in one specific connection mode define it directly, otherwise use UNKNOWN
-    private static final ConnectionType FORCED_CONNECTION_TYPE = ConnectionType.RELAY;
+    private static final BootstrappedPeerBuilder.ConnectionType FORCED_CONNECTION_TYPE = BootstrappedPeerBuilder.ConnectionType.RELAY;
 
     // Typically you run the bootstrap node in localhost to test direct connection.
     // If you have a setup where you are not behind a router you can also use a WAN bootstrap node.
-    private static final Node BOOTSTRAP_NODE = (FORCED_CONNECTION_TYPE == ConnectionType.DIRECT) ?
+    private static final Node BOOTSTRAP_NODE = (FORCED_CONNECTION_TYPE == BootstrappedPeerBuilder.ConnectionType.DIRECT) ?
             BootstrapNodes.LOCALHOST : Node.at("digitalocean1.dev.bitsquare.io", "188.226.179.109", 7367);
 
     private static final PeerAddress BOOTSTRAP_NODE_ADDRESS;
@@ -111,7 +111,7 @@ public class TomP2PTests {
     private PeerDHT peer2DHT;
     private int client1Port;
     private int client2Port;
-    private ConnectionType resolvedConnectionType;
+    private BootstrappedPeerBuilder.ConnectionType resolvedConnectionType;
     public @Rule RepeatRule repeatRule = new RepeatRule();
 
     @Before
@@ -135,7 +135,7 @@ public class TomP2PTests {
     @Test
     @Repeat(STRESS_TEST_COUNT)
     public void bootstrapInUnknownMode() throws Exception {
-        if (FORCED_CONNECTION_TYPE == ConnectionType.UNKNOWN) {
+        if (FORCED_CONNECTION_TYPE == BootstrappedPeerBuilder.ConnectionType.UNDEFINED) {
             peer = bootstrapInUnknownMode(client1Port);
             assertNotNull(peer);
         }
@@ -144,7 +144,7 @@ public class TomP2PTests {
     @Test
     @Repeat(STRESS_TEST_COUNT)
     public void testBootstrapDirectConnection() throws Exception {
-        if (FORCED_CONNECTION_TYPE == ConnectionType.DIRECT) {
+        if (FORCED_CONNECTION_TYPE == BootstrappedPeerBuilder.ConnectionType.DIRECT) {
             peer = bootstrapDirectConnection(client1Port);
             assertNotNull(peer);
         }
@@ -153,8 +153,8 @@ public class TomP2PTests {
     @Test
     @Repeat(STRESS_TEST_COUNT)
     public void testBootstrapWithPortForwarding() throws Exception {
-        if (FORCED_CONNECTION_TYPE == ConnectionType.AUTO_PORT_FORWARDING ||
-                FORCED_CONNECTION_TYPE == ConnectionType.MANUAL_PORT_FORWARDING) {
+        if (FORCED_CONNECTION_TYPE == BootstrappedPeerBuilder.ConnectionType.AUTO_PORT_FORWARDING ||
+                FORCED_CONNECTION_TYPE == BootstrappedPeerBuilder.ConnectionType.MANUAL_PORT_FORWARDING) {
             peer = bootstrapWithPortForwarding(client2Port);
             assertNotNull(peer);
         }
@@ -163,7 +163,7 @@ public class TomP2PTests {
     @Test
     @Repeat(STRESS_TEST_COUNT)
     public void testBootstrapInRelayMode() throws Exception {
-        if (FORCED_CONNECTION_TYPE == ConnectionType.RELAY) {
+        if (FORCED_CONNECTION_TYPE == BootstrappedPeerBuilder.ConnectionType.RELAY) {
             peer = bootstrapInRelayMode(client1Port);
             assertNotNull(peer);
         }
@@ -498,7 +498,8 @@ public class TomP2PTests {
     @Test
     @Repeat(STRESS_TEST_COUNT)
     public void testSendDirectBetweenLocalPeers() throws Exception {
-        if (FORCED_CONNECTION_TYPE == ConnectionType.DIRECT || resolvedConnectionType == ConnectionType.DIRECT) {
+        if (FORCED_CONNECTION_TYPE == BootstrappedPeerBuilder.ConnectionType.DIRECT || resolvedConnectionType == BootstrappedPeerBuilder.ConnectionType
+                .DIRECT) {
             peer1DHT = getDHTPeer(client1Port);
             peer2DHT = getDHTPeer(client2Port);
 
@@ -594,8 +595,8 @@ public class TomP2PTests {
         Number160 peerId = Number160.createHash(UUID.randomUUID().toString());
         Peer peer = null;
         try {
-            if (FORCED_CONNECTION_TYPE == ConnectionType.MANUAL_PORT_FORWARDING ||
-                    resolvedConnectionType == ConnectionType.MANUAL_PORT_FORWARDING) {
+            if (FORCED_CONNECTION_TYPE == BootstrappedPeerBuilder.ConnectionType.MANUAL_PORT_FORWARDING ||
+                    resolvedConnectionType == BootstrappedPeerBuilder.ConnectionType.MANUAL_PORT_FORWARDING) {
                 peer = new PeerBuilder(peerId).bindings(getBindings())
                         .behindFirewall()
                         .tcpPortForwarding(clientPort)
@@ -700,22 +701,22 @@ public class TomP2PTests {
     }
 
     private Peer bootstrapInUnknownMode(int clientPort) {
-        resolvedConnectionType = ConnectionType.DIRECT;
+        resolvedConnectionType = BootstrappedPeerBuilder.ConnectionType.DIRECT;
         Peer peer = bootstrapDirectConnection(clientPort);
         if (peer != null)
             return peer;
 
-        resolvedConnectionType = ConnectionType.MANUAL_PORT_FORWARDING;
+        resolvedConnectionType = BootstrappedPeerBuilder.ConnectionType.MANUAL_PORT_FORWARDING;
         peer = bootstrapWithPortForwarding(clientPort);
         if (peer != null)
             return peer;
 
-        resolvedConnectionType = ConnectionType.AUTO_PORT_FORWARDING;
+        resolvedConnectionType = BootstrappedPeerBuilder.ConnectionType.AUTO_PORT_FORWARDING;
         peer = bootstrapWithPortForwarding(clientPort);
         if (peer != null)
             return peer;
 
-        resolvedConnectionType = ConnectionType.RELAY;
+        resolvedConnectionType = BootstrappedPeerBuilder.ConnectionType.RELAY;
         peer = bootstrapInRelayMode(clientPort);
         if (peer != null)
             return peer;
@@ -728,13 +729,13 @@ public class TomP2PTests {
 
     private PeerDHT getDHTPeer(int clientPort) {
         Peer peer;
-        if (FORCED_CONNECTION_TYPE == ConnectionType.DIRECT) {
+        if (FORCED_CONNECTION_TYPE == BootstrappedPeerBuilder.ConnectionType.DIRECT) {
             peer = bootstrapDirectConnection(clientPort);
         }
-        else if (FORCED_CONNECTION_TYPE == ConnectionType.AUTO_PORT_FORWARDING) {
+        else if (FORCED_CONNECTION_TYPE == BootstrappedPeerBuilder.ConnectionType.AUTO_PORT_FORWARDING) {
             peer = bootstrapWithPortForwarding(clientPort);
         }
-        else if (FORCED_CONNECTION_TYPE == ConnectionType.RELAY) {
+        else if (FORCED_CONNECTION_TYPE == BootstrappedPeerBuilder.ConnectionType.RELAY) {
             peer = bootstrapInRelayMode(clientPort);
         }
         else {
