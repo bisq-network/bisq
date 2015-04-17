@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui;
 
+import io.bitsquare.app.Version;
 import io.bitsquare.gui.common.view.View;
 import io.bitsquare.gui.common.view.ViewPath;
 import io.bitsquare.gui.main.MainView;
@@ -36,7 +37,7 @@ import org.slf4j.LoggerFactory;
 
 public class Navigation implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
     transient private static final Logger log = LoggerFactory.getLogger(Navigation.class);
 
     transient private static final ViewPath DEFAULT_VIEW_PATH = ViewPath.to(MainView.class, BuyOfferView.class);

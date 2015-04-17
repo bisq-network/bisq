@@ -48,7 +48,7 @@ public class CommitPayoutTx extends TradeTask {
                 trade.setProcessState(BuyerTradeState.ProcessState.PAYOUT_TX_COMMITTED);
             else if (trade instanceof SellerTrade)
                 trade.setProcessState(SellerTradeState.ProcessState.PAYOUT_TX_COMMITTED);
-            
+
             complete();
         } catch (Throwable t) {
             t.printStackTrace();

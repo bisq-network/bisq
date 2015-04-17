@@ -17,6 +17,8 @@
 
 package io.bitsquare.btc;
 
+import io.bitsquare.app.Version;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.crypto.DeterministicKey;
@@ -31,9 +33,9 @@ import org.jetbrains.annotations.NotNull;
  */
 public class AddressEntry implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    // that will be restored from the wallet at deserialisation
+    // that will be restored from the wallet at deserialization
     private transient DeterministicKey keyPair;
 
     private final String offerId;

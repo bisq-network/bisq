@@ -55,6 +55,16 @@ public class Storage<T extends Serializable> {
     private static final Logger log = LoggerFactory.getLogger(Storage.class);
     public static final String DIR_KEY = "storage.dir";
 
+    private static DataBaseCorruptionHandler databaseCorruptionHandler;
+
+    public static void setDatabaseCorruptionHandler(DataBaseCorruptionHandler databaseCorruptionHandler) {
+        Storage.databaseCorruptionHandler = databaseCorruptionHandler;
+    }
+
+    public interface DataBaseCorruptionHandler {
+        void onFileCorrupted(String fileName);
+    }
+
     private final File dir;
     private FileManager<T> fileManager;
     private File storageFile;
@@ -120,7 +130,8 @@ public class Storage<T extends Serializable> {
                 log.info("Backup {} completed in {}msec", serializable.getClass().getSimpleName(), System.currentTimeMillis() - now);
 
                 return persistedObject;
-            } catch (InvalidClassException e) {
+            } catch (InvalidClassException | ClassCastException | ClassNotFoundException e) {
+                e.printStackTrace();
                 log.error("Version of persisted class has changed. We cannot read the persisted data anymore. We make a backup and remove the inconsistent " +
                         "file.");
                 try {
@@ -131,10 +142,11 @@ public class Storage<T extends Serializable> {
                     log.error(e1.getMessage());
                     // We swallow Exception if backup fails
                 }
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-                log.error(e.getMessage());
-                Throwables.propagate(e);
+                databaseCorruptionHandler.onFileCorrupted(storageFile.getName());
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
+                log.error(throwable.getMessage());
+                Throwables.propagate(throwable);
             }
         }
         return null;

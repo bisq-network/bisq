@@ -22,10 +22,10 @@ import io.bitsquare.gui.common.view.CachingViewLoader;
 import io.bitsquare.gui.common.view.View;
 import io.bitsquare.gui.common.view.ViewLoader;
 import io.bitsquare.gui.common.view.guice.InjectorViewFactory;
-import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.storage.Storage;
 import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.utils.Threading;
@@ -35,14 +35,20 @@ import com.google.inject.Injector;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.*;
 import javafx.scene.image.*;
 import javafx.scene.input.*;
+import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+
+import org.controlsfx.dialog.Dialogs;
 
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +66,8 @@ public class BitsquareApp extends Application {
     private Injector injector;
     private Stage primaryStage;
     private Scene scene;
+    private List<String> corruptedDatabaseFiles = new ArrayList<>();
+    private MainView mainView;
 
     public static void setEnvironment(Environment env) {
         BitsquareApp.env = env;
@@ -68,6 +76,15 @@ public class BitsquareApp extends Application {
     @Override
     public void start(Stage primaryStage) throws IOException {
         this.primaryStage = primaryStage;
+
+        // setup UncaughtExceptionHandler
+        Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
+            // Might come from another thread 
+            Platform.runLater(() -> showErrorPopup(throwable, true));
+        };
+        Thread.setDefaultUncaughtExceptionHandler(handler);
+        Thread.currentThread().setUncaughtExceptionHandler(handler);
+
         try {
             log.trace("BitsquareApp.start");
 
@@ -80,6 +97,12 @@ public class BitsquareApp extends Application {
                     URI.create("http://188.226.179.109/crashfx/upload"));*/
             // Server not setup yet, so we use client side only support
 
+            Storage.setDatabaseCorruptionHandler((String fileName) -> {
+                corruptedDatabaseFiles.add(fileName);
+                if (mainView != null)
+                    mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
+            });
+
             // Guice
             bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
             injector = Guice.createInjector(bitsquareAppModule);
@@ -87,10 +110,11 @@ public class BitsquareApp extends Application {
 
             // load the main view and create the main scene
             CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
-            MainView view = (MainView) viewLoader.load(MainView.class);
-            view.setExitHandler(this::stop);
+            mainView = (MainView) viewLoader.load(MainView.class);
+            mainView.setExitHandler(this::stop);
+            mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
 
-            scene = new Scene(view.getRoot(), 1000, 650);
+            scene = new Scene(mainView.getRoot(), 1000, 650);
             scene.getStylesheets().setAll(
                     "/io/bitsquare/gui/bitsquare.css",
                     "/io/bitsquare/gui/images.css");
@@ -135,8 +159,37 @@ public class BitsquareApp extends Application {
 
             //TODO just temp.
             //showDebugWindow();
-        } catch (Throwable t) {
-            Popups.openExceptionPopup(t);
+        } catch (Throwable throwable) {
+            showErrorPopup(throwable, true);
+        }
+    }
+
+    private void showErrorPopup(Throwable throwable, boolean doShutDown) {
+        if (scene == null) {
+            scene = new Scene(new StackPane(), 1000, 650);
+            primaryStage.setScene(scene);
+            primaryStage.show();
+        }
+        try {
+            throwable.printStackTrace();
+            Dialogs.create()
+                    .owner(primaryStage)
+                    .title("")
+                    .message("")
+                    .masthead("")
+                    .showException(throwable);
+            if (doShutDown)
+                stop();
+        } catch (Throwable throwable2) {
+            // If printStackTrace cause a further exception we don't pass the throwable to the Popup.
+            Dialogs.create()
+                    .owner(primaryStage)
+                    .title("Error")
+                    .message(throwable.toString())
+                    .masthead("A fatal exception occurred at startup.")
+                    .showError();
+            if (doShutDown)
+                stop();
         }
     }
 

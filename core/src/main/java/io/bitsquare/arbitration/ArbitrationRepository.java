@@ -17,6 +17,7 @@
 
 package io.bitsquare.arbitration;
 
+import io.bitsquare.app.Version;
 import io.bitsquare.crypto.Util;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.storage.Storage;
@@ -47,7 +48,7 @@ import org.slf4j.LoggerFactory;
 
 public class ArbitrationRepository implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
     transient private static final Logger log = LoggerFactory.getLogger(ArbitrationRepository.class);
 
     transient private final ArbitratorService arbitratorService;
@@ -63,7 +64,6 @@ public class ArbitrationRepository implements Serializable {
     public ArbitrationRepository(Storage<ArbitrationRepository> storage,
                                  Storage<Arbitrator> arbitratorStorage,
                                  ArbitratorService arbitratorService) throws InvalidKeySpecException, NoSuchAlgorithmException {
-        Storage<ArbitrationRepository> storage1 = storage;
         this.arbitratorService = arbitratorService;
 
         byte[] walletPubKey = Utils.HEX.decode("03a418bf0cb60a35ce217c7f80a2db08a4f5efbe56a0e7602fbc392dea6b63f840");

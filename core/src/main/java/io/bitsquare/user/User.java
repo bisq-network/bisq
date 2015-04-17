@@ -17,9 +17,12 @@
 
 package io.bitsquare.user;
 
+import io.bitsquare.app.Version;
 import io.bitsquare.fiat.FiatAccount;
 import io.bitsquare.storage.Storage;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 import java.security.NoSuchAlgorithmException;
@@ -46,7 +49,7 @@ import org.slf4j.LoggerFactory;
  */
 public class User implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
     transient private static final Logger log = LoggerFactory.getLogger(User.class);
 
@@ -56,6 +59,7 @@ public class User implements Serializable {
     // Persisted fields
     private String accountID;
     private List<FiatAccount> fiatAccounts = new ArrayList<>();
+
     private FiatAccount currentFiatAccount;
 
     // Observable wrappers
@@ -91,6 +95,12 @@ public class User implements Serializable {
     // for unit tests
     public User() {
         this.storage = null;
+    }
+
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        log.trace("Created from serialized form.");
     }
 
 

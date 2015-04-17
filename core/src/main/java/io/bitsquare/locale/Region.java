@@ -17,6 +17,8 @@
 
 package io.bitsquare.locale;
 
+import io.bitsquare.app.Version;
+
 import java.io.Serializable;
 
 import javax.annotation.concurrent.Immutable;
@@ -24,7 +26,7 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 public class Region implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     public final String code;
     public final String name;

@@ -17,6 +17,7 @@
 
 package io.bitsquare.btc;
 
+import io.bitsquare.app.Version;
 import io.bitsquare.storage.Storage;
 
 import org.bitcoinj.core.Wallet;
@@ -33,7 +34,7 @@ import org.slf4j.LoggerFactory;
 
 public class AddressEntryList extends ArrayList<AddressEntry> implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
     transient private static final Logger log = LoggerFactory.getLogger(AddressEntryList.class);
 
     final transient private Storage<AddressEntryList> storage;

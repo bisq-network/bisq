@@ -64,7 +64,7 @@ public class TomP2PNode implements ClientNode {
     private final Subject<BootstrappedPeerBuilder.State, BootstrappedPeerBuilder.State> bootstrapStateSubject;
     private final List<ResultHandler> resultHandlers = new CopyOnWriteArrayList<>();
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor

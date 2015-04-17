@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade;
 
+import io.bitsquare.app.Version;
 import io.bitsquare.crypto.PubKeyRing;
 import io.bitsquare.fiat.FiatAccount;
 
@@ -34,7 +35,7 @@ import org.slf4j.LoggerFactory;
 
 public class TradingPeer implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
     transient private static final Logger log = LoggerFactory.getLogger(TradingPeer.class);
 
@@ -79,7 +80,7 @@ public class TradingPeer implements Serializable {
     public void setAccountId(String accountId) {
         this.accountId = accountId;
     }
-    
+
     public byte[] getTradeWalletPubKey() {
         return tradeWalletPubKey;
     }
@@ -87,7 +88,7 @@ public class TradingPeer implements Serializable {
     public void setTradeWalletPubKey(byte[] tradeWalletPubKey) {
         this.tradeWalletPubKey = tradeWalletPubKey;
     }
-    
+
     public FiatAccount getFiatAccount() {
         return fiatAccount;
     }

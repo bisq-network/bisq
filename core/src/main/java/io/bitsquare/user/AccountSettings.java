@@ -17,6 +17,7 @@
 
 package io.bitsquare.user;
 
+import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.locale.Country;
@@ -38,7 +39,7 @@ import javax.inject.Inject;
 
 public class AccountSettings implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
     final transient private Storage<AccountSettings> storage;
 

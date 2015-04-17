@@ -17,6 +17,7 @@
 
 package io.bitsquare.p2p.tomp2p;
 
+import io.bitsquare.app.Version;
 import io.bitsquare.p2p.Peer;
 
 import com.google.common.base.Objects;
@@ -35,7 +36,7 @@ import net.tomp2p.peers.PeerAddress;
 @Immutable
 public class TomP2PPeer implements Peer, Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     private final PeerAddress peerAddress;
 

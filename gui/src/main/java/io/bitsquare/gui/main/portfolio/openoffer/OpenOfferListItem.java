@@ -34,6 +34,7 @@ class OpenOfferListItem {
     public OpenOffer getOpenOffer() {
         return openOffer;
     }
+
     public Offer getOffer() {
         return openOffer.getOffer();
     }

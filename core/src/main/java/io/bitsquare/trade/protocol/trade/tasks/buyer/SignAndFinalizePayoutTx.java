@@ -41,7 +41,7 @@ public class SignAndFinalizePayoutTx extends TradeTask {
             assert trade.getSecurityDeposit() != null;
             Coin sellerPayoutAmount = trade.getSecurityDeposit();
             Coin buyerPayoutAmount = sellerPayoutAmount.add(trade.getTradeAmount());
-            
+
             Transaction transaction = processModel.getTradeWalletService().signAndFinalizePayoutTx(
                     trade.getDepositTx(),
                     processModel.tradingPeer.getSignature(),

@@ -196,9 +196,9 @@ public class ComponentBuilder {
     }
 
     public static ButtonWithProgressIndicatorAndLabel getAndAddButtonWithStatus(GridPane gridPane,
-                                                                                      int rowIndex,
-                                                                                      String ButtonTitle,
-                                                                                      EventHandler<ActionEvent> onActionHandler) {
+                                                                                int rowIndex,
+                                                                                String ButtonTitle,
+                                                                                EventHandler<ActionEvent> onActionHandler) {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         Button button = new Button(ButtonTitle);

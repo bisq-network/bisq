@@ -38,6 +38,8 @@ import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.util.Transitions;
 
+import java.util.List;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -80,6 +82,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Label blockchainSyncLabel;
     private Label updateInfoLabel;
     private Runnable exitHandler;
+    private List<String> persistedFilesCorrupted;
 
     @Inject
     public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, OverlayManager overlayManager, Transitions transitions,
@@ -170,6 +173,15 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
                 navigation.navigateToPreviousVisitedView();
 
+                if (!persistedFilesCorrupted.isEmpty()) {
+                    // show warning that some files has been corrupted
+                    Popups.openWarningPopup("Those data base file(s) are not compatible with our current code base." +
+                                    "\n" + persistedFilesCorrupted.toString() +
+                                    "\n\nWe made a backup of the corrupted file(s) and applied the default values." +
+                                    "\n\nThe backup is located at: [data directory]/db/corrupted"
+                    );
+                }
+
                 transitions.fadeOutAndRemove(splashScreen, 1500, actionEvent -> disposeSplashScreen());
             }
         });
@@ -180,6 +192,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     public void setExitHandler(Runnable exitHandler) {
         this.exitHandler = exitHandler;
+    }
+
+    public void setPersistedFilesCorrupted(List<String> persistedFilesCorrupted) {
+        this.persistedFilesCorrupted = persistedFilesCorrupted;
     }
 
     private VBox createSplashScreen() {

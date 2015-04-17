@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade;
 
+import io.bitsquare.app.Version;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
@@ -33,7 +34,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class BuyerTrade extends Trade implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
     transient private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererTrade.class);
 

@@ -17,6 +17,8 @@
 
 package io.bitsquare.arbitration;
 
+import io.bitsquare.app.Version;
+
 import java.io.Serializable;
 
 //TODO still open if we use that really...
@@ -26,7 +28,7 @@ import java.io.Serializable;
  */
 public class Reputation implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     //TODO
     public Reputation() {

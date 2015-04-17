@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade;
 
+import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.TradeWalletService;
@@ -68,7 +69,7 @@ import org.slf4j.LoggerFactory;
  */
 abstract public class Trade implements Tradable, Model, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
     private transient static final Logger log = LoggerFactory.getLogger(Trade.class);
 
@@ -78,7 +79,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
         COMPLETED,
         FAILED
     }
-    
+
     // Mutable
     private Coin tradeAmount;
     private Peer tradingPeer;

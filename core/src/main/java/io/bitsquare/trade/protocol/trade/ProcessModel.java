@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade;
 
+import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitrationRepository;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.BlockChainService;
@@ -50,7 +51,7 @@ import org.slf4j.LoggerFactory;
 
 public class ProcessModel implements Model, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
     private static final Logger log = LoggerFactory.getLogger(ProcessModel.class);
 

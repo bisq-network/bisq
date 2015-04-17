@@ -17,6 +17,7 @@
 
 package io.bitsquare.arbitration;
 
+import io.bitsquare.app.Version;
 import io.bitsquare.storage.Storage;
 
 import org.bitcoinj.core.Coin;
@@ -30,7 +31,7 @@ import java.util.Objects;
 
 public class Arbitrator implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

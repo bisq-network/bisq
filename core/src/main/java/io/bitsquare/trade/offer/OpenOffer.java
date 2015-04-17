@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.offer;
 
+import io.bitsquare.app.Version;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.TradableList;
@@ -34,7 +35,7 @@ import org.slf4j.LoggerFactory;
 
 public class OpenOffer implements Tradable, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
     private static final Logger log = LoggerFactory.getLogger(OpenOffer.class);
 

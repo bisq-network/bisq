@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.offer;
 
+import io.bitsquare.app.Version;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.crypto.KeyRing;
@@ -48,7 +49,7 @@ import static com.google.common.base.Preconditions.*;
 
 public class Offer implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
     transient private static final Logger log = LoggerFactory.getLogger(Offer.class);
 
     public enum Direction {BUY, SELL}

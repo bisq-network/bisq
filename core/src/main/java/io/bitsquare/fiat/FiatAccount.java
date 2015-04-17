@@ -17,6 +17,7 @@
 
 package io.bitsquare.fiat;
 
+import io.bitsquare.app.Version;
 import io.bitsquare.locale.Country;
 
 import java.io.Serializable;
@@ -30,7 +31,7 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 public class FiatAccount implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     public static final long HOUR_IN_BLOCKS = 6;
     public static final long DAY_IN_BLOCKS = HOUR_IN_BLOCKS * 24;

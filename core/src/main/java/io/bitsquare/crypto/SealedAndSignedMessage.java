@@ -17,6 +17,7 @@
 
 package io.bitsquare.crypto;
 
+import io.bitsquare.app.Version;
 import io.bitsquare.p2p.Message;
 
 import java.io.Serializable;
@@ -35,7 +36,7 @@ import javax.crypto.SealedObject;
  */
 public class SealedAndSignedMessage implements Serializable, Message {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
     private static final Logger log = LoggerFactory.getLogger(SealedAndSignedMessage.class);
 

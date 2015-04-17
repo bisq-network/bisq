@@ -73,7 +73,7 @@ public class WithdrawalView extends ActivatableViewAndModel {
     private final ObservableList<WithdrawalListItem> addressList = FXCollections.observableArrayList();
 
     @Inject
-    private WithdrawalView(WalletService walletService, TradeManager tradeManager,  OpenOfferManager openOfferManager, BSFormatter formatter) {
+    private WithdrawalView(WalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager, BSFormatter formatter) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;

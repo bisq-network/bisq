@@ -71,7 +71,7 @@ public class BitsquareAppMain extends BitsquareExecutable {
         String updatesDirectory = bitsquareEnvironment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY);
 
         Logging.setup(Paths.get(bitsquareEnvironment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString());
-        
+
         // app dir need to be setup before UpdateFX bootstrap
         initAppDir(updatesDirectory);
 

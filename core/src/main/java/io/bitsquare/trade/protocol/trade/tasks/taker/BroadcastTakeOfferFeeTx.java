@@ -48,7 +48,7 @@ public class BroadcastTakeOfferFeeTx extends TradeTask {
 
                            /* if (trade instanceof SellerTrade)
                                 trade.setProcessState(TakerTradeState.ProcessState.TAKE_OFFER_FEE_PUBLISHED);*/
-                            
+
                             complete();
                         }
 
