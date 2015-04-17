@@ -19,6 +19,7 @@ package io.bitsquare.p2p.tomp2p;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.p2p.BaseP2PService;
 import io.bitsquare.p2p.ClientNode;
 import io.bitsquare.p2p.Node;
 
@@ -35,8 +36,16 @@ import javax.annotation.Nullable;
 
 import javax.inject.Inject;
 
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ReadOnlyIntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+
+import net.tomp2p.connection.PeerConnection;
+import net.tomp2p.connection.PeerException;
 import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.peers.PeerAddress;
+import net.tomp2p.peers.PeerStatusListener;
+import net.tomp2p.peers.RTT;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -54,7 +63,8 @@ public class TomP2PNode implements ClientNode {
     private BootstrappedPeerBuilder bootstrappedPeerBuilder;
     private final Subject<BootstrappedPeerBuilder.State, BootstrappedPeerBuilder.State> bootstrapStateSubject;
     private final List<ResultHandler> resultHandlers = new CopyOnWriteArrayList<>();
-
+    private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -92,6 +102,20 @@ public class TomP2PNode implements ClientNode {
             public void onSuccess(@Nullable PeerDHT peerDHT) {
                 if (peerDHT != null) {
                     TomP2PNode.this.peerDHT = peerDHT;
+
+                    peerDHT.peerBean().addPeerStatusListener(new PeerStatusListener() {
+                        @Override
+                        public boolean peerFailed(PeerAddress peerAddress, PeerException e) {
+                            return false;
+                        }
+
+                        @Override
+                        public boolean peerFound(PeerAddress peerAddress, PeerAddress peerAddress1, PeerConnection peerConnection, RTT rtt) {
+                            BaseP2PService.getUserThread().execute(() -> numPeers.set(peerDHT.peerBean().peerMap().size()));
+                            return false;
+                        }
+                    });
+
                     resultHandlers.stream().forEach(ResultHandler::handleResult);
                     bootstrapStateSubject.onCompleted();
                 }
@@ -140,5 +164,13 @@ public class TomP2PNode implements ClientNode {
 
     public void removeResultHandler(ResultHandler resultHandler) {
         resultHandlers.remove(resultHandler);
+    }
+
+    public int getNumPeers() {
+        return numPeers.get();
+    }
+
+    public ReadOnlyIntegerProperty numPeersProperty() {
+        return numPeers;
     }
 }

@@ -25,11 +25,17 @@ import io.bitsquare.crypto.CryptoService;
 import org.bitcoinj.core.AbstractWalletEventListener;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.Block;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.DownloadProgressTracker;
+import org.bitcoinj.core.FilteredBlock;
+import org.bitcoinj.core.GetDataMessage;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.Message;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Peer;
 import org.bitcoinj.core.PeerAddress;
+import org.bitcoinj.core.PeerEventListener;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
@@ -63,12 +69,17 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -107,6 +118,7 @@ public class WalletService {
     private Wallet wallet;
     private AddressEntry registrationAddressEntry;
     private AddressEntry arbitratorDepositAddressEntry;
+    private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -184,12 +196,9 @@ public class WalletService {
                 e.printStackTrace();
                 log.error(e.toString());
             }
-            // As an example!
-            // walletAppKit.useTor();
         }
         else if (params == TestNet3Params.get()) {
             walletAppKit.setCheckpoints(getClass().getResourceAsStream("/wallet/checkpoints.testnet"));
-            //walletAppKit.useTor();
         }
 
         walletAppKit.setDownloadListener(downloadListener)
@@ -210,7 +219,6 @@ public class WalletService {
             }
         }, Threading.USER_THREAD);
         walletAppKit.startAsync();
-
         return status.timeout(30, TimeUnit.SECONDS);
     }
 
@@ -220,6 +228,47 @@ public class WalletService {
 
         addressEntryList.onWalletReady(wallet);
         registrationAddressEntry = addressEntryList.getRegistrationAddressEntry();
+
+        walletAppKit.peerGroup().addEventListener(new PeerEventListener() {
+            @Override
+            public void onPeersDiscovered(Set<PeerAddress> peerAddresses) {
+            }
+
+            @Override
+            public void onBlocksDownloaded(Peer peer, Block block, FilteredBlock filteredBlock, int blocksLeft) {
+            }
+
+            @Override
+            public void onChainDownloadStarted(Peer peer, int blocksLeft) {
+            }
+
+            @Override
+            public void onPeerConnected(Peer peer, int peerCount) {
+                log.trace("onPeerConnected " + peerCount);
+                Threading.USER_THREAD.execute(() -> numPeers.set(peerCount));
+            }
+
+            @Override
+            public void onPeerDisconnected(Peer peer, int peerCount) {
+                log.trace("onPeerDisconnected " + peerCount);
+                Threading.USER_THREAD.execute(() -> numPeers.set(peerCount));
+            }
+
+            @Override
+            public Message onPreMessageReceived(Peer peer, Message m) {
+                return null;
+            }
+
+            @Override
+            public void onTransaction(Peer peer, Transaction t) {
+            }
+
+            @Nullable
+            @Override
+            public List<Message> getData(Peer peer, GetDataMessage m) {
+                return null;
+            }
+        });
     }
 
     public void shutDown() {
@@ -532,6 +581,14 @@ public class WalletService {
             else
                 log.trace(tracePrefix + ": Transaction already has inputs but we don't have the connected outputs, so we don't know the value.");
         }
+    }
+
+    public int getNumPeers() {
+        return numPeers.get();
+    }
+
+    public ReadOnlyIntegerProperty numPeersProperty() {
+        return numPeers;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

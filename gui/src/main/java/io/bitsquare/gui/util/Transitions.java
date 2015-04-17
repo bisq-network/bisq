@@ -27,6 +27,8 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.*;
 import javafx.scene.effect.*;
 import javafx.scene.layout.*;
@@ -82,6 +84,10 @@ public class Transitions {
     }
 
     public void fadeOutAndRemove(Node node, int duration) {
+        fadeOutAndRemove(node, duration, null);
+    }
+
+    public void fadeOutAndRemove(Node node, int duration, EventHandler<ActionEvent> handler) {
         if (!preferences.getUseEffects())
             duration = 1;
 
@@ -90,6 +96,8 @@ public class Transitions {
         fade.setOnFinished(actionEvent -> {
             ((Pane) (node.getParent())).getChildren().remove(node);
             Profiler.printMsgWithTime("fadeOutAndRemove");
+            if (handler != null)
+                handler.handle(actionEvent);
         });
     }
 

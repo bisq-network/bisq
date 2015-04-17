@@ -29,6 +29,10 @@ public class BaseP2PService implements P2PService {
         BaseP2PService.userThread = userThread;
     }
 
+    public static Executor getUserThread() {
+        return userThread;
+    }
+
     protected Executor executor;
     protected PeerDHT peerDHT;
 

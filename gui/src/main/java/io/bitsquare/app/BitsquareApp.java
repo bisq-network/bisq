@@ -22,6 +22,7 @@ import io.bitsquare.gui.common.view.CachingViewLoader;
 import io.bitsquare.gui.common.view.View;
 import io.bitsquare.gui.common.view.ViewLoader;
 import io.bitsquare.gui.common.view.guice.InjectorViewFactory;
+import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.util.ImageUtil;
@@ -46,8 +47,6 @@ import javafx.stage.StageStyle;
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Logger;
-import com.vinumeris.crashfx.CrashFX;
-import com.vinumeris.crashfx.CrashWindow;
 import org.springframework.core.env.Environment;
 
 import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
@@ -80,7 +79,6 @@ public class BitsquareApp extends Application {
                     Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "crashes"),
                     URI.create("http://188.226.179.109/crashfx/upload"));*/
             // Server not setup yet, so we use client side only support
-            CrashFX.setup();
 
             // Guice
             bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
@@ -89,9 +87,10 @@ public class BitsquareApp extends Application {
 
             // load the main view and create the main scene
             CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
-            View view = viewLoader.load(MainView.class);
+            MainView view = (MainView) viewLoader.load(MainView.class);
+            view.setExitHandler(this::stop);
 
-            scene = new Scene((Parent) view.getRoot(), 1000, 650);
+            scene = new Scene(view.getRoot(), 1000, 650);
             scene.getStylesheets().setAll(
                     "/io/bitsquare/gui/bitsquare.css",
                     "/io/bitsquare/gui/images.css");
@@ -137,7 +136,7 @@ public class BitsquareApp extends Application {
             //TODO just temp.
             //showDebugWindow();
         } catch (Throwable t) {
-            CrashWindow.open(t);
+            Popups.openExceptionPopup(t);
         }
     }
 

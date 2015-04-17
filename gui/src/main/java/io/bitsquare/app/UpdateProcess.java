@@ -105,9 +105,9 @@ public class UpdateProcess {
             }
         };
 
-        updater.progressProperty().addListener((observableValue, oldValue, newValue) -> {
+       /* updater.progressProperty().addListener((observableValue, oldValue, newValue) -> {
             log.trace("progressProperty newValue = " + newValue);
-        });
+        });*/
 
         log.info("Checking for updates!");
         updater.setOnSucceeded(event -> {

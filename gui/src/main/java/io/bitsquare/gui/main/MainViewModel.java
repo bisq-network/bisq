@@ -35,8 +35,12 @@ import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.User;
 
+import org.bitcoinj.utils.Threading;
+
 import com.google.inject.Inject;
 
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeoutException;
 
 import javafx.application.Platform;
@@ -60,12 +64,15 @@ import rx.Observable;
 class MainViewModel implements ViewModel {
     private static final Logger log = LoggerFactory.getLogger(MainViewModel.class);
 
+    private static final long BLOCKCHAIN_SYNC_TIMEOUT = 30000;
+
     // BTC network
     final StringProperty blockchainSyncInfo = new SimpleStringProperty("Initializing");
     final StringProperty blockchainSyncInfoFooter = new SimpleStringProperty("Initializing");
     final DoubleProperty blockchainSyncProgress = new SimpleDoubleProperty(-1);
     final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
     final StringProperty blockchainSyncIconId = new SimpleStringProperty();
+    final StringProperty numBTCPeers = new SimpleStringProperty();
 
     // P2P network
     final StringProperty bootstrapInfo = new SimpleStringProperty("Connecting to P2P network...");
@@ -73,6 +80,7 @@ class MainViewModel implements ViewModel {
     final DoubleProperty bootstrapProgress = new SimpleDoubleProperty(-1);
     final StringProperty bootstrapErrorMsg = new SimpleStringProperty();
     final StringProperty bootstrapIconId = new SimpleStringProperty();
+    final StringProperty numDHTPeers = new SimpleStringProperty();
 
     // software update
     final StringProperty updateInfo = new SimpleStringProperty();
@@ -100,6 +108,8 @@ class MainViewModel implements ViewModel {
     private OpenOfferManager openOfferManager;
     private final UpdateProcess updateProcess;
     private final BSFormatter formatter;
+    private Timer blockchainSyncTimeoutTimer;
+
 
     @Inject
     public MainViewModel(User user, KeyRing keyRing, WalletService walletService, ArbitrationRepository arbitrationRepository, ClientNode clientNode,
@@ -136,20 +146,35 @@ class MainViewModel implements ViewModel {
     public void initBackend() {
         Platform.runLater(updateProcess::init);
 
+        startBlockchainSyncTimeout();
+
         walletService.downloadPercentageProperty().addListener((ov, oldValue, newValue) -> {
             setBitcoinNetworkSyncProgress((double) newValue);
         });
         setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get());
 
+        walletService.numPeersProperty().addListener((observable, oldValue, newValue) -> {
+            numBTCPeers.set(String.valueOf(newValue) + " peers");
+            if ((int) newValue < 1) {
+                walletServiceErrorMsg.set("We lost connection to the last peer.");
+            }
+        });
+
         // Set executor for all P2PServices
         BaseP2PService.setUserThread(Platform::runLater);
+
+        clientNode.numPeersProperty().addListener((observable, oldValue, newValue) -> {
+            numDHTPeers.set(String.valueOf(newValue) + " peers");
+            if ((int) newValue < 1) {
+                bootstrapErrorMsg.set("We lost connection to the last peer.");
+            }
+        });
 
         Observable<BootstrappedPeerBuilder.State> bootstrapStateAsObservable = clientNode.bootstrap(keyRing.getDhtSignatureKeyPair());
         bootstrapStateAsObservable.publish();
         bootstrapStateAsObservable.subscribe(
                 state -> Platform.runLater(() -> setBootstrapState(state)),
                 error -> Platform.runLater(() -> {
-                    log.error(error.toString());
                     bootstrapErrorMsg.set(error.getMessage());
                     bootstrapInfo.set("Connecting to the P2P network failed.");
                     bootstrapProgress.set(0);
@@ -163,7 +188,6 @@ class MainViewModel implements ViewModel {
                     //log.trace("wallet next");
                 },
                 error -> Platform.runLater(() -> {
-                    log.trace("wallet error");
                     setWalletServiceException(error);
                 }),
                 () -> {
@@ -175,7 +199,6 @@ class MainViewModel implements ViewModel {
                     //log.trace("updateProcess next");
                 },
                 error -> {
-                    log.trace("updateProcess error");
                 },
                 () -> {
                     log.trace("updateProcess completed");
@@ -185,7 +208,8 @@ class MainViewModel implements ViewModel {
         allServices.subscribe(
                 next -> {
                 },
-                error -> log.error(error.toString()),
+                error -> {
+                },
                 () -> Platform.runLater(this::onAllServicesInitialized)
         );
     }
@@ -234,7 +258,6 @@ class MainViewModel implements ViewModel {
                 updateIconId.set("image-update-up-to-date");
                 break;
             case FAILURE:
-                log.error(updateProcess.getErrorMessage());
                 updateInfo.set("Check for updates failed. ");
                 updateIconId.set("image-update-failed");
                 break;
@@ -330,6 +353,7 @@ class MainViewModel implements ViewModel {
     private void setBitcoinNetworkSyncProgress(double value) {
         blockchainSyncProgress.set(value);
         if (value >= 1) {
+            stopBlockchainSyncTimeout();
             blockchainSyncInfo.set("Blockchain synchronization complete.");
             blockchainSyncIconId.set("image-connection-synced");
         }
@@ -340,6 +364,32 @@ class MainViewModel implements ViewModel {
         else {
             blockchainSyncInfo.set("Connecting to the bitcoin network...");
             blockchainSyncInfoFooter.set("Connecting...");
+        }
+    }
+
+    private void startBlockchainSyncTimeout() {
+        log.trace("startBlockchainSyncTimeout");
+        stopBlockchainSyncTimeout();
+
+        blockchainSyncTimeoutTimer = new Timer();
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                Threading.USER_THREAD.execute(() -> {
+                    log.trace("Timeout reached");
+                    Platform.runLater(() -> setWalletServiceException(new TimeoutException()));
+                });
+            }
+        };
+
+        blockchainSyncTimeoutTimer.schedule(task, BLOCKCHAIN_SYNC_TIMEOUT);
+    }
+
+    private void stopBlockchainSyncTimeout() {
+        log.trace("stopBlockchainSyncTimeout");
+        if (blockchainSyncTimeoutTimer != null) {
+            blockchainSyncTimeoutTimer.cancel();
+            blockchainSyncTimeoutTimer = null;
         }
     }
 
