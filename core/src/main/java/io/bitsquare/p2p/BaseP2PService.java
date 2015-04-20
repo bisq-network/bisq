@@ -35,6 +35,7 @@ public class BaseP2PService implements P2PService {
 
     protected Executor executor;
     protected PeerDHT peerDHT;
+    private int openRequests = 0;
 
     @Override
     public void bootstrapCompleted() {
@@ -46,7 +47,25 @@ public class BaseP2PService implements P2PService {
         this.executor = executor;
     }
 
+
+    protected void openRequestsUp() {
+        executor.execute(() -> openRequests++);
+    }
+
+    protected void openRequestsDown() {
+        executor.execute(() -> openRequests--);
+    }
+
     @Override
     public void shutDown() {
+        long ts = System.currentTimeMillis();
+        // wait max. 10 sec. for open calls to complete
+        while (openRequests > 0 && (System.currentTimeMillis() - ts) < 10000) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

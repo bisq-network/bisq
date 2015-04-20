@@ -61,10 +61,12 @@ public class TomP2PArbitratorService extends TomP2PDHTService implements Arbitra
         try {
             final Data arbitratorData = new Data(arbitrator);
 
+            openRequestsUp();
             FuturePut addFuture = addProtectedDataToMap(LOCATION_KEY, arbitratorData);
             addFuture.addListener(new BaseFutureAdapter<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
+                    openRequestsDown();
                     if (future.isSuccess()) {
                         log.trace("Add arbitrator to DHT was successful. Stored data: [key: " + LOCATION_KEY + ", " +
                                 "values: " + arbitratorData + "]");
@@ -84,16 +86,19 @@ public class TomP2PArbitratorService extends TomP2PDHTService implements Arbitra
                 }
             });
         } catch (IOException e) {
+            openRequestsDown();
             e.printStackTrace();
         }
     }
 
     public void removeArbitrator(Arbitrator arbitrator) throws IOException {
         final Data arbitratorData = new Data(arbitrator);
+        openRequestsUp();
         FutureRemove removeFuture = removeProtectedDataFromMap(LOCATION_KEY, arbitratorData);
         removeFuture.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
+                openRequestsDown();
                 for (Data arbitratorData : removeFuture.dataMap().values()) {
                     try {
                         Object arbitratorDataObject = arbitratorData.object();

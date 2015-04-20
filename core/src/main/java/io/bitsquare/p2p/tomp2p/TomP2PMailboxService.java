@@ -83,11 +83,13 @@ public class TomP2PMailboxService extends TomP2PDHTService implements MailboxSer
             log.trace("Add message to DHT requested. Added data: [locationKey: " + locationKey +
                     ", hash: " + data.hash().toString() + "]");
 
+            openRequestsUp();
             FuturePut futurePut = addDataToMapOfProtectedDomain(locationKey,
                     data, pubKeyRing.getDhtSignaturePubKey());
             futurePut.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
+                    openRequestsDown();
                     if (future.isSuccess()) {
                         executor.execute(() -> {
                             log.trace("Add message to mailbox was successful. Added data: [locationKey: " + locationKey + ", value: " + data + "]");
@@ -106,10 +108,12 @@ public class TomP2PMailboxService extends TomP2PDHTService implements MailboxSer
 
                 @Override
                 public void exceptionCaught(Throwable ex) throws Exception {
+                    openRequestsDown();
                     executor.execute(() -> faultHandler.handleFault("Add message to mailbox failed.", ex));
                 }
             });
         } catch (IOException ex) {
+            openRequestsDown();
             executor.execute(() -> faultHandler.handleFault("Add message to mailbox failed.", ex));
         }
     }

@@ -56,10 +56,14 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
     private final List<Listener> offerRepositoryListeners = new ArrayList<>();
     private final LongProperty invalidationTimestamp = new SimpleLongProperty(0);
 
-
     @Inject
     public TomP2POfferBookService(TomP2PNode tomP2PNode, KeyRing keyRing) {
         super(tomP2PNode, keyRing);
+    }
+
+    @Override
+    public void shutDown() {
+        super.shutDown();
     }
 
     @Override
@@ -71,10 +75,12 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
             offerData.ttlSeconds(TTL);
             log.trace("Add offer to DHT requested. Added data: [locationKey: " + locationKey +
                     ", hash: " + offerData.hash().toString() + "]");
+            openRequestsUp();
             FuturePut futurePut = addProtectedDataToMap(locationKey, offerData);
             futurePut.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
+                    openRequestsDown();
                     if (future.isSuccess()) {
                         executor.execute(() -> {
                             resultHandler.handleResult();
@@ -100,10 +106,12 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
 
                 @Override
                 public void exceptionCaught(Throwable ex) throws Exception {
+                    openRequestsDown();
                     executor.execute(() -> faultHandler.handleFault("Failed to add offer to DHT", ex));
                 }
             });
         } catch (IOException ex) {
+            openRequestsDown();
             executor.execute(() -> faultHandler.handleFault("Failed to add offer to DHT", ex));
         }
     }
@@ -115,10 +123,12 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
             final Data offerData = new Data(offer);
             log.trace("Remove offer from DHT requested. Removed data: [locationKey: " + locationKey +
                     ", hash: " + offerData.hash().toString() + "]");
+            openRequestsUp();
             FutureRemove futureRemove = removeProtectedDataFromMap(locationKey, offerData);
             futureRemove.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
+                    openRequestsDown();
                     // We don't test futureRemove.isSuccess() as this API does not fit well to that operation, 
                     // it might change in future to something like foundAndRemoved and notFound
                     // See discussion at: https://github.com/tomp2p/TomP2P/issues/57#issuecomment-62069840
@@ -146,11 +156,13 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
 
                 @Override
                 public void exceptionCaught(Throwable t) throws Exception {
+                    openRequestsDown();
                     log.error("Remove offer from DHT failed. Error: " + t.getMessage());
                     faultHandler.handleFault("Remove offer from DHT failed. Error: " + t.getMessage(), t);
                 }
             });
         } catch (IOException e) {
+            openRequestsDown();
             e.printStackTrace();
             log.error("Remove offer from DHT failed. Error: " + e.getMessage());
             faultHandler.handleFault("Remove offer from DHT failed. Error: " + e.getMessage(), e);
@@ -164,11 +176,26 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
             final Data offerData = new Data(offer);
             log.trace("Remove offer from DHT requested. Removed data: [locationKey: " + locationKey +
                     ", hash: " + offerData.hash().toString() + "]");
+            openRequestsUp();
             FutureRemove futureRemove = removeProtectedDataFromMap(locationKey, offerData);
             writeInvalidationTimestampToDHT(offer.getCurrencyCode());
-            futureRemove.awaitUninterruptibly(1000);
+            futureRemove.addListener(new BaseFutureListener<BaseFuture>() {
+                @Override
+                public void operationComplete(BaseFuture future) throws Exception {
+                    openRequestsDown();
+                    log.trace("isRemoved? " + futureRemove.isRemoved());
+                }
+
+                @Override
+                public void exceptionCaught(Throwable t) throws Exception {
+                    openRequestsDown();
+                    log.error("Remove offer from DHT failed. Error: " + t.getMessage());
+                }
+            });
+
             log.trace("isRemoved? " + futureRemove.isRemoved());
         } catch (IOException e) {
+            openRequestsDown();
             e.printStackTrace();
             log.error("Remove offer from DHT failed. Error: " + e.getMessage());
         }
@@ -195,6 +222,7 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
                                 }
                             } catch (ClassNotFoundException | IOException e) {
                                 e.printStackTrace();
+                                log.warn(e.getMessage());
                             }
                         }
                         log.trace("Get offers with offers.size(): " + offers.size());
@@ -239,11 +267,13 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
     private void writeInvalidationTimestampToDHT(String currencyCode) {
         invalidationTimestamp.set(System.currentTimeMillis());
         try {
+            openRequestsUp();
             FuturePut putFuture = putData(getInvalidatedLocationKey(currencyCode),
                     new Data(invalidationTimestamp.get()));
             putFuture.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
+                    openRequestsDown();
                     if (future.isSuccess())
                         log.trace("Update invalidationTimestamp to DHT was successful. TimeStamp=" +
                                 invalidationTimestamp.get());
@@ -253,10 +283,12 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
 
                 @Override
                 public void exceptionCaught(Throwable t) throws Exception {
+                    openRequestsDown();
                     log.error("Update invalidationTimestamp to DHT failed with exception:" + t.getMessage());
                 }
             });
         } catch (IOException e) {
+            openRequestsDown();
             log.error("Update invalidationTimestamp to DHT failed with exception:" + e.getMessage());
         }
     }

@@ -29,4 +29,5 @@ public interface MailboxService {
 
     void removeAllMessages(ResultHandler resultHandler, FaultHandler faultHandler);
 
+    void shutDown();
 }

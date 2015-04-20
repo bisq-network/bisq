@@ -79,5 +79,8 @@ public class TomP2PModule extends P2PModule {
         // First shut down AddressService to remove address from DHT
         injector.getInstance(AddressService.class).shutDown();
         injector.getInstance(BootstrappedPeerBuilder.class).shutDown();
+        injector.getInstance(MailboxService.class).shutDown();
+        injector.getInstance(MessageService.class).shutDown();
+
     }
 }

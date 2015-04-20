@@ -52,11 +52,6 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
     private final MailboxService mailboxService;
     private final CryptoService<MailboxMessage> cryptoService;
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Inject
     public TomP2PMessageService(TomP2PNode tomP2PNode, MailboxService mailboxService, CryptoService<MailboxMessage> cryptoService) {
         super(tomP2PNode);
@@ -71,11 +66,10 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
         setupReplyHandler();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // MessageService implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
+    @Override
+    public void shutDown() {
+        super.shutDown();
+    }
 
     @Override
     public void sendEncryptedMessage(Peer peer, PubKeyRing pubKeyRing, Message message, SendMessageListener listener) {
@@ -90,11 +84,13 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
         try {
             final Message encryptedMessage = cryptoService.encryptAndSignMessage(pubKeyRing, message);
 
+            openRequestsUp();
             FutureDirect futureDirect = peerDHT.peer().sendDirect(((TomP2PPeer) peer).getPeerAddress()).object(encryptedMessage).start();
             futureDirect.addListener(new BaseFutureListener<BaseFuture>() {
                                          @Override
                                          public void operationComplete(BaseFuture future) throws Exception {
                                              if (future.isSuccess()) {
+                                                 openRequestsDown();
                                                  log.debug("sendMessage completed");
                                                  executor.execute(listener::handleResult);
                                              }
@@ -116,6 +112,7 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
                                      }
             );
         } catch (Throwable t) {
+            openRequestsDown();
             t.printStackTrace();
             log.error(t.getMessage());
             executor.execute(listener::handleFault);
@@ -129,10 +126,12 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
                 pubKeyRing,
                 message,
                 () -> {
+                    openRequestsDown();
                     log.debug("Message successfully added to peers mailbox.");
                     executor.execute(listener::handleResult);
                 },
                 (errorMessage, throwable) -> {
+                    openRequestsDown();
                     log.error("Message failed to add to peers mailbox.");
                     executor.execute(listener::handleFault);
                 }
@@ -211,6 +210,6 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
     }
 
     private MessageWithPubKey getDecryptedMessageWithPubKey(SealedAndSignedMessage message) throws CryptoException {
-        return cryptoService.decryptAndVerifyMessage((SealedAndSignedMessage) message);
+        return cryptoService.decryptAndVerifyMessage(message);
     }
 }
