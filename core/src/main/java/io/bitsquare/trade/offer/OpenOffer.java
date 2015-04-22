@@ -21,14 +21,12 @@ import io.bitsquare.app.Version;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.TradableList;
-
-import org.bitcoinj.utils.Threading;
+import io.bitsquare.util.Utilities;
 
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.Timer;
-import java.util.TimerTask;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,26 +93,16 @@ public class OpenOffer implements Tradable, Serializable {
 
 
     private void startTimeout() {
-        log.trace("startTimeout");
         stopTimeout();
 
-        timeoutTimer = new Timer();
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                Threading.USER_THREAD.execute(() -> {
-                    log.debug("Timeout reached");
-                    if (state == State.RESERVED)
-                        setState(State.AVAILABLE);
-                });
-            }
-        };
-
-        timeoutTimer.schedule(task, TIMEOUT);
+        timeoutTimer = Utilities.setTimeout(TIMEOUT, () -> {
+            log.debug("Timeout reached");
+            if (state == State.RESERVED)
+                setState(State.AVAILABLE);
+        });
     }
 
     protected void stopTimeout() {
-        log.trace("stopTimeout");
         if (timeoutTimer != null) {
             timeoutTimer.cancel();
             timeoutTimer = null;

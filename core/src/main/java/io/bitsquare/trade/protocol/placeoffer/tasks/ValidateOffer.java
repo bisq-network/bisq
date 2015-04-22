@@ -32,8 +32,9 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             model.offer.validate();
 
             complete();

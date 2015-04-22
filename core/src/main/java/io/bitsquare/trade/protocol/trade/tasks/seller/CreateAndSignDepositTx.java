@@ -36,8 +36,9 @@ public class CreateAndSignDepositTx extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             assert trade.getTradeAmount() != null;
             Coin inputAmount = trade.getSecurityDeposit().add(FeePolicy.TX_FEE).add(trade.getTradeAmount());
             Coin msOutputAmount = inputAmount.add(trade.getSecurityDeposit());

@@ -32,7 +32,7 @@
             AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"
             xmlns:fx="http://javafx.com/fxml">
 
-    <ScrollPane fx:id="scrollPane" hbarPolicy="NEVER" vbarPolicy="NEVER" fitToWidth="true" fitToHeight="true"
+    <ScrollPane fx:id="scrollPane" onScroll="#onScroll" hbarPolicy="NEVER" vbarPolicy="NEVER" fitToWidth="true" fitToHeight="true"
                 AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
                 AnchorPane.bottomAnchor="0.0">
 

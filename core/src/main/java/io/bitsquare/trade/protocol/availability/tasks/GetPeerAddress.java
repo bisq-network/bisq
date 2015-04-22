@@ -37,13 +37,13 @@ public class GetPeerAddress extends Task<OfferAvailabilityModel> {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             model.addressService.findPeerAddress(model.offer.getPubKeyRing(), new GetPeerAddressListener() {
                 @Override
                 public void onResult(Peer peer) {
                     model.setPeer(peer);
-
                     complete();
                 }
 
@@ -55,6 +55,7 @@ public class GetPeerAddress extends Task<OfferAvailabilityModel> {
                 }
             });
         } catch (Throwable t) {
+            model.offer.setState(Offer.State.FAULT);
             failed(t);
         }
     }

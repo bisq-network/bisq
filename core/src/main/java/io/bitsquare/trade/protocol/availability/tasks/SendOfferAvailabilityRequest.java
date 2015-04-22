@@ -35,8 +35,9 @@ public class SendOfferAvailabilityRequest extends Task<OfferAvailabilityModel> {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             OfferAvailabilityRequest message = new OfferAvailabilityRequest(model.offer.getId(), model.getPubKeyRing());
             model.messageService.sendEncryptedMessage(model.getPeer(),
                     model.offer.getPubKeyRing(),
@@ -55,6 +56,7 @@ public class SendOfferAvailabilityRequest extends Task<OfferAvailabilityModel> {
                         }
                     });
         } catch (Throwable t) {
+            model.offer.setState(Offer.State.FAULT);
             failed(t);
         }
     }

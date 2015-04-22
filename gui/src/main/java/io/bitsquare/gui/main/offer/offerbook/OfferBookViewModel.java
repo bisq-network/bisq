@@ -35,6 +35,7 @@ import com.google.inject.Inject;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.transformation.SortedList;
 
 import org.slf4j.Logger;
@@ -54,6 +55,17 @@ class OfferBookViewModel extends ActivatableWithDataModel<OfferBookDataModel> im
     final StringProperty fiatCode = new SimpleStringProperty();
     final StringProperty restrictionsInfo = new SimpleStringProperty();
 
+    private ChangeListener<String> amountListener;
+    private ChangeListener<String> priceListener;
+    private ChangeListener<String> volumeListener;
+    private ChangeListener<Coin> amountAsCoinListener;
+    private ChangeListener<Fiat> priceAsFiatListener;
+    private ChangeListener<Fiat> volumeAsFiatListener;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
     public OfferBookViewModel(OfferBookDataModel dataModel, OptionalFiatValidator optionalFiatValidator,
@@ -64,57 +76,115 @@ class OfferBookViewModel extends ActivatableWithDataModel<OfferBookDataModel> im
         this.optionalBtcValidator = optionalBtcValidator;
         this.formatter = formatter;
 
+        createListeners();
+    }
+
+    @Override
+    protected void doActivate() {
+        addBindings();
+        addListeners();
+    }
+
+    @Override
+    protected void doDeactivate() {
+        removeBindings();
+        removeListeners();
+    }
+
+    private void addBindings() {
         btcCode.bind(dataModel.btcCode);
         fiatCode.bind(dataModel.fiatCode);
         restrictionsInfo.bind(dataModel.restrictionsInfo);
+    }
 
-        // Bidirectional bindings are used for all input fields: amount, price and volume
-        // We do volume/amount calculation during input, so user has immediate feedback
-        amount.addListener((ov, oldValue, newValue) -> {
+    private void removeBindings() {
+        btcCode.unbind();
+        fiatCode.unbind();
+        restrictionsInfo.unbind();
+    }
+
+    private void createListeners() {
+        amountAsCoinListener = (ov, oldValue, newValue) -> amount.set(formatter.formatCoin(newValue));
+        priceAsFiatListener = (ov, oldValue, newValue) -> price.set(formatter.formatFiat(newValue));
+        volumeAsFiatListener = (ov, oldValue, newValue) -> volume.set(formatter.formatFiat(newValue));
+
+        amountListener = (ov, oldValue, newValue) -> {
             if (isBtcInputValid(newValue).isValid) {
                 setAmountToModel();
                 setPriceToModel();
                 dataModel.calculateVolume();
             }
-        });
-
-        price.addListener((ov, oldValue, newValue) -> {
+        };
+        priceListener = (ov, oldValue, newValue) -> {
             if (isFiatInputValid(newValue).isValid) {
                 setAmountToModel();
                 setPriceToModel();
                 dataModel.calculateVolume();
             }
-        });
-
-        volume.addListener((ov, oldValue, newValue) -> {
+        };
+        volumeListener = (ov, oldValue, newValue) -> {
             if (isFiatInputValid(newValue).isValid) {
                 setPriceToModel();
                 setVolumeToModel();
                 dataModel.calculateAmount();
             }
-        });
+        };
+    }
 
+    private void addListeners() {
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
-        dataModel.amountAsCoinProperty().addListener((ov, oldValue, newValue) -> amount.set(formatter.formatCoin
-                (newValue)));
-        dataModel.priceAsFiatProperty().addListener((ov, oldValue, newValue) -> price.set(formatter.formatFiat(newValue)));
-        dataModel.volumeAsFiatProperty().addListener((ov, oldValue, newValue) -> volume.set(formatter.formatFiat
-                (newValue)));
+        dataModel.amountAsCoinProperty().addListener(amountAsCoinListener);
+        dataModel.priceAsFiatProperty().addListener(priceAsFiatListener);
+        dataModel.volumeAsFiatProperty().addListener(volumeAsFiatListener);
+
+        // Bidirectional bindings are used for all input fields: amount, price and volume
+        // We do volume/amount calculation during input, so user has immediate feedback
+        amount.addListener(amountListener);
+        price.addListener(priceListener);
+        volume.addListener(volumeListener);
+
+        amount.set("1");
+        price.set("300");
+        setAmountToModel();
+        setPriceToModel();
     }
 
-    void onCancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        dataModel.onCancelOpenOffer(offer, resultHandler, errorMessageHandler);
+    private void removeListeners() {
+        amount.removeListener(amountListener);
+        price.removeListener(priceListener);
+        volume.removeListener(volumeListener);
+
+        dataModel.amountAsCoinProperty().removeListener(amountAsCoinListener);
+        dataModel.priceAsFiatProperty().removeListener(priceAsFiatListener);
+        dataModel.volumeAsFiatProperty().removeListener(volumeAsFiatListener);
     }
 
-    boolean isTradable(Offer offer) {
-        return dataModel.isTradable(offer);
-    }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     void setDirection(Offer.Direction direction) {
         dataModel.setDirection(direction);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI actions
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    void onCancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        dataModel.onCancelOpenOffer(offer, resultHandler, errorMessageHandler);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    boolean isTradable(Offer offer) {
+        return dataModel.isTradable(offer);
+    }
 
     SortedList<OfferBookListItem> getOfferList() {
         return dataModel.getOfferList();
@@ -161,6 +231,11 @@ class OfferBookViewModel extends ActivatableWithDataModel<OfferBookDataModel> im
     Fiat getPriceAsCoin() {
         return dataModel.getPriceAsFiat();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private InputValidator.ValidationResult isBtcInputValid(String input) {
         return optionalBtcValidator.validate(input);

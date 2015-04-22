@@ -36,8 +36,9 @@ public class SendDepositTxPublishedMessage extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(processModel.getId(), trade.getDepositTx());
 
             processModel.getMessageService().sendEncryptedMessage(

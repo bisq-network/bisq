@@ -17,6 +17,10 @@
 
 package io.bitsquare.util;
 
+import io.bitsquare.common.handlers.ResultHandler;
+
+import org.bitcoinj.utils.Threading;
+
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -36,6 +40,9 @@ import java.io.Serializable;
 
 import java.net.URI;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +53,31 @@ import org.slf4j.LoggerFactory;
 public class Utilities {
     private static final Logger log = LoggerFactory.getLogger(Utilities.class);
     private static long lastTimeStamp = System.currentTimeMillis();
+
+
+    public static Timer setTimeout(long delay, ResultHandler handler) {
+        Timer timer = new Timer();
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                Threading.USER_THREAD.execute(() -> handler.handleResult());
+            }
+        };
+        timer.schedule(task, delay);
+        return timer;
+    }
+
+    public static Timer setInterval(long delay, ResultHandler handler) {
+        Timer timer = new Timer();
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                Threading.USER_THREAD.execute(() -> handler.handleResult());
+            }
+        };
+        timer.scheduleAtFixedRate(task, delay, delay);
+        return timer;
+    }
 
     public static String objectToJson(Object object) {
         Gson gson =

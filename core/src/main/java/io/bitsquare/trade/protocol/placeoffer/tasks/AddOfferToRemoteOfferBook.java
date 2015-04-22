@@ -33,9 +33,17 @@ public class AddOfferToRemoteOfferBook extends Task<PlaceOfferModel> {
     }
 
     @Override
-    protected void doRun() {
-        model.offerBookService.addOffer(model.offer,
-                this::complete,
-                (message, throwable) -> failed(throwable));
+    protected void run() {
+        try {
+            runInterceptHook();
+            model.offerBookService.addOffer(model.offer,
+                    () -> {
+                        model.offerAddedToOfferBook = true;
+                        complete();
+                    },
+                    (message, throwable) -> failed(throwable));
+        } catch (Throwable t) {
+            failed(t);
+        }
     }
 }

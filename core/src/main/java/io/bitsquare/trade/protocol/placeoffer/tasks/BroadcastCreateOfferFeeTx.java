@@ -47,58 +47,61 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
+        try {
+            runInterceptHook();
+            Coin totalsNeeded = model.offer.getSecurityDeposit().add(FeePolicy.CREATE_OFFER_FEE).add(FeePolicy.TX_FEE);
+            AddressEntry addressEntry = model.walletService.getAddressEntry(model.offer.getId());
+            Coin balance = model.walletService.getBalanceForAddress(addressEntry.getAddress());
+            if (balance.compareTo(totalsNeeded) >= 0) {
+                model.tradeWalletService.broadcastTx(model.getTransaction(), new FutureCallback<Transaction>() {
+                    @Override
+                    public void onSuccess(Transaction transaction) {
+                        log.info("Broadcast of offer fee payment succeeded: transaction = " + transaction.toString());
 
-        Coin totalsNeeded = model.offer.getSecurityDeposit().add(FeePolicy.CREATE_OFFER_FEE).add(FeePolicy.TX_FEE);
-        AddressEntry addressEntry = model.walletService.getAddressEntry(model.offer.getId());
-        Coin balance = model.walletService.getBalanceForAddress(addressEntry.getAddress());
-        if (balance.compareTo(totalsNeeded) >= 0) {
-
-            model.tradeWalletService.broadcastTx(model.getTransaction(), new FutureCallback<Transaction>() {
-                @Override
-                public void onSuccess(Transaction transaction) {
-                    log.info("Broadcast of offer fee payment succeeded: transaction = " + transaction.toString());
-
-                    if (model.getTransaction().getHashAsString().equals(transaction.getHashAsString())) {
-                        // No tx malleability happened after broadcast (still not in blockchain)
-                        complete();
+                        if (model.getTransaction().getHashAsString().equals(transaction.getHashAsString())) {
+                            // No tx malleability happened after broadcast (still not in blockchain)
+                            complete();
+                        }
+                        else {
+                            log.warn("Tx malleability happened after broadcast. We publish the changed offer to the DHT again.");
+                            // Tx malleability happened after broadcast. We publish the changed offer to the DHT again.
+                            model.offerBookService.removeOffer(model.offer,
+                                    () -> {
+                                        log.info("We store now the changed txID to the offer and add that again.");
+                                        // We store now the changed txID to the offer and add that again.
+                                        model.offer.setOfferFeePaymentTxID(transaction.getHashAsString());
+                                        model.offerBookService.addOffer(model.offer,
+                                                BroadcastCreateOfferFeeTx.this::complete,
+                                                (message, throwable) -> {
+                                                    log.error("addOffer failed");
+                                                    addOfferFailed = true;
+                                                    failed(throwable);
+                                                    updateStateOnFault();
+                                                });
+                                    },
+                                    (message, throwable) -> {
+                                        log.error("removeOffer failed");
+                                        removeOfferFailed = true;
+                                        failed(throwable);
+                                        updateStateOnFault();
+                                    });
+                        }
                     }
-                    else {
-                        log.warn("Tx malleability happened after broadcast. We publish the changed offer to the DHT again.");
-                        // Tx malleability happened after broadcast. We publish the changed offer to the DHT again.
-                        model.offerBookService.removeOffer(model.offer,
-                                () -> {
-                                    log.info("We store now the changed txID to the offer and add that again.");
-                                    // We store now the changed txID to the offer and add that again.
-                                    model.offer.setOfferFeePaymentTxID(transaction.getHashAsString());
-                                    model.offerBookService.addOffer(model.offer,
-                                            BroadcastCreateOfferFeeTx.this::complete,
-                                            (message, throwable) -> {
-                                                log.error("addOffer failed");
-                                                addOfferFailed = true;
-                                                failed(throwable);
-                                                updateStateOnFault();
-                                            });
-                                },
-                                (message, throwable) -> {
-                                    log.error("removeOffer failed");
-                                    removeOfferFailed = true;
-                                    failed(throwable);
-                                    updateStateOnFault();
-                                });
-                    }
-                }
 
-                @Override
-                public void onFailure(@NotNull Throwable t) {
-                    failed(t);
-                    updateStateOnFault();
-                }
-            });
-        }
-        else {
-            failed("Not enough balance for placing the offer.");
-            updateStateOnFault();
+                    @Override
+                    public void onFailure(@NotNull Throwable t) {
+                        failed(t);
+                        updateStateOnFault();
+                    }
+                });
+            }
+            else {
+                failed("Not enough balance for placing the offer.");
+                updateStateOnFault();
+            }
+        } catch (Throwable t) {
+            failed(t);
         }
     }
 

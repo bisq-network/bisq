@@ -37,8 +37,9 @@ public class ProcessFiatTransferStartedMessage extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             FiatTransferStartedMessage message = (FiatTransferStartedMessage) processModel.getTradeMessage();
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);

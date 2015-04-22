@@ -36,8 +36,9 @@ public class SendPayDepositRequest extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             boolean isInitialRequest = trade instanceof BuyerAsTakerTrade;
             PayDepositRequest tradeMessage = new PayDepositRequest(
                     processModel.getId(),

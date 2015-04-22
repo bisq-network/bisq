@@ -23,18 +23,12 @@ import io.bitsquare.user.User;
 
 import javax.inject.Inject;
 
-/**
- * FiatNumberValidator for validating fiat values.
- * <p/>
- * That class implements just what we need for the moment. It is not intended as a general purpose library class.
- */
-public final class FiatValidator extends NumberValidator {
+public class FiatValidator extends NumberValidator {
 
     //TODO Find appropriate values - depends on currencies
     public static final double MIN_FIAT_VALUE = 0.01; // usually a cent is the smallest currency unit
     public static final double MAX_FIAT_VALUE = 1000000;
-    private String currencyCode = "Fiat";
-
+    protected String currencyCode = "Fiat";
 
     @Inject
     public FiatValidator(User user) {
@@ -50,11 +44,6 @@ public final class FiatValidator extends NumberValidator {
             });
         }
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public ValidationResult validate(String input) {
@@ -74,21 +63,11 @@ public final class FiatValidator extends NumberValidator {
         return result;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setter
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     public void setFiatCurrencyCode(String currencyCode) {
         this.currencyCode = currencyCode;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private ValidationResult validateIfNotExceedsMinFiatValue(String input) {
+    protected ValidationResult validateIfNotExceedsMinFiatValue(String input) {
         double d = Double.parseDouble(input);
         if (d < MIN_FIAT_VALUE)
             return new ValidationResult(false, BSResources.get("validation.fiat.toSmall", currencyCode));
@@ -96,7 +75,7 @@ public final class FiatValidator extends NumberValidator {
             return new ValidationResult(true);
     }
 
-    private ValidationResult validateIfNotExceedsMaxFiatValue(String input) {
+    protected ValidationResult validateIfNotExceedsMaxFiatValue(String input) {
         double d = Double.parseDouble(input);
         if (d > MAX_FIAT_VALUE)
             return new ValidationResult(false, BSResources.get("validation.fiat.toLarge", currencyCode));

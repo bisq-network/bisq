@@ -36,8 +36,9 @@ public class ProcessPayDepositRequest extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             PayDepositRequest message = (PayDepositRequest) processModel.getTradeMessage();
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);

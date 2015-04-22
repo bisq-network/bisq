@@ -38,6 +38,16 @@ public class TradeTask extends Task<Trade> {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
+    }
+
+    @Override
+    protected void failed(Throwable t) {
+        t.printStackTrace();
+        appendExceptionToErrorMessage(t);
+        trade.setThrowable(t);
+        trade.setErrorMessage(errorMessage);
+        trade.setFaultState();
+        failed();
     }
 }

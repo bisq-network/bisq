@@ -34,8 +34,9 @@ public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityMode
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             OfferAvailabilityResponse offerAvailabilityResponse = (OfferAvailabilityResponse) model.getMessage();
 
             if (model.offer.getState() != Offer.State.REMOVED) {
@@ -47,6 +48,7 @@ public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityMode
 
             complete();
         } catch (Throwable t) {
+            model.offer.setState(Offer.State.FAULT);
             failed(t);
         }
     }

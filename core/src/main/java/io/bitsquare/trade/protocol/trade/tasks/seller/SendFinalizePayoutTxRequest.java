@@ -36,8 +36,9 @@ public class SendFinalizePayoutTxRequest extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             FinalizePayoutTxRequest message = new FinalizePayoutTxRequest(
                     processModel.getId(),
                     processModel.getPayoutTxSignature(),

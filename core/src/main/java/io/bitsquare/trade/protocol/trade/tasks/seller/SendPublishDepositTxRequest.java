@@ -35,8 +35,9 @@ public class SendPublishDepositTxRequest extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             PublishDepositTxRequest tradeMessage = new PublishDepositTxRequest(
                     processModel.getId(),
                     processModel.getFiatAccount(),

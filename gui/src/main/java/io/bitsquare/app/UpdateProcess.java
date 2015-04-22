@@ -17,7 +17,7 @@
 
 package io.bitsquare.app;
 
-import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.util.Utilities;
 
 import com.google.inject.Inject;
 
@@ -26,8 +26,8 @@ import java.io.File;
 import java.nio.file.Path;
 
 import java.util.List;
+import java.util.Timer;
 
-import javafx.animation.AnimationTimer;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
@@ -65,7 +65,7 @@ public class UpdateProcess {
 
     protected String errorMessage;
     protected final Subject<State, State> process = BehaviorSubject.create();
-    protected AnimationTimer timeoutTimer;
+    protected Timer timeoutTimer;
 
     @Inject
     public UpdateProcess(Environment environment) {
@@ -88,11 +88,7 @@ public class UpdateProcess {
         log.info("UpdateFX current version " + Version.PATCH_VERSION);
 
         // process.timeout() will cause an error state back but we don't want to break startup in case of an timeout
-        timeoutTimer = GUIUtil.setTimeout(10000, animationTimer -> {
-            process.onCompleted();
-            return null;
-        });
-        timeoutTimer.start();
+        timeoutTimer = Utilities.setTimeout(10000, () -> process.onCompleted());
 
         String agent = environment.getProperty(BitsquareEnvironment.APP_NAME_KEY) + Version.VERSION;
         Path dataDirPath = new File(environment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY)).toPath();
@@ -123,12 +119,12 @@ public class UpdateProcess {
                     state.set(State.UPDATE_AVAILABLE);
                     // We stop the timeout and treat it not completed. 
                     // The user should click the restart button manually if there are updates available.
-                    timeoutTimer.stop();
+                    timeoutTimer.cancel();
                 }
                 else if (summary.highestVersion == Version.PATCH_VERSION) {
                     log.info("UP_TO_DATE");
                     state.set(State.UP_TO_DATE);
-                    timeoutTimer.stop();
+                    timeoutTimer.cancel();
                     process.onCompleted();
                 }
             } catch (Throwable e) {
@@ -138,7 +134,7 @@ public class UpdateProcess {
                 // so we use state.onCompleted() instead of state.onError()
                 errorMessage = "Exception at processing UpdateSummary: " + e.getMessage();
                 state.set(State.FAILURE);
-                timeoutTimer.stop();
+                timeoutTimer.cancel();
                 process.onCompleted();
             }
         });
@@ -150,7 +146,7 @@ public class UpdateProcess {
             // so we use state.onCompleted() instead of state.onError()
             errorMessage = "Update failed: " + updater.getException();
             state.set(State.FAILURE);
-            timeoutTimer.stop();
+            timeoutTimer.cancel();
             process.onCompleted();
         });
 

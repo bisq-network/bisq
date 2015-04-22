@@ -33,8 +33,9 @@ public class VerifyTakerAccount extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             //TODO mocked yet
             if (processModel.getBlockChainService().verifyAccountRegistration()) {
                 if (processModel.getBlockChainService().isAccountBlackListed(processModel.tradingPeer.getAccountId(),

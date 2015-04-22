@@ -21,10 +21,6 @@ import io.bitsquare.locale.BSResources;
 
 public final class PasswordValidator extends InputValidator {
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
     public ValidationResult validate(String input) {
         ValidationResult result = validateIfNotEmpty(input);
@@ -32,11 +28,6 @@ public final class PasswordValidator extends InputValidator {
             result = validateMinLength(input);
         return result;
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private ValidationResult validateMinLength(String input) {
         if (input.length() > 7)

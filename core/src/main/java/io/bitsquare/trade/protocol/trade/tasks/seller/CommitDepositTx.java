@@ -34,8 +34,9 @@ public class CommitDepositTx extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             // To access tx confidence we need to add that tx into our wallet.
             Transaction depositTx = processModel.getTradeWalletService().commitTx(trade.getDepositTx());
 

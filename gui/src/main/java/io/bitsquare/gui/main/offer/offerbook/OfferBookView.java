@@ -35,6 +35,7 @@ import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.validation.OptionalBtcValidator;
 import io.bitsquare.gui.util.validation.OptionalFiatValidator;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Country;
 import io.bitsquare.trade.offer.Offer;
 
 import java.util.ArrayList;
@@ -43,7 +44,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.collections.transformation.SortedList;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -84,6 +85,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private final OptionalFiatValidator optionalFiatValidator;
     private OfferView.OfferActionHandler offerActionHandler;
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Inject
     OfferBookView(OfferBookViewModel model,
                   Navigation navigation,
@@ -114,7 +120,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         placeholder.setWrapText(true);
         table.setPlaceholder(placeholder);
 
-
         setupValidators();
         setupComparators();
 
@@ -129,30 +134,68 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     @Override
     public void doActivate() {
-        amountTextField.setText("");
-        priceTextField.setText("");
-        volumeTextField.setText("");
-
-        setupBindings();
-
+        addBindings();
+        
         // setOfferBookInfo has been called before
-        SortedList<OfferBookListItem> offerList = model.getOfferList();
-        table.setItems(offerList);
-        offerList.comparatorProperty().bind(table.comparatorProperty());
-        priceColumn.setSortType((model.getDirection() == Offer.Direction.BUY) ?
-                TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
+        table.setItems(model.getOfferList());
+        priceColumn.setSortType((model.getDirection() == Offer.Direction.BUY) ? TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
         table.sort();
-
-        //TODO temp for testing
-        amountTextField.setText("1");
-        priceTextField.setText("300");
-        volumeTextField.setText("300");
     }
 
     @Override
     public void doDeactivate() {
         removeBindings();
     }
+
+    private void addBindings() {
+        amountTextField.textProperty().bindBidirectional(model.amount);
+        priceTextField.textProperty().bindBidirectional(model.price);
+        volumeTextField.textProperty().bindBidirectional(model.volume);
+        amountBtcLabel.textProperty().bind(model.btcCode);
+        priceFiatLabel.textProperty().bind(model.fiatCode);
+        volumeFiatLabel.textProperty().bind(model.fiatCode);
+        priceDescriptionLabel.textProperty().bind(createStringBinding(() -> BSResources.get("Filter by price in {0}", model.fiatCode.get()), model.fiatCode));
+        volumeDescriptionLabel.textProperty().bind(createStringBinding(() -> BSResources.get("Filter by amount in {0}", model.fiatCode.get()), model.fiatCode));
+        volumeTextField.promptTextProperty().bind(createStringBinding(() -> BSResources.get("Amount in {0}", model.fiatCode.get()), model.fiatCode));
+
+        model.getOfferList().comparatorProperty().bind(table.comparatorProperty());
+    }
+
+    private void removeBindings() {
+        amountTextField.textProperty().unbind();
+        priceTextField.textProperty().unbind();
+        volumeTextField.textProperty().unbind();
+        amountBtcLabel.textProperty().unbind();
+        priceFiatLabel.textProperty().unbind();
+        volumeFiatLabel.textProperty().unbind();
+        priceDescriptionLabel.textProperty().unbind();
+        volumeDescriptionLabel.textProperty().unbind();
+        volumeTextField.promptTextProperty().unbind();
+
+        model.getOfferList().comparatorProperty().unbind();
+    }
+
+    private void setupValidators() {
+        amountTextField.setValidator(optionalBtcValidator);
+        priceTextField.setValidator(optionalFiatValidator);
+        volumeTextField.setValidator(optionalFiatValidator);
+    }
+
+    private void setupComparators() {
+        priceColumn.setComparator((o1, o2) -> o1.getOffer().getPrice().compareTo(o2.getOffer().getPrice()));
+        amountColumn.setComparator((o1, o2) -> o1.getOffer().getAmount().compareTo(o2.getOffer().getAmount()));
+        volumeColumn.setComparator((o1, o2) ->
+                o1.getOffer().getOfferVolume().compareTo(o2.getOffer().getOfferVolume()));
+      /*  countryColumn.setComparator((o1, o2) -> o1.getOffer().getBankAccountCountry().getName().compareTo(o2
+      .getOffer()
+                .getBankAccountCountry().getName()));*/
+        bankAccountTypeColumn.setComparator((o1, o2) -> o1.getOffer().getFiatAccountType().compareTo(o2.getOffer()
+                .getFiatAccountType()));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void enableCreateOfferButton() {
         createOfferButton.setDisable(false);
@@ -161,6 +204,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     public void setDirection(Offer.Direction direction) {
         model.setDirection(direction);
     }
+
+    public void setOfferActionHandler(OfferView.OfferActionHandler offerActionHandler) {
+        this.offerActionHandler = offerActionHandler;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI actions
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @FXML
     void createOffer() {
@@ -171,6 +223,23 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         else {
             openSetupScreen();
         }
+    }
+
+    private void openSetupScreen() {
+        overlayManager.blurContent();
+        List<Action> actions = new ArrayList<>();
+        actions.add(new AbstractAction(BSResources.get("shared.ok")) {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                getProperties().put("type", "OK");
+                Dialog.Actions.OK.handle(actionEvent);
+                navigation.setReturnPath(navigation.getCurrentPath());
+                navigation.navigateTo(MainView.class, AccountView.class, AccountSetupWizard.class);
+            }
+        });
+        Popups.openInfoPopup("You don't have setup a trading account.",
+                "You need to setup your trading account before you can trade.",
+                actions);
     }
 
     @FXML
@@ -203,23 +272,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         Popups.openWarningPopup("Under construction", "This feature is not implemented yet.");
     }
 
-    private void openSetupScreen() {
-        overlayManager.blurContent();
-        List<Action> actions = new ArrayList<>();
-        actions.add(new AbstractAction(BSResources.get("shared.ok")) {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                getProperties().put("type", "OK");
-                Dialog.Actions.OK.handle(actionEvent);
-                navigation.setReturnPath(navigation.getCurrentPath());
-                navigation.navigateTo(MainView.class, AccountView.class, AccountSetupWizard.class);
-            }
-        });
-        Popups.openInfoPopup("You don't have setup a trading account.",
-                "You need to setup your trading account before you can trade.",
-                actions);
-    }
-
     private void takeOffer(Offer offer) {
         if (model.isRegistered()) {
             if (offer.getDirection() == Offer.Direction.BUY) {
@@ -248,36 +300,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     }
 
-    private void openRestrictionsWarning(String restrictionsInfo) {
-        overlayManager.blurContent();
-        List<Action> actions = new ArrayList<>();
-        actions.add(new AbstractAction(BSResources.get("shared.yes")) {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                getProperties().put("type", "YES");
-                Dialog.Actions.YES.handle(actionEvent);
-            }
-        });
-        actions.add(new AbstractAction(BSResources.get("shared.no")) {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                getProperties().put("type", "NO");
-                Dialog.Actions.NO.handle(actionEvent);
-            }
-        });
 
-        Action response = Popups.openConfirmPopup("Information",
-                "You do not fulfill the requirements for that offer.",
-                restrictionsInfo,
-                actions);
-
-        Popups.removeBlurContent();
-
-        if (Popups.isYes(response))
-            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, RestrictionsView.class);
-        else
-            table.getSelectionModel().clearSelection();
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // State
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void showDetailsScreen() {
         if (!advancedScreenInited) {
@@ -313,61 +339,46 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         showOnlyMatchingCheckBox.setManaged(visible);
     }
 
-    private void setupBindings() {
-        amountTextField.textProperty().bindBidirectional(model.amount);
-        priceTextField.textProperty().bindBidirectional(model.price);
-        volumeTextField.textProperty().bindBidirectional(model.volume);
-        amountBtcLabel.textProperty().bind(model.btcCode);
-        priceFiatLabel.textProperty().bind(model.fiatCode);
-        volumeFiatLabel.textProperty().bind(model.fiatCode);
-        priceDescriptionLabel.textProperty().bind(model.fiatCode);
-        volumeDescriptionLabel.textProperty().bind(model.fiatCode);//Price per Bitcoin in EUR
-        priceDescriptionLabel.textProperty().bind(createStringBinding(() ->
-                        BSResources.get("Filter by price in {0}", model.fiatCode.get()),
-                model.fiatCode));
-        volumeDescriptionLabel.textProperty().bind(createStringBinding(() ->
-                        BSResources.get("Filter by amount in {0}", model.fiatCode.get()),
-                model.fiatCode));
-        volumeTextField.promptTextProperty().bind(createStringBinding(() ->
-                        BSResources.get("Amount in {0}", model.fiatCode.get()),
-                model.fiatCode));
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void openRestrictionsWarning(String restrictionsInfo) {
+        overlayManager.blurContent();
+        List<Action> actions = new ArrayList<>();
+        actions.add(new AbstractAction(BSResources.get("shared.yes")) {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                getProperties().put("type", "YES");
+                Dialog.Actions.YES.handle(actionEvent);
+            }
+        });
+        actions.add(new AbstractAction(BSResources.get("shared.no")) {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                getProperties().put("type", "NO");
+                Dialog.Actions.NO.handle(actionEvent);
+            }
+        });
+
+        Action response = Popups.openConfirmPopup("Information",
+                "You do not fulfill the requirements for that offer.",
+                restrictionsInfo,
+                actions);
+
+        Popups.removeBlurContent();
+
+        if (Popups.isYes(response))
+            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, RestrictionsView.class);
+        else
+            table.getSelectionModel().clearSelection();
     }
 
-    private void removeBindings() {
-        amountTextField.textProperty().unbind();
-        priceTextField.textProperty().unbind();
-        volumeTextField.textProperty().unbind();
-        amountBtcLabel.textProperty().unbind();
-        priceFiatLabel.textProperty().unbind();
-        volumeFiatLabel.textProperty().unbind();
-        priceDescriptionLabel.textProperty().unbind();
-        volumeDescriptionLabel.textProperty().unbind();
-        priceDescriptionLabel.textProperty().unbind();
-        volumeDescriptionLabel.textProperty().unbind();
-        volumeTextField.promptTextProperty().unbind();
-    }
 
-    private void setupValidators() {
-        amountTextField.setValidator(optionalBtcValidator);
-        priceTextField.setValidator(optionalFiatValidator);
-        volumeTextField.setValidator(optionalFiatValidator);
-    }
-
-    private void setupComparators() {
-        priceColumn.setComparator((o1, o2) -> o1.getOffer().getPrice().compareTo(o2.getOffer().getPrice()));
-        amountColumn.setComparator((o1, o2) -> o1.getOffer().getAmount().compareTo(o2.getOffer().getAmount()));
-        volumeColumn.setComparator((o1, o2) ->
-                o1.getOffer().getOfferVolume().compareTo(o2.getOffer().getOfferVolume()));
-      /*  countryColumn.setComparator((o1, o2) -> o1.getOffer().getBankAccountCountry().getName().compareTo(o2
-      .getOffer()
-                .getBankAccountCountry().getName()));*/
-        bankAccountTypeColumn.setComparator((o1, o2) -> o1.getOffer().getFiatAccountType().compareTo(o2.getOffer()
-                .getFiatAccountType()));
-    }
-
-    public void setOfferActionHandler(OfferView.OfferActionHandler offerActionHandler) {
-        this.offerActionHandler = offerActionHandler;
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Table
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setAmountColumnCellFactory() {
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -438,6 +449,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                         return new TableCell<OfferBookListItem, OfferBookListItem>() {
                             final ImageView iconView = new ImageView();
                             final Button button = new Button();
+                            ChangeListener<Country> countryChangeListener;
+                            OfferBookListItem item;
 
                             {
                                 button.setGraphic(iconView);
@@ -493,14 +506,26 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setOnAction(event -> takeOffer(item.getOffer()));
                                     }
 
-                                    //TODO remove listener
-                                    item.bankAccountCountryProperty().addListener((ov, o, n) -> verifyIfTradable(item));
+
+                                    if (countryChangeListener != null && this.item != null)
+                                        item.bankAccountCountryProperty().removeListener(countryChangeListener);
+
+                                    this.item = item;
+                                    countryChangeListener = (ov, o, n) -> verifyIfTradable(this.item);
+                                    item.bankAccountCountryProperty().addListener(countryChangeListener);
+
+
                                     verifyIfTradable(item);
 
                                     button.setText(title);
                                     setGraphic(button);
                                 }
                                 else {
+                                    if (this.item != null) {
+                                        this.item.bankAccountCountryProperty().removeListener(countryChangeListener);
+                                        this.item = null;
+                                        countryChangeListener = null;
+                                    }
                                     setGraphic(null);
                                 }
                             }

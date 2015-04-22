@@ -36,8 +36,9 @@ public class SendPayoutTxFinalizedMessage extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             PayoutTxFinalizedMessage tradeMessage = new PayoutTxFinalizedMessage(processModel.getId(), trade.getPayoutTx());
             processModel.getMessageService().sendEncryptedMessage(
                     trade.getTradingPeer(),

@@ -38,35 +38,25 @@ public class BroadcastTakeOfferFeeTx extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             processModel.getTradeWalletService().broadcastTx(processModel.getTakeOfferFeeTx(),
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {
                             log.debug("Take offer fee published successfully. Transaction ID = " + transaction.getHashAsString());
 
-                           /* if (trade instanceof SellerTrade)
-                                trade.setProcessState(TakerTradeState.ProcessState.TAKE_OFFER_FEE_PUBLISHED);*/
-
                             complete();
                         }
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
-                            t.printStackTrace();
                             appendToErrorMessage("Take offer fee payment failed. Maybe your network connection was lost. Please try again.");
-                            trade.setErrorMessage(errorMessage);
-
-                          /*  if (trade instanceof SellerTrade)
-                                trade.setProcessState(TakerTradeState.ProcessState.TAKE_OFFER_FEE_PUBLISH_FAILED);*/
-
                             failed(t);
                         }
                     });
         } catch (Throwable t) {
-            t.printStackTrace();
-            trade.setThrowable(t);
             failed(t);
         }
     }

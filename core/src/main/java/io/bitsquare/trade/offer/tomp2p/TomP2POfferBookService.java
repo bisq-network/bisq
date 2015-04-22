@@ -34,6 +34,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import javafx.beans.property.LongProperty;
+import javafx.beans.property.ReadOnlyLongProperty;
 import javafx.beans.property.SimpleLongProperty;
 
 import net.tomp2p.dht.FutureGet;
@@ -220,7 +221,7 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
                                 if (offerDataObject instanceof Offer) {
                                     offers.add((Offer) offerDataObject);
                                 }
-                            } catch (ClassNotFoundException | IOException e) {
+                            } catch (ClassCastException | ClassNotFoundException | IOException e) {
                                 e.printStackTrace();
                                 log.warn(e.getMessage());
                             }
@@ -293,7 +294,7 @@ public class TomP2POfferBookService extends TomP2PDHTService implements OfferBoo
         }
     }
 
-    public LongProperty invalidationTimestampProperty() {
+    public ReadOnlyLongProperty invalidationTimestampProperty() {
         return invalidationTimestamp;
     }
 

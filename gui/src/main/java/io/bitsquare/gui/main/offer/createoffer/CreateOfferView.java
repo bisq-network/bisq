@@ -48,6 +48,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.HPos;
@@ -75,6 +76,9 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 @FxmlView
 public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateOfferViewModel> {
 
+    private final Navigation navigation;
+    private final OverlayManager overlayManager;
+
     @FXML ScrollPane scrollPane;
     @FXML ImageView imageView;
     @FXML AddressTextField addressTextField;
@@ -100,31 +104,257 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private boolean detailsVisible;
     private boolean advancedScreenInited;
 
-    private final Navigation navigation;
-    private final OverlayManager overlayManager;
     private OfferView.CloseHandler closeHandler;
+
+    private ChangeListener<Boolean> amountFocusedListener;
+    private ChangeListener<Boolean> minAmountFocusedListener;
+    private ChangeListener<Boolean> priceFocusedListener;
+    private ChangeListener<Boolean> volumeFocusedListener;
+    private ChangeListener<Boolean> showWarningInvalidBtcDecimalPlacesListener;
+    private ChangeListener<Boolean> showWarningInvalidFiatDecimalPlacesPlacesListener;
+    private ChangeListener<Boolean> showWarningAdjustedVolumeListener;
+    private ChangeListener<String> requestPlaceOfferErrorMessageListener;
+    private ChangeListener<Boolean> isPlaceOfferSpinnerVisibleListener;
+    private ChangeListener<Boolean> showTransactionPublishedScreen;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
     private CreateOfferView(CreateOfferViewModel model, Navigation navigation,
                             OverlayManager overlayManager) {
         super(model);
+
         this.navigation = navigation;
         this.overlayManager = overlayManager;
     }
 
     @Override
     protected void initialize() {
-        setupListeners();
-        setupBindings();
+        createListeners();
 
         balanceTextField.setup(model.getWalletService(), model.address.get(), model.getFormatter());
         volumeTextField.setPromptText(BSResources.get("createOffer.volume.prompt", model.fiatCode.get()));
     }
 
     @Override
-    protected void doDeactivate() {
-
+    protected void doActivate() {
+        addBindings();
+        addListeners();
     }
+
+    @Override
+    protected void doDeactivate() {
+        removeBindings();
+        removeListeners();
+    }
+
+    private void addBindings() {
+        amountBtcLabel.textProperty().bind(model.btcCode);
+        priceFiatLabel.textProperty().bind(model.fiatCode);
+        volumeFiatLabel.textProperty().bind(model.fiatCode);
+        minAmountBtcLabel.textProperty().bind(model.btcCode);
+
+        priceDescriptionLabel.textProperty().bind(createStringBinding(() ->
+                BSResources.get("createOffer.amountPriceBox.priceDescription", model.fiatCode.get()), model.fiatCode));
+
+        volumeDescriptionLabel.textProperty().bind(createStringBinding(() -> model.volumeDescriptionLabel.get(), model.fiatCode, model.volumeDescriptionLabel));
+
+        buyLabel.textProperty().bind(model.directionLabel);
+        amountToTradeLabel.textProperty().bind(model.amountToTradeLabel);
+        amountTextField.textProperty().bindBidirectional(model.amount);
+        minAmountTextField.textProperty().bindBidirectional(model.minAmount);
+        priceTextField.textProperty().bindBidirectional(model.price);
+        volumeTextField.textProperty().bindBidirectional(model.volume);
+        amountPriceBoxInfo.textProperty().bind(model.amountPriceBoxInfo);
+
+        totalToPayTextField.textProperty().bind(model.totalToPay);
+
+        addressTextField.amountAsCoinProperty().bind(model.totalToPayAsCoin);
+        addressTextField.paymentLabelProperty().bind(model.paymentLabel);
+        addressTextField.addressProperty().bind(model.addressAsString);
+
+        bankAccountTypeTextField.textProperty().bind(model.bankAccountType);
+        bankAccountCurrencyTextField.textProperty().bind(model.bankAccountCurrency);
+        bankAccountCountyTextField.textProperty().bind(model.bankAccountCounty);
+
+        acceptedCountriesTextField.textProperty().bind(model.acceptedCountries);
+        acceptedLanguagesTextField.textProperty().bind(model.acceptedLanguages);
+        acceptedArbitratorsTextField.textProperty().bind(model.acceptedArbitrators);
+
+        // Validation
+        amountTextField.validationResultProperty().bind(model.amountValidationResult);
+        minAmountTextField.validationResultProperty().bind(model.minAmountValidationResult);
+        priceTextField.validationResultProperty().bind(model.priceValidationResult);
+        volumeTextField.validationResultProperty().bind(model.volumeValidationResult);
+
+        // buttons
+        placeOfferButton.visibleProperty().bind(model.isPlaceOfferButtonVisible);
+        placeOfferButton.disableProperty().bind(model.isPlaceOfferButtonDisabled);
+
+        placeOfferSpinnerInfoLabel.visibleProperty().bind(model.isPlaceOfferSpinnerVisible);
+    }
+
+    private void removeBindings() {
+        amountBtcLabel.textProperty().unbind();
+        priceFiatLabel.textProperty().unbind();
+        volumeFiatLabel.textProperty().unbind();
+        minAmountBtcLabel.textProperty().unbind();
+        priceDescriptionLabel.textProperty().unbind();
+        volumeDescriptionLabel.textProperty().unbind();
+        buyLabel.textProperty().unbind();
+        amountToTradeLabel.textProperty().unbind();
+        amountTextField.textProperty().unbindBidirectional(model.amount);
+        minAmountTextField.textProperty().unbindBidirectional(model.minAmount);
+        priceTextField.textProperty().unbindBidirectional(model.price);
+        volumeTextField.textProperty().unbindBidirectional(model.volume);
+        amountPriceBoxInfo.textProperty().unbind();
+        totalToPayTextField.textProperty().unbind();
+        addressTextField.amountAsCoinProperty().unbind();
+        addressTextField.paymentLabelProperty().unbind();
+        addressTextField.addressProperty().unbind();
+        bankAccountTypeTextField.textProperty().unbind();
+        bankAccountCurrencyTextField.textProperty().unbind();
+        bankAccountCountyTextField.textProperty().unbind();
+        acceptedCountriesTextField.textProperty().unbind();
+        acceptedLanguagesTextField.textProperty().unbind();
+        acceptedArbitratorsTextField.textProperty().unbind();
+        amountTextField.validationResultProperty().unbind();
+        minAmountTextField.validationResultProperty().unbind();
+        priceTextField.validationResultProperty().unbind();
+        volumeTextField.validationResultProperty().unbind();
+        placeOfferButton.visibleProperty().unbind();
+        placeOfferButton.disableProperty().unbind();
+        placeOfferSpinnerInfoLabel.visibleProperty().unbind();
+    }
+
+    private void createListeners() {
+        amountFocusedListener = (o, oldValue, newValue) -> {
+            model.onFocusOutAmountTextField(oldValue, newValue, amountTextField.getText());
+            amountTextField.setText(model.amount.get());
+        };
+        minAmountFocusedListener = (o, oldValue, newValue) -> {
+            model.onFocusOutMinAmountTextField(oldValue, newValue, minAmountTextField.getText());
+            minAmountTextField.setText(model.minAmount.get());
+        };
+        priceFocusedListener = (o, oldValue, newValue) -> {
+            model.onFocusOutPriceTextField(oldValue, newValue, priceTextField.getText());
+            priceTextField.setText(model.price.get());
+        };
+        volumeFocusedListener = (o, oldValue, newValue) -> {
+            model.onFocusOutVolumeTextField(oldValue, newValue, volumeTextField.getText());
+            volumeTextField.setText(model.volume.get());
+        };
+        showWarningInvalidBtcDecimalPlacesListener = (o, oldValue, newValue) -> {
+            if (newValue) {
+                Popups.openWarningPopup(BSResources.get("shared.warning"), BSResources.get("createOffer.amountPriceBox.warning.invalidBtcDecimalPlaces"));
+                model.showWarningInvalidBtcDecimalPlaces.set(false);
+            }
+        };
+        showWarningInvalidFiatDecimalPlacesPlacesListener = (o, oldValue, newValue) -> {
+            if (newValue) {
+                Popups.openWarningPopup(BSResources.get("shared.warning"), BSResources.get("createOffer.amountPriceBox.warning.invalidFiatDecimalPlaces"));
+                model.showWarningInvalidFiatDecimalPlaces.set(false);
+            }
+        };
+        showWarningAdjustedVolumeListener = (o, oldValue, newValue) -> {
+            if (newValue) {
+                Popups.openWarningPopup(BSResources.get("shared.warning"), BSResources.get("createOffer.amountPriceBox.warning.adjustedVolume"));
+                model.showWarningAdjustedVolume.set(false);
+                volumeTextField.setText(model.volume.get());
+            }
+        };
+        requestPlaceOfferErrorMessageListener = (o, oldValue, newValue) -> {
+            if (newValue != null) {
+                Popups.openErrorPopup(BSResources.get("shared.error"), BSResources.get("createOffer.amountPriceBox.error.message",
+                        model.requestPlaceOfferErrorMessage.get()));
+                Popups.removeBlurContent();
+            }
+        };
+        isPlaceOfferSpinnerVisibleListener = (ov, oldValue, newValue) -> {
+            placeOfferSpinner.setProgress(newValue ? -1 : 0);
+            placeOfferSpinner.setVisible(newValue);
+        };
+
+        showTransactionPublishedScreen = (o, oldValue, newValue) -> {
+            // TODO temp just for testing 
+            newValue = false;
+            close();
+            navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class);
+
+            if (newValue) {
+                overlayManager.blurContent();
+
+                // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added
+                // our own actions.
+                List<Action> actions = new ArrayList<>();
+              /*  actions.add(new AbstractAction(BSResources.get("shared.copyTxId")) {
+                    @Override
+                    public void handle(ActionEvent actionEvent) {
+                        getProperties().put("type", "COPY");
+                        Utilities.copyToClipboard(model.transactionId.get());
+                    }
+                });*/
+                actions.add(new AbstractAction(BSResources.get("shared.close")) {
+                    @Override
+                    public void handle(ActionEvent actionEvent) {
+                        getProperties().put("type", "CLOSE");
+                        try {
+                            close();
+                            navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        Dialog.Actions.CLOSE.handle(actionEvent);
+                    }
+                });
+                Popups.openInfoPopup(BSResources.get("createOffer.success.headline"),
+                        BSResources.get("createOffer.success.info"),
+                        actions);
+            }
+        };
+    }
+
+    private void addListeners() {
+        // focus out
+        amountTextField.focusedProperty().addListener(amountFocusedListener);
+        minAmountTextField.focusedProperty().addListener(minAmountFocusedListener);
+        priceTextField.focusedProperty().addListener(priceFocusedListener);
+        volumeTextField.focusedProperty().addListener(volumeFocusedListener);
+
+        // warnings
+        model.showWarningInvalidBtcDecimalPlaces.addListener(showWarningInvalidBtcDecimalPlacesListener);
+        model.showWarningInvalidFiatDecimalPlaces.addListener(showWarningInvalidFiatDecimalPlacesPlacesListener);
+        model.showWarningAdjustedVolume.addListener(showWarningAdjustedVolumeListener);
+        model.requestPlaceOfferErrorMessage.addListener(requestPlaceOfferErrorMessageListener);
+        model.isPlaceOfferSpinnerVisible.addListener(isPlaceOfferSpinnerVisibleListener);
+
+        model.showTransactionPublishedScreen.addListener(showTransactionPublishedScreen);
+    }
+
+    private void removeListeners() {
+        // focus out
+        amountTextField.focusedProperty().removeListener(amountFocusedListener);
+        minAmountTextField.focusedProperty().removeListener(minAmountFocusedListener);
+        priceTextField.focusedProperty().removeListener(priceFocusedListener);
+        volumeTextField.focusedProperty().removeListener(volumeFocusedListener);
+
+        // warnings
+        model.showWarningInvalidBtcDecimalPlaces.removeListener(showWarningInvalidBtcDecimalPlacesListener);
+        model.showWarningInvalidFiatDecimalPlaces.removeListener(showWarningInvalidFiatDecimalPlacesPlacesListener);
+        model.showWarningAdjustedVolume.removeListener(showWarningAdjustedVolumeListener);
+        model.requestPlaceOfferErrorMessage.removeListener(requestPlaceOfferErrorMessageListener);
+        model.isPlaceOfferSpinnerVisible.removeListener(isPlaceOfferSpinnerVisibleListener);
+
+        model.showTransactionPublishedScreen.removeListener(showTransactionPublishedScreen);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initWithData(Offer.Direction direction, Coin amount, Fiat price) {
         model.initWithData(direction, amount, price);
@@ -139,9 +369,19 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         this.closeHandler = closeHandler;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI actions
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @FXML
     void onPlaceOffer() {
         model.onPlaceOffer();
+    }
+
+    @FXML
+    void onScroll() {
+        InputTextField.hideErrorMessageDisplay();
     }
 
     @FXML
@@ -226,6 +466,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         Help.openWindow(HelpId.CREATE_OFFER_ADVANCED);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Navigation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private void openAccountSettings() {
         navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, RestrictionsView.class);
     }
@@ -235,150 +480,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             closeHandler.close();
     }
 
-    private void setupListeners() {
-        scrollPane.setOnScroll(e -> InputTextField.hideErrorMessageDisplay());
 
-        // focus out
-        amountTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-            model.onFocusOutAmountTextField(oldValue, newValue, amountTextField.getText());
-            amountTextField.setText(model.amount.get());
-        });
-
-        minAmountTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-            model.onFocusOutMinAmountTextField(oldValue, newValue, minAmountTextField.getText());
-            minAmountTextField.setText(model.minAmount.get());
-        });
-
-        priceTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-            model.onFocusOutPriceTextField(oldValue, newValue, priceTextField.getText());
-            priceTextField.setText(model.price.get());
-        });
-
-        volumeTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-            model.onFocusOutVolumeTextField(oldValue, newValue, volumeTextField.getText());
-            volumeTextField.setText(model.volume.get());
-        });
-
-        // warnings
-        model.showWarningInvalidBtcDecimalPlaces.addListener((o, oldValue, newValue) -> {
-            if (newValue) {
-                Popups.openWarningPopup(BSResources.get("shared.warning"), BSResources.get("createOffer.amountPriceBox.warning.invalidBtcDecimalPlaces"));
-                model.showWarningInvalidBtcDecimalPlaces.set(false);
-            }
-        });
-
-        model.showWarningInvalidFiatDecimalPlaces.addListener((o, oldValue, newValue) -> {
-            if (newValue) {
-                Popups.openWarningPopup(BSResources.get("shared.warning"), BSResources.get("createOffer.amountPriceBox.warning.invalidFiatDecimalPlaces"));
-                model.showWarningInvalidFiatDecimalPlaces.set(false);
-            }
-        });
-
-        model.showWarningAdjustedVolume.addListener((o, oldValue, newValue) -> {
-            if (newValue) {
-                Popups.openWarningPopup(BSResources.get("shared.warning"), BSResources.get("createOffer.amountPriceBox.warning.adjustedVolume"));
-                model.showWarningAdjustedVolume.set(false);
-                volumeTextField.setText(model.volume.get());
-            }
-        });
-
-        model.requestPlaceOfferErrorMessage.addListener((o, oldValue, newValue) -> {
-            if (newValue != null) {
-                Popups.openErrorPopup(BSResources.get("shared.error"), BSResources.get("createOffer.amountPriceBox.error.message",
-                        model.requestPlaceOfferErrorMessage.get()));
-                Popups.removeBlurContent();
-            }
-        });
-
-        model.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
-            // TODO temp just for testing 
-            newValue = false;
-            close();
-            navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class);
-
-            if (newValue) {
-                overlayManager.blurContent();
-
-                // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added
-                // our own actions.
-                List<Action> actions = new ArrayList<>();
-              /*  actions.add(new AbstractAction(BSResources.get("shared.copyTxId")) {
-                    @Override
-                    public void handle(ActionEvent actionEvent) {
-                        getProperties().put("type", "COPY");
-                        Utilities.copyToClipboard(model.transactionId.get());
-                    }
-                });*/
-                actions.add(new AbstractAction(BSResources.get("shared.close")) {
-                    @Override
-                    public void handle(ActionEvent actionEvent) {
-                        getProperties().put("type", "CLOSE");
-                        try {
-                            close();
-                            navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        Dialog.Actions.CLOSE.handle(actionEvent);
-                    }
-                });
-                Popups.openInfoPopup(BSResources.get("createOffer.success.headline"),
-                        BSResources.get("createOffer.success.info"),
-                        actions);
-            }
-        });
-    }
-
-    private void setupBindings() {
-        amountBtcLabel.textProperty().bind(model.btcCode);
-        priceFiatLabel.textProperty().bind(model.fiatCode);
-        volumeFiatLabel.textProperty().bind(model.fiatCode);
-        minAmountBtcLabel.textProperty().bind(model.btcCode);
-
-        priceDescriptionLabel.textProperty().bind(createStringBinding(() ->
-                BSResources.get("createOffer.amountPriceBox.priceDescription", model.fiatCode.get()), model.fiatCode));
-
-        volumeDescriptionLabel.textProperty().bind(createStringBinding(() -> model.volumeDescriptionLabel.get(), model.fiatCode, model.volumeDescriptionLabel));
-
-        buyLabel.textProperty().bind(model.directionLabel);
-        amountToTradeLabel.textProperty().bind(model.amountToTradeLabel);
-        amountTextField.textProperty().bindBidirectional(model.amount);
-        minAmountTextField.textProperty().bindBidirectional(model.minAmount);
-        priceTextField.textProperty().bindBidirectional(model.price);
-        volumeTextField.textProperty().bindBidirectional(model.volume);
-        amountPriceBoxInfo.textProperty().bind(model.amountPriceBoxInfo);
-
-        totalToPayTextField.textProperty().bind(model.totalToPay);
-
-        addressTextField.amountAsCoinProperty().bind(model.totalToPayAsCoin);
-        addressTextField.paymentLabelProperty().bind(model.paymentLabel);
-        addressTextField.addressProperty().bind(model.addressAsString);
-
-        bankAccountTypeTextField.textProperty().bind(model.bankAccountType);
-        bankAccountCurrencyTextField.textProperty().bind(model.bankAccountCurrency);
-        bankAccountCountyTextField.textProperty().bind(model.bankAccountCounty);
-
-        acceptedCountriesTextField.textProperty().bind(model.acceptedCountries);
-        acceptedLanguagesTextField.textProperty().bind(model.acceptedLanguages);
-        acceptedArbitratorsTextField.textProperty().bind(model.acceptedArbitrators);
-
-        // Validation
-        amountTextField.validationResultProperty().bind(model.amountValidationResult);
-        minAmountTextField.validationResultProperty().bind(model.minAmountValidationResult);
-        priceTextField.validationResultProperty().bind(model.priceValidationResult);
-        volumeTextField.validationResultProperty().bind(model.volumeValidationResult);
-
-        // buttons
-        placeOfferButton.visibleProperty().bind(model.isPlaceOfferButtonVisible);
-        placeOfferButton.disableProperty().bind(model.isPlaceOfferButtonDisabled);
-
-        placeOfferSpinnerInfoLabel.visibleProperty().bind(model.isPlaceOfferSpinnerVisible);
-
-        model.isPlaceOfferSpinnerVisible.addListener((ov, oldValue, newValue) -> {
-            placeOfferSpinner.setProgress(newValue ? -1 : 0);
-            placeOfferSpinner.setVisible(newValue);
-        });
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // State
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void showDetailsScreen() {
         payFundsPane.setInactive();
@@ -432,6 +537,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         advancedInfoDisplay.setVisible(visible);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initEditIcons() {
         acceptedCountriesLabelIcon.setId("clickable-icon");

@@ -44,8 +44,9 @@ public class SignAndPublishDepositTx extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             Coin inputAmount = trade.getSecurityDeposit().add(FeePolicy.TX_FEE);
 
             processModel.getTradeWalletService().signAndPublishDepositTx(

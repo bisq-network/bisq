@@ -38,8 +38,9 @@ public class CommitPayoutTx extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             Transaction transaction = processModel.getTradeWalletService().commitTx(trade.getPayoutTx());
 
             trade.setPayoutTx(transaction);

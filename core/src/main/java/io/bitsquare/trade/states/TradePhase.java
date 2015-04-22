@@ -17,29 +17,10 @@
 
 package io.bitsquare.trade.states;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+public enum TradePhase {
+    PREPARATION,            // No damage
+    TAKE_OFFER__FEE_PAID,   // Offer fee can be lost
+    DEPOSIT_BROAD_CASTED,   // Need arbitrator
+    PAYOUT_BROAD_CASTED     // Only charge back risk open
 
-public class SellerTradeState {
-    private static final Logger log = LoggerFactory.getLogger(SellerTradeState.class);
-
-    public enum ProcessState implements TradeState.ProcessState {
-        UNDEFINED,
-
-        DEPOSIT_PUBLISHED_MSG_RECEIVED,
-        DEPOSIT_CONFIRMED,
-
-        FIAT_PAYMENT_STARTED_MSG_RECEIVED,
-
-        FIAT_PAYMENT_RECEIPT,
-        FIAT_PAYMENT_RECEIPT_MSG_SENT,
-
-        PAYOUT_TX_RECEIVED,
-        PAYOUT_TX_COMMITTED,
-
-        PAYOUT_BROAD_CASTED,
-
-        TIMEOUT,
-        FAULT
-    }
 }

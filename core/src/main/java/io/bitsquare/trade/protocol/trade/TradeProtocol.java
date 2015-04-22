@@ -32,11 +32,9 @@ import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
 import io.bitsquare.trade.states.BuyerTradeState;
 import io.bitsquare.trade.states.SellerTradeState;
-
-import org.bitcoinj.utils.Threading;
+import io.bitsquare.util.Utilities;
 
 import java.util.Timer;
-import java.util.TimerTask;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,28 +139,18 @@ public abstract class TradeProtocol {
     }
 
     protected void startTimeout() {
-        log.debug("startTimeout");
         stopTimeout();
 
-        timeoutTimer = new Timer();
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                Threading.USER_THREAD.execute(() -> {
-                    log.debug("Timeout reached");
-                   /* if (trade instanceof SellerTrade)
-                        trade.setProcessState(SellerTradeState.ProcessState.TIMEOUT);
-                    else if (trade instanceof BuyerTrade)
-                        trade.setProcessState(BuyerTradeState.ProcessState.TIMEOUT);*/
-                });
-            }
-        };
-
-        timeoutTimer.schedule(task, TIMEOUT);
+        timeoutTimer = Utilities.setTimeout(TIMEOUT, () -> {
+            log.debug("Timeout reached");
+            if (trade instanceof SellerTrade)
+                trade.setProcessState(SellerTradeState.ProcessState.TIMEOUT);
+            else if (trade instanceof BuyerTrade)
+                trade.setProcessState(BuyerTradeState.ProcessState.TIMEOUT);
+        });
     }
 
     protected void stopTimeout() {
-        log.debug("stopTimeout");
         if (timeoutTimer != null) {
             timeoutTimer.cancel();
             timeoutTimer = null;

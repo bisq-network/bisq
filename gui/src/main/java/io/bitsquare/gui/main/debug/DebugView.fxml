@@ -44,38 +44,10 @@
         </GridPane.margin>
     </ComboBox>
 
-
-    <!--  <Label text="P2P network connection:" GridPane.rowIndex="1"/>
-      <TextField fx:id="connectionType" GridPane.rowIndex="1" GridPane.columnIndex="1"
-                 mouseTransparent="true" focusTraversable="false"/>
-  
-      <Label text="My external visible P2P network address:" GridPane.rowIndex="2"/>
-      <TextField fx:id="nodeAddress" GridPane.rowIndex="2" GridPane.columnIndex="1"
-                 mouseTransparent="true" focusTraversable="false"/>
-      -->
-
-
-    <Label text="Intercept before run?:" GridPane.rowIndex="3">
-        <GridPane.margin>
-            <Insets bottom="-15"/>
-        </GridPane.margin>
-    </Label>
-    <CheckBox fx:id="interceptBeforeCheckBox" onAction="#onCheckBoxChanged" GridPane.rowIndex="3" GridPane.columnIndex="1">
-        <GridPane.margin>
-            <Insets bottom="-15"/>
-        </GridPane.margin>
-    </CheckBox>
-
     <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="200.0"/>
         <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
     </columnConstraints>
-
-    <rowConstraints>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-    </rowConstraints>
 
 </GridPane>
 

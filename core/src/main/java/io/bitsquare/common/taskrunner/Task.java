@@ -23,8 +23,7 @@ import org.slf4j.LoggerFactory;
 public abstract class Task<T extends Model> {
     private static final Logger log = LoggerFactory.getLogger(Task.class);
 
-    public static Class<? extends Task> taskToInterceptBeforeRun;
-    public static Class<? extends Task> taskToInterceptAfterRun;
+    public static Class<? extends Task> taskToIntercept;
 
     private final TaskRunner taskHandler;
     protected final T model;
@@ -35,26 +34,11 @@ public abstract class Task<T extends Model> {
         this.model = model;
     }
 
-    protected void run() {
-        try {
-            interceptBeforeRun();
-            doRun();
-        } catch (Throwable t) {
-            appendExceptionToErrorMessage(t);
-            failed();
-        }
-    }
+    abstract protected void run();
 
-    abstract protected void doRun();
-
-    private void interceptBeforeRun() {
-        if (getClass() == taskToInterceptBeforeRun)
-            throw new InterceptTaskException("Task intercepted before run got executed. Task = " + getClass().getSimpleName());
-    }
-
-    private void interceptBeforeComplete() {
-        if (getClass() == taskToInterceptAfterRun)
-            throw new InterceptTaskException("Task intercepted before complete was called. Task = " + getClass().getSimpleName());
+    protected void runInterceptHook() {
+        if (getClass() == taskToIntercept)
+            throw new InterceptTaskException("Task intercepted for testing purpose. Task = " + getClass().getSimpleName());
     }
 
     protected void appendToErrorMessage(String message) {
@@ -69,12 +53,6 @@ public abstract class Task<T extends Model> {
     }
 
     protected void complete() {
-        try {
-            interceptBeforeComplete();
-        } catch (Throwable t) {
-            appendExceptionToErrorMessage(t);
-            failed();
-        }
         taskHandler.handleComplete();
     }
 
@@ -84,6 +62,7 @@ public abstract class Task<T extends Model> {
     }
 
     protected void failed(Throwable t) {
+        t.printStackTrace();
         appendExceptionToErrorMessage(t);
         failed();
     }

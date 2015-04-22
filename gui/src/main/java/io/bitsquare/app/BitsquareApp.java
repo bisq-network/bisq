@@ -158,7 +158,7 @@ public class BitsquareApp extends Application {
             primaryStage.show();
 
             //TODO just temp.
-            //showDebugWindow();
+            // showDebugWindow();
         } catch (Throwable throwable) {
             showErrorPopup(throwable, true);
         }
@@ -174,9 +174,8 @@ public class BitsquareApp extends Application {
             throwable.printStackTrace();
             Dialogs.create()
                     .owner(primaryStage)
-                    .title("")
-                    .message("")
-                    .masthead("")
+                    .title("Error")
+                    .message("A fatal exception occurred at startup.")
                     .showException(throwable);
             if (doShutDown)
                 stop();

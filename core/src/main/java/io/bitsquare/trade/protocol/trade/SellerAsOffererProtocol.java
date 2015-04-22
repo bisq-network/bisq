@@ -100,8 +100,8 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
                 CreateAndSignDepositTx.class,
                 SendPublishDepositTxRequest.class
         );
-        taskRunner.run();
         startTimeout();
+        taskRunner.run();
     }
 
     @Override

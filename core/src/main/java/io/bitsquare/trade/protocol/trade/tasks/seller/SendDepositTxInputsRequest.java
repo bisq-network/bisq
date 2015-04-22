@@ -39,8 +39,9 @@ public class SendDepositTxInputsRequest extends TradeTask {
     private int retryCounter = 0;
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             assert processModel.getTakeOfferFeeTx() != null;
             DepositTxInputsRequest message = new DepositTxInputsRequest(
                     processModel.getId(),
@@ -67,7 +68,7 @@ public class SendDepositTxInputsRequest extends TradeTask {
                             // We try to repeat once and if that fails as well we persist the state for a later retry.
                             if (retryCounter == 0) {
                                 retryCounter++;
-                                Threading.USER_THREAD.execute(SendDepositTxInputsRequest.this::doRun);
+                                Threading.USER_THREAD.execute(SendDepositTxInputsRequest.this::run);
                             }
                             else {
                                 appendToErrorMessage("Sending TakeOfferFeePayedMessage to offerer failed. Maybe the network connection was " +

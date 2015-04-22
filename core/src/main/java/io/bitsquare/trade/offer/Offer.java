@@ -59,7 +59,10 @@ public class Offer implements Serializable {
         AVAILABLE,
         NOT_AVAILABLE,
         REMOVED,
-        OFFERER_OFFLINE
+        OFFERER_OFFLINE,
+
+        TIMEOUT,
+        FAULT
     }
 
 

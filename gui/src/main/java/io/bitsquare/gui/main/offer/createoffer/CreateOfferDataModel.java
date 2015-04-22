@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.offer.createoffer;
 
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.arbitration.ArbitratorService;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
@@ -48,16 +47,14 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Domain for that UI element.
@@ -67,16 +64,22 @@ import static com.google.common.base.Preconditions.checkNotNull;
 class CreateOfferDataModel implements Activatable, DataModel {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferDataModel.class);
 
-    private OpenOfferManager openOfferManager;
+
+    private final OpenOfferManager openOfferManager;
     private final WalletService walletService;
     private final AccountSettings accountSettings;
     private final Preferences preferences;
+    private final User user;
     private final BSFormatter formatter;
-
     private final String offerId;
+    private final AddressEntry addressEntry;
+    final ObjectProperty<Coin> offerFeeAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> networkFeeAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> securityDepositAsCoin = new SimpleObjectProperty<>();
+    private final BalanceListener balanceListener;
+    private final ChangeListener<FiatAccount> currentFiatAccountListener;
 
     private Offer.Direction direction;
-    private AddressEntry addressEntry;
 
     final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
     final StringProperty transactionId = new SimpleStringProperty();
@@ -95,57 +98,53 @@ class CreateOfferDataModel implements Activatable, DataModel {
     final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> offerFeeAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> networkFeeAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> securityDepositAsCoin = new SimpleObjectProperty<>();
 
     final ObservableList<Country> acceptedCountries = FXCollections.observableArrayList();
     final ObservableList<String> acceptedLanguageCodes = FXCollections.observableArrayList();
     final ObservableList<Arbitrator> acceptedArbitrators = FXCollections.observableArrayList();
 
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     // non private for testing
     @Inject
-    public CreateOfferDataModel(OpenOfferManager openOfferManager, WalletService walletService, ArbitratorService arbitratorService,
+    public CreateOfferDataModel(OpenOfferManager openOfferManager, WalletService walletService,
                                 AccountSettings accountSettings, Preferences preferences, User user, BSFormatter formatter) {
         this.openOfferManager = openOfferManager;
         this.walletService = walletService;
         this.accountSettings = accountSettings;
         this.preferences = preferences;
+        this.user = user;
         this.formatter = formatter;
         this.offerId = UUID.randomUUID().toString();
+
+        addressEntry = walletService.getAddressEntry(offerId);
 
         offerFeeAsCoin.set(FeePolicy.CREATE_OFFER_FEE);
         networkFeeAsCoin.set(FeePolicy.TX_FEE);
 
-        if (walletService != null && walletService.getWallet() != null) {
-            addressEntry = walletService.getAddressEntry(offerId);
+        // we need to set it here already as it is used before activate
+        securityDepositAsCoin.set(accountSettings.getSecurityDeposit());
 
-            walletService.addBalanceListener(new BalanceListener(getAddressEntry().getAddress()) {
-                @Override
-                public void onBalanceChanged(@NotNull Coin balance) {
-                    updateBalance(balance);
-                }
-            });
-            updateBalance(walletService.getBalanceForAddress(getAddressEntry().getAddress()));
-        }
+        balanceListener = new BalanceListener(getAddressEntry().getAddress()) {
+            @Override
+            public void onBalanceChanged(@NotNull Coin balance) {
+                updateBalance(balance);
+            }
+        };
 
-        if (user != null) {
-            user.currentFiatAccountProperty().addListener((ov, oldValue, newValue) -> applyBankAccount(newValue));
-
-            applyBankAccount(user.currentFiatAccountProperty().get());
-        }
-
-        if (accountSettings != null)
-            btcCode.bind(preferences.btcDenominationProperty());
-
-        // we need to set it here already as initWithData is called before activate
-        if (accountSettings != null)
-            securityDepositAsCoin.set(accountSettings.getSecurityDeposit());
+        currentFiatAccountListener = (observable, oldValue, newValue) -> {
+            applyBankAccount(newValue);
+        };
     }
 
     @Override
     public void activate() {
+        addBindings();
+        addListeners();
+
         // might be changed after screen change
         if (accountSettings != null) {
             // set it here again to cover the case of an securityDeposit change after a screen change
@@ -155,12 +154,49 @@ class CreateOfferDataModel implements Activatable, DataModel {
             acceptedLanguageCodes.setAll(accountSettings.getAcceptedLanguageLocaleCodes());
             acceptedArbitrators.setAll(accountSettings.getAcceptedArbitrators());
         }
+
+        updateBalance(walletService.getBalanceForAddress(getAddressEntry().getAddress()));
+        applyBankAccount(user.currentFiatAccountProperty().get());
     }
 
     @Override
     public void deactivate() {
-        // no-op
+        removeBindings();
+        removeListeners();
     }
+
+    private void addBindings() {
+        btcCode.bind(preferences.btcDenominationProperty());
+    }
+
+    private void removeBindings() {
+        btcCode.unbind();
+    }
+
+    private void addListeners() {
+        walletService.addBalanceListener(balanceListener);
+        user.currentFiatAccountProperty().addListener(currentFiatAccountListener);
+
+    }
+
+    private void removeListeners() {
+        walletService.removeBalanceListener(balanceListener);
+        user.currentFiatAccountProperty().removeListener(currentFiatAccountListener);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    void initWithData(Offer.Direction direction) {
+        this.direction = direction;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI actions
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     void onPlaceOffer() {
         // data validation is done in the trade domain
@@ -177,47 +213,14 @@ class CreateOfferDataModel implements Activatable, DataModel {
         );
     }
 
-    void calculateVolume() {
-        try {
-            if (priceAsFiat.get() != null &&
-                    amountAsCoin.get() != null &&
-                    !amountAsCoin.get().isZero() &&
-                    !priceAsFiat.get().isZero()) {
-                volumeAsFiat.set(new ExchangeRate(priceAsFiat.get()).coinToFiat(amountAsCoin.get()));
-            }
-        } catch (Throwable t) {
-            // Should be never reached
-            log.error(t.toString());
-        }
+    void onSecurityDepositInfoDisplayed() {
+        preferences.setDisplaySecurityDepositInfo(false);
     }
 
-    void calculateAmount() {
-        try {
-            if (volumeAsFiat.get() != null &&
-                    priceAsFiat.get() != null &&
-                    !volumeAsFiat.get().isZero() &&
-                    !priceAsFiat.get().isZero()) {
-                // If we got a btc value with more then 4 decimals we convert it to max 4 decimals
-                amountAsCoin.set(formatter.reduceTo4Decimals(new ExchangeRate(priceAsFiat.get()).fiatToCoin
-                        (volumeAsFiat.get())));
 
-                calculateTotalToPay();
-            }
-        } catch (Throwable t) {
-            // Should be never reached
-            log.error(t.toString());
-        }
-    }
-
-    void calculateTotalToPay() {
-        if (securityDepositAsCoin.get() != null) {
-            if (direction == Offer.Direction.BUY)
-                totalToPayAsCoin.set(offerFeeAsCoin.get().add(networkFeeAsCoin.get()).add(securityDepositAsCoin.get()));
-            else
-                totalToPayAsCoin.set(offerFeeAsCoin.get().add(networkFeeAsCoin.get()).add(securityDepositAsCoin.get()).add(amountAsCoin.get()));
-        }
-    }
-
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     boolean isMinAmountLessOrEqualAmount() {
@@ -227,12 +230,6 @@ class CreateOfferDataModel implements Activatable, DataModel {
         return true;
     }
 
-    void securityDepositInfoDisplayed() {
-        preferences.setDisplaySecurityDepositInfo(false);
-    }
-
-
-    @Nullable
     Offer.Direction getDirection() {
         return direction;
     }
@@ -245,12 +242,51 @@ class CreateOfferDataModel implements Activatable, DataModel {
         return offerId;
     }
 
-    private void updateBalance(@NotNull Coin balance) {
-        isWalletFunded.set(totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0);
+    AddressEntry getAddressEntry() {
+        return addressEntry;
     }
 
-    public AddressEntry getAddressEntry() {
-        return addressEntry;
+    boolean getDisplaySecurityDepositInfo() {
+        return preferences.getDisplaySecurityDepositInfo();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    void calculateVolume() {
+        if (priceAsFiat.get() != null &&
+                amountAsCoin.get() != null &&
+                !amountAsCoin.get().isZero() &&
+                !priceAsFiat.get().isZero()) {
+            volumeAsFiat.set(new ExchangeRate(priceAsFiat.get()).coinToFiat(amountAsCoin.get()));
+        }
+    }
+
+    void calculateAmount() {
+        if (volumeAsFiat.get() != null &&
+                priceAsFiat.get() != null &&
+                !volumeAsFiat.get().isZero() &&
+                !priceAsFiat.get().isZero()) {
+            // If we got a btc value with more then 4 decimals we convert it to max 4 decimals
+            amountAsCoin.set(formatter.reduceTo4Decimals(new ExchangeRate(priceAsFiat.get()).fiatToCoin(volumeAsFiat.get())));
+
+            calculateTotalToPay();
+        }
+    }
+
+    void calculateTotalToPay() {
+        if (securityDepositAsCoin.get() != null) {
+            if (direction == Offer.Direction.BUY)
+                totalToPayAsCoin.set(offerFeeAsCoin.get().add(networkFeeAsCoin.get()).add(securityDepositAsCoin.get()));
+            else
+                totalToPayAsCoin.set(offerFeeAsCoin.get().add(networkFeeAsCoin.get()).add(securityDepositAsCoin.get()).add(amountAsCoin.get()));
+        }
+    }
+
+    private void updateBalance(Coin balance) {
+        isWalletFunded.set(totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0);
     }
 
     private void applyBankAccount(FiatAccount fiatAccount) {
@@ -261,14 +297,5 @@ class CreateOfferDataModel implements Activatable, DataModel {
 
             fiatCode.set(fiatAccount.currencyCode);
         }
-    }
-
-    public Boolean getDisplaySecurityDepositInfo() {
-        return preferences.getDisplaySecurityDepositInfo();
-    }
-
-    public void initWithData(Offer.Direction direction, Coin amount, Fiat price) {
-        checkNotNull(direction);
-        this.direction = direction;
     }
 }

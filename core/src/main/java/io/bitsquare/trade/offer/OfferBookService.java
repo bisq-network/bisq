@@ -23,7 +23,7 @@ import io.bitsquare.p2p.DHTService;
 
 import java.util.List;
 
-import javafx.beans.property.LongProperty;
+import javafx.beans.property.ReadOnlyLongProperty;
 
 public interface OfferBookService extends DHTService {
 
@@ -39,7 +39,7 @@ public interface OfferBookService extends DHTService {
 
     void removeListener(Listener listener);
 
-    LongProperty invalidationTimestampProperty();
+    ReadOnlyLongProperty invalidationTimestampProperty();
 
     void requestInvalidationTimeStampFromDHT(String fiatCode);
 

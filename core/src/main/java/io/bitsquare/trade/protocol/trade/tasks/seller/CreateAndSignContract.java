@@ -34,8 +34,9 @@ public class CreateAndSignContract extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             assert processModel.getTakeOfferFeeTxId() != null;
             Contract contract = new Contract(
                     processModel.getOffer(),

@@ -34,8 +34,9 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             Transaction transaction = model.tradeWalletService.createOfferFeeTx(
                     model.walletService.getAddressEntry(model.offer.getId()));
 

@@ -54,16 +54,16 @@ import org.slf4j.LoggerFactory;
 class OfferBookDataModel implements Activatable, DataModel {
     private static final Logger log = LoggerFactory.getLogger(OfferBookDataModel.class);
 
+    private final OpenOfferManager openOfferManager;
     private final User user;
     private final OfferBook offerBook;
     private final Preferences preferences;
     private final BSFormatter formatter;
-    private final OpenOfferManager openOfferManager;
 
     private final FilteredList<OfferBookListItem> filteredItems;
     private final SortedList<OfferBookListItem> sortedItems;
-    // private OfferBookInfo offerBookInfo;
-    private final ChangeListener<FiatAccount> bankAccountChangeListener;
+
+    private ChangeListener<FiatAccount> bankAccountChangeListener;
 
     private final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     private final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
@@ -76,6 +76,10 @@ class OfferBookDataModel implements Activatable, DataModel {
     private Offer.Direction direction;
 
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Inject
     public OfferBookDataModel(User user, OpenOfferManager openOfferManager, OfferBook offerBook, Preferences preferences,
                               BSFormatter formatter) {
@@ -87,63 +91,81 @@ class OfferBookDataModel implements Activatable, DataModel {
 
         this.filteredItems = new FilteredList<>(offerBook.getOfferBookListItems());
         this.sortedItems = new SortedList<>(filteredItems);
-        this.bankAccountChangeListener = (observableValue, oldValue, newValue) -> setBankAccount(newValue);
+
+        createListeners();
     }
 
     @Override
     public void activate() {
+        addBindings();
+        addListeners();
+/*
         amountAsCoin.set(null);
         priceAsFiat.set(null);
         volumeAsFiat.set(null);
 
-        offerBook.addClient();
-        user.currentFiatAccountProperty().addListener(bankAccountChangeListener);
-        btcCode.bind(preferences.btcDenominationProperty());
+        //TODO temp for testing
+        amountAsCoin.set(Coin.COIN);
+        priceAsFiat.set(Fiat.valueOf("EUR", 300*10000));
+       // volumeAsFiat.set(Fiat.valueOf("EUR", 300));*/
 
         setBankAccount(user.currentFiatAccountProperty().get());
         applyFilter();
+
+        offerBook.startPolling();
     }
 
     @Override
     public void deactivate() {
-        offerBook.removeClient();
-        user.currentFiatAccountProperty().removeListener(bankAccountChangeListener);
+        removeBindings();
+        removeListeners();
+
+        offerBook.stopPolling();
+    }
+
+    private void addBindings() {
+        btcCode.bind(preferences.btcDenominationProperty());
+    }
+
+    private void removeBindings() {
         btcCode.unbind();
     }
+
+    private void createListeners() {
+        this.bankAccountChangeListener = (observableValue, oldValue, newValue) -> setBankAccount(newValue);
+    }
+
+    private void addListeners() {
+        user.currentFiatAccountProperty().addListener(bankAccountChangeListener);
+    }
+
+    private void removeListeners() {
+        user.currentFiatAccountProperty().removeListener(bankAccountChangeListener);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    void setDirection(Offer.Direction direction) {
+        this.direction = direction;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI actions
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     void onCancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         openOfferManager.onCancelOpenOffer(offer, resultHandler, errorMessageHandler);
     }
 
-    void calculateVolume() {
-        try {
-            if (priceAsFiat.get() != null &&
-                    amountAsCoin.get() != null &&
-                    !amountAsCoin.get().isZero() &&
-                    !priceAsFiat.get().isZero()) {
-                volumeAsFiat.set(new ExchangeRate(priceAsFiat.get()).coinToFiat(amountAsCoin.get()));
-            }
-        } catch (Throwable t) {
-            // Should be never reached
-            log.error(t.toString());
-        }
-    }
 
-    void calculateAmount() {
-        try {
-            if (volumeAsFiat.get() != null &&
-                    priceAsFiat.get() != null &&
-                    !volumeAsFiat.get().isZero() &&
-                    !priceAsFiat.get().isZero()) {
-                // If we got a btc value with more then 4 decimals we convert it to max 4 decimals
-                amountAsCoin.set(formatter.reduceTo4Decimals(new ExchangeRate(priceAsFiat.get()).fiatToCoin
-                        (volumeAsFiat.get())));
-            }
-        } catch (Throwable t) {
-            // Should be never reached
-            log.error(t.toString());
-        }
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     boolean isTradable(Offer offer) {
         // if user has not registered yet we display all
@@ -179,27 +201,6 @@ class OfferBookDataModel implements Activatable, DataModel {
 
         return countryResult;
     }
-
-
-    void setDirection(Offer.Direction direction) {
-        this.direction = direction;
-    }
-
-    void setAmount(Coin amount) {
-        amountAsCoin.set(amount);
-        applyFilter();
-    }
-
-    void setPrice(Fiat price) {
-        priceAsFiat.set(price);
-        applyFilter();
-    }
-
-    void setVolume(Fiat volume) {
-        volumeAsFiat.set(volume);
-        applyFilter();
-    }
-
 
     SortedList<OfferBookListItem> getOfferList() {
         return sortedItems;
@@ -241,6 +242,57 @@ class OfferBookDataModel implements Activatable, DataModel {
         return direction;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    void calculateVolume() {
+        try {
+            if (priceAsFiat.get() != null &&
+                    amountAsCoin.get() != null &&
+                    !amountAsCoin.get().isZero() &&
+                    !priceAsFiat.get().isZero()) {
+                volumeAsFiat.set(new ExchangeRate(priceAsFiat.get()).coinToFiat(amountAsCoin.get()));
+            }
+        } catch (Throwable t) {
+            // Should be never reached
+            log.error(t.toString());
+        }
+    }
+
+    void calculateAmount() {
+        try {
+            if (volumeAsFiat.get() != null &&
+                    priceAsFiat.get() != null &&
+                    !volumeAsFiat.get().isZero() &&
+                    !priceAsFiat.get().isZero()) {
+                // If we got a btc value with more then 4 decimals we convert it to max 4 decimals
+                amountAsCoin.set(formatter.reduceTo4Decimals(new ExchangeRate(priceAsFiat.get()).fiatToCoin
+                        (volumeAsFiat.get())));
+            }
+        } catch (Throwable t) {
+            // Should be never reached
+            log.error(t.toString());
+        }
+    }
+
+
+    void setAmount(Coin amount) {
+        amountAsCoin.set(amount);
+        applyFilter();
+    }
+
+    void setPrice(Fiat price) {
+        priceAsFiat.set(price);
+        applyFilter();
+    }
+
+    void setVolume(Fiat volume) {
+        volumeAsFiat.set(volume);
+        applyFilter();
+    }
+
     private void setBankAccount(FiatAccount fiatAccount) {
         if (fiatAccount != null) {
             fiatCode.set(fiatAccount.currencyCode);
@@ -274,5 +326,4 @@ class OfferBookDataModel implements Activatable, DataModel {
             return directionResult && amountResult && priceResult;
         });
     }
-
 }

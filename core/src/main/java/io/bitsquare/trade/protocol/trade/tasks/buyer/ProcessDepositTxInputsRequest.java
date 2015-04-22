@@ -37,8 +37,9 @@ public class ProcessDepositTxInputsRequest extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             DepositTxInputsRequest message = (DepositTxInputsRequest) processModel.getTradeMessage();
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);

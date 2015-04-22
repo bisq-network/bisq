@@ -18,27 +18,25 @@
 package io.bitsquare.gui.main.offer.offerbook;
 
 import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OfferBookService;
 import io.bitsquare.user.User;
+import io.bitsquare.util.Utilities;
 
 import java.util.List;
+import java.util.Timer;
 
 import javax.inject.Inject;
 
-import javafx.animation.AnimationTimer;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Holds and manages the unsorted and unfiltered offerbook list of both buy and sell offers.
@@ -54,15 +52,15 @@ public class OfferBook {
 
     private final OfferBookService offerBookService;
     private final User user;
-
-    private final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-    private final OfferBookService.Listener offerBookServiceListener;
     private final ChangeListener<FiatAccount> bankAccountChangeListener;
     private final ChangeListener<Number> invalidationListener;
+    private final OfferBookService.Listener offerBookServiceListener;
+
+    private final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
+
     private String fiatCode;
-    private AnimationTimer pollingTimer;
+    private Timer pollingTimer;
     private Country country;
-    private int numClients = 0;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +73,7 @@ public class OfferBook {
         this.user = user;
 
         bankAccountChangeListener = (observableValue, oldValue, newValue) -> setBankAccount(newValue);
-        invalidationListener = (ov, oldValue, newValue) -> requestGetOffers();
+        invalidationListener = (ov, oldValue, newValue) -> offerBookService.getOffers(fiatCode);
 
         offerBookServiceListener = new OfferBookService.Listener() {
             @Override
@@ -105,20 +103,31 @@ public class OfferBook {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Package scope
+    // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addClient() {
-        numClients++;
-        if (numClients == 1)
-            startPolling();
+    void startPolling() {
+        addListeners();
+        setBankAccount(user.currentFiatAccountProperty().get());
+        pollingTimer = Utilities.setInterval(POLLING_INTERVAL, () -> offerBookService.requestInvalidationTimeStampFromDHT(fiatCode));
+        offerBookService.getOffers(fiatCode);
     }
 
-    public void removeClient() {
-        numClients--;
-        checkArgument(numClients >= 0);
-        if (numClients == 0)
-            stopPolling();
+    void stopPolling() {
+        pollingTimer.cancel();
+        removeListeners();
+    }
+
+    private void addListeners() {
+        user.currentFiatAccountProperty().addListener(bankAccountChangeListener);
+        offerBookService.addListener(offerBookServiceListener);
+        offerBookService.invalidationTimestampProperty().addListener(invalidationListener);
+    }
+
+    private void removeListeners() {
+        user.currentFiatAccountProperty().removeListener(bankAccountChangeListener);
+        offerBookService.removeListener(offerBookServiceListener);
+        offerBookService.invalidationTimestampProperty().removeListener(invalidationListener);
     }
 
 
@@ -126,13 +135,13 @@ public class OfferBook {
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableList<OfferBookListItem> getOfferBookListItems() {
+    ObservableList<OfferBookListItem> getOfferBookListItems() {
         return offerBookListItems;
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
+    // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setBankAccount(FiatAccount fiatAccount) {
@@ -149,50 +158,9 @@ public class OfferBook {
         }
     }
 
-    private void addListeners() {
-        log.debug("addListeners ");
-        user.currentFiatAccountProperty().addListener(bankAccountChangeListener);
-        offerBookService.addListener(offerBookServiceListener);
-        offerBookService.invalidationTimestampProperty().addListener(invalidationListener);
-    }
-
-    private void removeListeners() {
-        log.debug("removeListeners ");
-        user.currentFiatAccountProperty().removeListener(bankAccountChangeListener);
-        offerBookService.removeListener(offerBookServiceListener);
-        offerBookService.invalidationTimestampProperty().removeListener(invalidationListener);
-    }
-
     private void addOfferToOfferBookListItems(Offer offer) {
         if (offer != null) {
             offerBookListItems.add(new OfferBookListItem(offer, country));
         }
     }
-
-    private void requestGetOffers() {
-        offerBookService.getOffers(fiatCode);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Polling
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // TODO Just temporary, will be removed later when we have a push solution
-    private void startPolling() {
-        addListeners();
-        setBankAccount(user.currentFiatAccountProperty().get());
-        pollingTimer = GUIUtil.setInterval(POLLING_INTERVAL, (animationTimer) -> {
-            offerBookService.requestInvalidationTimeStampFromDHT(fiatCode);
-            return null;
-        });
-
-        offerBookService.getOffers(fiatCode);
-    }
-
-    private void stopPolling() {
-        pollingTimer.stop();
-        removeListeners();
-    }
-
 }

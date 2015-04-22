@@ -23,16 +23,7 @@ import org.bitcoinj.core.NetworkParameters;
 
 import java.math.BigDecimal;
 
-/**
- * BtcValidator for validating BTC values.
- * <p/>
- * That class implements just what we need for the moment. It is not intended as a general purpose library class.
- */
-public final class BtcValidator extends NumberValidator {
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
+public class BtcValidator extends NumberValidator {
 
     @Override
     public ValidationResult validate(String input) {
@@ -52,12 +43,7 @@ public final class BtcValidator extends NumberValidator {
         return result;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private ValidationResult validateIfNotFractionalBtcValue(String input) {
+    protected ValidationResult validateIfNotFractionalBtcValue(String input) {
         BigDecimal bd = new BigDecimal(input);
         final BigDecimal satoshis = bd.movePointRight(8);
         if (satoshis.scale() > 0)
@@ -66,7 +52,7 @@ public final class BtcValidator extends NumberValidator {
             return new ValidationResult(true);
     }
 
-    private ValidationResult validateIfNotExceedsMaxBtcValue(String input) {
+    protected ValidationResult validateIfNotExceedsMaxBtcValue(String input) {
         BigDecimal bd = new BigDecimal(input);
         final BigDecimal satoshis = bd.movePointRight(8);
         if (satoshis.longValue() > NetworkParameters.MAX_MONEY.longValue())

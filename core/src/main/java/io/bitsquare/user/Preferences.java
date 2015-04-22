@@ -54,9 +54,9 @@ public class Preferences implements Serializable {
 
     // Persisted fields
     private String btcDenomination = MonetaryFormat.CODE_BTC;
-    private Boolean useAnimations = true;
-    private Boolean useEffects = true;
-    private Boolean displaySecurityDepositInfo = true;
+    private boolean useAnimations = true;
+    private boolean useEffects = true;
+    private boolean displaySecurityDepositInfo = true;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
@@ -111,7 +111,7 @@ public class Preferences implements Serializable {
         this.useEffectsProperty.set(useEffectsProperty);
     }
 
-    public void setDisplaySecurityDepositInfo(Boolean displaySecurityDepositInfo) {
+    public void setDisplaySecurityDepositInfo(boolean displaySecurityDepositInfo) {
         this.displaySecurityDepositInfo = displaySecurityDepositInfo;
         storage.queueUpForSave();
     }
@@ -133,7 +133,7 @@ public class Preferences implements Serializable {
         return useAnimationsProperty.get();
     }
 
-    public Boolean getDisplaySecurityDepositInfo() {
+    public boolean getDisplaySecurityDepositInfo() {
         return displaySecurityDepositInfo;
     }
 

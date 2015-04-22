@@ -17,24 +17,11 @@
 
 package io.bitsquare.gui.util.validation;
 
-import io.bitsquare.locale.BSResources;
-
-import org.bitcoinj.core.NetworkParameters;
-
-import java.math.BigDecimal;
-
 /**
- * BtcValidator for validating BTC values.
- * <p/>
- * That class implements just what we need for the moment. It is not intended as a general purpose library class.
+ * That validator accepts empty inputs
  */
-public final class OptionalBtcValidator extends NumberValidator {
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
+public class OptionalBtcValidator extends BtcValidator {
+   
     @Override
     public ValidationResult validate(String input) {
         ValidationResult result = validateIfNotEmpty(input);
@@ -62,28 +49,5 @@ public final class OptionalBtcValidator extends NumberValidator {
         }
 
         return result;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private ValidationResult validateIfNotFractionalBtcValue(String input) {
-        BigDecimal bd = new BigDecimal(input);
-        final BigDecimal satoshis = bd.movePointRight(8);
-        if (satoshis.scale() > 0)
-            return new ValidationResult(false, BSResources.get("validation.btc.toSmall"));
-        else
-            return new ValidationResult(true);
-    }
-
-    private ValidationResult validateIfNotExceedsMaxBtcValue(String input) {
-        BigDecimal bd = new BigDecimal(input);
-        final BigDecimal satoshis = bd.movePointRight(8);
-        if (satoshis.longValue() > NetworkParameters.MAX_MONEY.longValue())
-            return new ValidationResult(false, BSResources.get("validation.btc.toLarge"));
-        else
-            return new ValidationResult(true);
     }
 }

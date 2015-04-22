@@ -32,8 +32,9 @@ public class VerifyOfferFeePayment extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             //TODO impl. missing
             int numOfPeersSeenTx = processModel.getWalletService().getNumOfPeersSeenTx(processModel.getTakeOfferFeeTx().getHashAsString());
        /* if (numOfPeersSeenTx > 2) {

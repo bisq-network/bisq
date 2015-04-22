@@ -17,10 +17,6 @@
 
 package io.bitsquare.gui.util;
 
-import java.util.function.Function;
-
-import javafx.animation.AnimationTimer;
-import javafx.application.Platform;
 import javafx.scene.input.*;
 
 import org.slf4j.Logger;
@@ -36,37 +32,5 @@ public class GUIUtil {
             clipboardContent.putString(content);
             clipboard.setContent(clipboardContent);
         }
-    }
-
-    public static AnimationTimer setTimeout(int delay, Function<AnimationTimer, Void> callback) {
-        AnimationTimer animationTimer = new AnimationTimer() {
-            final long lastTimeStamp = System.currentTimeMillis();
-
-            @Override
-            public void handle(long arg0) {
-                if (System.currentTimeMillis() > delay + lastTimeStamp) {
-                    Platform.runLater(() -> callback.apply(this));
-                    this.stop();
-                }
-            }
-        };
-        animationTimer.start();
-        return animationTimer;
-    }
-
-    public static AnimationTimer setInterval(int delay, Function<AnimationTimer, Void> callback) {
-        AnimationTimer animationTimer = new AnimationTimer() {
-            long lastTimeStamp = System.currentTimeMillis();
-
-            @Override
-            public void handle(long arg0) {
-                if (System.currentTimeMillis() > delay + lastTimeStamp) {
-                    lastTimeStamp = System.currentTimeMillis();
-                    callback.apply(this);
-                }
-            }
-        };
-        animationTimer.start();
-        return animationTimer;
     }
 }

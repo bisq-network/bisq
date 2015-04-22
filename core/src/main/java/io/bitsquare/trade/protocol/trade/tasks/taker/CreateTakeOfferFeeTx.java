@@ -34,20 +34,16 @@ public class CreateTakeOfferFeeTx extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             Transaction createTakeOfferFeeTx = processModel.getTradeWalletService().createTakeOfferFeeTx(processModel.getAddressEntry());
 
             processModel.setTakeOfferFeeTx(createTakeOfferFeeTx);
             processModel.setTakeOfferFeeTxId(createTakeOfferFeeTx.getHashAsString());
 
-            /*if (trade instanceof SellerTrade)
-                trade.setProcessState(TakerTradeState.ProcessState.TAKE_OFFER_FEE_TX_CREATED);*/
-
             complete();
         } catch (Throwable t) {
-            t.printStackTrace();
-            trade.setThrowable(t);
             failed(t);
         }
     }

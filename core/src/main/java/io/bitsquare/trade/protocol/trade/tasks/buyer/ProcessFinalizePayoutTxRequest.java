@@ -38,8 +38,9 @@ public class ProcessFinalizePayoutTxRequest extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             FinalizePayoutTxRequest message = (FinalizePayoutTxRequest) processModel.getTradeMessage();
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);

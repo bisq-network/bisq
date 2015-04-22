@@ -128,8 +128,8 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 BroadcastTakeOfferFeeTx.class,
                 SendDepositTxInputsRequest.class
         );
-        taskRunner.run();
         startTimeout();
+        taskRunner.run();
     }
 
 
@@ -153,8 +153,8 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 CreateAndSignDepositTx.class,
                 SendPublishDepositTxRequest.class
         );
-        taskRunner.run();
         startTimeout();
+        taskRunner.run();
     }
 
     private void handle(DepositTxPublishedMessage tradeMessage) {

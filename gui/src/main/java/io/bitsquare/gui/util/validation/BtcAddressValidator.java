@@ -24,29 +24,14 @@ import org.bitcoinj.core.AddressFormatException;
 
 import javax.inject.Inject;
 
-/**
- * BtcValidator for validating BTC values.
- * <p/>
- * That class implements just what we need for the moment. It is not intended as a general purpose library class.
- */
 public final class BtcAddressValidator extends InputValidator {
 
     private final BitcoinNetwork bitcoinNetwork;
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
     public BtcAddressValidator(BitcoinNetwork bitcoinNetwork) {
         this.bitcoinNetwork = bitcoinNetwork;
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public ValidationResult validate(String input) {
@@ -57,11 +42,6 @@ public final class BtcAddressValidator extends InputValidator {
         else
             return result;
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private ValidationResult validateBtcAddress(String input) {
         try {

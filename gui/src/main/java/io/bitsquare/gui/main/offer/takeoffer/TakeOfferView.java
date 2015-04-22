@@ -72,6 +72,9 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 @FxmlView
 public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOfferViewModel> {
 
+    private final Navigation navigation;
+    private final OverlayManager overlayManager;
+    
     @FXML ScrollPane scrollPane;
     @FXML ImageView imageView;
     @FXML InputTextField amountTextField;
@@ -94,11 +97,19 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private ImageView collapse;
     private PopOver totalToPayInfoPopover;
 
-    private final Navigation navigation;
-    private final OverlayManager overlayManager;
     private OfferView.CloseHandler closeHandler;
 
     private ChangeListener<String> errorMessageChangeListener;
+    private ChangeListener<Boolean> amountFocusedListener;
+    private ChangeListener<Boolean> isTakeOfferSpinnerVisibleListener;
+    private ChangeListener<TakeOfferViewModel.State> stateListener;
+    private ChangeListener<Boolean> showWarningInvalidBtcDecimalPlacesListener;
+    private ChangeListener<Boolean> showTransactionPublishedScreenListener;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
     private TakeOfferView(TakeOfferViewModel model, Navigation navigation,
@@ -107,18 +118,152 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         this.navigation = navigation;
         this.overlayManager = overlayManager;
+
+        createListeners();
     }
 
     @Override
     public void initialize() {
-        setupListeners();
-        setupBindings();
+    }
+
+    @Override
+    protected void doActivate() {
+        addListeners();
+        addBindings();
     }
 
     @Override
     protected void doDeactivate() {
-        model.errorMessage.removeListener(errorMessageChangeListener);
+        removeBindings();
+        removeListeners();
     }
+
+    private void addBindings() {
+        amountBtcLabel.textProperty().bind(model.btcCode);
+        amountTextField.textProperty().bindBidirectional(model.amount);
+        volumeTextField.textProperty().bindBidirectional(model.volume);
+        totalToPayTextField.textProperty().bind(model.totalToPay);
+        addressTextField.amountAsCoinProperty().bind(model.totalToPayAsCoin);
+        amountDescriptionLabel.textProperty().bind(model.amountDescription);
+        amountTextField.validationResultProperty().bind(model.amountValidationResult);
+        takeOfferButton.disableProperty().bind(model.takeOfferButtonDisabled);
+        takeOfferSpinnerInfoLabel.visibleProperty().bind(model.isTakeOfferSpinnerVisible);
+    }
+
+    private void removeBindings() {
+        amountBtcLabel.textProperty().unbind();
+        amountTextField.textProperty().unbindBidirectional(model.amount);
+        volumeTextField.textProperty().unbindBidirectional(model.volume);
+        totalToPayTextField.textProperty().unbind();
+        addressTextField.amountAsCoinProperty().unbind();
+        amountDescriptionLabel.textProperty().unbind();
+        amountTextField.validationResultProperty().unbind();
+        takeOfferButton.disableProperty().unbind();
+        takeOfferSpinnerInfoLabel.visibleProperty().unbind();
+    }
+
+
+    private void createListeners() {
+        errorMessageChangeListener = (o, oldValue, newValue) -> {
+            if (newValue != null) {
+                Popups.openErrorPopup(BSResources.get("shared.error"), BSResources.get("takeOffer.error.message", model.errorMessage.get()));
+                Popups.removeBlurContent();
+                Platform.runLater(this::close);
+            }
+        };
+        amountFocusedListener = (o, oldValue, newValue) -> {
+            model.onFocusOutAmountTextField(oldValue, newValue, amountTextField.getText());
+            amountTextField.setText(model.amount.get());
+        };
+        isTakeOfferSpinnerVisibleListener = (ov, oldValue, newValue) -> {
+            takeOfferSpinner.setProgress(newValue ? -1 : 0);
+            takeOfferSpinner.setVisible(newValue);
+        };
+        stateListener = (ov, oldValue, newValue) -> {
+            switch (newValue) {
+                case CHECK_AVAILABILITY:
+                    showCheckAvailabilityScreen();
+                    break;
+                case AMOUNT_SCREEN:
+                    showAmountScreen();
+                    break;
+                case PAYMENT_SCREEN:
+                    setupPaymentScreen();
+                    break;
+                case DETAILS_SCREEN:
+                    showDetailsScreen();
+                    break;
+            }
+        };
+        showWarningInvalidBtcDecimalPlacesListener = (o, oldValue, newValue) -> {
+            if (newValue) {
+                Popups.openWarningPopup(BSResources.get("shared.warning"),
+                        BSResources.get("takeOffer.amountPriceBox.warning.invalidBtcDecimalPlaces"));
+                model.showWarningInvalidBtcDecimalPlaces.set(false);
+            }
+        };
+        showTransactionPublishedScreenListener = (o, oldValue, newValue) -> {
+            // TODO temp just for testing 
+            newValue = false;
+            close();
+            navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
+
+            if (newValue) {
+                overlayManager.blurContent();
+
+                // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added
+                // our own actions.
+                List<Action> actions = new ArrayList<>();
+               /* actions.add(new AbstractAction(BSResources.get("shared.copyTxId")) {
+                    @Override
+                    public void handle(ActionEvent actionEvent) {
+                        getProperties().put("type", "COPY");
+                         Utilities.copyToClipboard(model.transactionId.get());
+                    }
+                });*/
+                actions.add(new AbstractAction(BSResources.get("shared.close")) {
+                    @Override
+                    public void handle(ActionEvent actionEvent) {
+                        getProperties().put("type", "CLOSE");
+                        try {
+                            close();
+                            navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        Dialog.Actions.CLOSE.handle(actionEvent);
+                    }
+                });
+
+                Popups.openInfoPopup(BSResources.get("takeOffer.success.headline"),
+                        BSResources.get("takeOffer.success.info"),
+                        actions);
+            }
+        };
+    }
+
+    private void addListeners() {
+        amountTextField.focusedProperty().addListener(amountFocusedListener);
+        model.isTakeOfferSpinnerVisible.addListener(isTakeOfferSpinnerVisibleListener);
+        model.state.addListener(stateListener);
+        model.showWarningInvalidBtcDecimalPlaces.addListener(showWarningInvalidBtcDecimalPlacesListener);
+        model.errorMessage.addListener(errorMessageChangeListener);
+        model.showTransactionPublishedScreen.addListener(showTransactionPublishedScreenListener);
+    }
+
+    private void removeListeners() {
+        amountTextField.focusedProperty().removeListener(amountFocusedListener);
+        model.isTakeOfferSpinnerVisible.removeListener(isTakeOfferSpinnerVisibleListener);
+        model.state.removeListener(stateListener);
+        model.showWarningInvalidBtcDecimalPlaces.removeListener(showWarningInvalidBtcDecimalPlacesListener);
+        model.errorMessage.removeListener(errorMessageChangeListener);
+        model.showTransactionPublishedScreen.removeListener(showTransactionPublishedScreenListener);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initWithData(Coin amount, Offer offer) {
         model.initWithData(amount, offer);
@@ -156,6 +301,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         this.closeHandler = closeHandler;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI actions
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @FXML
     void onTakeOffer() {
         model.onTakeOffer();
@@ -166,11 +316,15 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         model.onShowPaymentScreen();
     }
 
+    @FXML
+    void onScroll() {
+        InputTextField.hideErrorMessageDisplay();
+    }
 
     @FXML
     void onToggleShowAdvancedSettings() {
-        model.detailsVisible = !model.detailsVisible;
-        if (model.detailsVisible) {
+        model.onToggleShowAdvancedSettings();
+        if (model.isDetailsVisible()) {
             showAdvancedSettingsButton.setText(BSResources.get("takeOffer.fundsBox.hideAdvanced"));
             showAdvancedSettingsButton.setGraphic(collapse);
             showDetailsScreen();
@@ -197,117 +351,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         Help.openWindow(HelpId.TAKE_OFFER_ADVANCED);
     }
 
-    private void close() {
-        if (closeHandler != null)
-            closeHandler.close();
-    }
 
-    private void setupListeners() {
-        scrollPane.setOnScroll(e -> InputTextField.hideErrorMessageDisplay());
-
-        // focus out
-        amountTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-            model.onFocusOutAmountTextField(oldValue, newValue, amountTextField.getText());
-            amountTextField.setText(model.amount.get());
-        });
-
-        model.state.addListener((ov, oldValue, newValue) -> {
-            switch (newValue) {
-                case CHECK_AVAILABILITY:
-                    showCheckAvailabilityScreen();
-                    break;
-                case AMOUNT_SCREEN:
-                    showAmountScreen();
-                    break;
-                case PAYMENT_SCREEN:
-                    setupPaymentScreen();
-                    break;
-                case DETAILS_SCREEN:
-                    showDetailsScreen();
-                    break;
-            }
-        });
-
-        // warnings
-        model.showWarningInvalidBtcDecimalPlaces.addListener((o, oldValue, newValue) -> {
-            if (newValue) {
-                Popups.openWarningPopup(BSResources.get("shared.warning"),
-                        BSResources.get("takeOffer.amountPriceBox.warning.invalidBtcDecimalPlaces"));
-                model.showWarningInvalidBtcDecimalPlaces.set(false);
-            }
-        });
-
-        errorMessageChangeListener = (o, oldValue, newValue) -> {
-            if (newValue != null) {
-                Popups.openErrorPopup(BSResources.get("shared.error"), BSResources.get("takeOffer.error.message", model.errorMessage.get()));
-                Popups.removeBlurContent();
-                Platform.runLater(this::close);
-            }
-        };
-        model.errorMessage.addListener(errorMessageChangeListener);
-
-        model.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
-            // TODO temp just for testing 
-            newValue = false;
-            close();
-            navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
-
-            if (newValue) {
-                overlayManager.blurContent();
-
-                // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added
-                // our own actions.
-                List<Action> actions = new ArrayList<>();
-               /* actions.add(new AbstractAction(BSResources.get("shared.copyTxId")) {
-                    @Override
-                    public void handle(ActionEvent actionEvent) {
-                        getProperties().put("type", "COPY");
-                         Utilities.copyToClipboard(model.transactionId.get());
-                    }
-                });*/
-                actions.add(new AbstractAction(BSResources.get("shared.close")) {
-                    @Override
-                    public void handle(ActionEvent actionEvent) {
-                        getProperties().put("type", "CLOSE");
-                        try {
-                            close();
-                            navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        Dialog.Actions.CLOSE.handle(actionEvent);
-                    }
-                });
-
-                Popups.openInfoPopup(BSResources.get("takeOffer.success.headline"),
-                        BSResources.get("takeOffer.success.info"),
-                        actions);
-            }
-        });
-    }
-
-    private void setupBindings() {
-        amountBtcLabel.textProperty().bind(model.btcCode);
-        amountTextField.textProperty().bindBidirectional(model.amount);
-        volumeTextField.textProperty().bindBidirectional(model.volume);
-        totalToPayTextField.textProperty().bind(model.totalToPay);
-        addressTextField.amountAsCoinProperty().bind(model.totalToPayAsCoin);
-        amountDescriptionLabel.textProperty().bind(model.amountDescription);
-
-
-        // Validation
-        amountTextField.validationResultProperty().bind(model.amountValidationResult);
-
-        // buttons
-        takeOfferButton.disableProperty().bind(model.takeOfferButtonDisabled);
-
-        takeOfferSpinnerInfoLabel.visibleProperty().bind(model.isTakeOfferSpinnerVisible);
-
-        model.isTakeOfferSpinnerVisible.addListener((ov, oldValue, newValue) -> {
-            takeOfferSpinner.setProgress(newValue ? -1 : 0);
-            takeOfferSpinner.setVisible(newValue);
-        });
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // States/screens
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void showCheckAvailabilityScreen() {
 
@@ -376,11 +423,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.layout();
 
-        model.advancedScreenInited = !model.advancedScreenInited;
-
         toggleDetailsScreen(true);
     }
-
 
     private void hideDetailsScreen() {
         payFundsPane.setActive();
@@ -416,6 +460,16 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         bankAccountCountyTextField.setVisible(visible);
 
         advancedInfoDisplay.setVisible(visible);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void close() {
+        if (closeHandler != null)
+            closeHandler.close();
     }
 
     private void setupTotalToPayInfoIconLabel() {

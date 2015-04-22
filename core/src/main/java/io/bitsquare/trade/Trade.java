@@ -33,6 +33,8 @@ import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.ProcessModel;
 import io.bitsquare.trade.protocol.trade.TradeProtocol;
+import io.bitsquare.trade.states.BuyerTradeState;
+import io.bitsquare.trade.states.SellerTradeState;
 import io.bitsquare.trade.states.TradeState;
 import io.bitsquare.user.User;
 
@@ -243,6 +245,13 @@ abstract public class Trade implements Tradable, Model, Serializable {
         this.processState = processState;
         processStateProperty.set(processState);
         storage.queueUpForSave();
+    }
+
+    public void setFaultState() {
+        if (this instanceof SellerTrade)
+            setProcessState(SellerTradeState.ProcessState.FAULT);
+        else if (this instanceof BuyerTrade)
+            setProcessState(BuyerTradeState.ProcessState.FAULT);
     }
 
     public void setLifeCycleState(Trade.LifeCycleState lifeCycleState) {

@@ -27,9 +27,11 @@ import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.trade.BuyerAsTakerTrade;
 import io.bitsquare.trade.SellerAsTakerTrade;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.states.BuyerTradeState;
 import io.bitsquare.trade.states.SellerTradeState;
+import io.bitsquare.trade.states.TradeState;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -42,6 +44,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +61,12 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         DETAILS_SCREEN
     }
 
+    private final BtcValidator btcValidator;
+    private final BSFormatter formatter;
+    private final String offerFee;
+    private final String networkFee;
+
+    // static fields
     private String amountRange;
     private String price;
     private String directionLabel;
@@ -69,17 +78,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private String acceptedArbitratorIds;
     private String addressAsString;
     private String paymentLabel;
+    private boolean detailsVisible;
 
-    // Needed for the addressTextField
-    final ObjectProperty<Address> address = new SimpleObjectProperty<>();
-    final ObjectProperty<State> state = new SimpleObjectProperty<>(State.CHECK_AVAILABILITY);
-
-    private final BtcValidator btcValidator;
-    private final BSFormatter formatter;
-    private final String offerFee;
-    private final String networkFee;
-    boolean detailsVisible;
-    boolean advancedScreenInited;
 
     final StringProperty amount = new SimpleStringProperty();
     final StringProperty volume = new SimpleStringProperty();
@@ -99,12 +99,30 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
 
-    final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
 
     // Needed for the addressTextField
+    final ObjectProperty<Address> address = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
+
+    final ObjectProperty<State> state = new SimpleObjectProperty<>(State.CHECK_AVAILABILITY);
+    final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
+
     private boolean takeOfferRequested;
-    private boolean isAmountAndPriceValidAndWalletFunded;
+
+    // listeners
+    private ChangeListener<String> amountChangeListener;
+    private ChangeListener<Boolean> isWalletFundedChangeListener;
+    private ChangeListener<Coin> amountAsCoinChangeListener;
+    private ChangeListener<Offer.State> offerStateChangeListener;
+    private ChangeListener<TradeState.ProcessState> tradeStateChangeListener;
+    // Offer and trade are stored only for remove listener at deactivate
+    private Offer offer;
+    private Trade trade;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
     public TakeOfferViewModel(TakeOfferDataModel dataModel, BtcValidator btcValidator, BSFormatter formatter) {
@@ -116,23 +134,94 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         this.offerFee = formatter.formatCoinWithCode(dataModel.offerFeeAsCoin.get());
         this.networkFee = formatter.formatCoinWithCode(dataModel.networkFeeAsCoin.get());
 
-        setupBindings();
-        setupListeners();
-        applyTakeOfferRequestResult(false);
+        createListeners();
     }
 
-    // setOfferBookFilter is a one time call
+    @Override
+    protected void doActivate() {
+        addBindings();
+        addListeners();
+        isTakeOfferSpinnerVisible.set(false);
+        showTransactionPublishedScreen.set(false);
+    }
+
+    @Override
+    protected void doDeactivate() {
+        removeBindings();
+        removeListeners();
+    }
+
+    private void addBindings() {
+        volume.bind(createStringBinding(() -> formatter.formatFiatWithCode(dataModel.volumeAsFiat.get()), dataModel.volumeAsFiat));
+        totalToPay.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()), dataModel.totalToPayAsCoin));
+        securityDeposit.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.securityDepositAsCoin.get()), dataModel.securityDepositAsCoin));
+        totalToPayAsCoin.bind(dataModel.totalToPayAsCoin);
+        btcCode.bind(dataModel.btcCode);
+    }
+
+    private void removeBindings() {
+        volume.unbind();
+        totalToPay.unbind();
+        securityDeposit.unbind();
+        totalToPayAsCoin.unbind();
+        btcCode.unbind();
+    }
+
+    private void createListeners() {
+        amountChangeListener = (ov, oldValue, newValue) -> {
+            if (isBtcInputValid(newValue).isValid) {
+                setAmountToModel();
+                calculateVolume();
+                dataModel.calculateTotalToPay();
+            }
+            evaluateViewState();
+        };
+        isWalletFundedChangeListener = (ov, oldValue, newValue) -> evaluateViewState();
+        amountAsCoinChangeListener = (ov, oldValue, newValue) -> amount.set(formatter.formatCoin(newValue));
+        offerStateChangeListener = (ov, oldValue, newValue) -> applyOfferState(newValue);
+        tradeStateChangeListener = (ov, oldValue, newValue) -> applyTradeState(newValue);
+    }
+
+    private void addListeners() {
+        // Bidirectional bindings are used for all input fields: amount, price, volume and minAmount
+        // We do volume/amount calculation during input, so user has immediate feedback
+        amount.addListener(amountChangeListener);
+        dataModel.isWalletFunded.addListener(isWalletFundedChangeListener);
+        // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
+        dataModel.amountAsCoin.addListener(amountAsCoinChangeListener);
+
+        amountChangeListener.changed(null, null, amount.get());
+        isWalletFundedChangeListener.changed(null, null, dataModel.isWalletFunded.get());
+        amountAsCoinChangeListener.changed(null, null, dataModel.amountAsCoin.get());
+    }
+
+    private void removeListeners() {
+        amount.removeListener(amountChangeListener);
+        dataModel.isWalletFunded.removeListener(isWalletFundedChangeListener);
+        dataModel.amountAsCoin.removeListener(amountAsCoinChangeListener);
+
+        if (offer != null)
+            offer.stateProperty().removeListener(offerStateChangeListener);
+
+        if (trade != null)
+            trade.processStateProperty().removeListener(tradeStateChangeListener);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     void initWithData(Coin amount, Offer offer) {
         dataModel.initWithData(amount, offer);
 
-        directionLabel = offer.getDirection() == Offer.Direction.SELL ?
-                BSResources.get("shared.buyBitcoin") : BSResources.get("shared.sellBitcoin");
+        this.offer = offer;
+
+        directionLabel = offer.getDirection() == Offer.Direction.SELL ? BSResources.get("shared.buyBitcoin") : BSResources.get("shared.sellBitcoin");
 
         fiatCode.set(offer.getCurrencyCode());
-        if (!dataModel.isMinAmountLessOrEqualAmount()) {
-            amountValidationResult.set(new InputValidator.ValidationResult(false,
-                    BSResources.get("takeOffer.validation.amountSmallerThanMinAmount")));
-        }
+        if (!dataModel.isMinAmountLessOrEqualAmount())
+            amountValidationResult.set(new InputValidator.ValidationResult(false, BSResources.get("takeOffer.validation.amountSmallerThanMinAmount")));
 
         if (dataModel.getDirection() == Offer.Direction.BUY) {
             amountDescription.set(BSResources.get("takeOffer.amountPriceBox.buy.amountDescription", offer.getId()));
@@ -147,17 +236,13 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             fundsBoxInfoDisplay.set(BSResources.get("takeOffer.fundsBox.sell.info"));
         }
 
-        //model.volumeAsFiat.set(offer.getVolumeByAmount(model.amountAsCoin.get()));
-
-        amountRange = formatter.formatCoinWithCode(offer.getMinAmount()) + " - " +
-                formatter.formatCoinWithCode(offer.getAmount());
+        amountRange = formatter.formatCoinWithCode(offer.getMinAmount()) + " - " + formatter.formatCoinWithCode(offer.getAmount());
         price = formatter.formatFiatWithCode(offer.getPrice());
 
         paymentLabel = BSResources.get("takeOffer.fundsBox.paymentLabel", offer.getId());
-        if (dataModel.getAddressEntry() != null) {
-            addressAsString = dataModel.getAddressEntry().getAddress().toString();
-            address.set(dataModel.getAddressEntry().getAddress());
-        }
+        assert dataModel.getAddressEntry() != null;
+        addressAsString = dataModel.getAddressEntry().getAddress().toString();
+        address.set(dataModel.getAddressEntry().getAddress());
 
         acceptedCountries = formatter.countryLocalesToString(offer.getAcceptedCountries());
         acceptedLanguages = formatter.languageCodesToString(offer.getAcceptedLanguageCodes());
@@ -166,12 +251,43 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         bankAccountCurrency = BSResources.get(CurrencyUtil.getDisplayName(offer.getCurrencyCode()));
         bankAccountCounty = BSResources.get(offer.getBankAccountCountry().name);
 
-        offer.stateProperty().addListener((ov, oldValue, newValue) -> applyOfferState(newValue));
+        offer.stateProperty().addListener(offerStateChangeListener);
         applyOfferState(offer.stateProperty().get());
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI actions
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    void onTakeOffer() {
+        takeOfferRequested = true;
+        applyOnTakeOfferResult(false);
+
+        isTakeOfferSpinnerVisible.set(true);
+        dataModel.onTakeOffer((trade) -> {
+            this.trade = trade;
+            trade.processStateProperty().addListener(tradeStateChangeListener);
+            applyTradeState(trade.processStateProperty().get());
+            evaluateViewState();
+        });
+    }
+
+    void onShowPaymentScreen() {
+        state.set(State.PAYMENT_SCREEN);
+    }
+
+    void onToggleShowAdvancedSettings() {
+        detailsVisible = !detailsVisible;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // States
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private void applyOfferState(Offer.State state) {
-        log.debug("offer state = " + state);
+        log.debug("applyOfferState state = " + state);
 
         switch (state) {
             case UNDEFINED:
@@ -201,14 +317,20 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     errorMessage.set("You cannot take that offer because the offerer is offline.");
                 takeOfferRequested = false;
                 break;
-           /* case FAULT:
+            case FAULT:
                 if (takeOfferRequested)
                     errorMessage.set("Take offer request failed.");
                 else
                     errorMessage.set("The check for the offer availability failed.");
-
                 takeOfferRequested = false;
-                break;*/
+                break;
+            case TIMEOUT:
+                if (takeOfferRequested)
+                    errorMessage.set("Take offer request failed due a timeout.");
+                else
+                    errorMessage.set("The check for the offer availability failed due a timeout.");
+                takeOfferRequested = false;
+                break;
             default:
                 log.error("Unhandled offer state: " + state);
                 break;
@@ -218,125 +340,91 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             isTakeOfferSpinnerVisible.set(false);
         }
 
-        evaluateState();
+        evaluateViewState();
     }
 
-    void onTakeOffer() {
-        takeOfferRequested = true;
-        applyTakeOfferRequestResult(false);
+    private void applyTradeState(TradeState.ProcessState state) {
+        log.debug("applyTradeState state = " + state);
 
-        isTakeOfferSpinnerVisible.set(true);
+        String msg = "An error occurred.";
+        if (trade.getErrorMessage() != null)
+            msg = "Error message: " + trade.getErrorMessage();
 
-        dataModel.onTakeOffer((trade) -> {
-            trade.processStateProperty().addListener((ov, oldValue, newValue) -> {
-                log.debug("trade state = " + newValue);
+        if (trade instanceof SellerAsTakerTrade) {
+            switch ((SellerTradeState.ProcessState) state) {
+                case UNDEFINED:
+                    break;
+                case DEPOSIT_PUBLISHED_MSG_RECEIVED:
+                    assert trade.getDepositTx() != null;
+                    transactionId.set(trade.getDepositTx().getHashAsString());
+                    applyOnTakeOfferResult(true);
+                    break;
+                case DEPOSIT_CONFIRMED:
+                case FIAT_PAYMENT_STARTED_MSG_RECEIVED:
+                case FIAT_PAYMENT_RECEIPT:
+                case FIAT_PAYMENT_RECEIPT_MSG_SENT:
+                case PAYOUT_TX_RECEIVED:
+                case PAYOUT_TX_COMMITTED:
+                case PAYOUT_BROAD_CASTED:
+                    break;
+                case TIMEOUT:
+                    errorMessage.set("A timeout occurred. Maybe there are connection problems. " +
+                            "Please try later again.\n" + msg);
+                    takeOfferRequested = false;
+                    break;
+                case FAULT:
+                    errorMessage.set(msg);
+                    takeOfferRequested = false;
+                    break;
+                default:
+                    log.warn("Unhandled trade state: " + state);
+                    break;
+            }
+        }
+        else if (trade instanceof BuyerAsTakerTrade) {
+            switch ((BuyerTradeState.ProcessState) state) {
+                case UNDEFINED:
+                    break;
+                case DEPOSIT_PUBLISHED:
+                    assert trade.getDepositTx() != null;
+                    transactionId.set(trade.getDepositTx().getHashAsString());
+                    applyOnTakeOfferResult(true);
+                    break;
+                case DEPOSIT_PUBLISHED_MSG_SENT:
+                case DEPOSIT_CONFIRMED:
+                case FIAT_PAYMENT_STARTED:
+                case FIAT_PAYMENT_STARTED_MSG_SENT:
+                case FIAT_PAYMENT_RECEIPT_MSG_RECEIVED:
+                case PAYOUT_TX_COMMITTED:
+                case PAYOUT_TX_SENT:
+                case PAYOUT_BROAD_CASTED:
+                    break;
+                case TIMEOUT:
+                    errorMessage.set("A timeout occurred. Maybe there are connection problems. " +
+                            "Please try later again.\n" + msg);
+                    takeOfferRequested = false;
+                    break;
+                case FAULT:
+                    errorMessage.set(msg);
+                    takeOfferRequested = false;
+                    break;
+                default:
+                    log.warn("Unhandled trade state: " + state);
+                    break;
+            }
+        }
 
-                String msg = "";
-                if (trade.getErrorMessage() != null)
-                    msg = "\nError message: " + trade.getErrorMessage();
-
-                if (trade instanceof SellerAsTakerTrade) {
-                    switch ((SellerTradeState.ProcessState) newValue) {
-                        case UNDEFINED:
-                            break;
-                        case DEPOSIT_PUBLISHED_MSG_RECEIVED:
-                            assert trade.getDepositTx() != null;
-                            transactionId.set(trade.getDepositTx().getHashAsString());
-                            applyTakeOfferRequestResult(true);
-                            break;
-                        case DEPOSIT_CONFIRMED:
-                        case FIAT_PAYMENT_STARTED_MSG_RECEIVED:
-                        case FIAT_PAYMENT_RECEIPT:
-                        case FIAT_PAYMENT_RECEIPT_MSG_SENT:
-                        case PAYOUT_TX_RECEIVED:
-                        case PAYOUT_TX_COMMITTED:
-                        case PAYOUT_BROAD_CASTED:
-                            break;
-                       /* case TAKE_OFFER_FEE_PUBLISH_FAILED:
-                            errorMessage.set("An error occurred when paying the trade fee." + msg);
-                            takeOfferRequested = false;
-                            break;
-                        case MESSAGE_SENDING_FAILED:
-                            errorMessage.set("An error occurred when sending a message to the offerer. Maybe there are connection problems. " +
-                                    "Please try later again." + msg);
-                            takeOfferRequested = false;
-                            break;
-                        case EXCEPTION:
-                            errorMessage.set(msg);
-                            takeOfferRequested = false;
-                            break;*/
-                        default:
-                            log.warn("Unhandled trade state: " + newValue);
-                            break;
-                    }
-                }
-                else if (trade instanceof BuyerAsTakerTrade) {
-                    switch ((BuyerTradeState.ProcessState) newValue) {
-                        case UNDEFINED:
-                            break;
-                        case DEPOSIT_PUBLISHED:
-                            assert trade.getDepositTx() != null;
-                            transactionId.set(trade.getDepositTx().getHashAsString());
-                            applyTakeOfferRequestResult(true);
-                            break;
-                        case DEPOSIT_PUBLISHED_MSG_SENT:
-                        case DEPOSIT_CONFIRMED:
-                        case FIAT_PAYMENT_STARTED:
-                        case FIAT_PAYMENT_STARTED_MSG_SENT:
-                        case FIAT_PAYMENT_RECEIPT_MSG_RECEIVED:
-                        case PAYOUT_TX_COMMITTED:
-                        case PAYOUT_TX_SENT:
-                        case PAYOUT_BROAD_CASTED:
-                            break;
-                       /* case TAKE_OFFER_FEE_PUBLISH_FAILED:
-                            errorMessage.set("An error occurred when paying the trade fee." + msg);
-                            takeOfferRequested = false;
-                            break;
-                        case MESSAGE_SENDING_FAILED:
-                            errorMessage.set("Sending a message to the offerer failed. Maybe there are connection problems. " +
-                                    "Please try later again." + msg);
-                            takeOfferRequested = false;
-                            break;
-                        case TIMEOUT:
-                            errorMessage.set("Timeout: We did not received a message from the offerer. Maybe there are connection problems. " +
-                                    "Please try later again." + msg);
-                            takeOfferRequested = false;
-                            break;
-                        case EXCEPTION:
-                            errorMessage.set(msg);
-                            takeOfferRequested = false;
-                            break;*/
-                        default:
-                            log.warn("Unhandled trade state: " + newValue);
-                            break;
-                    }
-                }
-
-                if (errorMessage.get() != null) {
-                    isAmountAndPriceValidAndWalletFunded = false;
-                    isTakeOfferSpinnerVisible.set(false);
-                }
-            });
-
-            evaluateState();
-        });
-    }
-
-    boolean isSeller() {
-        return dataModel.getDirection() == Offer.Direction.BUY;
-    }
-
-    void securityDepositInfoDisplayed() {
-        dataModel.securityDepositInfoDisplayed();
+        if (errorMessage.get() != null)
+            isTakeOfferSpinnerVisible.set(false);
     }
 
 
-    void onShowPaymentScreen() {
-        state.set(State.PAYMENT_SCREEN);
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Focus handling
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     // On focus out we do validation and apply the data to the model
-    void onFocusOutAmountTextField(Boolean oldValue, Boolean newValue, String userInput) {
+    void onFocusOutAmountTextField(boolean oldValue, boolean newValue, String userInput) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isBtcInputValid(amount.get());
             amountValidationResult.set(result);
@@ -360,6 +448,18 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         }
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    boolean isSeller() {
+        return dataModel.getDirection() == Offer.Direction.BUY;
+    }
+
+    void securityDepositInfoDisplayed() {
+        dataModel.onSecurityDepositInfoDisplayed();
+    }
 
     WalletService getWalletService() {
         return dataModel.getWalletService();
@@ -429,48 +529,22 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return paymentLabel;
     }
 
-    Boolean getDisplaySecurityDepositInfo() {
+    boolean getDisplaySecurityDepositInfo() {
         return dataModel.getDisplaySecurityDepositInfo();
     }
 
-
-    private void setupListeners() {
-        // Bidirectional bindings are used for all input fields: amount, price, volume and minAmount
-        // We do volume/amount calculation during input, so user has immediate feedback
-        amount.addListener((ov, oldValue, newValue) -> {
-            if (isBtcInputValid(newValue).isValid) {
-                setAmountToModel();
-                calculateVolume();
-                dataModel.calculateTotalToPay();
-            }
-            evaluateState();
-        });
-
-        dataModel.isWalletFunded.addListener((ov, oldValue, newValue) -> {
-            evaluateState();
-        });
-
-        // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
-        dataModel.amountAsCoin.addListener((ov, oldValue, newValue) -> amount.set(formatter.formatCoin(newValue)));
+    boolean isDetailsVisible() {
+        return detailsVisible;
     }
 
-    private void applyTakeOfferRequestResult(boolean success) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void applyOnTakeOfferResult(boolean success) {
         isTakeOfferSpinnerVisible.set(false);
         showTransactionPublishedScreen.set(success);
-    }
-
-    private void setupBindings() {
-        volume.bind(createStringBinding(() -> formatter.formatFiatWithCode(dataModel.volumeAsFiat.get()),
-                dataModel.volumeAsFiat));
-        totalToPay.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()),
-                dataModel.totalToPayAsCoin));
-        securityDeposit.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.securityDepositAsCoin
-                        .get()),
-                dataModel.securityDepositAsCoin));
-
-        totalToPayAsCoin.bind(dataModel.totalToPayAsCoin);
-
-        btcCode.bind(dataModel.btcCode);
     }
 
     private void calculateVolume() {
@@ -482,8 +556,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         dataModel.amountAsCoin.set(formatter.parseToCoinWith4Decimals(amount.get()));
     }
 
-    private void evaluateState() {
-        isAmountAndPriceValidAndWalletFunded = isBtcInputValid(amount.get()).isValid &&
+    private void evaluateViewState() {
+        boolean isAmountAndPriceValidAndWalletFunded = isBtcInputValid(amount.get()).isValid &&
                 dataModel.isMinAmountLessOrEqualAmount() &&
                 !dataModel.isAmountLargerThanOfferAmount() &&
                 dataModel.isWalletFunded.get();

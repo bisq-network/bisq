@@ -38,6 +38,9 @@ public class BuyerTradeState {
         PAYOUT_TX_COMMITTED,
         PAYOUT_TX_SENT,
 
-        PAYOUT_BROAD_CASTED
+        PAYOUT_BROAD_CASTED,
+
+        TIMEOUT,
+        FAULT
     }
 }

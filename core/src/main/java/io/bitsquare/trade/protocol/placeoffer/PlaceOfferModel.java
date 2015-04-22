@@ -35,7 +35,7 @@ public class PlaceOfferModel implements Model {
     public final WalletService walletService;
     public final TradeWalletService tradeWalletService;
     public final OfferBookService offerBookService;
-
+    public boolean offerAddedToOfferBook;
     private Transaction transaction;
 
     public PlaceOfferModel(Offer offer,

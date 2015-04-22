@@ -21,8 +21,6 @@ import com.google.common.base.Throwables;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InvalidClassException;
-import java.io.InvalidObjectException;
 import java.io.Serializable;
 
 import java.util.concurrent.TimeUnit;
@@ -131,7 +129,7 @@ public class Storage<T extends Serializable> {
                 log.info("Backup {} completed in {}msec", serializable.getClass().getSimpleName(), System.currentTimeMillis() - now);
 
                 return persistedObject;
-            } catch (InvalidClassException | InvalidObjectException | ClassCastException | ClassNotFoundException e) {
+            } catch (ClassCastException | ClassNotFoundException | IOException e) {
                 e.printStackTrace();
                 log.error("Version of persisted class has changed. We cannot read the persisted data anymore. We make a backup and remove the inconsistent " +
                         "file.");

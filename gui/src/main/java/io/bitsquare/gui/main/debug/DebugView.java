@@ -21,6 +21,7 @@ import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.common.view.InitializableView;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityProtocol;
+import io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress;
 import io.bitsquare.trade.protocol.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bitsquare.trade.protocol.availability.tasks.SendOfferAvailabilityRequest;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
@@ -32,6 +33,7 @@ import io.bitsquare.trade.protocol.trade.BuyerAsOffererProtocol;
 import io.bitsquare.trade.protocol.trade.SellerAsTakerProtocol;
 import io.bitsquare.trade.protocol.trade.tasks.buyer.CreateDepositTxInputs;
 import io.bitsquare.trade.protocol.trade.tasks.buyer.ProcessDepositTxInputsRequest;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.ProcessFinalizePayoutTxRequest;
 import io.bitsquare.trade.protocol.trade.tasks.buyer.ProcessPublishDepositTxRequest;
 import io.bitsquare.trade.protocol.trade.tasks.buyer.SendDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.buyer.SendFiatTransferStartedMessage;
@@ -39,16 +41,23 @@ import io.bitsquare.trade.protocol.trade.tasks.buyer.SendPayDepositRequest;
 import io.bitsquare.trade.protocol.trade.tasks.buyer.SendPayoutTxFinalizedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.buyer.SignAndFinalizePayoutTx;
 import io.bitsquare.trade.protocol.trade.tasks.buyer.SignAndPublishDepositTx;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.VerifyAndSignContract;
 import io.bitsquare.trade.protocol.trade.tasks.offerer.VerifyTakeOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.tasks.offerer.VerifyTakerAccount;
 import io.bitsquare.trade.protocol.trade.tasks.seller.CommitDepositTx;
+import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignContract;
 import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignDepositTx;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessDepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessFiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessPayDepositRequest;
 import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessPayoutTxFinalizedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.SendDepositTxInputsRequest;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SendFinalizePayoutTxRequest;
+import io.bitsquare.trade.protocol.trade.tasks.seller.SendPublishDepositTxRequest;
 import io.bitsquare.trade.protocol.trade.tasks.seller.SignPayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.shared.CommitPayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
+import io.bitsquare.trade.protocol.trade.tasks.taker.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOffererAccount;
@@ -68,7 +77,6 @@ public class DebugView extends InitializableView {
 
 
     @FXML ComboBox<Class> taskComboBox;
-    @FXML CheckBox interceptBeforeCheckBox;
 
     @Inject
     public DebugView() {
@@ -76,12 +84,10 @@ public class DebugView extends InitializableView {
 
     @Override
     public void initialize() {
-        interceptBeforeCheckBox.setSelected(true);
-
         final ObservableList<Class> items = FXCollections.observableArrayList(Arrays.asList(
                         /*---- Protocol ----*/
                         OfferAvailabilityProtocol.class,
-                        io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress.class,
+                        GetPeerAddress.class,
                         SendOfferAvailabilityRequest.class,
                         ProcessOfferAvailabilityResponse.class,
                         Boolean.class, /* used as seperator*/
@@ -104,34 +110,45 @@ public class DebugView extends InitializableView {
 
                         ProcessPublishDepositTxRequest.class,
                         VerifyTakerAccount.class,
+                        VerifyAndSignContract.class,
                         SignAndPublishDepositTx.class,
                         SendDepositTxPublishedMessage.class,
 
-                        SignPayoutTx.class,
                         VerifyTakeOfferFeePayment.class,
                         SendFiatTransferStartedMessage.class,
 
-                        ProcessPayoutTxFinalizedMessage.class,
+                        ProcessFinalizePayoutTxRequest.class,
+                        SignAndFinalizePayoutTx.class,
+                        CommitPayoutTx.class,
+                        SendPayoutTxFinalizedMessage.class,
+                        SetupPayoutTxLockTimeReachedListener.class,
                         Boolean.class, /* used as seperator*/
                         
 
                         /*---- Protocol ----*/
                         SellerAsTakerProtocol.class,
                         CreateTakeOfferFeeTx.class,
+                        BroadcastTakeOfferFeeTx.class,
                         SendDepositTxInputsRequest.class,
 
                         ProcessPayDepositRequest.class,
                         VerifyOffererAccount.class,
+                        CreateAndSignContract.class,
                         CreateAndSignDepositTx.class,
+                        SendPublishDepositTxRequest.class,
 
                         ProcessDepositTxPublishedMessage.class,
                         CommitDepositTx.class,
 
                         ProcessFiatTransferStartedMessage.class,
 
-                        SignAndFinalizePayoutTx.class,
                         VerifyOfferFeePayment.class,
-                        SendPayoutTxFinalizedMessage.class
+                        SignPayoutTx.class,
+                        SendFinalizePayoutTxRequest.class,
+
+                        ProcessPayoutTxFinalizedMessage.class,
+                        CommitPayoutTx.class,
+                        SetupPayoutTxLockTimeReachedListener.class
                 )
         );
 
@@ -160,20 +177,8 @@ public class DebugView extends InitializableView {
     void onSelectTask() {
         Class item = taskComboBox.getSelectionModel().getSelectedItem();
         if (!item.getSimpleName().contains("Protocol")) {
-            if (interceptBeforeCheckBox.isSelected()) {
-                Task.taskToInterceptBeforeRun = item;
-                Task.taskToInterceptAfterRun = null;
-            }
-            else {
-                Task.taskToInterceptAfterRun = item;
-                Task.taskToInterceptBeforeRun = null;
-            }
+            Task.taskToIntercept = item;
         }
-    }
-
-    @FXML
-    void onCheckBoxChanged() {
-        onSelectTask();
     }
 }
 

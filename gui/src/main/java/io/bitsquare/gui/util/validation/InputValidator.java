@@ -19,24 +19,11 @@ package io.bitsquare.gui.util.validation;
 
 import io.bitsquare.locale.BSResources;
 
-/**
- * Base class for other specialized validators.
- * <p/>
- * That class implements just what we need for the moment. It is not intended as a general purpose library class.
- */
 public class InputValidator {
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public ValidationResult validate(String input) {
         return validateIfNotEmpty(input);
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected ValidationResult validateIfNotEmpty(String input) {
         if (input == null || input.length() == 0)
@@ -44,10 +31,6 @@ public class InputValidator {
         else
             return new ValidationResult(true);
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // ValidationResult
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static class ValidationResult {
         public final boolean isValid;

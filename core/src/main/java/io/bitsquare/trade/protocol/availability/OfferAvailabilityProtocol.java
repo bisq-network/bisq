@@ -30,11 +30,9 @@ import io.bitsquare.trade.protocol.availability.messages.OfferMessage;
 import io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress;
 import io.bitsquare.trade.protocol.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bitsquare.trade.protocol.availability.tasks.SendOfferAvailabilityRequest;
-
-import org.bitcoinj.utils.Threading;
+import io.bitsquare.util.Utilities;
 
 import java.util.Timer;
-import java.util.TimerTask;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +50,6 @@ public class OfferAvailabilityProtocol {
     private final DecryptedMessageHandler decryptedMessageHandler;
     private Timer timeoutTimer;
 
-    private boolean isCanceled;
     private TaskRunner<OfferAvailabilityModel> taskRunner;
 
 
@@ -84,8 +81,14 @@ public class OfferAvailabilityProtocol {
         model.messageService.addDecryptedMessageHandler(decryptedMessageHandler);
 
         taskRunner = new TaskRunner<>(model,
-                () -> log.debug("sequence at onCheckOfferAvailability completed"),
-                log::error
+                () -> {
+                    log.debug("sequence at onCheckOfferAvailability completed");
+                    stopTimeout();
+                },
+                (errorMessage) -> {
+                    log.error(errorMessage);
+                    stopTimeout();
+                }
         );
         taskRunner.addTasks(
                 GetPeerAddress.class,
@@ -96,7 +99,6 @@ public class OfferAvailabilityProtocol {
     }
 
     public void cancel() {
-        isCanceled = true;
         taskRunner.cancel();
         cleanup();
     }
@@ -119,15 +121,18 @@ public class OfferAvailabilityProtocol {
 
     private void handle(OfferAvailabilityResponse message) {
         stopTimeout();
+        startTimeout();
         model.setMessage(message);
 
         taskRunner = new TaskRunner<>(model,
                 () -> {
-                    log.debug("sequence at handleReportOfferAvailabilityMessage completed");
+                    log.debug("sequence at handle OfferAvailabilityResponse completed");
+                    stopTimeout();
                     resultHandler.handleResult();
                 },
                 (errorMessage) -> {
                     log.error(errorMessage);
+                    stopTimeout();
                     errorMessageHandler.handleErrorMessage(errorMessage);
                 }
         );
@@ -136,26 +141,16 @@ public class OfferAvailabilityProtocol {
     }
 
     protected void startTimeout() {
-        log.debug("startTimeout");
         stopTimeout();
 
-        timeoutTimer = new Timer();
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                Threading.USER_THREAD.execute(() -> {
-                    log.debug("Timeout reached");
-                    errorMessageHandler.handleErrorMessage("Timeout reached: Peer has not responded.");
-                    model.offer.setState(Offer.State.OFFERER_OFFLINE);
-                });
-            }
-        };
-
-        timeoutTimer.schedule(task, TIMEOUT);
+        timeoutTimer = Utilities.setTimeout(TIMEOUT, () -> {
+            log.warn("Timeout reached");
+            errorMessageHandler.handleErrorMessage("Timeout reached: Peer has not responded.");
+            model.offer.setState(Offer.State.TIMEOUT);
+        });
     }
 
     protected void stopTimeout() {
-        log.debug("stopTimeout");
         if (timeoutTimer != null) {
             timeoutTimer.cancel();
             timeoutTimer = null;

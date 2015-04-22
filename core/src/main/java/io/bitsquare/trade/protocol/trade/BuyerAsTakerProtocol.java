@@ -116,8 +116,8 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 CreateDepositTxInputs.class,
                 SendPayDepositRequest.class
         );
-        taskRunner.run();
         startTimeout();
+        taskRunner.run();
     }
 
 

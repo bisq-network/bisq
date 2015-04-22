@@ -34,13 +34,11 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.User;
-
-import org.bitcoinj.utils.Threading;
+import io.bitsquare.util.Utilities;
 
 import com.google.inject.Inject;
 
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeoutException;
 
 import javafx.application.Platform;
@@ -345,7 +343,7 @@ class MainViewModel implements ViewModel {
         if (numPendingTrades > 0)
             numPendingTradesAsString.set(String.valueOf(numPendingTrades));
         if (numPendingTrades > 9)
-            numPendingTradesAsString.set("*");
+            numPendingTradesAsString.set("-");
 
         showPendingTradesNotification.set(numPendingTrades > 0);
     }
@@ -371,18 +369,11 @@ class MainViewModel implements ViewModel {
         log.trace("startBlockchainSyncTimeout");
         stopBlockchainSyncTimeout();
 
-        blockchainSyncTimeoutTimer = new Timer();
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                Threading.USER_THREAD.execute(() -> {
-                    log.trace("Timeout reached");
-                    Platform.runLater(() -> setWalletServiceException(new TimeoutException()));
-                });
-            }
-        };
 
-        blockchainSyncTimeoutTimer.schedule(task, BLOCKCHAIN_SYNC_TIMEOUT);
+        blockchainSyncTimeoutTimer = Utilities.setTimeout(BLOCKCHAIN_SYNC_TIMEOUT, () -> {
+            log.trace("Timeout reached");
+            setWalletServiceException(new TimeoutException());
+        });
     }
 
     private void stopBlockchainSyncTimeout() {

@@ -37,8 +37,9 @@ public class CreateDepositTxInputs extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             log.debug("trade.id" + trade.getId());
             Coin inputAmount = trade.getSecurityDeposit().add(FeePolicy.TX_FEE);
             TradeWalletService.Result result = processModel.getTradeWalletService().createDepositTxInputs(inputAmount,

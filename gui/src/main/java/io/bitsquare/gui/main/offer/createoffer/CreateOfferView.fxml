@@ -30,7 +30,7 @@
 <AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.offer.createoffer.CreateOfferView"
             xmlns:fx="http://javafx.com/fxml">
 
-    <ScrollPane fx:id="scrollPane" hbarPolicy="NEVER" vbarPolicy="NEVER" fitToWidth="true" fitToHeight="true"
+    <ScrollPane fx:id="scrollPane" onScroll="#onScroll" hbarPolicy="NEVER" vbarPolicy="NEVER" fitToWidth="true" fitToHeight="true"
                 AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
                 AnchorPane.bottomAnchor="0.0">
 

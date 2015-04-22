@@ -35,8 +35,9 @@ public class SignAndFinalizePayoutTx extends TradeTask {
     }
 
     @Override
-    protected void doRun() {
+    protected void run() {
         try {
+            runInterceptHook();
             assert trade.getTradeAmount() != null;
             assert trade.getSecurityDeposit() != null;
             Coin sellerPayoutAmount = trade.getSecurityDeposit();
