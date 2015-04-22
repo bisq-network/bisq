@@ -58,7 +58,6 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
     public SellerAsOffererProtocol(SellerAsOffererTrade trade) {
         super(trade.getProcessModel());
 
-        log.debug("New OffererProtocol " + this);
         this.sellerAsOffererTrade = trade;
 
         // If we are after the timelock state we need to setup the listener again
@@ -68,8 +67,7 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
                 state == SellerTradeState.ProcessState.PAYOUT_BROAD_CASTED) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
-                        log.debug("taskRunner completed");
-                        // we are done!
+                        handleTaskRunnerSuccess("SetupPayoutTxLockTimeReachedListener");
                         processModel.onComplete();
                     },
                     this::handleTaskRunnerFault);
@@ -81,28 +79,8 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods
+    // Mailbox
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void handleTakeOfferRequest(TradeMessage message, Peer taker) {
-        processModel.setTradeMessage(message);
-        sellerAsOffererTrade.setTradingPeer(taker);
-
-        TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsOffererTrade,
-                () -> log.debug("taskRunner at handleTakerDepositPaymentRequestMessage completed"),
-                this::handleTaskRunnerFault);
-
-        taskRunner.addTasks(
-                ProcessPayDepositRequest.class,
-                VerifyTakerAccount.class,
-                CreateAndSignContract.class,
-                CreateAndSignDepositTx.class,
-                SendPublishDepositTxRequest.class
-        );
-        startTimeout();
-        taskRunner.run();
-    }
 
     @Override
     public void doApplyMailboxMessage(Message message, Trade trade) {
@@ -130,6 +108,31 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Start trade
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void handleTakeOfferRequest(TradeMessage message, Peer taker) {
+        processModel.setTradeMessage(message);
+        sellerAsOffererTrade.setTradingPeer(taker);
+
+        TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsOffererTrade,
+                () -> handleTaskRunnerSuccess("handleTakeOfferRequest"),
+                this::handleTaskRunnerFault);
+
+        taskRunner.addTasks(
+                ProcessPayDepositRequest.class,
+                VerifyTakerAccount.class,
+                CreateAndSignContract.class,
+                CreateAndSignDepositTx.class,
+                SendPublishDepositTxRequest.class
+        );
+        startTimeout();
+        taskRunner.run();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handling 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -138,7 +141,7 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
         processModel.setTradeMessage(tradeMessage);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsOffererTrade,
-                () -> log.debug("taskRunner at handleDepositTxPublishedMessage completed"),
+                () -> handleTaskRunnerSuccess("DepositTxPublishedMessage"),
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
@@ -157,7 +160,7 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
         processModel.setTradeMessage(tradeMessage);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsOffererTrade,
-                () -> log.debug("taskRunner at handleFiatTransferStartedMessage completed"),
+                () -> handleTaskRunnerSuccess("FiatTransferStartedMessage"),
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(ProcessFiatTransferStartedMessage.class);
@@ -175,12 +178,7 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
         sellerAsOffererTrade.setProcessState(SellerTradeState.ProcessState.FIAT_PAYMENT_RECEIPT);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsOffererTrade,
-                () -> {
-                    log.debug("taskRunner at handleFiatReceivedUIEvent completed");
-
-                    // we are done!
-                    processModel.onComplete();
-                },
+                () -> handleTaskRunnerSuccess("onFiatPaymentReceived"),
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
@@ -188,14 +186,19 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
                 SignPayoutTx.class,
                 SendFinalizePayoutTxRequest.class
         );
+        startTimeout();
         taskRunner.run();
     }
 
     private void handle(PayoutTxFinalizedMessage tradeMessage) {
+        stopTimeout();
         processModel.setTradeMessage(tradeMessage);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsOffererTrade,
-                () -> log.debug("taskRunner at handleFiatTransferStartedMessage completed"),
+                () -> {
+                    handleTaskRunnerSuccess("PayoutTxFinalizedMessage");
+                    processModel.onComplete();
+                },
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(

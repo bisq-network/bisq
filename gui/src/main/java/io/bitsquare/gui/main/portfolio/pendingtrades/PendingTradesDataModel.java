@@ -108,12 +108,12 @@ class PendingTradesDataModel implements Activatable, DataModel {
 
     private void onListChanged() {
         list.clear();
-        list.addAll(tradeManager.getPendingTrades().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
+        list.addAll(tradeManager.getPendingTrades().stream().filter(e -> !e.isFaultState())
+                .map(PendingTradesListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
 
-        log.debug("onListChanged {}", list.size());
         if (list.size() > 0)
             onSelectTrade(list.get(0));
         else if (list.size() == 0)
@@ -131,7 +131,6 @@ class PendingTradesDataModel implements Activatable, DataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void onSelectTrade(PendingTradesListItem item) {
-        log.debug("selectTrade {} {}", item != null, item != null ? item.getTrade().getId() : "null");
         // clean up previous selectedItem
         unbindStates();
 
@@ -176,7 +175,6 @@ class PendingTradesDataModel implements Activatable, DataModel {
                 toAddress,
                 trade,
                 () -> {
-                    log.debug("requestWithdraw was successful");
                     Platform.runLater(() -> navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class));
                 },
                 (errorMessage, throwable) -> {

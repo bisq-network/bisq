@@ -32,4 +32,5 @@ public class TradeTaskRunner extends TaskRunner<Trade> {
     public TradeTaskRunner(Trade sharedModel, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         super(sharedModel, (Class<? extends Model>) sharedModel.getClass().getSuperclass().getSuperclass(), resultHandler, errorMessageHandler);
     }
+
 }

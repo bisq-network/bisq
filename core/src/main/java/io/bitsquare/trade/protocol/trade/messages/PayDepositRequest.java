@@ -35,6 +35,7 @@ public class PayDepositRequest extends TradeMessage implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
+    public final Coin tradeAmount;
     public final List<TransactionOutput> buyerConnectedOutputsForAllInputs;
     public final List<TransactionOutput> buyerOutputs;
     public final byte[] buyerTradeWalletPubKey;
@@ -42,7 +43,7 @@ public class PayDepositRequest extends TradeMessage implements Serializable {
     public final PubKeyRing buyerPubKeyRing;
     public final FiatAccount buyerFiatAccount;
     public final String buyerAccountId;
-    public final Coin tradeAmount;
+    public final String takeOfferFeeTxId;
 
     public PayDepositRequest(String tradeId,
                              Coin tradeAmount,
@@ -52,7 +53,8 @@ public class PayDepositRequest extends TradeMessage implements Serializable {
                              byte[] buyerTradeWalletPubKey,
                              PubKeyRing buyerPubKeyRing,
                              FiatAccount buyerFiatAccount,
-                             String buyerAccountId) {
+                             String buyerAccountId,
+                             String takeOfferFeeTxId) {
         super(tradeId);
         this.tradeAmount = tradeAmount;
         this.isInitialRequest = isInitialRequest;
@@ -62,5 +64,6 @@ public class PayDepositRequest extends TradeMessage implements Serializable {
         this.buyerTradeWalletPubKey = buyerTradeWalletPubKey;
         this.buyerFiatAccount = buyerFiatAccount;
         this.buyerAccountId = buyerAccountId;
+        this.takeOfferFeeTxId = takeOfferFeeTxId;
     }
 }

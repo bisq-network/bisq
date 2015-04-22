@@ -19,8 +19,8 @@ package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
+import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +50,7 @@ public class ProcessPayDepositRequest extends TradeTask {
             processModel.tradingPeer.setPubKeyRing(checkNotNull(message.buyerPubKeyRing));
             processModel.tradingPeer.setFiatAccount(checkNotNull(message.buyerFiatAccount));
             processModel.tradingPeer.setAccountId(nonEmptyStringOf(message.buyerAccountId));
+            processModel.setTakeOfferFeeTxId(nonEmptyStringOf(message.takeOfferFeeTxId));
             trade.setTradeAmount(positiveCoinOf(nonZeroCoinOf(message.tradeAmount)));
 
             complete();

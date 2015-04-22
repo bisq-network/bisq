@@ -29,6 +29,8 @@ import org.bitcoinj.core.Coin;
 
 import java.io.Serializable;
 
+import java.util.Date;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,8 +52,10 @@ public abstract class SellerTrade extends Trade implements Serializable {
 
     @Override
     protected void initStates() {
-        processState = SellerTradeState.ProcessState.UNDEFINED;
-        lifeCycleState = Trade.LifeCycleState.PENDING;
+        if (processState == null)
+            processState = SellerTradeState.ProcessState.UNDEFINED;
+        if (lifeCycleState == null)
+            lifeCycleState = Trade.LifeCycleState.PENDING;
         initStateProperties();
     }
 
@@ -68,12 +72,28 @@ public abstract class SellerTrade extends Trade implements Serializable {
     public void setProcessState(TradeState.ProcessState processState) {
         super.setProcessState(processState);
 
-       /* switch ((SellerTradeState.ProcessState) processState) {
-            case EXCEPTION:
+        switch ((SellerTradeState.ProcessState) processState) {
+            case DEPOSIT_PUBLISHED_MSG_RECEIVED:
+                takeOfferDate = new Date();
+
+                if (this instanceof OffererTrade)
+                    openOfferManager.closeOpenOffer(getOffer());
+                break;
+
+            case TIMEOUT:
                 disposeProtocol();
                 setLifeCycleState(Trade.LifeCycleState.FAILED);
+
+                tradeManager.removeFailedTrade(this);
                 break;
-        }*/
+
+            case FAULT:
+                disposeProtocol();
+                setLifeCycleState(Trade.LifeCycleState.FAILED);
+
+                tradeManager.removeFailedTrade(this);
+                break;
+        }
     }
 
     @Override

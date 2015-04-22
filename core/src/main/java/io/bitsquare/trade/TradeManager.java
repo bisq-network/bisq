@@ -45,8 +45,6 @@ import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxInputsRequest;
 import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.states.BuyerTradeState;
-import io.bitsquare.trade.states.SellerTradeState;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.AddressFormatException;
@@ -187,10 +185,9 @@ public class TradeManager {
                 trade = new SellerAsOffererTrade(offer, pendingTradesStorage);
 
             trade.setStorage(pendingTradesStorage);
-            pendingTrades.add(trade);
             initTrade(trade);
+            pendingTrades.add(trade);
             ((OffererTrade) trade).handleTakeOfferRequest(message, sender);
-            setupDepositPublishedListener(trade);
         }
         else {
             // TODO respond
@@ -208,20 +205,10 @@ public class TradeManager {
                 blockChainService,
                 cryptoService,
                 arbitrationRepository,
+                this,
+                openOfferManager,
                 user,
                 keyRing);
-    }
-
-    // Only after published we consider the openOffer as closed and the trade as completely initialized
-    private void setupDepositPublishedListener(Trade trade) {
-        trade.processStateProperty().addListener((ov, oldValue, newValue) -> {
-            log.debug("setupDepositPublishedListener state = " + newValue);
-            if (newValue == BuyerTradeState.ProcessState.DEPOSIT_PUBLISHED ||
-                    newValue == SellerTradeState.ProcessState.DEPOSIT_PUBLISHED_MSG_RECEIVED) {
-                openOfferManager.closeOpenOffer(trade.getOffer());
-                trade.setTakeOfferDate(new Date());
-            }
-        });
     }
 
     private void setMailboxMessagesToTrades(List<SealedAndSignedMessage> encryptedMessages) {
@@ -268,9 +255,9 @@ public class TradeManager {
                 initTrade(trade);
             }
         }
+
         for (Trade trade : failedTrades) {
-            pendingTrades.remove(trade);
-            closedTradableManager.add(trade);
+            removeFailedTrade(trade);
         }
     }
 
@@ -367,7 +354,13 @@ public class TradeManager {
         }
     }
 
-
+    // In a fault case we remove it and add it to the closed trades
+    public void removeFailedTrade(Trade trade) {
+        pendingTrades.remove(trade);
+        closedTradableManager.add(trade);
+    }
+    
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -380,5 +373,8 @@ public class TradeManager {
         return offer.isMyOffer(keyRing);
     }
 
-
+    private Optional<Trade> findTrade(String id) {
+        return pendingTrades.stream().filter(trade -> trade.getId().equals(id)).findAny();
+    }
+   
 }

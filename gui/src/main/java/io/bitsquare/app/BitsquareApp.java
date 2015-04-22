@@ -158,7 +158,7 @@ public class BitsquareApp extends Application {
             primaryStage.show();
 
             //TODO just temp.
-            // showDebugWindow();
+            showDebugWindow();
         } catch (Throwable throwable) {
             showErrorPopup(throwable, true);
         }

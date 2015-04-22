@@ -21,7 +21,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.BuyerTrade;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.TradeTask;
+import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 import io.bitsquare.trade.states.BuyerTradeState;
 
 import org.bitcoinj.core.Coin;

@@ -231,7 +231,7 @@ public class OpenOfferManager {
     }
 
     public Optional<OpenOffer> findOpenOffer(String offerId) {
-        return openOffers.stream().filter(openOffer -> openOffer.getOffer().getId().equals(offerId)).findAny();
+        return openOffers.stream().filter(openOffer -> openOffer.getId().equals(offerId)).findAny();
     }
 
     // Close openOffer after deposit published

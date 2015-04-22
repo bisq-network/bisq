@@ -34,6 +34,7 @@ import org.bitcoinj.utils.Fiat;
 
 import com.google.inject.Inject;
 
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -145,7 +146,9 @@ class TakeOfferDataModel implements Activatable, DataModel {
         };
         updateBalance(walletService.getBalanceForAddress(addressEntry.getAddress()));
 
-        tradeManager.onCheckOfferAvailability(offer);
+        // delay a bit to get the listeners called
+        offer.resetState();
+        Platform.runLater(() -> tradeManager.onCheckOfferAvailability(offer));
     }
 
 

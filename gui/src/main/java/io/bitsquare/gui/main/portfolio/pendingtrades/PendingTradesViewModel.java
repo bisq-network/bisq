@@ -53,44 +53,30 @@ import org.slf4j.LoggerFactory;
 public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataModel> implements ViewModel {
     private static final Logger log = LoggerFactory.getLogger(PendingTradesViewModel.class);
 
-   /* enum ViewState {
-        UNDEFINED,
-        WAIT_FOR_BLOCKCHAIN_CONFIRMATION,
-        WAIT_FOR_FIAT_PAYMENT_STARTED,
-        REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED,
-        SELLER_REQUEST_PAYOUT_FINALIZE_MSG_SENT,
-        SELLER_PAYOUT_FINALIZED,
-        SELLER_COMPLETED,
-
-        WAIT_FOR_BLOCKCHAIN_CONFIRMATION,
-        BUYER_START_PAYMENT,
-        BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED,
-        BUYER_PAYOUT_FINALIZED,
-        BUYER_COMPLETED,
-
-        MESSAGE_SENDING_FAILED,
-        TIMEOUT,
-        EXCEPTION
-    }*/
-
     interface State {
     }
 
     enum BuyerState implements State {
+        UNDEFINED,
         WAIT_FOR_BLOCKCHAIN_CONFIRMATION,
         REQUEST_START_FIAT_PAYMENT,
         WAIT_FOR_FIAT_PAYMENT_RECEIPT,
         WAIT_FOR_UNLOCK_PAYOUT,
-        REQUEST_WITHDRAWAL
+        REQUEST_WITHDRAWAL,
+        CLOSED,
+        FAULT
     }
 
     enum SellerState implements State {
+        UNDEFINED,
         WAIT_FOR_BLOCKCHAIN_CONFIRMATION,
         WAIT_FOR_FIAT_PAYMENT_STARTED,
         REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED,
         WAIT_FOR_PAYOUT_TX,
         WAIT_FOR_UNLOCK_PAYOUT,
-        REQUEST_WITHDRAWAL
+        REQUEST_WITHDRAWAL,
+        CLOSED,
+        FAULT
     }
 
     private final BSFormatter formatter;
@@ -98,8 +84,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     private final InvalidationListener buyerStateListener;
     private final BtcAddressValidator btcAddressValidator;
 
-    private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>(BuyerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
-    private final ObjectProperty<SellerState> sellerState = new SimpleObjectProperty<>(SellerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
+    private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>(BuyerState.UNDEFINED);
+    private final ObjectProperty<SellerState> sellerState = new SimpleObjectProperty<>(SellerState.UNDEFINED);
 
     private final StringProperty txId = new SimpleStringProperty();
     private final BooleanProperty withdrawalButtonDisable = new SimpleBooleanProperty(true);
@@ -191,6 +177,10 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public void onWithdrawRequest(String withdrawToAddress) {
         dataModel.onWithdrawRequest(withdrawToAddress);
+        if (dataModel.getSellerProcessState().get() instanceof SellerTradeState.ProcessState)
+            sellerState.setValue(SellerState.CLOSED);
+        else
+            buyerState.setValue(BuyerState.CLOSED);
     }
 
     public void withdrawAddressFocusOut(String text) {
@@ -338,6 +328,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             if (processState != null) {
                 switch (processState) {
                     case UNDEFINED:
+                        sellerState.set(SellerState.UNDEFINED);
+                        break;
 
                     case DEPOSIT_PUBLISHED_MSG_RECEIVED:
                         sellerState.set(SellerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
@@ -373,16 +365,9 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                         break;
 
 
-                   /* case PAYOUT_BROAD_CASTED_FAILED:
-                        // sellerState.set(SellerState.EXCEPTION);
+                    case FAULT:
+                        sellerState.set(SellerState.FAULT);
                         break;
-
-                    case MESSAGE_SENDING_FAILED:
-                        //sellerState.set(SellerState.MESSAGE_SENDING_FAILED);
-                        break;
-                    case EXCEPTION:
-                        // sellerState.set(SellerState.EXCEPTION);
-                        break;*/
 
                     default:
                         log.warn("unhandled processState " + processState);
@@ -402,6 +387,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             if (processState != null) {
                 switch (processState) {
                     case UNDEFINED:
+                        sellerState.set(SellerState.UNDEFINED);
                         break;
 
 
@@ -436,18 +422,10 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                         break;
 
 
-                   /* case PAYOUT_BROAD_CASTED_FAILED:
-                        // buyerState.set(BuyerState.EXCEPTION);
+                    case FAULT:
+                        sellerState.set(SellerState.FAULT);
                         break;
 
-
-                    case MESSAGE_SENDING_FAILED:
-                        // buyerState.set(BuyerState.MESSAGE_SENDING_FAILED);
-                        break;
-                    case EXCEPTION:
-                        // buyerState.set(BuyerState.EXCEPTION);
-                        break;
-*/
                     default:
                         log.warn("unhandled viewState " + processState);
                         break;

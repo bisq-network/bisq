@@ -84,7 +84,6 @@ public class OpenOffer implements Tradable, Serializable {
             startTimeout();
         else
             stopTimeout();
-
     }
 
     public State getState() {

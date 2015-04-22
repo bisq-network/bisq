@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.TradeTask;
+import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;

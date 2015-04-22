@@ -157,6 +157,10 @@ public abstract class TradeProtocol {
         }
     }
 
+    protected void handleTaskRunnerSuccess(String info) {
+        log.debug("handleTaskRunnerSuccess " + info);
+    }
+
     protected void handleTaskRunnerFault(String errorMessage) {
         log.error(errorMessage);
         cleanup();

@@ -169,8 +169,8 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
 
     private void setupReplyHandler() {
         peerDHT.peer().objectDataReply((sender, message) -> {
-            log.debug("Incoming message with peerAddress " + sender);
-            log.debug("Incoming message with type " + message);
+            //log.debug("Incoming message with peerAddress " + sender);
+            //log.debug("Incoming message with type " + message);
 
             int messageSize = 0;
             if (message != null)
@@ -189,7 +189,7 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
                                 MessageWithPubKey messageWithPubKey = null;
                                 try {
                                     messageWithPubKey = getDecryptedMessageWithPubKey((SealedAndSignedMessage) message);
-                                    log.debug("decrypted message " + messageWithPubKey.getMessage());
+                                    //log.debug("decrypted message " + messageWithPubKey.getMessage());
                                     e.handleMessage(messageWithPubKey, new TomP2PPeer(sender));
                                 } catch (CryptoException e1) {
                                     e1.printStackTrace();

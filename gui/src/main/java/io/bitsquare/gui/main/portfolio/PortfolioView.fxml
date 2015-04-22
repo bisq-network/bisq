@@ -24,7 +24,7 @@
          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" tabClosingPolicy="UNAVAILABLE"
          xmlns:fx="http://javafx.com/fxml">
 
-    <Tab fx:id="offersTab" text="Open offers"/>
+    <Tab fx:id="openOffersTab" text="Open offers"/>
     <Tab fx:id="openTradesTab" text="Open trades"/>
     <Tab fx:id="closedTradesTab" text="History"/>
 

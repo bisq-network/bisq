@@ -92,6 +92,10 @@ public class BuyerSubView extends TradeSubView {
             tradeStepDetailsView.deactivate();
 
         switch (state) {
+            case UNDEFINED:
+              /*  showItem(waitTxInBlockchain);
+                ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText("Trade is in an incomplete state.");*/
+                break;
             case WAIT_FOR_BLOCKCHAIN_CONFIRMATION:
                 showItem(waitTxInBlockchain);
 
@@ -143,6 +147,14 @@ public class BuyerSubView extends TradeSubView {
                 completedView.setSummaryInfoDisplayText("Your security deposit has been refunded to you. " +
                         "You can review the details to that trade any time in the closed trades screen.");
                 completedView.setWithdrawAmountTextFieldText(model.getPayoutAmount());
+                break;
+            case CLOSED:
+                showItem(waitTxInBlockchain);
+                ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText("Trade is closed");
+                break;
+            case FAULT:
+                showItem(waitTxInBlockchain);
+                ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText("Error occured");
                 break;
             /*case MESSAGE_SENDING_FAILED:
                 Popups.openWarningPopup("Sending message to trading peer failed.", model.getErrorMessage());

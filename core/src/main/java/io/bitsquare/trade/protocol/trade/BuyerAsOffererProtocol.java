@@ -60,7 +60,6 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     public BuyerAsOffererProtocol(BuyerAsOffererTrade trade) {
         super(trade.getProcessModel());
 
-        log.debug("New OffererProtocol " + this);
         this.buyerAsOffererTrade = trade;
 
         // If we are after the timelock state we need to setup the listener again
@@ -68,10 +67,10 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
         if (state == BuyerTradeState.ProcessState.PAYOUT_TX_COMMITTED ||
                 state == BuyerTradeState.ProcessState.PAYOUT_TX_SENT ||
                 state == BuyerTradeState.ProcessState.PAYOUT_BROAD_CASTED) {
+
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
-                        log.debug("taskRunner completed");
-                        // we are done!
+                        handleTaskRunnerSuccess("SetupPayoutTxLockTimeReachedListener");
                         processModel.onComplete();
                     },
                     this::handleTaskRunnerFault);
@@ -83,28 +82,8 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods
+    // Mailbox
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void handleTakeOfferRequest(TradeMessage message, Peer taker) {
-        checkTradeId(processModel.getId(), message);
-        processModel.setTradeMessage(message);
-        buyerAsOffererTrade.setTradingPeer(taker);
-
-        //buyerAsOffererTrade.setLifeCycleState(OffererTradeState.LifeCycleState.OFFER_RESERVED);
-
-        TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
-                () -> log.debug("taskRunner at handleRequestDepositTxInputsMessage completed"),
-                this::handleTaskRunnerFault);
-        taskRunner.addTasks(
-                ProcessDepositTxInputsRequest.class,
-                CreateDepositTxInputs.class,
-                SendPayDepositRequest.class
-        );
-        startTimeout();
-        taskRunner.run();
-    }
 
     @Override
     public void doApplyMailboxMessage(Message message, Trade trade) {
@@ -121,6 +100,29 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
                     log.error(errorMessage);
                 }));
     }
+    
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Start trade
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void handleTakeOfferRequest(TradeMessage message, Peer taker) {
+        checkTradeId(processModel.getId(), message);
+        processModel.setTradeMessage(message);
+        buyerAsOffererTrade.setTradingPeer(taker);
+
+        TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
+                () -> handleTaskRunnerSuccess("handleTakeOfferRequest"),
+                this::handleTaskRunnerFault);
+        taskRunner.addTasks(
+                ProcessDepositTxInputsRequest.class,
+                CreateDepositTxInputs.class,
+                SendPayDepositRequest.class
+        );
+        startTimeout();
+        taskRunner.run();
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -132,7 +134,7 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
         processModel.setTradeMessage(tradeMessage);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
-                () -> log.debug("taskRunner at handleRequestPublishDepositTxMessage completed"),
+                () -> handleTaskRunnerSuccess("PublishDepositTxRequest"),
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
                 ProcessPublishDepositTxRequest.class,
@@ -155,7 +157,7 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
         buyerAsOffererTrade.setProcessState(BuyerTradeState.ProcessState.FIAT_PAYMENT_STARTED);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
-                () -> log.debug("taskRunner at handleBankTransferStartedUIEvent completed"),
+                () -> handleTaskRunnerSuccess("onFiatPaymentStarted"),
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
                 VerifyTakeOfferFeePayment.class,
@@ -175,8 +177,7 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
                 () -> {
-                    log.debug("taskRunner at handlePayoutTxPublishedMessage completed");
-                    // we are done!
+                    handleTaskRunnerSuccess("FinalizePayoutTxRequest");
                     processModel.onComplete();
                 },
                 this::handleTaskRunnerFault);

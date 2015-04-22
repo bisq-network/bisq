@@ -31,6 +31,7 @@ import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.trade.protocol.trade.ProcessModel;
 import io.bitsquare.trade.protocol.trade.TradeProtocol;
 import io.bitsquare.trade.states.BuyerTradeState;
@@ -75,6 +76,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
 
     private transient static final Logger log = LoggerFactory.getLogger(Trade.class);
 
+
     public enum LifeCycleState {
         PREPARATION,
         PENDING,
@@ -100,6 +102,9 @@ abstract public class Trade implements Tradable, Model, Serializable {
     transient private Storage<? extends TradableList> storage;
     transient protected TradeProtocol tradeProtocol;
 
+    transient protected TradeManager tradeManager;
+    transient protected OpenOfferManager openOfferManager;
+
     // Immutable
     private final Offer offer;
     private final ProcessModel processModel;
@@ -107,7 +112,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
 
     // Mutable
     private MessageWithPubKey messageWithPubKey;
-    private Date takeOfferDate;
+    protected Date takeOfferDate;
     protected TradeState.ProcessState processState;
     protected Trade.LifeCycleState lifeCycleState;
     private Transaction depositTx;
@@ -169,8 +174,13 @@ abstract public class Trade implements Tradable, Model, Serializable {
                      BlockChainService blockChainService,
                      CryptoService cryptoService,
                      ArbitrationRepository arbitrationRepository,
+                     TradeManager tradeManager,
+                     OpenOfferManager openOfferManager,
                      User user,
                      KeyRing keyRing) {
+
+        this.tradeManager = tradeManager;
+        this.openOfferManager = openOfferManager;
 
         processModel.onAllServicesInitialized(offer,
                 messageService,
@@ -254,6 +264,21 @@ abstract public class Trade implements Tradable, Model, Serializable {
             setProcessState(BuyerTradeState.ProcessState.FAULT);
     }
 
+    public boolean isFaultState() {
+        return processState == BuyerTradeState.ProcessState.FAULT || processState == SellerTradeState.ProcessState.FAULT;
+    }
+    
+  /*  public void resetFault() {
+        if (this instanceof SellerTrade)
+            setProcessState(SellerTradeState.ProcessState.UNDEFINED);
+        else if (this instanceof BuyerTrade)
+            setProcessState(BuyerTradeState.ProcessState.UNDEFINED);
+        
+        setLifeCycleState(LifeCycleState.PREPARATION);
+        errorMessage = null;
+        throwable = null;
+    }*/
+    
     public void setLifeCycleState(Trade.LifeCycleState lifeCycleState) {
         this.lifeCycleState = lifeCycleState;
         lifeCycleStateProperty.set(lifeCycleState);

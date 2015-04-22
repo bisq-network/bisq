@@ -92,6 +92,10 @@ public class SellerSubView extends TradeSubView {
             tradeStepDetailsView.deactivate();
 
         switch (viewState) {
+            case UNDEFINED:
+               /* showItem(waitTxInBlockchain);
+                ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText("Trade is in an incomplete state.");*/
+                break;
             case WAIT_FOR_BLOCKCHAIN_CONFIRMATION:
                 showItem(waitTxInBlockchain);
 
@@ -173,6 +177,15 @@ public class SellerSubView extends TradeSubView {
 
                 completedView.setWithdrawAmountTextFieldText(model.getPayoutAmount());
                 break;
+            case CLOSED:
+                showItem(waitTxInBlockchain);
+                ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText("Trade is closed");
+                break;
+            case FAULT:
+                showItem(waitTxInBlockchain);
+                ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText("Error occured");
+                break;
+            
            /* case MESSAGE_SENDING_FAILED:
                 Popups.openWarningPopup("Sending message to trading peer failed.", model.getErrorMessage());
                 break;

@@ -21,8 +21,8 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.BuyerAsTakerTrade;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.TradeTask;
 import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
+import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 import io.bitsquare.trade.states.StateUtil;
 
 import org.slf4j.Logger;
@@ -49,7 +49,8 @@ public class SendPayDepositRequest extends TradeTask {
                     processModel.getTradeWalletPubKey(),
                     processModel.getPubKeyRing(),
                     processModel.getFiatAccount(),
-                    processModel.getAccountId());
+                    processModel.getAccountId(),
+                    processModel.getTakeOfferFeeTxId());
 
             processModel.getMessageService().sendEncryptedMessage(
                     trade.getTradingPeer(),

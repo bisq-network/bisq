@@ -167,6 +167,10 @@ public class Offer implements Serializable {
         // TODO check upper and lower bounds for fiat
     }
 
+    public void resetState() {
+        setState(State.UNDEFINED);
+    }
+
     public boolean isMyOffer(KeyRing keyRing) {
         return getPubKeyRing().getHashString().equals(keyRing.getPubKeyRing().getHashString());
     }
