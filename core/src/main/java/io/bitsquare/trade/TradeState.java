@@ -58,7 +58,6 @@ public interface TradeState {
         SellerState(Phase phase) {
             this.phase = phase;
         }
-
     }
 
     enum BuyerState implements TradeState {

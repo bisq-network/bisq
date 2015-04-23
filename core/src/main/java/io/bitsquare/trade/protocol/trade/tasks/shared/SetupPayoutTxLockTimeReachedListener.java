@@ -67,8 +67,6 @@ public class SetupPayoutTxLockTimeReachedListener extends TradeTask {
                         Threading.USER_THREAD::execute);
             }
         } catch (Throwable t) {
-            t.printStackTrace();
-
             failed(t);
         }
     }
@@ -84,21 +82,11 @@ public class SetupPayoutTxLockTimeReachedListener extends TradeTask {
                 else if (trade instanceof SellerTrade)
                     trade.setTradeState(TradeState.SellerState.PAYOUT_BROAD_CASTED);
 
-
                 complete();
             }
 
             @Override
             public void onFailure(@NotNull Throwable t) {
-                t.printStackTrace();
-                
-/*
-                if (trade instanceof TakerTrade)
-                    trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_BROAD_CASTED_FAILED);
-                else if (trade instanceof OffererTrade)
-                    trade.setProcessState(OffererTradeState.ProcessState.PAYOUT_BROAD_CASTED_FAILED);*/
-
-
                 failed(t);
             }
         });

@@ -23,7 +23,6 @@ import io.bitsquare.trade.BuyerAsTakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-import io.bitsquare.trade.states.StateUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,24 +58,17 @@ public class SendPayDepositRequest extends TradeTask {
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {
-                            log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");
+                            log.trace("PayDepositRequest successfully arrived at peer");
                             complete();
                         }
 
                         @Override
                         public void handleFault() {
-                            appendToErrorMessage("Sending RequestTakerDepositPaymentMessage failed");
-                            trade.setErrorMessage(errorMessage);
-                            StateUtil.setOfferOpenState(trade);
-                            StateUtil.setSendFailedState(trade);
+                            appendToErrorMessage("Sending PayDepositRequest failed");
                             failed();
                         }
                     });
         } catch (Throwable t) {
-            t.printStackTrace();
-
-            StateUtil.setOfferOpenState(trade);
-            StateUtil.setSendFailedState(trade);
             failed(t);
         }
     }

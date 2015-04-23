@@ -60,8 +60,6 @@ public class SignAndFinalizePayoutTx extends TradeTask {
 
             complete();
         } catch (Throwable t) {
-            t.printStackTrace();
-
             failed(t);
         }
     }

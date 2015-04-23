@@ -20,7 +20,6 @@ package io.bitsquare.trade.protocol.trade.tasks.offerer;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-import io.bitsquare.trade.states.StateUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,9 +38,7 @@ public class VerifyTakerAccount extends TradeTask {
             //TODO mocked yet
             if (processModel.getBlockChainService().verifyAccountRegistration()) {
                 if (processModel.getBlockChainService().isAccountBlackListed(processModel.tradingPeer.getAccountId(),
-                        processModel
-                                .tradingPeer
-                                .getFiatAccount())) {
+                        processModel.tradingPeer.getFiatAccount())) {
                     log.error("Taker is blacklisted");
                     failed("Taker is blacklisted");
                 }
@@ -51,15 +48,8 @@ public class VerifyTakerAccount extends TradeTask {
             }
             else {
                 failed("Account registration validation for peer failed.");
-
-                StateUtil.setOfferOpenState(trade);
             }
         } catch (Throwable t) {
-            t.printStackTrace();
-
-
-            StateUtil.setOfferOpenState(trade);
-
             failed(t);
         }
     }

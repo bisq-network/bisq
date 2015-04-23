@@ -88,7 +88,8 @@ class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataMod
                     return "Failed";
                 }
                 else {
-                    log.error("Wrong state " + item.getTrade().tradeStateProperty().get());
+                    log.error("Wrong state " + tradeState);
+                    return tradeState.toString();
                 }
             }
             else if (trade instanceof SellerTrade) {
@@ -96,7 +97,8 @@ class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataMod
                     return "Failed";
                 }
                 else {
-                    log.error("Wrong state " + item.getTrade().tradeStateProperty().get());
+                    log.error("Wrong state " + tradeState);
+                    return tradeState.toString();
                 }
             }
         }

@@ -22,7 +22,6 @@ import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxInputsRequest;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-import io.bitsquare.trade.states.StateUtil;
 
 import org.bitcoinj.utils.Threading;
 
@@ -75,15 +74,11 @@ public class SendDepositTxInputsRequest extends TradeTask {
                                         "lost or the offerer lost his connection. We persisted the state of the trade, please try again later " +
                                         "or cancel that trade.");
 
-                                trade.setErrorMessage(errorMessage);
-                                StateUtil.setSendFailedState(trade);
                                 failed();
                             }
                         }
                     });
         } catch (Throwable t) {
-            t.printStackTrace();
-
             failed(t);
         }
     }

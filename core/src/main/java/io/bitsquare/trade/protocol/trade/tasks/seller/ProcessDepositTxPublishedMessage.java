@@ -50,8 +50,6 @@ public class ProcessDepositTxPublishedMessage extends TradeTask {
 
             complete();
         } catch (Throwable t) {
-            t.printStackTrace();
-
             failed(t);
         }
     }

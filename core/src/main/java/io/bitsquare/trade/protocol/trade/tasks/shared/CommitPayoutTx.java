@@ -51,8 +51,6 @@ public class CommitPayoutTx extends TradeTask {
 
             complete();
         } catch (Throwable t) {
-            t.printStackTrace();
-
             failed(t);
         }
     }

@@ -22,7 +22,6 @@ import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.PublishDepositTxRequest;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-import io.bitsquare.trade.states.StateUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,17 +61,11 @@ public class SendPublishDepositTxRequest extends TradeTask {
 
                         @Override
                         public void handleFault() {
-                            appendToErrorMessage("Sending RequestOffererPublishDepositTxMessage failed");
-                            trade.setErrorMessage(errorMessage);
-
-                            StateUtil.setSendFailedState(trade);
-
+                            appendToErrorMessage("Sending PublishDepositTxRequest failed");
                             failed();
                         }
                     });
         } catch (Throwable t) {
-            t.printStackTrace();
-
             failed(t);
         }
     }

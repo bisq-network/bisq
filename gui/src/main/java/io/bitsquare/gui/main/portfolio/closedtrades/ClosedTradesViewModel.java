@@ -94,6 +94,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                     }
                     else {
                         log.error("That must not happen. We got a pending state but we are in the closed trades list.");
+                        return tradeState.toString();
                     }
                 }
                 else if (trade instanceof SellerTrade) {
@@ -105,6 +106,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                     }
                     else {
                         log.error("That must not happen. We got a pending state but we are in the closed trades list.");
+                        return tradeState.toString();
                     }
                 }
             }

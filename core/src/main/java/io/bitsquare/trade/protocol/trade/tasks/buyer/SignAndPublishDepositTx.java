@@ -72,17 +72,11 @@ public class SignAndPublishDepositTx extends TradeTask {
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
-                            handleFault(t);
+                            failed(t);
                         }
                     });
         } catch (Throwable t) {
-            handleFault(t);
+            failed(t);
         }
-    }
-
-    private void handleFault(Throwable t) {
-        t.printStackTrace();
-
-        failed(t);
     }
 }

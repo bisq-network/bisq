@@ -25,7 +25,7 @@ import io.bitsquare.trade.protocol.trade.ProcessModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TradeTask extends Task<Trade> {
+public abstract class TradeTask extends Task<Trade> {
     private static final Logger log = LoggerFactory.getLogger(TradeTask.class);
 
     protected final ProcessModel processModel;
@@ -39,7 +39,16 @@ public class TradeTask extends Task<Trade> {
     }
 
     @Override
-    protected void run() {
+    protected void failed() {
+        trade.setErrorMessage(errorMessage);
+        super.failed();
+    }
+
+    @Override
+    protected void failed(String message) {
+        appendToErrorMessage(message);
+        trade.setErrorMessage(errorMessage);
+        super.failed();
     }
 
     @Override
@@ -47,6 +56,6 @@ public class TradeTask extends Task<Trade> {
         t.printStackTrace();
         appendExceptionToErrorMessage(t);
         trade.setErrorMessage(errorMessage);
-        failed();
+        super.failed();
     }
 }

@@ -23,7 +23,6 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.protocol.trade.messages.FinalizePayoutTxRequest;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-import io.bitsquare.trade.states.StateUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +52,7 @@ public class SendFinalizePayoutTxRequest extends TradeTask {
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {
-                            log.trace("PayoutTxPublishedMessage successfully arrived at peer");
+                            log.trace("FinalizePayoutTxRequest successfully arrived at peer");
 
                             trade.setTradeState(TradeState.SellerState.FIAT_PAYMENT_RECEIPT_MSG_SENT);
 
@@ -62,15 +61,11 @@ public class SendFinalizePayoutTxRequest extends TradeTask {
 
                         @Override
                         public void handleFault() {
-                            appendToErrorMessage("Sending PayoutTxPublishedMessage failed");
-                            trade.setErrorMessage(errorMessage);
-                            StateUtil.setSendFailedState(trade);
+                            appendToErrorMessage("Sending FinalizePayoutTxRequest failed");
                             failed();
                         }
                     });
         } catch (Throwable t) {
-            t.printStackTrace();
-
             failed(t);
         }
     }

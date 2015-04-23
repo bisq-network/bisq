@@ -48,8 +48,6 @@ public class VerifyOffererAccount extends TradeTask {
                 failed("Account registration validation for peer faultHandler.onFault.");
             }
         } catch (Throwable t) {
-            t.printStackTrace();
-
             failed(t);
         }
     }
