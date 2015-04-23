@@ -74,7 +74,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private final Navigation navigation;
     private final OverlayManager overlayManager;
-    
+
     @FXML ScrollPane scrollPane;
     @FXML ImageView imageView;
     @FXML InputTextField amountTextField;

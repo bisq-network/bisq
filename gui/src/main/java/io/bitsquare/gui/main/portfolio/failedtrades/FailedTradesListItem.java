@@ -15,31 +15,22 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.states;
+package io.bitsquare.gui.main.portfolio.failedtrades;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.bitsquare.trade.Trade;
 
-public class SellerTradeState {
-    private static final Logger log = LoggerFactory.getLogger(SellerTradeState.class);
+/**
+ * We could remove that wrapper if it is not needed for additional UI only fields.
+ */
+class FailedTradesListItem {
 
-    public enum ProcessState implements TradeState.ProcessState {
-        UNDEFINED,
+    private final Trade trade;
 
-        DEPOSIT_PUBLISHED_MSG_RECEIVED,
-        DEPOSIT_CONFIRMED,
+    FailedTradesListItem(Trade trade) {
+        this.trade = trade;
+    }
 
-        FIAT_PAYMENT_STARTED_MSG_RECEIVED,
-
-        FIAT_PAYMENT_RECEIPT,
-        FIAT_PAYMENT_RECEIPT_MSG_SENT,
-
-        PAYOUT_TX_RECEIVED,
-        PAYOUT_TX_COMMITTED,
-
-        PAYOUT_BROAD_CASTED,
-
-        TIMEOUT,
-        FAULT
+    Trade getTrade() {
+        return trade;
     }
 }

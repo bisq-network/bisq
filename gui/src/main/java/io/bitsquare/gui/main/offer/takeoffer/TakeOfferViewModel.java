@@ -28,10 +28,8 @@ import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.trade.BuyerAsTakerTrade;
 import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.offer.Offer;
-import io.bitsquare.trade.states.BuyerTradeState;
-import io.bitsquare.trade.states.SellerTradeState;
-import io.bitsquare.trade.states.TradeState;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -104,7 +102,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final ObjectProperty<Address> address = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
 
-    final ObjectProperty<State> state = new SimpleObjectProperty<>(State.CHECK_AVAILABILITY);
+    final ObjectProperty<State> state = new SimpleObjectProperty<>(TakeOfferViewModel.State.CHECK_AVAILABILITY);
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
 
     private boolean takeOfferRequested;
@@ -114,7 +112,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private ChangeListener<Boolean> isWalletFundedChangeListener;
     private ChangeListener<Coin> amountAsCoinChangeListener;
     private ChangeListener<Offer.State> offerStateChangeListener;
-    private ChangeListener<TradeState.ProcessState> tradeStateChangeListener;
+    private ChangeListener<TradeState> tradeStateChangeListener;
     // Offer and trade are stored only for remove listener at deactivate
     private Offer offer;
     private Trade trade;
@@ -204,7 +202,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             offer.stateProperty().removeListener(offerStateChangeListener);
 
         if (trade != null)
-            trade.processStateProperty().removeListener(tradeStateChangeListener);
+            trade.tradeStateProperty().removeListener(tradeStateChangeListener);
     }
 
 
@@ -267,14 +265,14 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         isTakeOfferSpinnerVisible.set(true);
         dataModel.onTakeOffer((trade) -> {
             this.trade = trade;
-            trade.processStateProperty().addListener(tradeStateChangeListener);
-            applyTradeState(trade.processStateProperty().get());
+            trade.tradeStateProperty().addListener(tradeStateChangeListener);
+            applyTradeState(trade.tradeStateProperty().get());
             evaluateViewState();
         });
     }
 
     void onShowPaymentScreen() {
-        state.set(State.PAYMENT_SCREEN);
+        state.set(TakeOfferViewModel.State.PAYMENT_SCREEN);
     }
 
     void onToggleShowAdvancedSettings() {
@@ -294,7 +292,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 // TODO set spinner?
                 break;
             case AVAILABLE:
-                this.state.set(State.AMOUNT_SCREEN);
+                this.state.set(TakeOfferViewModel.State.AMOUNT_SCREEN);
                 break;
             case NOT_AVAILABLE:
                 if (takeOfferRequested)
@@ -343,16 +341,16 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         evaluateViewState();
     }
 
-    private void applyTradeState(TradeState.ProcessState state) {
-        log.debug("applyTradeState state = " + state);
+    private void applyTradeState(TradeState tradeState) {
+        log.debug("applyTradeState state = " + tradeState);
 
         String msg = "An error occurred.";
         if (trade.getErrorMessage() != null)
             msg = "Error message: " + trade.getErrorMessage();
 
         if (trade instanceof SellerAsTakerTrade) {
-            switch ((SellerTradeState.ProcessState) state) {
-                case UNDEFINED:
+            switch ((TradeState.SellerState) tradeState) {
+                case PREPARATION:
                     break;
                 case DEPOSIT_PUBLISHED_MSG_RECEIVED:
                     assert trade.getDepositTx() != null;
@@ -367,7 +365,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 case PAYOUT_TX_COMMITTED:
                 case PAYOUT_BROAD_CASTED:
                     break;
-                case TIMEOUT:
+               /* case TIMEOUT:
                     errorMessage.set("A timeout occurred. Maybe there are connection problems. " +
                             "Please try later again.\n" + msg);
                     takeOfferRequested = false;
@@ -375,15 +373,15 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 case FAULT:
                     errorMessage.set(msg);
                     takeOfferRequested = false;
-                    break;
+                    break;*/
                 default:
-                    log.warn("Unhandled trade state: " + state);
+                    log.warn("Unhandled trade state: " + tradeState);
                     break;
             }
         }
         else if (trade instanceof BuyerAsTakerTrade) {
-            switch ((BuyerTradeState.ProcessState) state) {
-                case UNDEFINED:
+            switch ((TradeState.BuyerState) tradeState) {
+                case PREPARATION:
                     break;
                 case DEPOSIT_PUBLISHED:
                     assert trade.getDepositTx() != null;
@@ -399,7 +397,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 case PAYOUT_TX_SENT:
                 case PAYOUT_BROAD_CASTED:
                     break;
-                case TIMEOUT:
+               /* case TIMEOUT:
                     errorMessage.set("A timeout occurred. Maybe there are connection problems. " +
                             "Please try later again.\n" + msg);
                     takeOfferRequested = false;
@@ -407,9 +405,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 case FAULT:
                     errorMessage.set(msg);
                     takeOfferRequested = false;
-                    break;
+                    break;*/
                 default:
-                    log.warn("Unhandled trade state: " + state);
+                    log.warn("Unhandled trade state: " + tradeState);
                     break;
             }
         }
@@ -562,8 +560,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 !dataModel.isAmountLargerThanOfferAmount() &&
                 dataModel.isWalletFunded.get();
 
-        if (isAmountAndPriceValidAndWalletFunded && state.get() != State.CHECK_AVAILABILITY)
-            state.set(State.PAYMENT_SCREEN);
+        if (isAmountAndPriceValidAndWalletFunded && state.get() != TakeOfferViewModel.State.CHECK_AVAILABILITY)
+            state.set(TakeOfferViewModel.State.PAYMENT_SCREEN);
 
         takeOfferButtonDisabled.set(!isAmountAndPriceValidAndWalletFunded || takeOfferRequested);
     }

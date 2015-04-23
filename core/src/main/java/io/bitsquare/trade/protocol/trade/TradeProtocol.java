@@ -28,10 +28,9 @@ import io.bitsquare.p2p.listener.GetPeerAddressListener;
 import io.bitsquare.trade.BuyerTrade;
 import io.bitsquare.trade.SellerTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
-import io.bitsquare.trade.states.BuyerTradeState;
-import io.bitsquare.trade.states.SellerTradeState;
 import io.bitsquare.util.Utilities;
 
 import java.util.Timer;
@@ -121,9 +120,9 @@ public abstract class TradeProtocol {
 
         boolean needPayoutTxBroadcast = false;
         if (trade instanceof SellerTrade)
-            needPayoutTxBroadcast = trade.processStateProperty().get() == SellerTradeState.ProcessState.PAYOUT_TX_COMMITTED;
+            needPayoutTxBroadcast = trade.tradeStateProperty().get() == TradeState.SellerState.PAYOUT_TX_COMMITTED;
         else if (trade instanceof BuyerTrade)
-            needPayoutTxBroadcast = trade.processStateProperty().get() == BuyerTradeState.ProcessState.PAYOUT_TX_COMMITTED;
+            needPayoutTxBroadcast = trade.tradeStateProperty().get() == TradeState.BuyerState.PAYOUT_TX_COMMITTED;
 
         if (needPayoutTxBroadcast) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
@@ -143,10 +142,7 @@ public abstract class TradeProtocol {
 
         timeoutTimer = Utilities.setTimeout(TIMEOUT, () -> {
             log.debug("Timeout reached");
-            if (trade instanceof SellerTrade)
-                trade.setProcessState(SellerTradeState.ProcessState.TIMEOUT);
-            else if (trade instanceof BuyerTrade)
-                trade.setProcessState(BuyerTradeState.ProcessState.TIMEOUT);
+            trade.setErrorMessage("A timeout occured.");
         });
     }
 

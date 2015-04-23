@@ -177,24 +177,6 @@ public class SellerSubView extends TradeSubView {
 
                 completedView.setWithdrawAmountTextFieldText(model.getPayoutAmount());
                 break;
-            case CLOSED:
-                showItem(waitTxInBlockchain);
-                ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText("Trade is closed");
-                break;
-            case FAULT:
-                showItem(waitTxInBlockchain);
-                ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText("Error occured");
-                break;
-            
-           /* case MESSAGE_SENDING_FAILED:
-                Popups.openWarningPopup("Sending message to trading peer failed.", model.getErrorMessage());
-                break;
-            case EXCEPTION:
-                if (model.getTradeException() != null)
-                    Popups.openExceptionPopup(model.getTradeException());
-                else
-                    Popups.openErrorPopup("An error occurred", model.getErrorMessage());
-                break;*/
             default:
                 log.warn("unhandled viewState " + viewState);
                 break;

@@ -45,7 +45,7 @@ public class CommitDepositTx extends TradeTask {
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            trade.setThrowable(t);
+
             failed(t);
         }
     }

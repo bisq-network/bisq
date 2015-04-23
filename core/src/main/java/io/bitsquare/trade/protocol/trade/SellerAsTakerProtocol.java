@@ -22,6 +22,7 @@ import io.bitsquare.p2p.Peer;
 import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.SellerTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
@@ -44,8 +45,6 @@ import io.bitsquare.trade.protocol.trade.tasks.taker.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOffererAccount;
-import io.bitsquare.trade.states.SellerTradeState;
-import io.bitsquare.trade.states.TradeState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,10 +68,10 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
         // If we are after the timelock state we need to setup the listener again
         if (trade instanceof SellerTrade) {
-            TradeState.ProcessState state = trade.processStateProperty().get();
-            if (state == SellerTradeState.ProcessState.PAYOUT_TX_RECEIVED ||
-                    state == SellerTradeState.ProcessState.PAYOUT_TX_COMMITTED ||
-                    state == SellerTradeState.ProcessState.PAYOUT_BROAD_CASTED) {
+            TradeState tradeState = trade.tradeStateProperty().get();
+            if (tradeState == TradeState.SellerState.PAYOUT_TX_RECEIVED ||
+                    tradeState == TradeState.SellerState.PAYOUT_TX_COMMITTED ||
+                    tradeState == TradeState.SellerState.PAYOUT_BROAD_CASTED) {
                 TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                         () -> {
                             handleTaskRunnerSuccess("SetupPayoutTxLockTimeReachedListener");
@@ -199,7 +198,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     @Override
     public void onFiatPaymentReceived() {
-        sellerAsTakerTrade.setProcessState(SellerTradeState.ProcessState.FIAT_PAYMENT_RECEIPT);
+        sellerAsTakerTrade.setTradeState(TradeState.SellerState.FIAT_PAYMENT_RECEIPT);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
                 () -> handleTaskRunnerSuccess("onFiatPaymentReceived"),

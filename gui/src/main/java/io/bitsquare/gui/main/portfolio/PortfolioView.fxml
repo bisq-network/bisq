@@ -25,7 +25,8 @@
          xmlns:fx="http://javafx.com/fxml">
 
     <Tab fx:id="openOffersTab" text="Open offers"/>
-    <Tab fx:id="openTradesTab" text="Open trades"/>
+    <Tab fx:id="pendingTradesTab" text="Open trades"/>
     <Tab fx:id="closedTradesTab" text="History"/>
+    <Tab fx:id="failedTradesTab" text="Failed"/>
 
 </TabPane>

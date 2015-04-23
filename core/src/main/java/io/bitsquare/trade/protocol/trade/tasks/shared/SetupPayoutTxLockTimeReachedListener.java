@@ -21,9 +21,8 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.BuyerTrade;
 import io.bitsquare.trade.SellerTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-import io.bitsquare.trade.states.BuyerTradeState;
-import io.bitsquare.trade.states.SellerTradeState;
 
 import org.bitcoinj.core.StoredBlock;
 import org.bitcoinj.core.Transaction;
@@ -69,7 +68,7 @@ public class SetupPayoutTxLockTimeReachedListener extends TradeTask {
             }
         } catch (Throwable t) {
             t.printStackTrace();
-            trade.setThrowable(t);
+
             failed(t);
         }
     }
@@ -81,9 +80,9 @@ public class SetupPayoutTxLockTimeReachedListener extends TradeTask {
                 log.debug("BroadcastTx succeeded. Transaction:" + transaction);
 
                 if (trade instanceof BuyerTrade)
-                    trade.setProcessState(BuyerTradeState.ProcessState.PAYOUT_BROAD_CASTED);
+                    trade.setTradeState(TradeState.BuyerState.PAYOUT_BROAD_CASTED);
                 else if (trade instanceof SellerTrade)
-                    trade.setProcessState(SellerTradeState.ProcessState.PAYOUT_BROAD_CASTED);
+                    trade.setTradeState(TradeState.SellerState.PAYOUT_BROAD_CASTED);
 
 
                 complete();
@@ -92,7 +91,7 @@ public class SetupPayoutTxLockTimeReachedListener extends TradeTask {
             @Override
             public void onFailure(@NotNull Throwable t) {
                 t.printStackTrace();
-                trade.setThrowable(t);
+                
 /*
                 if (trade instanceof TakerTrade)
                     trade.setProcessState(TakerTradeState.ProcessState.PAYOUT_BROAD_CASTED_FAILED);

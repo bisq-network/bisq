@@ -21,6 +21,7 @@ import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.trade.BuyerAsTakerTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.protocol.trade.messages.FinalizePayoutTxRequest;
 import io.bitsquare.trade.protocol.trade.messages.PublishDepositTxRequest;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
@@ -41,8 +42,6 @@ import io.bitsquare.trade.protocol.trade.tasks.taker.BroadcastTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.CreateTakeOfferFeeTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOffererAccount;
-import io.bitsquare.trade.states.BuyerTradeState;
-import io.bitsquare.trade.states.TradeState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,10 +64,10 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         processModel.tradingPeer.setPubKeyRing(trade.getOffer().getPubKeyRing());
 
         // If we are after the timelock state we need to setup the listener again
-        TradeState.ProcessState state = trade.processStateProperty().get();
-        if (state == BuyerTradeState.ProcessState.PAYOUT_TX_COMMITTED ||
-                state == BuyerTradeState.ProcessState.PAYOUT_TX_SENT ||
-                state == BuyerTradeState.ProcessState.PAYOUT_BROAD_CASTED) {
+        TradeState tradeState = trade.tradeStateProperty().get();
+        if (tradeState == TradeState.BuyerState.PAYOUT_TX_COMMITTED ||
+                tradeState == TradeState.BuyerState.PAYOUT_TX_SENT ||
+                tradeState == TradeState.BuyerState.PAYOUT_BROAD_CASTED) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
                         handleTaskRunnerSuccess("SetupPayoutTxLockTimeReachedListener");
@@ -153,7 +152,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     // User clicked the "bank transfer started" button
     @Override
     public void onFiatPaymentStarted() {
-        buyerAsTakerTrade.setProcessState(BuyerTradeState.ProcessState.FIAT_PAYMENT_STARTED);
+        buyerAsTakerTrade.setTradeState(TradeState.BuyerState.FIAT_PAYMENT_STARTED);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
                 () -> handleTaskRunnerSuccess("onFiatPaymentStarted"),

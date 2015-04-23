@@ -19,9 +19,9 @@ package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-import io.bitsquare.trade.states.SellerTradeState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,12 +46,12 @@ public class ProcessPayoutTxFinalizedMessage extends TradeTask {
 
             trade.setPayoutTx(checkNotNull(message.payoutTx));
 
-            trade.setProcessState(SellerTradeState.ProcessState.PAYOUT_TX_RECEIVED);
+            trade.setTradeState(TradeState.SellerState.PAYOUT_TX_RECEIVED);
 
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            trade.setThrowable(t);
+
             failed(t);
         }
     }

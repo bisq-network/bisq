@@ -46,9 +46,7 @@ public class TradeTask extends Task<Trade> {
     protected void failed(Throwable t) {
         t.printStackTrace();
         appendExceptionToErrorMessage(t);
-        trade.setThrowable(t);
         trade.setErrorMessage(errorMessage);
-        trade.setFaultState();
         failed();
     }
 }

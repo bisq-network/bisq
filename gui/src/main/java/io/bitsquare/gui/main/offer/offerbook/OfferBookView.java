@@ -135,7 +135,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     @Override
     public void doActivate() {
         addBindings();
-        
+
         // setOfferBookInfo has been called before
         table.setItems(model.getOfferList());
         priceColumn.setSortType((model.getDirection() == Offer.Direction.BUY) ? TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);

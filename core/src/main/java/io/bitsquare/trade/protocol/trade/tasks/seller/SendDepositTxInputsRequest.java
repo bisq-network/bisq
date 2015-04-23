@@ -83,7 +83,7 @@ public class SendDepositTxInputsRequest extends TradeTask {
                     });
         } catch (Throwable t) {
             t.printStackTrace();
-            trade.setThrowable(t);
+
             failed(t);
         }
     }

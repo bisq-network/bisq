@@ -52,7 +52,6 @@ public class ProcessDepositTxInputsRequest extends TradeTask {
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            trade.setThrowable(t);
             StateUtil.setOfferOpenState(trade);
             failed(t);
         }

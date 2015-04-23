@@ -22,8 +22,6 @@ import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.BuyerProtocol;
-import io.bitsquare.trade.states.BuyerTradeState;
-import io.bitsquare.trade.states.TradeState;
 
 import org.bitcoinj.core.Coin;
 
@@ -52,10 +50,8 @@ public abstract class BuyerTrade extends Trade implements Serializable {
 
     @Override
     protected void initStates() {
-        if (processState == null)
-            processState = BuyerTradeState.ProcessState.UNDEFINED;
-        if (lifeCycleState == null)
-            lifeCycleState = Trade.LifeCycleState.PREPARATION;
+        if (tradeState == null)
+            tradeState = TradeState.BuyerState.PREPARATION;
         initStateProperties();
     }
 
@@ -65,57 +61,71 @@ public abstract class BuyerTrade extends Trade implements Serializable {
     }
 
 
+    @Override
+    public boolean isFailedState() {
+        return tradeState == TradeState.BuyerState.FAILED;
+    }
+
+    @Override
+    public void setFailedState() {
+        TradeState tradeState = TradeState.BuyerState.FAILED;
+        // We store the phase of the last state into the failed state
+        tradeState.setPhase(tradeState.getPhase());
+        setTradeState(tradeState);
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setter for Mutable objects
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setProcessState(TradeState.ProcessState processState) {
-        super.setProcessState(processState);
+    public void setTradeState(TradeState tradeState) {
+        super.setTradeState(tradeState);
 
-        switch ((BuyerTradeState.ProcessState) processState) {
+        switch ((TradeState.BuyerState) tradeState) {
+            case PREPARATION:
+                break;
+
             case DEPOSIT_PUBLISHED:
                 takeOfferDate = new Date();
 
                 if (this instanceof OffererTrade)
                     openOfferManager.closeOpenOffer(getOffer());
                 break;
-
-            case TIMEOUT:
-                disposeProtocol();
-                setLifeCycleState(Trade.LifeCycleState.FAILED);
-
-                tradeManager.removeFailedTrade(this);
+            case DEPOSIT_PUBLISHED_MSG_SENT:
+                break;
+            case DEPOSIT_CONFIRMED:
                 break;
 
-            case FAULT:
-                disposeProtocol();
-                setLifeCycleState(Trade.LifeCycleState.FAILED);
-
-                tradeManager.removeFailedTrade(this);
+            case FIAT_PAYMENT_STARTED:
                 break;
-        }
-    }
+            case FIAT_PAYMENT_STARTED_MSG_SENT:
+                break;
 
-    @Override
-    public void setLifeCycleState(Trade.LifeCycleState lifeCycleState) {
-        super.setLifeCycleState(lifeCycleState);
+            case FIAT_PAYMENT_RECEIPT_MSG_RECEIVED:
+                break;
 
-        switch (lifeCycleState) {
+            case PAYOUT_TX_COMMITTED:
+                break;
+            case PAYOUT_TX_SENT:
+                break;
+
+            case PAYOUT_BROAD_CASTED:
+                break;
+
+            case WITHDRAW_COMPLETED:
+                disposeProtocol();
+                break;
+
             case FAILED:
                 disposeProtocol();
                 break;
-            case COMPLETED:
-                disposeProtocol();
+
+            default:
+                log.error("Unhandled state " + tradeState);
                 break;
         }
-    }
-
-    @Override
-    public void setThrowable(Throwable throwable) {
-        super.setThrowable(throwable);
-
-        //  setProcessState(BuyerTradeState.ProcessState.EXCEPTION);
     }
 
 
@@ -125,7 +135,7 @@ public abstract class BuyerTrade extends Trade implements Serializable {
 
     @Override
     protected void handleConfidenceResult() {
-        if (((BuyerTradeState.ProcessState) processState).ordinal() < BuyerTradeState.ProcessState.DEPOSIT_CONFIRMED.ordinal())
-            setProcessState(BuyerTradeState.ProcessState.DEPOSIT_CONFIRMED);
+        if (((TradeState.BuyerState) tradeState).ordinal() < TradeState.BuyerState.DEPOSIT_CONFIRMED.ordinal())
+            setTradeState(TradeState.BuyerState.DEPOSIT_CONFIRMED);
     }
 }

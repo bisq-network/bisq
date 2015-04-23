@@ -20,9 +20,9 @@ package io.bitsquare.trade.protocol.trade.tasks.seller;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.listener.SendMessageListener;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.protocol.trade.messages.FinalizePayoutTxRequest;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-import io.bitsquare.trade.states.SellerTradeState;
 import io.bitsquare.trade.states.StateUtil;
 
 import org.slf4j.Logger;
@@ -55,7 +55,7 @@ public class SendFinalizePayoutTxRequest extends TradeTask {
                         public void handleResult() {
                             log.trace("PayoutTxPublishedMessage successfully arrived at peer");
 
-                            trade.setProcessState(SellerTradeState.ProcessState.FIAT_PAYMENT_RECEIPT_MSG_SENT);
+                            trade.setTradeState(TradeState.SellerState.FIAT_PAYMENT_RECEIPT_MSG_SENT);
 
                             complete();
                         }
@@ -70,7 +70,7 @@ public class SendFinalizePayoutTxRequest extends TradeTask {
                     });
         } catch (Throwable t) {
             t.printStackTrace();
-            trade.setThrowable(t);
+
             failed(t);
         }
     }

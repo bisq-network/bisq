@@ -21,9 +21,8 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.BuyerTrade;
 import io.bitsquare.trade.SellerTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-import io.bitsquare.trade.states.BuyerTradeState;
-import io.bitsquare.trade.states.SellerTradeState;
 
 import org.bitcoinj.core.Transaction;
 
@@ -46,14 +45,14 @@ public class CommitPayoutTx extends TradeTask {
             trade.setPayoutTx(transaction);
 
             if (trade instanceof BuyerTrade)
-                trade.setProcessState(BuyerTradeState.ProcessState.PAYOUT_TX_COMMITTED);
+                trade.setTradeState(TradeState.BuyerState.PAYOUT_TX_COMMITTED);
             else if (trade instanceof SellerTrade)
-                trade.setProcessState(SellerTradeState.ProcessState.PAYOUT_TX_COMMITTED);
+                trade.setTradeState(TradeState.SellerState.PAYOUT_TX_COMMITTED);
 
             complete();
         } catch (Throwable t) {
             t.printStackTrace();
-            trade.setThrowable(t);
+
             failed(t);
         }
     }

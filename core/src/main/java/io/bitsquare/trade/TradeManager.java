@@ -37,6 +37,7 @@ import io.bitsquare.p2p.MessageService;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.closed.ClosedTradableManager;
+import io.bitsquare.trade.failed.FailedTradesManager;
 import io.bitsquare.trade.handlers.TakeOfferResultHandler;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOffer;
@@ -87,6 +88,7 @@ public class TradeManager {
     private final CryptoService<MailboxMessage> cryptoService;
     private final OpenOfferManager openOfferManager;
     private final ClosedTradableManager closedTradableManager;
+    private FailedTradesManager failedTradesManager;
     private final ArbitrationRepository arbitrationRepository;
 
     private final Storage<TradableList<Trade>> pendingTradesStorage;
@@ -109,6 +111,7 @@ public class TradeManager {
                         CryptoService<MailboxMessage> cryptoService,
                         OpenOfferManager openOfferManager,
                         ClosedTradableManager closedTradableManager,
+                        FailedTradesManager failedTradesManager,
                         ArbitrationRepository arbitrationRepository,
                         @Named("storage.dir") File storageDir) {
         this.user = user;
@@ -122,6 +125,7 @@ public class TradeManager {
         this.cryptoService = cryptoService;
         this.openOfferManager = openOfferManager;
         this.closedTradableManager = closedTradableManager;
+        this.failedTradesManager = failedTradesManager;
         this.arbitrationRepository = arbitrationRepository;
 
         pendingTradesStorage = new Storage<>(storageDir);
@@ -246,7 +250,7 @@ public class TradeManager {
             // TODO if the peer has changed its IP address, we need to make another findPeer request. At the moment we use the peer stored in trade to
             // continue the trade, but that might fail.
 
-            if (trade.lifeCycleState == Trade.LifeCycleState.FAILED) {
+            if (trade.isFailedState()) {
                 failedTrades.add(trade);
             }
             else {
@@ -257,7 +261,10 @@ public class TradeManager {
         }
 
         for (Trade trade : failedTrades) {
-            removeFailedTrade(trade);
+            if (trade.isCriticalFault())
+                addTradeToFailedTrades(trade);
+            else
+                addTradeToClosedTrades(trade);
         }
     }
 
@@ -329,7 +336,11 @@ public class TradeManager {
             public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                 if (transaction != null) {
                     log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
-                    trade.setLifeCycleState(Trade.LifeCycleState.COMPLETED);
+
+                    if (trade instanceof BuyerTrade)
+                        trade.setTradeState(TradeState.BuyerState.WITHDRAW_COMPLETED);
+                    else if (trade instanceof SellerTrade)
+                        trade.setTradeState(TradeState.SellerState.WITHDRAW_COMPLETED);
 
                     pendingTrades.remove(trade);
                     closedTradableManager.add(trade);
@@ -355,12 +366,16 @@ public class TradeManager {
     }
 
     // In a fault case we remove it and add it to the closed trades
-    public void removeFailedTrade(Trade trade) {
+    public void addTradeToClosedTrades(Trade trade) {
         pendingTrades.remove(trade);
         closedTradableManager.add(trade);
     }
-    
-    
+
+    public void addTradeToFailedTrades(Trade trade) {
+        pendingTrades.remove(trade);
+        failedTradesManager.add(trade);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -372,9 +387,4 @@ public class TradeManager {
     public boolean isMyOffer(Offer offer) {
         return offer.isMyOffer(keyRing);
     }
-
-    private Optional<Trade> findTrade(String id) {
-        return pendingTrades.stream().filter(trade -> trade.getId().equals(id)).findAny();
-    }
-   
 }

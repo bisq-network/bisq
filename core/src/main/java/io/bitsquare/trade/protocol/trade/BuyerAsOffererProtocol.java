@@ -21,6 +21,7 @@ import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.Peer;
 import io.bitsquare.trade.BuyerAsOffererTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.protocol.trade.messages.FinalizePayoutTxRequest;
 import io.bitsquare.trade.protocol.trade.messages.PublishDepositTxRequest;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
@@ -39,8 +40,6 @@ import io.bitsquare.trade.protocol.trade.tasks.offerer.VerifyTakeOfferFeePayment
 import io.bitsquare.trade.protocol.trade.tasks.offerer.VerifyTakerAccount;
 import io.bitsquare.trade.protocol.trade.tasks.shared.CommitPayoutTx;
 import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
-import io.bitsquare.trade.states.BuyerTradeState;
-import io.bitsquare.trade.states.TradeState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,10 +62,10 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
         this.buyerAsOffererTrade = trade;
 
         // If we are after the timelock state we need to setup the listener again
-        TradeState.ProcessState state = trade.processStateProperty().get();
-        if (state == BuyerTradeState.ProcessState.PAYOUT_TX_COMMITTED ||
-                state == BuyerTradeState.ProcessState.PAYOUT_TX_SENT ||
-                state == BuyerTradeState.ProcessState.PAYOUT_BROAD_CASTED) {
+        TradeState tradeState = trade.tradeStateProperty().get();
+        if (tradeState == TradeState.BuyerState.PAYOUT_TX_COMMITTED ||
+                tradeState == TradeState.BuyerState.PAYOUT_TX_SENT ||
+                tradeState == TradeState.BuyerState.PAYOUT_BROAD_CASTED) {
 
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
@@ -100,7 +99,7 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
                     log.error(errorMessage);
                 }));
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Start trade
@@ -154,7 +153,7 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     // User clicked the "bank transfer started" button
     @Override
     public void onFiatPaymentStarted() {
-        buyerAsOffererTrade.setProcessState(BuyerTradeState.ProcessState.FIAT_PAYMENT_STARTED);
+        buyerAsOffererTrade.setTradeState(TradeState.BuyerState.FIAT_PAYMENT_STARTED);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
                 () -> handleTaskRunnerSuccess("onFiatPaymentStarted"),

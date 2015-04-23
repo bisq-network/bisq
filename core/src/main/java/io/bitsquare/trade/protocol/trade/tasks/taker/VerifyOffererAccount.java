@@ -49,7 +49,7 @@ public class VerifyOffererAccount extends TradeTask {
             }
         } catch (Throwable t) {
             t.printStackTrace();
-            trade.setThrowable(t);
+
             failed(t);
         }
     }

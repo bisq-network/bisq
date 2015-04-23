@@ -24,8 +24,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.states.BuyerTradeState;
-import io.bitsquare.trade.states.SellerTradeState;
+import io.bitsquare.trade.TradeState;
 
 import org.bitcoinj.core.BlockChainListener;
 import org.bitcoinj.core.Coin;
@@ -62,9 +61,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         REQUEST_START_FIAT_PAYMENT,
         WAIT_FOR_FIAT_PAYMENT_RECEIPT,
         WAIT_FOR_UNLOCK_PAYOUT,
-        REQUEST_WITHDRAWAL,
-        CLOSED,
-        FAULT
+        REQUEST_WITHDRAWAL
     }
 
     enum SellerState implements State {
@@ -74,9 +71,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED,
         WAIT_FOR_PAYOUT_TX,
         WAIT_FOR_UNLOCK_PAYOUT,
-        REQUEST_WITHDRAWAL,
-        CLOSED,
-        FAULT
+        REQUEST_WITHDRAWAL
     }
 
     private final BSFormatter formatter;
@@ -84,8 +79,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     private final InvalidationListener buyerStateListener;
     private final BtcAddressValidator btcAddressValidator;
 
-    private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>(BuyerState.UNDEFINED);
-    private final ObjectProperty<SellerState> sellerState = new SimpleObjectProperty<>(SellerState.UNDEFINED);
+    private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>(PendingTradesViewModel.BuyerState.UNDEFINED);
+    private final ObjectProperty<SellerState> sellerState = new SimpleObjectProperty<>(PendingTradesViewModel.SellerState.UNDEFINED);
 
     private final StringProperty txId = new SimpleStringProperty();
     private final BooleanProperty withdrawalButtonDisable = new SimpleBooleanProperty(true);
@@ -177,10 +172,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public void onWithdrawRequest(String withdrawToAddress) {
         dataModel.onWithdrawRequest(withdrawToAddress);
-        if (dataModel.getSellerProcessState().get() instanceof SellerTradeState.ProcessState)
-            sellerState.setValue(SellerState.CLOSED);
-        else
-            buyerState.setValue(BuyerState.CLOSED);
     }
 
     public void withdrawAddressFocusOut(String text) {
@@ -213,10 +204,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public BtcAddressValidator getBtcAddressValidator() {
         return btcAddressValidator;
-    }
-
-    Throwable getTradeException() {
-        return dataModel.getTradeException();
     }
 
     String getErrorMessage() {
@@ -322,51 +309,46 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void applySellerState() {
-        if (dataModel.getSellerProcessState().get() instanceof SellerTradeState.ProcessState) {
-            SellerTradeState.ProcessState processState = (SellerTradeState.ProcessState) dataModel.getSellerProcessState().get();
+        if (dataModel.getSellerProcessState().get() instanceof TradeState.SellerState) {
+            TradeState.SellerState processState = (TradeState.SellerState) dataModel.getSellerProcessState().get();
             log.debug("updateSellerState (SellerTradeState) " + processState);
             if (processState != null) {
                 switch (processState) {
-                    case UNDEFINED:
-                        sellerState.set(SellerState.UNDEFINED);
+                    case PREPARATION:
+                        sellerState.set(PendingTradesViewModel.SellerState.UNDEFINED);
                         break;
 
                     case DEPOSIT_PUBLISHED_MSG_RECEIVED:
-                        sellerState.set(SellerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
+                        sellerState.set(PendingTradesViewModel.SellerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
                         break;
 
 
                     case DEPOSIT_CONFIRMED:
-                        sellerState.set(SellerState.WAIT_FOR_FIAT_PAYMENT_STARTED);
+                        sellerState.set(PendingTradesViewModel.SellerState.WAIT_FOR_FIAT_PAYMENT_STARTED);
                         break;
 
 
                     case FIAT_PAYMENT_STARTED_MSG_RECEIVED:
-                        sellerState.set(SellerState.REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED);
+                        sellerState.set(PendingTradesViewModel.SellerState.REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED);
                         break;
 
 
                     case FIAT_PAYMENT_RECEIPT:
                         break;
                     case FIAT_PAYMENT_RECEIPT_MSG_SENT:
-                        sellerState.set(SellerState.WAIT_FOR_PAYOUT_TX);
+                        sellerState.set(PendingTradesViewModel.SellerState.WAIT_FOR_PAYOUT_TX);
                         break;
 
 
                     case PAYOUT_TX_RECEIVED:
                         break;
                     case PAYOUT_TX_COMMITTED:
-                        sellerState.set(SellerState.WAIT_FOR_UNLOCK_PAYOUT);
+                        sellerState.set(PendingTradesViewModel.SellerState.WAIT_FOR_UNLOCK_PAYOUT);
                         break;
 
 
                     case PAYOUT_BROAD_CASTED:
-                        sellerState.set(SellerState.REQUEST_WITHDRAWAL);
-                        break;
-
-
-                    case FAULT:
-                        sellerState.set(SellerState.FAULT);
+                        sellerState.set(PendingTradesViewModel.SellerState.REQUEST_WITHDRAWAL);
                         break;
 
                     default:
@@ -381,31 +363,31 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     private void applyBuyerState() {
-        if (dataModel.getBuyerProcessState().get() instanceof BuyerTradeState.ProcessState) {
-            BuyerTradeState.ProcessState processState = (BuyerTradeState.ProcessState) dataModel.getBuyerProcessState().get();
+        if (dataModel.getBuyerProcessState().get() instanceof TradeState.BuyerState) {
+            TradeState.BuyerState processState = (TradeState.BuyerState) dataModel.getBuyerProcessState().get();
             log.debug("updateBuyerState (BuyerTradeState) " + processState);
             if (processState != null) {
                 switch (processState) {
-                    case UNDEFINED:
-                        sellerState.set(SellerState.UNDEFINED);
+                    case PREPARATION:
+                        sellerState.set(PendingTradesViewModel.SellerState.UNDEFINED);
                         break;
 
 
                     case DEPOSIT_PUBLISHED:
                     case DEPOSIT_PUBLISHED_MSG_SENT:
-                        buyerState.set(BuyerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
+                        buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
                         break;
 
 
                     case DEPOSIT_CONFIRMED:
-                        buyerState.set(BuyerState.REQUEST_START_FIAT_PAYMENT);
+                        buyerState.set(PendingTradesViewModel.BuyerState.REQUEST_START_FIAT_PAYMENT);
                         break;
 
 
                     case FIAT_PAYMENT_STARTED:
                         break;
                     case FIAT_PAYMENT_STARTED_MSG_SENT:
-                        buyerState.set(BuyerState.WAIT_FOR_FIAT_PAYMENT_RECEIPT);
+                        buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_FIAT_PAYMENT_RECEIPT);
                         break;
 
 
@@ -413,17 +395,12 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                     case PAYOUT_TX_COMMITTED:
                         break;
                     case PAYOUT_TX_SENT:
-                        buyerState.set(BuyerState.WAIT_FOR_UNLOCK_PAYOUT);
+                        buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_UNLOCK_PAYOUT);
                         break;
 
 
                     case PAYOUT_BROAD_CASTED:
-                        buyerState.set(BuyerState.REQUEST_WITHDRAWAL);
-                        break;
-
-
-                    case FAULT:
-                        sellerState.set(SellerState.FAULT);
+                        buyerState.set(PendingTradesViewModel.BuyerState.REQUEST_WITHDRAWAL);
                         break;
 
                     default:

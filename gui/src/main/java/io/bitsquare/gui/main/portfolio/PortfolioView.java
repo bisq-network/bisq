@@ -26,6 +26,7 @@ import io.bitsquare.gui.common.view.View;
 import io.bitsquare.gui.common.view.ViewLoader;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.portfolio.closedtrades.ClosedTradesView;
+import io.bitsquare.gui.main.portfolio.failedtrades.FailedTradesView;
 import io.bitsquare.gui.main.portfolio.openoffer.OpenOffersView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
 
@@ -38,7 +39,7 @@ import javafx.scene.control.*;
 @FxmlView
 public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
 
-    @FXML Tab openOffersTab, openTradesTab, closedTradesTab;
+    @FXML Tab openOffersTab, pendingTradesTab, closedTradesTab, failedTradesTab;
 
     private Tab currentTab;
     private Navigation.Listener navigationListener;
@@ -65,10 +66,12 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
             log.debug("tabChangeListener");
             if (newValue == openOffersTab)
                 navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class);
-            else if (newValue == openTradesTab)
+            else if (newValue == pendingTradesTab)
                 navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
             else if (newValue == closedTradesTab)
                 navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class);
+            else if (newValue == failedTradesTab)
+                navigation.navigateTo(MainView.class, PortfolioView.class, FailedTradesView.class);
         };
     }
 
@@ -79,10 +82,12 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
 
         if (root.getSelectionModel().getSelectedItem() == openOffersTab)
             navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class);
-        else if (root.getSelectionModel().getSelectedItem() == openTradesTab)
+        else if (root.getSelectionModel().getSelectedItem() == pendingTradesTab)
             navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
         else if (root.getSelectionModel().getSelectedItem() == closedTradesTab)
             navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class);
+        else if (root.getSelectionModel().getSelectedItem() == failedTradesTab)
+            navigation.navigateTo(MainView.class, PortfolioView.class, FailedTradesView.class);
     }
 
     @Override
@@ -100,8 +105,9 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
         View view = viewLoader.load(viewClass);
 
         if (view instanceof OpenOffersView) currentTab = openOffersTab;
-        else if (view instanceof PendingTradesView) currentTab = openTradesTab;
+        else if (view instanceof PendingTradesView) currentTab = pendingTradesTab;
         else if (view instanceof ClosedTradesView) currentTab = closedTradesTab;
+        else if (view instanceof FailedTradesView) currentTab = failedTradesTab;
 
         currentTab.setContent(view.getRoot());
         root.getSelectionModel().select(currentTab);

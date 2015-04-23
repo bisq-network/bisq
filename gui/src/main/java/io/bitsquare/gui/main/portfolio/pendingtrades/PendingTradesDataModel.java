@@ -32,8 +32,8 @@ import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.SellerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.offer.Offer;
-import io.bitsquare.trade.states.TradeState;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.BlockChainListener;
@@ -71,8 +71,8 @@ class PendingTradesDataModel implements Activatable, DataModel {
     private final ListChangeListener<Trade> tradesListChangeListener;
     private boolean isOffererRole;
 
-    private final ObjectProperty<TradeState.ProcessState> sellerProcessState = new SimpleObjectProperty<>();
-    private final ObjectProperty<TradeState.ProcessState> buyerProcessState = new SimpleObjectProperty<>();
+    private final ObjectProperty<TradeState> sellerProcessState = new SimpleObjectProperty<>();
+    private final ObjectProperty<TradeState> buyerProcessState = new SimpleObjectProperty<>();
     private final ObjectProperty<Trade> tradeProperty = new SimpleObjectProperty<>();
     private final StringProperty txId = new SimpleStringProperty();
     private Trade trade;
@@ -108,8 +108,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
 
     private void onListChanged() {
         list.clear();
-        list.addAll(tradeManager.getPendingTrades().stream().filter(e -> !e.isFaultState())
-                .map(PendingTradesListItem::new).collect(Collectors.toList()));
+        list.addAll(tradeManager.getPendingTrades().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
@@ -147,9 +146,9 @@ class PendingTradesDataModel implements Activatable, DataModel {
             isOffererRole = tradeManager.isMyOffer(trade.getOffer());
 
             if (trade instanceof SellerTrade)
-                sellerProcessState.bind(trade.processStateProperty());
+                sellerProcessState.bind(trade.tradeStateProperty());
             else if (trade instanceof BuyerTrade)
-                buyerProcessState.bind(trade.processStateProperty());
+                buyerProcessState.bind(trade.tradeStateProperty());
 
             if (trade.getDepositTx() != null)
                 txId.set(trade.getDepositTx().getHashAsString());
@@ -244,10 +243,6 @@ class PendingTradesDataModel implements Activatable, DataModel {
         return trade.getOffer().getCurrencyCode();
     }
 
-    Throwable getTradeException() {
-        return trade.getThrowable();
-    }
-
     String getErrorMessage() {
         return trade.getErrorMessage();
     }
@@ -268,11 +263,11 @@ class PendingTradesDataModel implements Activatable, DataModel {
         return trade;
     }
 
-    ReadOnlyObjectProperty<TradeState.ProcessState> getSellerProcessState() {
+    ReadOnlyObjectProperty<TradeState> getSellerProcessState() {
         return sellerProcessState;
     }
 
-    ReadOnlyObjectProperty<TradeState.ProcessState> getBuyerProcessState() {
+    ReadOnlyObjectProperty<TradeState> getBuyerProcessState() {
         return buyerProcessState;
     }
 

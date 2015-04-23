@@ -34,9 +34,6 @@ import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.trade.protocol.trade.ProcessModel;
 import io.bitsquare.trade.protocol.trade.TradeProtocol;
-import io.bitsquare.trade.states.BuyerTradeState;
-import io.bitsquare.trade.states.SellerTradeState;
-import io.bitsquare.trade.states.TradeState;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;
@@ -76,13 +73,16 @@ abstract public class Trade implements Tradable, Model, Serializable {
 
     private transient static final Logger log = LoggerFactory.getLogger(Trade.class);
 
-
-    public enum LifeCycleState {
+  /*  public enum CriticalPhase {
         PREPARATION,
-        PENDING,
-        COMPLETED,
+        TAKER_FEE_PAID,
+        DEPOSIT_PAID,
+        FIAT_SENT,
+        FIAT_RECEIVED,
+        PAYOUT_PAID,
+        WITHDRAWN,
         FAILED
-    }
+    }*/
 
     // Mutable
     private Coin tradeAmount;
@@ -96,8 +96,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Transient/Immutable
-    private transient ObjectProperty<TradeState.ProcessState> processStateProperty;
-    private transient ObjectProperty<Trade.LifeCycleState> lifeCycleStateProperty;
+    private transient ObjectProperty<TradeState> processStateProperty;
     // Trades are saved in the TradeList
     transient private Storage<? extends TradableList> storage;
     transient protected TradeProtocol tradeProtocol;
@@ -113,8 +112,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     // Mutable
     private MessageWithPubKey messageWithPubKey;
     protected Date takeOfferDate;
-    protected TradeState.ProcessState processState;
-    protected Trade.LifeCycleState lifeCycleState;
+    protected TradeState tradeState;
     private Transaction depositTx;
     private Contract contract;
     private String contractAsJson;
@@ -122,10 +120,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     private String buyerContractSignature;
     private Transaction payoutTx;
     private long lockTime;
-
-    // Transient/Mutable
-    transient private String errorMessage;
-    transient private Throwable throwable;
+    private String errorMessage;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -205,8 +200,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     }
 
     protected void initStateProperties() {
-        processStateProperty = new SimpleObjectProperty<>(processState);
-        lifeCycleStateProperty = new SimpleObjectProperty<>(lifeCycleState);
+        processStateProperty = new SimpleObjectProperty<>(tradeState);
     }
 
     protected void initAmountProperty() {
@@ -251,40 +245,20 @@ abstract public class Trade implements Tradable, Model, Serializable {
         this.storage = storage;
     }
 
-    public void setProcessState(TradeState.ProcessState processState) {
-        this.processState = processState;
-        processStateProperty.set(processState);
+    public void setTradeState(TradeState tradeState) {
+        this.tradeState = tradeState;
+        processStateProperty.set(tradeState);
         storage.queueUpForSave();
     }
 
-    public void setFaultState() {
-        if (this instanceof SellerTrade)
-            setProcessState(SellerTradeState.ProcessState.FAULT);
-        else if (this instanceof BuyerTrade)
-            setProcessState(BuyerTradeState.ProcessState.FAULT);
-    }
+    abstract public boolean isFailedState();
 
-    public boolean isFaultState() {
-        return processState == BuyerTradeState.ProcessState.FAULT || processState == SellerTradeState.ProcessState.FAULT;
+    abstract public void setFailedState();
+
+    public boolean isCriticalFault() {
+        return tradeState.getPhase().ordinal() >= TradeState.Phase.DEPOSIT_PAID.ordinal();
     }
     
-  /*  public void resetFault() {
-        if (this instanceof SellerTrade)
-            setProcessState(SellerTradeState.ProcessState.UNDEFINED);
-        else if (this instanceof BuyerTrade)
-            setProcessState(BuyerTradeState.ProcessState.UNDEFINED);
-        
-        setLifeCycleState(LifeCycleState.PREPARATION);
-        errorMessage = null;
-        throwable = null;
-    }*/
-    
-    public void setLifeCycleState(Trade.LifeCycleState lifeCycleState) {
-        this.lifeCycleState = lifeCycleState;
-        lifeCycleStateProperty.set(lifeCycleState);
-        storage.queueUpForSave();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Storage
@@ -340,12 +314,8 @@ abstract public class Trade implements Tradable, Model, Serializable {
             return null;
     }
 
-    public ReadOnlyObjectProperty<? extends TradeState.ProcessState> processStateProperty() {
+    public ReadOnlyObjectProperty<? extends TradeState> tradeStateProperty() {
         return processStateProperty;
-    }
-
-    public ReadOnlyObjectProperty<Trade.LifeCycleState> lifeCycleStateProperty() {
-        return lifeCycleStateProperty;
     }
 
     public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
@@ -446,20 +416,20 @@ abstract public class Trade implements Tradable, Model, Serializable {
 
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
+
+        if (errorMessage != null && errorMessage.length() > 0) {
+            setFailedState();
+
+            if (isCriticalFault())
+                tradeManager.addTradeToFailedTrades(this);
+            else if (isFailedState())
+                tradeManager.addTradeToClosedTrades(this);
+        }
     }
 
     @Nullable
     public String getErrorMessage() {
         return errorMessage;
-    }
-
-    public void setThrowable(Throwable throwable) {
-        this.throwable = throwable;
-    }
-
-    @Nullable
-    public Throwable getThrowable() {
-        return throwable;
     }
 
 
@@ -501,14 +471,12 @@ abstract public class Trade implements Tradable, Model, Serializable {
                 ", tradeAmountProperty=" + tradeAmountProperty +
                 ", tradeVolumeProperty=" + tradeVolumeProperty +
                 ", processStateProperty=" + processStateProperty +
-                ", lifeCycleStateProperty=" + lifeCycleStateProperty +
                 ", storage=" + storage +
                 ", tradeProtocol=" + tradeProtocol +
                 ", offer=" + offer +
                 ", date=" + takeOfferDate +
                 ", processModel=" + processModel +
-                ", processState=" + processState +
-                ", lifeCycleState=" + lifeCycleState +
+                ", processState=" + tradeState +
                 ", messageWithPubKey=" + messageWithPubKey +
                 ", depositTx=" + depositTx +
                /* ", contract=" + contract +
@@ -517,7 +485,6 @@ abstract public class Trade implements Tradable, Model, Serializable {
                 ", buyerContractSignature='" + buyerContractSignature + '\'' +*/
                 ", payoutTx=" + payoutTx +
                 ", errorMessage='" + errorMessage + '\'' +
-                ", throwable=" + throwable +
                 '}';
     }
 

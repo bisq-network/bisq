@@ -19,6 +19,7 @@ package io.bitsquare.trade;
 
 import io.bitsquare.BitsquareModule;
 import io.bitsquare.trade.closed.ClosedTradableManager;
+import io.bitsquare.trade.failed.FailedTradesManager;
 
 import com.google.inject.Singleton;
 
@@ -38,11 +39,6 @@ public class TradeModule extends BitsquareModule {
     protected void configure() {
         bind(TradeManager.class).in(Singleton.class);
         bind(ClosedTradableManager.class).in(Singleton.class);
+        bind(FailedTradesManager.class).in(Singleton.class);
     }
-
-   /* @Override
-    protected void doClose(Injector injector) {
-        log.trace("doClose " + getClass().getSimpleName());
-        injector.getInstance(TradeManager.class).shutDown();
-    }*/
 }

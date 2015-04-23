@@ -15,12 +15,12 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.closed;
+package io.bitsquare.trade.failed;
 
 import io.bitsquare.crypto.KeyRing;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.TradableList;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.offer.Offer;
 
 import com.google.inject.Inject;
@@ -34,28 +34,27 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ClosedTradableManager {
-    private static final Logger log = LoggerFactory.getLogger(ClosedTradableManager.class);
-    private final TradableList<Tradable> closedTrades;
+public class FailedTradesManager {
+    private static final Logger log = LoggerFactory.getLogger(FailedTradesManager.class);
+    private final TradableList<Trade> failedTrades;
     private KeyRing keyRing;
 
     @Inject
-    public ClosedTradableManager(KeyRing keyRing, @Named("storage.dir") File storageDir) {
+    public FailedTradesManager(KeyRing keyRing, @Named("storage.dir") File storageDir) {
         this.keyRing = keyRing;
-        this.closedTrades = new TradableList<>(new Storage<>(storageDir), "ClosedTrades");
+        this.failedTrades = new TradableList<>(new Storage<>(storageDir), "FailedTrades");
     }
 
-    public void add(Tradable tradable) {
-        closedTrades.add(tradable);
+    public void add(Trade trade) {
+        failedTrades.add(trade);
     }
 
     public boolean wasMyOffer(Offer offer) {
         return offer.isMyOffer(keyRing);
     }
 
-    public ObservableList<Tradable> getClosedTrades() {
-        return closedTrades.getObservableList();
+    public ObservableList<Trade> getFailedTrades() {
+        return failedTrades.getObservableList();
     }
-
 
 }

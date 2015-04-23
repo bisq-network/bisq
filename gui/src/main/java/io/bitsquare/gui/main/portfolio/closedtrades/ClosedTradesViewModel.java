@@ -20,7 +20,10 @@ package io.bitsquare.gui.main.portfolio.closedtrades;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.trade.BuyerTrade;
+import io.bitsquare.trade.SellerTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.offer.OpenOffer;
 
 import com.google.inject.Inject;
@@ -80,13 +83,29 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
     String getState(ClosedTradesListItem item) {
         if (item != null) {
             if (item.getTradable() instanceof Trade) {
-                switch (((Trade) item.getTradable()).lifeCycleStateProperty().get()) {
-                    case COMPLETED:
-                        return "Completed";
-                    case FAILED:
+                Trade trade = (Trade) item.getTradable();
+                TradeState tradeState = trade.tradeStateProperty().get();
+                if (trade instanceof BuyerTrade) {
+                    if (tradeState == TradeState.BuyerState.FAILED) {
                         return "Failed";
-                    case PENDING:
-                        throw new RuntimeException("That must not happen. We got a pending state but we are in the closed trades list.");
+                    }
+                    else if (tradeState == TradeState.BuyerState.WITHDRAW_COMPLETED) {
+                        return "Completed";
+                    }
+                    else {
+                        log.error("That must not happen. We got a pending state but we are in the closed trades list.");
+                    }
+                }
+                else if (trade instanceof SellerTrade) {
+                    if (tradeState == TradeState.SellerState.FAILED) {
+                        return "Failed";
+                    }
+                    else if (tradeState == TradeState.SellerState.WITHDRAW_COMPLETED) {
+                        return "Completed";
+                    }
+                    else {
+                        log.error("That must not happen. We got a pending state but we are in the closed trades list.");
+                    }
                 }
             }
             else if (item.getTradable() instanceof OpenOffer) {

@@ -21,7 +21,7 @@ package io.bitsquare.gui.util.validation;
  * That validator accepts empty inputs
  */
 public class OptionalBtcValidator extends BtcValidator {
-   
+
     @Override
     public ValidationResult validate(String input) {
         ValidationResult result = validateIfNotEmpty(input);
