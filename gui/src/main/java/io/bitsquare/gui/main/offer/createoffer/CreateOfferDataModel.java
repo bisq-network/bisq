@@ -108,10 +108,10 @@ class CreateOfferDataModel implements Activatable, DataModel {
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // non private for testing
+
     @Inject
-    public CreateOfferDataModel(OpenOfferManager openOfferManager, WalletService walletService,
-                                AccountSettings accountSettings, Preferences preferences, User user, BSFormatter formatter) {
+    CreateOfferDataModel(OpenOfferManager openOfferManager, WalletService walletService,
+                         AccountSettings accountSettings, Preferences preferences, User user, BSFormatter formatter) {
         this.openOfferManager = openOfferManager;
         this.walletService = walletService;
         this.accountSettings = accountSettings;
