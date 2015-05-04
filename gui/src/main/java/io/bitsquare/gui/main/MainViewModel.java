@@ -352,11 +352,13 @@ class MainViewModel implements ViewModel {
     private void setBitcoinNetworkSyncProgress(double value) {
         blockchainSyncProgress.set(value);
         if (value >= 1) {
-            stopBlockchainSyncTimeout();
             blockchainSyncInfo.set("Blockchain synchronization complete.");
             blockchainSyncIconId.set("image-connection-synced");
         }
         else if (value > 0.0) {
+            // We stop as soon the download started the timeout
+            stopBlockchainSyncTimeout();
+            
             blockchainSyncInfo.set("Synchronizing blockchain: " + formatter.formatToPercent(value));
             blockchainSyncInfoFooter.set("Synchronizing: " + formatter.formatToPercent(value));
         }
