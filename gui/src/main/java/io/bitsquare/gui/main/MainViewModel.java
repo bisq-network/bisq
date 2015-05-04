@@ -164,7 +164,8 @@ class MainViewModel implements ViewModel {
         clientNode.numPeersProperty().addListener((observable, oldValue, newValue) -> {
             numDHTPeers.set(String.valueOf(newValue) + " peers");
             if ((int) newValue < 1) {
-                bootstrapErrorMsg.set("We lost connection to the last peer.");
+                // TODO swallow connection drops for a certain time.
+                // bootstrapErrorMsg.set("We lost connection to the last peer.");
             }
         });
 
@@ -358,7 +359,7 @@ class MainViewModel implements ViewModel {
         else if (value > 0.0) {
             // We stop as soon the download started the timeout
             stopBlockchainSyncTimeout();
-            
+
             blockchainSyncInfo.set("Synchronizing blockchain: " + formatter.formatToPercent(value));
             blockchainSyncInfoFooter.set("Synchronizing: " + formatter.formatToPercent(value));
         }
