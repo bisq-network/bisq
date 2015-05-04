@@ -97,6 +97,7 @@ public class WalletService {
 
     public static final String DIR_KEY = "wallet.dir";
     public static final String PREFIX_KEY = "wallet.prefix";
+    private static final long STARTUP_TIMEOUT = 60;
 
     private final List<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArrayList<>();
     private final List<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArrayList<>();
@@ -215,11 +216,12 @@ public class WalletService {
             @Override
             public void failed(@NotNull Service.State from, @NotNull Throwable failure) {
                 walletAppKit = null;
+                log.error("walletAppKit failed");
                 status.onError(failure);
             }
         }, Threading.USER_THREAD);
         walletAppKit.startAsync();
-        return status.timeout(30, TimeUnit.SECONDS);
+        return status.timeout(STARTUP_TIMEOUT, TimeUnit.SECONDS);
     }
 
     private void initWallet() {

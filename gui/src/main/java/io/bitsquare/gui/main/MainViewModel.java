@@ -62,7 +62,7 @@ import rx.Observable;
 class MainViewModel implements ViewModel {
     private static final Logger log = LoggerFactory.getLogger(MainViewModel.class);
 
-    private static final long BLOCKCHAIN_SYNC_TIMEOUT = 30000;
+    private static final long BLOCKCHAIN_SYNC_TIMEOUT = 60000;
 
     // BTC network
     final StringProperty blockchainSyncInfo = new SimpleStringProperty("Initializing");
@@ -186,6 +186,7 @@ class MainViewModel implements ViewModel {
                     //log.trace("wallet next");
                 },
                 error -> Platform.runLater(() -> {
+                    log.trace("wallet error");
                     setWalletServiceException(error);
                 }),
                 () -> {
