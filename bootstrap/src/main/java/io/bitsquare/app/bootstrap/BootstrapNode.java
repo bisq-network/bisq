@@ -60,7 +60,7 @@ public class BootstrapNode {
         try {
             Number160 peerId = Number160.createHash(name);
 
-            DefaultEventExecutorGroup eventExecutorGroup = new DefaultEventExecutorGroup(250);
+            DefaultEventExecutorGroup eventExecutorGroup = new DefaultEventExecutorGroup(50);
             ChannelClientConfiguration clientConf = PeerBuilder.createDefaultChannelClientConfiguration();
             clientConf.pipelineFilter(new PeerBuilder.EventExecutorGroupFilter(eventExecutorGroup));
 
@@ -85,17 +85,29 @@ public class BootstrapNode {
             peer.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {
                 @Override
                 public void peerInserted(PeerAddress peerAddress, boolean verified) {
-                    log.debug("Peer inserted: peerAddress=" + peerAddress + ", verified=" + verified);
+                    try {
+                        log.debug("Peer inserted: peerAddress=" + peerAddress + ", verified=" + verified);
+                    } catch (Throwable t) {
+                        log.error("Exception at peerInserted " + t.getMessage());
+                    }
                 }
 
                 @Override
                 public void peerRemoved(PeerAddress peerAddress, PeerStatistic peerStatistics) {
-                    log.debug("Peer removed: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
+                    try {
+                        log.debug("Peer removed: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
+                    } catch (Throwable t) {
+                        log.error("Exception at peerRemoved " + t.getMessage());
+                    }
                 }
 
                 @Override
                 public void peerUpdated(PeerAddress peerAddress, PeerStatistic peerStatistics) {
-                    // log.debug("Peer updated: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
+                    try {
+                        //log.debug("Peer updated: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
+                    } catch (Throwable t) {
+                        log.error("Exception at peerUpdated " + t.getMessage());
+                    }
                 }
             });
 
@@ -104,9 +116,13 @@ public class BootstrapNode {
                 while (true) {
                     if (peer.peerBean().peerMap().all().size() > 0) {
                         noPeersInfoPrinted = false;
-                        log.info("Number of peers online = " + peer.peerBean().peerMap().all().size());
-                        for (PeerAddress peerAddress : peer.peerBean().peerMap().all()) {
-                            log.info("Peer: " + peerAddress.toString());
+                        try {
+                            log.info("Number of peers online = " + peer.peerBean().peerMap().all().size());
+                            for (PeerAddress peerAddress : peer.peerBean().peerMap().all()) {
+                                log.info("Peer: " + peerAddress.toString());
+                            }
+                        } catch (Throwable t) {
+                            log.error("Exception at run loop " + t.getMessage());
                         }
                     }
                     else if (noPeersInfoPrinted) {
@@ -122,7 +138,8 @@ public class BootstrapNode {
                 }
             }).start();
 
-        } catch (Exception e) {
+        } catch (Throwable t) {
+            log.error("Fatal exception " + t.getMessage());
             if (peer != null)
                 peer.shutdown().awaitUninterruptibly();
         }
