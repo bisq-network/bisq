@@ -63,6 +63,7 @@ class MainViewModel implements ViewModel {
     private static final Logger log = LoggerFactory.getLogger(MainViewModel.class);
 
     private static final long BLOCKCHAIN_SYNC_TIMEOUT = 30000;
+    private static final long LOST_CONNECTION_TIMEOUT = 10000;
 
     // BTC network
     final StringProperty blockchainSyncInfo = new SimpleStringProperty("Initializing");
@@ -107,6 +108,7 @@ class MainViewModel implements ViewModel {
     private final UpdateProcess updateProcess;
     private final BSFormatter formatter;
     private Timer blockchainSyncTimeoutTimer;
+    private Timer lostConnectionTimeoutTimer;
 
 
     @Inject
@@ -163,9 +165,19 @@ class MainViewModel implements ViewModel {
 
         clientNode.numPeersProperty().addListener((observable, oldValue, newValue) -> {
             numDHTPeers.set(String.valueOf(newValue) + " peers");
-            if ((int) newValue < 1) {
-                // TODO swallow connection drops for a certain time.
-                // bootstrapErrorMsg.set("We lost connection to the last peer.");
+            if ((int) newValue == 0) {
+                if (lostConnectionTimeoutTimer != null)
+                    lostConnectionTimeoutTimer.cancel();
+                lostConnectionTimeoutTimer = Utilities.setTimeout(LOST_CONNECTION_TIMEOUT, () -> {
+                    log.trace("Connection lost timeout reached");
+                    bootstrapErrorMsg.set("We lost connection to the last peer.");
+                });
+            }
+            else if ((int) oldValue == 0 && (int) newValue > 0) {
+                if (lostConnectionTimeoutTimer != null) {
+                    lostConnectionTimeoutTimer.cancel();
+                    lostConnectionTimeoutTimer = null;
+                }
             }
         });
 
