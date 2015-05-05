@@ -153,7 +153,7 @@ class MainViewModel implements ViewModel {
         });
         setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get());
 
-        walletServic.numPeersProperty().addListener((observable, oldValue, newValue) -> {
+        walletService.numPeersProperty().addListener((observable, oldValue, newValue) -> {
             numBTCPeers.set(String.valueOf(newValue) + " peers");
             if ((int) newValue < 1) {
                 walletServiceErrorMsg.set("We lost connection to the last peer.");
