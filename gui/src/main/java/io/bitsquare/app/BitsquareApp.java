@@ -111,7 +111,6 @@ public class BitsquareApp extends Application {
             // load the main view and create the main scene
             CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
             mainView = (MainView) viewLoader.load(MainView.class);
-            mainView.setExitHandler(this::stop);
             mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
 
             scene = new Scene(mainView.getRoot(), 1000, 650);

@@ -81,7 +81,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private ProgressBar blockchainSyncIndicator;
     private Label blockchainSyncLabel;
     private Label updateInfoLabel;
-    private Runnable exitHandler;
     private List<String> persistedFilesCorrupted;
 
     @Inject
@@ -190,10 +189,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Platform.runLater(model::initBackend);
     }
 
-    public void setExitHandler(Runnable exitHandler) {
-        this.exitHandler = exitHandler;
-    }
-
     public void setPersistedFilesCorrupted(List<String> persistedFilesCorrupted) {
         this.persistedFilesCorrupted = persistedFilesCorrupted;
     }
@@ -213,9 +208,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         blockchainSyncLabel.textProperty().bind(model.blockchainSyncInfo);
         walletServiceErrorMsgListener = (ov, oldValue, newValue) -> {
             blockchainSyncLabel.setId("splash-error-state-msg");
-            Popups.openErrorPopup("Error", "Connecting to the bitcoin network failed. \n" + newValue
-                    + "\nPlease check our internet connection and restart the application.");
-            exitHandler.run();
+            openBTCConnectionErrorPopup(newValue);
         };
         model.walletServiceErrorMsg.addListener(walletServiceErrorMsgListener);
 
@@ -264,10 +257,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         bootstrapErrorMsgListener = (ov, oldValue, newValue) -> {
             bootstrapStateLabel.setId("splash-error-state-msg");
             bootstrapIndicator.setVisible(false);
-
-            Popups.openErrorPopup("Error", "Connecting to the Bitsquare network failed. \n" + model.bootstrapErrorMsg.get()
-                    + "\nPlease check our internet connection and restart the application.");
-            exitHandler.run();
+            openBTCConnectionErrorPopup(model.bootstrapErrorMsg.get());
         };
         model.bootstrapErrorMsg.addListener(bootstrapErrorMsgListener);
 
@@ -373,9 +363,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             bitcoinNetworkLabel.setId("splash-error-state-msg");
             bitcoinNetworkLabel.textProperty().unbind();
             bitcoinNetworkLabel.setText("Not connected");
-            Popups.openErrorPopup("Error", "Connecting to the bitcoin network failed. \n" + newValue
-                    + "\nPlease check our internet connection and restart the application.");
-            exitHandler.run();
+            openBTCConnectionErrorPopup(newValue);
         });
 
         model.blockchainSyncProgress.addListener((ov, oldValue, newValue) -> {
@@ -428,8 +416,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             bootstrapLabel.textProperty().unbind();
             bootstrapLabel.setText("Not connected");
             Popups.openErrorPopup("Error", "Connecting to the P2P network failed. \n" + newValue
-                    + "\nPlease check our internet connection and restart the application.");
-            exitHandler.run();
+                    + "\nPlease check our internet connection.");
         });
 
         AnchorPane footerContainer = new AnchorPane(separator, blockchainSyncBox, versionLabel, bootstrapLabel, bootstrapIcon, numPeersLabel) {{
@@ -558,5 +545,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         if (suffixIdx != viewName.length() - suffix.length())
             throw new IllegalArgumentException("Cannot get ID for " + viewClass + ": class must end in " + suffix);
         return viewName.substring(0, suffixIdx).toLowerCase();
+    }
+
+    private void openBTCConnectionErrorPopup(String errorMsg) {
+        Popups.openErrorPopup("Error", "Connecting to the bitcoin network failed. \n" + errorMsg
+                + "\nPlease check our internet connection.");
     }
 }
