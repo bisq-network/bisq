@@ -22,7 +22,6 @@ import io.bitsquare.p2p.BootstrapNodes;
 import io.bitsquare.p2p.Node;
 
 import java.util.Collection;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 import net.tomp2p.dht.PeerBuilderDHT;
@@ -45,6 +44,9 @@ public class BootstrapNode {
 
     private static final String VERSION = "0.1.3";
 
+    public static final String P2P_ID = "node.p2pId";
+    public static int DEFAULT_P2P_ID = 1; // 0 | 1 | 2 for mainnet/testnet/regtest 
+
     private static Peer peer = null;
 
     private final Environment env;
@@ -56,12 +58,13 @@ public class BootstrapNode {
 
 
     public void start() {
-        int port = env.getProperty(Node.PORT_KEY, Integer.class, BootstrapNodes.PORT);
-        String name = env.getProperty(Node.NAME_KEY, BootstrapNodes.DEFAULT_NODE_NAME);
+        int p2pId = env.getProperty(P2P_ID, Integer.class, DEFAULT_P2P_ID);
+        int port = env.getProperty(Node.PORT_KEY, Integer.class, BootstrapNodes.BASE_PORT + p2pId);
+        String name = env.getRequiredProperty(Node.NAME_KEY);
         Logging.setup(name + "_" + port);
 
         try {
-            Number160 peerId = Number160.createHash(new Random().nextInt());
+            Number160 peerId = Number160.createHash(name);
 /*
             DefaultEventExecutorGroup eventExecutorGroup = new DefaultEventExecutorGroup(50);
             ChannelClientConfiguration clientConf = PeerBuilder.createDefaultChannelClientConfiguration();
@@ -73,6 +76,7 @@ public class BootstrapNode {
 
             peer = new PeerBuilder(peerId)
                     .ports(port)
+                    .p2pId(p2pId)
                   /*  .channelClientConfiguration(clientConf)
                     .channelServerConfiguration(serverConf)*/
                     .start();
@@ -87,7 +91,7 @@ public class BootstrapNode {
 
             if (!name.equals(BootstrapNodes.LOCALHOST.getName())) {
                 Collection<PeerAddress> bootstrapNodes = BootstrapNodes.getAllBootstrapNodes().stream().filter(e -> !e.getName().equals(name))
-                        .map(e -> e.toPeerAddress()).collect(Collectors.toList());
+                        .map(e -> e.toPeerAddressWithPort(port)).collect(Collectors.toList());
 
                 log.info("Bootstrapping to " + bootstrapNodes.size() + " bootstrapNode(s)");
                 log.info("Bootstrapping bootstrapNodes " + bootstrapNodes);

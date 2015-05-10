@@ -18,6 +18,7 @@
 package io.bitsquare.btc;
 
 import io.bitsquare.BitsquareException;
+import io.bitsquare.user.Preferences;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -41,8 +42,8 @@ public class FeePolicy {
     private final String takeOfferFeeAddress;
 
     @Inject
-    public FeePolicy(BitcoinNetwork bitcoinNetwork) {
-        this.bitcoinNetwork = bitcoinNetwork;
+    public FeePolicy(Preferences preferences) {
+        this.bitcoinNetwork = preferences.getBitcoinNetwork();
 
         switch (bitcoinNetwork) {
             case TESTNET:

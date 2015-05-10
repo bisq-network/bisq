@@ -17,17 +17,29 @@
 
 package io.bitsquare.gui.main.settings.network;
 
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.common.view.InitializableView;
+import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.BSResources;
 import io.bitsquare.p2p.ClientNode;
+import io.bitsquare.user.Preferences;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.inject.Inject;
 
+import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+
+import org.controlsfx.control.action.AbstractAction;
+import org.controlsfx.control.action.Action;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
 
@@ -36,14 +48,19 @@ public class NetworkSettingsView extends InitializableView {
 
     private final String bitcoinNetworkString;
     private final WalletService walletService;
+    private final Preferences preferences;
     private final ClientNode clientNode;
 
     @FXML TextField bitcoinNetwork, connectionType, nodeAddress, bootstrapNodeAddress, connectedPeersBTC, connectedPeersP2P;
+    @FXML CheckBox useUPnP;
+    @FXML ComboBox<BitcoinNetwork> netWorkComboBox;
 
     @Inject
-    public NetworkSettingsView(BitcoinNetwork bitcoinNetwork, WalletService walletService, ClientNode clientNode, BSFormatter formatter) {
+    public NetworkSettingsView(WalletService walletService, ClientNode clientNode, Preferences preferences, BSFormatter
+            formatter) {
         this.walletService = walletService;
-        this.bitcoinNetworkString = formatter.formatBitcoinNetwork(bitcoinNetwork);
+        this.preferences = preferences;
+        this.bitcoinNetworkString = formatter.formatBitcoinNetwork(preferences.getBitcoinNetwork());
         this.clientNode = clientNode;
     }
 
@@ -56,6 +73,46 @@ public class NetworkSettingsView extends InitializableView {
         connectedPeersP2P.textProperty().bind(createStringBinding(() -> String.valueOf(clientNode.numPeersProperty().get()), clientNode.numPeersProperty()));
         nodeAddress.setText(clientNode.getAddress().toString());
         bootstrapNodeAddress.setText(clientNode.getBootstrapNodeAddress().toString());
+
+        useUPnP.setSelected(preferences.getUseUPnP());
+
+        netWorkComboBox.setItems(FXCollections.observableArrayList(BitcoinNetwork.values()));
+        netWorkComboBox.getSelectionModel().select(preferences.getBitcoinNetwork());
+    }
+
+    @FXML
+    void onSelectUPnP() {
+        preferences.setUseUPnP(useUPnP.isSelected());
+    }
+
+    @FXML
+    void onSelectNetwork() {
+        preferences.setBitcoinNetwork(netWorkComboBox.getSelectionModel().getSelectedItem());
+
+        List<Action> actions = new ArrayList<>();
+        actions.add(new AbstractAction(BSResources.get("shared.no")) {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                getProperties().put("type", "NO");
+                org.controlsfx.dialog.Dialog.Actions.NO.handle(actionEvent);
+            }
+        });
+
+        actions.add(new AbstractAction(BSResources.get("shared.yes")) {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                getProperties().put("type", "YES");
+                org.controlsfx.dialog.Dialog.Actions.YES.handle(actionEvent);
+            }
+        });
+
+        Action response = Popups.openConfirmPopup("Info", null,
+                "You need to restart the application to apply the change of the Bitcoin network." +
+                        "\n\nDo you want to shutdown now?",
+                actions);
+
+        if (Popups.isYes(response))
+            BitsquareApp.shutDownHandler.run();
     }
 }
 

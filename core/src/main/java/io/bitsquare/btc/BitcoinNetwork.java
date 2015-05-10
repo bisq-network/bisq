@@ -22,7 +22,9 @@ import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
 
-public enum BitcoinNetwork {
+import java.io.Serializable;
+
+public enum BitcoinNetwork implements Serializable {
 
     MAINNET(MainNetParams.get()),
     TESTNET(TestNet3Params.get()),

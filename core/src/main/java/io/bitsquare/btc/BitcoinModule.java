@@ -40,7 +40,6 @@ public class BitcoinModule extends BitsquareModule {
 
     @Override
     protected void configure() {
-        bind(BitcoinNetwork.class).toInstance(env.getProperty(BitcoinNetwork.KEY, BitcoinNetwork.class, BitcoinNetwork.DEFAULT));
         bind(RegTestHost.class).toInstance(env.getProperty(RegTestHost.KEY, RegTestHost.class, RegTestHost.DEFAULT));
         bind(FeePolicy.class).in(Singleton.class);
 

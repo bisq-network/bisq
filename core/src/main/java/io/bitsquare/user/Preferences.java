@@ -18,6 +18,7 @@
 package io.bitsquare.user;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.storage.Storage;
 
 import org.bitcoinj.utils.MonetaryFormat;
@@ -37,6 +38,8 @@ import javafx.beans.property.StringProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.core.env.Environment;
+
 public class Preferences implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
@@ -45,7 +48,6 @@ public class Preferences implements Serializable {
 
     // Deactivate mBit for now as most screens are not supporting it yet
     transient private static final List<String> BTC_DENOMINATIONS = Arrays.asList(MonetaryFormat.CODE_BTC/*, MonetaryFormat.CODE_MBTC*/);
-
     public static List<String> getBtcDenominations() {
         return BTC_DENOMINATIONS;
     }
@@ -54,21 +56,25 @@ public class Preferences implements Serializable {
 
     // Persisted fields
     private String btcDenomination = MonetaryFormat.CODE_BTC;
+
     private boolean useAnimations = true;
     private boolean useEffects = true;
     private boolean displaySecurityDepositInfo = true;
+    private boolean useUPnP = true;
+    private BitcoinNetwork bitcoinNetwork;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
     transient private final BooleanProperty useAnimationsProperty = new SimpleBooleanProperty(useAnimations);
     transient private final BooleanProperty useEffectsProperty = new SimpleBooleanProperty(useEffects);
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Preferences(Storage<Preferences> storage) {
+    public Preferences(Storage<Preferences> storage, Environment environment) {
         this.storage = storage;
 
         Preferences persisted = storage.initAndGetPersisted(this);
@@ -76,7 +82,12 @@ public class Preferences implements Serializable {
             setBtcDenomination(persisted.btcDenomination);
             setUseAnimations(persisted.useAnimations);
             setUseEffects(persisted.useEffects);
+            setUseUPnP(persisted.useUPnP);
+            setBitcoinNetwork(persisted.bitcoinNetwork);
             displaySecurityDepositInfo = persisted.getDisplaySecurityDepositInfo();
+        }
+        else {
+            setBitcoinNetwork(environment.getProperty(BitcoinNetwork.KEY, BitcoinNetwork.class, BitcoinNetwork.DEFAULT));
         }
 
         // Use that to guarantee update of the serializable field and to make a storage update in case of a change
@@ -116,6 +127,16 @@ public class Preferences implements Serializable {
         storage.queueUpForSave();
     }
 
+    public void setUseUPnP(boolean useUPnP) {
+        this.useUPnP = useUPnP;
+        storage.queueUpForSave();
+    }
+
+    public void setBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {
+        this.bitcoinNetwork = bitcoinNetwork;
+        storage.queueUpForSave();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -149,5 +170,11 @@ public class Preferences implements Serializable {
         return useEffectsProperty;
     }
 
+    public boolean getUseUPnP() {
+        return useUPnP;
+    }
 
+    public BitcoinNetwork getBitcoinNetwork() {
+        return bitcoinNetwork;
+    }
 }

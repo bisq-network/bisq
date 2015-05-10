@@ -20,7 +20,6 @@ package io.bitsquare.gui.main;
 import io.bitsquare.app.UpdateProcess;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitrationRepository;
-import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.KeyRing;
 import io.bitsquare.fiat.FiatAccount;
@@ -33,6 +32,7 @@ import io.bitsquare.p2p.tomp2p.BootstrappedPeerBuilder;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOfferManager;
+import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
 
@@ -117,7 +117,7 @@ class MainViewModel implements ViewModel {
 
     @Inject
     public MainViewModel(User user, KeyRing keyRing, WalletService walletService, ArbitrationRepository arbitrationRepository, ClientNode clientNode,
-                         TradeManager tradeManager, OpenOfferManager openOfferManager, BitcoinNetwork bitcoinNetwork, UpdateProcess updateProcess,
+                         TradeManager tradeManager, OpenOfferManager openOfferManager, Preferences preferences, UpdateProcess updateProcess,
                          BSFormatter formatter) {
         this.user = user;
         this.keyRing = keyRing;
@@ -129,8 +129,8 @@ class MainViewModel implements ViewModel {
         this.updateProcess = updateProcess;
         this.formatter = formatter;
 
-        bitcoinNetworkAsString = formatter.formatBitcoinNetwork(bitcoinNetwork);
-        networkId = bitcoinNetwork.ordinal();
+        bitcoinNetworkAsString = formatter.formatBitcoinNetwork(preferences.getBitcoinNetwork());
+        networkId = preferences.getBitcoinNetwork().ordinal();
 
         updateProcess.state.addListener((observableValue, oldValue, newValue) -> applyUpdateState(newValue));
         applyUpdateState(updateProcess.state.get());

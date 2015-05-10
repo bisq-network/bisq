@@ -21,6 +21,7 @@ import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.crypto.CryptoService;
+import io.bitsquare.user.Preferences;
 
 import org.bitcoinj.core.AbstractWalletEventListener;
 import org.bitcoinj.core.Address;
@@ -127,15 +128,15 @@ public class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletService(BitcoinNetwork bitcoinNetwork, RegTestHost regTestHost, CryptoService cryptoService,
+    public WalletService(RegTestHost regTestHost, CryptoService cryptoService,
                          TradeWalletService tradeWalletService, AddressEntryList addressEntryList, UserAgent userAgent,
-                         @Named(DIR_KEY) File walletDir, @Named(PREFIX_KEY) String walletPrefix) {
+                         @Named(DIR_KEY) File walletDir, @Named(PREFIX_KEY) String walletPrefix, Preferences preferences) {
         this.regTestHost = regTestHost;
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
-        this.params = bitcoinNetwork.getParameters();
+        this.params = preferences.getBitcoinNetwork().getParameters();
         this.cryptoService = cryptoService;
-        this.walletDir = walletDir;
+        this.walletDir = new File(walletDir, preferences.getBitcoinNetwork().toString().toLowerCase());
         this.walletPrefix = walletPrefix;
         this.userAgent = userAgent;
     }

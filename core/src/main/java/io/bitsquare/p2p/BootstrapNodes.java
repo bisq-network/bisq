@@ -27,20 +27,19 @@ import org.slf4j.LoggerFactory;
 public class BootstrapNodes {
     private static final Logger log = LoggerFactory.getLogger(BootstrapNodes.class);
 
-    public static final int PORT = 7366;
-    public static final String DEFAULT_NODE_NAME = "default";
-
+    public static final int BASE_PORT = 7366;  // port will be evaluated from btc network 7366 for mainnet, 7367 for testnet and 7368 for regtest
+    
     private static List<Node> bootstrapNodes = Arrays.asList(
-            Node.at(DEFAULT_NODE_NAME, "188.226.179.109", PORT),
-            Node.at(DEFAULT_NODE_NAME, "52.24.144.42", PORT),
-            Node.at(DEFAULT_NODE_NAME, "52.11.125.194", PORT)
+            //Node.at("digitalocean1.bitsquare.io", "188.226.179.109", BASE_PORT),
+            Node.at("aws1.bitsquare.io", "52.24.144.42", BASE_PORT),
+            Node.at("aws2.bitsquare.io", "52.11.125.194", BASE_PORT)
     );
 
     /**
      * A locally-running BootstrapNode instance.
      * Typically used only for testing. Not included in results from {@link #getAllBootstrapNodes()}.
      */
-    public static Node LOCALHOST = Node.at("localhost", "127.0.0.1", PORT);
+    public static Node LOCALHOST = Node.at("localhost", "127.0.0.1", BASE_PORT);
 
     private static Node selectedNode = bootstrapNodes.get(new Random().nextInt(bootstrapNodes.size()));
 

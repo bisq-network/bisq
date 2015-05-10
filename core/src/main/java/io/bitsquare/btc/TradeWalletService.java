@@ -20,6 +20,7 @@ package io.bitsquare.btc;
 import io.bitsquare.btc.exceptions.SigningException;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
+import io.bitsquare.user.Preferences;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -91,8 +92,8 @@ public class TradeWalletService {
     private final FeePolicy feePolicy;
 
     @Inject
-    public TradeWalletService(BitcoinNetwork bitcoinNetwork, FeePolicy feePolicy) {
-        this.params = bitcoinNetwork.getParameters();
+    public TradeWalletService(Preferences preferences, FeePolicy feePolicy) {
+        this.params = preferences.getBitcoinNetwork().getParameters();
         this.feePolicy = feePolicy;
     }
 

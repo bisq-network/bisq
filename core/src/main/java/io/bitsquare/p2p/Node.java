@@ -94,12 +94,12 @@ public final class Node {
         return port;
     }
 
-    public PeerAddress toPeerAddress() {
+    public PeerAddress toPeerAddressWithPort(int port) {
         try {
             return new PeerAddress(Number160.createHash(getName()),
                     InetAddress.getByName(getIp()),
-                    getPort(),
-                    getPort());
+                    port,
+                    port);
         } catch (UnknownHostException e) {
             log.error("toPeerAddress failed: " + e.getMessage());
             return null;

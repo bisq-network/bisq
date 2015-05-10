@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.util.validation;
 
-import io.bitsquare.btc.BitcoinNetwork;
+import io.bitsquare.user.Preferences;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -26,11 +26,11 @@ import javax.inject.Inject;
 
 public final class BtcAddressValidator extends InputValidator {
 
-    private final BitcoinNetwork bitcoinNetwork;
+    private Preferences preferences;
 
     @Inject
-    public BtcAddressValidator(BitcoinNetwork bitcoinNetwork) {
-        this.bitcoinNetwork = bitcoinNetwork;
+    public BtcAddressValidator(Preferences preferences) {
+        this.preferences = preferences;
     }
 
     @Override
@@ -45,7 +45,7 @@ public final class BtcAddressValidator extends InputValidator {
 
     private ValidationResult validateBtcAddress(String input) {
         try {
-            new Address(bitcoinNetwork.getParameters(), input);
+            new Address(preferences.getBitcoinNetwork().getParameters(), input);
             return new ValidationResult(true);
         } catch (AddressFormatException e) {
             return new ValidationResult(false, "Bitcoin address is a valid format");

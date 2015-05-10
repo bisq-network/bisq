@@ -18,7 +18,6 @@
 package io.bitsquare.app;
 
 import io.bitsquare.BitsquareException;
-import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.KeyStorage;
@@ -88,12 +87,8 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(APP_DATA_DIR_KEY) :
                 appDataDir(userDataDir, appName);
 
-        String bitcoinNetwork = commandLineProperties.containsProperty(BitcoinNetwork.KEY) ?
-                (String) commandLineProperties.getProperty(BitcoinNetwork.KEY) :
-                BitcoinNetwork.DEFAULT.toString();
-
         this.bootstrapNodePort = commandLineProperties.containsProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY) ?
-                (String) commandLineProperties.getProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY) : String.valueOf(BootstrapNodes.PORT);
+                (String) commandLineProperties.getProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY) : String.valueOf(BootstrapNodes.BASE_PORT);
 
         MutablePropertySources propertySources = this.getPropertySources();
         propertySources.addFirst(commandLineProperties);

@@ -69,6 +69,8 @@ public class BitsquareApp extends Application {
     private List<String> corruptedDatabaseFiles = new ArrayList<>();
     private MainView mainView;
 
+    public static Runnable shutDownHandler;
+
     public static void setEnvironment(Environment env) {
         BitsquareApp.env = env;
     }
@@ -76,6 +78,8 @@ public class BitsquareApp extends Application {
     @Override
     public void start(Stage primaryStage) throws IOException {
         this.primaryStage = primaryStage;
+
+        shutDownHandler = this::stop;
 
         // setup UncaughtExceptionHandler
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
