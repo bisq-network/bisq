@@ -65,9 +65,9 @@ public class TomP2PModule extends P2PModule {
                 env.getProperty(USE_MANUAL_PORT_FORWARDING_KEY, boolean.class, false));
 
         bind(Node.class).annotatedWith(Names.named(BOOTSTRAP_NODE_KEY)).toInstance(
-                Node.at(env.getProperty(BOOTSTRAP_NODE_NAME_KEY, BootstrapNodes.DEFAULT.getName()),
-                        env.getProperty(BOOTSTRAP_NODE_IP_KEY, BootstrapNodes.DEFAULT.getIp()),
-                        env.getProperty(BOOTSTRAP_NODE_PORT_KEY, int.class, BootstrapNodes.DEFAULT.getPort())
+                Node.at(env.getProperty(BOOTSTRAP_NODE_NAME_KEY, BootstrapNodes.getSelectedNode().getName()),
+                        env.getProperty(BOOTSTRAP_NODE_IP_KEY, BootstrapNodes.getSelectedNode().getIp()),
+                        env.getProperty(BOOTSTRAP_NODE_PORT_KEY, int.class, BootstrapNodes.getSelectedNode().getPort())
                 )
         );
         bindConstant().annotatedWith(Names.named(NETWORK_INTERFACE_KEY)).to(env.getProperty(NETWORK_INTERFACE_KEY, NETWORK_INTERFACE_UNSPECIFIED));

@@ -106,7 +106,7 @@ public class WalletService {
     private final DownloadListener downloadListener = new DownloadListener();
     private final WalletEventListener walletEventListener = new BitsquareWalletEventListener();
 
-    private RegTestHost regTestHost;
+    private final RegTestHost regTestHost;
     private final TradeWalletService tradeWalletService;
     private final AddressEntryList addressEntryList;
     private final NetworkParameters params;
@@ -175,9 +175,9 @@ public class WalletService {
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
         if (params == RegTestParams.get()) {
-            if (regTestHost == RegTestHost.DIGITAL_OCEAN_1) {
+            if (regTestHost == RegTestHost.REG_TEST_SERVER) {
                 try {
-                    walletAppKit.setPeerNodes(new PeerAddress(InetAddress.getByName("188.226.179.109"), params.getPort()));
+                    walletAppKit.setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.SERVER_IP), params.getPort()));
                 } catch (UnknownHostException e) {
                     throw new RuntimeException(e);
                 }

@@ -19,30 +19,36 @@ package io.bitsquare.p2p;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
-public interface BootstrapNodes {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    int DEFAULT_PORT = 7366;
+public class BootstrapNodes {
+    private static final Logger log = LoggerFactory.getLogger(BootstrapNodes.class);
 
-    Node DIGITAL_OCEAN_1 = Node.at("digitalocean1.bitsquare.io", "188.226.179.109", DEFAULT_PORT);
+    public static final int PORT = 7366;
+    public static final String DEFAULT_NODE_NAME = "default";
 
-    /**
-     * Alias to the default bootstrap node.
-     */
-    Node DEFAULT = DIGITAL_OCEAN_1;
+    private static List<Node> bootstrapNodes = Arrays.asList(
+            Node.at(DEFAULT_NODE_NAME, "188.226.179.109", PORT),
+            Node.at(DEFAULT_NODE_NAME, "52.24.144.42", PORT),
+            Node.at(DEFAULT_NODE_NAME, "52.11.125.194", PORT)
+    );
 
     /**
      * A locally-running BootstrapNode instance.
-     * Typically used only for testing. Not included in results from {@link #all()}.
+     * Typically used only for testing. Not included in results from {@link #getAllBootstrapNodes()}.
      */
-    Node LOCALHOST = Node.at("localhost", "127.0.0.1", DEFAULT_PORT);
+    public static Node LOCALHOST = Node.at("localhost", "127.0.0.1", PORT);
 
-    /**
-     * All known public bootstrap nodes.
-     */
-    static List<Node> all() {
-        return Arrays.asList(
-                DIGITAL_OCEAN_1
-        );
+    private static Node selectedNode = bootstrapNodes.get(new Random().nextInt(bootstrapNodes.size()));
+
+    public static List<Node> getAllBootstrapNodes() {
+        return bootstrapNodes;
+    }
+
+    public static Node getSelectedNode() {
+        return selectedNode;
     }
 }

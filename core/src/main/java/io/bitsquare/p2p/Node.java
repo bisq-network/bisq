@@ -21,7 +21,12 @@ import com.google.common.base.Objects;
 
 import java.io.IOException;
 
+import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.UnknownHostException;
+
+import net.tomp2p.peers.Number160;
+import net.tomp2p.peers.PeerAddress;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +92,18 @@ public final class Node {
         }
 
         return port;
+    }
+
+    public PeerAddress toPeerAddress() {
+        try {
+            return new PeerAddress(Number160.createHash(getName()),
+                    InetAddress.getByName(getIp()),
+                    getPort(),
+                    getPort());
+        } catch (UnknownHostException e) {
+            log.error("toPeerAddress failed: " + e.getMessage());
+            return null;
+        }
     }
 
     @Override

@@ -31,6 +31,7 @@ import java.security.KeyPair;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
 
 import javax.annotation.Nullable;
 
@@ -40,12 +41,10 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
-import net.tomp2p.connection.PeerConnection;
-import net.tomp2p.connection.PeerException;
 import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.peers.PeerAddress;
-import net.tomp2p.peers.PeerStatusListener;
-import net.tomp2p.peers.RTT;
+import net.tomp2p.peers.PeerMapChangeListener;
+import net.tomp2p.peers.PeerStatistic;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -88,7 +87,11 @@ public class TomP2PNode implements ClientNode {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Observable<BootstrappedPeerBuilder.State> bootstrap(KeyPair keyPair) {
+    public void setExecutor(Executor executor) {
+        bootstrappedPeerBuilder.setExecutor(executor);
+    }
+
+    public Observable<BootstrappedPeerBuilder.State> bootstrap(int networkId, KeyPair keyPair) {
         bootstrappedPeerBuilder.setKeyPair(keyPair);
 
         bootstrappedPeerBuilder.getState().addListener((ov, oldValue, newValue) -> {
@@ -96,14 +99,39 @@ public class TomP2PNode implements ClientNode {
             bootstrapStateSubject.onNext(newValue);
         });
 
-        SettableFuture<PeerDHT> bootstrapFuture = bootstrappedPeerBuilder.start();
+        SettableFuture<PeerDHT> bootstrapFuture = bootstrappedPeerBuilder.start(networkId);
         Futures.addCallback(bootstrapFuture, new FutureCallback<PeerDHT>() {
             @Override
             public void onSuccess(@Nullable PeerDHT peerDHT) {
                 if (peerDHT != null) {
                     TomP2PNode.this.peerDHT = peerDHT;
 
-                    peerDHT.peerBean().addPeerStatusListener(new PeerStatusListener() {
+                    BaseP2PService.getUserThread().execute(() -> numPeers.set(peerDHT.peerBean().peerMap().all().size()));
+                    log.debug("Number of peers = " + peerDHT.peerBean().peerMap().all().size());
+
+                    peerDHT.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {
+                        @Override
+                        public void peerInserted(PeerAddress peerAddress, boolean b) {
+                            BaseP2PService.getUserThread().execute(() -> numPeers.set(peerDHT.peerBean().peerMap().all().size()));
+                            log.debug("peerInserted " + peerAddress);
+                            log.debug("Number of peers = " + peerDHT.peerBean().peerMap().all().size());
+                        }
+
+                        @Override
+                        public void peerRemoved(PeerAddress peerAddress, PeerStatistic peerStatistic) {
+                            BaseP2PService.getUserThread().execute(() -> numPeers.set(peerDHT.peerBean().peerMap().all().size()));
+                            log.debug("peerRemoved " + peerAddress);
+                            log.debug("Number of peers = " + peerDHT.peerBean().peerMap().all().size());
+                        }
+
+                        @Override
+                        public void peerUpdated(PeerAddress peerAddress, PeerStatistic peerStatistic) {
+                            BaseP2PService.getUserThread().execute(() -> numPeers.set(peerDHT.peerBean().peerMap().all().size()));
+                            log.debug("peerUpdated " + peerAddress);
+                            log.debug("Number of peers = " + peerDHT.peerBean().peerMap().all().size());
+                        }
+                    });
+                 /*   peerDHT.peerBean().addPeerStatusListener(new PeerStatusListener() {
                         @Override
                         public boolean peerFailed(PeerAddress peerAddress, PeerException e) {
                             return false;
@@ -114,7 +142,7 @@ public class TomP2PNode implements ClientNode {
                             BaseP2PService.getUserThread().execute(() -> numPeers.set(peerDHT.peerBean().peerMap().size()));
                             return false;
                         }
-                    });
+                    });*/
 
                     resultHandlers.stream().forEach(ResultHandler::handleResult);
                     bootstrapStateSubject.onCompleted();

@@ -360,10 +360,15 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         bitcoinNetworkLabel.setText(model.bitcoinNetworkAsString);
 
         model.walletServiceErrorMsg.addListener((ov, oldValue, newValue) -> {
-            bitcoinNetworkLabel.setId("splash-error-state-msg");
-            bitcoinNetworkLabel.textProperty().unbind();
-            bitcoinNetworkLabel.setText("Not connected");
-            openBTCConnectionErrorPopup(newValue);
+            if (newValue != null) {
+                bitcoinNetworkLabel.setId("splash-error-state-msg");
+                bitcoinNetworkLabel.setText("Not connected");
+                openBTCConnectionErrorPopup(newValue);
+            }
+            else {
+                bitcoinNetworkLabel.setId("footer-bitcoin-network-label");
+                bitcoinNetworkLabel.setText(model.bitcoinNetworkAsString);
+            }
         });
 
         model.blockchainSyncProgress.addListener((ov, oldValue, newValue) -> {
@@ -412,11 +417,17 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         setBottomAnchor(numPeersLabel, 7d);
         numPeersLabel.textProperty().bind(model.numDHTPeers);
         model.bootstrapErrorMsg.addListener((ov, oldValue, newValue) -> {
-            bootstrapLabel.setId("splash-error-state-msg");
-            bootstrapLabel.textProperty().unbind();
-            bootstrapLabel.setText("Not connected");
-            Popups.openErrorPopup("Error", "Connecting to the P2P network failed. \n" + newValue
-                    + "\nPlease check our internet connection.");
+            if (newValue != null) {
+                bootstrapLabel.setId("splash-error-state-msg");
+                bootstrapLabel.textProperty().unbind();
+                bootstrapLabel.setText("Not connected");
+                Popups.openErrorPopup("Error", "Connecting to the P2P network failed. \n" + newValue
+                        + "\nPlease check your internet connection.");
+            }
+            else {
+                bootstrapLabel.setId("footer-pane");
+                bootstrapLabel.textProperty().bind(model.bootstrapInfoFooter);
+            }
         });
 
         AnchorPane footerContainer = new AnchorPane(separator, blockchainSyncBox, versionLabel, bootstrapLabel, bootstrapIcon, numPeersLabel) {{
@@ -549,6 +560,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     private void openBTCConnectionErrorPopup(String errorMsg) {
         Popups.openErrorPopup("Error", "Connecting to the bitcoin network failed. \n" + errorMsg
-                + "\nPlease check our internet connection.");
+                + "\nPlease check your internet connection.");
     }
 }

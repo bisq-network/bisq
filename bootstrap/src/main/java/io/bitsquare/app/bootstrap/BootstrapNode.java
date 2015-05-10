@@ -21,9 +21,12 @@ import io.bitsquare.app.Logging;
 import io.bitsquare.p2p.BootstrapNodes;
 import io.bitsquare.p2p.Node;
 
-import net.tomp2p.connection.ChannelClientConfiguration;
-import net.tomp2p.connection.ChannelServerConfiguration;
+import java.util.Collection;
+import java.util.Random;
+import java.util.stream.Collectors;
+
 import net.tomp2p.dht.PeerBuilderDHT;
+import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.nat.PeerBuilderNAT;
 import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerBuilder;
@@ -35,7 +38,6 @@ import net.tomp2p.peers.PeerStatistic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import org.springframework.core.env.Environment;
 
 public class BootstrapNode {
@@ -52,26 +54,27 @@ public class BootstrapNode {
         this.env = env;
     }
 
+
     public void start() {
-        int port = env.getProperty(Node.PORT_KEY, Integer.class, BootstrapNodes.DEFAULT_PORT);
-        String name = env.getRequiredProperty(Node.NAME_KEY);
+        int port = env.getProperty(Node.PORT_KEY, Integer.class, BootstrapNodes.PORT);
+        String name = env.getProperty(Node.NAME_KEY, BootstrapNodes.DEFAULT_NODE_NAME);
         Logging.setup(name + "_" + port);
 
         try {
-            Number160 peerId = Number160.createHash(name);
-
+            Number160 peerId = Number160.createHash(new Random().nextInt());
+/*
             DefaultEventExecutorGroup eventExecutorGroup = new DefaultEventExecutorGroup(50);
             ChannelClientConfiguration clientConf = PeerBuilder.createDefaultChannelClientConfiguration();
             clientConf.pipelineFilter(new PeerBuilder.EventExecutorGroupFilter(eventExecutorGroup));
 
             ChannelServerConfiguration serverConf = PeerBuilder.createDefaultChannelServerConfiguration();
             serverConf.pipelineFilter(new PeerBuilder.EventExecutorGroupFilter(eventExecutorGroup));
-            serverConf.connectionTimeoutTCPMillis(5000);
+            serverConf.connectionTimeoutTCPMillis(5000);*/
 
             peer = new PeerBuilder(peerId)
                     .ports(port)
-                    .channelClientConfiguration(clientConf)
-                    .channelServerConfiguration(serverConf)
+                  /*  .channelClientConfiguration(clientConf)
+                    .channelServerConfiguration(serverConf)*/
                     .start();
             
             /*peer.objectDataReply((sender, request) -> {
@@ -79,14 +82,25 @@ public class BootstrapNode {
                 return "pong";
             });*/
 
-            new PeerBuilderDHT(peer).start();
+            PeerDHT peerDHT = new PeerBuilderDHT(peer).start();
             new PeerBuilderNAT(peer).start();
 
+            if (!name.equals(BootstrapNodes.LOCALHOST.getName())) {
+                Collection<PeerAddress> bootstrapNodes = BootstrapNodes.getAllBootstrapNodes().stream().filter(e -> !e.getName().equals(name))
+                        .map(e -> e.toPeerAddress()).collect(Collectors.toList());
+
+                log.info("Bootstrapping to " + bootstrapNodes.size() + " bootstrapNode(s)");
+                log.info("Bootstrapping bootstrapNodes " + bootstrapNodes);
+                peer.bootstrap().bootstrapTo(bootstrapNodes).start().awaitUninterruptibly();
+            }
+            else {
+                log.info("Localhost, no bootstrap");
+            }
             peer.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {
                 @Override
                 public void peerInserted(PeerAddress peerAddress, boolean verified) {
                     try {
-                        log.debug("Peer inserted: peerAddress=" + peerAddress + ", verified=" + verified);
+                        log.info("Peer inserted: peerAddress=" + peerAddress + ", verified=" + verified);
                     } catch (Throwable t) {
                         log.error("Exception at peerInserted " + t.getMessage());
                     }
@@ -95,7 +109,7 @@ public class BootstrapNode {
                 @Override
                 public void peerRemoved(PeerAddress peerAddress, PeerStatistic peerStatistics) {
                     try {
-                        log.debug("Peer removed: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
+                        log.info("Peer removed: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
                     } catch (Throwable t) {
                         log.error("Exception at peerRemoved " + t.getMessage());
                     }
@@ -104,7 +118,7 @@ public class BootstrapNode {
                 @Override
                 public void peerUpdated(PeerAddress peerAddress, PeerStatistic peerStatistics) {
                     try {
-                        //log.debug("Peer updated: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
+                        log.info("Peer updated: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
                     } catch (Throwable t) {
                         log.error("Exception at peerUpdated " + t.getMessage());
                     }
@@ -130,7 +144,7 @@ public class BootstrapNode {
                         noPeersInfoPrinted = true;
                     }
                     try {
-                        Thread.sleep(10000);
+                        Thread.sleep(2000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                         return;

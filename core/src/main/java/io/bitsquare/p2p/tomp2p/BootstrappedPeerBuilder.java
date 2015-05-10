@@ -17,6 +17,7 @@
 
 package io.bitsquare.p2p.tomp2p;
 
+import io.bitsquare.p2p.BootstrapNodes;
 import io.bitsquare.p2p.Node;
 
 import com.google.common.util.concurrent.SettableFuture;
@@ -29,6 +30,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import java.security.KeyPair;
+
+import java.util.Optional;
+import java.util.concurrent.Executor;
 
 import javax.inject.Inject;
 
@@ -113,7 +117,7 @@ public class BootstrappedPeerBuilder {
     private KeyPair keyPair;
     private final int port;
     private final boolean useManualPortForwarding;
-    private final Node bootstrapNode;
+    private Node bootstrapNode;
     private final String networkInterface;
 
     private final SettableFuture<PeerDHT> settableFuture = SettableFuture.create();
@@ -123,6 +127,8 @@ public class BootstrappedPeerBuilder {
 
     private Peer peer;
     private PeerDHT peerDHT;
+    private boolean retriedOtherBootstrapNode;
+    private Executor executor;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -156,7 +162,11 @@ public class BootstrappedPeerBuilder {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SettableFuture<PeerDHT> start() {
+    public void setExecutor(Executor executor) {
+        this.executor = executor;
+    }
+
+    public SettableFuture<PeerDHT> start(int networkId) {
         try {
             DefaultEventExecutorGroup eventExecutorGroup = new DefaultEventExecutorGroup(20);
             ChannelClientConfiguration clientConf = PeerBuilder.createDefaultChannelClientConfiguration();
@@ -172,6 +182,7 @@ public class BootstrappedPeerBuilder {
 
             if (useManualPortForwarding) {
                 peer = new PeerBuilder(keyPair)
+                        .p2pId(networkId)
                         .channelClientConfiguration(clientConf)
                         .channelServerConfiguration(serverConf)
                         .ports(port)
@@ -182,6 +193,7 @@ public class BootstrappedPeerBuilder {
             }
             else {
                 peer = new PeerBuilder(keyPair)
+                        .p2pId(networkId)
                         .channelClientConfiguration(clientConf)
                         .channelServerConfiguration(serverConf)
                         .ports(port)
@@ -274,9 +286,20 @@ public class BootstrappedPeerBuilder {
                             bootstrap();
                         }
                         else {
-                            // All attempts failed. Give up...
-                            handleError(State.RELAY_FAILED, "NAT traversal using relay mode failed " +
-                                    futureRelayNAT.failedReason());
+                            if (!retriedOtherBootstrapNode && BootstrapNodes.getAllBootstrapNodes().size() > 1) {
+                                log.warn("Bootstrap failed with bootstrapNode: " + bootstrapNode + ". We try again with another node.");
+                                retriedOtherBootstrapNode = true;
+                                Optional<Node> optional = BootstrapNodes.getAllBootstrapNodes().stream().filter(e -> !e.equals(bootstrapNode)).findAny();
+                                if (optional.isPresent()) {
+                                    bootstrapNode = optional.get();
+                                    executor.execute(() -> discoverExternalAddress());
+                                }
+                            }
+                            else {
+                                // All attempts failed. Give up...
+                                handleError(State.RELAY_FAILED, "NAT traversal using relay mode failed " +
+                                        futureRelayNAT.failedReason());
+                            }
                         }
                     }
                 }

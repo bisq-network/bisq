@@ -21,6 +21,8 @@ import io.bitsquare.p2p.tomp2p.BootstrappedPeerBuilder;
 
 import java.security.KeyPair;
 
+import java.util.concurrent.Executor;
+
 import javafx.beans.property.ReadOnlyIntegerProperty;
 
 import rx.Observable;
@@ -32,7 +34,9 @@ public interface ClientNode {
 
     Node getBootstrapNodeAddress();
 
-    Observable<BootstrappedPeerBuilder.State> bootstrap(KeyPair keyPair);
+    Observable<BootstrappedPeerBuilder.State> bootstrap(int networkId, KeyPair keyPair);
 
     ReadOnlyIntegerProperty numPeersProperty();
+
+    void setExecutor(Executor executor);
 }

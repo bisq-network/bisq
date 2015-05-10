@@ -36,6 +36,8 @@ import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
 
+import org.bitcoinj.store.BlockStoreException;
+
 import com.google.inject.Inject;
 
 import java.util.Timer;
@@ -64,6 +66,17 @@ class MainViewModel implements ViewModel {
 
     private static final long BLOCKCHAIN_SYNC_TIMEOUT = 30000;
     private static final long LOST_CONNECTION_TIMEOUT = 10000;
+
+    private final User user;
+    private final KeyRing keyRing;
+    private final WalletService walletService;
+    private final ArbitrationRepository arbitrationRepository;
+    private final ClientNode clientNode;
+    private final TradeManager tradeManager;
+    private final OpenOfferManager openOfferManager;
+    private final UpdateProcess updateProcess;
+    private final BSFormatter formatter;
+    private final int networkId;
 
     // BTC network
     final StringProperty blockchainSyncInfo = new SimpleStringProperty("Initializing");
@@ -98,15 +111,6 @@ class MainViewModel implements ViewModel {
 
     final String bitcoinNetworkAsString;
 
-    private final User user;
-    private KeyRing keyRing;
-    private final WalletService walletService;
-    private final ArbitrationRepository arbitrationRepository;
-    private final ClientNode clientNode;
-    private final TradeManager tradeManager;
-    private OpenOfferManager openOfferManager;
-    private final UpdateProcess updateProcess;
-    private final BSFormatter formatter;
     private Timer blockchainSyncTimeoutTimer;
     private Timer lostConnectionTimeoutTimer;
 
@@ -126,6 +130,7 @@ class MainViewModel implements ViewModel {
         this.formatter = formatter;
 
         bitcoinNetworkAsString = formatter.formatBitcoinNetwork(bitcoinNetwork);
+        networkId = bitcoinNetwork.ordinal();
 
         updateProcess.state.addListener((observableValue, oldValue, newValue) -> applyUpdateState(newValue));
         applyUpdateState(updateProcess.state.get());
@@ -146,7 +151,8 @@ class MainViewModel implements ViewModel {
     public void initBackend() {
         Platform.runLater(updateProcess::init);
 
-        startBlockchainSyncTimeout();
+        if (walletService.downloadPercentageProperty().get() > -1)
+            startBlockchainSyncTimeout();
 
         walletService.downloadPercentageProperty().addListener((ov, oldValue, newValue) -> {
             setBitcoinNetworkSyncProgress((double) newValue);
@@ -155,9 +161,10 @@ class MainViewModel implements ViewModel {
 
         walletService.numPeersProperty().addListener((observable, oldValue, newValue) -> {
             numBTCPeers.set(String.valueOf(newValue) + " peers");
-            if ((int) newValue < 1) {
+            if ((int) newValue < 1)
                 walletServiceErrorMsg.set("We lost connection to the last peer.");
-            }
+            else
+                walletServiceErrorMsg.set(null);
         });
 
         // Set executor for all P2PServices
@@ -178,10 +185,12 @@ class MainViewModel implements ViewModel {
                     lostConnectionTimeoutTimer.cancel();
                     lostConnectionTimeoutTimer = null;
                 }
+                bootstrapErrorMsg.set(null);
             }
         });
 
-        Observable<BootstrappedPeerBuilder.State> bootstrapStateAsObservable = clientNode.bootstrap(keyRing.getDhtSignatureKeyPair());
+        clientNode.setExecutor(Platform::runLater);
+        Observable<BootstrappedPeerBuilder.State> bootstrapStateAsObservable = clientNode.bootstrap(networkId, keyRing.getDhtSignatureKeyPair());
         bootstrapStateAsObservable.publish();
         bootstrapStateAsObservable.subscribe(
                 state -> Platform.runLater(() -> setBootstrapState(state)),
@@ -229,6 +238,7 @@ class MainViewModel implements ViewModel {
     private void onAllServicesInitialized() {
         log.trace("backend completed");
 
+        setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get());
         tradeManager.getPendingTrades().addListener((ListChangeListener<Trade>) change -> updateNumPendingTrades());
         updateNumPendingTrades();
         showAppScreen.set(true);
@@ -321,6 +331,9 @@ class MainViewModel implements ViewModel {
                     "You must allow outgoing TCP connections to port 18333 for the bitcoin testnet.\n\n" +
                     "See https://github.com/bitsquare/bitsquare/wiki for instructions.");
         }
+        else if (error.getCause() instanceof BlockStoreException) {
+            walletServiceErrorMsg.set("You cannot run 2 instances of the program.");
+        }
         else if (error.getMessage() != null) {
             walletServiceErrorMsg.set(error.getMessage());
         }
@@ -365,6 +378,8 @@ class MainViewModel implements ViewModel {
     private void setBitcoinNetworkSyncProgress(double value) {
         blockchainSyncProgress.set(value);
         if (value >= 1) {
+            stopBlockchainSyncTimeout();
+
             blockchainSyncInfo.set("Blockchain synchronization complete.");
             blockchainSyncIconId.set("image-connection-synced");
         }

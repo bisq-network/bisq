@@ -19,9 +19,11 @@ package io.bitsquare.btc;
 
 public enum RegTestHost {
 
-    LOCALHOST(),
-    DIGITAL_OCEAN_1(); // 188.226.179.109
+    LOCALHOST,
+    REG_TEST_SERVER; // 188.226.179.109
 
     public static final String KEY = "bitcoin.regtest.host";
-    public static final RegTestHost DEFAULT = DIGITAL_OCEAN_1;
+    public static final RegTestHost DEFAULT = LOCALHOST;
+    public static final String SERVER_IP = "188.226.179.109";
+
 }

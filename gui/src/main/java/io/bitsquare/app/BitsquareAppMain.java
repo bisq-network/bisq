@@ -134,11 +134,11 @@ public class BitsquareAppMain extends BitsquareExecutable {
                 .withValuesConvertedBy(new EnumValueConverter(RegTestHost.class));
 
 
-        parser.accepts(BOOTSTRAP_NODE_NAME_KEY, description("", BootstrapNodes.DEFAULT.getName()))
+        parser.accepts(BOOTSTRAP_NODE_NAME_KEY, description("", BootstrapNodes.getSelectedNode().getName()))
                 .withRequiredArg();
-        parser.accepts(BOOTSTRAP_NODE_IP_KEY, description("", BootstrapNodes.DEFAULT.getIp()))
+        parser.accepts(BOOTSTRAP_NODE_IP_KEY, description("", BootstrapNodes.getSelectedNode().getIp()))
                 .withRequiredArg();
-        parser.accepts(BOOTSTRAP_NODE_PORT_KEY, description("", BootstrapNodes.DEFAULT.getPort()))
+        parser.accepts(BOOTSTRAP_NODE_PORT_KEY, description("", BootstrapNodes.getSelectedNode().getPort()))
                 .withRequiredArg()
                 .ofType(int.class);
         parser.accepts(NETWORK_INTERFACE_KEY, description("Network interface", null))

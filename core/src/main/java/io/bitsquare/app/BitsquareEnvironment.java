@@ -19,7 +19,6 @@ package io.bitsquare.app;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.btc.BitcoinNetwork;
-import io.bitsquare.btc.RegTestHost;
 import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.KeyStorage;
@@ -93,13 +92,8 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(BitcoinNetwork.KEY) :
                 BitcoinNetwork.DEFAULT.toString();
 
-        String regTestHost = commandLineProperties.containsProperty(RegTestHost.KEY) ?
-                (String) commandLineProperties.getProperty(RegTestHost.KEY) :
-                RegTestHost.DEFAULT.toString();
-
         this.bootstrapNodePort = commandLineProperties.containsProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY) ?
-                (String) commandLineProperties.getProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY) :
-                getBootstrapNodePort(BitcoinNetwork.valueOf(bitcoinNetwork), RegTestHost.valueOf(regTestHost));
+                (String) commandLineProperties.getProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY) : String.valueOf(BootstrapNodes.PORT);
 
         MutablePropertySources propertySources = this.getPropertySources();
         propertySources.addFirst(commandLineProperties);
@@ -110,19 +104,6 @@ public class BitsquareEnvironment extends StandardEnvironment {
             propertySources.addLast(defaultProperties());
         } catch (Exception ex) {
             throw new BitsquareException(ex);
-        }
-    }
-
-    private String getBootstrapNodePort(BitcoinNetwork bitcoinNetwork, RegTestHost regTestHost) {
-        // We use default port 7366 for mainnet, 7367 for testnet and 7368 for regtest
-        if (bitcoinNetwork == BitcoinNetwork.REGTEST && regTestHost == RegTestHost.DIGITAL_OCEAN_1) {
-            return String.valueOf(BootstrapNodes.DEFAULT_PORT + 2);
-        }
-        else if (bitcoinNetwork == BitcoinNetwork.TESTNET) {
-            return String.valueOf(BootstrapNodes.DEFAULT_PORT + 1);
-        }
-        else {
-            return String.valueOf(BootstrapNodes.DEFAULT_PORT);
         }
     }
 

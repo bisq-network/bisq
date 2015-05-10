@@ -43,7 +43,6 @@ public abstract class BitsquareModule extends AbstractModule {
 
     protected void install(BitsquareModule module) {
         super.install(module);
-        log.trace("install " + module.getClass().getSimpleName());
         modules.add(module);
     }
 
@@ -68,6 +67,5 @@ public abstract class BitsquareModule extends AbstractModule {
      * @param injector the Injector originally initialized with this module
      */
     protected void doClose(Injector injector) {
-        log.trace("doClose " + getClass().getSimpleName());
     }
 }

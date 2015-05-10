@@ -45,20 +45,29 @@
         </GridPane.margin>
     </TextField>
 
-    <Label text="P2P network connection:" GridPane.rowIndex="1"/>
-    <TextField fx:id="connectionType" GridPane.rowIndex="1" GridPane.columnIndex="1"
+    <Label text="Bitcoin network connected peers:" GridPane.rowIndex="1"/>
+    <TextField fx:id="connectedPeersBTC" GridPane.rowIndex="1" GridPane.columnIndex="1"
                mouseTransparent="true" focusTraversable="false"/>
 
-    <Label text="My external visible P2P network address:" GridPane.rowIndex="2"/>
-    <TextField fx:id="nodeAddress" GridPane.rowIndex="2" GridPane.columnIndex="1"
+
+    <Label text="P2P network connection:" GridPane.rowIndex="2"/>
+    <TextField fx:id="connectionType" GridPane.rowIndex="2" GridPane.columnIndex="1"
                mouseTransparent="true" focusTraversable="false"/>
 
-    <Label text="P2P bootstrap node address:" GridPane.rowIndex="3">
+    <Label text="P2P network connected peers:" GridPane.rowIndex="3"/>
+    <TextField fx:id="connectedPeersP2P" GridPane.rowIndex="3" GridPane.columnIndex="1"
+               mouseTransparent="true" focusTraversable="false"/>
+
+    <Label text="My external visible P2P network address:" GridPane.rowIndex="4"/>
+    <TextField fx:id="nodeAddress" GridPane.rowIndex="4" GridPane.columnIndex="1"
+               mouseTransparent="true" focusTraversable="false"/>
+
+    <Label text="P2P bootstrap node address:" GridPane.rowIndex="5">
         <GridPane.margin>
             <Insets bottom="-15"/>
         </GridPane.margin>
     </Label>
-    <TextField fx:id="bootstrapNodeAddress" GridPane.rowIndex="3" GridPane.columnIndex="1"
+    <TextField fx:id="bootstrapNodeAddress" GridPane.rowIndex="5" GridPane.columnIndex="1"
                mouseTransparent="true" focusTraversable="false">
         <GridPane.margin>
             <Insets bottom="-15"/>

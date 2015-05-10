@@ -32,10 +32,9 @@ public class BootstrapNodeMain extends BitsquareExecutable {
     }
 
     protected void customizeOptionParsing(OptionParser parser) {
-        parser.accepts(Node.NAME_KEY, description("Name of this node", null))
-                .withRequiredArg()
-                .isRequired();
-        parser.accepts(Node.PORT_KEY, description("Port to listen on", BootstrapNodes.DEFAULT_PORT))
+        parser.accepts(Node.NAME_KEY, description("Name of this node", BootstrapNodes.DEFAULT_NODE_NAME))
+                .withRequiredArg();
+        parser.accepts(Node.PORT_KEY, description("Port to listen on", BootstrapNodes.PORT))
                 .withRequiredArg()
                 .ofType(int.class);
     }
