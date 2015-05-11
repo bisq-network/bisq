@@ -78,6 +78,7 @@ public class NetworkSettingsView extends InitializableView {
 
         netWorkComboBox.setItems(FXCollections.observableArrayList(BitcoinNetwork.values()));
         netWorkComboBox.getSelectionModel().select(preferences.getBitcoinNetwork());
+        netWorkComboBox.setOnAction(e -> onSelectNetwork());
     }
 
     @FXML
@@ -85,7 +86,6 @@ public class NetworkSettingsView extends InitializableView {
         preferences.setUseUPnP(useUPnP.isSelected());
     }
 
-    @FXML
     void onSelectNetwork() {
         preferences.setBitcoinNetwork(netWorkComboBox.getSelectionModel().getSelectedItem());
 
@@ -106,7 +106,7 @@ public class NetworkSettingsView extends InitializableView {
             }
         });
 
-        Action response = Popups.openConfirmPopup("Info", null,
+        Action response = Popups.openConfirmPopup("Info", "",
                 "You need to restart the application to apply the change of the Bitcoin network." +
                         "\n\nDo you want to shutdown now?",
                 actions);
