@@ -29,29 +29,34 @@ import io.bitsquare.gui.main.portfolio.closedtrades.ClosedTradesView;
 import io.bitsquare.gui.main.portfolio.failedtrades.FailedTradesView;
 import io.bitsquare.gui.main.portfolio.openoffer.OpenOffersView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.failed.FailedTradesManager;
 
 import javax.inject.Inject;
 
 import javafx.beans.value.ChangeListener;
+import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
 @FxmlView
 public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
 
-    @FXML Tab openOffersTab, pendingTradesTab, closedTradesTab, failedTradesTab;
-
+    @FXML Tab openOffersTab, pendingTradesTab, closedTradesTab;
+    private Tab failedTradesTab = new Tab("Failed");
     private Tab currentTab;
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
+    private FailedTradesManager failedTradesManager;
 
     @Inject
-    public PortfolioView(CachingViewLoader viewLoader, Navigation navigation) {
+    public PortfolioView(CachingViewLoader viewLoader, Navigation navigation, FailedTradesManager failedTradesManager) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
+        this.failedTradesManager = failedTradesManager;
     }
 
     @Override
@@ -77,6 +82,16 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
 
     @Override
     public void doActivate() {
+        failedTradesManager.getFailedTrades().addListener((ListChangeListener<Trade>) c -> {
+            if (failedTradesManager.getFailedTrades().size() > 0 && root.getTabs().size() == 3)
+                root.getTabs().add(failedTradesTab);
+            else
+                root.getTabs().remove(failedTradesTab);
+        });
+        if (failedTradesManager.getFailedTrades().size() > 0 && root.getTabs().size() == 3)
+            root.getTabs().add(failedTradesTab);
+        else
+            root.getTabs().remove(failedTradesTab);
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
 

@@ -47,7 +47,7 @@ import rx.subjects.Subject;
 public class UpdateProcess {
     private static final Logger log = LoggerFactory.getLogger(UpdateProcess.class);
 
-    private static final List<ECPoint> UPDATE_SIGNING_KEYS = Crypto.decode("0296CFF54A8B1611499D4C1024E654140AFBB58C505FE4BB7C847B4F4A7C683DF6");
+    private static final List<ECPoint> UPDATE_SIGNING_KEYS = Crypto.decode("038396415C265C59042AB05A5436356E8D0FA19F13E3DE4915AFF763CB4785345E");
     private static final String UPDATES_BASE_URL = "http://bitsquare.io/updateFX/";
     private static final int UPDATE_SIGNING_THRESHOLD = 1;
     private static final Path ROOT_CLASS_PATH = UpdateFX.findCodePath(BitsquareAppMain.class);

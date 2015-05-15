@@ -127,8 +127,8 @@ public class TomP2PNode implements ClientNode {
                         @Override
                         public void peerUpdated(PeerAddress peerAddress, PeerStatistic peerStatistic) {
                             BaseP2PService.getUserThread().execute(() -> numPeers.set(peerDHT.peerBean().peerMap().all().size()));
-                            log.debug("peerUpdated " + peerAddress);
-                            log.debug("Number of peers = " + peerDHT.peerBean().peerMap().all().size());
+                            // log.debug("peerUpdated " + peerAddress);
+                            // log.debug("Number of peers = " + peerDHT.peerBean().peerMap().all().size());
                         }
                     });
                  /*   peerDHT.peerBean().addPeerStatusListener(new PeerStatusListener() {

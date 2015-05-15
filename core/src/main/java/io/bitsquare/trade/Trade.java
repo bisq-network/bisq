@@ -256,7 +256,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     abstract public void setFailedState();
 
     public boolean isCriticalFault() {
-        return tradeState.getPhase().ordinal() >= TradeState.Phase.DEPOSIT_PAID.ordinal();
+        return tradeState.getPhase() != null && tradeState.getPhase().ordinal() >= TradeState.Phase.DEPOSIT_PAID.ordinal();
     }
     
 

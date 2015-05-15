@@ -122,7 +122,7 @@ public class BootstrapNode {
                 @Override
                 public void peerUpdated(PeerAddress peerAddress, PeerStatistic peerStatistics) {
                     try {
-                        log.info("Peer updated: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
+                        //log.info("Peer updated: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
                     } catch (Throwable t) {
                         log.error("Exception at peerUpdated " + t.getMessage());
                     }

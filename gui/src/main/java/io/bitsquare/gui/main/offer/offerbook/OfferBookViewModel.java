@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.offer.offerbook;
 
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
@@ -143,10 +144,12 @@ class OfferBookViewModel extends ActivatableWithDataModel<OfferBookDataModel> im
         price.addListener(priceListener);
         volume.addListener(volumeListener);
 
-        amount.set("1");
-        price.set("300");
-        setAmountToModel();
-        setPriceToModel();
+        if (BitsquareApp.DEV_MODE) {
+            amount.set("1");
+            price.set("300");
+            setAmountToModel();
+            setPriceToModel();
+        }
     }
 
     private void removeListeners() {

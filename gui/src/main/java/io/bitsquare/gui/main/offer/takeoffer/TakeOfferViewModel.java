@@ -455,7 +455,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return dataModel.getDirection() == Offer.Direction.BUY;
     }
 
-    void securityDepositInfoDisplayed() {
+    void onSecurityDepositInfoDisplayed() {
         dataModel.onSecurityDepositInfoDisplayed();
     }
 

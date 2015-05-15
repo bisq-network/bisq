@@ -97,19 +97,19 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     @Override
     protected void initialize() {
         ToggleButton homeButton = new NavButton(HomeView.class, "Overview") {{
-            setDisable(true); // alpha
+            setDisable(true); // TODO for alpha
         }};
         ToggleButton buyButton = new NavButton(BuyOfferView.class, "Buy BTC");
         ToggleButton sellButton = new NavButton(SellOfferView.class, "Sell BTC");
         ToggleButton portfolioButton = new NavButton(PortfolioView.class, "Portfolio");
         ToggleButton fundsButton = new NavButton(FundsView.class, "Funds");
         ToggleButton msgButton = new NavButton(MsgView.class, "Messages") {{
-            setDisable(true); // alpha
+            setDisable(true); // TODO for alpha
         }};
         ToggleButton settingsButton = new NavButton(SettingsView.class, "Settings");
-        ToggleButton accountButton = new NavButton(AccountView.class, "Account"); /*{{
-            setDisable(true); // alpha
-        }};*/
+        ToggleButton accountButton = new NavButton(AccountView.class, "Account") {{
+            setDisable(true); // TODO for alpha
+        }};
         Pane portfolioButtonHolder = new Pane(portfolioButton);
         Pane bankAccountComboBoxHolder = new Pane();
 
@@ -208,7 +208,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         blockchainSyncLabel.textProperty().bind(model.blockchainSyncInfo);
         walletServiceErrorMsgListener = (ov, oldValue, newValue) -> {
             blockchainSyncLabel.setId("splash-error-state-msg");
-            openBTCConnectionErrorPopup(newValue);
+            // error popup is called by error handler at createFooter
         };
         model.walletServiceErrorMsg.addListener(walletServiceErrorMsgListener);
 
@@ -257,7 +257,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         bootstrapErrorMsgListener = (ov, oldValue, newValue) -> {
             bootstrapStateLabel.setId("splash-error-state-msg");
             bootstrapIndicator.setVisible(false);
-            openBTCConnectionErrorPopup(model.bootstrapErrorMsg.get());
+            // error popup is handled by handler at createFooter
         };
         model.bootstrapErrorMsg.addListener(bootstrapErrorMsgListener);
 
@@ -490,7 +490,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         vBox.setAlignment(Pos.CENTER);
         vBox.getChildren().setAll(comboBox, titleLabel);
 
-        // For alpha
+        // TODO for alpha
         vBox.setDisable(true);
 
         return vBox;
@@ -559,7 +559,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     }
 
     private void openBTCConnectionErrorPopup(String errorMsg) {
-        Popups.openErrorPopup("Error", "Connecting to the bitcoin network failed. \n" + errorMsg
-                + "\nPlease check your internet connection.");
+        Popups.openErrorPopup("Error", "Connecting to the bitcoin network failed. \n" + errorMsg);
+        // + "\nPlease check your internet connection."
     }
 }

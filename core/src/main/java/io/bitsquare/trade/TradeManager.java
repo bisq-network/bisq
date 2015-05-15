@@ -88,7 +88,7 @@ public class TradeManager {
     private final CryptoService<MailboxMessage> cryptoService;
     private final OpenOfferManager openOfferManager;
     private final ClosedTradableManager closedTradableManager;
-    private FailedTradesManager failedTradesManager;
+    private final FailedTradesManager failedTradesManager;
     private final ArbitrationRepository arbitrationRepository;
 
     private final Storage<TradableList<Trade>> pendingTradesStorage;

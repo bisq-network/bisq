@@ -171,8 +171,8 @@ public class BootstrappedPeerBuilder {
         try {
             // port is evaluated from btc network. 7366 for mainnet, 7367 for testnet and 7368 for regtest
             bootstrapNode = Node.at(bootstrapNode.getName(), bootstrapNode.getIp(), bootstrapNode.getPort() + networkId);
-            log.debug("Bootstrap to {}", bootstrapNode.toString());
-            
+            log.debug("Bootstrap to {} with networkId {}", bootstrapNode.toString(), networkId);
+
             DefaultEventExecutorGroup eventExecutorGroup = new DefaultEventExecutorGroup(20);
             ChannelClientConfiguration clientConf = PeerBuilder.createDefaultChannelClientConfiguration();
             clientConf.pipelineFilter(new PeerBuilder.EventExecutorGroupFilter(eventExecutorGroup));

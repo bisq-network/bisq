@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.offer.takeoffer;
 
 
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
@@ -203,11 +204,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             }
         };
         showTransactionPublishedScreenListener = (o, oldValue, newValue) -> {
-            // TODO temp just for testing 
-            newValue = false;
-            close();
-            navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
-
+            if (BitsquareApp.DEV_MODE) {
+                newValue = false;
+                close();
+                navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
+            }
+            
             if (newValue) {
                 overlayManager.blurContent();
 
@@ -371,24 +373,25 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void setupPaymentScreen() {
-        // TODO deactivate for testing the moment
-       /* if (model.getDisplaySecurityDepositInfo()) {
-            overlayManager.blurContent();
-            List<Action> actions = new ArrayList<>();
-            actions.add(new AbstractAction(BSResources.get("shared.close")) {
-                @Override
-                public void handle(ActionEvent actionEvent) {
-                    getProperties().put("type", "CLOSE");
-                    Dialog.Actions.CLOSE.handle(actionEvent);
-                }
-            });
-            Popups.openInfoPopup("To ensure that both traders behave fair they need to pay a security deposit.",
-                    "The deposit will stay in your local trading wallet until the offer gets accepted by another trader. " +
-                            "\nIt will be refunded to you after the trade has successfully completed.",
-                    actions);
+        if (!BitsquareApp.DEV_MODE) {
+            if (model.getDisplaySecurityDepositInfo()) {
+                overlayManager.blurContent();
+                List<Action> actions = new ArrayList<>();
+                actions.add(new AbstractAction(BSResources.get("shared.close")) {
+                    @Override
+                    public void handle(ActionEvent actionEvent) {
+                        getProperties().put("type", "CLOSE");
+                        Dialog.Actions.CLOSE.handle(actionEvent);
+                    }
+                });
+                Popups.openInfoPopup("To ensure that both traders behave fair they need to pay a security deposit.",
+                        "The deposit will stay in your local trading wallet until the offer gets accepted by another trader. " +
+                                "\nIt will be refunded to you after the trade has successfully completed.",
+                        actions);
 
-            model.securityDepositInfoDisplayed();
-        }*/
+                model.onSecurityDepositInfoDisplayed();
+            }
+        }
 
         priceAmountPane.setInactive();
         takeOfferButton.setVisible(true);

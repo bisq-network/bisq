@@ -64,8 +64,9 @@ import rx.Observable;
 class MainViewModel implements ViewModel {
     private static final Logger log = LoggerFactory.getLogger(MainViewModel.class);
 
-    private static final long BLOCKCHAIN_SYNC_TIMEOUT = 30000;
-    private static final long LOST_CONNECTION_TIMEOUT = 10000;
+    private static final long BLOCKCHAIN_SYNC_TIMEOUT = 60000;
+    private static final long LOST_P2P_CONNECTION_TIMEOUT = 5000;
+    private static final long LOST_BTC_CONNECTION_TIMEOUT = 2000;
 
     private final User user;
     private final KeyRing keyRing;
@@ -112,7 +113,8 @@ class MainViewModel implements ViewModel {
     final String bitcoinNetworkAsString;
 
     private Timer blockchainSyncTimeoutTimer;
-    private Timer lostConnectionTimeoutTimer;
+    private Timer lostP2PConnectionTimeoutTimer;
+    private Timer lostBTCConnectionTimeoutTimer;
 
 
     @Inject
@@ -160,11 +162,23 @@ class MainViewModel implements ViewModel {
         setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get());
 
         walletService.numPeersProperty().addListener((observable, oldValue, newValue) -> {
+
             numBTCPeers.set(String.valueOf(newValue) + " peers");
-            if ((int) newValue < 1)
-                walletServiceErrorMsg.set("We lost connection to the last peer.");
-            else
+            if ((int) newValue < 1) {
+                if (lostBTCConnectionTimeoutTimer != null)
+                    lostBTCConnectionTimeoutTimer.cancel();
+                lostBTCConnectionTimeoutTimer = Utilities.setTimeout(LOST_BTC_CONNECTION_TIMEOUT, () -> {
+                    log.trace("Connection lost timeout reached");
+                    walletServiceErrorMsg.set("We lost connection to the last peer.");
+                });
+            }
+            else {
+                if (lostBTCConnectionTimeoutTimer != null) {
+                    lostBTCConnectionTimeoutTimer.cancel();
+                    lostBTCConnectionTimeoutTimer = null;
+                }
                 walletServiceErrorMsg.set(null);
+            }
         });
 
         // Set executor for all P2PServices
@@ -173,17 +187,17 @@ class MainViewModel implements ViewModel {
         clientNode.numPeersProperty().addListener((observable, oldValue, newValue) -> {
             numDHTPeers.set(String.valueOf(newValue) + " peers");
             if ((int) newValue == 0) {
-                if (lostConnectionTimeoutTimer != null)
-                    lostConnectionTimeoutTimer.cancel();
-                lostConnectionTimeoutTimer = Utilities.setTimeout(LOST_CONNECTION_TIMEOUT, () -> {
+                if (lostP2PConnectionTimeoutTimer != null)
+                    lostP2PConnectionTimeoutTimer.cancel();
+                lostP2PConnectionTimeoutTimer = Utilities.setTimeout(LOST_P2P_CONNECTION_TIMEOUT, () -> {
                     log.trace("Connection lost timeout reached");
                     bootstrapErrorMsg.set("We lost connection to the last peer.");
                 });
             }
             else if ((int) oldValue == 0 && (int) newValue > 0) {
-                if (lostConnectionTimeoutTimer != null) {
-                    lostConnectionTimeoutTimer.cancel();
-                    lostConnectionTimeoutTimer = null;
+                if (lostP2PConnectionTimeoutTimer != null) {
+                    lostP2PConnectionTimeoutTimer.cancel();
+                    lostP2PConnectionTimeoutTimer = null;
                 }
                 bootstrapErrorMsg.set(null);
             }
@@ -243,7 +257,7 @@ class MainViewModel implements ViewModel {
         updateNumPendingTrades();
         showAppScreen.set(true);
 
-        // For alpha version
+        // TODO for alpha version
         if (!user.isRegistered()) {
             FiatAccount fiatAccount = new FiatAccount(FiatAccount.Type.IRC,
                     "EUR",
@@ -399,7 +413,6 @@ class MainViewModel implements ViewModel {
     private void startBlockchainSyncTimeout() {
         log.trace("startBlockchainSyncTimeout");
         stopBlockchainSyncTimeout();
-
 
         blockchainSyncTimeoutTimer = Utilities.setTimeout(BLOCKCHAIN_SYNC_TIMEOUT, () -> {
             log.trace("Timeout reached");

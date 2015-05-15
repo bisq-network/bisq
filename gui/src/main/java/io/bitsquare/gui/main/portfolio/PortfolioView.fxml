@@ -27,6 +27,5 @@
     <Tab fx:id="openOffersTab" text="Open offers"/>
     <Tab fx:id="pendingTradesTab" text="Open trades"/>
     <Tab fx:id="closedTradesTab" text="History"/>
-    <Tab fx:id="failedTradesTab" text="Failed"/>
 
 </TabPane>

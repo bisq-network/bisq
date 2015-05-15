@@ -60,6 +60,8 @@ import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
 public class BitsquareApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BitsquareApp.class);
 
+    public static final boolean DEV_MODE = true;
+
     private static Environment env;
 
     private BitsquareAppModule bitsquareAppModule;
@@ -96,7 +98,7 @@ public class BitsquareApp extends Application {
             Threading.USER_THREAD = Platform::runLater;
 
             // Use CrashFX for report crash logs
-           /* CrashFX.setup("Bitsquare/" + Version.VERSION,
+            /*CrashFX.setup("Bitsquare/" + Version.VERSION,
                     Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "crashes"),
                     URI.create("http://188.226.179.109/crashfx/upload"));*/
             // Server not setup yet, so we use client side only support
@@ -136,7 +138,8 @@ public class BitsquareApp extends Application {
                         new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
                     stop();
                 else if (new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
-                    showDebugWindow();
+                    if (BitsquareApp.DEV_MODE)
+                        showDebugWindow();
             });
 
             // configure the primary stage
@@ -160,7 +163,6 @@ public class BitsquareApp extends Application {
             // make the UI visible
             primaryStage.show();
 
-            //TODO just temp.
             //showDebugWindow();
         } catch (Throwable throwable) {
             showErrorPopup(throwable, true);

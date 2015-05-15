@@ -58,8 +58,6 @@ import org.controlsfx.dialog.Dialog;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
 
-// Note: countryColumn is deactivated in alpha version
-
 @FxmlView
 public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookViewModel> {
 
@@ -110,7 +108,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         setAmountColumnCellFactory();
         setPriceColumnCellFactory();
         setVolumeColumnCellFactory();
-      /*  setCountryColumnCellFactory();*/
+        // TODO: countryColumn is deactivated in alpha version
+        // setCountryColumnCellFactory();
         setBankAccountTypeColumnCellFactory();
         setDirectionColumnCellFactory();
 

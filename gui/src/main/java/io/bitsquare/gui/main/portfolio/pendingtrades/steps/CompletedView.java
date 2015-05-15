@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps;
 
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.gui.components.InfoDisplay;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
@@ -131,8 +132,8 @@ public class CompletedView extends TradeStepDetailsView {
         withdrawAddressTextField = getAndAddLabelInputTextFieldPair(gridPane, gridRow++, "Withdraw to address:").inputTextField;
         withdrawButton = getAndAddButton(gridPane, gridRow++, "Withdraw to external wallet", this::onWithdrawRequest);
 
-        //TODO just temp for testing
-        withdrawAddressTextField.setText("mxmKZruv9x9JLcEj6rZx6Hnm4LLAcQHtcr");
+        if (BitsquareApp.DEV_MODE)
+            withdrawAddressTextField.setText("mkNW1omJFA7RD3AZ94mfKqubRff2gx21KE");
     }
 
     public void setBtcTradeAmountLabelText(String text) {

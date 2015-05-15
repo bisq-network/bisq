@@ -148,33 +148,44 @@ public class CryptoService<T> {
             Cipher cipherAsym = Cipher.getInstance(ASYM_CIPHER);
             cipherAsym.init(Cipher.DECRYPT_MODE, keyRing.getMsgEncryptionKeyPair().getPrivate());
             Object secretKeyObject = sealedSecretKey.getObject(cipherAsym);
-            assert secretKeyObject instanceof SecretKey;
-            SecretKey secretKey = (SecretKey) secretKeyObject;
+            if (secretKeyObject instanceof SecretKey) {
+                SecretKey secretKey = (SecretKey) secretKeyObject;
 
-            // Decrypt signedMessage with secretKey
-            Cipher cipherSym = Cipher.getInstance(SYM_CIPHER);
-            cipherSym.init(Cipher.DECRYPT_MODE, secretKey);
-            Object signedMessageObject = sealedMessage.getObject(cipherSym);
-            assert signedMessageObject instanceof SignedObject;
-            SignedObject signedMessage = (SignedObject) signedMessageObject;
+                // Decrypt signedMessage with secretKey
+                Cipher cipherSym = Cipher.getInstance(SYM_CIPHER);
+                cipherSym.init(Cipher.DECRYPT_MODE, secretKey);
+                Object signedMessageObject = sealedMessage.getObject(cipherSym);
+                if (signedMessageObject instanceof SignedObject) {
+                    SignedObject signedMessage = (SignedObject) signedMessageObject;
 
-            // Verify message with peers pubKey
-            if (signedMessage.verify(signaturePubKey, Signature.getInstance(MSG_SIGN_ALGO))) {
-                // Get message
-                Object messageObject = signedMessage.getObject();
-                assert messageObject instanceof Message;
-                log.debug("Decryption needed {} ms", System.currentTimeMillis() - ts);
-                return new MessageWithPubKey((Message) messageObject, signaturePubKey);
+                    // Verify message with peers pubKey
+                    if (signedMessage.verify(signaturePubKey, Signature.getInstance(MSG_SIGN_ALGO))) {
+                        // Get message
+                        Object messageObject = signedMessage.getObject();
+                        if (messageObject instanceof Message) {
+                            log.debug("Decryption needed {} ms", System.currentTimeMillis() - ts);
+                            return new MessageWithPubKey((Message) messageObject, signaturePubKey);
+                        }
+                        else {
+                            throw new CryptoException("messageObject is not instance of Message");
+                        }
+                    }
+                    else {
+                        throw new CryptoException("Signature is not valid");
+                    }
+                }
+                else {
+                    throw new CryptoException("signedMessageObject is not instance of SignedObject");
+                }
             }
             else {
-                throw new CryptoException("Signature is not valid");
+                throw new CryptoException("secretKeyObject is not instance of SecretKey");
             }
         } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | BadPaddingException |
                 ClassNotFoundException | IllegalBlockSizeException | IOException | SignatureException e) {
             throw new CryptoException(e);
         }
     }
-
 
     public String signMessage(ECKey key, Sha256Hash hash) {
         ECKey.ECDSASignature sig = key.sign(hash, null);
