@@ -1,6 +1,6 @@
 cd ..\..\
 
-:: edit iss file -> AppVersion=0.1.1
+:: edit iss file -> AppVersion=0.2.1
 
 :: Copy jar file from mac build (1.jar from processed folder) to windows
 :: edit -> -BappVersion=0.2.1 and -srcfiles

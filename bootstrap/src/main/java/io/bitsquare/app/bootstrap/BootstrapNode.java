@@ -45,7 +45,7 @@ public class BootstrapNode {
     private static final String VERSION = "0.1.3";
 
     public static final String P2P_ID = "node.p2pId";
-    public static int DEFAULT_P2P_ID = 1; // 0 | 1 | 2 for mainnet/testnet/regtest 
+    public static int DEFAULT_P2P_ID = 2; // 0 | 1 | 2 for mainnet/testnet/regtest 
 
     private static Peer peer = null;
 
@@ -60,7 +60,7 @@ public class BootstrapNode {
     public void start() {
         int p2pId = env.getProperty(P2P_ID, Integer.class, DEFAULT_P2P_ID);
         int port = env.getProperty(Node.PORT_KEY, Integer.class, BootstrapNodes.BASE_PORT + p2pId);
-        String name = env.getRequiredProperty(Node.NAME_KEY);
+        String name = env.getProperty(Node.NAME_KEY, BootstrapNodes.LOCALHOST.getName());
         Logging.setup(name + "_" + port);
 
         try {

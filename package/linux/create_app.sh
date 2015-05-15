@@ -28,8 +28,3 @@ $JAVA_HOME/bin/javapackager \
     -outfile Bitsquare
 
 cd package/linux
-
-# TODO: Figure out where LICENSE file goes so distros don't complain about "low quality" packages.
-# -BlicenseFile=LICENSE comlains about missing file (Bundler DEB Installer skipped because of a configuration problem: Specified license file is missing.  
-# Advice to fix: Make sure that references a file in the app resources, and that it is relative to the 
-# basedir.)
