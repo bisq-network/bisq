@@ -73,7 +73,7 @@ public class SystemTray {
         // prevent exiting the app when the last window gets closed
         // For now we allow to close the app by closing the window. 
         // Later we only let it close via the system trays exit.
-        Platform.setImplicitExit(true);
+        Platform.setImplicitExit(false);
 
         MenuItem aboutItem = new MenuItem("Info about Bitsquare");
         MenuItem exitItem = new MenuItem("Exit");
@@ -124,6 +124,13 @@ public class SystemTray {
             }
         });
 
+        aboutItem.addActionListener(e -> {
+            try {
+                Utilities.openWebPage("https://bitsquare.io");
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+        });
         exitItem.addActionListener(e -> onExit.run());
     }
 
