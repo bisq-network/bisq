@@ -30,7 +30,7 @@ public class BootstrapNodes {
     public static final int BASE_PORT = 7366;  // port will be evaluated from btc network 7366 for mainnet, 7367 for testnet and 7368 for regtest
     
     private static List<Node> bootstrapNodes = Arrays.asList(
-            //Node.at("digitalocean1.bitsquare.io", "188.226.179.109", BASE_PORT),
+            Node.at("digitalocean1.bitsquare.io", "188.226.179.109", BASE_PORT),
             Node.at("aws1.bitsquare.io", "52.24.144.42", BASE_PORT),
             Node.at("aws2.bitsquare.io", "52.11.125.194", BASE_PORT)
     );

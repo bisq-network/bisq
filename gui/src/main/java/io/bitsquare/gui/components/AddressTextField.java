@@ -55,8 +55,6 @@ public class AddressTextField extends AnchorPane {
     private final StringProperty paymentLabel = new SimpleStringProperty();
     private final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
 
-    private OverlayManager overlayManager;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -114,16 +112,14 @@ public class AddressTextField extends AnchorPane {
                 popOver.setDetachedTitle("Scan QR code for this address");
                 popOver.setDetached(true);
                 popOver.setOnHiding(windowEvent -> {
-                    if (overlayManager != null)
-                        overlayManager.removeBlurContent();
+                    OverlayManager.removeBlurContent();
                 });
 
                 Window window = getScene().getWindow();
                 double x = Math.round(window.getX() + (window.getWidth() - 320) / 2);
                 double y = Math.round(window.getY() + (window.getHeight() - 240) / 2);
                 popOver.show(getScene().getWindow(), x, y);
-                if (overlayManager != null)
-                    overlayManager.blurContent();
+                OverlayManager.blurContent();
             }
         });
 
@@ -174,11 +170,6 @@ public class AddressTextField extends AnchorPane {
 
     public void setPaymentLabel(String paymentLabel) {
         this.paymentLabel.set(paymentLabel);
-    }
-
-    // TODO find better solution without OverlayManager dependency
-    public void setOverlayManager(OverlayManager overlayManager) {
-        this.overlayManager = overlayManager;
     }
 
 

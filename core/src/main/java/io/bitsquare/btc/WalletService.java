@@ -610,7 +610,7 @@ public class WalletService {
         @Override
         protected void doneDownload() {
             super.doneDownload();
-            Threading.USER_THREAD.execute(() -> this.percentage.set(1));
+            Threading.USER_THREAD.execute(() -> this.percentage.set(1d));
         }
 
         public ReadOnlyDoubleProperty percentageProperty() {

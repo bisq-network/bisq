@@ -127,10 +127,9 @@ public final class Node {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(Node.class.getSimpleName())
-                .add("name", name)
-                .add("ip", ip)
-                .add("port", port)
-                .toString();
+        return "Node with: " +
+                "name='" + name + '\'' +
+                ", ip='" + ip + '\'' +
+                ", port=" + port;
     }
 }

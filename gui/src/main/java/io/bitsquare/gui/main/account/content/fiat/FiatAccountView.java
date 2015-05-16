@@ -62,12 +62,10 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
 
     private Wizard wizard;
 
-    private final OverlayManager overlayManager;
 
     @Inject
-    public FiatAccountView(FiatAccountViewModel model, OverlayManager overlayManager) {
+    public FiatAccountView(FiatAccountViewModel model) {
         super(model);
-        this.overlayManager = overlayManager;
     }
 
     @Override
@@ -202,7 +200,7 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
 
         model.getCountryNotInAcceptedCountriesList().addListener((ov, oldValue, newValue) -> {
             if (newValue) {
-                overlayManager.blurContent();
+                OverlayManager.blurContent();
                 List<Action> actions = new ArrayList<>();
                 actions.add(new AbstractAction(BSResources.get("shared.no")) {
                     @Override
@@ -228,7 +226,7 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
                 if (Popups.isYes(response))
                     model.addCountryToAcceptedCountriesList();
 
-                overlayManager.removeBlurContent();
+                OverlayManager.removeBlurContent();
             }
         });
 

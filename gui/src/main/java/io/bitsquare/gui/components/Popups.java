@@ -39,15 +39,8 @@ public class Popups {
 
     public static Stage primaryStage;
 
-    // TODO just temporary, class will be removed completely
-    public static void setOverlayManager(OverlayManager overlayManager) {
-        Popups.overlayManager = overlayManager;
-    }
-
-    private static OverlayManager overlayManager;
-
     public static void removeBlurContent() {
-        overlayManager.removeBlurContent();
+        OverlayManager.removeBlurContent();
     }
 
     // Information
@@ -56,7 +49,7 @@ public class Popups {
     }
 
     public static void openInfoPopup(String masthead, String message) {
-        overlayManager.blurContent();
+        OverlayManager.blurContent();
         List<Action> actions = new ArrayList<>();
         actions.add(new AbstractAction(BSResources.get("shared.close")) {
             @Override
@@ -84,7 +77,7 @@ public class Popups {
     }
 
     public static Action openConfirmPopup(String title, String masthead, String message) {
-        overlayManager.blurContent();
+        OverlayManager.blurContent();
         List<Action> actions = new ArrayList<>();
         actions.add(new AbstractAction(BSResources.get("shared.ok")) {
             @Override
@@ -123,7 +116,7 @@ public class Popups {
     }
 
     public static void openWarningPopup(String title, String masthead, String message) {
-        overlayManager.blurContent();
+        OverlayManager.blurContent();
         List<Action> actions = new ArrayList<>();
         actions.add(new AbstractAction(BSResources.get("shared.close")) {
             @Override
@@ -156,7 +149,7 @@ public class Popups {
     }
 
     public static void openErrorPopup(String title, String masthead, String message) {
-        overlayManager.blurContent();
+        OverlayManager.blurContent();
         List<Action> actions = new ArrayList<>();
         actions.add(new AbstractAction(BSResources.get("shared.close")) {
             @Override
@@ -189,7 +182,7 @@ public class Popups {
     }
 
     private static void openExceptionPopup(Throwable throwable, String title, String masthead, String message) {
-        overlayManager.blurContent();
+        OverlayManager.blurContent();
         List<Action> actions = new ArrayList<>();
         actions.add(new AbstractAction(BSResources.get("shared.close")) {
             @Override

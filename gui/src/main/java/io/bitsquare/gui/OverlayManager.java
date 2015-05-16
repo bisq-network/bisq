@@ -24,7 +24,7 @@ import java.util.List;
 
 public class OverlayManager {
 
-    private final List<OverlayListener> listeners = new ArrayList<>();
+    private final static List<OverlayListener> listeners = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -35,19 +35,19 @@ public class OverlayManager {
     public OverlayManager() {
     }
 
-    public void blurContent() {
+    public static void blurContent() {
         listeners.stream().forEach(OverlayListener::onBlurContentRequested);
     }
 
-    public void removeBlurContent() {
+    public static void removeBlurContent() {
         listeners.stream().forEach(OverlayListener::onRemoveBlurContentRequested);
     }
 
-    public void addListener(OverlayListener listener) {
+    public static void addListener(OverlayListener listener) {
         listeners.add(listener);
     }
 
-    public void removeListener(OverlayListener listener) {
+    public static void removeListener(OverlayListener listener) {
         listeners.remove(listener);
     }
 

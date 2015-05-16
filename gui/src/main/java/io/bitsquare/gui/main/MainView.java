@@ -66,7 +66,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private final OverlayManager overlayManager;
     private final Transitions transitions;
     private final String title;
     private ChangeListener<String> walletServiceErrorMsgListener;
@@ -84,12 +83,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private List<String> persistedFilesCorrupted;
 
     @Inject
-    public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, OverlayManager overlayManager, Transitions transitions,
+    public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, Transitions transitions,
                     @Named(MainView.TITLE_KEY) String title) {
         super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
-        this.overlayManager = overlayManager;
         this.transitions = transitions;
         this.title = title;
     }
@@ -497,9 +495,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     }
 
     private void configureBlurring(Node node) {
-        Popups.setOverlayManager(overlayManager);
-
-        overlayManager.addListener(new OverlayManager.OverlayListener() {
+        OverlayManager.addListener(new OverlayManager.OverlayListener() {
             @Override
             public void onBlurContentRequested() {
                 transitions.blur(node);

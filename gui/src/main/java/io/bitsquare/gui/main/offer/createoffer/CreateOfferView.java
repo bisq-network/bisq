@@ -78,7 +78,6 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateOfferViewModel> {
 
     private final Navigation navigation;
-    private final OverlayManager overlayManager;
 
     @FXML ScrollPane scrollPane;
     @FXML ImageView imageView;
@@ -124,12 +123,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferView(CreateOfferViewModel model, Navigation navigation,
-                            OverlayManager overlayManager) {
+    private CreateOfferView(CreateOfferViewModel model, Navigation navigation) {
         super(model);
 
         this.navigation = navigation;
-        this.overlayManager = overlayManager;
     }
 
     @Override
@@ -287,7 +284,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             }
 
             if (newValue) {
-                overlayManager.blurContent();
+                OverlayManager.blurContent();
 
                 // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added
                 // our own actions.
@@ -390,7 +387,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     void onShowPayFundsScreen() {
         if (!BitsquareApp.DEV_MODE) {
             if (model.getDisplaySecurityDepositInfo()) {
-                overlayManager.blurContent();
+                OverlayManager.blurContent();
                 List<Action> actions = new ArrayList<>();
                 actions.add(new AbstractAction(BSResources.get("shared.close")) {
                     @Override

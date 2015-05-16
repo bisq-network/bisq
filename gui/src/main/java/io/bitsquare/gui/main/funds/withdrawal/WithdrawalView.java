@@ -27,6 +27,8 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.gui.util.validation.BtcAddressValidator;
+import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOfferManager;
 
@@ -43,6 +45,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -60,8 +63,8 @@ import org.jetbrains.annotations.NotNull;
 @FxmlView
 public class WithdrawalView extends ActivatableViewAndModel {
 
+    @FXML Button withdrawButton;
     @FXML TableView<WithdrawalListItem> table;
-    @FXML Button addNewAddressButton;
     @FXML TextField withdrawFromTextField, withdrawToTextField, amountTextField;
     @FXML TableColumn<WithdrawalListItem, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, copyColumn,
             confidenceColumn;
@@ -70,14 +73,19 @@ public class WithdrawalView extends ActivatableViewAndModel {
     private TradeManager tradeManager;
     private OpenOfferManager openOfferManager;
     private final BSFormatter formatter;
+    private final BtcAddressValidator btcAddressValidator;
+    private final BtcValidator btcValidator;
     private final ObservableList<WithdrawalListItem> addressList = FXCollections.observableArrayList();
 
     @Inject
-    private WithdrawalView(WalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager, BSFormatter formatter) {
+    private WithdrawalView(WalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager, BSFormatter formatter,
+                           BtcAddressValidator btcAddressValidator, BtcValidator btcValidator) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
         this.formatter = formatter;
+        this.btcAddressValidator = btcAddressValidator;
+        this.btcValidator = btcValidator;
     }
 
 
@@ -92,8 +100,16 @@ public class WithdrawalView extends ActivatableViewAndModel {
         setConfidenceColumnCellFactory();
     }
 
+    private boolean areInputsValid() {
+        return btcAddressValidator.validate(withdrawFromTextField.getText()).and(
+                btcAddressValidator.validate(withdrawToTextField.getText())).and(
+                btcValidator.validate(amountTextField.getText())).isValid;
+    }
+
     @Override
     public void doActivate() {
+        withdrawButton.disableProperty().bind(Bindings.createBooleanBinding(() -> !areInputsValid(),
+                withdrawFromTextField.textProperty(), amountTextField.textProperty(), withdrawToTextField.textProperty()));
         table.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
             if (newValue != null) {
 
@@ -124,6 +140,7 @@ public class WithdrawalView extends ActivatableViewAndModel {
     @Override
     public void doDeactivate() {
         addressList.forEach(WithdrawalListItem::cleanup);
+        withdrawButton.disableProperty().unbind();
     }
 
     @FXML
@@ -178,6 +195,13 @@ public class WithdrawalView extends ActivatableViewAndModel {
             Popups.openErrorPopup("Insufficient amount",
                     "The amount to transfer is lower the the transaction fee and the min. possible tx value.");
         }
+
+        withdrawFromTextField.setText("");
+        withdrawFromTextField.setPromptText("Select a source address from the table");
+        amountTextField.setText("");
+        amountTextField.setPromptText("");
+        withdrawToTextField.setText("");
+        withdrawToTextField.setPromptText("");
     }
 
     private void fillList() {

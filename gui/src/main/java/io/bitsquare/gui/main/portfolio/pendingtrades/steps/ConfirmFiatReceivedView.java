@@ -81,7 +81,6 @@ public class ConfirmFiatReceivedView extends TradeStepDetailsView {
 
     private void onPaymentReceived(ActionEvent actionEvent) {
         log.debug("onPaymentReceived");
-        model.fiatPaymentReceived();
         confirmFiatReceivedButton.setDisable(true);
         statusLabel.setText("Sending message to trading peer...");
         statusProgressIndicator.setVisible(true);
@@ -89,6 +88,8 @@ public class ConfirmFiatReceivedView extends TradeStepDetailsView {
         root = statusProgressIndicator.getScene().getRoot();
         // We deactivate mouse interaction to avoid that user leaves screen
         root.setMouseTransparent(true);
+
+        model.fiatPaymentReceived();
     }
 
 

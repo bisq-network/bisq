@@ -160,6 +160,8 @@ class MainViewModel implements ViewModel {
             setBitcoinNetworkSyncProgress((double) newValue);
         });
         setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get());
+        // Sometimes we don't get the updates, so add an additional setter after 2 seconds
+        Utilities.setTimeout(2000, () -> setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get()));
 
         walletService.numPeersProperty().addListener((observable, oldValue, newValue) -> {
 

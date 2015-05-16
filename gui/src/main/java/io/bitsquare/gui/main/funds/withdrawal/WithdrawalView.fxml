@@ -56,7 +56,7 @@
         <Label text="Withdraw to address:" GridPane.rowIndex="2"/>
         <TextField fx:id="withdrawToTextField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-        <Button text="Withdraw" defaultButton="true" onAction="#onWithdraw" GridPane.rowIndex="3"
+        <Button fx:id="withdrawButton" text="Withdraw" defaultButton="true" onAction="#onWithdraw" GridPane.rowIndex="3"
                 GridPane.columnIndex="1"/>
 
         <columnConstraints>

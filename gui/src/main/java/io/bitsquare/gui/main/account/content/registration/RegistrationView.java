@@ -54,12 +54,9 @@ public class RegistrationView extends InitializableView<GridPane, RegistrationVi
 
     private Wizard wizard;
 
-    private final OverlayManager overlayManager;
-
     @Inject
-    private RegistrationView(RegistrationViewModel model, OverlayManager overlayManager) {
+    private RegistrationView(RegistrationViewModel model) {
         super(model);
-        this.overlayManager = overlayManager;
     }
 
     @Override
@@ -68,9 +65,6 @@ public class RegistrationView extends InitializableView<GridPane, RegistrationVi
         addressTextField.setAmountAsCoin(model.getFeeAsCoin());
         addressTextField.setPaymentLabel(model.getPaymentLabel());
         addressTextField.setAddress(model.getAddressAsString());
-
-        // TODO find better solution
-        addressTextField.setOverlayManager(overlayManager);
 
         balanceTextField.setup(model.getWalletService(), model.address.get(),
                 model.getFormatter());
@@ -94,7 +88,7 @@ public class RegistrationView extends InitializableView<GridPane, RegistrationVi
 
         model.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
             if (newValue) {
-                overlayManager.blurContent();
+                OverlayManager.blurContent();
 
                 List<Action> actions = new ArrayList<>();
                /* actions.add(new AbstractAction(BSResources.get("shared.copyTxId")) {

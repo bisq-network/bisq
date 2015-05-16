@@ -78,7 +78,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
 
     private final Navigation navigation;
-    private final OverlayManager overlayManager;
     private final OptionalBtcValidator optionalBtcValidator;
     private final OptionalFiatValidator optionalFiatValidator;
     private OfferView.OfferActionHandler offerActionHandler;
@@ -91,13 +90,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     @Inject
     OfferBookView(OfferBookViewModel model,
                   Navigation navigation,
-                  OverlayManager overlayManager,
                   OptionalBtcValidator optionalBtcValidator,
                   OptionalFiatValidator optionalFiatValidator) {
         super(model);
 
         this.navigation = navigation;
-        this.overlayManager = overlayManager;
         this.optionalBtcValidator = optionalBtcValidator;
         this.optionalFiatValidator = optionalFiatValidator;
     }
@@ -225,7 +222,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private void openSetupScreen() {
-        overlayManager.blurContent();
+        OverlayManager.blurContent();
         List<Action> actions = new ArrayList<>();
         actions.add(new AbstractAction(BSResources.get("shared.ok")) {
             @Override
@@ -344,7 +341,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void openRestrictionsWarning(String restrictionsInfo) {
-        overlayManager.blurContent();
+        OverlayManager.blurContent();
         List<Action> actions = new ArrayList<>();
         actions.add(new AbstractAction(BSResources.get("shared.yes")) {
             @Override
