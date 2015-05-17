@@ -145,17 +145,9 @@ public final class Node {
         return Objects.hashCode(name, ip, port);
     }
 
-    public String getClientNodeInfo() {
-        return "Node with: " +
-                ", ip='" + ip + '\'' +
-                ", p2pId='" + p2pId + '\'' +
-                ", port=" + port;
-    }
-
     @Override
     public String toString() {
-        return "Node with: " +
-                "Name='" + name + '\'' +
+        return "Name='" + name + '\'' +
                 "; IP='" + ip + '\'' +
                 "; P2P network ID=" + p2pId +
                 "; port=" + port;

@@ -423,8 +423,8 @@ class MainViewModel implements ViewModel {
     }
 
     private void stopBlockchainSyncTimeout() {
-        log.trace("stopBlockchainSyncTimeout");
         if (blockchainSyncTimeoutTimer != null) {
+            log.trace("stopBlockchainSyncTimeout");
             blockchainSyncTimeoutTimer.cancel();
             blockchainSyncTimeoutTimer = null;
         }
