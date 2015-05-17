@@ -30,9 +30,9 @@ import rx.Observable;
 public interface ClientNode {
     BootstrappedPeerBuilder.ConnectionType getConnectionType();
 
-    Node getAddress();
+    String getClientNodeInfo();
 
-    Node getBootstrapNodeAddress();
+    Node getBootstrapNode();
 
     Observable<BootstrappedPeerBuilder.State> bootstrap(int networkId, KeyPair keyPair);
 

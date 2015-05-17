@@ -21,7 +21,6 @@ import io.bitsquare.BitsquareException;
 import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.KeyStorage;
-import io.bitsquare.p2p.BootstrapNodes;
 import io.bitsquare.p2p.tomp2p.TomP2PModule;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.util.Utilities;
@@ -88,7 +87,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 appDataDir(userDataDir, appName);
 
         this.bootstrapNodePort = commandLineProperties.containsProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY) ?
-                (String) commandLineProperties.getProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY) : String.valueOf(BootstrapNodes.BASE_PORT);
+                (String) commandLineProperties.getProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY) : "-1";
 
         MutablePropertySources propertySources = this.getPropertySources();
         propertySources.addFirst(commandLineProperties);

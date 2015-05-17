@@ -77,7 +77,7 @@ class MainViewModel implements ViewModel {
     private final OpenOfferManager openOfferManager;
     private final UpdateProcess updateProcess;
     private final BSFormatter formatter;
-    private final int networkId;
+    private final int p2pId;
 
     // BTC network
     final StringProperty blockchainSyncInfo = new SimpleStringProperty("Initializing");
@@ -132,7 +132,7 @@ class MainViewModel implements ViewModel {
         this.formatter = formatter;
 
         bitcoinNetworkAsString = formatter.formatBitcoinNetwork(preferences.getBitcoinNetwork());
-        networkId = preferences.getBitcoinNetwork().ordinal();
+        p2pId = preferences.getBitcoinNetwork().ordinal() + 10; // p2pId: Mainnet 10, testnet 11, regtest 12
 
         updateProcess.state.addListener((observableValue, oldValue, newValue) -> applyUpdateState(newValue));
         applyUpdateState(updateProcess.state.get());
@@ -206,7 +206,7 @@ class MainViewModel implements ViewModel {
         });
 
         clientNode.setExecutor(Platform::runLater);
-        Observable<BootstrappedPeerBuilder.State> bootstrapStateAsObservable = clientNode.bootstrap(networkId, keyRing.getDhtSignatureKeyPair());
+        Observable<BootstrappedPeerBuilder.State> bootstrapStateAsObservable = clientNode.bootstrap(p2pId, keyRing.getDhtSignatureKeyPair());
         bootstrapStateAsObservable.publish();
         bootstrapStateAsObservable.subscribe(
                 state -> Platform.runLater(() -> setBootstrapState(state)),

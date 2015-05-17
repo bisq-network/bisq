@@ -117,7 +117,7 @@ public class BitsquareAppMain extends BitsquareExecutable {
                 .ofType(boolean.class);
         parser.accepts(NAME_KEY, description("Name of this node", null))
                 .withRequiredArg();
-        parser.accepts(PORT_KEY, description("Port to listen on", Node.DEFAULT_PORT))
+        parser.accepts(PORT_KEY, description("Port to listen on", Node.CLIENT_PORT))
                 .withRequiredArg()
                 .ofType(int.class);
         parser.accepts(USE_MANUAL_PORT_FORWARDING_KEY, description("Use manual port forwarding", false))
@@ -134,11 +134,14 @@ public class BitsquareAppMain extends BitsquareExecutable {
                 .withValuesConvertedBy(new EnumValueConverter(RegTestHost.class));
 
 
-        parser.accepts(BOOTSTRAP_NODE_NAME_KEY, description("", BootstrapNodes.getSelectedNode().getName()))
+        parser.accepts(BOOTSTRAP_NODE_NAME_KEY, description("Bootstrap node name", BootstrapNodes.getLocalhostNode().getName()))
                 .withRequiredArg();
-        parser.accepts(BOOTSTRAP_NODE_IP_KEY, description("", BootstrapNodes.getSelectedNode().getIp()))
+        parser.accepts(BOOTSTRAP_NODE_IP_KEY, description("Bootstrap node IP", BootstrapNodes.getLocalhostNode().getIp()))
                 .withRequiredArg();
-        parser.accepts(BOOTSTRAP_NODE_PORT_KEY, description("", BootstrapNodes.getSelectedNode().getPort()))
+        parser.accepts(BOOTSTRAP_NODE_P2P_ID_KEY, description("Bootstrap node p2p network ID", BootstrapNodes.getLocalhostNode().getPort()))
+                .withRequiredArg()
+                .ofType(int.class);
+        parser.accepts(BOOTSTRAP_NODE_PORT_KEY, description("Bootstrap node port", BootstrapNodes.getLocalhostNode().getPort()))
                 .withRequiredArg()
                 .ofType(int.class);
         parser.accepts(NETWORK_INTERFACE_KEY, description("Network interface", null))

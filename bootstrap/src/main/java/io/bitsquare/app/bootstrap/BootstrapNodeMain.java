@@ -32,13 +32,14 @@ public class BootstrapNodeMain extends BitsquareExecutable {
     }
 
     protected void customizeOptionParsing(OptionParser parser) {
-        parser.accepts(Node.NAME_KEY, description("Name of this node", BootstrapNodes.LOCALHOST.getName()))
+        parser.accepts(Node.NAME_KEY, description("Name of this node", BootstrapNodes.getLocalhostNode().getName()))
                 .withRequiredArg()
                 .ofType(String.class);
-        parser.accepts(Node.PORT_KEY, description("Port to listen on", BootstrapNodes.BASE_PORT))
+        parser.accepts(Node.P2P_ID_KEY, description("P2P network ID",
+                BootstrapNodes.getLocalhostNode().getP2pId()))
                 .withRequiredArg()
                 .ofType(int.class);
-        parser.accepts(BootstrapNode.P2P_ID, description("P2P Network ID [0 | 1 | 2 for mainnet/testnet/regtest]", BootstrapNode.DEFAULT_P2P_ID))
+        parser.accepts(Node.PORT_KEY, description("Port to listen on", BootstrapNodes.getLocalhostNode().getPort()))
                 .withRequiredArg()
                 .ofType(int.class);
     }

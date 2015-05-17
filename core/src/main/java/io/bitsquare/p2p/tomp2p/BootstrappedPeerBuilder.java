@@ -32,7 +32,6 @@ import java.net.UnknownHostException;
 
 import java.security.KeyPair;
 
-import java.util.Optional;
 import java.util.concurrent.Executor;
 
 import javax.inject.Inject;
@@ -167,11 +166,27 @@ public class BootstrappedPeerBuilder {
         this.executor = executor;
     }
 
-    public SettableFuture<PeerDHT> start(int networkId) {
+    public SettableFuture<PeerDHT> start(int p2pId) {
         try {
-            // port is evaluated from btc network. 7366 for mainnet, 7367 for testnet and 7368 for regtest
-            bootstrapNode = Node.at(bootstrapNode.getName(), bootstrapNode.getIp(), bootstrapNode.getPort() + networkId);
-            log.debug("Bootstrap to {} with networkId {}", bootstrapNode.toString(), networkId);
+            Node selectedNode = BootstrapNodes.selectNode(p2pId);
+            String bootstrapNodeName = bootstrapNode.getName();
+            if (bootstrapNodeName == null)
+                bootstrapNodeName = selectedNode.getName();
+
+            String bootstrapNodeIp = bootstrapNode.getIp();
+            if (bootstrapNodeIp == null)
+                bootstrapNodeIp = selectedNode.getIp();
+
+            int bootstrapNodeP2pId = bootstrapNode.getP2pId();
+            if (bootstrapNodeP2pId == -1)
+                bootstrapNodeP2pId = selectedNode.getP2pId();
+
+            int bootstrapNodePort = bootstrapNode.getPort();
+            if (bootstrapNodePort == -1)
+                bootstrapNodePort = selectedNode.getPort();
+
+            bootstrapNode = Node.at(bootstrapNodeName, bootstrapNodeIp, bootstrapNodeP2pId, bootstrapNodePort);
+            log.debug("Bootstrap to {}", bootstrapNode.toString());
 
             DefaultEventExecutorGroup eventExecutorGroup = new DefaultEventExecutorGroup(20);
             ChannelClientConfiguration clientConf = PeerBuilder.createDefaultChannelClientConfiguration();
@@ -187,7 +202,7 @@ public class BootstrappedPeerBuilder {
 
             if (useManualPortForwarding) {
                 peer = new PeerBuilder(keyPair)
-                        .p2pId(networkId)
+                        .p2pId(p2pId)
                         .channelClientConfiguration(clientConf)
                         .channelServerConfiguration(serverConf)
                         .ports(port)
@@ -198,7 +213,7 @@ public class BootstrappedPeerBuilder {
             }
             else {
                 peer = new PeerBuilder(keyPair)
-                        .p2pId(networkId)
+                        .p2pId(p2pId)
                         .channelClientConfiguration(clientConf)
                         .channelServerConfiguration(serverConf)
                         .ports(port)
@@ -294,19 +309,16 @@ public class BootstrappedPeerBuilder {
                             bootstrap();
                         }
                         else {
-                            if (!retriedOtherBootstrapNode && BootstrapNodes.getAllBootstrapNodes().size() > 1) {
-                                log.warn("Bootstrap failed with bootstrapNode: " + bootstrapNode + ". We try again with another node.");
+                            Node fallbackNode = BootstrapNodes.getFallbackNode();
+                            if (!retriedOtherBootstrapNode && fallbackNode != null) {
                                 retriedOtherBootstrapNode = true;
-                                Optional<Node> optional = BootstrapNodes.getAllBootstrapNodes().stream().filter(e -> !e.equals(bootstrapNode)).findAny();
-                                if (optional.isPresent()) {
-                                    bootstrapNode = optional.get();
-                                    executor.execute(() -> discoverExternalAddress());
-                                }
+                                bootstrapNode = fallbackNode;
+                                log.warn("Bootstrap failed with bootstrapNode: " + bootstrapNode + ". We try again with another node.");
+                                executor.execute(() -> discoverExternalAddress());
                             }
                             else {
                                 // All attempts failed. Give up...
-                                handleError(State.RELAY_FAILED, "NAT traversal using relay mode failed " +
-                                        futureRelayNAT.failedReason());
+                                handleError(State.RELAY_FAILED, "NAT traversal using relay mode failed " + futureRelayNAT.failedReason());
                             }
                         }
                     }
@@ -351,19 +363,16 @@ public class BootstrappedPeerBuilder {
                         bootstrap();
                     }
                     else {
-                        if (!retriedOtherBootstrapNode && BootstrapNodes.getAllBootstrapNodes().size() > 1) {
-                            log.warn("Bootstrap failed with bootstrapNode: " + bootstrapNode + ". We try again with another node.");
+                        Node fallbackNode = BootstrapNodes.getFallbackNode();
+                        if (!retriedOtherBootstrapNode && fallbackNode != null) {
                             retriedOtherBootstrapNode = true;
-                            Optional<Node> optional = BootstrapNodes.getAllBootstrapNodes().stream().filter(e -> !e.equals(bootstrapNode)).findAny();
-                            if (optional.isPresent()) {
-                                bootstrapNode = optional.get();
-                                executor.execute(() -> discoverExternalAddress());
-                            }
+                            bootstrapNode = fallbackNode;
+                            log.warn("Bootstrap failed with bootstrapNode: " + bootstrapNode + ". We try again with another node.");
+                            executor.execute(() -> discoverExternalAddress());
                         }
                         else {
                             // All attempts failed. Give up...
-                            handleError(State.RELAY_FAILED, "NAT traversal using relay mode failed " +
-                                    futureRelayNAT.failedReason());
+                            handleError(State.RELAY_FAILED, "NAT traversal using relay mode failed " + futureRelayNAT.failedReason());
                         }
                     }
                 }

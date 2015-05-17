@@ -39,23 +39,9 @@ public class NodeTests {
 
         assertThat(node1a, not(equalTo(Node.at("bitsquare2.example.com", node1a.getIp()))));
         assertThat(node1a, not(equalTo(Node.at(node1a.getName(), "203.0.113.2"))));
-        assertThat(node1a, not(equalTo(Node.at(node1a.getName(), node1a.getIp(), Node.DEFAULT_PORT + 1))));
 
         Node node2 = Node.at("bitsquare2.example.com", "203.0.113.2");
         assertThat(node1a.hashCode(), equalTo(node1b.hashCode()));
         assertThat(node1a.hashCode(), not(equalTo(node2.hashCode())));
-
-        assertThat(node1a.getPort(), equalTo(Node.DEFAULT_PORT));
-
-        Node node3a = Node.at("bitsquare3.example.com", "203.0.113.3", 1234);
-        Node node3b = Node.at("bitsquare3.example.com", "203.0.113.3", "1234");
-
-        assertThat(node3a, equalTo(node3b));
-    }
-
-    @Test
-    public void testToString() {
-        Node node = Node.at("bitsquare1.example.com", "203.0.113.1", 5001);
-        assertThat(node.toString(), equalTo("Node{name=bitsquare1.example.com, ip=203.0.113.1, port=5001}"));
     }
 }

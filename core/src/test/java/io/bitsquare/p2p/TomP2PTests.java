@@ -15,10 +15,8 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg;
+package io.bitsquare.p2p;
 
-import io.bitsquare.p2p.BootstrapNodes;
-import io.bitsquare.p2p.Node;
 import io.bitsquare.p2p.tomp2p.BootstrappedPeerBuilder;
 import io.bitsquare.util.Repeat;
 import io.bitsquare.util.RepeatRule;
@@ -73,9 +71,9 @@ import static org.junit.Assert.*;
 /**
  * Test bootstrapping, DHT operations like put/get/add/remove and sendDirect in both LAN and WAN environment
  * Test scenarios in direct connection, auto port forwarding or relay mode.
- * <p/>
- * To start a bootstrap node code use the {@link io.bitsquare.app.bootstrap.BootstrapNode} class.
- * <p/>
+ * <p>
+ * To start a bootstrap node use the {@link io.bitsquare.app.bootstrap.BootstrapNode} class.
+ * <p>
  * To configure your test environment edit the static fields for id, IP and port.
  * In the configure method and the connectionType you can define your test scenario.
  */
@@ -88,12 +86,20 @@ public class TomP2PTests {
 
     // Typically you run the bootstrap node in localhost to test direct connection.
     // If you have a setup where you are not behind a router you can also use a WAN bootstrap node.
-    private static final Node BOOTSTRAP_NODE = (FORCED_CONNECTION_TYPE == BootstrappedPeerBuilder.ConnectionType.DIRECT) ?
-            BootstrapNodes.LOCALHOST : Node.at("digitalocean1.dev.bitsquare.io", "188.226.179.109", 7367);
+    private static final Node BOOTSTRAP_NODE;
 
     private static final PeerAddress BOOTSTRAP_NODE_ADDRESS;
 
     static {
+        int p2pId = 1;
+        if (FORCED_CONNECTION_TYPE == BootstrappedPeerBuilder.ConnectionType.DIRECT) {
+            BootstrapNodes.selectLocalhostNode(p2pId);
+            BOOTSTRAP_NODE = BootstrapNodes.getLocalhostNode();
+        }
+        else {
+            BOOTSTRAP_NODE = Node.at("digitalocean1.dev.bitsquare.io", "188.226.179.109", p2pId, 7367);
+        }
+
         try {
             BOOTSTRAP_NODE_ADDRESS = new PeerAddress(
                     Number160.createHash(BOOTSTRAP_NODE.getName()),
@@ -312,9 +318,9 @@ public class TomP2PTests {
         PeerDHT peer1 = new PeerBuilderDHT(new PeerBuilder(Number160.createHash("peer1")).ports(3006).start()).start();
         PeerDHT peer2 = new PeerBuilderDHT(new PeerBuilder(Number160.createHash("peer2")).ports(3007).start()).start();
 */
-        PeerAddress masterPeerAddress = new PeerAddress(Number160.createHash(BootstrapNodes.LOCALHOST.getName()),
-                BootstrapNodes.LOCALHOST.getIp(), BootstrapNodes.LOCALHOST.getPort(),
-                BootstrapNodes.LOCALHOST.getPort());
+        PeerAddress masterPeerAddress = new PeerAddress(Number160.createHash(BootstrapNodes.getLocalhostNode().getName()),
+                BootstrapNodes.getLocalhostNode().getIp(), BootstrapNodes.getLocalhostNode().getPort(),
+                BootstrapNodes.getLocalhostNode().getPort());
 
         // start both at the same time
         BaseFuture fb1 = peer1.peer().bootstrap().peerAddress(masterPeerAddress).start();

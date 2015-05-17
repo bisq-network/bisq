@@ -91,7 +91,7 @@ public class TomP2PNode implements ClientNode {
         bootstrappedPeerBuilder.setExecutor(executor);
     }
 
-    public Observable<BootstrappedPeerBuilder.State> bootstrap(int networkId, KeyPair keyPair) {
+    public Observable<BootstrappedPeerBuilder.State> bootstrap(int p2pId, KeyPair keyPair) {
         bootstrappedPeerBuilder.setKeyPair(keyPair);
 
         bootstrappedPeerBuilder.getState().addListener((ov, oldValue, newValue) -> {
@@ -99,7 +99,7 @@ public class TomP2PNode implements ClientNode {
             bootstrapStateSubject.onNext(newValue);
         });
 
-        SettableFuture<PeerDHT> bootstrapFuture = bootstrappedPeerBuilder.start(networkId);
+        SettableFuture<PeerDHT> bootstrapFuture = bootstrappedPeerBuilder.start(p2pId);
         Futures.addCallback(bootstrapFuture, new FutureCallback<PeerDHT>() {
             @Override
             public void onSuccess(@Nullable PeerDHT peerDHT) {
@@ -172,17 +172,15 @@ public class TomP2PNode implements ClientNode {
         return bootstrappedPeerBuilder.getConnectionType();
     }
 
-    @Override
-    public Node getAddress() {
+    public String getClientNodeInfo() {
         PeerAddress peerAddress = peerDHT.peerBean().serverPeerAddress();
-        return Node.at(
-                peerDHT.peerID().toString(),
-                peerAddress.inetAddress().getHostAddress(),
-                peerAddress.peerSocketAddress().tcpPort());
+        return "IP='" + peerAddress.inetAddress().getHostAddress() + '\'' +
+                "; P2P network ID='" + peerDHT.peer().p2pId() + '\'' +
+                "; port=" + peerAddress.peerSocketAddress().tcpPort();
     }
 
     @Override
-    public Node getBootstrapNodeAddress() {
+    public Node getBootstrapNode() {
         return bootstrappedPeerBuilder.getBootstrapNode();
     }
 

@@ -71,8 +71,8 @@ public class NetworkSettingsView extends InitializableView {
 
         connectionType.setText(clientNode.getConnectionType().toString());
         connectedPeersP2P.textProperty().bind(createStringBinding(() -> String.valueOf(clientNode.numPeersProperty().get()), clientNode.numPeersProperty()));
-        nodeAddress.setText(clientNode.getAddress().toString());
-        bootstrapNodeAddress.setText(clientNode.getBootstrapNodeAddress().toString());
+        nodeAddress.setText(clientNode.getClientNodeInfo());
+        bootstrapNodeAddress.setText(clientNode.getBootstrapNode().toString());
 
         useUPnP.setSelected(preferences.getUseUPnP());
 

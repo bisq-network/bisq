@@ -17,9 +17,12 @@
 
 package io.bitsquare.p2p;
 
+import io.bitsquare.BitsquareException;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,27 +30,72 @@ import org.slf4j.LoggerFactory;
 public class BootstrapNodes {
     private static final Logger log = LoggerFactory.getLogger(BootstrapNodes.class);
 
-    public static final int BASE_PORT = 7366;  // port will be evaluated from btc network 7366 for mainnet, 7367 for testnet and 7368 for regtest
-    
-    private static List<Node> bootstrapNodes = Arrays.asList(
-            Node.at("digitalocean1.bitsquare.io", "188.226.179.109", BASE_PORT),
-            Node.at("aws1.bitsquare.io", "52.24.144.42", BASE_PORT),
-            Node.at("aws2.bitsquare.io", "52.11.125.194", BASE_PORT)
+    private static final List<Node> bootstrapNodes = Arrays.asList(
+            Node.at("digitalocean1.bitsquare.io", "188.226.179.109"),
+            Node.at("aws1.bitsquare.io", "52.24.144.42"),
+            Node.at("aws2.bitsquare.io", "52.11.125.194")
     );
+    private static Node selectedNode;
 
-    /**
-     * A locally-running BootstrapNode instance.
-     * Typically used only for testing. Not included in results from {@link #getAllBootstrapNodes()}.
-     */
-    public static Node LOCALHOST = Node.at("localhost", "127.0.0.1", BASE_PORT);
+    public static List<Node> getAllBootstrapNodes(int p2pId) {
+        switch (p2pId) {
+            case Node.MAIN_NET_P2P_ID:
+                return bootstrapNodes.stream().map(e -> e.withP2pIdAndPort(Node.MAIN_NET_P2P_ID, Node.MAIN_NET_PORT)).collect(Collectors.toList());
+            case Node.TEST_NET_P2P_ID:
+                return bootstrapNodes.stream().map(e -> e.withP2pIdAndPort(Node.TEST_NET_P2P_ID, Node.TEST_NET_PORT)).collect(Collectors.toList());
+            case Node.REG_TEST_P2P_ID:
+                return bootstrapNodes.stream().map(e -> e.withP2pIdAndPort(Node.REG_TEST_P2P_ID, Node.REG_TEST_PORT)).collect(Collectors.toList());
+            default:
+                throw new BitsquareException("Unsupported P2pId. p2pId=" + p2pId);
+        }
+    }
 
-    private static Node selectedNode = bootstrapNodes.get(new Random().nextInt(bootstrapNodes.size()));
+    public static Node selectNode(int p2pId) {
+        if (selectedNode == null)
+            selectedNode = getAllBootstrapNodes(p2pId).get(new Random().nextInt(bootstrapNodes.size()));
+        else
+            throw new BitsquareException("selectNode must be called only once.");
 
-    public static List<Node> getAllBootstrapNodes() {
-        return bootstrapNodes;
+        return selectedNode;
     }
 
     public static Node getSelectedNode() {
+        if (selectedNode == null)
+            throw new BitsquareException("selectNode must be called first.");
+
         return selectedNode;
+    }
+
+    public static Node getFallbackNode() {
+        if (bootstrapNodes.size() > 1)
+            return BootstrapNodes.getAllBootstrapNodes(selectedNode.getP2pId()).stream().filter(e -> !e.equals(selectedNode)).findAny().get();
+        else
+            return null;
+
+    }
+
+    // Localhost default use regtest
+    private static Node localhostNode = selectLocalhostNode(Node.REG_TEST_P2P_ID);
+
+    public static Node selectLocalhostNode(int p2pId) {
+        final Node localhostNode = Node.at("localhost", "127.0.0.1");
+        switch (p2pId) {
+            case Node.MAIN_NET_P2P_ID:
+                BootstrapNodes.localhostNode = localhostNode.withP2pIdAndPort(Node.MAIN_NET_P2P_ID, Node.MAIN_NET_PORT);
+                break;
+            case Node.TEST_NET_P2P_ID:
+                BootstrapNodes.localhostNode = localhostNode.withP2pIdAndPort(Node.TEST_NET_P2P_ID, Node.TEST_NET_PORT);
+                break;
+            case Node.REG_TEST_P2P_ID:
+                BootstrapNodes.localhostNode = localhostNode.withP2pIdAndPort(Node.REG_TEST_P2P_ID, Node.REG_TEST_PORT);
+                break;
+            default:
+                throw new BitsquareException("Unsupported P2pId. p2pId=" + p2pId);
+        }
+        return BootstrapNodes.localhostNode;
+    }
+
+    public static Node getLocalhostNode() {
+        return localhostNode;
     }
 }
