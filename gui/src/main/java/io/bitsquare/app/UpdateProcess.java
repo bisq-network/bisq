@@ -21,9 +21,8 @@ import io.bitsquare.util.Utilities;
 
 import com.google.inject.Inject;
 
-import java.io.File;
-
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import java.util.List;
 import java.util.Timer;
@@ -91,7 +90,11 @@ public class UpdateProcess {
         timeoutTimer = Utilities.setTimeout(10000, () -> process.onCompleted());
 
         String agent = environment.getProperty(BitsquareEnvironment.APP_NAME_KEY) + Version.VERSION;
-        Path dataDirPath = new File(environment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY)).toPath();
+
+        // We use the outer dir not the app data dir including version and btc network
+        Path dataDirPath = Paths.get(environment.getProperty(BitsquareEnvironment.USER_DATA_DIR_KEY),
+                environment.getProperty(BitsquareEnvironment.APP_NAME_KEY));
+        
         Updater updater = new Updater(UPDATES_BASE_URL, agent, Version.PATCH_VERSION, dataDirPath, ROOT_CLASS_PATH,
                 UPDATE_SIGNING_KEYS, UPDATE_SIGNING_THRESHOLD) {
             @Override
