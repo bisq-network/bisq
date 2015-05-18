@@ -123,7 +123,7 @@ public class BitsquareAppMain extends BitsquareExecutable {
         parser.accepts(USE_MANUAL_PORT_FORWARDING_KEY, description("Use manual port forwarding", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
-        parser.accepts(BitcoinNetwork.KEY, description("", BitcoinNetwork.DEFAULT))
+        parser.accepts(BitcoinNetwork.KEY, description("Bitcoin network", BitcoinNetwork.DEFAULT))
                 .withRequiredArg()
                 .ofType(BitcoinNetwork.class)
                 .withValuesConvertedBy(new EnumValueConverter(BitcoinNetwork.class));
@@ -133,15 +133,16 @@ public class BitsquareAppMain extends BitsquareExecutable {
                 .ofType(RegTestHost.class)
                 .withValuesConvertedBy(new EnumValueConverter(RegTestHost.class));
 
-
-        parser.accepts(BOOTSTRAP_NODE_NAME_KEY, description("Bootstrap node name", BootstrapNodes.getLocalhostNode().getName()))
+        BootstrapNodes bootstrapNodes = new BootstrapNodes();
+        bootstrapNodes.initWithNetworkId(Node.REG_TEST_P2P_ID); // use regtest as default
+        parser.accepts(BOOTSTRAP_NODE_NAME_KEY, description("Bootstrap node name", bootstrapNodes.getLocalhostNode().getName()))
                 .withRequiredArg();
-        parser.accepts(BOOTSTRAP_NODE_IP_KEY, description("Bootstrap node IP", BootstrapNodes.getLocalhostNode().getIp()))
+        parser.accepts(BOOTSTRAP_NODE_IP_KEY, description("Bootstrap node IP", bootstrapNodes.getLocalhostNode().getIp()))
                 .withRequiredArg();
-        parser.accepts(BOOTSTRAP_NODE_P2P_ID_KEY, description("Bootstrap node p2p network ID", BootstrapNodes.getLocalhostNode().getPort()))
+        parser.accepts(BOOTSTRAP_NODE_P2P_ID_KEY, description("Bootstrap node p2p network ID", bootstrapNodes.getLocalhostNode().getPort()))
                 .withRequiredArg()
                 .ofType(int.class);
-        parser.accepts(BOOTSTRAP_NODE_PORT_KEY, description("Bootstrap node port", BootstrapNodes.getLocalhostNode().getPort()))
+        parser.accepts(BOOTSTRAP_NODE_PORT_KEY, description("Bootstrap node port", bootstrapNodes.getLocalhostNode().getPort()))
                 .withRequiredArg()
                 .ofType(int.class);
         parser.accepts(NETWORK_INTERFACE_KEY, description("Network interface", null))

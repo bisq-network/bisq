@@ -73,7 +73,7 @@ class BitsquareAppModule extends BitsquareModule {
         File keyStorageDir = new File(env.getRequiredProperty(KeyStorage.DIR_KEY));
         bind(File.class).annotatedWith(named(KeyStorage.DIR_KEY)).toInstance(keyStorageDir);
 
-        bind(Environment.class).toInstance(env);
+        bind(BitsquareEnvironment.class).toInstance((BitsquareEnvironment) env);
         bind(UpdateProcess.class).in(Singleton.class);
 
         // ordering is used for shut down sequence

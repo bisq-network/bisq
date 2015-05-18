@@ -68,7 +68,7 @@ public class UpdateProcess {
     protected Timer timeoutTimer;
 
     @Inject
-    public UpdateProcess(Environment environment) {
+    public UpdateProcess(BitsquareEnvironment environment) {
         this.environment = environment;
     }
 

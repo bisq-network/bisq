@@ -40,12 +40,10 @@ public abstract class BuyerTrade extends Trade implements Serializable {
 
     public BuyerTrade(Offer offer, Coin tradeAmount, Peer tradingPeer, Storage<? extends TradableList> storage) {
         super(offer, tradeAmount, tradingPeer, storage);
-        log.trace("Created by constructor");
     }
 
     public BuyerTrade(Offer offer, Storage<? extends TradableList> storage) {
         super(offer, storage);
-        log.trace("Created by constructor");
     }
 
     @Override

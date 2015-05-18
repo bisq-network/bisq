@@ -128,7 +128,6 @@ abstract public class Trade implements Tradable, Model, Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected Trade(Offer offer, Storage<? extends TradableList> storage) {
-        log.trace("Created by constructor");
         this.offer = offer;
         this.storage = storage;
 
@@ -156,7 +155,6 @@ abstract public class Trade implements Tradable, Model, Serializable {
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        log.trace("Created from serialized form.");
 
         initStateProperties();
         initAmountProperty();

@@ -49,8 +49,6 @@ public class TradableList<T extends Tradable> extends ArrayList<T> implements Se
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public TradableList(Storage<TradableList<T>> storage, String fileName) {
-        log.trace("Created by constructor");
-
         this.storage = storage;
 
         TradableList persisted = storage.initAndGetPersisted(this, fileName);
@@ -62,7 +60,6 @@ public class TradableList<T extends Tradable> extends ArrayList<T> implements Se
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        log.trace("Created from serialized form.");
     }
 
     @Override

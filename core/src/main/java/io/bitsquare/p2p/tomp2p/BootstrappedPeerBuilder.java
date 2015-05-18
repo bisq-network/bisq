@@ -27,9 +27,6 @@ import com.google.inject.name.Named;
 
 import java.io.IOException;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 import java.security.KeyPair;
 
 import java.util.concurrent.Executor;
@@ -55,7 +52,6 @@ import net.tomp2p.nat.PeerBuilderNAT;
 import net.tomp2p.nat.PeerNAT;
 import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerBuilder;
-import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.peers.PeerMapChangeListener;
 import net.tomp2p.peers.PeerStatistic;
@@ -75,7 +71,6 @@ import io.netty.util.concurrent.DefaultEventExecutorGroup;
 public class BootstrappedPeerBuilder {
     private static final Logger log = LoggerFactory.getLogger(BootstrappedPeerBuilder.class);
 
-    static final String BOOTSTRAP_NODE_KEY = "bootstrapNode";
     static final String NETWORK_INTERFACE_KEY = "interface";
     static final String NETWORK_INTERFACE_UNSPECIFIED = "<unspecified>";
     static final String USE_MANUAL_PORT_FORWARDING_KEY = "node.useManualPortForwarding";
@@ -117,17 +112,16 @@ public class BootstrappedPeerBuilder {
     private final int port;
     private final boolean useManualPortForwarding;
     private final String networkInterface;
+    private BootstrapNodes bootstrapNodes;
     private final Preferences preferences;
 
     private final SettableFuture<PeerDHT> settableFuture = SettableFuture.create();
     private final ObjectProperty<State> state = new SimpleObjectProperty<>(State.UNDEFINED);
     private final ObjectProperty<ConnectionType> connectionType = new SimpleObjectProperty<>(ConnectionType.UNDEFINED);
 
-    private Node bootstrapNode;
     private KeyPair keyPair;
     private Peer peer;
     private PeerDHT peerDHT;
-    private boolean retriedOtherBootstrapNode;
     private Executor executor;
 
 
@@ -138,13 +132,13 @@ public class BootstrappedPeerBuilder {
     @Inject
     public BootstrappedPeerBuilder(@Named(Node.PORT_KEY) int port,
                                    @Named(USE_MANUAL_PORT_FORWARDING_KEY) boolean useManualPortForwarding,
-                                   @Named(BOOTSTRAP_NODE_KEY) Node bootstrapNode,
                                    @Named(NETWORK_INTERFACE_KEY) String networkInterface,
+                                   BootstrapNodes bootstrapNodes,
                                    Preferences preferences) {
         this.port = port;
         this.useManualPortForwarding = useManualPortForwarding;
-        this.bootstrapNode = bootstrapNode;
         this.networkInterface = networkInterface;
+        this.bootstrapNodes = bootstrapNodes;
         this.preferences = preferences;
     }
 
@@ -166,28 +160,8 @@ public class BootstrappedPeerBuilder {
         this.executor = executor;
     }
 
-    public SettableFuture<PeerDHT> start(int p2pId) {
+    public SettableFuture<PeerDHT> start() {
         try {
-            Node selectedNode = BootstrapNodes.selectNode(p2pId);
-            String bootstrapNodeName = bootstrapNode.getName();
-            if (bootstrapNodeName == null)
-                bootstrapNodeName = selectedNode.getName();
-
-            String bootstrapNodeIp = bootstrapNode.getIp();
-            if (bootstrapNodeIp == null)
-                bootstrapNodeIp = selectedNode.getIp();
-
-            int bootstrapNodeP2pId = bootstrapNode.getP2pId();
-            if (bootstrapNodeP2pId == -1)
-                bootstrapNodeP2pId = selectedNode.getP2pId();
-
-            int bootstrapNodePort = bootstrapNode.getPort();
-            if (bootstrapNodePort == -1)
-                bootstrapNodePort = selectedNode.getPort();
-
-            bootstrapNode = Node.at(bootstrapNodeName, bootstrapNodeIp, bootstrapNodeP2pId, bootstrapNodePort);
-            log.debug("Bootstrap to {}", bootstrapNode.toString());
-
             DefaultEventExecutorGroup eventExecutorGroup = new DefaultEventExecutorGroup(20);
             ChannelClientConfiguration clientConf = PeerBuilder.createDefaultChannelClientConfiguration();
             clientConf.pipelineFilter(new PeerBuilder.EventExecutorGroupFilter(eventExecutorGroup));
@@ -202,7 +176,7 @@ public class BootstrappedPeerBuilder {
 
             if (useManualPortForwarding) {
                 peer = new PeerBuilder(keyPair)
-                        .p2pId(p2pId)
+                        .p2pId(bootstrapNodes.getP2pId())
                         .channelClientConfiguration(clientConf)
                         .channelServerConfiguration(serverConf)
                         .ports(port)
@@ -213,7 +187,7 @@ public class BootstrappedPeerBuilder {
             }
             else {
                 peer = new PeerBuilder(keyPair)
-                        .p2pId(p2pId)
+                        .p2pId(bootstrapNodes.getP2pId())
                         .channelClientConfiguration(clientConf)
                         .channelServerConfiguration(serverConf)
                         .ports(port)
@@ -270,13 +244,13 @@ public class BootstrappedPeerBuilder {
     // bootstrap node and use that peer as relay
 
     private void discoverExternalAddressUsingUPnP() {
-        FutureDiscover futureDiscover = peer.discover().peerAddress(getBootstrapAddress()).start();
+        Node randomNode = bootstrapNodes.getRandomDiscoverNode();
+        log.info("Random Node for discovering own address visible form outside: " + randomNode);
+        FutureDiscover futureDiscover = peer.discover().peerAddress(randomNode.toPeerAddress()).start();
         setState(State.DISCOVERY_STARTED);
         PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
-
         FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
         FutureRelayNAT futureRelayNAT = peerNAT.startRelay(new TCPRelayClientConfig(), futureDiscover, futureNAT);
-
         futureRelayNAT.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture futureRelayNAT) throws Exception {
@@ -309,17 +283,8 @@ public class BootstrappedPeerBuilder {
                             bootstrap();
                         }
                         else {
-                            Node fallbackNode = BootstrapNodes.getFallbackNode();
-                            if (!retriedOtherBootstrapNode && fallbackNode != null) {
-                                retriedOtherBootstrapNode = true;
-                                bootstrapNode = fallbackNode;
-                                log.warn("Bootstrap failed with bootstrapNode: " + bootstrapNode + ". We try again with another node.");
-                                executor.execute(() -> discoverExternalAddress());
-                            }
-                            else {
-                                // All attempts failed. Give up...
-                                handleError(State.RELAY_FAILED, "NAT traversal using relay mode failed " + futureRelayNAT.failedReason());
-                            }
+                            // All attempts failed. Give up...
+                            handleError(State.RELAY_FAILED, "NAT traversal using relay mode failed " + futureRelayNAT.failedReason());
                         }
                     }
                 }
@@ -333,12 +298,12 @@ public class BootstrappedPeerBuilder {
     }
 
     private void discoverExternalAddress() {
-        FutureDiscover futureDiscover = peer.discover().peerAddress(getBootstrapAddress()).start();
+        Node randomNode = bootstrapNodes.getRandomDiscoverNode();
+        log.info("Random Node for discovering own address visible form outside: " + randomNode);
+        FutureDiscover futureDiscover = peer.discover().peerAddress(randomNode.toPeerAddress()).start();
         setState(State.DISCOVERY_STARTED);
         PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
-
         FutureRelayNAT futureRelayNAT = peerNAT.startRelay(new TCPRelayClientConfig(), futureDiscover);
-
         futureRelayNAT.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture futureRelayNAT) throws Exception {
@@ -363,17 +328,8 @@ public class BootstrappedPeerBuilder {
                         bootstrap();
                     }
                     else {
-                        Node fallbackNode = BootstrapNodes.getFallbackNode();
-                        if (!retriedOtherBootstrapNode && fallbackNode != null) {
-                            retriedOtherBootstrapNode = true;
-                            bootstrapNode = fallbackNode;
-                            log.warn("Bootstrap failed with bootstrapNode: " + bootstrapNode + ". We try again with another node.");
-                            executor.execute(() -> discoverExternalAddress());
-                        }
-                        else {
-                            // All attempts failed. Give up...
-                            handleError(State.RELAY_FAILED, "NAT traversal using relay mode failed " + futureRelayNAT.failedReason());
-                        }
+                        // All attempts failed. Give up...
+                        handleError(State.RELAY_FAILED, "NAT traversal using relay mode failed " + futureRelayNAT.failedReason());
                     }
                 }
             }
@@ -389,9 +345,7 @@ public class BootstrappedPeerBuilder {
         log.trace("start bootstrap");
 
         // We don't wait until bootstrap is done for speeding up startup process
-        // settableFuture.set(peerDHT);
-
-        FutureBootstrap futureBootstrap = peer.bootstrap().peerAddress(getBootstrapAddress()).start();
+        FutureBootstrap futureBootstrap = peer.bootstrap().bootstrapTo(bootstrapNodes.getBootstrapPeerAddresses()).start();
         futureBootstrap.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
@@ -411,22 +365,6 @@ public class BootstrappedPeerBuilder {
                 handleError(State.BOOT_STRAP_FAILED, "Exception at bootstrap: " + t.getMessage());
             }
         });
-    }
-
-    private PeerAddress getBootstrapAddress() {
-        try {
-            return new PeerAddress(Number160.createHash(bootstrapNode.getName()),
-                    InetAddress.getByName(bootstrapNode.getIp()),
-                    bootstrapNode.getPort(),
-                    bootstrapNode.getPort());
-        } catch (UnknownHostException e) {
-            log.error("getBootstrapAddress failed: " + e.getMessage());
-            return null;
-        }
-    }
-
-    public Node getBootstrapNode() {
-        return bootstrapNode;
     }
 
     public ConnectionType getConnectionType() {

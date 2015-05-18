@@ -85,8 +85,8 @@
     <TextField fx:id="nodeAddress" GridPane.rowIndex="6" GridPane.columnIndex="1"
                mouseTransparent="true" focusTraversable="false"/>
 
-    <Label text="P2P bootstrap node address:" GridPane.rowIndex="7"/>
-    <TextField fx:id="bootstrapNodeAddress" GridPane.rowIndex="7" GridPane.columnIndex="1"
+    <Label text="P2P bootstrap node addresses:" GridPane.rowIndex="7" GridPane.valignment="TOP"/>
+    <TextArea fx:id="bootstrapNodeAddress" GridPane.rowIndex="7" GridPane.columnIndex="1"
                mouseTransparent="true" focusTraversable="false"/>
 
     <columnConstraints>

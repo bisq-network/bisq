@@ -21,7 +21,6 @@ import io.bitsquare.BitsquareException;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.BaseP2PService;
 import io.bitsquare.p2p.ClientNode;
-import io.bitsquare.p2p.Node;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -91,7 +90,7 @@ public class TomP2PNode implements ClientNode {
         bootstrappedPeerBuilder.setExecutor(executor);
     }
 
-    public Observable<BootstrappedPeerBuilder.State> bootstrap(int p2pId, KeyPair keyPair) {
+    public Observable<BootstrappedPeerBuilder.State> bootstrap(KeyPair keyPair) {
         bootstrappedPeerBuilder.setKeyPair(keyPair);
 
         bootstrappedPeerBuilder.getState().addListener((ov, oldValue, newValue) -> {
@@ -99,7 +98,7 @@ public class TomP2PNode implements ClientNode {
             bootstrapStateSubject.onNext(newValue);
         });
 
-        SettableFuture<PeerDHT> bootstrapFuture = bootstrappedPeerBuilder.start(p2pId);
+        SettableFuture<PeerDHT> bootstrapFuture = bootstrappedPeerBuilder.start();
         Futures.addCallback(bootstrapFuture, new FutureCallback<PeerDHT>() {
             @Override
             public void onSuccess(@Nullable PeerDHT peerDHT) {
@@ -177,11 +176,6 @@ public class TomP2PNode implements ClientNode {
         return "IP='" + peerAddress.inetAddress().getHostAddress() + '\'' +
                 "; P2P network ID='" + peerDHT.peer().p2pId() + '\'' +
                 "; port=" + peerAddress.peerSocketAddress().tcpPort();
-    }
-
-    @Override
-    public Node getBootstrapNode() {
-        return bootstrappedPeerBuilder.getBootstrapNode();
     }
 
     public void addResultHandler(ResultHandler resultHandler) {

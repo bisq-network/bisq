@@ -32,14 +32,16 @@ public class BootstrapNodeMain extends BitsquareExecutable {
     }
 
     protected void customizeOptionParsing(OptionParser parser) {
-        parser.accepts(Node.NAME_KEY, description("Name of this node", BootstrapNodes.getLocalhostNode().getName()))
+        BootstrapNodes bootstrapNodes = new BootstrapNodes();
+        bootstrapNodes.initWithNetworkId(Node.REG_TEST_P2P_ID); // use regtest as default
+        parser.accepts(Node.NAME_KEY, description("Name of this node", bootstrapNodes.getLocalhostNode().getName()))
                 .withRequiredArg()
                 .ofType(String.class);
         parser.accepts(Node.P2P_ID_KEY, description("P2P network ID",
-                BootstrapNodes.getLocalhostNode().getP2pId()))
+                bootstrapNodes.getLocalhostNode().getP2pId()))
                 .withRequiredArg()
                 .ofType(int.class);
-        parser.accepts(Node.PORT_KEY, description("Port to listen on", BootstrapNodes.getLocalhostNode().getPort()))
+        parser.accepts(Node.PORT_KEY, description("Port to listen on", bootstrapNodes.getLocalhostNode().getPort()))
                 .withRequiredArg()
                 .ofType(int.class);
     }

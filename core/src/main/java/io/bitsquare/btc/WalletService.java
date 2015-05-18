@@ -136,7 +136,7 @@ public class WalletService {
         this.addressEntryList = addressEntryList;
         this.params = preferences.getBitcoinNetwork().getParameters();
         this.cryptoService = cryptoService;
-        this.walletDir = new File(walletDir, preferences.getBitcoinNetwork().toString().toLowerCase());
+        this.walletDir = new File(walletDir, "bitcoin");
         this.walletPrefix = walletPrefix;
         this.userAgent = userAgent;
     }
@@ -176,6 +176,7 @@ public class WalletService {
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
         if (params == RegTestParams.get()) {
+            log.debug("regTestHost " + regTestHost);
             if (regTestHost == RegTestHost.REG_TEST_SERVER) {
                 try {
                     walletAppKit.setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.SERVER_IP), params.getPort()));

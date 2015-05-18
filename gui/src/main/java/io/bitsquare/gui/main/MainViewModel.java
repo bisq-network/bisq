@@ -27,6 +27,7 @@ import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.p2p.BaseP2PService;
+import io.bitsquare.p2p.BootstrapNodes;
 import io.bitsquare.p2p.ClientNode;
 import io.bitsquare.p2p.tomp2p.BootstrappedPeerBuilder;
 import io.bitsquare.trade.Trade;
@@ -77,7 +78,6 @@ class MainViewModel implements ViewModel {
     private final OpenOfferManager openOfferManager;
     private final UpdateProcess updateProcess;
     private final BSFormatter formatter;
-    private final int p2pId;
 
     // BTC network
     final StringProperty blockchainSyncInfo = new SimpleStringProperty("Initializing");
@@ -120,7 +120,7 @@ class MainViewModel implements ViewModel {
     @Inject
     public MainViewModel(User user, KeyRing keyRing, WalletService walletService, ArbitrationRepository arbitrationRepository, ClientNode clientNode,
                          TradeManager tradeManager, OpenOfferManager openOfferManager, Preferences preferences, UpdateProcess updateProcess,
-                         BSFormatter formatter) {
+                         BootstrapNodes bootstrapNodes, BSFormatter formatter) {
         this.user = user;
         this.keyRing = keyRing;
         this.walletService = walletService;
@@ -132,7 +132,7 @@ class MainViewModel implements ViewModel {
         this.formatter = formatter;
 
         bitcoinNetworkAsString = formatter.formatBitcoinNetwork(preferences.getBitcoinNetwork());
-        p2pId = preferences.getBitcoinNetwork().ordinal() + 10; // p2pId: Mainnet 10, testnet 11, regtest 12
+        bootstrapNodes.initWithNetworkId(preferences.getBitcoinNetwork().ordinal() + 10);
 
         updateProcess.state.addListener((observableValue, oldValue, newValue) -> applyUpdateState(newValue));
         applyUpdateState(updateProcess.state.get());
@@ -206,7 +206,7 @@ class MainViewModel implements ViewModel {
         });
 
         clientNode.setExecutor(Platform::runLater);
-        Observable<BootstrappedPeerBuilder.State> bootstrapStateAsObservable = clientNode.bootstrap(p2pId, keyRing.getDhtSignatureKeyPair());
+        Observable<BootstrappedPeerBuilder.State> bootstrapStateAsObservable = clientNode.bootstrap(keyRing.getDhtSignatureKeyPair());
         bootstrapStateAsObservable.publish();
         bootstrapStateAsObservable.subscribe(
                 state -> Platform.runLater(() -> setBootstrapState(state)),

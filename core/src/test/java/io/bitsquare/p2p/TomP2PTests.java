@@ -90,11 +90,14 @@ public class TomP2PTests {
 
     private static final PeerAddress BOOTSTRAP_NODE_ADDRESS;
 
+    private static final BootstrapNodes bootstrapNodes;
+
     static {
         int p2pId = 1;
+        bootstrapNodes = new BootstrapNodes();
         if (FORCED_CONNECTION_TYPE == BootstrappedPeerBuilder.ConnectionType.DIRECT) {
-            BootstrapNodes.selectLocalhostNode(p2pId);
-            BOOTSTRAP_NODE = BootstrapNodes.getLocalhostNode();
+            bootstrapNodes.initWithNetworkId(p2pId);
+            BOOTSTRAP_NODE = bootstrapNodes.getLocalhostNode();
         }
         else {
             BOOTSTRAP_NODE = Node.at("digitalocean1.dev.bitsquare.io", "188.226.179.109", p2pId, 7367);
@@ -318,9 +321,7 @@ public class TomP2PTests {
         PeerDHT peer1 = new PeerBuilderDHT(new PeerBuilder(Number160.createHash("peer1")).ports(3006).start()).start();
         PeerDHT peer2 = new PeerBuilderDHT(new PeerBuilder(Number160.createHash("peer2")).ports(3007).start()).start();
 */
-        PeerAddress masterPeerAddress = new PeerAddress(Number160.createHash(BootstrapNodes.getLocalhostNode().getName()),
-                BootstrapNodes.getLocalhostNode().getIp(), BootstrapNodes.getLocalhostNode().getPort(),
-                BootstrapNodes.getLocalhostNode().getPort());
+        PeerAddress masterPeerAddress = bootstrapNodes.getLocalhostNode().toPeerAddress();
 
         // start both at the same time
         BaseFuture fb1 = peer1.peer().bootstrap().peerAddress(masterPeerAddress).start();

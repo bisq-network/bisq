@@ -25,11 +25,13 @@ import io.bitsquare.gui.common.view.InitializableView;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.p2p.BootstrapNodes;
 import io.bitsquare.p2p.ClientNode;
 import io.bitsquare.user.Preferences;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -48,17 +50,20 @@ public class NetworkSettingsView extends InitializableView {
 
     private final String bitcoinNetworkString;
     private final WalletService walletService;
+    private BootstrapNodes bootstrapNodes;
     private final Preferences preferences;
     private final ClientNode clientNode;
 
-    @FXML TextField bitcoinNetwork, connectionType, nodeAddress, bootstrapNodeAddress, connectedPeersBTC, connectedPeersP2P;
+    @FXML TextField bitcoinNetwork, connectionType, nodeAddress, connectedPeersBTC, connectedPeersP2P;
     @FXML CheckBox useUPnP;
     @FXML ComboBox<BitcoinNetwork> netWorkComboBox;
+    @FXML TextArea bootstrapNodeAddress;
 
     @Inject
-    public NetworkSettingsView(WalletService walletService, ClientNode clientNode, Preferences preferences, BSFormatter
+    public NetworkSettingsView(WalletService walletService, ClientNode clientNode, BootstrapNodes bootstrapNodes, Preferences preferences, BSFormatter
             formatter) {
         this.walletService = walletService;
+        this.bootstrapNodes = bootstrapNodes;
         this.preferences = preferences;
         this.bitcoinNetworkString = formatter.formatBitcoinNetwork(preferences.getBitcoinNetwork());
         this.clientNode = clientNode;
@@ -72,7 +77,10 @@ public class NetworkSettingsView extends InitializableView {
         connectionType.setText(clientNode.getConnectionType().toString());
         connectedPeersP2P.textProperty().bind(createStringBinding(() -> String.valueOf(clientNode.numPeersProperty().get()), clientNode.numPeersProperty()));
         nodeAddress.setText(clientNode.getClientNodeInfo());
-        bootstrapNodeAddress.setText(clientNode.getBootstrapNode().toString());
+        String bootstrapNodesText = bootstrapNodes.getBootstrapNodes().stream().map(e -> e.toString() + "\n").collect(Collectors.toList()).toString()
+                .replace(", ", "").replace("[", "").replace("\n]", "");
+        bootstrapNodeAddress.setPrefRowCount(bootstrapNodes.getBootstrapNodes().size());
+        bootstrapNodeAddress.setText(bootstrapNodesText);
 
         useUPnP.setSelected(preferences.getUseUPnP());
 

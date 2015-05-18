@@ -64,7 +64,7 @@ public final class Node {
     }
 
     // Not fully defined node
-    public static Node at(String name, String ip) {
+    public static Node rawNodeAt(String name, String ip) {
         return Node.at(name, ip, -1, -1);
     }
 
@@ -75,10 +75,6 @@ public final class Node {
     public Node withP2pIdAndPort(int p2pId, int port) {
         return Node.at(this.name, this.ip, p2pId, port);
     }
-
-   /* public static Node at(String name, int p2pId, String ip) {
-        return Node.at(name, ip, p2pId, DEFAULT_PORT);
-    }*/
 
     public static final int CLIENT_PORT = findFreeSystemPort();
 
@@ -98,8 +94,20 @@ public final class Node {
 
     public PeerAddress toPeerAddressWithPort(int port) {
         try {
-            return new PeerAddress(Number160.createHash(getName()),
-                    InetAddress.getByName(getIp()),
+            return new PeerAddress(Number160.createHash(name),
+                    InetAddress.getByName(ip),
+                    port,
+                    port);
+        } catch (UnknownHostException e) {
+            log.error(e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    public PeerAddress toPeerAddress() {
+        try {
+            return new PeerAddress(Number160.createHash(name),
+                    InetAddress.getByName(ip),
                     port,
                     port);
         } catch (UnknownHostException e) {

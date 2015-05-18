@@ -47,12 +47,10 @@ public class BuyerAsOffererTrade extends BuyerTrade implements OffererTrade, Ser
 
     public BuyerAsOffererTrade(Offer offer, Storage<? extends TradableList> storage) {
         super(offer, storage);
-        log.trace("Created by constructor");
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        log.trace("Created from serialized form.");
 
         initStateProperties();
         initAmountProperty();

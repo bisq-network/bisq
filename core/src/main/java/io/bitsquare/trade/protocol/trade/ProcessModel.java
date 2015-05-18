@@ -80,13 +80,11 @@ public class ProcessModel implements Model, Serializable {
 
 
     public ProcessModel() {
-        log.trace("Created by constructor");
         tradingPeer = new TradingPeer();
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        log.trace("Created from serialized form.");
     }
 
     public void onAllServicesInitialized(Offer offer,

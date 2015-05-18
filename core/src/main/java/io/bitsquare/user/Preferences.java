@@ -17,6 +17,7 @@
 
 package io.bitsquare.user;
 
+import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.storage.Storage;
@@ -38,8 +39,6 @@ import javafx.beans.property.StringProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.core.env.Environment;
-
 public class Preferences implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
@@ -48,11 +47,13 @@ public class Preferences implements Serializable {
 
     // Deactivate mBit for now as most screens are not supporting it yet
     transient private static final List<String> BTC_DENOMINATIONS = Arrays.asList(MonetaryFormat.CODE_BTC/*, MonetaryFormat.CODE_MBTC*/);
+
     public static List<String> getBtcDenominations() {
         return BTC_DENOMINATIONS;
     }
 
     transient private final Storage<Preferences> storage;
+    transient private BitsquareEnvironment bitsquareEnvironment;
 
     // Persisted fields
     private String btcDenomination = MonetaryFormat.CODE_BTC;
@@ -61,7 +62,7 @@ public class Preferences implements Serializable {
     private boolean useEffects = true;
     private boolean displaySecurityDepositInfo = true;
     private boolean useUPnP = true;
-    private BitcoinNetwork bitcoinNetwork;
+    transient private BitcoinNetwork bitcoinNetwork;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
@@ -74,8 +75,9 @@ public class Preferences implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Preferences(Storage<Preferences> storage, Environment environment) {
+    public Preferences(Storage<Preferences> storage, BitsquareEnvironment bitsquareEnvironment) {
         this.storage = storage;
+        this.bitsquareEnvironment = bitsquareEnvironment;
 
         Preferences persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
@@ -83,12 +85,10 @@ public class Preferences implements Serializable {
             setUseAnimations(persisted.useAnimations);
             setUseEffects(persisted.useEffects);
             setUseUPnP(persisted.useUPnP);
-            setBitcoinNetwork(persisted.bitcoinNetwork);
             displaySecurityDepositInfo = persisted.getDisplaySecurityDepositInfo();
         }
-        else {
-            setBitcoinNetwork(environment.getProperty(BitcoinNetwork.KEY, BitcoinNetwork.class, BitcoinNetwork.DEFAULT));
-        }
+
+        setBitcoinNetwork(bitsquareEnvironment.getBtcNetworkProperty());
 
         // Use that to guarantee update of the serializable field and to make a storage update in case of a change
         btcDenominationProperty.addListener((ov) -> {
@@ -133,8 +133,10 @@ public class Preferences implements Serializable {
     }
 
     public void setBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {
+        if (this.bitcoinNetwork != bitcoinNetwork)
+            bitsquareEnvironment.setBitcoinNetwork(bitcoinNetwork);
+
         this.bitcoinNetwork = bitcoinNetwork;
-        storage.queueUpForSave();
     }
 
 

@@ -32,9 +32,7 @@ public interface ClientNode {
 
     String getClientNodeInfo();
 
-    Node getBootstrapNode();
-
-    Observable<BootstrappedPeerBuilder.State> bootstrap(int networkId, KeyPair keyPair);
+    Observable<BootstrappedPeerBuilder.State> bootstrap(KeyPair keyPair);
 
     ReadOnlyIntegerProperty numPeersProperty();
 

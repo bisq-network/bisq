@@ -18,6 +18,7 @@
 package io.bitsquare.p2p.tomp2p;
 
 import io.bitsquare.p2p.AddressService;
+import io.bitsquare.p2p.BootstrapNodes;
 import io.bitsquare.p2p.ClientNode;
 import io.bitsquare.p2p.MailboxService;
 import io.bitsquare.p2p.MessageService;
@@ -33,11 +34,11 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.core.env.Environment;
 
-import static io.bitsquare.p2p.tomp2p.BootstrappedPeerBuilder.*;
+import static io.bitsquare.p2p.tomp2p.BootstrappedPeerBuilder.NETWORK_INTERFACE_UNSPECIFIED;
 
 public class TomP2PModule extends P2PModule {
     private static final Logger log = LoggerFactory.getLogger(TomP2PModule.class);
-    public static final String BOOTSTRAP_NODE_NAME_KEY = "bootstrap.node.name";
+    public static final String BOOTSTRAP_NODE_NAME_KEY = "bootstrap.node.name"; 
     public static final String BOOTSTRAP_NODE_IP_KEY = "bootstrap.node.ip";
     public static final String BOOTSTRAP_NODE_P2P_ID_KEY = "bootstrap.node.p2pId";
     public static final String BOOTSTRAP_NODE_PORT_KEY = "bootstrap.node.port";
@@ -51,6 +52,7 @@ public class TomP2PModule extends P2PModule {
     @Override
     protected void doConfigure() {
         // Used both ClientNode and TomP2PNode for injection
+        bind(BootstrapNodes.class).in(Singleton.class);
         bind(ClientNode.class).to(TomP2PNode.class).in(Singleton.class);
         bind(TomP2PNode.class).in(Singleton.class);
 
@@ -64,7 +66,7 @@ public class TomP2PModule extends P2PModule {
         bind(boolean.class).annotatedWith(Names.named(USE_MANUAL_PORT_FORWARDING_KEY)).toInstance(
                 env.getProperty(USE_MANUAL_PORT_FORWARDING_KEY, boolean.class, false));
 
-        bind(Node.class).annotatedWith(Names.named(BOOTSTRAP_NODE_KEY)).toInstance(
+        bind(Node.class).annotatedWith(Names.named(BootstrapNodes.BOOTSTRAP_NODE_KEY)).toInstance(
                 Node.at(env.getProperty(BOOTSTRAP_NODE_NAME_KEY, ""),
                         env.getProperty(BOOTSTRAP_NODE_IP_KEY, ""),
                         Integer.valueOf(env.getProperty(BOOTSTRAP_NODE_P2P_ID_KEY, "-1")),

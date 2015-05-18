@@ -45,12 +45,10 @@ public class SellerAsTakerTrade extends SellerTrade implements TakerTrade, Seria
 
     public SellerAsTakerTrade(Offer offer, Coin tradeAmount, Peer tradingPeer, Storage<? extends TradableList> storage) {
         super(offer, tradeAmount, tradingPeer, storage);
-        log.trace("Created by constructor");
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        log.trace("Created from serialized form.");
 
         initStateProperties();
         initAmountProperty();
