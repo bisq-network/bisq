@@ -43,6 +43,7 @@ public class SendPayoutTxFinalizedMessage extends TradeTask {
                     trade.getTradingPeer(),
                     processModel.tradingPeer.getPubKeyRing(),
                     tradeMessage,
+                    true,
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {

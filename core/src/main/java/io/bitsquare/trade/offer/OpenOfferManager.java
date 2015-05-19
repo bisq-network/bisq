@@ -268,6 +268,7 @@ public class OpenOfferManager {
             messageService.sendEncryptedMessage(sender,
                     message.getPubKeyRing(),
                     offerAvailabilityResponse,
+                    false,
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {

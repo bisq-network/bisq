@@ -42,6 +42,7 @@ public class SendOfferAvailabilityRequest extends Task<OfferAvailabilityModel> {
             model.messageService.sendEncryptedMessage(model.getPeer(),
                     model.offer.getPubKeyRing(),
                     message,
+                    false,
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {

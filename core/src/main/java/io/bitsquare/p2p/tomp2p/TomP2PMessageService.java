@@ -72,7 +72,7 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
     }
 
     @Override
-    public void sendEncryptedMessage(Peer peer, PubKeyRing pubKeyRing, Message message, SendMessageListener listener) {
+    public void sendEncryptedMessage(Peer peer, PubKeyRing pubKeyRing, Message message, boolean useMailboxIfUnreachable, SendMessageListener listener) {
         assert pubKeyRing != null;
 
         log.debug("sendMessage called");
@@ -97,7 +97,14 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
                                              else {
                                                  log.info("sendMessage failed. We will try to send the message to the mailbox. Fault reason:  " +
                                                          futureDirect.failedReason());
-                                                 sendMailboxMessage(pubKeyRing, (SealedAndSignedMessage) encryptedMessage, listener);
+                                                 if (useMailboxIfUnreachable) {
+                                                     sendMailboxMessage(pubKeyRing, (SealedAndSignedMessage) encryptedMessage, listener);
+                                                 }
+                                                 else {
+                                                     openRequestsDown();
+                                                     log.error("Send message was not successful");
+                                                     executor.execute(listener::handleFault);
+                                                 }
                                              }
                                          }
 
@@ -105,7 +112,14 @@ public class TomP2PMessageService extends TomP2PService implements MessageServic
                                          public void exceptionCaught(Throwable t) throws Exception {
                                              log.info("sendMessage failed with exception. We will try to send the message to the mailbox. Exception: "
                                                      + t.getMessage());
-                                             sendMailboxMessage(pubKeyRing, (SealedAndSignedMessage) encryptedMessage, listener);
+                                             if (useMailboxIfUnreachable) {
+                                                 sendMailboxMessage(pubKeyRing, (SealedAndSignedMessage) encryptedMessage, listener);
+                                             }
+                                             else {
+                                                 openRequestsDown();
+                                                 log.error("Send message was not successful");
+                                                 executor.execute(listener::handleFault);
+                                             }
                                          }
                                      }
             );

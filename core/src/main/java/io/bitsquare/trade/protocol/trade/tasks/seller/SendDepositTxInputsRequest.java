@@ -53,6 +53,7 @@ public class SendDepositTxInputsRequest extends TradeTask {
                     trade.getTradingPeer(),
                     processModel.tradingPeer.getPubKeyRing(),
                     message,
+                    false,
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {

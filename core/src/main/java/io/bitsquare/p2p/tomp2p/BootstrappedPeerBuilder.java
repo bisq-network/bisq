@@ -200,7 +200,10 @@ public class BootstrappedPeerBuilder {
             peer.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {
                 @Override
                 public void peerInserted(PeerAddress peerAddress, boolean verified) {
-                    log.debug("Peer inserted: peerAddress=" + peerAddress + ", verified=" + verified);
+                    if (verified)
+                        log.debug("Peer inserted: peerAddress=" + peerAddress + ", verified=" + verified);
+                    else
+                        log.trace("Peer inserted: peerAddress=" + peerAddress + ", verified=" + verified);
                 }
 
                 @Override

@@ -55,6 +55,7 @@ public class SendPayDepositRequest extends TradeTask {
                     trade.getTradingPeer(),
                     processModel.tradingPeer.getPubKeyRing(),
                     tradeMessage,
+                    false,
                     new SendMessageListener() {
                         @Override
                         public void handleResult() {
