@@ -28,10 +28,8 @@ import io.bitsquare.util.Utilities;
 import io.bitsquare.util.spring.JOptCommandLinePropertySource;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import java.nio.file.Paths;
 
@@ -77,53 +75,44 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
     private final ResourceLoader resourceLoader = new DefaultResourceLoader();
 
-    protected final String appName;
-    protected final String userDataDir;
-    protected final String appDataDir;
-    protected final String btcNetworkDir;
-    protected final String bootstrapNodePort;
+    private final String appName;
+    private final String userDataDir;
+    private final String appDataDir;
+    private final String btcNetworkDir;
+    private final String bootstrapNodePort;
+    private BitcoinNetwork bitcoinNetwork;
 
     public BitsquareEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(options)));
     }
 
-    public BitcoinNetwork getBtcNetworkProperty() {
-        String dirString = Paths.get(userDataDir, appName).toString();
-        String fileString = Paths.get(dirString, BITCOIN_NETWORK_PROP).toString();
-        File dir = new File(dirString);
-        File file = new File(fileString);
-        if (!dir.exists())
-            dir.mkdirs();
-
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (Throwable e) {
-                log.error(e.getMessage());
-            }
-        }
-        try (InputStream fileInputStream = new FileInputStream(file)) {
-            Properties properties = new Properties();
-            properties.load(fileInputStream);
-            String bitcoinNetwork = properties.getProperty("bitcoinNetwork", BitcoinNetwork.DEFAULT.name());
-            return BitcoinNetwork.valueOf(bitcoinNetwork);
-        } catch (Throwable e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-            return BitcoinNetwork.DEFAULT;
-        }
+    public BitcoinNetwork getBitcoinNetwork() {
+        return bitcoinNetwork;
     }
 
-    public void setBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {
-        String path = Paths.get(userDataDir, appName, BITCOIN_NETWORK_PROP).toString();
-        File file = new File(path);
-        try (FileOutputStream fos = new FileOutputStream(file)) {
+    public void saveBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {
+        try {
+            Resource resource = getAppDirPropertiesResource();
+            File file = resource.getFile();
             Properties properties = new Properties();
-            properties.setProperty("bitcoinNetwork", bitcoinNetwork.name());
-            properties.store(fos, null);
-        } catch (IOException e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
+            if (file.exists()) {
+                Object propertiesObject = appDirProperties().getSource();
+                if (propertiesObject instanceof Properties) {
+                    properties = (Properties) propertiesObject;
+                }
+                else {
+                    log.warn("propertiesObject not instance of Properties");
+                }
+            }
+            properties.setProperty(BitcoinNetwork.KEY, bitcoinNetwork.name());
+
+            try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
+                properties.store(fileOutputStream, null);
+            } catch (IOException e1) {
+                log.error(e1.getMessage());
+            }
+        } catch (Exception e2) {
+            e2.printStackTrace();
         }
     }
 
@@ -140,11 +129,6 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(APP_DATA_DIR_KEY) :
                 appDataDir(userDataDir, appName);
 
-        btcNetworkDir = Paths.get(appDataDir, getBtcNetworkProperty().name().toLowerCase()).toString();
-        File btcNetworkDirFile = new File(btcNetworkDir);
-        if (!btcNetworkDirFile.exists())
-            btcNetworkDirFile.mkdir();
-
         bootstrapNodePort = commandLineProperties.containsProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY) ?
                 (String) commandLineProperties.getProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY) : "-1";
 
@@ -154,15 +138,27 @@ public class BitsquareEnvironment extends StandardEnvironment {
             propertySources.addLast(appDirProperties());
             propertySources.addLast(homeDirProperties());
             propertySources.addLast(classpathProperties());
+
+            bitcoinNetwork = BitcoinNetwork.valueOf(getProperty(BitcoinNetwork.KEY, BitcoinNetwork.DEFAULT.name()).toUpperCase());
+            btcNetworkDir = Paths.get(appDataDir, bitcoinNetwork.name().toLowerCase()).toString();
+            File btcNetworkDirFile = new File(btcNetworkDir);
+            if (!btcNetworkDirFile.exists())
+                btcNetworkDirFile.mkdir();
+
+            // btcNetworkDir used in defaultProperties
             propertySources.addLast(defaultProperties());
         } catch (Exception ex) {
             throw new BitsquareException(ex);
         }
     }
 
+    private Resource getAppDirPropertiesResource() {
+        String location = String.format("file:%s/bitsquare.properties", appDataDir);
+        return resourceLoader.getResource(location);
+    }
+
     PropertySource<?> appDirProperties() throws Exception {
-        String location = String.format("file:%s/bitsquare.properties", btcNetworkDir);
-        Resource resource = resourceLoader.getResource(location);
+        Resource resource = getAppDirPropertiesResource();
 
         if (!resource.exists())
             return new PropertySource.StubPropertySource(BITSQUARE_APP_DIR_PROPERTY_SOURCE_NAME);

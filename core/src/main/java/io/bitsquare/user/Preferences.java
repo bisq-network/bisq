@@ -88,7 +88,7 @@ public class Preferences implements Serializable {
             displaySecurityDepositInfo = persisted.getDisplaySecurityDepositInfo();
         }
 
-        setBitcoinNetwork(bitsquareEnvironment.getBtcNetworkProperty());
+        this.bitcoinNetwork = bitsquareEnvironment.getBitcoinNetwork();
 
         // Use that to guarantee update of the serializable field and to make a storage update in case of a change
         btcDenominationProperty.addListener((ov) -> {
@@ -134,7 +134,7 @@ public class Preferences implements Serializable {
 
     public void setBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {
         if (this.bitcoinNetwork != bitcoinNetwork)
-            bitsquareEnvironment.setBitcoinNetwork(bitcoinNetwork);
+            bitsquareEnvironment.saveBitcoinNetwork(bitcoinNetwork);
 
         this.bitcoinNetwork = bitcoinNetwork;
     }

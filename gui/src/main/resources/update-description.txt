@@ -5,3 +5,4 @@ Release notes:
 - Only use mailbox for certain P2P messages 
 - Bootstrap node update
 - Fix bug with empty log file
+- Add warning popup when using mainnet
