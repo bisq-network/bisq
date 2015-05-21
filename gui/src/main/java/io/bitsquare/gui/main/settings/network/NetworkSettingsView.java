@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -95,6 +96,41 @@ public class NetworkSettingsView extends InitializableView {
     }
 
     void onSelectNetwork() {
+        if (netWorkComboBox.getSelectionModel().getSelectedItem() != preferences.getBitcoinNetwork()) {
+            if (netWorkComboBox.getSelectionModel().getSelectedItem() == BitcoinNetwork.MAINNET) {
+                List<Action> actions = new ArrayList<>();
+                actions.add(new AbstractAction(BSResources.get("shared.no")) {
+                    @Override
+                    public void handle(ActionEvent actionEvent) {
+                        getProperties().put("type", "NO");
+                        org.controlsfx.dialog.Dialog.Actions.NO.handle(actionEvent);
+                    }
+                });
+
+                actions.add(new AbstractAction(BSResources.get("shared.yes")) {
+                    @Override
+                    public void handle(ActionEvent actionEvent) {
+                        getProperties().put("type", "YES");
+                        org.controlsfx.dialog.Dialog.Actions.YES.handle(actionEvent);
+                    }
+                });
+
+                Action response = Popups.openConfirmPopup("Warning", "The application is under heavy development. " +
+                                "Using the mainnet network with Bitcoin is not recommended at that stage.",
+                        "Are you sure you want to switch to mainnet?", actions);
+
+                if (Popups.isYes(response))
+                    selectNetwork();
+                else
+                    Platform.runLater(() -> netWorkComboBox.getSelectionModel().select(preferences.getBitcoinNetwork()));
+            }
+            else {
+                selectNetwork();
+            }
+        }
+    }
+
+    void selectNetwork() {
         preferences.setBitcoinNetwork(netWorkComboBox.getSelectionModel().getSelectedItem());
 
         List<Action> actions = new ArrayList<>();
@@ -105,7 +141,6 @@ public class NetworkSettingsView extends InitializableView {
                 org.controlsfx.dialog.Dialog.Actions.NO.handle(actionEvent);
             }
         });
-
         actions.add(new AbstractAction(BSResources.get("shared.yes")) {
             @Override
             public void handle(ActionEvent actionEvent) {
