@@ -31,9 +31,7 @@ sed "s|JAR_NAME_STRING_GOES_HERE|$patchVersion.jar|" package/mac/Info.template.p
 mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 cp gui/target/shaded.jar gui/updatefx/builds/$patchVersion.jar
 
-java -jar ./updatefx/updatefx-app-1.6.jar --url=http://bitsquare.io/updateFX/ gui/updatefx
-# using trezor
-#java -jar ./updatefx/updatefx-app-1.6.jar --url=http://bitsquare.io/updateFX/ gui/updatefx --trezor 
+java -jar ./updatefx/updatefx-app-1.3-SNAPSHOT.jar --url=http://bitsquare.io/updateFX/v03 gui/updatefx
 
 $JAVA_HOME/bin/javapackager \
     -deploy \

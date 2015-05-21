@@ -67,15 +67,12 @@ public class BitsquareAppMain extends BitsquareExecutable {
             System.exit(EXIT_FAILURE);
             return;
         }
-        BitsquareAppEnvironment bitsquareEnvironment = new BitsquareAppEnvironment(options);
-        String updatesDirectory = bitsquareEnvironment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY);
+        BitsquareEnvironment bitsquareEnvironment = new BitsquareEnvironment(options);
 
-        Logging.setup(Paths.get(bitsquareEnvironment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString());
+        // update dir need to be setup before UpdateFX bootstrap
+        initAppDir(bitsquareEnvironment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY));
 
-        // app dir need to be setup before UpdateFX bootstrap
-        initAppDir(updatesDirectory);
-
-        UpdateFX.bootstrap(BitsquareAppMain.class, new File(updatesDirectory).toPath(), args);
+        UpdateFX.bootstrap(BitsquareAppMain.class, new File(bitsquareEnvironment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY)).toPath(), args);
     }
 
     // That will be called from UpdateFX after updates are checked
@@ -151,7 +148,7 @@ public class BitsquareAppMain extends BitsquareExecutable {
 
     @Override
     protected void doExecute(OptionSet options) {
-        BitsquareApp.setEnvironment(new BitsquareAppEnvironment(options));
+        BitsquareApp.setEnvironment(new BitsquareEnvironment(options));
         javafx.application.Application.launch(BitsquareApp.class);
     }
 }

@@ -6,18 +6,18 @@
         </encoder>
     </appender>
 
-    <root level="WARN">
+    <root level="INFO">
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-    <logger name="io.bitsquare" level="TRACE"/>
+    <logger name="io.bitsquare" level="DEBUG"/>
     <logger name="io.bitsquare.btc.AddressBasedCoinSelector" level="OFF"/>
 
     <logger name="io.bitsquare.gui.util.Profiler" level="ERROR"/>
     <logger name="io.bitsquare.locale.BSResources" level="ERROR"/>
 
-    <logger name="org.bitcoinj" level="WARN"/>
-    <logger name="net.tomp2p" level="WARN"/>
+    <logger name="org.bitcoinj" level="INFO"/>
+    <logger name="net.tomp2p" level="INFO"/>
 
     <logger name="org.bitcoinj.core.BitcoinSerializer" level="WARN"/>
     <logger name="org.bitcoinj.core.Peer" level="WARN"/>

@@ -23,8 +23,7 @@
         <key>CFBundleShortVersionString</key>
         <string>1</string>
         
-        <!--  CFBundleSignature exists only for compatibility with Classic Mac OS apps and documents. Modern Mac OS X apps don't need to worry about assigning a Bundle 
-        Signature.-->
+        <!--  CFBundleSignature exists only for compatibility with Classic Mac OS apps and documents. Modern Mac OS X apps don't need to worry about assigning a Bundle Signature.-->
         <key>CFBundleSignature</key>
         <string>????</string>
         

@@ -278,8 +278,10 @@ public class WalletService {
     public void shutDown() {
         if (wallet != null)
             wallet.removeEventListener(walletEventListener);
-        if (walletAppKit != null)
+        if (walletAppKit != null) {
             walletAppKit.stopAsync();
+            walletAppKit.awaitTerminated();
+        }
     }
 
     public ReadOnlyDoubleProperty downloadPercentageProperty() {

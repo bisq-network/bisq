@@ -18,6 +18,7 @@
 package io.bitsquare.gui;
 
 import io.bitsquare.BitsquareModule;
+import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.gui.common.fxml.FxmlViewLoader;
 import io.bitsquare.gui.common.view.CachingViewLoader;
 import io.bitsquare.gui.common.view.ViewFactory;
@@ -78,6 +79,6 @@ public class GuiModule extends BitsquareModule {
         bind(Stage.class).toInstance(primaryStage);
         Popups.primaryStage = primaryStage;
 
-        bindConstant().annotatedWith(Names.named(MainView.TITLE_KEY)).to(env.getRequiredProperty(MainView.TITLE_KEY));
+        bindConstant().annotatedWith(Names.named(MainView.TITLE_KEY)).to(env.getRequiredProperty(BitsquareEnvironment.APP_NAME_KEY));
     }
 }

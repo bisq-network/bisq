@@ -100,6 +100,8 @@ class MainViewModel implements ViewModel {
     String version = "v." + Version.VERSION;
 
     final BooleanProperty showRestartButton = new SimpleBooleanProperty(false);
+    final BooleanProperty showDownloadButton = new SimpleBooleanProperty(false);
+    final StringProperty newReleaseUrl = new SimpleStringProperty();
     final StringProperty updateIconId = new SimpleStringProperty();
 
     final StringProperty bankAccountsComboBoxPrompt = new SimpleStringProperty();
@@ -295,8 +297,14 @@ class MainViewModel implements ViewModel {
                 updateInfo.set("Software is up to date. Version: " + Version.VERSION);
                 updateIconId.set("image-update-up-to-date");
                 break;
+            case NEW_RELEASE:
+                updateInfo.set("A new release is available.");
+                updateIconId.set("image-update-available");
+                newReleaseUrl.set(updateProcess.getReleaseUrl());
+                showDownloadButton.setValue(true);
+                break;
             case FAILURE:
-                updateInfo.set("Check for updates failed. ");
+                updateInfo.set("Check for updates failed.");
                 updateIconId.set("image-update-failed");
                 break;
         }

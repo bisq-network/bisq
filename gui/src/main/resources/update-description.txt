@@ -1,0 +1,7 @@
+Release notes:
+- Bootstrap to all bootstrap nodes
+- Separeate btc network by directories in data dir
+- Add support for new release download
+- Only use mailbox for certain P2P messages 
+- Bootstrap node update
+- Fix bug with empty log file

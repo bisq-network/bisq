@@ -9,7 +9,7 @@ mkdir gui/updatefx/site
 mkdir gui/deploy
 
 # create key/wallet. Copy wallet key to UpdateProcess and use wallet for other OS builds
-java -jar ./updatefx/updatefx-app-1.6.jar --url=http://bitsquare.io/updateFX/ gui/updatefx
+java -jar ./updatefx/updatefx-app-1.3-SNAPSHOT.jar --url=http://bitsquare.io/updateFX/v03 gui/updatefx
 
 cd package/mac
 

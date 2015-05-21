@@ -21,6 +21,9 @@ import io.bitsquare.common.handlers.ResultHandler;
 
 import org.bitcoinj.utils.Threading;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
+
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -32,6 +35,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
@@ -39,6 +44,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import java.net.URI;
+import java.net.URLConnection;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -53,7 +59,6 @@ import org.slf4j.LoggerFactory;
 public class Utilities {
     private static final Logger log = LoggerFactory.getLogger(Utilities.class);
     private static long lastTimeStamp = System.currentTimeMillis();
-
 
     public static Timer setTimeout(long delay, ResultHandler handler) {
         Timer timer = new Timer();
@@ -299,4 +304,18 @@ public class Utilities {
         }
     }
 
+    public static String readTextFileFromServer(String url, String userAgent) throws IOException {
+        URLConnection connection = URI.create(url).toURL().openConnection();
+        connection.setDoOutput(true);
+        connection.setUseCaches(false);
+        connection.setConnectTimeout(10 * 1000);
+        connection.addRequestProperty("User-Agent", userAgent);
+        connection.connect();
+        try (InputStream inputStream = connection.getInputStream();) {
+            return CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
 }

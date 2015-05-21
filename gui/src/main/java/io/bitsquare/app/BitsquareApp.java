@@ -35,6 +35,8 @@ import com.google.inject.Injector;
 
 import java.io.IOException;
 
+import java.nio.file.Paths;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,6 +55,7 @@ import org.controlsfx.dialog.Dialogs;
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Logger;
+import com.vinumeris.updatefx.UpdateFX;
 import org.springframework.core.env.Environment;
 
 import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
@@ -72,6 +75,7 @@ public class BitsquareApp extends Application {
     private MainView mainView;
 
     public static Runnable shutDownHandler;
+    public static Runnable restartDownHandler;
 
     public static void setEnvironment(Environment env) {
         BitsquareApp.env = env;
@@ -81,7 +85,10 @@ public class BitsquareApp extends Application {
     public void start(Stage primaryStage) throws IOException {
         this.primaryStage = primaryStage;
 
+        Logging.setup(Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString());
+
         shutDownHandler = this::stop;
+        restartDownHandler = this::restart;
 
         // setup UncaughtExceptionHandler
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
@@ -103,12 +110,6 @@ public class BitsquareApp extends Application {
                     URI.create("http://188.226.179.109/crashfx/upload"));*/
             // Server not setup yet, so we use client side only support
 
-            Storage.setDatabaseCorruptionHandler((String fileName) -> {
-                corruptedDatabaseFiles.add(fileName);
-                if (mainView != null)
-                    mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
-            });
-
             // Guice
             bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
             injector = Guice.createInjector(bitsquareAppModule);
@@ -118,6 +119,12 @@ public class BitsquareApp extends Application {
             CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
             mainView = (MainView) viewLoader.load(MainView.class);
             mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
+
+            Storage.setDatabaseCorruptionHandler((String fileName) -> {
+                corruptedDatabaseFiles.add(fileName);
+                if (mainView != null)
+                    mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
+            });
 
             scene = new Scene(mainView.getRoot(), 1000, 650);
             scene.getStylesheets().setAll(
@@ -217,5 +224,15 @@ public class BitsquareApp extends Application {
     public void stop() {
         bitsquareAppModule.close(injector);
         System.exit(0);
+    }
+
+    public void restart() {
+        try {
+            bitsquareAppModule.close(injector);
+            UpdateFX.restartApp();
+        } catch (Throwable t) {
+            // in dev mode restart does not work
+            stop();
+        }
     }
 }

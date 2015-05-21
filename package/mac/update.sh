@@ -26,6 +26,6 @@ echo fullVersion = $fullVersion
 
 mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 cp gui/target/shaded.jar gui/updatefx/builds/$patchVersion.jar
-java -jar ./updatefx/updatefx-app-1.6.jar --url=http://bitsquare.io/updateFX/ gui/updatefx
+java -jar ./updatefx/updatefx-app-1.3-SNAPSHOT.jar --url=http://bitsquare.io/updateFX/v03 gui/updatefx
 
 cd package/mac

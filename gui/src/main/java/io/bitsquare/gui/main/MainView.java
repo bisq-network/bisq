@@ -37,6 +37,7 @@ import io.bitsquare.gui.main.offer.SellOfferView;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.util.Transitions;
+import io.bitsquare.util.Utilities;
 
 import java.util.List;
 
@@ -75,12 +76,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private ChangeListener<Number> bootstrapProgressListener;
     private ChangeListener<String> updateIconIdListener;
     private Button restartButton;
+    private Button downloadButton;
     private ProgressIndicator bootstrapIndicator;
     private Label bootstrapStateLabel;
     private ProgressBar blockchainSyncIndicator;
     private Label blockchainSyncLabel;
     private Label updateInfoLabel;
     private List<String> persistedFilesCorrupted;
+    private Tooltip downloadButtonTooltip;
 
     @Inject
     public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, Transitions transitions,
@@ -296,6 +299,22 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         restartButton.managedProperty().bind(model.showRestartButton);
         restartButton.setOnAction(e -> model.restart());
 
+        downloadButton = new Button("Download");
+        downloadButton.setDefaultButton(true);
+        downloadButton.visibleProperty().bind(model.showDownloadButton);
+        downloadButton.managedProperty().bind(model.showDownloadButton);
+        downloadButtonTooltip = new Tooltip();
+        downloadButtonTooltip.textProperty().bind(model.newReleaseUrl);
+        downloadButton.setTooltip(downloadButtonTooltip);
+        downloadButton.setOnAction(e -> {
+            try {
+                Utilities.openWebPage(model.newReleaseUrl.get());
+            } catch (Exception e1) {
+                e1.printStackTrace();
+                log.error(e1.getMessage());
+            }
+        });
+
         ImageView updateIcon = new ImageView();
         updateIcon.setId(model.updateIconId.get());
 
@@ -310,7 +329,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         updateBox.setSpacing(10);
         updateBox.setAlignment(Pos.CENTER);
         updateBox.setPrefHeight(20);
-        updateBox.getChildren().addAll(updateInfoLabel, restartButton, updateIcon);
+        updateBox.getChildren().addAll(updateInfoLabel, restartButton, downloadButton, updateIcon);
 
         vBox.getChildren().addAll(logo, blockchainSyncBox, bootstrapBox, updateBox);
         return vBox;
@@ -331,6 +350,9 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         updateInfoLabel.textProperty().unbind();
         restartButton.visibleProperty().unbind();
         restartButton.managedProperty().unbind();
+        downloadButton.visibleProperty().unbind();
+        downloadButton.managedProperty().unbind();
+        downloadButtonTooltip.textProperty().unbind();
     }
 
 

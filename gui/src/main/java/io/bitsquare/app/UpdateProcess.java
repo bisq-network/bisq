@@ -21,6 +21,8 @@ import io.bitsquare.util.Utilities;
 
 import com.google.inject.Inject;
 
+import java.io.IOException;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -38,7 +40,6 @@ import com.vinumeris.updatefx.UpdateFX;
 import com.vinumeris.updatefx.UpdateSummary;
 import com.vinumeris.updatefx.Updater;
 import org.bouncycastle.math.ec.ECPoint;
-import org.springframework.core.env.Environment;
 import rx.Observable;
 import rx.subjects.BehaviorSubject;
 import rx.subjects.Subject;
@@ -46,25 +47,26 @@ import rx.subjects.Subject;
 public class UpdateProcess {
     private static final Logger log = LoggerFactory.getLogger(UpdateProcess.class);
 
-    private static final List<ECPoint> UPDATE_SIGNING_KEYS = Crypto.decode("038396415C265C59042AB05A5436356E8D0FA19F13E3DE4915AFF763CB4785345E");
-    private static final String UPDATES_BASE_URL = "http://bitsquare.io/updateFX/";
+    private static final List<ECPoint> UPDATE_SIGNING_KEYS = Crypto.decode("029EF2D0D33A2546CB15FB10D969B7D65CAFB811CB3AC902E8D9A46BE847B1DA21");
+    private static final String UPDATES_BASE_URL = "https://bitsquare.io/updateFX/v03";
     private static final int UPDATE_SIGNING_THRESHOLD = 1;
     private static final Path ROOT_CLASS_PATH = UpdateFX.findCodePath(BitsquareAppMain.class);
 
-    private final Environment environment;
+    private final BitsquareEnvironment environment;
 
     public enum State {
         CHECK_FOR_UPDATES,
         UPDATE_AVAILABLE,
         UP_TO_DATE,
+        NEW_RELEASE, // if a new minor release is out we inform the user to download the new binary
         FAILURE
     }
 
     public final ObjectProperty<State> state = new SimpleObjectProperty<>(State.CHECK_FOR_UPDATES);
 
-    protected String errorMessage;
-    protected final Subject<State, State> process = BehaviorSubject.create();
-    protected Timer timeoutTimer;
+    private String releaseUrl;
+    private final Subject<State, State> process = BehaviorSubject.create();
+    private Timer timeoutTimer;
 
     @Inject
     public UpdateProcess(BitsquareEnvironment environment) {
@@ -79,24 +81,35 @@ public class UpdateProcess {
         return process.asObservable();
     }
 
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
     public void init() {
         log.info("UpdateFX current version " + Version.PATCH_VERSION);
 
         // process.timeout() will cause an error state back but we don't want to break startup in case of an timeout
-        timeoutTimer = Utilities.setTimeout(10000, () -> process.onCompleted());
+        timeoutTimer = Utilities.setTimeout(10000, () -> {
+            log.error("Timeout reached for UpdateFX");
+            process.onCompleted();
+        });
+        String userAgent = environment.getProperty(BitsquareEnvironment.APP_NAME_KEY) + Version.VERSION;
 
-        String agent = environment.getProperty(BitsquareEnvironment.APP_NAME_KEY) + Version.VERSION;
+        // Check if there is a new minor version release out. The release_url should be empty if no release is available, otherwise the download url.
+        try {
+            releaseUrl = Utilities.readTextFileFromServer(UPDATES_BASE_URL + "/release_url", userAgent);
+            if (releaseUrl != null && releaseUrl.length() > 0) {
+                log.info("New release available at: " + releaseUrl);
+                state.set(State.NEW_RELEASE);
+                timeoutTimer.cancel();
+                return;
+            }
+            else {
+                // All ok. Empty file if we have no new release.
+            }
+        } catch (IOException e) {
+            // ignore. File might be missing
+        }
 
-        // We use the outer dir not the app data dir including version and btc network
-        Path dataDirPath = Paths.get(environment.getProperty(BitsquareEnvironment.USER_DATA_DIR_KEY),
-                environment.getProperty(BitsquareEnvironment.APP_NAME_KEY));
-        
-        Updater updater = new Updater(UPDATES_BASE_URL, agent, Version.PATCH_VERSION, dataDirPath, ROOT_CLASS_PATH,
-                UPDATE_SIGNING_KEYS, UPDATE_SIGNING_THRESHOLD) {
+        Updater updater = new Updater(UPDATES_BASE_URL, userAgent, Version.PATCH_VERSION,
+                Paths.get(environment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY)),
+                ROOT_CLASS_PATH, UPDATE_SIGNING_KEYS, UPDATE_SIGNING_THRESHOLD) {
             @Override
             protected void updateProgress(long workDone, long max) {
                 //log.trace("updateProgress " + workDone + "/" + max);
@@ -135,7 +148,6 @@ public class UpdateProcess {
 
                 // we treat errors as update not as critical errors to prevent startup, 
                 // so we use state.onCompleted() instead of state.onError()
-                errorMessage = "Exception at processing UpdateSummary: " + e.getMessage();
                 state.set(State.FAILURE);
                 timeoutTimer.cancel();
                 process.onCompleted();
@@ -147,7 +159,6 @@ public class UpdateProcess {
 
             // we treat errors as update not as critical errors to prevent startup, 
             // so we use state.onCompleted() instead of state.onError()
-            errorMessage = "Update failed: " + updater.getException();
             state.set(State.FAILURE);
             timeoutTimer.cancel();
             process.onCompleted();
@@ -156,5 +167,9 @@ public class UpdateProcess {
         Thread thread = new Thread(updater, "Online update check");
         thread.setDaemon(true);
         thread.start();
+    }
+
+    public String getReleaseUrl() {
+        return releaseUrl;
     }
 }

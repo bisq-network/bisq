@@ -53,7 +53,7 @@ public class Preferences implements Serializable {
     }
 
     transient private final Storage<Preferences> storage;
-    transient private BitsquareEnvironment bitsquareEnvironment;
+    transient private final BitsquareEnvironment bitsquareEnvironment;
 
     // Persisted fields
     private String btcDenomination = MonetaryFormat.CODE_BTC;

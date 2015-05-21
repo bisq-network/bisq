@@ -118,7 +118,7 @@ public class NetworkSettingsView extends InitializableView {
                 "Do you want to shutdown now?", actions);
 
         if (Popups.isYes(response))
-            BitsquareApp.shutDownHandler.run();
+            BitsquareApp.restartDownHandler.run();
     }
 }
 

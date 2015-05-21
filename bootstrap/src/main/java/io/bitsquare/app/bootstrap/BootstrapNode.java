@@ -126,10 +126,14 @@ public class BootstrapNode {
                 while (true) {
                     if (peer.peerBean().peerMap().all().size() > 0) {
                         noPeersInfoPrinted = false;
-                        log.info("Number of peers online = " + peer.peerBean().peerMap().all().size());
+                        int relayed = 0;
                         for (PeerAddress peerAddress : peer.peerBean().peerMap().all()) {
                             log.info("Peer: " + peerAddress.toString());
+                            if (peerAddress.isRelayed())
+                                relayed++;
                         }
+                        log.info("Number of peers online = " + peer.peerBean().peerMap().all().size());
+                        log.info("Relayed peers = " + relayed);
                     }
                     else if (noPeersInfoPrinted) {
                         log.info("No peers online");

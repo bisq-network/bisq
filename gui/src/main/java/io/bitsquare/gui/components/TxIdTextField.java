@@ -99,6 +99,7 @@ public class TxIdTextField extends AnchorPane {
             try {
                 // TODO get the url form the app preferences
                 Utilities.openWebPage("https://www.biteasy.com/testnet/transactions/" + txID);
+                // https://insight.bitpay.com/ only mainnet?
                 //Utilities.openURL("https://blockchain.info/tx/" + txID);
             } catch (Exception e) {
                 log.error(e.getMessage());
