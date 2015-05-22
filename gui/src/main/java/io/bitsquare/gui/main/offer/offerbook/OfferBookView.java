@@ -82,6 +82,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private final OptionalFiatValidator optionalFiatValidator;
     private OfferView.OfferActionHandler offerActionHandler;
 
+    private ChangeListener<String> amountTextFieldListener;
+    private ChangeListener<String> priceTextFieldListener;
+    private ChangeListener<String> volumeTextFieldListener;
+    private ChangeListener<Boolean> amountTextFieldFocusedListener;
+    private ChangeListener<Boolean> priceTextFieldFocusedListener;
+    private ChangeListener<Boolean> volumeTextFieldFocusedListener;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -126,10 +133,22 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         // for irc demo
         showAdvancedSettingsButton.setVisible(false);
         showAdvancedSettingsButton.setManaged(false);
+
+        createListeners();
     }
 
     @Override
     public void doActivate() {
+        // reset filter values
+        amountTextField.setText("");
+        priceTextField.setText("");
+        volumeTextField.setText("");
+
+        amountTextField.resetValidation();
+        priceTextField.resetValidation();
+        volumeTextField.resetValidation();
+
+        addListeners();
         addBindings();
 
         // setOfferBookInfo has been called before
@@ -141,12 +160,68 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     @Override
     public void doDeactivate() {
         removeBindings();
+        removeListeners();
+    }
+
+    private void createListeners() {
+        amountTextFieldListener = (observable, oldValue, newValue) -> model.amount.set(newValue);
+        priceTextFieldListener = (observable, oldValue, newValue) -> model.price.set(newValue);
+        volumeTextFieldListener = (observable, oldValue, newValue) -> model.volume.set(newValue);
+
+        amountTextFieldFocusedListener = (ov, oldValue, newValue) -> {
+            if (newValue) {
+                amountTextField.textProperty().unbind();
+                amountTextField.textProperty().addListener(amountTextFieldListener);
+            }
+            else {
+                amountTextField.textProperty().removeListener(amountTextFieldListener);
+                amountTextField.textProperty().bind(model.amount);
+            }
+        };
+        priceTextFieldFocusedListener = (ov, oldValue, newValue) -> {
+            if (newValue) {
+                priceTextField.textProperty().unbind();
+                priceTextField.textProperty().addListener(priceTextFieldListener);
+            }
+            else {
+                priceTextField.textProperty().removeListener(priceTextFieldListener);
+                priceTextField.textProperty().bind(model.price);
+            }
+        };
+        volumeTextFieldFocusedListener = (ov, oldValue, newValue) -> {
+            if (newValue) {
+                volumeTextField.textProperty().unbind();
+                volumeTextField.textProperty().addListener(volumeTextFieldListener);
+            }
+            else {
+                volumeTextField.textProperty().removeListener(volumeTextFieldListener);
+                volumeTextField.textProperty().bind(model.volume);
+            }
+        };
+    }
+
+    private void addListeners() {
+        amountTextField.focusedProperty().addListener(amountTextFieldFocusedListener);
+        priceTextField.focusedProperty().addListener(priceTextFieldFocusedListener);
+        volumeTextField.focusedProperty().addListener(volumeTextFieldFocusedListener);
+    }
+
+    private void removeListeners() {
+        amountTextField.focusedProperty().removeListener(amountTextFieldFocusedListener);
+        priceTextField.focusedProperty().removeListener(priceTextFieldFocusedListener);
+        volumeTextField.focusedProperty().removeListener(volumeTextFieldFocusedListener);
+
+        amountTextField.textProperty().removeListener(amountTextFieldListener);
+        priceTextField.textProperty().removeListener(priceTextFieldListener);
+        volumeTextField.textProperty().removeListener(volumeTextFieldListener);
     }
 
     private void addBindings() {
-        amountTextField.textProperty().bindBidirectional(model.amount);
-        priceTextField.textProperty().bindBidirectional(model.price);
-        volumeTextField.textProperty().bindBidirectional(model.volume);
+        // those bindings are unbinded by focus change handlers
+        amountTextField.textProperty().bind(model.amount);
+        priceTextField.textProperty().bind(model.price);
+        volumeTextField.textProperty().bind(model.volume);
+
         amountBtcLabel.textProperty().bind(model.btcCode);
         priceFiatLabel.textProperty().bind(model.fiatCode);
         volumeFiatLabel.textProperty().bind(model.fiatCode);

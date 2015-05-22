@@ -82,6 +82,10 @@ class OfferBookViewModel extends ActivatableWithDataModel<OfferBookDataModel> im
 
     @Override
     protected void doActivate() {
+        amount.set("");
+        price.set("");
+        volume.set("");
+        
         addBindings();
         addListeners();
     }

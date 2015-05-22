@@ -97,24 +97,17 @@ class OfferBookDataModel implements Activatable, DataModel {
 
     @Override
     public void activate() {
-        addBindings();
-        addListeners();
-
-        // reset filter values
         amountAsCoin.set(null);
         priceAsFiat.set(null);
         volumeAsFiat.set(null);
         
-/*
-        //TODO temp for testing
-        amountAsCoin.set(Coin.COIN);
-        priceAsFiat.set(Fiat.valueOf("EUR", 300*10000));
-       // volumeAsFiat.set(Fiat.valueOf("EUR", 300));*/
+        addBindings();
+        addListeners();
 
         setBankAccount(user.currentFiatAccountProperty().get());
-        applyFilter();
 
         offerBook.startPolling();
+        applyFilter();
     }
 
     @Override
