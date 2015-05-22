@@ -403,6 +403,9 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                         buyerState.set(PendingTradesViewModel.BuyerState.REQUEST_WITHDRAWAL);
                         break;
 
+                    case WITHDRAW_COMPLETED:
+                        break;
+
                     default:
                         log.warn("unhandled viewState " + processState);
                         break;

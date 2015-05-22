@@ -166,7 +166,7 @@ class MainViewModel implements ViewModel {
         Utilities.setTimeout(2000, () -> setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get()));
 
         walletService.numPeersProperty().addListener((observable, oldValue, newValue) -> {
-
+            log.debug("Bitcoin peers " + newValue);
             numBTCPeers.set(String.valueOf(newValue) + " peers");
             if ((int) newValue < 1) {
                 if (lostBTCConnectionTimeoutTimer != null)

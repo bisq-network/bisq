@@ -110,7 +110,7 @@ public class BootstrapNodes {
     }
 
     public Node getRandomDiscoverNode() {
-        return bootstrapNodes.get(new Random().nextInt(rawBootstrapNodes.size()));
+        return bootstrapNodes.get(new Random().nextInt(bootstrapNodes.size()));
     }
 
     public List<Node> getBootstrapNodes() {

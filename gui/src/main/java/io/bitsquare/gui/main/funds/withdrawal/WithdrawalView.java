@@ -112,7 +112,6 @@ public class WithdrawalView extends ActivatableViewAndModel {
                 withdrawFromTextField.textProperty(), amountTextField.textProperty(), withdrawToTextField.textProperty()));
         table.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
             if (newValue != null) {
-
                 if (Coin.ZERO.compareTo(newValue.getBalance()) <= 0) {
                     amountTextField.setText(newValue.getBalance().toPlainString());
                     withdrawFromTextField.setText(newValue.getAddressEntry().getAddressString());

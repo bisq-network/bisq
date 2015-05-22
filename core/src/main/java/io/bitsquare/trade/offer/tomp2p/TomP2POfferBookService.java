@@ -52,7 +52,8 @@ import org.slf4j.LoggerFactory;
 
 public class TomP2POfferBookService extends TomP2PDHTService implements OfferBookService {
     private static final Logger log = LoggerFactory.getLogger(TomP2POfferBookService.class);
-    private static final int TTL = 30 * 24 * 60 * 60;   // the offer is default 30 days valid
+    //private static final int TTL = 30 * 24 * 60 * 60;   // the offer is default 30 days valid
+    private static final int TTL = 2 * 60 * 60;   // for testing the offer is only 2 hour valid
 
     private final List<Listener> offerRepositoryListeners = new ArrayList<>();
     private final LongProperty invalidationTimestamp = new SimpleLongProperty(0);
