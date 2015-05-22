@@ -99,11 +99,13 @@ class OfferBookDataModel implements Activatable, DataModel {
     public void activate() {
         addBindings();
         addListeners();
-/*
+
+        // reset filter values
         amountAsCoin.set(null);
         priceAsFiat.set(null);
         volumeAsFiat.set(null);
-
+        
+/*
         //TODO temp for testing
         amountAsCoin.set(Coin.COIN);
         priceAsFiat.set(Fiat.valueOf("EUR", 300*10000));
