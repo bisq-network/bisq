@@ -28,7 +28,7 @@ You can find more information in the build scripts under package.
 Prerequisites
 -------------
 
-The only prerequisite for building Bitsquare is installing the Java Development Kit (JDK), version 8u20 or better.
+The only prerequisite for building Bitsquare is installing the Java Development Kit (JDK), version 8u20 or better (as well as maven and git).
 
 To check the version of Java you currently have installed:
 
