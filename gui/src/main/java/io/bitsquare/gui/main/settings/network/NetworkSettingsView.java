@@ -150,7 +150,7 @@ public class NetworkSettingsView extends InitializableView {
         });
 
         Action response = Popups.openConfirmPopup("Info", "You need to restart the application to apply the change of the Bitcoin network.",
-                "Do you want to shutdown now?", actions);
+                "Do you want to restart now?", actions);
 
         if (Popups.isYes(response))
             BitsquareApp.restartDownHandler.run();

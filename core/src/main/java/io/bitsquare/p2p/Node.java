@@ -157,7 +157,7 @@ public final class Node {
     public String toString() {
         return "Name='" + name + '\'' +
                 "; IP='" + ip + '\'' +
-                "; P2P network ID=" + p2pId +
-                "; port=" + port;
+                "; port=" + port +
+                "; P2P network ID=" + p2pId;
     }
 }

@@ -68,6 +68,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -280,7 +281,12 @@ public class WalletService {
             wallet.removeEventListener(walletEventListener);
         if (walletAppKit != null) {
             walletAppKit.stopAsync();
-            walletAppKit.awaitTerminated();
+            try {
+                walletAppKit.awaitTerminated(5, TimeUnit.SECONDS);
+            } catch (TimeoutException e) {
+                e.printStackTrace();
+                log.error("walletAppKit.awaitTerminated not terminated after 5 sec. Error message: " + e.getMessage());
+            }
         }
     }
 

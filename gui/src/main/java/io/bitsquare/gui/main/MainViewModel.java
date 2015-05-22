@@ -67,7 +67,7 @@ class MainViewModel implements ViewModel {
 
     private static final long BLOCKCHAIN_SYNC_TIMEOUT = 60000;
     private static final long LOST_P2P_CONNECTION_TIMEOUT = 5000;
-    private static final long LOST_BTC_CONNECTION_TIMEOUT = 2000;
+    private static final long LOST_BTC_CONNECTION_TIMEOUT = 5000;
 
     private final User user;
     private final KeyRing keyRing;
