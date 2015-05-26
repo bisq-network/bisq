@@ -26,6 +26,8 @@ Building from source
 
 See [doc/build.md](doc/build.md).
 
+[AUR for Arch Linux](https://aur.archlinux.org/packages/bitsquare-git)
+
 
 Staying in Touch
 ----------------
