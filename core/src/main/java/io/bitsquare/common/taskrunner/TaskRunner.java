@@ -21,7 +21,6 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -33,7 +32,7 @@ public class TaskRunner<T extends Model> {
 
     private final Queue<Class<? extends Task>> tasks = new LinkedBlockingQueue<>();
     protected final T sharedModel;
-    private final Class<? extends Model> sharedModelClass;
+    private final Class<T> sharedModelClass;
     private final ResultHandler resultHandler;
     private final ErrorMessageHandler errorMessageHandler;
     private boolean failed = false;
@@ -43,19 +42,18 @@ public class TaskRunner<T extends Model> {
 
 
     public TaskRunner(T sharedModel, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        this(sharedModel, sharedModel.getClass(), resultHandler, errorMessageHandler);
+        this(sharedModel, (Class<T>) sharedModel.getClass(), resultHandler, errorMessageHandler);
     }
 
-    public TaskRunner(T sharedModel, Class<? extends Model> sharedModelClass, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public TaskRunner(T sharedModel, Class<T> sharedModelClass, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         this.sharedModel = sharedModel;
         this.resultHandler = resultHandler;
         this.errorMessageHandler = errorMessageHandler;
         this.sharedModelClass = sharedModelClass;
     }
 
-    public final void addTasks(Class<? extends Task<? extends Model>>... items) {
-        List<Class<? extends Task<? extends Model>>> list = Arrays.asList(items);
-        tasks.addAll(list);
+    public final void addTasks(Class<? extends Task<T>>... items) {
+        tasks.addAll(Arrays.asList(items));
     }
 
     public void run() {

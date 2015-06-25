@@ -19,18 +19,12 @@ package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class TradeTaskRunner extends TaskRunner<Trade> {
-    private static final Logger log = LoggerFactory.getLogger(TradeTaskRunner.class);
 
     public TradeTaskRunner(Trade sharedModel, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        super(sharedModel, (Class<? extends Model>) sharedModel.getClass().getSuperclass().getSuperclass(), resultHandler, errorMessageHandler);
+        super(sharedModel, (Class<Trade>) sharedModel.getClass().getSuperclass().getSuperclass(), resultHandler, errorMessageHandler);
     }
-
 }
