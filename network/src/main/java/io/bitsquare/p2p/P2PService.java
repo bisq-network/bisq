@@ -85,7 +85,8 @@ public class P2PService {
                       @Named(ProgramArguments.TOR_DIR) File torDir,
                       @Named(ProgramArguments.USE_LOCALHOST) boolean useLocalhost,
                       EncryptionService encryptionService,
-                      KeyRing keyRing) {
+                      KeyRing keyRing,
+                      @Named("storage.dir") File storageDir) {
         this.encryptionService = encryptionService;
         this.keyRing = keyRing;
 
@@ -105,7 +106,7 @@ public class P2PService {
 
 
         // storage layer
-        dataStorage = new ProtectedExpirableDataStorage(routing, encryptionService);
+        dataStorage = new ProtectedExpirableDataStorage(routing, storageDir);
 
 
         // Listeners
@@ -132,7 +133,7 @@ public class P2PService {
                 UserThread.execute(() -> p2pServiceListeners.stream().forEach(e -> e.onSetupFailed(throwable)));
             }
         };
-        
+
         networkNode.addConnectionListener(new ConnectionListener() {
             @Override
             public void onConnection(Connection connection) {

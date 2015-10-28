@@ -157,7 +157,7 @@ public class ArbitratorManager {
         Arbitrator registeredArbitrator = user.getRegisteredArbitrator();
         if (registeredArbitrator != null) {
             addArbitrator(registeredArbitrator,
-                    this::applyArbitrators,
+                    () -> applyArbitrators(),
                     log::error
             );
         }

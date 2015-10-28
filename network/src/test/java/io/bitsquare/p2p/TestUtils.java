@@ -117,7 +117,7 @@ public class TestUtils {
                 seedNodesRepository.setTorSeedNodeAddresses(seedNodes);
         }
 
-        P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhost, encryptionService, keyRing);
+        P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhost, encryptionService, keyRing, new File("dummy"));
         p2PService.start(new P2PServiceListener() {
             @Override
             public void onAllDataReceived() {

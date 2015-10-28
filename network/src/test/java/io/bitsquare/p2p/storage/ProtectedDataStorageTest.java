@@ -58,7 +58,7 @@ public class ProtectedDataStorageTest {
         encryptionService1 = new EncryptionService(keyRing1);
         networkNode1 = TestUtils.getAndStartSeedNode(8001, encryptionService1, keyRing1, useClearNet, seedNodes).getP2PService().getNetworkNode();
         routing1 = new Routing(networkNode1, seedNodes);
-        dataStorage1 = new ProtectedExpirableDataStorage(routing1, encryptionService1);
+        dataStorage1 = new ProtectedExpirableDataStorage(routing1, new File("dummy"));
 
         // for mailbox
         keyRing2 = new KeyRing(new KeyStorage(new File("temp_keyStorage2")));
@@ -100,7 +100,7 @@ public class ProtectedDataStorageTest {
     public void testExpirableData() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
         ProtectedExpirableDataStorage.CHECK_TTL_INTERVAL = 10;
         // CHECK_TTL_INTERVAL is used in constructor of ProtectedExpirableDataStorage so we recreate it here
-        dataStorage1 = new ProtectedExpirableDataStorage(routing1, encryptionService1);
+        dataStorage1 = new ProtectedExpirableDataStorage(routing1, new File("dummy"));
         mockData.ttl = 50;
 
         ProtectedData data = dataStorage1.getDataWithSignedSeqNr(mockData, storageSignatureKeyPair1);

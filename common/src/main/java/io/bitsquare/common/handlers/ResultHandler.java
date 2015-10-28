@@ -17,6 +17,6 @@
 
 package io.bitsquare.common.handlers;
 
-public interface ResultHandler extends Runnable {
+public interface ResultHandler {
     void handleResult();
 }

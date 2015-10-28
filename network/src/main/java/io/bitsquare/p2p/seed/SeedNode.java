@@ -85,7 +85,7 @@ public class SeedNode {
                 seedNodesRepository.setTorSeedNodeAddresses(seedNodes);
         }
 
-        p2PService = new P2PService(seedNodesRepository, port, new File("bitsquare_seed_node_" + port), useLocalhost, encryptionService, keyRing);
+        p2PService = new P2PService(seedNodesRepository, port, new File("bitsquare_seed_node_" + port), useLocalhost, encryptionService, keyRing, new File("dummy"));
         p2PService.start(listener);
     }
 

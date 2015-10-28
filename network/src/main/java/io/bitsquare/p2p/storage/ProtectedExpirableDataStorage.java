@@ -3,16 +3,17 @@ package io.bitsquare.p2p.storage;
 import com.google.common.annotations.VisibleForTesting;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.CryptoUtil;
-import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.network.IllegalRequest;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.routing.Routing;
 import io.bitsquare.p2p.storage.data.*;
 import io.bitsquare.p2p.storage.messages.*;
+import io.bitsquare.storage.Storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.security.*;
 import java.util.List;
@@ -29,10 +30,10 @@ public class ProtectedExpirableDataStorage {
     public static int CHECK_TTL_INTERVAL = 10 * 60 * 1000;
 
     private final Routing routing;
-    private final EncryptionService encryptionService;
     private final Map<BigInteger, ProtectedData> map = new ConcurrentHashMap<>();
     private final List<HashSetChangedListener> hashSetChangedListeners = new CopyOnWriteArrayList<>();
-    private final Map<BigInteger, Integer> sequenceNumberMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<BigInteger, Integer> sequenceNumberMap = new ConcurrentHashMap<>();
+    private final Storage<ConcurrentHashMap> storage;
     private boolean authenticated;
     private final Timer timer = new Timer();
     private volatile boolean shutDownInProgress;
@@ -42,9 +43,15 @@ public class ProtectedExpirableDataStorage {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ProtectedExpirableDataStorage(Routing routing, EncryptionService encryptionService) {
+    public ProtectedExpirableDataStorage(Routing routing, File storageDir) {
         this.routing = routing;
-        this.encryptionService = encryptionService;
+
+        storage = new Storage<>(storageDir);
+
+        ConcurrentHashMap<BigInteger, Integer> persisted = storage.initAndGetPersisted(sequenceNumberMap, "sequenceNumberMap");
+        if (persisted != null) {
+            sequenceNumberMap = persisted;
+        }
 
         addMessageListener((message, connection) -> {
             if (message instanceof DataMessage) {
@@ -102,11 +109,12 @@ public class ProtectedExpirableDataStorage {
                 && (!containsKey || checkIfStoredDataMatchesNewData(protectedData, hashOfPayload))
                 && doAddProtectedExpirableData(protectedData, hashOfPayload, sender);
 
-        if (result)
+        if (result) {
             sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
-        else
+            storage.queueUpForSave();
+        } else {
             log.debug("add failed");
-
+        }
         return result;
     }
 
@@ -121,11 +129,12 @@ public class ProtectedExpirableDataStorage {
                 && checkIfStoredDataMatchesNewData(protectedData, hashOfPayload)
                 && doRemoveProtectedExpirableData(protectedData, hashOfPayload, sender);
 
-        if (result)
+        if (result) {
             sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
-        else
+            storage.queueUpForSave();
+        } else {
             log.debug("remove failed");
-
+        }
         return result;
     }
 
@@ -141,11 +150,12 @@ public class ProtectedExpirableDataStorage {
                 && checkIfStoredMailboxDataMatchesNewMailboxData(protectedMailboxData, hashOfData)
                 && doRemoveProtectedExpirableData(protectedMailboxData, hashOfData, sender);
 
-        if (result)
+        if (result) {
             sequenceNumberMap.put(hashOfData, protectedMailboxData.sequenceNumber);
-        else
+            storage.queueUpForSave();
+        } else {
             log.debug("removeMailboxData failed");
-
+        }
         return result;
     }
 
