@@ -49,6 +49,7 @@ public class P2PService {
     private static final Logger log = LoggerFactory.getLogger(P2PService.class);
 
     private final EncryptionService encryptionService;
+    private final SetupListener setupListener;
     private KeyRing keyRing;
     private final NetworkStatistics networkStatistics;
 
@@ -108,6 +109,58 @@ public class P2PService {
 
 
         // Listeners
+        setupListener = new SetupListener() {
+            @Override
+            public void onTorNodeReady() {
+                UserThread.execute(() -> p2pServiceListeners.stream().forEach(e -> e.onTorNodeReady()));
+
+                // we don't know yet our own address so we can not filter that from the 
+                // seedNodeAddresses in case we are a seed node
+                sendGetAllDataMessage(seedNodeAddresses);
+            }
+
+            @Override
+            public void onHiddenServiceReady() {
+                hiddenServiceReady = true;
+                tryStartAuthentication();
+
+                UserThread.execute(() -> p2pServiceListeners.stream().forEach(e -> e.onHiddenServiceReady()));
+            }
+
+            @Override
+            public void onSetupFailed(Throwable throwable) {
+                UserThread.execute(() -> p2pServiceListeners.stream().forEach(e -> e.onSetupFailed(throwable)));
+            }
+        };
+        
+        networkNode.addConnectionListener(new ConnectionListener() {
+            @Override
+            public void onConnection(Connection connection) {
+            }
+
+            @Override
+            public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
+                authenticatedPeerAddresses.add(peerAddress);
+                authenticatedToFirstPeer = true;
+
+                P2PService.this.authenticated = true;
+                dataStorage.setAuthenticated(true);
+                UserThread.execute(() -> p2pServiceListeners.stream().forEach(e -> e.onAuthenticated()));
+            }
+
+            @Override
+            public void onDisconnect(Reason reason, Connection connection) {
+                Address peerAddress = connection.getPeerAddress();
+                if (peerAddress != null)
+                    authenticatedPeerAddresses.remove(peerAddress);
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                log.error("onError self/ConnectionException " + networkNode.getAddress() + "/" + throwable);
+            }
+        });
+
         networkNode.addMessageListener((message, connection) -> {
             if (message instanceof GetDataSetMessage) {
                 log.trace("Received GetAllDataMessage: " + message);
@@ -201,57 +254,7 @@ public class P2PService {
         if (listener != null)
             addP2PServiceListener(listener);
 
-        networkNode.start(new SetupListener() {
-            @Override
-            public void onTorNodeReady() {
-                UserThread.execute(() -> p2pServiceListeners.stream().forEach(e -> e.onTorNodeReady()));
-
-                // we don't know yet our own address so we can not filter that from the 
-                // seedNodeAddresses in case we are a seed node
-                sendGetAllDataMessage(seedNodeAddresses);
-            }
-
-            @Override
-            public void onHiddenServiceReady() {
-                hiddenServiceReady = true;
-                tryStartAuthentication();
-
-                UserThread.execute(() -> p2pServiceListeners.stream().forEach(e -> e.onHiddenServiceReady()));
-            }
-
-            @Override
-            public void onSetupFailed(Throwable throwable) {
-                UserThread.execute(() -> p2pServiceListeners.stream().forEach(e -> e.onSetupFailed(throwable)));
-            }
-        });
-
-        networkNode.addConnectionListener(new ConnectionListener() {
-            @Override
-            public void onConnection(Connection connection) {
-            }
-
-            @Override
-            public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
-                authenticatedPeerAddresses.add(peerAddress);
-                authenticatedToFirstPeer = true;
-
-                P2PService.this.authenticated = true;
-                dataStorage.setAuthenticated(true);
-                UserThread.execute(() -> p2pServiceListeners.stream().forEach(e -> e.onAuthenticated()));
-            }
-
-            @Override
-            public void onDisconnect(Reason reason, Connection connection) {
-                Address peerAddress = connection.getPeerAddress();
-                if (peerAddress != null)
-                    authenticatedPeerAddresses.remove(peerAddress);
-            }
-
-            @Override
-            public void onError(Throwable throwable) {
-                log.error("onError self/ConnectionException " + networkNode.getAddress() + "/" + throwable);
-            }
-        });
+        networkNode.start(setupListener);
     }
 
     public void shutDown(Runnable shutDownCompleteHandler) {
