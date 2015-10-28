@@ -19,32 +19,14 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps;
 
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.util.Layout;
+import javafx.scene.control.TextField;
 
-import org.bitcoinj.core.AbstractBlockChain;
-import org.bitcoinj.core.BlockChainListener;
-import org.bitcoinj.core.ScriptException;
-import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.core.StoredBlock;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.VerificationException;
-
-import java.util.List;
-
-import javafx.scene.control.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static io.bitsquare.gui.util.ComponentBuilder.*;
+import static io.bitsquare.gui.util.FormBuilder.*;
 
 public class WaitPayoutLockTimeView extends TradeStepDetailsView {
-    private static final Logger log = LoggerFactory.getLogger(WaitPayoutLockTimeView.class);
-
-    private final BlockChainListener blockChainListener;
-
     private TextField blockTextField;
-    private Label infoLabel;
     private TextField timeTextField;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -52,49 +34,23 @@ public class WaitPayoutLockTimeView extends TradeStepDetailsView {
 
     public WaitPayoutLockTimeView(PendingTradesViewModel model) {
         super(model);
-
-        blockChainListener = new BlockChainListener() {
-            @Override
-            public void notifyNewBestBlock(StoredBlock block) throws VerificationException {
-                setLockTime(block.getHeight());
-            }
-
-            @Override
-            public void reorganize(StoredBlock splitPoint, List<StoredBlock> oldBlocks, List<StoredBlock> newBlocks) throws VerificationException {
-                setLockTime(model.getBestChainHeight());
-            }
-
-            @Override
-            public boolean isTransactionRelevant(Transaction tx) throws ScriptException {
-                return false;
-            }
-
-            @Override
-            public void receiveFromBlock(Transaction tx, StoredBlock block, AbstractBlockChain.NewBlockType blockType, int relativityOffset) throws
-                    VerificationException {
-            }
-
-            @Override
-            public boolean notifyTransactionIsInBlock(Sha256Hash txHash, StoredBlock block, AbstractBlockChain.NewBlockType blockType, int relativityOffset)
-                    throws VerificationException {
-                return false;
-            }
-        };
     }
 
     @Override
-    public void activate() {
-        super.activate();
-
-        model.addBlockChainListener(blockChainListener);
-        setLockTime(model.getBestChainHeight());
+    public void doActivate() {
+        super.doActivate();
     }
 
     @Override
-    public void deactivate() {
-        super.deactivate();
+    public void doDeactivate() {
+        super.doDeactivate();
+    }
 
-        model.removeBlockChainListener(blockChainListener);
+    @Override
+    protected void updateDateFromBlocks(long bestBlocKHeight) {
+        long missingBlocks = model.getLockTime() - bestBlocKHeight;
+        blockTextField.setText(String.valueOf(missingBlocks));
+        timeTextField.setText(model.getDateFromBlocks(missingBlocks));
     }
 
 
@@ -107,12 +63,6 @@ public class WaitPayoutLockTimeView extends TradeStepDetailsView {
             infoLabel.setText(text);
     }
 
-    private void setLockTime(int bestBlocKHeight) {
-        long missingBlocks = model.getLockTime() - (long) bestBlocKHeight;
-        blockTextField.setText(String.valueOf(missingBlocks));
-        timeTextField.setText(model.getUnlockDate(missingBlocks));
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Build view
@@ -120,12 +70,12 @@ public class WaitPayoutLockTimeView extends TradeStepDetailsView {
 
     @Override
     protected void buildGridEntries() {
-        getAndAddTitledGroupBg(gridPane, gridRow, 2, "Payout transaction lock time");
-        blockTextField = getAndAddLabelTextFieldPair(gridPane, gridRow++, "Block(s) to wait until unlock:", Layout.FIRST_ROW_DISTANCE).textField;
-        timeTextField = getAndAddLabelTextFieldPair(gridPane, gridRow++, "Approx. date when payout gets unlocked:").textField;
+        addTitledGroupBg(gridPane, gridRow, 2, "Payout transaction lock time");
+        blockTextField = addLabelTextField(gridPane, gridRow, "Block(s) to wait until unlock:", "", Layout.FIRST_ROW_DISTANCE).second;
+        timeTextField = addLabelTextField(gridPane, ++gridRow, "Approx. date when payout gets unlocked:").second;
 
-        getAndAddTitledGroupBg(gridPane, gridRow, 1, "Information", Layout.GROUP_DISTANCE);
-        infoLabel = getAndAddInfoLabel(gridPane, gridRow++, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        infoTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1, "Information", Layout.GROUP_DISTANCE);
+        infoLabel = addMultilineLabel(gridPane, gridRow, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
     }
 }
 

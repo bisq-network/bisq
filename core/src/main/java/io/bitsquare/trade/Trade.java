@@ -17,51 +17,40 @@
 
 package io.bitsquare.trade;
 
+import com.google.common.base.Throwables;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import io.bitsquare.app.Version;
-import io.bitsquare.arbitration.ArbitrationRepository;
-import io.bitsquare.btc.BlockChainService;
+import io.bitsquare.arbitration.ArbitratorManager;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.taskrunner.Model;
-import io.bitsquare.crypto.CryptoService;
-import io.bitsquare.crypto.KeyRing;
-import io.bitsquare.crypto.MessageWithPubKey;
-import io.bitsquare.p2p.AddressService;
-import io.bitsquare.p2p.MessageService;
-import io.bitsquare.p2p.Peer;
+import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.P2PService;
+import io.bitsquare.p2p.messaging.DecryptedMessageWithPubKey;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.trade.protocol.trade.ProcessModel;
 import io.bitsquare.trade.protocol.trade.TradeProtocol;
 import io.bitsquare.user.User;
-
+import javafx.beans.property.*;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.utils.Fiat;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-
 import java.util.Date;
-
-import javax.annotation.Nullable;
-
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-
-import org.jetbrains.annotations.NotNull;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Holds all data which are relevant to the trade, but not those which are only needed in the trade process as shared data between tasks. Those data are
@@ -73,20 +62,72 @@ abstract public class Trade implements Tradable, Model, Serializable {
 
     private transient static final Logger log = LoggerFactory.getLogger(Trade.class);
 
-  /*  public enum CriticalPhase {
+    public enum State {
+        PREPARATION(Phase.PREPARATION),
+
+        TAKER_FEE_PAID(Phase.TAKER_FEE_PAID),
+
+        DEPOSIT_PUBLISH_REQUESTED(Phase.DEPOSIT_REQUESTED),
+        DEPOSIT_PUBLISHED(Phase.DEPOSIT_PAID),
+        DEPOSIT_SEEN_IN_NETWORK(Phase.DEPOSIT_PAID), // triggered by balance update, used only in error cases
+        DEPOSIT_PUBLISHED_MSG_SENT(Phase.DEPOSIT_PAID),
+        DEPOSIT_PUBLISHED_MSG_RECEIVED(Phase.DEPOSIT_PAID),
+        DEPOSIT_CONFIRMED(Phase.DEPOSIT_PAID),
+
+        FIAT_PAYMENT_STARTED(Phase.FIAT_SENT),
+        FIAT_PAYMENT_STARTED_MSG_SENT(Phase.FIAT_SENT),
+        FIAT_PAYMENT_STARTED_MSG_RECEIVED(Phase.FIAT_SENT),
+
+        FIAT_PAYMENT_RECEIPT(Phase.FIAT_RECEIVED),
+        FIAT_PAYMENT_RECEIPT_MSG_SENT(Phase.FIAT_RECEIVED),
+        FIAT_PAYMENT_RECEIPT_MSG_RECEIVED(Phase.FIAT_RECEIVED),
+
+        PAYOUT_TX_COMMITTED(Phase.PAYOUT_PAID),
+        PAYOUT_TX_SENT(Phase.PAYOUT_PAID),
+        PAYOUT_TX_RECEIVED(Phase.PAYOUT_PAID),
+        PAYOUT_BROAD_CASTED(Phase.PAYOUT_PAID),
+
+        WITHDRAW_COMPLETED(Phase.WITHDRAWN);
+
+        public Phase getPhase() {
+            return phase;
+        }
+
+        private final Phase phase;
+
+        State(Phase phase) {
+            this.phase = phase;
+        }
+    }
+
+    public enum Phase {
         PREPARATION,
         TAKER_FEE_PAID,
+        DEPOSIT_REQUESTED,
         DEPOSIT_PAID,
         FIAT_SENT,
         FIAT_RECEIVED,
         PAYOUT_PAID,
         WITHDRAWN,
-        FAILED
-    }*/
+        DISPUTE
+    }
+
+    public enum DisputeState {
+        NONE,
+        DISPUTE_REQUESTED,
+        DISPUTE_STARTED_BY_PEER,
+        DISPUTE_CLOSED
+    }
+
+    public enum TradePeriodState {
+        NORMAL,
+        HALF_REACHED,
+        TRADE_PERIOD_OVER
+    }
 
     // Mutable
     private Coin tradeAmount;
-    private Peer tradingPeer;
+    private Address tradingPeerAddress;
     private transient ObjectProperty<Coin> tradeAmountProperty;
     private transient ObjectProperty<Fiat> tradeVolumeProperty;
 
@@ -96,31 +137,41 @@ abstract public class Trade implements Tradable, Model, Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Transient/Immutable
-    private transient ObjectProperty<TradeState> processStateProperty;
+    private transient ObjectProperty<State> processStateProperty;
+    private transient ObjectProperty<DisputeState> disputeStateProperty;
+    private transient ObjectProperty<TradePeriodState> tradePeriodStateProperty;
     // Trades are saved in the TradeList
     transient private Storage<? extends TradableList> storage;
     transient protected TradeProtocol tradeProtocol;
 
-    transient protected TradeManager tradeManager;
-    transient protected OpenOfferManager openOfferManager;
-
     // Immutable
     private final Offer offer;
     private final ProcessModel processModel;
-    private final Date creationDate;
 
     // Mutable
-    private MessageWithPubKey messageWithPubKey;
-    protected Date takeOfferDate;
-    protected TradeState tradeState;
+    private DecryptedMessageWithPubKey decryptedMessageWithPubKey;
+    private Date takeOfferDate = new Date(0); // in some error cases the date is not set and cause null pointers, so we set a default
+
+    protected State state;
+    private DisputeState disputeState = DisputeState.NONE;
+    private TradePeriodState tradePeriodState = TradePeriodState.NORMAL;
     private Transaction depositTx;
     private Contract contract;
     private String contractAsJson;
-    private String sellerContractSignature;
-    private String buyerContractSignature;
+    private byte[] contractHash;
+    private String takerContractSignature;
+    private String offererContractSignature;
     private Transaction payoutTx;
-    private long lockTime;
+    private long lockTimeAsBlockHeight;
+    private int openDisputeTimeAsBlockHeight;
+    private int checkPaymentTimeAsBlockHeight;
+    private String arbitratorId;
+    private Address arbitratorAddress;
+    private String takerPaymentAccountId;
+    private boolean halfTradePeriodReachedWarningDisplayed;
+    private boolean tradePeriodOverWarningDisplayed;
     private String errorMessage;
+    transient private StringProperty errorMessageProperty;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -134,55 +185,50 @@ abstract public class Trade implements Tradable, Model, Serializable {
         processModel = new ProcessModel();
         tradeVolumeProperty = new SimpleObjectProperty<>();
         tradeAmountProperty = new SimpleObjectProperty<>();
+        errorMessageProperty = new SimpleStringProperty();
 
         initStates();
         initStateProperties();
-
-        // That will only be used in case of a canceled open offer trade
-        creationDate = new Date();
     }
 
     // taker
-    protected Trade(Offer offer, Coin tradeAmount, Peer tradingPeer,
+    protected Trade(Offer offer, Coin tradeAmount, Address tradingPeerAddress,
                     Storage<? extends TradableList> storage) {
 
         this(offer, storage);
         this.tradeAmount = tradeAmount;
-        this.tradingPeer = tradingPeer;
+        this.tradingPeerAddress = tradingPeerAddress;
         tradeAmountProperty.set(tradeAmount);
         tradeVolumeProperty.set(getTradeVolume());
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-
-        initStateProperties();
-        initAmountProperty();
+        try {
+            in.defaultReadObject();
+            initStateProperties();
+            initAmountProperty();
+            errorMessageProperty = new SimpleStringProperty(errorMessage);
+        } catch (Throwable t) {
+            log.trace("Cannot be deserialized." + t.getMessage());
+        }
     }
 
-    public void init(MessageService messageService,
+    public void init(P2PService p2PService,
                      WalletService walletService,
-                     AddressService addressService,
                      TradeWalletService tradeWalletService,
-                     BlockChainService blockChainService,
-                     CryptoService cryptoService,
-                     ArbitrationRepository arbitrationRepository,
+                     ArbitratorManager arbitratorManager,
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
                      User user,
                      KeyRing keyRing) {
 
-        this.tradeManager = tradeManager;
-        this.openOfferManager = openOfferManager;
-
         processModel.onAllServicesInitialized(offer,
-                messageService,
-                addressService,
+                tradeManager,
+                openOfferManager,
+                p2PService,
                 walletService,
                 tradeWalletService,
-                blockChainService,
-                cryptoService,
-                arbitrationRepository,
+                arbitratorManager,
                 user,
                 keyRing);
 
@@ -190,15 +236,15 @@ abstract public class Trade implements Tradable, Model, Serializable {
 
         tradeProtocol.checkPayoutTxTimeLock(this);
 
-        if (messageWithPubKey != null) {
-            tradeProtocol.applyMailboxMessage(messageWithPubKey, this);
-            // After applied to protocol we remove it
-            messageWithPubKey = null;
+        if (decryptedMessageWithPubKey != null) {
+            tradeProtocol.applyMailboxMessage(decryptedMessageWithPubKey, this);
         }
     }
 
     protected void initStateProperties() {
-        processStateProperty = new SimpleObjectProperty<>(tradeState);
+        processStateProperty = new SimpleObjectProperty<>(state);
+        disputeStateProperty = new SimpleObjectProperty<>(disputeState);
+        tradePeriodStateProperty = new SimpleObjectProperty<>(tradePeriodState);
     }
 
     protected void initAmountProperty() {
@@ -223,43 +269,72 @@ abstract public class Trade implements Tradable, Model, Serializable {
     }
 
     public void setDepositTx(Transaction tx) {
+        log.debug("setDepositTx " + tx);
         this.depositTx = tx;
         setupConfidenceListener();
         storage.queueUpForSave();
     }
 
-    public void disposeProtocol() {
-        if (tradeProtocol != null) {
-            tradeProtocol.cleanup();
-            tradeProtocol = null;
-        }
+    @Nullable
+    public Transaction getDepositTx() {
+        return depositTx;
     }
 
-    public void setMailboxMessage(MessageWithPubKey messageWithPubKey) {
-        this.messageWithPubKey = messageWithPubKey;
+    public void setMailboxMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
+        log.trace("setMailboxMessage " + decryptedMessageWithPubKey);
+        this.decryptedMessageWithPubKey = decryptedMessageWithPubKey;
+    }
+
+    public DecryptedMessageWithPubKey getMailboxMessage() {
+        return decryptedMessageWithPubKey;
     }
 
     public void setStorage(Storage<? extends TradableList> storage) {
         this.storage = storage;
     }
 
-    public void setTradeState(TradeState tradeState) {
-        this.tradeState = tradeState;
-        processStateProperty.set(tradeState);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // States
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setState(State state) {
+        this.state = state;
+        processStateProperty.set(state);
         storage.queueUpForSave();
     }
 
-    abstract public boolean isFailedState();
-
-    abstract public void setFailedState();
-
-    public boolean isCriticalFault() {
-        return tradeState.getPhase() != null && tradeState.getPhase().ordinal() >= TradeState.Phase.DEPOSIT_PAID.ordinal();
+    public void setDisputeState(DisputeState disputeState) {
+        this.disputeState = disputeState;
+        disputeStateProperty.set(disputeState);
+        storage.queueUpForSave();
     }
-    
+
+    public DisputeState getDisputeState() {
+        return disputeState;
+    }
+
+    public void setTradePeriodState(TradePeriodState tradePeriodState) {
+        this.tradePeriodState = tradePeriodState;
+        tradePeriodStateProperty.set(tradePeriodState);
+        storage.queueUpForSave();
+    }
+
+    public TradePeriodState getTradePeriodState() {
+        return tradePeriodState;
+    }
+
+    public boolean isTakerFeePaid() {
+        return state.getPhase() != null && state.getPhase().ordinal() >= Phase.TAKER_FEE_PAID.ordinal();
+    }
+
+    public State getState() {
+        return state;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Storage
+    // Model implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Get called from taskRunner after each completed task
@@ -282,22 +357,16 @@ abstract public class Trade implements Tradable, Model, Serializable {
         return offer.getId();
     }
 
+    public String getShortId() {
+        return offer.getShortId();
+    }
+
     public Offer getOffer() {
         return offer;
     }
 
-    @Nullable
-    public Transaction getDepositTx() {
-        return depositTx;
-    }
-
-    @NotNull
-    public Coin getSecurityDeposit() {
-        return offer.getSecurityDeposit();
-    }
-
     public Coin getPayoutAmount() {
-        return getSecurityDeposit();
+        return FeePolicy.SECURITY_DEPOSIT;
     }
 
     public ProcessModel getProcessModel() {
@@ -312,7 +381,8 @@ abstract public class Trade implements Tradable, Model, Serializable {
             return null;
     }
 
-    public ReadOnlyObjectProperty<? extends TradeState> tradeStateProperty() {
+
+    public ReadOnlyObjectProperty<? extends State> stateProperty() {
         return processStateProperty;
     }
 
@@ -325,25 +395,36 @@ abstract public class Trade implements Tradable, Model, Serializable {
     }
 
 
+    public ReadOnlyObjectProperty<DisputeState> disputeStateProperty() {
+        return disputeStateProperty;
+    }
+
+    public ReadOnlyObjectProperty<TradePeriodState> getTradePeriodStateProperty() {
+        return tradePeriodStateProperty;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter/Setter for Mutable objects
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Date getDate() {
-        return takeOfferDate != null ? takeOfferDate : creationDate;
+        return takeOfferDate;
     }
 
     public void setTakeOfferDate(Date takeOfferDate) {
         this.takeOfferDate = takeOfferDate;
     }
 
-    public void setTradingPeer(Peer tradingPeer) {
-        this.tradingPeer = tradingPeer;
+    public void setTradingPeerAddress(Address tradingPeerAddress) {
+        if (tradingPeerAddress == null)
+            log.error("tradingPeerAddress=null");
+        else
+            this.tradingPeerAddress = tradingPeerAddress;
     }
 
     @Nullable
-    public Peer getTradingPeer() {
-        return tradingPeer;
+    public Address getTradingPeerAddress() {
+        return tradingPeerAddress;
     }
 
     public void setTradeAmount(Coin tradeAmount) {
@@ -357,31 +438,46 @@ abstract public class Trade implements Tradable, Model, Serializable {
         return tradeAmount;
     }
 
-    public void setLockTime(long lockTime) {
-        log.debug("lockTime " + lockTime);
-        this.lockTime = lockTime;
+    public void setLockTimeAsBlockHeight(long lockTimeAsBlockHeight) {
+        this.lockTimeAsBlockHeight = lockTimeAsBlockHeight;
     }
 
-    public long getLockTime() {
-        return lockTime;
+    public long getLockTimeAsBlockHeight() {
+        return lockTimeAsBlockHeight;
     }
 
-    public void setSellerContractSignature(String takerSignature) {
-        this.sellerContractSignature = takerSignature;
+    public int getOpenDisputeTimeAsBlockHeight() {
+        return openDisputeTimeAsBlockHeight;
+    }
+
+    public void setOpenDisputeTimeAsBlockHeight(int openDisputeTimeAsBlockHeight) {
+        this.openDisputeTimeAsBlockHeight = openDisputeTimeAsBlockHeight;
+    }
+
+    public int getCheckPaymentTimeAsBlockHeight() {
+        return checkPaymentTimeAsBlockHeight;
+    }
+
+    public void setCheckPaymentTimeAsBlockHeight(int checkPaymentTimeAsBlockHeight) {
+        this.checkPaymentTimeAsBlockHeight = checkPaymentTimeAsBlockHeight;
+    }
+
+    public void setTakerContractSignature(String takerSignature) {
+        this.takerContractSignature = takerSignature;
     }
 
     @Nullable
-    public String getSellerContractSignature() {
-        return sellerContractSignature;
+    public String getTakerContractSignature() {
+        return takerContractSignature;
     }
 
-    public void setBuyerContractSignature(String buyerContractSignature) {
-        this.buyerContractSignature = buyerContractSignature;
+    public void setOffererContractSignature(String offererContractSignature) {
+        this.offererContractSignature = offererContractSignature;
     }
 
     @Nullable
-    public String getBuyerContractSignature() {
-        return buyerContractSignature;
+    public String getOffererContractSignature() {
+        return offererContractSignature;
     }
 
     public void setContractAsJson(String contractAsJson) {
@@ -414,20 +510,53 @@ abstract public class Trade implements Tradable, Model, Serializable {
 
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
-
-        if (errorMessage != null && errorMessage.length() > 0) {
-            setFailedState();
-
-            if (isCriticalFault())
-                tradeManager.addTradeToFailedTrades(this);
-            else if (isFailedState())
-                tradeManager.addTradeToClosedTrades(this);
-        }
+        errorMessageProperty.set(errorMessage);
     }
 
-    @Nullable
-    public String getErrorMessage() {
-        return errorMessage;
+    public ReadOnlyStringProperty errorMessageProperty() {
+        return errorMessageProperty;
+    }
+
+    public Address getArbitratorAddress() {
+        return arbitratorAddress;
+    }
+
+    public void setArbitratorAddress(Address arbitratorAddress) {
+        this.arbitratorAddress = arbitratorAddress;
+    }
+
+    public String getTakerPaymentAccountId() {
+        return takerPaymentAccountId;
+    }
+
+    public void setTakerPaymentAccountId(String takerPaymentAccountId) {
+        this.takerPaymentAccountId = takerPaymentAccountId;
+    }
+
+    public void setHalfTradePeriodReachedWarningDisplayed(boolean halfTradePeriodReachedWarningDisplayed) {
+        this.halfTradePeriodReachedWarningDisplayed = halfTradePeriodReachedWarningDisplayed;
+        storage.queueUpForSave();
+    }
+
+    public boolean isHalfTradePeriodReachedWarningDisplayed() {
+        return halfTradePeriodReachedWarningDisplayed;
+    }
+
+    public void setTradePeriodOverWarningDisplayed(boolean tradePeriodOverWarningDisplayed) {
+        this.tradePeriodOverWarningDisplayed = tradePeriodOverWarningDisplayed;
+        storage.queueUpForSave();
+    }
+
+    public boolean isTradePeriodOverWarningDisplayed() {
+        return tradePeriodOverWarningDisplayed;
+    }
+
+    public void setContractHash(byte[] contractHash) {
+        this.contractHash = contractHash;
+    }
+
+    public byte[] getContractHash() {
+        return contractHash;
     }
 
 
@@ -436,28 +565,42 @@ abstract public class Trade implements Tradable, Model, Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setupConfidenceListener() {
+        log.debug("setupConfidenceListener");
         if (depositTx != null) {
             TransactionConfidence transactionConfidence = depositTx.getConfidence();
-            ListenableFuture<TransactionConfidence> future = transactionConfidence.getDepthFuture(1);
-            Futures.addCallback(future, new FutureCallback<TransactionConfidence>() {
-                @Override
-                public void onSuccess(TransactionConfidence result) {
-                    handleConfidenceResult();
-                }
+            log.debug("transactionConfidence " + transactionConfidence.getDepthInBlocks());
+            if (transactionConfidence.getDepthInBlocks() > 0) {
+                handleConfidenceResult();
+            } else {
+                ListenableFuture<TransactionConfidence> future = transactionConfidence.getDepthFuture(1);
+                Futures.addCallback(future, new FutureCallback<TransactionConfidence>() {
+                    @Override
+                    public void onSuccess(TransactionConfidence result) {
+                        log.debug("transactionConfidence " + transactionConfidence.getDepthInBlocks());
+                        log.debug("state " + state);
+                        handleConfidenceResult();
+                    }
 
-                @Override
-                public void onFailure(@NotNull Throwable t) {
-                    t.printStackTrace();
-                    log.error(t.getMessage());
-                    Throwables.propagate(t);
-                }
-            });
+                    @Override
+                    public void onFailure(@NotNull Throwable t) {
+                        t.printStackTrace();
+                        log.error(t.getMessage());
+                        Throwables.propagate(t);
+                    }
+                });
+            }
+
+        } else {
+            log.error("depositTx == null. That must not happen.");
         }
     }
 
     abstract protected void createProtocol();
 
-    abstract protected void handleConfidenceResult();
+    private void handleConfidenceResult() {
+        if (state.ordinal() < State.DEPOSIT_CONFIRMED.ordinal())
+            setState(State.DEPOSIT_CONFIRMED);
+    }
 
     abstract protected void initStates();
 
@@ -465,7 +608,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     public String toString() {
         return "Trade{" +
                 "tradeAmount=" + tradeAmount +
-                ", tradingPeer=" + tradingPeer +
+                ", tradingPeer=" + tradingPeerAddress +
                 ", tradeAmountProperty=" + tradeAmountProperty +
                 ", tradeVolumeProperty=" + tradeVolumeProperty +
                 ", processStateProperty=" + processStateProperty +
@@ -474,8 +617,8 @@ abstract public class Trade implements Tradable, Model, Serializable {
                 ", offer=" + offer +
                 ", date=" + takeOfferDate +
                 ", processModel=" + processModel +
-                ", processState=" + tradeState +
-                ", messageWithPubKey=" + messageWithPubKey +
+                ", processState=" + state +
+                ", messageWithPubKey=" + decryptedMessageWithPubKey +
                 ", depositTx=" + depositTx +
                /* ", contract=" + contract +
                 ", contractAsJson='" + contractAsJson + '\'' +*/
@@ -485,5 +628,4 @@ abstract public class Trade implements Tradable, Model, Serializable {
                 ", errorMessage='" + errorMessage + '\'' +
                 '}';
     }
-
 }

@@ -18,12 +18,10 @@
 package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.p2p.listener.SendMessageListener;
+import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.protocol.trade.messages.FinalizePayoutTxRequest;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,34 +36,45 @@ public class SendFinalizePayoutTxRequest extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            FinalizePayoutTxRequest message = new FinalizePayoutTxRequest(
-                    processModel.getId(),
-                    processModel.getPayoutTxSignature(),
-                    processModel.getAddressEntry().getAddressString(),
-                    trade.getLockTime()
-            );
+            if (trade.getTradingPeerAddress() != null) {
+                FinalizePayoutTxRequest message = new FinalizePayoutTxRequest(
+                        processModel.getId(),
+                        processModel.getPayoutTxSignature(),
+                        processModel.getAddressEntry().getAddressString(),
+                        trade.getLockTimeAsBlockHeight(),
+                        processModel.getMyAddress()
+                );
 
-            processModel.getMessageService().sendEncryptedMessage(
-                    trade.getTradingPeer(),
-                    processModel.tradingPeer.getPubKeyRing(),
-                    message,
-                    true,
-                    new SendMessageListener() {
-                        @Override
-                        public void handleResult() {
-                            log.trace("FinalizePayoutTxRequest successfully arrived at peer");
+                processModel.getP2PService().sendEncryptedMailboxMessage(
+                        trade.getTradingPeerAddress(),
+                        processModel.tradingPeer.getPubKeyRing(),
+                        message,
+                        new SendMailboxMessageListener() {
+                            @Override
+                            public void onArrived() {
+                                log.trace("Message arrived at peer.");
+                                trade.setState(Trade.State.FIAT_PAYMENT_RECEIPT_MSG_SENT);
+                                complete();
+                            }
 
-                            trade.setTradeState(TradeState.SellerState.FIAT_PAYMENT_RECEIPT_MSG_SENT);
+                            @Override
+                            public void onStoredInMailbox() {
+                                log.trace("Message stored in mailbox.");
+                                trade.setState(Trade.State.FIAT_PAYMENT_RECEIPT_MSG_SENT);
+                                complete();
+                            }
 
-                            complete();
+                            @Override
+                            public void onFault() {
+                                appendToErrorMessage("FinalizePayoutTxRequest sending failed");
+                                failed();
+                            }
                         }
-
-                        @Override
-                        public void handleFault() {
-                            appendToErrorMessage("Sending FinalizePayoutTxRequest failed");
-                            failed();
-                        }
-                    });
+                );
+            } else {
+                log.error("trade.getTradingPeerAddress() = " + trade.getTradingPeerAddress());
+                failed("A needed dependency is null");
+            }
         } catch (Throwable t) {
             failed(t);
         }

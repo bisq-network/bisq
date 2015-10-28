@@ -18,21 +18,22 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.Peer;
+import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.p2p.Address;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.BuyerAsOffererProtocol;
 import io.bitsquare.trade.protocol.trade.OffererProtocol;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-
 import org.bitcoinj.core.Coin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BuyerAsOffererTrade extends BuyerTrade implements OffererTrade, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -50,10 +51,13 @@ public class BuyerAsOffererTrade extends BuyerTrade implements OffererTrade, Ser
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-
-        initStateProperties();
-        initAmountProperty();
+        try {
+            in.defaultReadObject();
+            initStateProperties();
+            initAmountProperty();
+        } catch (Throwable t) {
+            log.trace("Cannot be deserialized." + t.getMessage());
+        }
     }
 
     @Override
@@ -67,13 +71,15 @@ public class BuyerAsOffererTrade extends BuyerTrade implements OffererTrade, Ser
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleTakeOfferRequest(TradeMessage message, Peer taker) {
+    public void handleTakeOfferRequest(TradeMessage message, Address taker) {
         ((OffererProtocol) tradeProtocol).handleTakeOfferRequest(message, taker);
     }
 
     @Override
     public Coin getPayoutAmount() {
-        return getSecurityDeposit().add(getTradeAmount());
+        checkNotNull(getTradeAmount(), "Invalid state: getTradeAmount() = null");
+
+        return FeePolicy.SECURITY_DEPOSIT.add(getTradeAmount());
     }
 
 }

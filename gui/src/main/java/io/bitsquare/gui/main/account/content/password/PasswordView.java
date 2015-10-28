@@ -17,67 +17,184 @@
 
 package io.bitsquare.gui.main.account.content.password;
 
+import io.bitsquare.btc.TradeWalletService;
+import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.common.util.Tuple3;
+import io.bitsquare.crypto.ScryptUtil;
+import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.common.view.InitializableView;
-import io.bitsquare.gui.common.view.Wizard;
-import io.bitsquare.gui.main.help.Help;
-import io.bitsquare.gui.main.help.HelpId;
+import io.bitsquare.gui.components.PasswordTextField;
+import io.bitsquare.gui.components.TitledGroupBg;
+import io.bitsquare.gui.popups.Popup;
+import io.bitsquare.gui.util.Layout;
+import io.bitsquare.gui.util.validation.InputValidator;
+import io.bitsquare.gui.util.validation.PasswordValidator;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.layout.GridPane;
+import org.bitcoinj.core.Wallet;
+import org.bitcoinj.crypto.KeyCrypterScrypt;
 
 import javax.inject.Inject;
 
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import static io.bitsquare.gui.util.FormBuilder.*;
 
 @FxmlView
-public class PasswordView extends InitializableView<GridPane, PasswordViewModel> implements Wizard.Step {
+public class PasswordView extends ActivatableView<GridPane, Void> {
 
-    @FXML HBox buttonsHBox;
-    @FXML Button saveButton, skipButton;
-    @FXML PasswordField oldPasswordField, passwordField, repeatedPasswordField;
+    private final PasswordValidator passwordValidator;
+    private final WalletService walletService;
+    private final TradeWalletService tradeWalletService;
 
-    private Wizard wizard;
+    private PasswordTextField passwordField;
+    private PasswordTextField repeatedPasswordField;
+    private Button pwButton;
+    private TitledGroupBg headline;
+    private int gridRow = 0;
+    private Label repeatedPasswordLabel;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private PasswordView(PasswordViewModel model) {
-        super(model);
+    private PasswordView(PasswordValidator passwordValidator, WalletService walletService, TradeWalletService tradeWalletService) {
+        this.passwordValidator = passwordValidator;
+        this.walletService = walletService;
+        this.tradeWalletService = tradeWalletService;
     }
 
     @Override
     public void initialize() {
-        passwordField.textProperty().bindBidirectional(model.passwordField);
-        repeatedPasswordField.textProperty().bindBidirectional(model.repeatedPasswordField);
+        headline = addTitledGroupBg(root, gridRow, 3, "");
+        passwordField = addLabelPasswordTextField(root, gridRow, "Enter password:", Layout.FIRST_ROW_DISTANCE).second;
+        passwordField.setValidator(passwordValidator);
+        passwordField.textProperty().addListener((observable, oldValue, newValue) -> {
+            validatePasswords();
+        });
 
-        saveButton.disableProperty().bind(model.saveButtonDisabled);
+        Tuple2<Label, PasswordTextField> tuple2 = addLabelPasswordTextField(root, ++gridRow, "Repeat password:");
+        repeatedPasswordLabel = tuple2.first;
+        repeatedPasswordField = tuple2.second;
+        repeatedPasswordField.setValidator(passwordValidator);
+        repeatedPasswordField.textProperty().addListener((observable, oldValue, newValue) -> {
+            validatePasswords();
+        });
+
+        Tuple3<Button, ProgressIndicator, Label> tuple = addButtonWithStatus(root, ++gridRow, "", 0);
+        pwButton = tuple.first;
+        ProgressIndicator progressIndicator = tuple.second;
+        Label deriveStatusLabel = tuple.third;
+        pwButton.setDisable(true);
+
+        setText();
+
+        pwButton.setOnAction(e -> {
+            pwButton.setDisable(true);
+            deriveStatusLabel.setText("Derive key from password");
+            progressIndicator.setProgress(-1);
+            progressIndicator.setVisible(true);
+
+            KeyCrypterScrypt keyCrypterScrypt;
+            Wallet wallet = walletService.getWallet();
+            if (wallet.isEncrypted())
+                keyCrypterScrypt = (KeyCrypterScrypt) wallet.getKeyCrypter();
+            else
+                keyCrypterScrypt = new KeyCrypterScrypt(ScryptUtil.SCRYPT_PARAMETERS);
+
+            ScryptUtil.deriveKeyWithScrypt(keyCrypterScrypt, passwordField.getText(), aesKey -> {
+                deriveStatusLabel.setText("");
+                progressIndicator.setVisible(false);
+
+                if (wallet.isEncrypted()) {
+                    if (wallet.checkAESKey(aesKey)) {
+                        wallet.decrypt(aesKey);
+                        tradeWalletService.setAesKey(null);
+                        new Popup()
+                                .information("Wallet successfully decrypted and password protection removed.")
+                                .show();
+                        passwordField.setText("");
+                        repeatedPasswordField.setText("");
+                    } else {
+                        new Popup()
+                                .headLine("Wrong password")
+                                .message("Please try entering your password again, carefully checking for typos or spelling errors.")
+                                .show();
+                    }
+                } else {
+                    wallet.encrypt(keyCrypterScrypt, aesKey);
+                    // we save the key for the trade wallet as we don't require passwords here
+                    tradeWalletService.setAesKey(aesKey);
+                    new Popup()
+                            .information("Wallet successfully encrypted and password protection enabled.")
+                            .show();
+                    passwordField.setText("");
+                    repeatedPasswordField.setText("");
+                }
+                setText();
+            });
+        });
+
+        addTitledGroupBg(root, ++gridRow, 1, "Information", Layout.GROUP_DISTANCE);
+        addMultilineLabel(root, gridRow,
+                "With password protection you need to enter your password when" +
+                        " withdrawing Bitcoin out of your wallet or " +
+                        "if you want to view or restore a wallet from seed words.\n" +
+                        "For the transactions used in the trade process we don't support password protection as that would make automatic offer " +
+                        "execution impossible.",
+                Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+    }
+
+    private void setText() {
+        if (walletService.getWallet().isEncrypted()) {
+            pwButton.setText("Remove password");
+            headline.setText("Remove password protection for wallet");
+            repeatedPasswordField.setVisible(false);
+            repeatedPasswordField.setManaged(false);
+            repeatedPasswordLabel.setVisible(false);
+            repeatedPasswordLabel.setManaged(false);
+        } else {
+            pwButton.setText("Set password");
+            headline.setText("Set password protection for wallet");
+            repeatedPasswordField.setVisible(true);
+            repeatedPasswordField.setManaged(true);
+            repeatedPasswordLabel.setVisible(true);
+            repeatedPasswordLabel.setManaged(true);
+        }
     }
 
     @Override
-    public void setWizard(Wizard wizard) {
-        this.wizard = wizard;
+    protected void activate() {
     }
 
     @Override
-    public void hideWizardNavigation() {
-        buttonsHBox.getChildren().remove(skipButton);
+    protected void deactivate() {
     }
 
-    @FXML
-    private void onSaved() {
-        if (wizard != null && model.requestSavePassword())
-            wizard.nextStep(this);
-        else
-            log.debug(model.getErrorMessage()); // TODO use validating passwordTF
-    }
+    private void validatePasswords() {
+        passwordValidator.setExternalValidationResult(null);
+        InputValidator.ValidationResult result = passwordValidator.validate(passwordField.getText());
+        if (result.isValid) {
+            if (walletService.getWallet().isEncrypted()) {
+                pwButton.setDisable(false);
+                return;
+            } else {
+                result = passwordValidator.validate(repeatedPasswordField.getText());
 
-    @FXML
-    private void onSkipped() {
-        if (wizard != null)
-            wizard.nextStep(this);
-    }
-
-    @FXML
-    private void onOpenHelp() {
-        Help.openWindow(HelpId.SETUP_PASSWORD);
+                if (result.isValid) {
+                    if (passwordField.getText().equals(repeatedPasswordField.getText())) {
+                        pwButton.setDisable(false);
+                        return;
+                    } else {
+                        passwordValidator.setExternalValidationResult(new InputValidator.ValidationResult(false, "The 2 passwords do not match."));
+                    }
+                }
+            }
+        }
+        pwButton.setDisable(true);
     }
 }
 

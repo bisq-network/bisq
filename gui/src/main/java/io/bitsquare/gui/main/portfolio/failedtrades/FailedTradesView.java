@@ -19,26 +19,28 @@ package io.bitsquare.gui.main.portfolio.failedtrades;
 
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.components.Popups;
-
-import javax.inject.Inject;
-
+import io.bitsquare.gui.popups.TradeDetailsPopup;
+import io.bitsquare.trade.Trade;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 
+import javax.inject.Inject;
+
 @FxmlView
-public class FailedTradesView extends ActivatableViewAndModel<GridPane, FailedTradesViewModel> {
+public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTradesViewModel> {
 
     @FXML TableView<FailedTradesListItem> table;
     @FXML TableColumn<FailedTradesListItem, FailedTradesListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, tradeIdColumn, stateColumn;
+    private final TradeDetailsPopup tradeDetailsPopup;
 
     @Inject
-    public FailedTradesView(FailedTradesViewModel model) {
+    public FailedTradesView(FailedTradesViewModel model, TradeDetailsPopup tradeDetailsPopup) {
         super(model);
+        this.tradeDetailsPopup = tradeDetailsPopup;
     }
 
     @Override
@@ -56,15 +58,8 @@ public class FailedTradesView extends ActivatableViewAndModel<GridPane, FailedTr
     }
 
     @Override
-    public void doActivate() {
+    protected void activate() {
         table.setItems(model.getList());
-    }
-
-    private void openOfferDetails(FailedTradesListItem item) {
-        // TODO Open popup with details view
-        log.debug("Trade details " + item);
-        Popups.openWarningPopup("Under construction", "This will open a details " +
-                "popup but that is not implemented yet.");
     }
 
     private void setTradeIdColumnCellFactory() {
@@ -85,9 +80,11 @@ public class FailedTradesView extends ActivatableViewAndModel<GridPane, FailedTr
 
                                 if (item != null && !empty) {
                                     hyperlink = new Hyperlink(model.getTradeId(item));
-                                    hyperlink.setId("id-link");
                                     Tooltip.install(hyperlink, new Tooltip(model.getTradeId(item)));
-                                    hyperlink.setOnAction(event -> openOfferDetails(item));
+                                    hyperlink.setOnAction(event -> {
+                                        Trade trade = item.getTrade();
+                                        tradeDetailsPopup.show(trade);
+                                    });
                                     setGraphic(hyperlink);
                                 }
                                 else {

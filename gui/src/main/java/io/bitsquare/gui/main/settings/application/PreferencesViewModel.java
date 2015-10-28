@@ -17,37 +17,101 @@
 
 package io.bitsquare.gui.main.settings.application;
 
-import io.bitsquare.gui.common.model.ActivatableWithDataModel;
-import io.bitsquare.gui.common.model.ViewModel;
-
 import com.google.inject.Inject;
-
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.StringProperty;
+import io.bitsquare.gui.common.model.ActivatableViewModel;
+import io.bitsquare.user.BlockChainExplorer;
+import io.bitsquare.user.Preferences;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-class PreferencesViewModel extends ActivatableWithDataModel<PreferencesDataModel> implements ViewModel {
+class PreferencesViewModel extends ActivatableViewModel {
+
+    private final Preferences preferences;
+    final ObservableList<String> btcDenominations = FXCollections.observableArrayList(Preferences.getBtcDenominations());
+    final ObservableList<BlockChainExplorer> blockExplorers;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, initialisation
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PreferencesViewModel(PreferencesDataModel dataModel) {
-        super(dataModel);
+    public PreferencesViewModel(Preferences preferences) {
+        this.preferences = preferences;
+        blockExplorers = FXCollections.observableArrayList(preferences.getBlockChainExplorers());
     }
 
-    public ObservableList<String> getBtcDenominationItems() {
-        return dataModel.btcDenominations;
+    @Override
+    protected void activate() {
     }
 
-    BooleanProperty useAnimations() {
-        return dataModel.useAnimations;
-    }
-
-    BooleanProperty useEffects() {
-        return dataModel.useEffects;
-    }
-
-    StringProperty btcDenomination() {
-        return dataModel.btcDenomination;
+    @Override
+    protected void deactivate() {
     }
 
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI actions
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onSelectBtcDenomination(String selectedItem) {
+        preferences.setBtcDenomination(selectedItem);
+    }
+
+    public void onSelectUseEffects(boolean selected) {
+        preferences.setUseEffects(selected);
+    }
+
+    public void onSelectUseAnimations(boolean selected) {
+        preferences.setUseAnimations(selected);
+    }
+
+    public void onSelectShowPlaceOfferConfirmation(boolean selected) {
+        preferences.setShowPlaceOfferConfirmation(selected);
+    }
+
+    public void onSelectShowTakeOfferConfirmation(boolean selected) {
+        preferences.setShowTakeOfferConfirmation(selected);
+    }
+
+    public void onSelectAutoSelectArbitratorsCheckBox(boolean selected) {
+        preferences.setAutoSelectArbitrators(selected);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String getBtcDenomination() {
+        return preferences.getBtcDenomination();
+    }
+
+    public boolean getUseAnimations() {
+        return preferences.getUseAnimations();
+    }
+
+    public boolean getUseEffects() {
+        return preferences.getUseEffects();
+    }
+
+    public boolean getShowPlaceOfferConfirmation() {
+        return preferences.getShowPlaceOfferConfirmation();
+    }
+
+    public boolean getShowTakeOfferConfirmation() {
+        return preferences.getShowTakeOfferConfirmation();
+    }
+
+    public boolean getAutoSelectArbitrators() {
+        return preferences.getAutoSelectArbitrators();
+    }
+
+    public BlockChainExplorer getBlockExplorer() {
+        return preferences.getBlockChainExplorer();
+    }
+
+    public void onSelectBlockExplorer(BlockChainExplorer selectedItem) {
+        preferences.setBlockChainExplorer(selectedItem);
+    }
 }

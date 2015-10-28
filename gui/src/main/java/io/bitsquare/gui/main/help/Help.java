@@ -17,9 +17,8 @@
 
 package io.bitsquare.gui.main.help;
 
-import io.bitsquare.gui.components.Popups;
-import io.bitsquare.util.Utilities;
-
+import io.bitsquare.common.util.Utilities;
+import io.bitsquare.gui.popups.Popup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,8 +36,8 @@ public class Help {
             Utilities.openWebPage("https://github.com/bitsquare/bitsquare/wiki/User-Guide");
         } catch (Exception e) {
             log.error(e.getMessage());
-            Popups.openWarningPopup("Warning", "Opening browser failed. Please check your internet " +
-                    "connection.");
+            new Popup().warning("Opening browser failed. Please check your internet " +
+                    "connection.").show();
         }
     }
 

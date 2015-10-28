@@ -17,27 +17,24 @@
 
 package io.bitsquare.trade.failed;
 
-import io.bitsquare.crypto.KeyRing;
+import com.google.inject.Inject;
+import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradableList;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.offer.Offer;
-
-import com.google.inject.Inject;
-
-import java.io.File;
-
-import javax.inject.Named;
-
 import javafx.collections.ObservableList;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Named;
+import java.io.File;
+import java.util.Optional;
 
 public class FailedTradesManager {
     private static final Logger log = LoggerFactory.getLogger(FailedTradesManager.class);
     private final TradableList<Trade> failedTrades;
-    private KeyRing keyRing;
+    private final KeyRing keyRing;
 
     @Inject
     public FailedTradesManager(KeyRing keyRing, @Named("storage.dir") File storageDir) {
@@ -57,4 +54,7 @@ public class FailedTradesManager {
         return failedTrades.getObservableList();
     }
 
+    public Optional<Trade> getTradeById(String id) {
+        return failedTrades.stream().filter(e -> e.getId().equals(id)).findFirst();
+    }
 }

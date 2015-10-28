@@ -17,153 +17,89 @@
 
 package io.bitsquare.gui.main.offer.offerbook;
 
-import io.bitsquare.app.BitsquareApp;
+import com.google.inject.Inject;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.gui.common.model.ActivatableWithDataModel;
-import io.bitsquare.gui.common.model.ViewModel;
+import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.validation.InputValidator;
-import io.bitsquare.gui.util.validation.OptionalBtcValidator;
-import io.bitsquare.gui.util.validation.OptionalFiatValidator;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.CountryUtil;
+import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.p2p.Address;
+import io.bitsquare.payment.PaymentMethod;
+import io.bitsquare.payment.SepaAccount;
 import io.bitsquare.trade.offer.Offer;
-
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.Fiat;
-
-import com.google.inject.Inject;
-
+import io.bitsquare.trade.offer.OpenOfferManager;
+import io.bitsquare.user.Preferences;
+import io.bitsquare.user.User;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.List;
+import java.util.Optional;
 
-class OfferBookViewModel extends ActivatableWithDataModel<OfferBookDataModel> implements ViewModel {
-    private static final Logger log = LoggerFactory.getLogger(OfferBookViewModel.class);
-
-    private final OptionalBtcValidator optionalBtcValidator;
+class OfferBookViewModel extends ActivatableViewModel {
+    private final OpenOfferManager openOfferManager;
+    private final User user;
+    private final OfferBook offerBook;
+    private final Preferences preferences;
     private final BSFormatter formatter;
-    private final OptionalFiatValidator optionalFiatValidator;
 
-    final StringProperty amount = new SimpleStringProperty();
-    final StringProperty price = new SimpleStringProperty();
-    final StringProperty volume = new SimpleStringProperty();
-    final StringProperty btcCode = new SimpleStringProperty();
-    final StringProperty fiatCode = new SimpleStringProperty();
-    final StringProperty restrictionsInfo = new SimpleStringProperty();
+    private final FilteredList<OfferBookListItem> filteredItems;
+    private final SortedList<OfferBookListItem> sortedItems;
+    private TradeCurrency tradeCurrency;
 
-    private ChangeListener<String> amountListener;
-    private ChangeListener<String> priceListener;
-    private ChangeListener<String> volumeListener;
-    private ChangeListener<Coin> amountAsCoinListener;
-    private ChangeListener<Fiat> priceAsFiatListener;
-    private ChangeListener<Fiat> volumeAsFiatListener;
+    private Offer.Direction direction;
 
+    private final StringProperty btcCode = new SimpleStringProperty();
+    final StringProperty tradeCurrencyCode = new SimpleStringProperty();
+    private PaymentMethod paymentMethod = new AllPaymentMethodsEntry();
+    private final ObservableList<OfferBookListItem> offerBookListItems;
+    private final ListChangeListener<OfferBookListItem> listChangeListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferBookViewModel(OfferBookDataModel dataModel, OptionalFiatValidator optionalFiatValidator,
-                              OptionalBtcValidator optionalBtcValidator, BSFormatter formatter) {
-        super(dataModel);
+    public OfferBookViewModel(User user, OpenOfferManager openOfferManager, OfferBook offerBook,
+                              Preferences preferences,
+                              BSFormatter formatter) {
+        super();
 
-        this.optionalFiatValidator = optionalFiatValidator;
-        this.optionalBtcValidator = optionalBtcValidator;
+        this.openOfferManager = openOfferManager;
+        this.user = user;
+        this.offerBook = offerBook;
+        this.preferences = preferences;
         this.formatter = formatter;
 
-        createListeners();
+        offerBookListItems = offerBook.getOfferBookListItems();
+        listChangeListener = c -> filterList();
+
+        this.filteredItems = new FilteredList<>(offerBookListItems);
+        this.sortedItems = new SortedList<>(filteredItems);
+
+        tradeCurrency = CurrencyUtil.getDefaultFiatCurrency();
+        tradeCurrencyCode.set(tradeCurrency.getCode());
     }
 
     @Override
-    protected void doActivate() {
-        amount.set("");
-        price.set("");
-        volume.set("");
-        
-        addBindings();
-        addListeners();
+    protected void activate() {
+        btcCode.bind(preferences.btcDenominationProperty());
+        offerBookListItems.addListener(listChangeListener);
+        offerBook.fillOfferBookListItems();
+        filterList();
     }
 
     @Override
-    protected void doDeactivate() {
-        removeBindings();
-        removeListeners();
-    }
-
-    private void addBindings() {
-        btcCode.bind(dataModel.btcCode);
-        fiatCode.bind(dataModel.fiatCode);
-        restrictionsInfo.bind(dataModel.restrictionsInfo);
-    }
-
-    private void removeBindings() {
+    protected void deactivate() {
         btcCode.unbind();
-        fiatCode.unbind();
-        restrictionsInfo.unbind();
-    }
-
-    private void createListeners() {
-        amountAsCoinListener = (ov, oldValue, newValue) -> amount.set(formatter.formatCoin(newValue));
-        priceAsFiatListener = (ov, oldValue, newValue) -> price.set(formatter.formatFiat(newValue));
-        volumeAsFiatListener = (ov, oldValue, newValue) -> volume.set(formatter.formatFiat(newValue));
-
-        amountListener = (ov, oldValue, newValue) -> {
-            if (isBtcInputValid(newValue).isValid) {
-                setAmountToModel();
-                setPriceToModel();
-                dataModel.calculateVolume();
-            }
-        };
-        priceListener = (ov, oldValue, newValue) -> {
-            if (isFiatInputValid(newValue).isValid) {
-                setAmountToModel();
-                setPriceToModel();
-                dataModel.calculateVolume();
-            }
-        };
-        volumeListener = (ov, oldValue, newValue) -> {
-            if (isFiatInputValid(newValue).isValid) {
-                setPriceToModel();
-                setVolumeToModel();
-                dataModel.calculateAmount();
-            }
-        };
-    }
-
-    private void addListeners() {
-        // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
-        dataModel.amountAsCoinProperty().addListener(amountAsCoinListener);
-        dataModel.priceAsFiatProperty().addListener(priceAsFiatListener);
-        dataModel.volumeAsFiatProperty().addListener(volumeAsFiatListener);
-
-        // Bidirectional bindings are used for all input fields: amount, price and volume
-        // We do volume/amount calculation during input, so user has immediate feedback
-        amount.addListener(amountListener);
-        price.addListener(priceListener);
-        volume.addListener(volumeListener);
-
-        if (BitsquareApp.DEV_MODE) {
-            amount.set("1");
-            price.set("300");
-            setAmountToModel();
-            setPriceToModel();
-        }
-    }
-
-    private void removeListeners() {
-        amount.removeListener(amountListener);
-        price.removeListener(priceListener);
-        volume.removeListener(volumeListener);
-
-        dataModel.amountAsCoinProperty().removeListener(amountAsCoinListener);
-        dataModel.priceAsFiatProperty().removeListener(priceAsFiatListener);
-        dataModel.volumeAsFiatProperty().removeListener(volumeAsFiatListener);
     }
 
 
@@ -172,7 +108,7 @@ class OfferBookViewModel extends ActivatableWithDataModel<OfferBookDataModel> im
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void setDirection(Offer.Direction direction) {
-        dataModel.setDirection(direction);
+        this.direction = direction;
     }
 
 
@@ -180,8 +116,20 @@ class OfferBookViewModel extends ActivatableWithDataModel<OfferBookDataModel> im
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void onCancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        dataModel.onCancelOpenOffer(offer, resultHandler, errorMessageHandler);
+    public void onSetTradeCurrency(TradeCurrency tradeCurrency) {
+        this.tradeCurrency = tradeCurrency;
+        tradeCurrencyCode.set(tradeCurrency.getCode());
+       /* if (!(tradeCurrency instanceof AllTradeCurrenciesEntry))*/
+        //offerBook.getOffers(tradeCurrencyCode.get());
+    }
+
+    public void onSetPaymentMethod(PaymentMethod paymentMethod) {
+        this.paymentMethod = paymentMethod;
+        filterList();
+    }
+
+    void onRemoveOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        openOfferManager.onRemoveOpenOffer(offer, resultHandler, errorMessageHandler);
     }
 
 
@@ -189,21 +137,34 @@ class OfferBookViewModel extends ActivatableWithDataModel<OfferBookDataModel> im
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    boolean isTradable(Offer offer) {
-        return dataModel.isTradable(offer);
-    }
-
     SortedList<OfferBookListItem> getOfferList() {
-        return dataModel.getOfferList();
-    }
-
-    boolean isRegistered() {
-        return dataModel.isRegistered();
+        return sortedItems;
     }
 
     boolean isMyOffer(Offer offer) {
-        return dataModel.isMyOffer(offer);
+        return openOfferManager.isMyOffer(offer);
     }
+
+    Offer.Direction getDirection() {
+        return direction;
+    }
+
+    public ObservableList<TradeCurrency> getTradeCurrencies() {
+        ObservableList<TradeCurrency> list = preferences.getTradeCurrenciesAsObservable();
+       /* list.add(0, new AllTradeCurrenciesEntry());*/
+        return list;
+    }
+
+    public TradeCurrency getTradeCurrency() {
+        return tradeCurrency;
+    }
+
+    public ObservableList<PaymentMethod> getPaymentMethods() {
+        ObservableList<PaymentMethod> list = FXCollections.observableArrayList(PaymentMethod.ALL_VALUES);
+        list.add(0, paymentMethod);
+        return list;
+    }
+
 
     String getAmount(OfferBookListItem item) {
         return (item != null) ? formatter.formatCoin(item.getOffer().getAmount()) +
@@ -219,49 +180,108 @@ class OfferBookViewModel extends ActivatableWithDataModel<OfferBookDataModel> im
                 " (" + formatter.formatFiat(item.getOffer().getMinOfferVolume()) + ")" : "";
     }
 
-    String getBankAccountType(OfferBookListItem item) {
-        return (item != null) ? BSResources.get(item.getOffer().getFiatAccountType().toString()) : "";
+    String getPaymentMethod(OfferBookListItem item) {
+        String result = "";
+        if (item != null) {
+            Offer offer = item.getOffer();
+            String method = BSResources.get(offer.getPaymentMethod().getId());
+            String methodCountryCode = offer.getPaymentMethodCountryCode();
+
+            if (methodCountryCode != null)
+                result = method + " (" + methodCountryCode + ")";
+            else
+                result = method;
+        }
+        return result;
+    }
+
+    String getPaymentMethodToolTip(OfferBookListItem item) {
+        String result = "";
+        if (item != null) {
+            Offer offer = item.getOffer();
+            String method = BSResources.get(offer.getPaymentMethod().getId());
+            String methodCountryCode = offer.getPaymentMethodCountryCode();
+
+            if (methodCountryCode != null)
+                result = method + "\nOfferers country of bank: " + CountryUtil.getNameByCode(methodCountryCode);
+            else
+                result = method;
+
+            List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
+            if (acceptedCountryCodes != null && acceptedCountryCodes.size() > 0) {
+                if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes))
+                    result += "\nAccepted taker countries: All Euro countries";
+                else
+                    result += "\nAccepted taker countries: " + CountryUtil.getNamesByCodesString(acceptedCountryCodes);
+            }
+        }
+        return result;
     }
 
     String getDirectionLabel(Offer offer) {
-        return formatter.formatDirection(offer.getMirroredDirection());
-    }
-
-    Offer.Direction getDirection() {
-        return dataModel.getDirection();
-    }
-
-    Coin getAmountAsCoin() {
-        return dataModel.getAmountAsCoin();
-    }
-
-    Fiat getPriceAsCoin() {
-        return dataModel.getPriceAsFiat();
+        return formatter.getDirection(offer.getMirroredDirection());
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Utils
+    // Checks
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private InputValidator.ValidationResult isBtcInputValid(String input) {
-        return optionalBtcValidator.validate(input);
+    boolean hasPaymentAccount() {
+        return user.currentPaymentAccountProperty().get() != null;
     }
 
-    private InputValidator.ValidationResult isFiatInputValid(String input) {
-        return optionalFiatValidator.validate(input);
+    boolean isPaymentAccountValidForOffer(Offer offer) {
+
+        Optional<TradeCurrency> result1 = user.getPaymentAccounts().stream()
+                .filter(paymentAccount -> paymentAccount.getPaymentMethod().equals(offer.getPaymentMethod()))
+                .filter(paymentAccount -> {
+                    List<String> offerAcceptedCountryCodes = offer.getAcceptedCountryCodes();
+                    if (offerAcceptedCountryCodes != null && paymentAccount instanceof SepaAccount) {
+                        return ((SepaAccount) paymentAccount).getAcceptedCountryCodes().stream()
+                                .filter(offerAcceptedCountryCodes::contains)
+                                .findAny().isPresent();
+                    } else {
+                        return true;
+                    }
+                })
+                .flatMap(paymentAccount -> paymentAccount.getTradeCurrencies().stream())
+                .filter(currency -> currency.getCode().equals(offer.getCurrencyCode())).findAny();
+        return result1.isPresent();
     }
 
-    private void setAmountToModel() {
-        dataModel.setAmount(formatter.parseToCoinWith4Decimals(amount.get()));
+    public boolean hasPaymentAccountForCurrency() {
+        return user.hasPaymentAccountForCurrency(tradeCurrency);
     }
 
-    private void setPriceToModel() {
-        dataModel.setPrice(formatter.parseToFiatWith2Decimals(price.get()));
+    boolean hasAcceptedArbitrators() {
+        return user.getAcceptedArbitrators() != null && !user.getAcceptedArbitrators().isEmpty();
     }
 
-    private void setVolumeToModel() {
-        dataModel.setVolume(formatter.parseToFiatWith2Decimals(volume.get()));
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Filters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void filterList() {
+        filteredItems.setPredicate(offerBookListItem -> {
+            Offer offer = offerBookListItem.getOffer();
+            boolean directionResult = offer.getDirection() != direction;
+            boolean paymentMethodResult = true;
+            if (!(paymentMethod instanceof AllPaymentMethodsEntry))
+                paymentMethodResult = offer.getPaymentMethod().equals(paymentMethod);
+
+            return directionResult && paymentMethodResult;
+        });
     }
 
+
+    public boolean hasMatchingArbitrator(Offer offer) {
+        for (Address offerArbitratorAddress : offer.getArbitratorAddresses()) {
+            for (Address acceptedArbitratorAddress : user.getAcceptedArbitratorAddresses()) {
+                if (offerArbitratorAddress.equals(acceptedArbitratorAddress))
+                    return true;
+            }
+        }
+        return false;
+    }
 }

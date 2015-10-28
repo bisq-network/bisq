@@ -17,8 +17,6 @@
 
 package io.bitsquare.gui.util.validation;
 
-import io.bitsquare.user.User;
-
 import javax.inject.Inject;
 
 /**
@@ -27,8 +25,8 @@ import javax.inject.Inject;
 public class OptionalFiatValidator extends FiatValidator {
 
     @Inject
-    public OptionalFiatValidator(User user) {
-        super(user);
+    public OptionalFiatValidator() {
+        super();
     }
 
     @Override

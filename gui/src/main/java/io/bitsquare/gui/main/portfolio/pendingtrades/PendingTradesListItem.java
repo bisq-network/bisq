@@ -18,13 +18,11 @@
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
 import io.bitsquare.trade.Trade;
-
+import javafx.beans.property.ReadOnlyObjectProperty;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import java.util.Date;
-
-import javafx.beans.property.ReadOnlyObjectProperty;
 
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.
@@ -69,7 +67,7 @@ public class PendingTradesListItem {
     }
 
     public String getId() {
-        return trade.getId();
+        return trade.getShortId();
     }
 
     public Fiat getPrice() {

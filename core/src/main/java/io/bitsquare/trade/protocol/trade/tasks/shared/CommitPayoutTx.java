@@ -18,14 +18,9 @@
 package io.bitsquare.trade.protocol.trade.tasks.shared;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.BuyerTrade;
-import io.bitsquare.trade.SellerTrade;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-
 import org.bitcoinj.core.Transaction;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,14 +35,9 @@ public class CommitPayoutTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            Transaction transaction = processModel.getTradeWalletService().commitTx(trade.getPayoutTx());
-
+            Transaction transaction = processModel.getTradeWalletService().addTransactionToWallet(trade.getPayoutTx());
             trade.setPayoutTx(transaction);
-
-            if (trade instanceof BuyerTrade)
-                trade.setTradeState(TradeState.BuyerState.PAYOUT_TX_COMMITTED);
-            else if (trade instanceof SellerTrade)
-                trade.setTradeState(TradeState.SellerState.PAYOUT_TX_COMMITTED);
+            trade.setState(Trade.State.PAYOUT_TX_COMMITTED);
 
             complete();
         } catch (Throwable t) {

@@ -20,7 +20,6 @@ package io.bitsquare.trade.protocol.placeoffer.tasks;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +38,9 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
 
             complete();
         } catch (Exception e) {
+            model.offer.setErrorMessage("An error occurred.\n" +
+                    "Error message:\n"
+                    + e.getMessage());
             failed(e);
         }
     }

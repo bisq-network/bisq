@@ -20,7 +20,6 @@ package io.bitsquare.trade;
 import io.bitsquare.trade.offer.Offer;
 
 import java.io.Serializable;
-
 import java.util.Date;
 
 public interface Tradable extends Serializable {
@@ -29,4 +28,6 @@ public interface Tradable extends Serializable {
     Date getDate();
 
     String getId();
+
+    String getShortId();
 }

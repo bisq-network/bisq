@@ -17,15 +17,15 @@
 
 package io.bitsquare.gui.components;
 
-import io.bitsquare.gui.util.GUIUtil;
-
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bitsquare.common.util.Utilities;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.AnchorPane;
 
 public class TextFieldWithCopyIcon extends AnchorPane {
 
@@ -45,7 +45,7 @@ public class TextFieldWithCopyIcon extends AnchorPane {
         AnchorPane.setRightAnchor(copyIcon, 0.0);
         copyIcon.setOnMouseClicked(e -> {
             if (getText() != null && getText().length() > 0)
-                GUIUtil.copyToClipboard(getText());
+                Utilities.copyToClipboard(getText());
         });
         TextField txIdLabel = new TextField();
         txIdLabel.setEditable(false);
@@ -63,7 +63,7 @@ public class TextFieldWithCopyIcon extends AnchorPane {
     // Getter/Setter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String getText() {
+    private String getText() {
         return text.get();
     }
 

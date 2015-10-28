@@ -19,15 +19,14 @@ package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.bitsquare.util.Validator.*;
+import static io.bitsquare.util.Validator.checkTradeId;
+import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
 public class ProcessFiatTransferStartedMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(ProcessFiatTransferStartedMessage.class);
@@ -40,13 +39,17 @@ public class ProcessFiatTransferStartedMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+            log.debug("current trade state " + trade.getState());
             FiatTransferStartedMessage message = (FiatTransferStartedMessage) processModel.getTradeMessage();
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);
 
             processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(message.buyerPayoutAddress));
 
-            trade.setTradeState(TradeState.SellerState.FIAT_PAYMENT_STARTED_MSG_RECEIVED);
+            trade.setState(Trade.State.FIAT_PAYMENT_STARTED_MSG_RECEIVED);
+
+            // update to the latest peer address of our peer if the message is correct
+            trade.setTradingPeerAddress(processModel.getTempTradingPeerAddress());
 
             complete();
         } catch (Throwable t) {

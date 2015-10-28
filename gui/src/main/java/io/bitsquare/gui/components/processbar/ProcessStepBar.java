@@ -17,11 +17,12 @@
 
 package io.bitsquare.gui.components.processbar;
 
-import java.util.List;
-
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.scene.control.*;
+import javafx.scene.control.Control;
+import javafx.scene.control.Skin;
+
+import java.util.List;
 
 public class ProcessStepBar<T> extends Control {
 
@@ -65,7 +66,7 @@ public class ProcessStepBar<T> extends Control {
             ((ProcessStepBarSkin) getSkin()).setProcessStepItems(processStepItems);
     }
 
-    public void setSelectedIndex(int selectedIndex) {
+    private void setSelectedIndex(int selectedIndex) {
         this.selectedIndex.set(selectedIndex);
         if (getSkin() != null)
             ((ProcessStepBarSkin) getSkin()).setSelectedIndex(selectedIndex);

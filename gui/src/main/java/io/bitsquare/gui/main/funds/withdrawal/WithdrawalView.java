@@ -17,75 +17,89 @@
 
 package io.bitsquare.gui.main.funds.withdrawal;
 
+import com.google.common.util.concurrent.FutureCallback;
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.gui.common.view.ActivatableViewAndModel;
+import io.bitsquare.common.util.Utilities;
+import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.popups.OfferDetailsPopup;
+import io.bitsquare.gui.popups.Popup;
+import io.bitsquare.gui.popups.TradeDetailsPopup;
+import io.bitsquare.gui.popups.WalletPasswordPopup;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
-import io.bitsquare.gui.util.validation.BtcValidator;
+import io.bitsquare.trade.Tradable;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.closed.ClosedTradableManager;
+import io.bitsquare.trade.failed.FailedTradesManager;
+import io.bitsquare.trade.offer.OpenOffer;
 import io.bitsquare.trade.offer.OpenOfferManager;
-
-import org.bitcoinj.core.AddressFormatException;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.Transaction;
-
-import com.google.common.util.concurrent.FutureCallback;
-
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.inject.Inject;
-
+import io.bitsquare.user.Preferences;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
-
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
-
-import org.controlsfx.control.action.Action;
-
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.Transaction;
 import org.jetbrains.annotations.NotNull;
+import org.spongycastle.crypto.params.KeyParameter;
+
+import javax.inject.Inject;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @FxmlView
-public class WithdrawalView extends ActivatableViewAndModel {
+public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @FXML Button withdrawButton;
     @FXML TableView<WithdrawalListItem> table;
     @FXML TextField withdrawFromTextField, withdrawToTextField, amountTextField;
-    @FXML TableColumn<WithdrawalListItem, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, copyColumn,
-            confidenceColumn;
+    @FXML
+    TableColumn<WithdrawalListItem, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, confidenceColumn;
 
     private final WalletService walletService;
-    private TradeManager tradeManager;
-    private OpenOfferManager openOfferManager;
+    private final TradeManager tradeManager;
+    private final ClosedTradableManager closedTradableManager;
+    private final FailedTradesManager failedTradesManager;
+    private final OpenOfferManager openOfferManager;
     private final BSFormatter formatter;
+    private final Preferences preferences;
     private final BtcAddressValidator btcAddressValidator;
-    private final BtcValidator btcValidator;
+    private final WalletPasswordPopup walletPasswordPopup;
+    private final OfferDetailsPopup offerDetailsPopup;
+    private final TradeDetailsPopup tradeDetailsPopup;
     private final ObservableList<WithdrawalListItem> addressList = FXCollections.observableArrayList();
 
     @Inject
-    private WithdrawalView(WalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager, BSFormatter formatter,
-                           BtcAddressValidator btcAddressValidator, BtcValidator btcValidator) {
+    private WithdrawalView(WalletService walletService, TradeManager tradeManager, ClosedTradableManager closedTradableManager,
+                           FailedTradesManager failedTradesManager, OpenOfferManager openOfferManager, BSFormatter formatter, Preferences preferences,
+                           BtcAddressValidator btcAddressValidator, WalletPasswordPopup walletPasswordPopup,
+                           OfferDetailsPopup offerDetailsPopup, TradeDetailsPopup tradeDetailsPopup) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
+        this.closedTradableManager = closedTradableManager;
+        this.failedTradesManager = failedTradesManager;
         this.openOfferManager = openOfferManager;
         this.formatter = formatter;
+        this.preferences = preferences;
         this.btcAddressValidator = btcAddressValidator;
-        this.btcValidator = btcValidator;
+        this.walletPasswordPopup = walletPasswordPopup;
+        this.offerDetailsPopup = offerDetailsPopup;
+        this.tradeDetailsPopup = tradeDetailsPopup;
     }
 
 
@@ -95,19 +109,34 @@ public class WithdrawalView extends ActivatableViewAndModel {
         table.setPlaceholder(new Label("No funds for withdrawal available"));
 
         setLabelColumnCellFactory();
+        setAddressColumnCellFactory();
         setBalanceColumnCellFactory();
-        setCopyColumnCellFactory();
         setConfidenceColumnCellFactory();
+
+        if (BitsquareApp.DEV_MODE)
+            withdrawToTextField.setText("mwajQdfYnve1knXnmv7JdeiVpeogTsck6S");
     }
 
     private boolean areInputsValid() {
         return btcAddressValidator.validate(withdrawFromTextField.getText()).and(
-                btcAddressValidator.validate(withdrawToTextField.getText())).and(
-                btcValidator.validate(amountTextField.getText())).isValid;
+                btcAddressValidator.validate(withdrawToTextField.getText())).isValid;
+    }
+
+    private void openTxDetails(WithdrawalListItem item) {
+        // TODO Open popup with details view
+        log.debug("openTxDetails " + item);
+
+        try {
+            Utilities.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            new Popup().warning("Opening browser failed. Please check your internet " +
+                    "connection.").show();
+        }
     }
 
     @Override
-    public void doActivate() {
+    protected void activate() {
         withdrawButton.disableProperty().bind(Bindings.createBooleanBinding(() -> !areInputsValid(),
                 withdrawFromTextField.textProperty(), amountTextField.textProperty(), withdrawToTextField.textProperty()));
         table.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
@@ -137,7 +166,7 @@ public class WithdrawalView extends ActivatableViewAndModel {
     }
 
     @Override
-    public void doDeactivate() {
+    protected void deactivate() {
         addressList.forEach(WithdrawalListItem::cleanup);
         withdrawButton.disableProperty().unbind();
     }
@@ -163,51 +192,62 @@ public class WithdrawalView extends ActivatableViewAndModel {
                 }
             };
 
-            Action response = Popups.openConfirmPopup(
-                    "Withdrawal request", "Confirm your request",
-                    "Your withdrawal request:\n\n" + "Amount: " + amountTextField.getText() + " BTC\n" + "Sending" +
-                            " address: " + withdrawFromTextField.getText() + "\n" + "Receiving address: " +
-                            withdrawToTextField.getText() + "\n" + "Transaction fee: " +
-                            formatter.formatCoinWithCode(FeePolicy.TX_FEE) + "\n" +
-                            "You receive in total: " +
-                            formatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
-                            "Are you sure you withdraw that amount?");
-
-            Popups.removeBlurContent();
-            if (Popups.isOK(response)) {
-                try {
-                    walletService.sendFunds(withdrawFromTextField.getText(), withdrawToTextField.getText(),
-                            amount, callback);
-                    fillList();
-                } catch (AddressFormatException e) {
-                    Popups.openErrorPopup("Address invalid",
-                            "The address is not correct. Please check the address format.");
-
-                } catch (InsufficientMoneyException e) {
-                    Popups.openInsufficientMoneyPopup();
-                } catch (IllegalArgumentException e) {
-                    Popups.openErrorPopup("Wrong inputs", "Please check the inputs.");
-                }
+            if (BitsquareApp.DEV_MODE) {
+                doWithdraw(amount, callback);
+            } else {
+                new Popup().headLine("Confirm your withdrawal request").message("Amount: " + amountTextField.getText() + " " +
+                        "BTC\n" +
+                        "Sending" +
+                        " address: " + withdrawFromTextField.getText() + "\n" + "Receiving address: " +
+                        withdrawToTextField.getText() + "\n" + "Transaction fee: " +
+                        formatter.formatCoinWithCode(FeePolicy.TX_FEE) + "\n" +
+                        "Receivers amount: " +
+                        formatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
+                        "Are you sure you withdraw that amount?")
+                        .onAction(() -> {
+                            doWithdraw(amount, callback);
+                        })
+                        .show();
             }
         }
         else {
-            Popups.openErrorPopup("Insufficient amount",
-                    "The amount to transfer is lower the the transaction fee and the min. possible tx value.");
+            new Popup().error("The amount to transfer is lower the the transaction fee and the min. possible tx value.").show();
+        }
+    }
+
+    private void doWithdraw(Coin amount, FutureCallback<Transaction> callback) {
+        if (walletService.getWallet().isEncrypted())
+            walletPasswordPopup.show().onAesKey(aesKey -> sendFunds(amount, aesKey, callback));
+        else
+            sendFunds(amount, null, callback);
+        fillList();
+    }
+
+    private void sendFunds(Coin amount, KeyParameter aesKey, FutureCallback<Transaction> callback) {
+        try {
+            walletService.sendFunds(withdrawFromTextField.getText(), withdrawToTextField.getText(), amount, aesKey, callback);
+        } catch (AddressFormatException e) {
+            new Popup().error("The address is not correct. Please check the address format.").show();
+        } catch (InsufficientMoneyException e) {
+            log.warn(e.getMessage());
+            new Popup().error("You don't have enough fund in your wallet.").show();
         }
 
         withdrawFromTextField.setText("");
         withdrawFromTextField.setPromptText("Select a source address from the table");
         amountTextField.setText("");
         amountTextField.setPromptText("");
-        withdrawToTextField.setText("");
+        if (!BitsquareApp.DEV_MODE)
+            withdrawToTextField.setText("");
         withdrawToTextField.setPromptText("");
     }
 
     private void fillList() {
         addressList.clear();
+
         List<AddressEntry> addressEntryList = walletService.getAddressEntryList();
 
-        List<String> reservedTrades = Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getPendingTrades().stream())
+        List<String> reservedTrades = Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getTrades().stream())
                 .map(tradable -> tradable.getOffer().getId())
                 .collect(Collectors.toList());
 
@@ -237,13 +277,11 @@ public class WithdrawalView extends ActivatableViewAndModel {
 
                         if (item != null && !empty) {
                             hyperlink = new Hyperlink(item.getLabel());
-                            hyperlink.setId("id-link");
                             if (item.getAddressEntry().getOfferId() != null) {
-                                Tooltip tooltip = new Tooltip(item.getAddressEntry().getOfferId());
+                                Tooltip tooltip = new Tooltip(item.getAddressEntry().getShortOfferId());
                                 Tooltip.install(hyperlink, tooltip);
 
-                                hyperlink.setOnAction(event -> log.info("Show trade details " + item.getAddressEntry
-                                        ().getOfferId()));
+                                hyperlink.setOnAction(event -> openDetails(item));
                             }
                             setGraphic(hyperlink);
                         }
@@ -255,6 +293,36 @@ public class WithdrawalView extends ActivatableViewAndModel {
                 };
             }
         });
+    }
+
+    private void setAddressColumnCellFactory() {
+        addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        addressColumn.setCellFactory(
+                new Callback<TableColumn<WithdrawalListItem, WithdrawalListItem>, TableCell<WithdrawalListItem,
+                        WithdrawalListItem>>() {
+
+                    @Override
+                    public TableCell<WithdrawalListItem, WithdrawalListItem> call(TableColumn<WithdrawalListItem,
+                            WithdrawalListItem> column) {
+                        return new TableCell<WithdrawalListItem, WithdrawalListItem>() {
+                            private Hyperlink hyperlink;
+
+                            @Override
+                            public void updateItem(final WithdrawalListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    hyperlink = new Hyperlink(item.getAddressString());
+                                    hyperlink.setOnAction(event -> openTxDetails(item));
+                                    setGraphic(hyperlink);
+                                } else {
+                                    setGraphic(null);
+                                    setId(null);
+                                }
+                            }
+                        };
+                    }
+                });
     }
 
     private void setBalanceColumnCellFactory() {
@@ -271,43 +339,6 @@ public class WithdrawalView extends ActivatableViewAndModel {
                             public void updateItem(final WithdrawalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setGraphic((item != null && !empty) ? item.getBalanceLabel() : null);
-                            }
-                        };
-                    }
-                });
-    }
-
-    private void setCopyColumnCellFactory() {
-        copyColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        copyColumn.setCellFactory(
-                new Callback<TableColumn<WithdrawalListItem, WithdrawalListItem>, TableCell<WithdrawalListItem,
-                        WithdrawalListItem>>() {
-
-                    @Override
-                    public TableCell<WithdrawalListItem, WithdrawalListItem> call(TableColumn<WithdrawalListItem,
-                            WithdrawalListItem> column) {
-                        return new TableCell<WithdrawalListItem, WithdrawalListItem>() {
-                            final Label copyIcon = new Label();
-
-                            {
-                                copyIcon.getStyleClass().add("copy-icon");
-                                AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
-                                Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
-                            }
-
-                            @Override
-                            public void updateItem(final WithdrawalListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-
-                                if (item != null && !empty) {
-                                    setGraphic(copyIcon);
-                                    copyIcon.setOnMouseClicked(e -> GUIUtil.copyToClipboard(item
-                                            .addressStringProperty().get()));
-
-                                }
-                                else {
-                                    setGraphic(null);
-                                }
                             }
                         };
                     }
@@ -342,6 +373,20 @@ public class WithdrawalView extends ActivatableViewAndModel {
                 });
     }
 
+    private void openDetails(WithdrawalListItem item) {
+        String offerId = item.getAddressEntry().getOfferId();
+        Optional<Tradable> tradableOptional = closedTradableManager.getTradableById(offerId);
+        if (tradableOptional.isPresent()) {
+            Tradable tradable = tradableOptional.get();
+            if (tradable instanceof Trade) {
+                tradeDetailsPopup.show((Trade) tradable);
+            } else if (tradable instanceof OpenOffer) {
+                offerDetailsPopup.show(tradable.getOffer());
+            }
+        } else {
+            failedTradesManager.getTradeById(offerId).ifPresent(trade -> tradeDetailsPopup.show(trade));
+        }
+    }
 }
 
 

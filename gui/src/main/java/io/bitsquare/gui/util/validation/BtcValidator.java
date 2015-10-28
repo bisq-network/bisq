@@ -17,13 +17,21 @@
 
 package io.bitsquare.gui.util.validation;
 
+import io.bitsquare.btc.Restrictions;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.BSResources;
 
-import org.bitcoinj.core.NetworkParameters;
-
+import javax.inject.Inject;
 import java.math.BigDecimal;
 
 public class BtcValidator extends NumberValidator {
+
+    private final BSFormatter formatter;
+
+    @Inject
+    public BtcValidator(BSFormatter formatter) {
+        this.formatter = formatter;
+    }
 
     @Override
     public ValidationResult validate(String input) {
@@ -55,8 +63,8 @@ public class BtcValidator extends NumberValidator {
     protected ValidationResult validateIfNotExceedsMaxBtcValue(String input) {
         BigDecimal bd = new BigDecimal(input);
         final BigDecimal satoshis = bd.movePointRight(8);
-        if (satoshis.longValue() > NetworkParameters.MAX_MONEY.longValue())
-            return new ValidationResult(false, BSResources.get("validation.btc.toLarge"));
+        if (satoshis.longValue() > Restrictions.MAX_TRADE_AMOUNT.longValue())
+            return new ValidationResult(false, BSResources.get("validation.btc.toLarge", formatter.formatCoinWithCode(Restrictions.MAX_TRADE_AMOUNT)));
         else
             return new ValidationResult(true);
     }

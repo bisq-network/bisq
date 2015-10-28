@@ -22,7 +22,6 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
 import io.bitsquare.trade.protocol.availability.messages.OfferAvailabilityResponse;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +47,10 @@ public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityMode
 
             complete();
         } catch (Throwable t) {
-            model.offer.setState(Offer.State.FAULT);
+            model.offer.setErrorMessage("An error occurred.\n" +
+                    "Error message:\n"
+                    + t.getMessage());
+
             failed(t);
         }
     }

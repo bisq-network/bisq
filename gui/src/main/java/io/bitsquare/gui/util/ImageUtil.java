@@ -17,12 +17,10 @@
 
 package io.bitsquare.gui.util;
 
-import io.bitsquare.locale.Country;
-
-import javafx.scene.image.*;
-
 import com.sun.javafx.tk.quantum.QuantumToolkit;
-
+import io.bitsquare.locale.Country;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,8 +29,6 @@ public class ImageUtil {
     private static final Logger log = LoggerFactory.getLogger(ImageUtil.class);
 
     public static final String REMOVE_ICON = "image-remove";
-    public static final String EXPAND = "image-expand";
-    public static final String COLLAPSE = "image-collapse";
 
     public static ImageView getImageViewById(String id) {
         ImageView imageView = new ImageView();
@@ -44,7 +40,7 @@ public class ImageUtil {
         return new Image(ImageUtil.class.getResourceAsStream(url));
     }
 
-    public static ImageView getImageViewByUrl(String url) {
+    private static ImageView getImageViewByUrl(String url) {
         return new ImageView(getImageByUrl(url));
     }
 

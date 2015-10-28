@@ -18,35 +18,27 @@
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps;
 
 import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.gui.components.InfoDisplay;
+import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.util.Layout;
-
-import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
-import javafx.event.ActionEvent;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static io.bitsquare.gui.util.ComponentBuilder.*;
+import static io.bitsquare.gui.util.FormBuilder.*;
 
 public class CompletedView extends TradeStepDetailsView {
-    private static final Logger log = LoggerFactory.getLogger(WaitTxInBlockchainView.class);
-
     private final ChangeListener<Boolean> focusedPropertyListener;
 
     private Label btcTradeAmountLabel;
     private TextField btcTradeAmountTextField;
     private Label fiatTradeAmountLabel;
     private TextField fiatTradeAmountTextField;
-    private Label feesLabel;
     private TextField feesTextField;
-    private Label securityDepositLabel;
     private TextField securityDepositTextField;
-    private InfoDisplay summaryInfoDisplay;
     private InputTextField withdrawAddressTextField;
     private TextField withdrawAmountTextField;
     private Button withdrawButton;
@@ -66,39 +58,28 @@ public class CompletedView extends TradeStepDetailsView {
     }
 
     @Override
-    public void activate() {
-        super.activate();
+    public void doActivate() {
+        super.doActivate();
         withdrawAddressTextField.focusedProperty().addListener(focusedPropertyListener);
         withdrawAddressTextField.setValidator(model.getBtcAddressValidator());
         withdrawButton.disableProperty().bind(model.getWithdrawalButtonDisable());
 
         // We need to handle both cases: Address not set and address already set (when returning from other view)
         // We get address validation after focus out, so first make sure we loose focus and then set it again as hint for user to put address in
-        Platform.runLater(() -> {
+        UserThread.execute(() -> {
             withdrawAddressTextField.requestFocus();
-            Platform.runLater(() -> {
+            UserThread.execute(() -> {
                 this.requestFocus();
-                Platform.runLater(() -> {
-                    withdrawAddressTextField.requestFocus();
-                });
+                UserThread.execute(() -> withdrawAddressTextField.requestFocus());
             });
         });
     }
 
     @Override
-    public void deactivate() {
-        super.deactivate();
+    public void doDeactivate() {
+        super.doDeactivate();
         withdrawAddressTextField.focusedProperty().removeListener(focusedPropertyListener);
         withdrawButton.disableProperty().unbind();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI Handlers
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void onWithdrawRequest(ActionEvent actionEvent) {
-        model.onWithdrawRequest(withdrawAddressTextField.getText());
     }
 
 
@@ -108,32 +89,29 @@ public class CompletedView extends TradeStepDetailsView {
 
     @Override
     protected void buildGridEntries() {
-        getAndAddTitledGroupBg(gridPane, gridRow, 5, "Summary");
-        LabelTextFieldPair btcTradeAmountPair = getAndAddLabelTextFieldPair(gridPane, gridRow++, "You have bought:", Layout.FIRST_ROW_DISTANCE);
-        btcTradeAmountLabel = btcTradeAmountPair.label;
-        btcTradeAmountTextField = btcTradeAmountPair.textField;
+        addTitledGroupBg(gridPane, gridRow, 4, "Summary", 0);
+        Tuple2<Label, TextField> btcTradeAmountPair = addLabelTextField(gridPane, gridRow, "You have bought:", "", Layout.FIRST_ROW_DISTANCE);
+        btcTradeAmountLabel = btcTradeAmountPair.first;
+        btcTradeAmountTextField = btcTradeAmountPair.second;
 
-        LabelTextFieldPair fiatTradeAmountPair = getAndAddLabelTextFieldPair(gridPane, gridRow++, "You have paid:");
-        fiatTradeAmountLabel = fiatTradeAmountPair.label;
-        fiatTradeAmountTextField = fiatTradeAmountPair.textField;
+        Tuple2<Label, TextField> fiatTradeAmountPair = addLabelTextField(gridPane, ++gridRow, "You have paid:");
+        fiatTradeAmountLabel = fiatTradeAmountPair.first;
+        fiatTradeAmountTextField = fiatTradeAmountPair.second;
 
-        LabelTextFieldPair feesPair = getAndAddLabelTextFieldPair(gridPane, gridRow++, "Total fees paid:");
-        feesLabel = feesPair.label;
-        feesTextField = feesPair.textField;
+        Tuple2<Label, TextField> feesPair = addLabelTextField(gridPane, ++gridRow, "Total fees paid:");
+        feesTextField = feesPair.second;
 
-        LabelTextFieldPair securityDepositPair = getAndAddLabelTextFieldPair(gridPane, gridRow++, "Refunded security deposit:");
-        securityDepositLabel = securityDepositPair.label;
-        securityDepositTextField = securityDepositPair.textField;
+        Tuple2<Label, TextField> securityDepositPair = addLabelTextField(gridPane, ++gridRow, "Refunded security deposit:");
+        securityDepositTextField = securityDepositPair.second;
 
-        summaryInfoDisplay = getAndAddInfoDisplay(gridPane, gridRow++, "infoDisplay", this::onOpenHelp);
-
-        getAndAddTitledGroupBg(gridPane, gridRow, 2, "Withdraw your bitcoins", Layout.GROUP_DISTANCE);
-        withdrawAmountTextField = getAndAddLabelTextFieldPair(gridPane, gridRow++, "Amount to withdraw:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).textField;
-        withdrawAddressTextField = getAndAddLabelInputTextFieldPair(gridPane, gridRow++, "Withdraw to address:").inputTextField;
-        withdrawButton = getAndAddButton(gridPane, gridRow++, "Withdraw to external wallet", this::onWithdrawRequest);
+        addTitledGroupBg(gridPane, ++gridRow, 2, "Withdraw your bitcoins", Layout.GROUP_DISTANCE);
+        withdrawAmountTextField = addLabelTextField(gridPane, gridRow, "Amount to withdraw:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        withdrawAddressTextField = addLabelInputTextField(gridPane, ++gridRow, "Withdraw to address:").second;
+        withdrawButton = addButtonAfterGroup(gridPane, ++gridRow, "Withdraw to external wallet");
+        withdrawButton.setOnAction(e -> model.onWithdrawRequest(withdrawAddressTextField.getText()));
 
         if (BitsquareApp.DEV_MODE)
-            withdrawAddressTextField.setText("mkNW1omJFA7RD3AZ94mfKqubRff2gx21KE");
+            withdrawAddressTextField.setText("mwajQdfYnve1knXnmv7JdeiVpeogTsck6S");
     }
 
     public void setBtcTradeAmountLabelText(String text) {
@@ -160,12 +138,7 @@ public class CompletedView extends TradeStepDetailsView {
         securityDepositTextField.setText(text);
     }
 
-    public void setSummaryInfoDisplayText(String text) {
-        summaryInfoDisplay.setText(text);
-    }
-
     public void setWithdrawAmountTextFieldText(String text) {
         withdrawAmountTextField.setText(text);
     }
-
 }

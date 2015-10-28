@@ -19,11 +19,10 @@ package io.bitsquare.trade.protocol.availability.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.p2p.listener.SendMessageListener;
+import io.bitsquare.p2p.messaging.SendMailMessageListener;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
 import io.bitsquare.trade.protocol.availability.messages.OfferAvailabilityRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,26 +37,27 @@ public class SendOfferAvailabilityRequest extends Task<OfferAvailabilityModel> {
     protected void run() {
         try {
             runInterceptHook();
-            OfferAvailabilityRequest message = new OfferAvailabilityRequest(model.offer.getId(), model.getPubKeyRing());
-            model.messageService.sendEncryptedMessage(model.getPeer(),
+
+            model.p2PService.sendEncryptedMailMessage(model.getPeerAddress(),
                     model.offer.getPubKeyRing(),
-                    message,
-                    false,
-                    new SendMessageListener() {
+                    new OfferAvailabilityRequest(model.offer.getId(), model.getPubKeyRing()),
+                    new SendMailMessageListener() {
                         @Override
-                        public void handleResult() {
+                        public void onArrived() {
                             complete();
                         }
 
                         @Override
-                        public void handleFault() {
+                        public void onFault() {
                             model.offer.setState(Offer.State.OFFERER_OFFLINE);
-
-                            failed();
                         }
-                    });
+                    }
+            );
         } catch (Throwable t) {
-            model.offer.setState(Offer.State.FAULT);
+            model.offer.setErrorMessage("An error occurred.\n" +
+                    "Error message:\n"
+                    + t.getMessage());
+
             failed(t);
         }
     }

@@ -20,7 +20,6 @@ package io.bitsquare.trade.protocol.trade.tasks.offerer;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,19 +35,14 @@ public class VerifyTakerAccount extends TradeTask {
         try {
             runInterceptHook();
             //TODO mocked yet
-            if (processModel.getBlockChainService().verifyAccountRegistration()) {
-                if (processModel.getBlockChainService().isAccountBlackListed(processModel.tradingPeer.getAccountId(),
-                        processModel.tradingPeer.getFiatAccount())) {
-                    log.error("Taker is blacklisted");
-                    failed("Taker is blacklisted");
-                }
-                else {
-                    complete();
-                }
+           /* if (processModel.getBlockChainService().isAccountBlackListed(processModel.tradingPeer.getAccountId(),
+                    processModel.tradingPeer.getPaymentAccountContractData())) {
+                log.error("Taker is blacklisted");
+                failed("Taker is blacklisted");
             }
-            else {
-                failed("Account registration validation for peer failed.");
-            }
+            else {*/
+            complete();
+            //}
         } catch (Throwable t) {
             failed(t);
         }

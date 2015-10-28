@@ -19,18 +19,26 @@ package io.bitsquare.gui.main.settings.application;
 
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.util.Layout;
+import io.bitsquare.user.BlockChainExplorer;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.layout.GridPane;
+import javafx.util.StringConverter;
 
 import javax.inject.Inject;
 
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import static io.bitsquare.gui.util.FormBuilder.*;
 
 @FxmlView
 public class PreferencesView extends ActivatableViewAndModel<GridPane, PreferencesViewModel> {
 
-    @FXML ComboBox<String> btcDenominationComboBox;
-    @FXML CheckBox useAnimationsCheckBox, useEffectsCheckBox;
+    private ComboBox<String> btcDenominationComboBox;
+    private ComboBox<BlockChainExplorer> blockExplorerComboBox;
+
+    private CheckBox useAnimationsCheckBox, useEffectsCheckBox, showPlaceOfferConfirmationCheckBox, showTakeOfferConfirmationCheckBox,
+            autoSelectArbitratorsCheckBox;
+    private int gridRow = 0;
 
     @Inject
     public PreferencesView(PreferencesViewModel model) {
@@ -38,26 +46,64 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     @Override
-    public void doActivate() {
-        btcDenominationComboBox.setItems(model.getBtcDenominationItems());
-        btcDenominationComboBox.getSelectionModel().select(model.btcDenomination().get());
+    public void initialize() {
+        addTitledGroupBg(root, gridRow, 7, "Preferences");
 
-        // TODO for alpha
+        btcDenominationComboBox = addLabelComboBox(root, gridRow, "Bitcoin denomination:", Layout.FIRST_ROW_DISTANCE).second;
+        blockExplorerComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin block explorer:").second;
+        useAnimationsCheckBox = addLabelCheckBox(root, ++gridRow, "Use animations:", "").second;
+        useEffectsCheckBox = addLabelCheckBox(root, ++gridRow, "Use efects:", "").second;
+        showPlaceOfferConfirmationCheckBox = addLabelCheckBox(root, ++gridRow, "Show confirmation at place offer:", "").second;
+        showTakeOfferConfirmationCheckBox = addLabelCheckBox(root, ++gridRow, "Show confirmation at take offer:", "").second;
+        autoSelectArbitratorsCheckBox = addLabelCheckBox(root, ++gridRow, "Auto select arbitrators by language:", "").second;
+    }
+
+    @Override
+    protected void activate() {
         btcDenominationComboBox.setDisable(true);
+        btcDenominationComboBox.setItems(model.btcDenominations);
+        btcDenominationComboBox.getSelectionModel().select(model.getBtcDenomination());
+        btcDenominationComboBox.setOnAction(e -> model.onSelectBtcDenomination(btcDenominationComboBox.getSelectionModel().getSelectedItem()));
 
-        useAnimationsCheckBox.selectedProperty().bindBidirectional(model.useAnimations());
-        useEffectsCheckBox.selectedProperty().bindBidirectional(model.useEffects());
+        blockExplorerComboBox.setItems(model.blockExplorers);
+        blockExplorerComboBox.getSelectionModel().select(model.getBlockExplorer());
+        blockExplorerComboBox.setConverter(new StringConverter<BlockChainExplorer>() {
+            @Override
+            public String toString(BlockChainExplorer blockChainExplorer) {
+                return blockChainExplorer.name;
+            }
+
+            @Override
+            public BlockChainExplorer fromString(String string) {
+                return null;
+            }
+        });
+        blockExplorerComboBox.setOnAction(e -> model.onSelectBlockExplorer(blockExplorerComboBox.getSelectionModel().getSelectedItem()));
+
+        useAnimationsCheckBox.setSelected(model.getUseAnimations());
+        useAnimationsCheckBox.setOnAction(e -> model.onSelectUseAnimations(useAnimationsCheckBox.isSelected()));
+
+        useEffectsCheckBox.setSelected(model.getUseEffects());
+        useEffectsCheckBox.setOnAction(e -> model.onSelectUseEffects(useEffectsCheckBox.isSelected()));
+
+        showPlaceOfferConfirmationCheckBox.setSelected(model.getShowPlaceOfferConfirmation());
+        showPlaceOfferConfirmationCheckBox.setOnAction(e -> model.onSelectShowPlaceOfferConfirmation(showPlaceOfferConfirmationCheckBox.isSelected()));
+
+        showTakeOfferConfirmationCheckBox.setSelected(model.getShowTakeOfferConfirmation());
+        showTakeOfferConfirmationCheckBox.setOnAction(e -> model.onSelectShowTakeOfferConfirmation(showTakeOfferConfirmationCheckBox.isSelected()));
+
+        autoSelectArbitratorsCheckBox.setSelected(model.getAutoSelectArbitrators());
+        autoSelectArbitratorsCheckBox.setOnAction(e -> model.onSelectAutoSelectArbitratorsCheckBox(autoSelectArbitratorsCheckBox.isSelected()));
 
     }
 
     @Override
-    public void doDeactivate() {
-        useAnimationsCheckBox.selectedProperty().unbind();
-        useEffectsCheckBox.selectedProperty().unbind();
-    }
-
-    @FXML
-    void onSelectBtcDenomination() {
-        model.btcDenomination().set(btcDenominationComboBox.getSelectionModel().getSelectedItem());
+    protected void deactivate() {
+        btcDenominationComboBox.setOnAction(null);
+        useAnimationsCheckBox.setOnAction(null);
+        useEffectsCheckBox.setOnAction(null);
+        showPlaceOfferConfirmationCheckBox.setOnAction(null);
+        showTakeOfferConfirmationCheckBox.setOnAction(null);
+        autoSelectArbitratorsCheckBox.setOnAction(null);
     }
 }

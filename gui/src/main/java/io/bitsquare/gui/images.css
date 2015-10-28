@@ -14,6 +14,10 @@
     -fx-image: url("../../../images/info.png");
 }
 
+#light_close {
+    -fx-image: url("../../../images/light_close.png");
+}
+
 #image-alert-round {
     -fx-image: url("../../../images/alert_round.png");
 }
@@ -47,12 +51,12 @@
 }
 
 /* navigation buttons */
-#image-nav-home {
-    -fx-image: url("../../../images/nav/home.png");
+#image-nav-market {
+    -fx-image: url("../../../images/nav/market.png");
 }
 
-#image-nav-home-active {
-    -fx-image: url("../../../images/nav/home_active.png");
+#image-nav-market-active {
+    -fx-image: url("../../../images/nav/market_active.png");
 }
 
 #image-nav-buyoffer {
@@ -87,12 +91,12 @@
     -fx-image: url("../../../images/nav/funds_active.png");
 }
 
-#image-nav-msg {
-    -fx-image: url("../../../images/nav/msg.png");
+#image-nav-disputes {
+    -fx-image: url("../../../images/nav/disputes.png");
 }
 
-#image-nav-msg-active {
-    -fx-image: url("../../../images/nav/msg_active.png");
+#image-nav-disputes-active {
+    -fx-image: url("../../../images/nav/disputes_active.png");
 }
 
 #image-nav-settings {
@@ -170,3 +174,24 @@
 #image-offer_state_not_available {
     -fx-image: url("../../../images/offer/offer_state_not_available.png");
 }
+
+#image-attachment {
+    -fx-image: url("../../../images/attachment.png");
+}
+
+#bubble_arrow_grey_left {
+    -fx-image: url("../../../images/bubble_arrow_grey_left.png");
+}
+
+#bubble_arrow_blue_left {
+    -fx-image: url("../../../images/bubble_arrow_blue_left.png");
+}
+
+#bubble_arrow_grey_right {
+    -fx-image: url("../../../images/bubble_arrow_grey_right.png");
+}
+
+#bubble_arrow_blue_right {
+    -fx-image: url("../../../images/bubble_arrow_blue_right.png");
+}
+

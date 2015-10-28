@@ -17,21 +17,18 @@
 
 package io.bitsquare.gui.main.portfolio.failedtrades;
 
-import io.bitsquare.gui.common.model.Activatable;
-import io.bitsquare.gui.common.model.DataModel;
+import com.google.inject.Inject;
+import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.failed.FailedTradesManager;
 import io.bitsquare.trade.offer.Offer;
-
-import com.google.inject.Inject;
-
-import java.util.stream.Collectors;
-
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
-class FailedTradesDataModel implements Activatable, DataModel {
+import java.util.stream.Collectors;
+
+class FailedTradesDataModel extends ActivatableDataModel {
 
     private final FailedTradesManager failedTradesManager;
 
@@ -46,13 +43,13 @@ class FailedTradesDataModel implements Activatable, DataModel {
     }
 
     @Override
-    public void activate() {
+    protected void activate() {
         applyList();
         failedTradesManager.getFailedTrades().addListener(tradesListChangeListener);
     }
 
     @Override
-    public void deactivate() {
+    protected void deactivate() {
         failedTradesManager.getFailedTrades().removeListener(tradesListChangeListener);
     }
 

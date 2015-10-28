@@ -17,25 +17,28 @@
 
 package io.bitsquare.arbitration;
 
-import io.bitsquare.BitsquareModule;
-
 import com.google.inject.Singleton;
-
+import com.google.inject.name.Names;
+import io.bitsquare.app.AppModule;
+import io.bitsquare.app.ProgramArguments;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
-public abstract class ArbitratorModule extends BitsquareModule {
+public class ArbitratorModule extends AppModule {
+    private static final Logger log = LoggerFactory.getLogger(ArbitratorModule.class);
 
-    protected ArbitratorModule(Environment env) {
+    public ArbitratorModule(Environment env) {
         super(env);
     }
 
     @Override
     protected final void configure() {
-        bind(ArbitrationRepository.class).in(Singleton.class);
+        bind(ArbitratorManager.class).in(Singleton.class);
+        bind(DisputeManager.class).in(Singleton.class);
+        bind(ArbitratorService.class).in(Singleton.class);
 
-        doConfigure();
-    }
-
-    protected void doConfigure() {
+        Boolean devTest = env.getProperty(ProgramArguments.DEV_TEST, boolean.class, false);
+        bind(boolean.class).annotatedWith(Names.named(ProgramArguments.DEV_TEST)).toInstance(devTest);
     }
 }

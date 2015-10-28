@@ -19,18 +19,15 @@ package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.storage.Storage;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-
 import java.util.ArrayList;
-
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TradableList<T extends Tradable> extends ArrayList<T> implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -59,7 +56,11 @@ public class TradableList<T extends Tradable> extends ArrayList<T> implements Se
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
+        try {
+            in.defaultReadObject();
+        } catch (Throwable t) {
+            log.trace("Cannot be deserialized." + t.getMessage());
+        }
     }
 
     @Override

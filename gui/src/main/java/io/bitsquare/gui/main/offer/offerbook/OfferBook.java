@@ -17,26 +17,20 @@
 
 package io.bitsquare.gui.main.offer.offerbook;
 
-import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.locale.Country;
-import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.p2p.storage.HashSetChangedListener;
+import io.bitsquare.p2p.storage.data.ProtectedData;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OfferBookService;
-import io.bitsquare.user.User;
-import io.bitsquare.util.Utilities;
-
-import java.util.List;
-import java.util.Timer;
-
-import javax.inject.Inject;
-
-import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import java.io.Serializable;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Holds and manages the unsorted and unfiltered offerbook list of both buy and sell offers.
@@ -46,21 +40,10 @@ import org.slf4j.LoggerFactory;
  * package for that.
  */
 public class OfferBook {
-
     private static final Logger log = LoggerFactory.getLogger(OfferBook.class);
-    private static final int POLLING_INTERVAL = 2000; // in ms
 
     private final OfferBookService offerBookService;
-    private final User user;
-    private final ChangeListener<FiatAccount> bankAccountChangeListener;
-    private final ChangeListener<Number> invalidationListener;
-    private final OfferBookService.Listener offerBookServiceListener;
-
     private final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-
-    private String fiatCode;
-    private Timer pollingTimer;
-    private Country country;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -68,99 +51,51 @@ public class OfferBook {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBook(OfferBookService offerBookService, User user, TradeManager tradeManager) {
+    OfferBook(OfferBookService offerBookService, TradeManager tradeManager) {
         this.offerBookService = offerBookService;
-        this.user = user;
-
-        bankAccountChangeListener = (observableValue, oldValue, newValue) -> setBankAccount(newValue);
-        invalidationListener = (ov, oldValue, newValue) -> offerBookService.getOffers(fiatCode);
-
-        offerBookServiceListener = new OfferBookService.Listener() {
+        offerBookService.addHashSetChangedListener(new HashSetChangedListener() {
             @Override
-            public void onOfferAdded(Offer offer) {
-                addOfferToOfferBookListItems(offer);
+            public void onAdded(ProtectedData entry) {
+                log.debug("onAdded " + entry);
+                Serializable data = entry.expirablePayload;
+                if (data instanceof Offer) {
+                    Offer offer = (Offer) data;
+                    OfferBookListItem offerBookListItem = new OfferBookListItem(offer);
+                    if (!offerBookListItems.contains(offerBookListItem))
+                        offerBookListItems.add(offerBookListItem);
+                }
             }
 
             @Override
-            public void onOffersReceived(List<Offer> offers) {
-                //TODO use deltas instead replacing the whole list
-                offerBookListItems.clear();
-                offers.stream().forEach(OfferBook.this::addOfferToOfferBookListItems);
+            public void onRemoved(ProtectedData entry) {
+                log.debug("onRemoved " + entry);
+                if (entry.expirablePayload instanceof Offer) {
+                    Offer offer = (Offer) entry.expirablePayload;
+
+                    // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
+                    offer.setState(Offer.State.REMOVED);
+
+                    // clean up possible references in openOfferManager 
+                    tradeManager.onOfferRemovedFromRemoteOfferBook(offer);
+
+                    offerBookListItems.removeIf(item -> item.getOffer().getId().equals(offer.getId()));
+                }
             }
-
-            @Override
-            public void onOfferRemoved(Offer offer) {
-                // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
-                offer.setState(Offer.State.REMOVED);
-
-                // clean up possible references in openOfferManager 
-                tradeManager.onOfferRemovedFromRemoteOfferBook(offer);
-
-                offerBookListItems.removeIf(item -> item.getOffer().getId().equals(offer.getId()));
-            }
-        };
+        });
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    void startPolling() {
-        addListeners();
-        setBankAccount(user.currentFiatAccountProperty().get());
-        pollingTimer = Utilities.setInterval(POLLING_INTERVAL, () -> offerBookService.requestInvalidationTimeStampFromDHT(fiatCode));
-        offerBookService.getOffers(fiatCode);
-    }
-
-    void stopPolling() {
-        pollingTimer.cancel();
-        removeListeners();
-    }
-
-    private void addListeners() {
-        user.currentFiatAccountProperty().addListener(bankAccountChangeListener);
-        offerBookService.addListener(offerBookServiceListener);
-        offerBookService.invalidationTimestampProperty().addListener(invalidationListener);
-    }
-
-    private void removeListeners() {
-        user.currentFiatAccountProperty().removeListener(bankAccountChangeListener);
-        offerBookService.removeListener(offerBookServiceListener);
-        offerBookService.invalidationTimestampProperty().removeListener(invalidationListener);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getter
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    ObservableList<OfferBookListItem> getOfferBookListItems() {
+    public ObservableList<OfferBookListItem> getOfferBookListItems() {
         return offerBookListItems;
     }
 
+    public void fillOfferBookListItems() {
+        log.debug("fillOfferBookListItems");
+        List<Offer> offers = offerBookService.getOffers();
+        CopyOnWriteArrayList<OfferBookListItem> list = new CopyOnWriteArrayList<>();
+        offers.stream().forEach(e -> list.add(new OfferBookListItem(e)));
+        offerBookListItems.clear();
+        offerBookListItems.addAll(list);
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Utils
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void setBankAccount(FiatAccount fiatAccount) {
-        log.debug("setBankAccount " + fiatAccount);
-        if (fiatAccount != null) {
-            country = fiatAccount.country;
-            fiatCode = fiatAccount.currencyCode;
-
-            // TODO check why that was used (probably just for update triggering, if so refactor that)
-            //offerBookListItems.stream().forEach(e -> e.setBankAccountCountry(country));
-        }
-        else {
-            fiatCode = CurrencyUtil.getDefaultCurrencyAsCode();
-        }
-    }
-
-    private void addOfferToOfferBookListItems(Offer offer) {
-        if (offer != null) {
-            offerBookListItems.add(new OfferBookListItem(offer, country));
-        }
+        log.debug("offerBookListItems " + offerBookListItems.size());
     }
 }

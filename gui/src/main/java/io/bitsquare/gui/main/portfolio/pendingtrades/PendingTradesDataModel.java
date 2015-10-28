@@ -17,62 +17,55 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
+import com.google.inject.Inject;
+import io.bitsquare.arbitration.Dispute;
+import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.UserThread;
+import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.common.model.Activatable;
-import io.bitsquare.gui.common.model.DataModel;
-import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.disputes.DisputesView;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.closedtrades.ClosedTradesView;
-import io.bitsquare.trade.BuyerTrade;
-import io.bitsquare.trade.Contract;
-import io.bitsquare.trade.SellerTrade;
-import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeManager;
-import io.bitsquare.trade.TradeState;
+import io.bitsquare.gui.popups.Popup;
+import io.bitsquare.gui.popups.WalletPasswordPopup;
+import io.bitsquare.payment.PaymentAccountContractData;
+import io.bitsquare.trade.*;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.User;
-
-import org.bitcoinj.core.BlockChainListener;
-import org.bitcoinj.core.Coin;
-
-import com.google.inject.Inject;
-
-import java.util.stream.Collectors;
-
-import javafx.application.Platform;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.ReadOnlyStringProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import org.bitcoinj.core.BlockChainListener;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
+import org.spongycastle.crypto.params.KeyParameter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.stream.Collectors;
 
-class PendingTradesDataModel implements Activatable, DataModel {
-    private static final Logger log = LoggerFactory.getLogger(PendingTradesDataModel.class);
+import static com.google.common.base.Preconditions.checkNotNull;
 
+public class PendingTradesDataModel extends ActivatableDataModel {
     private final TradeManager tradeManager;
+
     private final WalletService walletService;
-    private TradeWalletService tradeWalletService;
-    private final User user;
-    private Navigation navigation;
+    private final TradeWalletService tradeWalletService;
+    private User user;
+    private final KeyRing keyRing;
+    private final DisputeManager disputeManager;
+    private final Navigation navigation;
+    private final WalletPasswordPopup walletPasswordPopup;
 
     private final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
     private PendingTradesListItem selectedItem;
     private final ListChangeListener<Trade> tradesListChangeListener;
-    private boolean isOffererRole;
+    private boolean isOfferer;
 
-    private final ObjectProperty<TradeState> sellerProcessState = new SimpleObjectProperty<>();
-    private final ObjectProperty<TradeState> buyerProcessState = new SimpleObjectProperty<>();
     private final ObjectProperty<Trade> tradeProperty = new SimpleObjectProperty<>();
     private final StringProperty txId = new SimpleStringProperty();
     private Trade trade;
@@ -83,45 +76,49 @@ class PendingTradesDataModel implements Activatable, DataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradesDataModel(TradeManager tradeManager, WalletService walletService, TradeWalletService tradeWalletService, User user, Navigation
-            navigation) {
+    public PendingTradesDataModel(TradeManager tradeManager, WalletService walletService, TradeWalletService tradeWalletService,
+                                  User user, KeyRing keyRing, DisputeManager disputeManager,
+                                  Navigation navigation, WalletPasswordPopup walletPasswordPopup) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
         this.user = user;
+        this.keyRing = keyRing;
+        this.disputeManager = disputeManager;
         this.navigation = navigation;
+        this.walletPasswordPopup = walletPasswordPopup;
 
         tradesListChangeListener = change -> onListChanged();
     }
 
     @Override
-    public void activate() {
-        tradeManager.getPendingTrades().addListener(tradesListChangeListener);
+    protected void activate() {
+        tradeManager.getTrades().addListener(tradesListChangeListener);
         onListChanged();
     }
 
     @Override
-    public void deactivate() {
-        tradeManager.getPendingTrades().removeListener(tradesListChangeListener);
-        unbindStates();
+    protected void deactivate() {
+        tradeManager.getTrades().removeListener(tradesListChangeListener);
     }
 
     private void onListChanged() {
         list.clear();
-        list.addAll(tradeManager.getPendingTrades().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
+        list.addAll(tradeManager.getTrades().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
 
-        if (list.size() > 0)
+        // TODO improve selectedItem handling
+        // selectedItem does not get set to null if we dont have the view visible
+        // So if the item gets removed form the list, and a new item is added we need to check if the old 
+        // selectedItem is in the new list, if not we know it is an invalid one
+        if (list.size() == 1)
+            onSelectTrade(list.get(0));
+        else if (list.size() > 1 && (selectedItem == null || !list.contains(selectedItem)))
             onSelectTrade(list.get(0));
         else if (list.size() == 0)
             onSelectTrade(null);
-    }
-
-    private void unbindStates() {
-        sellerProcessState.unbind();
-        buyerProcessState.unbind();
     }
 
 
@@ -131,8 +128,6 @@ class PendingTradesDataModel implements Activatable, DataModel {
 
     void onSelectTrade(PendingTradesListItem item) {
         // clean up previous selectedItem
-        unbindStates();
-
         selectedItem = item;
 
         if (item == null) {
@@ -143,73 +138,98 @@ class PendingTradesDataModel implements Activatable, DataModel {
             trade = item.getTrade();
             tradeProperty.set(trade);
 
-            isOffererRole = tradeManager.isMyOffer(trade.getOffer());
-
-            if (trade instanceof SellerTrade)
-                sellerProcessState.bind(trade.tradeStateProperty());
-            else if (trade instanceof BuyerTrade)
-                buyerProcessState.bind(trade.tradeStateProperty());
+            isOfferer = tradeManager.isMyOffer(trade.getOffer());
 
             if (trade.getDepositTx() != null)
                 txId.set(trade.getDepositTx().getHashAsString());
         }
     }
 
-
     void onFiatPaymentStarted() {
-        assert trade != null;
-        if (trade instanceof BuyerTrade)
+        checkNotNull(trade, "trade must not be null");
+        if (trade instanceof BuyerTrade && trade.getDisputeState() == Trade.DisputeState.NONE)
             ((BuyerTrade) trade).onFiatPaymentStarted();
     }
 
     void onFiatPaymentReceived() {
-        assert trade != null;
-        if (trade instanceof SellerTrade)
+        checkNotNull(trade, "trade must not be null");
+        if (trade instanceof SellerTrade && trade.getDisputeState() == Trade.DisputeState.NONE)
             ((SellerTrade) trade).onFiatPaymentReceived();
     }
 
     void onWithdrawRequest(String toAddress) {
-        assert trade != null;
+        checkNotNull(trade, "trade must not be null");
+        if (walletService.getWallet().isEncrypted())
+            walletPasswordPopup.show().onAesKey(aesKey -> doWithdrawRequest(toAddress, aesKey));
+        else
+            doWithdrawRequest(toAddress, null);
+    }
+
+    private void doWithdrawRequest(String toAddress, KeyParameter aesKey) {
         tradeManager.onWithdrawRequest(
                 toAddress,
+                aesKey,
                 trade,
                 () -> {
-                    Platform.runLater(() -> navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class));
+                    UserThread.execute(() -> navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class));
                 },
                 (errorMessage, throwable) -> {
                     log.error(errorMessage);
-                    Popups.openExceptionPopup(throwable);
+                    new Popup().error("An error occurred:\n" + throwable.getMessage()).show();
                 });
-            
-    
-    /*
-            Action response = Popups.openConfirmPopup(
-                    "Withdrawal request", "Confirm your request",
-                    "Your withdrawal request:\n\n" + "Amount: " + amountTextField.getText() + " BTC\n" + "Sending" +
-                            " address: " + withdrawFromTextField.getText() + "\n" + "Receiving address: " +
-                            withdrawToTextField.getText() + "\n" + "Transaction fee: " +
-                            formatter.formatCoinWithCode(FeePolicy.TX_FEE) + "\n" +
-                            "You receive in total: " +
-                            formatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
-                            "Are you sure you withdraw that amount?");
-    
-            if (Popups.isOK(response)) {
-                try {
-                    walletService.sendFunds(
-                            withdrawFromTextField.getText(), withdrawToTextField.getText(),
-                            changeAddressTextField.getText(), amount, callback);
-                } catch (AddressFormatException e) {
-                    Popups.openErrorPopup("Address invalid",
-                            "The address is not correct. Please check the address format.");
-    
-                } catch (InsufficientMoneyException e) {
-                    Popups.openInsufficientMoneyPopup();
-                } catch (IllegalArgumentException e) {
-                    Popups.openErrorPopup("Wrong inputs", "Please check the inputs.");
-                }
-            }*/
     }
 
+    public void onOpenDispute() {
+        doOpenDispute(false);
+    }
+
+    public void onOpenSupportTicket() {
+        doOpenDispute(true);
+    }
+
+    private void doOpenDispute(boolean isSupportTicket) {
+        if (trade != null) {
+            Transaction depositTx = trade.getDepositTx();
+            log.debug("trade.getDepositTx() " + depositTx);
+            byte[] depositTxSerialized = null;
+            byte[] payoutTxSerialized = null;
+            String depositTxHashAsString = null;
+            String payoutTxHashAsString = null;
+            if (depositTx != null) {
+                depositTxSerialized = depositTx.bitcoinSerialize();
+                depositTxHashAsString = depositTx.getHashAsString();
+            }
+            Transaction payoutTx = trade.getPayoutTx();
+            if (payoutTx != null) {
+                payoutTxSerialized = payoutTx.bitcoinSerialize();
+                payoutTxHashAsString = payoutTx.getHashAsString();
+            }
+
+            Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
+                    trade.getId(),
+                    keyRing.getPubKeyRing().hashCode(), // traderId
+                    trade.getOffer().getDirection() == Offer.Direction.BUY ? isOfferer : !isOfferer,
+                    isOfferer,
+                    keyRing.getPubKeyRing(),
+                    trade.getDate(),
+                    trade.getContract(),
+                    trade.getContractHash(),
+                    depositTxSerialized,
+                    payoutTxSerialized,
+                    depositTxHashAsString,
+                    payoutTxHashAsString,
+                    trade.getContractAsJson(),
+                    trade.getOffererContractSignature(),
+                    trade.getTakerContractSignature(),
+                    user.getAcceptedArbitratorByAddress(trade.getArbitratorAddress()).getPubKeyRing(),
+                    isSupportTicket
+            );
+
+            trade.setDisputeState(Trade.DisputeState.DISPUTE_REQUESTED);
+            disputeManager.sendOpenNewDisputeMessage(dispute);
+            navigation.navigateTo(MainView.class, DisputesView.class);
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -223,16 +243,12 @@ class PendingTradesDataModel implements Activatable, DataModel {
         return trade.getOffer().getDirection() == Offer.Direction.BUY;
     }
 
-    boolean isOffererRole() {
-        return isOffererRole;
+    boolean isOfferer() {
+        return isOfferer;
     }
 
     Coin getTotalFees() {
-        return FeePolicy.TX_FEE.add(isOffererRole() ? FeePolicy.CREATE_OFFER_FEE : FeePolicy.TAKE_OFFER_FEE);
-    }
-
-    WalletService getWalletService() {
-        return walletService;
+        return FeePolicy.TX_FEE.add(isOfferer() ? FeePolicy.CREATE_OFFER_FEE : FeePolicy.TAKE_OFFER_FEE);
     }
 
     PendingTradesListItem getSelectedItem() {
@@ -243,12 +259,8 @@ class PendingTradesDataModel implements Activatable, DataModel {
         return trade.getOffer().getCurrencyCode();
     }
 
-    String getErrorMessage() {
-        return trade.getErrorMessage();
-    }
-
     public Offer.Direction getDirection(Offer offer) {
-        return isOffererRole ? offer.getDirection() : offer.getMirroredDirection();
+        return isOfferer ? offer.getDirection() : offer.getMirroredDirection();
     }
 
     Coin getPayoutAmount() {
@@ -259,16 +271,8 @@ class PendingTradesDataModel implements Activatable, DataModel {
         return trade.getContract();
     }
 
-    Trade getTrade() {
+    public Trade getTrade() {
         return trade;
-    }
-
-    ReadOnlyObjectProperty<TradeState> getSellerProcessState() {
-        return sellerProcessState;
-    }
-
-    ReadOnlyObjectProperty<TradeState> getBuyerProcessState() {
-        return buyerProcessState;
     }
 
     ReadOnlyObjectProperty<Trade> getTradeProperty() {
@@ -277,10 +281,6 @@ class PendingTradesDataModel implements Activatable, DataModel {
 
     ReadOnlyStringProperty getTxId() {
         return txId;
-    }
-
-    String getPayoutTxId() {
-        return trade.getPayoutTx().getHashAsString();
     }
 
     void addBlockChainListener(BlockChainListener blockChainListener) {
@@ -292,11 +292,41 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     public long getLockTime() {
-        return trade.getLockTime();
+        return trade.getLockTimeAsBlockHeight();
+    }
+
+    public long getCheckPaymentTimeAsBlockHeight() {
+        return trade.getCheckPaymentTimeAsBlockHeight();
+    }
+
+    public long getOpenDisputeTimeAsBlockHeight() {
+        return trade.getOpenDisputeTimeAsBlockHeight();
     }
 
     public int getBestChainHeight() {
         return tradeWalletService.getBestChainHeight();
     }
+
+    public PaymentAccountContractData getSellersPaymentAccountContractData() {
+        return trade.getContract().getSellerPaymentAccountContractData();
+    }
+
+    public String getReference() {
+        return trade.getOffer().getReferenceText();
+    }
+
+    public WalletService getWalletService() {
+        return walletService;
+    }
+
+    public DisputeManager getDisputeManager() {
+        return disputeManager;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
 }
 

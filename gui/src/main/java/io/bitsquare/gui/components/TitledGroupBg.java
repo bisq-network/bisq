@@ -20,8 +20,9 @@ package io.bitsquare.gui.components;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
 
 public class TitledGroupBg extends Pane {
 
@@ -50,7 +51,7 @@ public class TitledGroupBg extends Pane {
         label.setId("titled-group-bg-label");
     }
 
-    public void setActive() {
+    private void setActive() {
         setId("titled-group-bg-active");
         label.setId("titled-group-bg-label-active");
     }

@@ -20,7 +20,6 @@ package io.bitsquare.gui.common.view;
 import io.bitsquare.app.Version;
 
 import java.io.Serializable;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,7 +29,7 @@ public class ViewPath extends ArrayList<Class<? extends View>> implements Serial
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    public ViewPath() {
+    private ViewPath() {
     }
 
     public ViewPath(Collection<? extends Class<? extends View>> c) {

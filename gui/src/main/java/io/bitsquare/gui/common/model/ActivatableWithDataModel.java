@@ -17,27 +17,27 @@
 
 package io.bitsquare.gui.common.model;
 
-public abstract class ActivatableWithDataModel<D extends Activatable> extends WithDataModel<D> implements Activatable {
+public class ActivatableWithDataModel<D extends Activatable> extends WithDataModel<D> implements Activatable {
 
     public ActivatableWithDataModel(D dataModel) {
         super(dataModel);
     }
 
     @Override
-    public final void activate() {
-        dataModel.activate();
-        this.doActivate();
+    public final void _activate() {
+        dataModel._activate();
+        this.activate();
     }
 
-    protected void doActivate() {
+    protected void activate() {
     }
 
     @Override
-    public final void deactivate() {
-        dataModel.deactivate();
-        this.doDeactivate();
+    public final void _deactivate() {
+        dataModel._deactivate();
+        this.deactivate();
     }
 
-    protected void doDeactivate() {
+    protected void deactivate() {
     }
 }

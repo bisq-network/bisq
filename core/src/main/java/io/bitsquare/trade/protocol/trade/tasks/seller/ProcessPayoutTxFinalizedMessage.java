@@ -19,13 +19,12 @@ package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.checkTradeId;
 
@@ -40,13 +39,17 @@ public class ProcessPayoutTxFinalizedMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+            log.debug("current trade state " + trade.getState());
             PayoutTxFinalizedMessage message = (PayoutTxFinalizedMessage) processModel.getTradeMessage();
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);
+            checkArgument(message.payoutTx != null);
+            trade.setPayoutTx(processModel.getWalletService().getTransactionFromSerializedTx(message.payoutTx));
 
-            trade.setPayoutTx(checkNotNull(message.payoutTx));
+            trade.setState(Trade.State.PAYOUT_TX_RECEIVED);
 
-            trade.setTradeState(TradeState.SellerState.PAYOUT_TX_RECEIVED);
+            // update to the latest peer address of our peer if the message is correct
+            trade.setTradingPeerAddress(processModel.getTempTradingPeerAddress());
 
             complete();
         } catch (Throwable t) {

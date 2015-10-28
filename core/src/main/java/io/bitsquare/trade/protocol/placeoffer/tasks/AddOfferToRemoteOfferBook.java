@@ -20,7 +20,6 @@ package io.bitsquare.trade.protocol.placeoffer.tasks;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +28,6 @@ public class AddOfferToRemoteOfferBook extends Task<PlaceOfferModel> {
 
     public AddOfferToRemoteOfferBook(TaskRunner taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
-        appendToErrorMessage("Could not add offer to offerbook. Maybe you have connection problems. Please try later again.");
     }
 
     @Override
@@ -41,8 +39,17 @@ public class AddOfferToRemoteOfferBook extends Task<PlaceOfferModel> {
                         model.offerAddedToOfferBook = true;
                         complete();
                     },
-                    (message, throwable) -> failed(throwable));
+                    errorMessage -> {
+                        model.offer.setErrorMessage("Could not add offer to offerbook.\n" +
+                                "Please check your network connection and try again.");
+
+                        failed(errorMessage);
+                    });
         } catch (Throwable t) {
+            model.offer.setErrorMessage("An error occurred.\n" +
+                    "Error message:\n"
+                    + t.getMessage());
+
             failed(t);
         }
     }

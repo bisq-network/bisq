@@ -17,12 +17,9 @@
 
 package io.bitsquare.gui.main.settings.application;
 
-import io.bitsquare.gui.common.model.Activatable;
-import io.bitsquare.gui.common.model.DataModel;
-import io.bitsquare.user.Preferences;
-
 import com.google.inject.Inject;
-
+import io.bitsquare.gui.common.model.ActivatableDataModel;
+import io.bitsquare.user.Preferences;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -31,7 +28,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-class PreferencesDataModel implements Activatable, DataModel {
+class PreferencesDataModel extends ActivatableDataModel {
 
     private final Preferences preferences;
 
@@ -39,11 +36,11 @@ class PreferencesDataModel implements Activatable, DataModel {
     private final ChangeListener<Boolean> useEffectsListener;
     private final ChangeListener<String> btcDenominationListener;
 
-    final ObservableList<String> btcDenominations;
+    private final ObservableList<String> btcDenominations;
 
-    final BooleanProperty useAnimations = new SimpleBooleanProperty();
-    final BooleanProperty useEffects = new SimpleBooleanProperty();
-    final StringProperty btcDenomination = new SimpleStringProperty();
+    private final BooleanProperty useAnimations = new SimpleBooleanProperty();
+    private final BooleanProperty useEffects = new SimpleBooleanProperty();
+    private final StringProperty btcDenomination = new SimpleStringProperty();
 
 
     @Inject
@@ -58,7 +55,7 @@ class PreferencesDataModel implements Activatable, DataModel {
 
 
     @Override
-    public void activate() {
+    protected void activate() {
         useAnimations.set(preferences.getUseAnimations());
         useEffects.set(preferences.getUseEffects());
         btcDenomination.set(preferences.getBtcDenomination());
@@ -69,7 +66,7 @@ class PreferencesDataModel implements Activatable, DataModel {
     }
 
     @Override
-    public void deactivate() {
+    protected void deactivate() {
         useAnimations.removeListener(useAnimationsListener);
         useEffects.removeListener(useEffectsListener);
         btcDenomination.removeListener(btcDenominationListener);

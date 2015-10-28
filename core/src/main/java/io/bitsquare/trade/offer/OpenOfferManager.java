@@ -17,18 +17,18 @@
 
 package io.bitsquare.trade.offer;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Inject;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.crypto.KeyRing;
-import io.bitsquare.crypto.MessageWithPubKey;
-import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.p2p.DecryptedMessageHandler;
+import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.MessageService;
-import io.bitsquare.p2p.Peer;
-import io.bitsquare.p2p.listener.SendMessageListener;
+import io.bitsquare.p2p.P2PService;
+import io.bitsquare.p2p.P2PServiceListener;
+import io.bitsquare.p2p.messaging.SendMailMessageListener;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradableList;
 import io.bitsquare.trade.closed.ClosedTradableManager;
@@ -37,43 +37,39 @@ import io.bitsquare.trade.protocol.availability.messages.OfferAvailabilityReques
 import io.bitsquare.trade.protocol.availability.messages.OfferAvailabilityResponse;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
-import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.User;
-
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.Fiat;
-
-import com.google.inject.Inject;
-
-import java.io.File;
-
-import java.util.Optional;
-
-import javax.inject.Named;
-
 import javafx.collections.ObservableList;
-
+import org.reactfx.util.FxTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Named;
+import java.io.File;
+import java.time.Duration;
+import java.util.Optional;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.inject.internal.util.$Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
 public class OpenOfferManager {
     private static final Logger log = LoggerFactory.getLogger(OpenOfferManager.class);
 
-    private final User user;
     private final KeyRing keyRing;
-    private final AccountSettings accountSettings;
+    private User user;
+    private P2PService p2PService;
     private final WalletService walletService;
-    private MessageService messageService;
     private final TradeWalletService tradeWalletService;
     private final OfferBookService offerBookService;
-    private ClosedTradableManager closedTradableManager;
+    private final ClosedTradableManager closedTradableManager;
 
     private final TradableList<OpenOffer> openOffers;
     private final Storage<TradableList<OpenOffer>> openOffersStorage;
     private boolean shutDownRequested;
+    private ScheduledThreadPoolExecutor executor;
+    private P2PServiceListener p2PServiceListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -81,20 +77,18 @@ public class OpenOfferManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OpenOfferManager(User user,
-                            KeyRing keyRing,
-                            AccountSettings accountSettings,
+    public OpenOfferManager(KeyRing keyRing,
+                            User user,
+                            P2PService p2PService,
                             WalletService walletService,
-                            MessageService messageService,
                             TradeWalletService tradeWalletService,
                             OfferBookService offerBookService,
                             ClosedTradableManager closedTradableManager,
                             @Named("storage.dir") File storageDir) {
-        this.user = user;
         this.keyRing = keyRing;
-        this.accountSettings = accountSettings;
+        this.user = user;
+        this.p2PService = p2PService;
         this.walletService = walletService;
-        this.messageService = messageService;
         this.tradeWalletService = tradeWalletService;
         this.offerBookService = offerBookService;
         this.closedTradableManager = closedTradableManager;
@@ -105,6 +99,15 @@ public class OpenOfferManager {
         // In case the app did get killed the shutDown from the modules is not called, so we use a shutdown hook
         Thread shutDownHookThread = new Thread(OpenOfferManager.this::shutDown, "OpenOfferManager.ShutDownHook");
         Runtime.getRuntime().addShutdownHook(shutDownHookThread);
+
+        // Handler for incoming offer availability requests
+        p2PService.addDecryptedMailListener((decryptedMessageWithPubKey, peerAddress) -> {
+            // We get an encrypted message but don't do the signature check as we don't know the peer yet.
+            // A basic sig check is in done also at decryption time
+            Message message = decryptedMessageWithPubKey.message;
+            if (message instanceof OfferAvailabilityRequest)
+                handleOfferAvailabilityRequest((OfferAvailabilityRequest) message, peerAddress);
+        });
     }
 
 
@@ -115,36 +118,94 @@ public class OpenOfferManager {
     public void onAllServicesInitialized() {
         log.trace("onAllServicesInitialized");
 
-        // Handler for incoming offer availability requests
-        messageService.addDecryptedMessageHandler(new DecryptedMessageHandler() {
-            @Override
-            public void handleMessage(MessageWithPubKey messageWithPubKey, Peer sender) {
-                // We get an encrypted message but don't do the signature check as we don't know the peer yet.
-                // A basic sig check is in done also at decryption time
-                Message message = messageWithPubKey.getMessage();
-                if (message instanceof OfferAvailabilityRequest)
-                    handleOfferAvailabilityRequest((OfferAvailabilityRequest) message, sender);
-            }
-        });
+        // We add own offers to offerbook when we go online again
+        // setupAnStartRePublishThread will re-publish at method call
 
+        // Before the TTL is reached we re-publish our offers
+        // If offer removal at shutdown fails we don't want to have long term dangling dead offers, so we set TTL quite short and use re-publish as 
+        // strategy. Offerers need to be online anyway.
+        if (!p2PService.isAuthenticated()) {
+            p2PServiceListener = new P2PServiceListener() {
+                @Override
+                public void onTorNodeReady() {
+                }
+
+                @Override
+                public void onHiddenServiceReady() {
+                }
+
+                @Override
+                public void onSetupFailed(Throwable throwable) {
+                }
+
+                @Override
+                public void onAllDataReceived() {
+                }
+
+                @Override
+                public void onAuthenticated() {
+                    startRePublishThread();
+                }
+            };
+            p2PService.addP2PServiceListener(p2PServiceListener);
+
+        } else {
+            startRePublishThread();
+        }
+    }
+
+    private void startRePublishThread() {
+        if (p2PServiceListener != null) p2PService.removeP2PServiceListener(p2PServiceListener);
+
+        ThreadFactoryBuilder builder = new ThreadFactoryBuilder()
+                .setDaemon(true)
+                .setNameFormat("Re-publish offers thread")
+                .setPriority(Thread.MIN_PRIORITY);  // Avoid competing with the GUI thread.
+
+        // An executor that starts up threads when needed and shuts them down later.
+        executor = new ScheduledThreadPoolExecutor(1, builder.build());
+        executor.setKeepAliveTime(5, TimeUnit.SECONDS);
+        executor.allowCoreThreadTimeOut(true);
+        executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+
+        checkArgument(Offer.TTL > 60000, "Offer.TTL <= 60");
+        long period = Offer.TTL - 120000; // 2 min before TTL expires
+        executor.scheduleAtFixedRate(this::rePublishOffers, 0, period, TimeUnit.SECONDS);
+    }
+
+    private void rePublishOffers() {
         for (OpenOffer openOffer : openOffers) {
-            // We add own offers to offerbook when we go online again
             offerBookService.addOffer(openOffer.getOffer(),
-                    () -> log.debug("Successful added offer to DHT"),
-                    (message, throwable) -> log.error("Add offer to DHT failed. " + message));
+                    () -> log.debug("Successful added offer to P2P network"),
+                    errorMessage -> log.error("Add offer to P2P network failed. " + errorMessage));
             //setupDepositPublishedListener(openOffer);
             openOffer.setStorage(openOffersStorage);
         }
     }
 
     public void shutDown() {
+        shutDown(null);
+    }
+
+    public void shutDown(Runnable completeHandler) {
+        if (executor != null) {
+            executor.shutdown();
+            try {
+                executor.awaitTermination(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
         if (!shutDownRequested) {
             log.debug("shutDown");
             shutDownRequested = true;
-            // we remove own offers form offerbook when we go offline
+            // we remove own offers from offerbook when we go offline
             for (OpenOffer openOffer : openOffers) {
                 offerBookService.removeOfferAtShutDown(openOffer.getOffer());
             }
+
+            FxTimer.runLater(Duration.ofMillis(500), completeHandler::run);
         }
     }
 
@@ -153,31 +214,10 @@ public class OpenOfferManager {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onPlaceOffer(String id,
-                             Offer.Direction direction,
-                             Fiat price,
-                             Coin amount,
-                             Coin minAmount,
-                             TransactionResultHandler resultHandler,
-                             ErrorMessageHandler errorMessageHandler) {
+    public void onPlaceOffer(Offer offer,
+                             TransactionResultHandler resultHandler) {
 
-        FiatAccount fiatAccount = user.currentFiatAccountProperty().get();
-        Offer offer = new Offer(id,
-                keyRing.getPubKeyRing(),
-                direction,
-                price.getValue(),
-                amount,
-                minAmount,
-                fiatAccount.type,
-                fiatAccount.currencyCode,
-                fiatAccount.country,
-                fiatAccount.id,
-                accountSettings.getAcceptedArbitratorIds(),
-                accountSettings.getSecurityDeposit(),
-                accountSettings.getAcceptedCountries(),
-                accountSettings.getAcceptedLanguageLocaleCodes());
-
-        PlaceOfferModel model = new PlaceOfferModel(offer, walletService, tradeWalletService, offerBookService);
+        PlaceOfferModel model = new PlaceOfferModel(offer, walletService, tradeWalletService, offerBookService, user);
 
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 model,
@@ -186,21 +226,20 @@ public class OpenOfferManager {
                     openOffers.add(openOffer);
                     openOffersStorage.queueUpForSave();
                     resultHandler.handleResult(transaction);
-                },
-                errorMessageHandler::handleErrorMessage
+                }
         );
 
         placeOfferProtocol.placeOffer();
     }
 
 
-    public void onCancelOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void onRemoveOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         Optional<OpenOffer> openOfferOptional = findOpenOffer(offer.getId());
         if (openOfferOptional.isPresent())
-            onCancelOpenOffer(openOfferOptional.get(), resultHandler, errorMessageHandler);
+            onRemoveOpenOffer(openOfferOptional.get(), resultHandler, errorMessageHandler);
     }
 
-    public void onCancelOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void onRemoveOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         offerBookService.removeOffer(openOffer.getOffer(),
                 () -> {
                     openOffer.getOffer().setState(Offer.State.REMOVED);
@@ -210,7 +249,7 @@ public class OpenOfferManager {
                     //disposeCheckOfferAvailabilityRequest(offer);
                     resultHandler.handleResult();
                 },
-                (message, throwable) -> errorMessageHandler.handleErrorMessage(message));
+                errorMessageHandler);
     }
 
     public void reserveOpenOffer(OpenOffer openOffer) {
@@ -241,7 +280,7 @@ public class OpenOfferManager {
             openOffer.setState(OpenOffer.State.CLOSED);
             offerBookService.removeOffer(openOffer.getOffer(),
                     () -> log.trace("Successful removed offer"),
-                    (message, throwable) -> log.error(message));
+                    errorMessage -> log.error(errorMessage));
         });
 
     }
@@ -251,7 +290,7 @@ public class OpenOfferManager {
     // Offer Availability
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handleOfferAvailabilityRequest(OfferAvailabilityRequest message, Peer sender) {
+    private void handleOfferAvailabilityRequest(OfferAvailabilityRequest message, Address sender) {
         log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + sender);
         try {
             nonEmptyStringOf(message.offerId);
@@ -264,25 +303,27 @@ public class OpenOfferManager {
         Optional<OpenOffer> openOfferOptional = findOpenOffer(message.offerId);
         boolean isAvailable = openOfferOptional.isPresent() && openOfferOptional.get().getState() == OpenOffer.State.AVAILABLE;
         try {
-            OfferAvailabilityResponse offerAvailabilityResponse = new OfferAvailabilityResponse(message.offerId, isAvailable);
-            messageService.sendEncryptedMessage(sender,
+            p2PService.sendEncryptedMailMessage(sender,
                     message.getPubKeyRing(),
-                    offerAvailabilityResponse,
-                    false,
-                    new SendMessageListener() {
+                    new OfferAvailabilityResponse(message.offerId, isAvailable),
+                    new SendMailMessageListener() {
                         @Override
-                        public void handleResult() {
-                            log.trace("ReportOfferAvailabilityMessage successfully arrived at peer");
+                        public void onArrived() {
+                            log.trace("OfferAvailabilityResponse successfully arrived at peer");
                         }
 
                         @Override
-                        public void handleFault() {
-                            log.info("Sending ReportOfferAvailabilityMessage failed.");
+                        public void onFault() {
+                            log.info("Sending OfferAvailabilityResponse failed.");
                         }
                     });
         } catch (Throwable t) {
             t.printStackTrace();
             log.info("Exception at handleRequestIsOfferAvailableMessage " + t.getMessage());
         }
+    }
+
+    public Optional<OpenOffer> getOpenOfferById(String offerId) {
+        return openOffers.stream().filter(e -> e.getId().equals(offerId)).findFirst();
     }
 }

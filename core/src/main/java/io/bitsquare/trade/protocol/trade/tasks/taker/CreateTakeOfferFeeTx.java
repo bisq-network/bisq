@@ -17,12 +17,15 @@
 
 package io.bitsquare.trade.protocol.trade.tasks.taker;
 
+import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.p2p.Address;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.ArbitrationSelectionRule;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-
+import io.bitsquare.user.User;
 import org.bitcoinj.core.Transaction;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,9 +40,19 @@ public class CreateTakeOfferFeeTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            Transaction createTakeOfferFeeTx = processModel.getTradeWalletService().createTakeOfferFeeTx(processModel.getAddressEntry());
+
+            User user = processModel.getUser();
+            Address selectedArbitratorAddress = ArbitrationSelectionRule.select(user.getAcceptedArbitratorAddresses(), processModel.getOffer());
+            log.debug("selectedArbitratorAddress " + selectedArbitratorAddress);
+            Arbitrator selectedArbitrator = user.getAcceptedArbitratorByAddress(selectedArbitratorAddress);
+            Transaction createTakeOfferFeeTx = processModel.getTradeWalletService().createTradingFeeTx(
+                    processModel.getAddressEntry(),
+                    FeePolicy.TAKE_OFFER_FEE,
+                    selectedArbitrator.getBtcAddress());
 
             processModel.setTakeOfferFeeTx(createTakeOfferFeeTx);
+
+            // TODO check if needed as we have stored tx already at setTakeOfferFeeTx
             processModel.setTakeOfferFeeTxId(createTakeOfferFeeTx.getHashAsString());
 
             complete();

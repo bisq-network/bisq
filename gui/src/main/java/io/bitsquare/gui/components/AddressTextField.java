@@ -17,36 +17,33 @@
 
 package io.bitsquare.gui.components;
 
-import io.bitsquare.gui.OverlayManager;
-import io.bitsquare.gui.util.GUIUtil;
-import io.bitsquare.util.Utilities;
-
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.uri.BitcoinURI;
-
-import java.io.ByteArrayInputStream;
-
-import java.net.URI;
-
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bitsquare.common.util.Utilities;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.popups.Popup;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.scene.control.*;
-import javafx.scene.image.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
 import javafx.stage.Window;
-
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
-
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
-
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.uri.BitcoinURI;
 import org.controlsfx.control.PopOver;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayInputStream;
+import java.net.URI;
 
 public class AddressTextField extends AnchorPane {
     private static final Logger log = LoggerFactory.getLogger(AddressTextField.class);
@@ -71,8 +68,8 @@ public class AddressTextField extends AnchorPane {
                 Utilities.openURI(URI.create(getBitcoinURI()));
             } catch (Exception e) {
                 log.warn(e.getMessage());
-                Popups.openWarningPopup("Warning", "Opening a system Bitcoin wallet application has failed. " +
-                        "Perhaps you don't have one installed?");
+                new Popup().warning("Opening a system Bitcoin wallet application has failed. " +
+                        "Perhaps you don't have one installed?").show();
             }
         });
         textField.focusTraversableProperty().set(focusTraversableProperty().get());
@@ -85,7 +82,7 @@ public class AddressTextField extends AnchorPane {
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.setOnMouseClicked(e -> {
             if (address.get() != null && address.get().length() > 0)
-                GUIUtil.copyToClipboard(address.get());
+                Utilities.copyToClipboard(address.get());
         });
 
         Label qrCode = new Label();
@@ -111,15 +108,13 @@ public class AddressTextField extends AnchorPane {
                 PopOver popOver = new PopOver(pane);
                 popOver.setDetachedTitle("Scan QR code for this address");
                 popOver.setDetached(true);
-                popOver.setOnHiding(windowEvent -> {
-                    OverlayManager.removeBlurContent();
-                });
+                popOver.setOnHiding(windowEvent -> MainView.removeBlur());
 
                 Window window = getScene().getWindow();
                 double x = Math.round(window.getX() + (window.getWidth() - 320) / 2);
                 double y = Math.round(window.getY() + (window.getHeight() - 240) / 2);
                 popOver.show(getScene().getWindow(), x, y);
-                OverlayManager.blurContent();
+                MainView.blur();
             }
         });
 

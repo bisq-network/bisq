@@ -17,42 +17,32 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
-import io.bitsquare.btc.WalletService;
+import com.google.inject.Inject;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.validation.BtcAddressValidator;
+import io.bitsquare.gui.util.validation.*;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeState;
-
+import javafx.beans.property.*;
+import javafx.collections.ObservableList;
 import org.bitcoinj.core.BlockChainListener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
-
-import com.google.inject.Inject;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Date;
 
-import javafx.beans.InvalidationListener;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.ReadOnlyStringProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.collections.ObservableList;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel.SellerState.*;
 
 public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataModel> implements ViewModel {
-    private static final Logger log = LoggerFactory.getLogger(PendingTradesViewModel.class);
+    private Subscription tradeStateSubscription;
 
-    interface State {
+    private interface State {
     }
 
     enum BuyerState implements State {
@@ -75,12 +65,16 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     private final BSFormatter formatter;
-    private final InvalidationListener sellerStateListener;
-    private final InvalidationListener buyerStateListener;
     private final BtcAddressValidator btcAddressValidator;
 
+    private final IBANValidator ibanValidator;
+    private final BICValidator bicValidator;
+    private final InputValidator inputValidator;
+    private final OKPayValidator okPayValidator;
+    private final AltCoinAddressValidator altCoinAddressValidator;
+
     private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>(PendingTradesViewModel.BuyerState.UNDEFINED);
-    private final ObjectProperty<SellerState> sellerState = new SimpleObjectProperty<>(PendingTradesViewModel.SellerState.UNDEFINED);
+    private final ObjectProperty<SellerState> sellerState = new SimpleObjectProperty<>(UNDEFINED);
 
     private final StringProperty txId = new SimpleStringProperty();
     private final BooleanProperty withdrawalButtonDisable = new SimpleBooleanProperty(true);
@@ -91,36 +85,55 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradesViewModel(PendingTradesDataModel dataModel, BSFormatter formatter,
-                                  BtcAddressValidator btcAddressValidator) {
+    public PendingTradesViewModel(PendingTradesDataModel dataModel,
+                                  BSFormatter formatter,
+                                  BtcAddressValidator btcAddressValidator,
+                                  IBANValidator ibanValidator,
+                                  BICValidator bicValidator,
+                                  InputValidator inputValidator,
+                                  OKPayValidator okPayValidator,
+                                  AltCoinAddressValidator altCoinAddressValidator
+    ) {
         super(dataModel);
 
         this.formatter = formatter;
         this.btcAddressValidator = btcAddressValidator;
-        this.sellerStateListener = (ov) -> applySellerState();
-        this.buyerStateListener = (ov) -> applyBuyerState();
+        this.ibanValidator = ibanValidator;
+        this.bicValidator = bicValidator;
+        this.inputValidator = inputValidator;
+        this.okPayValidator = okPayValidator;
+        this.altCoinAddressValidator = altCoinAddressValidator;
     }
 
     @Override
-    public void doActivate() {
-        txId.bind(dataModel.getTxId());
+    protected void activate() {
+        setTradeStateSubscription();
 
-        dataModel.getSellerProcessState().addListener(sellerStateListener);
-        dataModel.getBuyerProcessState().addListener(buyerStateListener);
+        txId.bind(dataModel.getTxId());
+    }
+
+    @Override
+    protected void deactivate() {
+        if (tradeStateSubscription != null) {
+            tradeStateSubscription.unsubscribe();
+            tradeStateSubscription = null;
+        }
+        txId.unbind();
+    }
+
+    private void setTradeStateSubscription() {
+        if (tradeStateSubscription != null)
+            tradeStateSubscription.unsubscribe();
 
         if (dataModel.getTrade() != null) {
-            applySellerState();
-            applyBuyerState();
+            tradeStateSubscription = EasyBind.subscribe(dataModel.getTrade().stateProperty(), newValue -> {
+                if (newValue != null) {
+                    applyState(newValue);
+                }
+            });
         }
     }
 
-    @Override
-    public void doDeactivate() {
-        txId.unbind();
-
-        dataModel.getSellerProcessState().removeListener(sellerStateListener);
-        dataModel.getBuyerProcessState().removeListener(buyerStateListener);
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
@@ -128,7 +141,11 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     void onSelectTrade(PendingTradesListItem item) {
         dataModel.onSelectTrade(item);
+
+        // call it after  dataModel.onSelectTrade as trade is set
+        setTradeStateSubscription();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -144,10 +161,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public ReadOnlyStringProperty getTxId() {
         return txId;
-    }
-
-    public String getPayoutTxId() {
-        return dataModel.getPayoutTxId();
     }
 
     public ReadOnlyBooleanProperty getWithdrawalButtonDisable() {
@@ -187,11 +200,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public boolean isOfferer() {
-        return dataModel.isOffererRole();
-    }
-
-    public WalletService getWalletService() {
-        return dataModel.getWalletService();
+        return dataModel.isOfferer();
     }
 
     PendingTradesListItem getSelectedItem() {
@@ -204,10 +213,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public BtcAddressValidator getBtcAddressValidator() {
         return btcAddressValidator;
-    }
-
-    String getErrorMessage() {
-        return dataModel.getErrorMessage();
     }
 
     // columns
@@ -228,7 +233,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     String evaluateDirection(PendingTradesListItem item) {
-        return (item != null) ? formatter.formatDirection(dataModel.getDirection(item.getTrade().getOffer())) : "";
+        return (item != null) ? formatter.getDirection(dataModel.getDirection(item.getTrade().getOffer())) : "";
     }
 
     String formatDate(Date value) {
@@ -247,37 +252,54 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return dataModel.getLockTime();
     }
 
+    public long getCheckPaymentTimeAsBlockHeight() {
+        return dataModel.getCheckPaymentTimeAsBlockHeight();
+    }
+
+    public long getOpenDisputeTimeAsBlockHeight() {
+        return dataModel.getOpenDisputeTimeAsBlockHeight();
+    }
+
+
     public int getBestChainHeight() {
         return dataModel.getBestChainHeight();
     }
 
-    public String getUnlockDate(long missingBlocks) {
-        return formatter.getUnlockDate(missingBlocks);
+    public String getDateFromBlocks(long missingBlocks) {
+        return formatter.getDateFromBlocks(missingBlocks);
     }
 
-    // payment
+    public String getReference() {
+        return dataModel.getReference();
+    }
+
     public String getPaymentMethod() {
-        assert dataModel.getContract() != null;
-        return BSResources.get(dataModel.getContract().sellerFiatAccount.type.toString());
+        checkNotNull(dataModel.getContract(), "dataModel.getContract() must not be null");
+        return BSResources.get(dataModel.getContract().getPaymentMethodName());
     }
 
     public String getFiatAmount() {
         return formatter.formatFiatWithCode(dataModel.getTrade().getTradeVolume());
     }
 
-    public String getHolderName() {
-        assert dataModel.getContract() != null;
-        return dataModel.getContract().sellerFiatAccount.accountHolderName;
+    public IBANValidator getIbanValidator() {
+        return ibanValidator;
     }
 
-    public String getPrimaryId() {
-        assert dataModel.getContract() != null;
-        return dataModel.getContract().sellerFiatAccount.accountPrimaryID;
+    public AltCoinAddressValidator getAltCoinAddressValidator() {
+        return altCoinAddressValidator;
     }
 
-    public String getSecondaryId() {
-        assert dataModel.getContract() != null;
-        return dataModel.getContract().sellerFiatAccount.accountSecondaryID;
+    public BICValidator getBicValidator() {
+        return bicValidator;
+    }
+
+    public InputValidator getInputValidator() {
+        return inputValidator;
+    }
+
+    public OKPayValidator getOkPayValidator() {
+        return okPayValidator;
     }
 
     // summary
@@ -294,13 +316,15 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getSecurityDeposit() {
-        // securityDeposit is handled different for offerer and taker.
-        // Offerer have paid in the max amount, but taker might have taken less so also paid in less securityDeposit
-        if (dataModel.isOffererRole())
-            return formatter.formatCoinWithCode(dataModel.getTrade().getOffer().getSecurityDeposit());
-        else
-            return formatter.formatCoinWithCode(dataModel.getTrade().getSecurityDeposit());
+        return formatter.formatCoinWithCode(FeePolicy.SECURITY_DEPOSIT);
+    }
 
+    public boolean isBlockChainMethod() {
+        return dataModel.getTrade().getOffer().getPaymentMethod().equals(PaymentMethod.BLOCK_CHAINS);
+    }
+
+    public Trade getTrade() {
+        return dataModel.getTrade();
     }
 
 
@@ -308,112 +332,72 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     // States
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void applySellerState() {
-        if (dataModel.getSellerProcessState().get() instanceof TradeState.SellerState) {
-            TradeState.SellerState processState = (TradeState.SellerState) dataModel.getSellerProcessState().get();
-            log.debug("updateSellerState (SellerTradeState) " + processState);
-            if (processState != null) {
-                switch (processState) {
-                    case PREPARATION:
-                        sellerState.set(PendingTradesViewModel.SellerState.UNDEFINED);
-                        break;
+    private void applyState(Trade.State tradeState) {
+        log.debug("updateSellerState (SellerTradeState) " + tradeState);
+        switch (tradeState) {
+            case PREPARATION:
+                sellerState.set(UNDEFINED);
+                buyerState.set(PendingTradesViewModel.BuyerState.UNDEFINED);
+                break;
 
-                    case DEPOSIT_PUBLISHED_MSG_RECEIVED:
-                        sellerState.set(PendingTradesViewModel.SellerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
-                        break;
+            case TAKER_FEE_PAID:
+                break;
 
+            case DEPOSIT_PUBLISH_REQUESTED:
+                break;
+            case DEPOSIT_PUBLISHED:
+            case DEPOSIT_SEEN_IN_NETWORK:
+            case DEPOSIT_PUBLISHED_MSG_SENT:
+            case DEPOSIT_PUBLISHED_MSG_RECEIVED:
+                sellerState.set(WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
+                buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
+                break;
 
-                    case DEPOSIT_CONFIRMED:
-                        sellerState.set(PendingTradesViewModel.SellerState.WAIT_FOR_FIAT_PAYMENT_STARTED);
-                        break;
-
-
-                    case FIAT_PAYMENT_STARTED_MSG_RECEIVED:
-                        sellerState.set(PendingTradesViewModel.SellerState.REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED);
-                        break;
-
-
-                    case FIAT_PAYMENT_RECEIPT:
-                        break;
-                    case FIAT_PAYMENT_RECEIPT_MSG_SENT:
-                        sellerState.set(PendingTradesViewModel.SellerState.WAIT_FOR_PAYOUT_TX);
-                        break;
+            case DEPOSIT_CONFIRMED:
+                sellerState.set(WAIT_FOR_FIAT_PAYMENT_STARTED);
+                buyerState.set(PendingTradesViewModel.BuyerState.REQUEST_START_FIAT_PAYMENT);
+                break;
 
 
-                    case PAYOUT_TX_RECEIVED:
-                        break;
-                    case PAYOUT_TX_COMMITTED:
-                        sellerState.set(PendingTradesViewModel.SellerState.WAIT_FOR_UNLOCK_PAYOUT);
-                        break;
+            case FIAT_PAYMENT_STARTED:
+                break;
+            case FIAT_PAYMENT_STARTED_MSG_SENT:
+                buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_FIAT_PAYMENT_RECEIPT);
+                break;
+            case FIAT_PAYMENT_STARTED_MSG_RECEIVED:
+                sellerState.set(REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED);
+                break;
 
 
-                    case PAYOUT_BROAD_CASTED:
-                        sellerState.set(PendingTradesViewModel.SellerState.REQUEST_WITHDRAWAL);
-                        break;
-
-                    default:
-                        log.warn("unhandled processState " + processState);
-                        break;
-                }
-            }
-        }
-        else {
-            log.error("Unhandled state " + dataModel.getSellerProcessState().get());
-        }
-    }
-
-    private void applyBuyerState() {
-        if (dataModel.getBuyerProcessState().get() instanceof TradeState.BuyerState) {
-            TradeState.BuyerState processState = (TradeState.BuyerState) dataModel.getBuyerProcessState().get();
-            log.debug("updateBuyerState (BuyerTradeState) " + processState);
-            if (processState != null) {
-                switch (processState) {
-                    case PREPARATION:
-                        sellerState.set(PendingTradesViewModel.SellerState.UNDEFINED);
-                        break;
+            case FIAT_PAYMENT_RECEIPT:
+                break;
+            case FIAT_PAYMENT_RECEIPT_MSG_SENT:
+                sellerState.set(WAIT_FOR_PAYOUT_TX);
+                buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_FIAT_PAYMENT_RECEIPT);
+                break;
+            case FIAT_PAYMENT_RECEIPT_MSG_RECEIVED:
+                break;
 
 
-                    case DEPOSIT_PUBLISHED:
-                    case DEPOSIT_PUBLISHED_MSG_SENT:
-                        buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
-                        break;
+            case PAYOUT_TX_SENT:
+                buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_UNLOCK_PAYOUT);
+                break;
+            case PAYOUT_TX_RECEIVED:
+                break;
+            case PAYOUT_TX_COMMITTED:
+                sellerState.set(WAIT_FOR_UNLOCK_PAYOUT);
+                break;
+            case PAYOUT_BROAD_CASTED:
+                sellerState.set(REQUEST_WITHDRAWAL);
+                buyerState.set(PendingTradesViewModel.BuyerState.REQUEST_WITHDRAWAL);
+                break;
 
+            case WITHDRAW_COMPLETED:
+                break;
 
-                    case DEPOSIT_CONFIRMED:
-                        buyerState.set(PendingTradesViewModel.BuyerState.REQUEST_START_FIAT_PAYMENT);
-                        break;
-
-
-                    case FIAT_PAYMENT_STARTED:
-                        break;
-                    case FIAT_PAYMENT_STARTED_MSG_SENT:
-                        buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_FIAT_PAYMENT_RECEIPT);
-                        break;
-
-
-                    case FIAT_PAYMENT_RECEIPT_MSG_RECEIVED:
-                    case PAYOUT_TX_COMMITTED:
-                        break;
-                    case PAYOUT_TX_SENT:
-                        buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_UNLOCK_PAYOUT);
-                        break;
-
-
-                    case PAYOUT_BROAD_CASTED:
-                        buyerState.set(PendingTradesViewModel.BuyerState.REQUEST_WITHDRAWAL);
-                        break;
-
-                    case WITHDRAW_COMPLETED:
-                        break;
-
-                    default:
-                        log.warn("unhandled viewState " + processState);
-                        break;
-                }
-            }
-        }
-        else {
-            log.error("Unhandled state " + dataModel.getBuyerProcessState().get());
+            default:
+                log.warn("unhandled processState " + tradeState);
+                break;
         }
     }
 }

@@ -18,28 +18,27 @@
 package io.bitsquare.gui.main.funds.transactions;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.common.view.ActivatableViewAndModel;
+import io.bitsquare.common.util.Utilities;
+import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.util.Utilities;
-
-import org.bitcoinj.core.Transaction;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-
+import io.bitsquare.user.Preferences;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
+import org.bitcoinj.core.Transaction;
+
+import javax.inject.Inject;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @FxmlView
-public class TransactionsView extends ActivatableViewAndModel {
+public class TransactionsView extends ActivatableView<VBox, Void> {
 
     @FXML TableView<TransactionsListItem> table;
     @FXML TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, addressColumn, amountColumn, typeColumn,
@@ -49,11 +48,13 @@ public class TransactionsView extends ActivatableViewAndModel {
 
     private final WalletService walletService;
     private final BSFormatter formatter;
+    private final Preferences preferences;
 
     @Inject
-    private TransactionsView(WalletService walletService, BSFormatter formatter) {
+    private TransactionsView(WalletService walletService, BSFormatter formatter, Preferences preferences) {
         this.walletService = walletService;
         this.formatter = formatter;
+        this.preferences = preferences;
     }
 
     @Override
@@ -66,7 +67,7 @@ public class TransactionsView extends ActivatableViewAndModel {
     }
 
     @Override
-    public void doActivate() {
+    protected void activate() {
         List<Transaction> transactions = walletService.getWallet().getRecentTransactions(10000, true);
         transactionsListItems = FXCollections.observableArrayList();
         transactionsListItems.addAll(transactions.stream().map(transaction ->
@@ -76,7 +77,7 @@ public class TransactionsView extends ActivatableViewAndModel {
     }
 
     @Override
-    public void doDeactivate() {
+    protected void deactivate() {
         transactionsListItems.forEach(TransactionsListItem::cleanup);
     }
 
@@ -85,12 +86,11 @@ public class TransactionsView extends ActivatableViewAndModel {
         log.debug("openTxDetails " + item);
 
         try {
-            // TODO get the url form the app preferences
-            Utilities.openWebPage("https://www.biteasy.com/testnet/addresses/" + item.getAddressString());
+            Utilities.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
         } catch (Exception e) {
             log.error(e.getMessage());
-            Popups.openWarningPopup("Warning", "Opening browser failed. Please check your internet " +
-                    "connection.");
+            new Popup().warning("Opening browser failed. Please check your internet " +
+                    "connection.").show();
         }
     }
 
@@ -112,7 +112,6 @@ public class TransactionsView extends ActivatableViewAndModel {
 
                                 if (item != null && !empty) {
                                     hyperlink = new Hyperlink(item.getAddressString());
-                                    hyperlink.setId("id-link");
                                     hyperlink.setOnAction(event -> openTxDetails(item));
                                     setGraphic(hyperlink);
                                 }

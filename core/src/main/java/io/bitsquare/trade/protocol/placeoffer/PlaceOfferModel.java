@@ -22,9 +22,8 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OfferBookService;
-
+import io.bitsquare.user.User;
 import org.bitcoinj.core.Transaction;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,17 +34,20 @@ public class PlaceOfferModel implements Model {
     public final WalletService walletService;
     public final TradeWalletService tradeWalletService;
     public final OfferBookService offerBookService;
+    public final User user;
     public boolean offerAddedToOfferBook;
     private Transaction transaction;
 
     public PlaceOfferModel(Offer offer,
                            WalletService walletService,
                            TradeWalletService tradeWalletService,
-                           OfferBookService offerBookService) {
+                           OfferBookService offerBookService,
+                           User user) {
         this.offer = offer;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
         this.offerBookService = offerBookService;
+        this.user = user;
     }
 
     public void setTransaction(Transaction transaction) {

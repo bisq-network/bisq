@@ -22,12 +22,13 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.springframework.util.StringUtils;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
+import static java.lang.String.join;
 
 public abstract class BitsquareExecutable {
-    public static final int EXIT_SUCCESS = 0;
+    private static final int EXIT_SUCCESS = 0;
     public static final int EXIT_FAILURE = 1;
-    public static final String HELP_KEY = "help";
+    private static final String HELP_KEY = "help";
 
     public void execute(String[] args) throws Exception {
         OptionParser parser = new OptionParser();

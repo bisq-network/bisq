@@ -17,68 +17,39 @@
 
 package io.bitsquare.btc;
 
-import io.bitsquare.BitsquareException;
-import io.bitsquare.user.Preferences;
-
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
-
-import javax.inject.Inject;
+import org.bitcoinj.core.Wallet;
 
 public class FeePolicy {
 
-    public static final Coin TX_FEE = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;   // dropped down to 0.00001 BTC
+    // Official min. fee and fee per kiloByte dropped down to 0.00001 BTC / Coin.valueOf(1000) / 1000 satoshis, but as there are reported problems with 
+    // confirmation we use a hgher value.
+    // The should also help to avoid problems when the tx size is larger as the standard (e.g. if the user does not pay
+    // in with one transaction but several tx). We don't do a dynamically fee calculation as we need predictable amounts, so that should help to get a larger 
+    // headroom.
+    // Andreas Schildbach reported problems with confirmation and increased the fee/offered UI side fee setting.
 
+    // http://www.cointape.com/
+    // The fastest and cheapest transaction fee is currently 50 satoshis/byte, shown in green at the top.
+    // For the average transaction size of 597 bytes, this results in a fee of 298 bits (0.298 mBTC). -> 0.0003 BTC or Coin.valueOf(30000);
 
-    // TODO: Change REGISTRATION_FEE to 0.00001 (See https://github.com/bitsquare/bitsquare/issues/228)
-    public static final Coin REGISTRATION_FEE = TX_FEE.add(TX_FEE);
-    public static final Coin CREATE_OFFER_FEE = Coin.valueOf(1000000); // 0.01 BTC
+    // trade fee tx: 226 bytes
+    // deposit tx: 336 bytes
+    // payout tx: 371 bytes
+    // disputed payout tx: 408 bytes -> 20400 satoshis with 50 satoshis/byte
+
+    // Other good source is: https://tradeblock.com/blockchain 15-100 satoshis/byte
+
+    public static final Coin TX_FEE = Coin.valueOf(30000); // 0.0003 BTC about 0.06 EUR @ 200 EUR/BTC: about 90 satoshi /byte
+
+    static {
+        // we use our fee as default fee
+        Wallet.SendRequest.DEFAULT_FEE_PER_KB = FeePolicy.TX_FEE;
+    }
+
+    public static final Coin DUST = Coin.valueOf(546);
+
+    public static final Coin CREATE_OFFER_FEE = Coin.valueOf(100000); // 0.001 BTC  0.1% of 1 BTC about 0.2 EUR @ 200 EUR/BTC
     public static final Coin TAKE_OFFER_FEE = CREATE_OFFER_FEE;
-
-    private final BitcoinNetwork bitcoinNetwork;
-    private final String createOfferFeeAddress;
-    private final String takeOfferFeeAddress;
-
-    @Inject
-    public FeePolicy(Preferences preferences) {
-        this.bitcoinNetwork = preferences.getBitcoinNetwork();
-
-        switch (bitcoinNetwork) {
-            case TESTNET:
-                createOfferFeeAddress = "mopJDiHncoveyy7S7FZTUNVbrCxazxvGrE";
-                takeOfferFeeAddress = "mopJDiHncoveyy7S7FZTUNVbrCxazxvGrE";
-                break;
-            case MAINNET:
-                // bitsquare donation address used for the moment...
-                createOfferFeeAddress = "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7";
-                takeOfferFeeAddress = "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7";
-                break;
-            case REGTEST:
-                createOfferFeeAddress = "mkNW1omJFA7RD3AZ94mfKqubRff2gx21KE";
-                takeOfferFeeAddress = "mkNW1omJFA7RD3AZ94mfKqubRff2gx21KE";
-                break;
-            default:
-                throw new BitsquareException("Unknown bitcoin network: %s", bitcoinNetwork);
-        }
-    }
-
-    //TODO get address form arbitrator list
-    public Address getAddressForCreateOfferFee() {
-        try {
-            return new Address(bitcoinNetwork.getParameters(), createOfferFeeAddress);
-        } catch (AddressFormatException ex) {
-            throw new BitsquareException(ex);
-        }
-    }
-
-    //TODO get address form the intersection of  both traders arbitrator lists
-    public Address getAddressForTakeOfferFee() {
-        try {
-            return new Address(bitcoinNetwork.getParameters(), takeOfferFeeAddress);
-        } catch (AddressFormatException ex) {
-            throw new BitsquareException(ex);
-        }
-    }
+    public static final Coin SECURITY_DEPOSIT = Coin.valueOf(10000000); // 0.1 BTC; about 20 EUR @ 200 EUR/BTC
 }

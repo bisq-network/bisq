@@ -17,15 +17,16 @@
 
 package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SignAndFinalizePayoutTx extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(SignAndFinalizePayoutTx.class);
@@ -38,22 +39,21 @@ public class SignAndFinalizePayoutTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            assert trade.getTradeAmount() != null;
-            assert trade.getSecurityDeposit() != null;
-            Coin sellerPayoutAmount = trade.getSecurityDeposit();
+            checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
+            Coin sellerPayoutAmount = FeePolicy.SECURITY_DEPOSIT;
             Coin buyerPayoutAmount = sellerPayoutAmount.add(trade.getTradeAmount());
 
-            Transaction transaction = processModel.getTradeWalletService().signAndFinalizePayoutTx(
+            Transaction transaction = processModel.getTradeWalletService().buyerSignsAndFinalizesPayoutTx(
                     trade.getDepositTx(),
                     processModel.tradingPeer.getSignature(),
                     buyerPayoutAmount,
                     sellerPayoutAmount,
                     processModel.getAddressEntry(),
                     processModel.tradingPeer.getPayoutAddressString(),
-                    trade.getLockTime(),
+                    trade.getLockTimeAsBlockHeight(),
                     processModel.getTradeWalletPubKey(),
                     processModel.tradingPeer.getTradeWalletPubKey(),
-                    processModel.getArbitratorPubKey()
+                    processModel.getArbitratorPubKey(trade.getArbitratorAddress())
             );
 
             trade.setPayoutTx(transaction);

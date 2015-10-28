@@ -17,31 +17,25 @@
 
 package io.bitsquare.app;
 
+import com.vinumeris.updatefx.UpdateFX;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.RegTestHost;
-import io.bitsquare.p2p.BootstrapNodes;
-import io.bitsquare.p2p.Node;
+import io.bitsquare.p2p.Utils;
 import io.bitsquare.util.joptsimple.EnumValueConverter;
+import joptsimple.OptionException;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.vinumeris.updatefx.UpdateFX;
-import joptsimple.OptionException;
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-
 import static io.bitsquare.app.BitsquareEnvironment.*;
-import static io.bitsquare.p2p.Node.*;
-import static io.bitsquare.p2p.tomp2p.TomP2PModule.*;
 import static java.util.Arrays.asList;
 
 public class BitsquareAppMain extends BitsquareExecutable {
@@ -77,7 +71,7 @@ public class BitsquareAppMain extends BitsquareExecutable {
 
     // That will be called from UpdateFX after updates are checked
     public static void realMain(String[] args) throws Exception {
-        log.trace("realMain");
+        //log.trace("realMain");
         // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
         // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
         Thread.currentThread().setContextClassLoader(BitsquareAppMain.class.getClassLoader());
@@ -112,12 +106,15 @@ public class BitsquareAppMain extends BitsquareExecutable {
                 description("Clean application data directory", DEFAULT_APP_DATA_DIR_CLEAN))
                 .withRequiredArg()
                 .ofType(boolean.class);
-        parser.accepts(NAME_KEY, description("Name of this node", null))
+        parser.accepts(ProgramArguments.NAME_KEY, description("Name of this node", null))
                 .withRequiredArg();
-        parser.accepts(PORT_KEY, description("Port to listen on", Node.CLIENT_PORT))
+        parser.accepts(ProgramArguments.PORT_KEY, description("Port to listen on", Utils.findFreeSystemPort()))
                 .withRequiredArg()
                 .ofType(int.class);
-        parser.accepts(USE_MANUAL_PORT_FORWARDING_KEY, description("Use manual port forwarding", false))
+        parser.accepts(ProgramArguments.USE_LOCALHOST, description("Use localhost network for development", false))
+                .withRequiredArg()
+                .ofType(boolean.class);
+        parser.accepts(ProgramArguments.DEV_TEST, description("Enable arbitrator dev priv key", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
         parser.accepts(BitcoinNetwork.KEY, description("Bitcoin network", BitcoinNetwork.DEFAULT))
@@ -125,25 +122,11 @@ public class BitsquareAppMain extends BitsquareExecutable {
                 .ofType(BitcoinNetwork.class)
                 .withValuesConvertedBy(new EnumValueConverter(BitcoinNetwork.class));
 
+
         parser.accepts(RegTestHost.KEY, description("", RegTestHost.DEFAULT))
                 .withRequiredArg()
                 .ofType(RegTestHost.class)
                 .withValuesConvertedBy(new EnumValueConverter(RegTestHost.class));
-
-        BootstrapNodes bootstrapNodes = new BootstrapNodes();
-        bootstrapNodes.initWithNetworkId(Node.REG_TEST_P2P_ID); // use regtest as default
-        parser.accepts(BOOTSTRAP_NODE_NAME_KEY, description("Bootstrap node name", bootstrapNodes.getLocalhostNode().getName()))
-                .withRequiredArg();
-        parser.accepts(BOOTSTRAP_NODE_IP_KEY, description("Bootstrap node IP", bootstrapNodes.getLocalhostNode().getIp()))
-                .withRequiredArg();
-        parser.accepts(BOOTSTRAP_NODE_P2P_ID_KEY, description("Bootstrap node p2p network ID", bootstrapNodes.getLocalhostNode().getPort()))
-                .withRequiredArg()
-                .ofType(int.class);
-        parser.accepts(BOOTSTRAP_NODE_PORT_KEY, description("Bootstrap node port", bootstrapNodes.getLocalhostNode().getPort()))
-                .withRequiredArg()
-                .ofType(int.class);
-        parser.accepts(NETWORK_INTERFACE_KEY, description("Network interface", null))
-                .withRequiredArg();
     }
 
     @Override

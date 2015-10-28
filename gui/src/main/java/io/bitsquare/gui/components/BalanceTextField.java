@@ -20,19 +20,24 @@ package io.bitsquare.gui.components;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.util.BSFormatter;
-
+import javafx.scene.control.TextField;
+import javafx.scene.effect.BlurType;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.Effect;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.paint.Color;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 
-import javafx.scene.control.*;
-import javafx.scene.effect.*;
-import javafx.scene.layout.*;
-import javafx.scene.paint.*;
-
 public class BalanceTextField extends AnchorPane {
 
-    private final TextField textField;
+    private static WalletService walletService;
 
+    public static void setWalletService(WalletService walletService) {
+        BalanceTextField.walletService = walletService;
+    }
+
+    private final TextField textField;
     private final Effect fundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.GREEN, 4, 0.0, 0, 0);
     private final Effect notFundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.ORANGERED, 4, 0.0, 0, 0);
     private BSFormatter formatter;
@@ -53,7 +58,7 @@ public class BalanceTextField extends AnchorPane {
         getChildren().addAll(textField);
     }
 
-    public void setup(WalletService walletService, Address address, BSFormatter formatter) {
+    public void setup(Address address, BSFormatter formatter) {
         this.formatter = formatter;
 
         walletService.addBalanceListener(new BalanceListener(address) {

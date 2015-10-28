@@ -17,47 +17,39 @@
 
 package io.bitsquare.gui.util;
 
-import io.bitsquare.arbitration.ArbitrationRepository;
-import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.BitcoinNetwork;
-import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
-import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.p2p.Address;
 import io.bitsquare.trade.offer.Offer;
-import io.bitsquare.user.User;
-
+import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.utils.MonetaryFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.math.BigDecimal;
-
 import java.text.DateFormat;
 import java.text.DecimalFormat;
-
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 //TODO convert to non static
 
 /**
  * Central point for formatting and input parsing.
- * <p/>
+ * <p>
  * Note that we never use for text input values any coin or currency symbol or code.
  * BtcFormat does not support
  */
 public class BSFormatter {
     private static final Logger log = LoggerFactory.getLogger(BSFormatter.class);
 
-    private Locale locale = Locale.getDefault();
+    private Locale locale = Preferences.getDefaultLocale();
     private boolean useMilliBit;
     private int scale = 3;
 
@@ -70,25 +62,23 @@ public class BSFormatter {
     // no way to remove grouping separator). It seems to be not optimal for user input formatting.
     private MonetaryFormat coinFormat = MonetaryFormat.BTC.repeatOptionalDecimals(2, 2);
 
-    private String currencyCode = CurrencyUtil.getDefaultCurrencyAsCode();
+    //  private String currencyCode = CurrencyUtil.getDefaultFiatCurrencyAsCode();
 
     // format is like: 1,00  never more then 2 decimals
-    private final MonetaryFormat fiatFormat = MonetaryFormat.FIAT.repeatOptionalDecimals(0, 0).code(0, currencyCode);
-    private final ArbitrationRepository arbitrationRepository;
+    private final MonetaryFormat fiatFormat = MonetaryFormat.FIAT.repeatOptionalDecimals(0, 0);
 
 
     @Inject
-    public BSFormatter(User user, ArbitrationRepository arbitrationRepository) {
-        this.arbitrationRepository = arbitrationRepository;
-        if (user.currentFiatAccountProperty().get() == null)
-            setFiatCurrencyCode(CurrencyUtil.getDefaultCurrencyAsCode());
-        else if (user.currentFiatAccountProperty().get() != null)
-            setFiatCurrencyCode(user.currentFiatAccountProperty().get().currencyCode);
+    public BSFormatter() {
+      /*  if (user.tradeCurrencyProperty().get() == null)
+            setFiatCurrencyCode(CurrencyUtil.getDefaultFiatCurrencyAsCode());
+        else if (user.tradeCurrencyProperty().get() != null)
+            setFiatCurrencyCode(user.tradeCurrencyProperty().get().getCode());
 
-        user.currentFiatAccountProperty().addListener((ov, oldValue, newValue) -> {
+        user.tradeCurrencyProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue != null)
-                setFiatCurrencyCode(newValue.currencyCode);
-        });
+                setFiatCurrencyCode(newValue.getCode());
+        });*/
     }
 
 
@@ -117,10 +107,10 @@ public class BSFormatter {
             return MonetaryFormat.BTC.repeatOptionalDecimals(2, 2);
     }
 
-    public void setFiatCurrencyCode(String currencyCode) {
+  /*  public void setFiatCurrencyCode(String currencyCode) {
         this.currencyCode = currencyCode;
         fiatFormat.code(0, currencyCode);
-    }
+    }*/
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -227,7 +217,8 @@ public class BSFormatter {
     public String formatFiatWithCode(Fiat fiat) {
         if (fiat != null) {
             try {
-                return fiatFormat.postfixCode().format(fiat).toString();
+                //return fiatFormat.postfixCode().format(fiat).toString();
+                return fiatFormat.noCode().format(fiat).toString() + " " + fiat.getCurrencyCode();
             } catch (Throwable t) {
                 log.warn("Exception at formatFiatWithCode: " + t.toString());
                 return "";
@@ -238,7 +229,7 @@ public class BSFormatter {
         }
     }
 
-    public Fiat parseToFiat(String input) {
+    private Fiat parseToFiat(String input, String currencyCode) {
         if (input != null && input.length() > 0) {
             try {
                 return Fiat.parseFiat(currencyCode, cleanInput(input));
@@ -262,10 +253,10 @@ public class BSFormatter {
      * @return
      */
 
-    public Fiat parseToFiatWith2Decimals(String input) {
+    public Fiat parseToFiatWith2Decimals(String input, String currencyCode) {
         if (input != null && input.length() > 0) {
             try {
-                return parseToFiat(new BigDecimal(cleanInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString());
+                return parseToFiat(new BigDecimal(cleanInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString(), currencyCode);
             } catch (Throwable t) {
                 log.warn("Exception at parseCoinTo4Decimals: " + t.toString());
                 return Fiat.valueOf(currencyCode, 0);
@@ -275,8 +266,8 @@ public class BSFormatter {
         return Fiat.valueOf(currencyCode, 0);
     }
 
-    public boolean hasFiatValidDecimals(String input) {
-        return parseToFiat(input).equals(parseToFiatWith2Decimals(input));
+    public boolean hasFiatValidDecimals(String input, String currencyCode) {
+        return parseToFiat(input, currencyCode).equals(parseToFiatWith2Decimals(input, currencyCode));
     }
 
 
@@ -285,11 +276,11 @@ public class BSFormatter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public String formatDirection(Offer.Direction direction) {
-        return formatDirection(direction, true);
+    public String getDirection(Offer.Direction direction) {
+        return getDirection(direction, true);
     }
 
-    public String formatDirection(Offer.Direction direction, boolean allUpperCase) {
+    private String getDirection(Offer.Direction direction, boolean allUpperCase) {
         String result = (direction == Offer.Direction.BUY) ? "Buy" : "Sell";
         if (allUpperCase) {
             result = result.toUpperCase();
@@ -306,39 +297,46 @@ public class BSFormatter {
                 " (" + formatFiat(offer.getMinOfferVolume()) + ")";
     }
 
+    public String formatVolumeWithMinVolumeWithCode(Offer offer) {
+        return formatFiatWithCode(offer.getOfferVolume()) +
+                " (" + formatFiatWithCode(offer.getMinOfferVolume()) + ")";
+    }
+
     public String countryLocalesToString(List<Country> countries) {
         return countries.stream().map(e -> e.name).collect(Collectors.joining(", "));
     }
 
-    public String arbitratorsToNames(List<Arbitrator> arbitrators) {
-        return arbitrators.stream().map(Arbitrator::getName).collect(Collectors.joining(", "));
+
+    public String arbitratorAddressesToString(List<Address> addresses) {
+        //return addresses.stream().map(e -> e.getFullAddress().substring(0, 8)).collect(Collectors.joining(", "));
+        return addresses.stream().map(e -> e.getFullAddress()).collect(Collectors.joining(", "));
     }
 
-    public String arbitratorIdsToNames(List<String> ids) {
-        return ids.stream().map(e -> arbitrationRepository.getArbitratorsMap().get(e).getName()).collect(Collectors.joining(", "));
+    public String arbitratorAddressToShortAddress(Address address) {
+        return address.getFullAddress().substring(0, 8);
     }
 
     public String languageCodesToString(List<String> languageLocales) {
         return languageLocales.stream().map(LanguageUtil::getDisplayName).collect(Collectors.joining(", "));
     }
 
-    public String arbitrationMethodsToString(List<Arbitrator.METHOD> methods) {
-        return methods.stream().map(e -> BSResources.get(e.toString())).collect(Collectors.joining(", "));
-    }
-
-    public String arbitrationIDVerificationsToString(List<Arbitrator.ID_VERIFICATION> items) {
-        return items.stream().map(e -> BSResources.get(e.toString())).collect(Collectors.joining(", "));
-    }
-
-    public String mnemonicCodeToString(List<String> mnemonicCode) {
-        return mnemonicCode.stream().collect(Collectors.joining(" "));
-    }
-
-
     public String formatDateTime(Date date) {
-        DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
-        DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, locale);
-        return dateFormatter.format(date) + " " + timeFormatter.format(date);
+        if (date != null) {
+            DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
+            DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, locale);
+            return dateFormatter.format(date) + " " + timeFormatter.format(date);
+        } else {
+            return "";
+        }
+    }
+
+    public String formatDate(Date date) {
+        if (date != null) {
+            DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
+            return dateFormatter.format(date);
+        } else {
+            return "";
+        }
     }
 
     public String formatToPercent(double value) {
@@ -358,11 +356,15 @@ public class BSFormatter {
         return input;
     }
 
-    public String getUnlockDate(long missingBlocks) {
+    public String getDateFromBlocks(long blocks) {
         DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
         DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.SHORT, locale);
-        Date unlockDate = new Date(new Date().getTime() + missingBlocks * 10 * 60 * 1000);
-        return dateFormatter.format(unlockDate) + " " + timeFormatter.format(unlockDate);
+        Date date = new Date(new Date().getTime() + blocks * 10 * 60 * 1000);
+        return dateFormatter.format(date) + " " + timeFormatter.format(date);
+    }
+
+    public String booleanToYesNo(boolean value) {
+        return value ? "Yes" : "No";
     }
 
     public String formatBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {

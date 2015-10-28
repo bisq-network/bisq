@@ -17,22 +17,20 @@
 
 package io.bitsquare.locale;
 
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-
 import java.net.URL;
 import java.net.URLConnection;
-
 import java.text.MessageFormat;
-
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class BSResources {
     private static final Logger log = LoggerFactory.getLogger(BSResources.class);
@@ -61,7 +59,7 @@ public class BSResources {
 // Adds UTF8 support for property files
 class UTF8Control extends ResourceBundle.Control {
 
-    public ResourceBundle newBundle(String baseName, Locale locale, String format, ClassLoader loader, boolean reload)
+    public ResourceBundle newBundle(String baseName, @NotNull Locale locale, @NotNull String format, ClassLoader loader, boolean reload)
             throws IllegalAccessException, InstantiationException, IOException {
         // The below is a copy of the default implementation.
         final String bundleName = toBundleName(baseName, locale);
@@ -77,8 +75,7 @@ class UTF8Control extends ResourceBundle.Control {
                     stream = connection.getInputStream();
                 }
             }
-        }
-        else {
+        } else {
             stream = loader.getResourceAsStream(resourceName);
         }
         if (stream != null) {

@@ -18,13 +18,13 @@
 /**
  * Copyright 2013 Google Inc.
  * Copyright 2014 Andreas Schildbach
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,29 +35,21 @@
 package io.bitsquare.storage;
 
 
-import org.bitcoinj.core.Utils;
-import org.bitcoinj.utils.Threading;
-
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import io.bitsquare.common.UserThread;
+import org.bitcoinj.core.Utils;
+import org.bitcoinj.utils.Threading;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
+import java.io.*;
 import java.nio.file.Paths;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -97,17 +89,17 @@ public class FileManager<T> {
                 .setPriority(Thread.MIN_PRIORITY);  // Avoid competing with the GUI thread.
 
         // An executor that starts up threads when needed and shuts them down later.
-        this.executor = new ScheduledThreadPoolExecutor(1, builder.build());
-        this.executor.setKeepAliveTime(5, TimeUnit.SECONDS);
-        this.executor.allowCoreThreadTimeOut(true);
-        this.executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+        executor = new ScheduledThreadPoolExecutor(1, builder.build());
+        executor.setKeepAliveTime(5, TimeUnit.SECONDS);
+        executor.allowCoreThreadTimeOut(true);
+        executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
 
         // File must only be accessed from the auto-save executor from now on, to avoid simultaneous access.
-        this.savePending = new AtomicBoolean();
+        savePending = new AtomicBoolean();
         this.delay = delay;
         this.delayTimeUnit = checkNotNull(delayTimeUnit);
 
-        this.saver = () -> {
+        saver = () -> {
             // Runs in an auto save thread.
             if (!savePending.getAndSet(false)) {
                 // Some other scheduled request already beat us to it.
@@ -121,7 +113,7 @@ public class FileManager<T> {
             @Override
             public void run() {
                 try {
-                    FileManager.this.shutdown();
+                    FileManager.this.shutDown();
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -137,7 +129,7 @@ public class FileManager<T> {
     /**
      * Actually write the wallet file to disk, using an atomic rename when possible. Runs on the current thread.
      */
-    public void saveNow(T serializable) throws IOException {
+    public void saveNow(T serializable) {
         saveNowInternal(serializable);
     }
 
@@ -152,12 +144,15 @@ public class FileManager<T> {
         executor.schedule(saver, delay, delayTimeUnit);
     }
 
-    public T read(File file) throws IOException, ClassNotFoundException {
+    public T read(File file) {
         log.debug("read" + file);
         lock.lock();
         try (final FileInputStream fileInputStream = new FileInputStream(file);
              final ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
             return (T) objectInputStream.readObject();
+        } catch (Throwable t) {
+            log.error("Exception at read: " + t.getMessage());
+            return null;
         } finally {
             lock.unlock();
         }
@@ -190,7 +185,7 @@ public class FileManager<T> {
     /**
      * Shut down auto-saving.
      */
-    public void shutdown() {
+    public void shutDown() {
       /*  if (serializable != null)
             log.debug("shutDown " + serializable.getClass().getSimpleName());
         else
@@ -198,9 +193,10 @@ public class FileManager<T> {
 
         executor.shutdown();
         try {
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS); // forever
-        } catch (InterruptedException x) {
-            throw new RuntimeException(x);
+            //executor.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS); // forever
+            executor.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -241,7 +237,7 @@ public class FileManager<T> {
     private void saveNowInternal(T serializable) {
         long now = System.currentTimeMillis();
         saveToFile(serializable, dir, storageFile);
-        Threading.USER_THREAD.execute(() -> log.info("Save {} completed in {}msec", storageFile, System.currentTimeMillis() - now));
+        UserThread.execute(() -> log.info("Save {} completed in {}msec", storageFile, System.currentTimeMillis() - now));
     }
 
     private void saveToFile(T serializable, File dir, File storageFile) {
@@ -264,7 +260,6 @@ public class FileManager<T> {
 
             // TODO ConcurrentModificationException happens sometimes at that line
             objectOutputStream.writeObject(serializable);
-
             // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
             // to not write through to physical media for at least a few seconds, but this is the best we can do.
             fileOutputStream.flush();
@@ -313,8 +308,7 @@ public class FileManager<T> {
                 if (!tempFile.renameTo(canonical)) {
                     throw new IOException("Failed to rename " + tempFile + " to " + canonical);
                 }
-            }
-            else if (!tempFile.renameTo(file)) {
+            } else if (!tempFile.renameTo(file)) {
                 throw new IOException("Failed to rename " + tempFile + " to " + file);
             }
         } finally {

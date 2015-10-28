@@ -17,32 +17,42 @@
 
 package io.bitsquare.gui.components;
 
-import io.bitsquare.btc.WalletService;
-import io.bitsquare.btc.listeners.TxConfidenceListener;
-import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
-import io.bitsquare.gui.util.GUIUtil;
-import io.bitsquare.util.Utilities;
-
-import org.bitcoinj.core.TransactionConfidence;
-
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-
+import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.listeners.TxConfidenceListener;
+import io.bitsquare.common.util.Utilities;
+import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+import io.bitsquare.gui.popups.Popup;
+import io.bitsquare.user.Preferences;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.AnchorPane;
+import org.bitcoinj.core.TransactionConfidence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TxIdTextField extends AnchorPane {
     private static final Logger log = LoggerFactory.getLogger(TxIdTextField.class);
 
+    private static Preferences preferences;
+
+    public static void setPreferences(Preferences preferences) {
+        TxIdTextField.preferences = preferences;
+    }
+
+    private static WalletService walletService;
+
+    public static void setWalletService(WalletService walletService) {
+        TxIdTextField.walletService = walletService;
+    }
+
     private final TextField textField;
     private final Tooltip progressIndicatorTooltip;
     private final ConfidenceProgressIndicator progressIndicator;
     private final Label copyIcon;
     private TxConfidenceListener txConfidenceListener;
-    private WalletService walletService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -80,8 +90,8 @@ public class TxIdTextField extends AnchorPane {
         getChildren().addAll(textField, copyIcon, progressIndicator);
     }
 
-    public void setup(WalletService walletService, String txID) {
-        this.walletService = walletService;
+
+    public void setup(String txID) {
         if (txConfidenceListener != null)
             walletService.removeTxConfidenceListener(txConfidenceListener);
 
@@ -97,18 +107,16 @@ public class TxIdTextField extends AnchorPane {
         textField.setText(txID);
         textField.setOnMouseClicked(mouseEvent -> {
             try {
-                // TODO get the url form the app preferences
-                Utilities.openWebPage("https://www.biteasy.com/testnet/transactions/" + txID);
-                // https://insight.bitpay.com/ only mainnet?
-                //Utilities.openURL("https://blockchain.info/tx/" + txID);
+                if (preferences != null)
+                    Utilities.openWebPage(preferences.getBlockChainExplorer().txUrl + txID);
             } catch (Exception e) {
                 log.error(e.getMessage());
-                Popups.openWarningPopup("Warning", "Opening browser failed. Please check your internet " +
-                        "connection.");
+                new Popup().warning("Opening browser failed. Please check your internet " +
+                        "connection.").show();
             }
         });
 
-        copyIcon.setOnMouseClicked(e -> GUIUtil.copyToClipboard(txID));
+        copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(txID));
     }
 
     public void cleanup() {

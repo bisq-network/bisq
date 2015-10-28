@@ -17,18 +17,15 @@
 
 package io.bitsquare.trade;
 
-import io.bitsquare.BitsquareModule;
+import com.google.inject.Singleton;
+import io.bitsquare.app.AppModule;
 import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.failed.FailedTradesManager;
-
-import com.google.inject.Singleton;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.core.env.Environment;
 
-public class TradeModule extends BitsquareModule {
+public class TradeModule extends AppModule {
     private static final Logger log = LoggerFactory.getLogger(TradeModule.class);
 
     public TradeModule(Environment env) {

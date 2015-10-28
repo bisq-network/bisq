@@ -18,20 +18,22 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.Peer;
+import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.p2p.Address;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.BuyerAsTakerProtocol;
 import io.bitsquare.trade.protocol.trade.TakerProtocol;
-
 import org.bitcoinj.core.Coin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -44,15 +46,18 @@ public class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade, Seriali
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BuyerAsTakerTrade(Offer offer, Coin tradeAmount, Peer tradingPeer, Storage<? extends TradableList> storage) {
-        super(offer, tradeAmount, tradingPeer, storage);
+    public BuyerAsTakerTrade(Offer offer, Coin tradeAmount, Address tradingPeerAddress, Storage<? extends TradableList> storage) {
+        super(offer, tradeAmount, tradingPeerAddress, storage);
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-
-        initStateProperties();
-        initAmountProperty();
+        try {
+            in.defaultReadObject();
+            initStateProperties();
+            initAmountProperty();
+        } catch (Throwable t) {
+            log.trace("Cannot be deserialized." + t.getMessage());
+        }
     }
 
     @Override
@@ -67,12 +72,14 @@ public class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade, Seriali
 
     @Override
     public void takeAvailableOffer() {
-        assert tradeProtocol instanceof TakerProtocol;
+        checkArgument(tradeProtocol instanceof TakerProtocol, "tradeProtocol NOT instanceof TakerProtocol");
         ((TakerProtocol) tradeProtocol).takeAvailableOffer();
     }
 
     @Override
     public Coin getPayoutAmount() {
-        return getSecurityDeposit().add(getTradeAmount());
+        checkNotNull(getTradeAmount(), "Invalid state: getTradeAmount() = null");
+
+        return FeePolicy.SECURITY_DEPOSIT.add(getTradeAmount());
     }
 }

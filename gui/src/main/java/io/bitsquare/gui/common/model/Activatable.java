@@ -19,18 +19,18 @@ package io.bitsquare.gui.common.model;
 
 public interface Activatable {
 
-    void activate();
+    void _activate();
 
-    void deactivate();
+    void _deactivate();
 
 
     Activatable NOOP_INSTANCE = new Activatable() {
         @Override
-        public void activate() {
+        public void _activate() {
         }
 
         @Override
-        public void deactivate() {
+        public void _deactivate() {
         }
     };
 

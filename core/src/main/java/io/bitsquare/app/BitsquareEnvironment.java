@@ -21,24 +21,13 @@ import io.bitsquare.BitsquareException;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.crypto.KeyStorage;
-import io.bitsquare.p2p.tomp2p.TomP2PModule;
+import io.bitsquare.common.crypto.KeyStorage;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.util.Utilities;
 import io.bitsquare.util.spring.JOptCommandLinePropertySource;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
-import java.nio.file.Paths;
-
-import java.util.Properties;
-
+import joptsimple.OptionSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import joptsimple.OptionSet;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.core.env.PropertySource;
@@ -47,6 +36,12 @@ import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePropertySource;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.Properties;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -79,11 +74,11 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private final String userDataDir;
     private final String appDataDir;
     private final String btcNetworkDir;
-    private final String bootstrapNodePort;
     private BitcoinNetwork bitcoinNetwork;
 
     public BitsquareEnvironment(OptionSet options) {
-        this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(options)));
+        this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
+                options)));
     }
 
     public BitcoinNetwork getBitcoinNetwork() {
@@ -99,8 +94,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 Object propertiesObject = appDirProperties().getSource();
                 if (propertiesObject instanceof Properties) {
                     properties = (Properties) propertiesObject;
-                }
-                else {
+                } else {
                     log.warn("propertiesObject not instance of Properties");
                 }
             }
@@ -128,9 +122,6 @@ public class BitsquareEnvironment extends StandardEnvironment {
         appDataDir = commandLineProperties.containsProperty(APP_DATA_DIR_KEY) ?
                 (String) commandLineProperties.getProperty(APP_DATA_DIR_KEY) :
                 appDataDir(userDataDir, appName);
-
-        bootstrapNodePort = commandLineProperties.containsProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY) ?
-                (String) commandLineProperties.getProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY) : "-1";
 
         MutablePropertySources propertySources = this.getPropertySources();
         propertySources.addFirst(commandLineProperties);
@@ -166,7 +157,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
         return new ResourcePropertySource(BITSQUARE_APP_DIR_PROPERTY_SOURCE_NAME, resource);
     }
 
-    PropertySource<?> homeDirProperties() throws Exception {
+    private PropertySource<?> homeDirProperties() throws Exception {
         String location = String.format("file:%s/.bitsquare/bitsquare.properties", getProperty("user.home"));
         Resource resource = resourceLoader.getResource(location);
 
@@ -176,12 +167,12 @@ public class BitsquareEnvironment extends StandardEnvironment {
         return new ResourcePropertySource(BITSQUARE_HOME_DIR_PROPERTY_SOURCE_NAME, resource);
     }
 
-    PropertySource<?> classpathProperties() throws Exception {
+    private PropertySource<?> classpathProperties() throws Exception {
         Resource resource = resourceLoader.getResource("classpath:bitsquare.properties");
         return new ResourcePropertySource(BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME, resource);
     }
 
-    protected PropertySource<?> defaultProperties() {
+    private PropertySource<?> defaultProperties() {
         return new PropertiesPropertySource(BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
             private static final long serialVersionUID = -8478089705207326165L;
 
@@ -200,8 +191,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
                 setProperty(Storage.DIR_KEY, Paths.get(btcNetworkDir, "db").toString());
                 setProperty(KeyStorage.DIR_KEY, Paths.get(btcNetworkDir, "keys").toString());
-
-                setProperty(TomP2PModule.BOOTSTRAP_NODE_PORT_KEY, bootstrapNodePort);
+                setProperty(ProgramArguments.TOR_DIR, Paths.get(btcNetworkDir, "tor").toString());
             }
         });
     }

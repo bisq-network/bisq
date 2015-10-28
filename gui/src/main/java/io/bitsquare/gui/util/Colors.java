@@ -17,13 +17,12 @@
 
 package io.bitsquare.gui.util;
 
-import javafx.scene.paint.*;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 
 public class Colors {
     public static final Paint BLUE = Color.valueOf("#0f87c3");
     public static final Paint LIGHT_GREY = Color.valueOf("#CCCCCC");
-    public static final Paint MID_GREY = Color.valueOf("#666666");
-    public static final Paint DARK_GREY = Color.valueOf("#333333");
     public static final Paint GREEN = Color.valueOf("#00aa33");
 
 }

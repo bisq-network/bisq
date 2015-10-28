@@ -18,20 +18,17 @@
 package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.crypto.PubKeyRing;
-import io.bitsquare.fiat.FiatAccount;
+import io.bitsquare.btc.data.RawInput;
+import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.payment.PaymentAccountContractData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionOutput;
-
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TradingPeer implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -41,10 +38,7 @@ public class TradingPeer implements Serializable {
 
     // Mutable
     private String accountId;
-    private FiatAccount fiatAccount;
-    private Transaction preparedDepositTx;
-    private List<TransactionOutput> connectedOutputsForAllInputs;
-    private List<TransactionOutput> outputs;
+    private PaymentAccountContractData paymentAccountContractData;
     // private Coin payoutAmount;
     private String payoutAddressString;
     // private byte[] signature;
@@ -53,6 +47,10 @@ public class TradingPeer implements Serializable {
     private byte[] signature;
     private PubKeyRing pubKeyRing;
     private byte[] tradeWalletPubKey;
+    private List<RawInput> rawInputs;
+    private long changeOutputValue;
+    @Nullable
+    private String changeOutputAddress;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +61,11 @@ public class TradingPeer implements Serializable {
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
+        try {
+            in.defaultReadObject();
+        } catch (Throwable t) {
+            log.trace("Cannot be deserialized." + t.getMessage());
+        }
     }
 
 
@@ -87,45 +89,14 @@ public class TradingPeer implements Serializable {
         this.tradeWalletPubKey = tradeWalletPubKey;
     }
 
-    public FiatAccount getFiatAccount() {
-        return fiatAccount;
+    public PaymentAccountContractData getPaymentAccountContractData() {
+        return paymentAccountContractData;
     }
 
-    public void setFiatAccount(FiatAccount fiatAccount) {
-        this.fiatAccount = fiatAccount;
+    public void setPaymentAccountContractData(PaymentAccountContractData paymentAccountContractData) {
+        this.paymentAccountContractData = paymentAccountContractData;
     }
 
-    public Transaction getPreparedDepositTx() {
-        return preparedDepositTx;
-    }
-
-    public void setPreparedDepositTx(Transaction preparedDepositTx) {
-        this.preparedDepositTx = preparedDepositTx;
-    }
-
-    public List<TransactionOutput> getConnectedOutputsForAllInputs() {
-        return connectedOutputsForAllInputs;
-    }
-
-    public void setConnectedOutputsForAllInputs(List<TransactionOutput> connectedOutputsForAllInputs) {
-        this.connectedOutputsForAllInputs = connectedOutputsForAllInputs;
-    }
-
-    public List<TransactionOutput> getOutputs() {
-        return outputs;
-    }
-
-    public void setOutputs(List<TransactionOutput> outputs) {
-        this.outputs = outputs;
-    }
-
-   /* public Coin getPayoutAmount() {
-        return payoutAmount;
-    }
-
-    public void setPayoutAmount(Coin payoutAmount) {
-        this.payoutAmount = payoutAmount;
-    }*/
 
     public String getPayoutAddressString() {
         return payoutAddressString;
@@ -134,14 +105,6 @@ public class TradingPeer implements Serializable {
     public void setPayoutAddressString(String payoutAddressString) {
         this.payoutAddressString = payoutAddressString;
     }
-
-   /* public byte[] getSignature() {
-        return signature;
-    }
-
-    public void setSignature(byte[] signature) {
-        this.signature = signature;
-    }*/
 
     public String getContractAsJson() {
         return contractAsJson;
@@ -173,5 +136,30 @@ public class TradingPeer implements Serializable {
 
     public void setPubKeyRing(PubKeyRing pubKeyRing) {
         this.pubKeyRing = pubKeyRing;
+    }
+
+    public void setRawInputs(List<RawInput> rawInputs) {
+        this.rawInputs = rawInputs;
+    }
+
+    public List<RawInput> getRawInputs() {
+        return rawInputs;
+    }
+
+    public void setChangeOutputValue(long changeOutputValue) {
+        this.changeOutputValue = changeOutputValue;
+    }
+
+    public long getChangeOutputValue() {
+        return changeOutputValue;
+    }
+
+    public void setChangeOutputAddress(String changeOutputAddress) {
+        this.changeOutputAddress = changeOutputAddress;
+    }
+
+    @Nullable
+    public String getChangeOutputAddress() {
+        return changeOutputAddress;
     }
 }

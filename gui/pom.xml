@@ -57,7 +57,8 @@
                     <!-- broken with Java 8 (MSHADE-174), using ProGuard instead. -->
                     <minimizeJar>false</minimizeJar>
                     <transformers>
-                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                        <transformer
+                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                             <mainClass>io.bitsquare.app.BitsquareAppMain</mainClass>
                         </transformer>
                     </transformers>
@@ -129,12 +130,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
-        <!-- <dependency>
-             <groupId>com.vinumeris</groupId>
-             <artifactId>crashfx-client</artifactId>
-             <version>1.1</version>
-         </dependency>-->
 
         <dependency>
             <groupId>org.controlsfx</groupId>

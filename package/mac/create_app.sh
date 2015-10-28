@@ -47,6 +47,7 @@ $JAVA_HOME/bin/javapackager \
     -outdir gui/deploy \
     -srcfiles gui/updatefx/builds/processed/$patchVersion.jar \
     -appclass io.bitsquare.app.BitsquareAppMain \
-    -outfile Bitsquare
+    -outfile Bitsquare \
+    -BjvmProperties=-Djava.net.preferIPv4Stack=true
     
 cd package/mac

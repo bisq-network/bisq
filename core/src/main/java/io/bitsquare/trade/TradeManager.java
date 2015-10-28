@@ -17,60 +17,51 @@
 
 package io.bitsquare.trade;
 
-import io.bitsquare.arbitration.ArbitrationRepository;
+import com.google.common.util.concurrent.FutureCallback;
+import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.crypto.CryptoService;
-import io.bitsquare.crypto.KeyRing;
-import io.bitsquare.crypto.MessageWithPubKey;
-import io.bitsquare.crypto.SealedAndSignedMessage;
-import io.bitsquare.p2p.AddressService;
-import io.bitsquare.p2p.DecryptedMessageHandler;
-import io.bitsquare.p2p.MailboxMessage;
-import io.bitsquare.p2p.MailboxService;
+import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.MessageService;
-import io.bitsquare.p2p.Peer;
+import io.bitsquare.p2p.P2PService;
+import io.bitsquare.p2p.P2PServiceListener;
+import io.bitsquare.p2p.messaging.DecryptedMailListener;
+import io.bitsquare.p2p.messaging.DecryptedMailboxListener;
+import io.bitsquare.p2p.messaging.DecryptedMessageWithPubKey;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.failed.FailedTradesManager;
-import io.bitsquare.trade.handlers.TakeOfferResultHandler;
+import io.bitsquare.trade.handlers.TradeResultHandler;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOffer;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
-import io.bitsquare.trade.protocol.trade.messages.DepositTxInputsRequest;
 import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.user.User;
-
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.ObservableList;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.crypto.params.KeyParameter;
 
-import com.google.common.util.concurrent.FutureCallback;
-
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.File;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-
-import javafx.collections.ObservableList;
-
-import org.jetbrains.annotations.NotNull;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
@@ -79,20 +70,18 @@ public class TradeManager {
 
     private final User user;
     private final KeyRing keyRing;
-    private final MessageService messageService;
-    private final MailboxService mailboxService;
-    private final AddressService addressService;
-    private final BlockChainService blockChainService;
     private final WalletService walletService;
     private final TradeWalletService tradeWalletService;
-    private final CryptoService<MailboxMessage> cryptoService;
     private final OpenOfferManager openOfferManager;
     private final ClosedTradableManager closedTradableManager;
     private final FailedTradesManager failedTradesManager;
-    private final ArbitrationRepository arbitrationRepository;
+    private final ArbitratorManager arbitratorManager;
+    private final P2PService p2PService;
 
-    private final Storage<TradableList<Trade>> pendingTradesStorage;
-    private final TradableList<Trade> pendingTrades;
+    private final Storage<TradableList<Trade>> tradableListStorage;
+    private final TradableList<Trade> trades;
+    private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
+    private P2PServiceListener p2PServiceListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -102,34 +91,86 @@ public class TradeManager {
     @Inject
     public TradeManager(User user,
                         KeyRing keyRing,
-                        MessageService messageService,
-                        MailboxService mailboxService,
-                        AddressService addressService,
-                        BlockChainService blockChainService,
                         WalletService walletService,
                         TradeWalletService tradeWalletService,
-                        CryptoService<MailboxMessage> cryptoService,
                         OpenOfferManager openOfferManager,
                         ClosedTradableManager closedTradableManager,
                         FailedTradesManager failedTradesManager,
-                        ArbitrationRepository arbitrationRepository,
+                        ArbitratorManager arbitratorManager,
+                        P2PService p2PService,
                         @Named("storage.dir") File storageDir) {
         this.user = user;
         this.keyRing = keyRing;
-        this.messageService = messageService;
-        this.mailboxService = mailboxService;
-        this.addressService = addressService;
-        this.blockChainService = blockChainService;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
-        this.cryptoService = cryptoService;
         this.openOfferManager = openOfferManager;
         this.closedTradableManager = closedTradableManager;
         this.failedTradesManager = failedTradesManager;
-        this.arbitrationRepository = arbitrationRepository;
+        this.arbitratorManager = arbitratorManager;
+        this.p2PService = p2PService;
 
-        pendingTradesStorage = new Storage<>(storageDir);
-        this.pendingTrades = new TradableList<>(pendingTradesStorage, "PendingTrades");
+        tradableListStorage = new Storage<>(storageDir);
+        this.trades = new TradableList<>(tradableListStorage, "PendingTrades");
+
+        p2PService.addDecryptedMailListener(new DecryptedMailListener() {
+            @Override
+            public void onMailMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Address peerAddress) {
+                Message message = decryptedMessageWithPubKey.message;
+
+                // Handler for incoming initial messages from taker
+                if (message instanceof PayDepositRequest) {
+                    log.trace("Received PayDepositRequest: " + message);
+                    handleInitialTakeOfferRequest((PayDepositRequest) message, peerAddress);
+                }
+            }
+        });
+        p2PService.addDecryptedMailboxListener(new DecryptedMailboxListener() {
+            @Override
+            public void onMailboxMessageAdded(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Address senderAddress) {
+                log.trace("onMailboxMessageAdded decryptedMessageWithPubKey: " + decryptedMessageWithPubKey);
+                log.trace("onMailboxMessageAdded senderAddress: " + senderAddress);
+                Message message = decryptedMessageWithPubKey.message;
+                if (message instanceof PayDepositRequest) {
+                    //TODO is that used????
+                    PayDepositRequest payDepositRequest = (PayDepositRequest) message;
+                    log.trace("Received payDepositRequest: " + payDepositRequest);
+                    if (payDepositRequest.getSenderAddress().equals(senderAddress))
+                        handleInitialTakeOfferRequest(payDepositRequest, senderAddress);
+                    else
+                        log.warn("Peer address not matching for payDepositRequest");
+                } else if (message instanceof TradeMessage) {
+                    log.trace("Received TradeMessage: " + message);
+                    String tradeId = ((TradeMessage) message).tradeId;
+                    Optional<Trade> tradeOptional = trades.stream().filter(e -> e.getId().equals(tradeId)).findAny();
+                    if (tradeOptional.isPresent())
+                        tradeOptional.get().setMailboxMessage(decryptedMessageWithPubKey);
+                }
+            }
+        });
+
+        p2PServiceListener = new P2PServiceListener() {
+            @Override
+            public void onTorNodeReady() {
+            }
+
+            @Override
+            public void onHiddenServiceReady() {
+            }
+
+            @Override
+            public void onSetupFailed(Throwable throwable) {
+            }
+
+            @Override
+            public void onAllDataReceived() {
+            }
+
+            @Override
+            public void onAuthenticated() {
+                initPendingTrades();
+            }
+        };
+        p2PService.addP2PServiceListener(p2PServiceListener);
     }
 
 
@@ -141,35 +182,41 @@ public class TradeManager {
     // OffererAsBuyerProtocol listens for take offer requests, so we need to instantiate it early.
     public void onAllServicesInitialized() {
         log.trace("onAllServicesInitialized");
-
-        // If there are messages in our mailbox we apply it and remove them from the DHT
-        // We run that before initializing the pending trades to be sure the state is correct
-        mailboxService.getAllMessages(
-                (encryptedMailboxMessages) -> {
-                    log.trace("mailboxService.getAllMessages success");
-                    setMailboxMessagesToTrades(encryptedMailboxMessages);
-                    emptyMailbox();
-                    initPendingTrades();
-                });
-
-        // Handler for incoming initial messages from taker
-        messageService.addDecryptedMessageHandler(new DecryptedMessageHandler() {
-            @Override
-            public void handleMessage(MessageWithPubKey messageWithPubKey, Peer sender) {
-                // We get an encrypted message but don't do the signature check as we don't know the peer yet.
-                // A basic sig check is in done also at decryption time
-                Message message = messageWithPubKey.getMessage();
-                // Those 2 messages are initial request form the taker.
-                // RequestPayDepositMessage is used also in case of SellerAsTaker but there it is handled in the protocol as it is not an initial request
-                if (message instanceof DepositTxInputsRequest ||
-                        (message instanceof PayDepositRequest && ((PayDepositRequest) message).isInitialRequest))
-                    handleInitialTakeOfferRequest((TradeMessage) message, sender);
-            }
-        });
     }
 
-    private void handleInitialTakeOfferRequest(TradeMessage message, Peer sender) {
-        log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + sender);
+    private void initPendingTrades() {
+        if (p2PServiceListener != null) p2PService.removeP2PServiceListener(p2PServiceListener);
+
+        List<Trade> failedTrades = new ArrayList<>();
+        for (Trade trade : trades) {
+            // We continue an interrupted trade.
+            // TODO if the peer has changed its IP address, we need to make another findPeer request. At the moment we use the peer stored in trade to
+            // continue the trade, but that might fail.
+
+            // TODO
+           /* if (trade.isFailedState()) {
+                failedTrades.add(trade);
+            }
+            else {*/
+            trade.setStorage(tradableListStorage);
+            trade.updateDepositTxFromWallet(tradeWalletService);
+            initTrade(trade);
+
+            // after we are authenticated we remove mailbox messages. 
+            DecryptedMessageWithPubKey mailboxMessage = trade.getMailboxMessage();
+            if (mailboxMessage != null) {
+                p2PService.removeEntryFromMailbox(mailboxMessage);
+                trade.setMailboxMessage(null);
+            }
+            // }
+        }
+        pendingTradesInitialized.set(true);
+
+        failedTrades.stream().filter(Trade::isTakerFeePaid).forEach(this::addTradeToFailedTrades);
+    }
+
+    private void handleInitialTakeOfferRequest(TradeMessage message, Address peerAddress) {
+        log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + peerAddress);
         try {
             nonEmptyStringOf(message.tradeId);
         } catch (Throwable t) {
@@ -184,93 +231,35 @@ public class TradeManager {
 
             Trade trade;
             if (offer.getDirection() == Offer.Direction.BUY)
-                trade = new BuyerAsOffererTrade(offer, pendingTradesStorage);
+                trade = new BuyerAsOffererTrade(offer, tradableListStorage);
             else
-                trade = new SellerAsOffererTrade(offer, pendingTradesStorage);
+                trade = new SellerAsOffererTrade(offer, tradableListStorage);
 
-            trade.setStorage(pendingTradesStorage);
+            trade.setStorage(tradableListStorage);
             initTrade(trade);
-            pendingTrades.add(trade);
-            ((OffererTrade) trade).handleTakeOfferRequest(message, sender);
-        }
-        else {
+            trades.add(trade);
+            ((OffererTrade) trade).handleTakeOfferRequest(message, peerAddress);
+        } else {
             // TODO respond
             //(RequestDepositTxInputsMessage)message.
-            //  messageService.sendEncryptedMessage(sender,messageWithPubKey.getMessage().);
+            //  messageService.sendEncryptedMessage(peerAddress,messageWithPubKey.getMessage().);
             log.info("We received a take offer request but don't have that offer anymore.");
         }
     }
 
     private void initTrade(Trade trade) {
-        trade.init(messageService,
+        trade.init(p2PService,
                 walletService,
-                addressService,
                 tradeWalletService,
-                blockChainService,
-                cryptoService,
-                arbitrationRepository,
+                arbitratorManager,
                 this,
                 openOfferManager,
                 user,
                 keyRing);
     }
 
-    private void setMailboxMessagesToTrades(List<SealedAndSignedMessage> encryptedMessages) {
-        log.trace("applyMailboxMessage encryptedMailboxMessage.size=" + encryptedMessages.size());
-        for (SealedAndSignedMessage encrypted : encryptedMessages) {
-            try {
-                MessageWithPubKey messageWithPubKey = cryptoService.decryptAndVerifyMessage(encrypted);
-                Message message = messageWithPubKey.getMessage();
-                if (message instanceof MailboxMessage && message instanceof TradeMessage) {
-                    String tradeId = ((TradeMessage) message).tradeId;
-                    Optional<Trade> tradeOptional = pendingTrades.stream().filter(e -> e.getId().equals(tradeId)).findAny();
-                    if (tradeOptional.isPresent())
-                        tradeOptional.get().setMailboxMessage(messageWithPubKey);
-                }
-            } catch (Throwable e) {
-                e.printStackTrace();
-                log.error(e.getMessage());
-            }
-        }
-    }
-
-    private void emptyMailbox() {
-        mailboxService.removeAllMessages(
-                () -> log.debug("All mailbox entries removed"),
-                (errorMessage, fault) -> {
-                    log.error(errorMessage);
-                    log.error(fault.getMessage());
-                });
-    }
-
-    private void initPendingTrades() {
-        List<Trade> failedTrades = new ArrayList<>();
-        for (Trade trade : pendingTrades) {
-            // We continue an interrupted trade.
-            // TODO if the peer has changed its IP address, we need to make another findPeer request. At the moment we use the peer stored in trade to
-            // continue the trade, but that might fail.
-
-            if (trade.isFailedState()) {
-                failedTrades.add(trade);
-            }
-            else {
-                trade.setStorage(pendingTradesStorage);
-                trade.updateDepositTxFromWallet(tradeWalletService);
-                initTrade(trade);
-            }
-        }
-
-        for (Trade trade : failedTrades) {
-            if (trade.isCriticalFault())
-                addTradeToFailedTrades(trade);
-            else
-                addTradeToClosedTrades(trade);
-        }
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Called from Offerbook when offer gets removed from DHT
+    // Called from Offerbook when offer gets removed from P2P network
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onOfferRemovedFromRemoteOfferBook(Offer offer) {
@@ -282,8 +271,9 @@ public class TradeManager {
     // Take offer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onCheckOfferAvailability(Offer offer) {
-        offer.checkOfferAvailability(getOfferAvailabilityModel(offer));
+    public void checkOfferAvailability(Offer offer,
+                                       ResultHandler resultHandler) {
+        offer.checkOfferAvailability(getOfferAvailabilityModel(offer), resultHandler);
     }
 
     // When closing take offer view, we are not interested in the onCheckOfferAvailability result anymore, so remove from the map
@@ -292,34 +282,44 @@ public class TradeManager {
     }
 
     // First we check if offer is still available then we create the trade with the protocol
-    public void onTakeOffer(Coin amount, Offer offer, TakeOfferResultHandler takeOfferResultHandler) {
+    public void onTakeOffer(Coin amount,
+                            Offer offer,
+                            String paymentAccountId,
+                            TradeResultHandler tradeResultHandler) {
         final OfferAvailabilityModel model = getOfferAvailabilityModel(offer);
-        offer.checkOfferAvailability(model, () -> {
-            if (offer.getState() == Offer.State.AVAILABLE)
-                createTrade(amount, offer, model, takeOfferResultHandler);
-        });
+        offer.checkOfferAvailability(model,
+                () -> {
+                    if (offer.getState() == Offer.State.AVAILABLE)
+                        createTrade(amount, offer, paymentAccountId, model, tradeResultHandler);
+                });
     }
 
-    private void createTrade(Coin amount, Offer offer, OfferAvailabilityModel model, TakeOfferResultHandler takeOfferResultHandler) {
+    private void createTrade(Coin amount,
+                             Offer offer,
+                             String paymentAccountId,
+                             OfferAvailabilityModel model,
+                             TradeResultHandler tradeResultHandler) {
         Trade trade;
         if (offer.getDirection() == Offer.Direction.BUY)
-            trade = new SellerAsTakerTrade(offer, amount, model.getPeer(), pendingTradesStorage);
+            trade = new SellerAsTakerTrade(offer, amount, model.getPeerAddress(), tradableListStorage);
         else
-            trade = new BuyerAsTakerTrade(offer, amount, model.getPeer(), pendingTradesStorage);
+            trade = new BuyerAsTakerTrade(offer, amount, model.getPeerAddress(), tradableListStorage);
 
         trade.setTakeOfferDate(new Date());
+        trade.setTakerPaymentAccountId(paymentAccountId);
+
         initTrade(trade);
-        pendingTrades.add(trade);
+
+        trades.add(trade);
         ((TakerTrade) trade).takeAvailableOffer();
-        takeOfferResultHandler.handleResult(trade);
+        tradeResultHandler.handleResult(trade);
     }
 
     private OfferAvailabilityModel getOfferAvailabilityModel(Offer offer) {
         return new OfferAvailabilityModel(
                 offer,
                 keyRing.getPubKeyRing(),
-                messageService,
-                addressService);
+                p2PService);
     }
 
 
@@ -327,8 +327,8 @@ public class TradeManager {
     // Trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onWithdrawRequest(String toAddress, Trade trade, ResultHandler resultHandler, FaultHandler faultHandler) {
-        AddressEntry addressEntry = walletService.getAddressEntry(trade.getId());
+    public void onWithdrawRequest(String toAddress, KeyParameter aesKey, Trade trade, ResultHandler resultHandler, FaultHandler faultHandler) {
+        AddressEntry addressEntry = walletService.getAddressEntryByOfferId(trade.getId());
         String fromAddress = addressEntry.getAddressString();
 
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
@@ -336,15 +336,8 @@ public class TradeManager {
             public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                 if (transaction != null) {
                     log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
-
-                    if (trade instanceof BuyerTrade)
-                        trade.setTradeState(TradeState.BuyerState.WITHDRAW_COMPLETED);
-                    else if (trade instanceof SellerTrade)
-                        trade.setTradeState(TradeState.SellerState.WITHDRAW_COMPLETED);
-
-                    pendingTrades.remove(trade);
-                    closedTradableManager.add(trade);
-
+                    trade.setState(Trade.State.WITHDRAW_COMPLETED);
+                    addTradeToClosedTrades(trade);
                     resultHandler.handleResult();
                 }
             }
@@ -357,7 +350,7 @@ public class TradeManager {
             }
         };
         try {
-            walletService.sendFunds(fromAddress, toAddress, trade.getPayoutAmount(), callback);
+            walletService.sendFunds(fromAddress, toAddress, trade.getPayoutAmount(), aesKey, callback);
         } catch (AddressFormatException | InsufficientMoneyException e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -365,26 +358,57 @@ public class TradeManager {
         }
     }
 
-    // In a fault case we remove it and add it to the closed trades
-    public void addTradeToClosedTrades(Trade trade) {
-        pendingTrades.remove(trade);
+    // If trade was completed (closed without fault but might be closed by a dispute) we move it to the closed trades
+    private void addTradeToClosedTrades(Trade trade) {
+        trades.remove(trade);
         closedTradableManager.add(trade);
     }
 
+    // If trade is in already in critical state (if taker role: taker fee; both roles: after deposit published)
+    // we move the trade to failedTradesManager
     public void addTradeToFailedTrades(Trade trade) {
-        pendingTrades.remove(trade);
+        trades.remove(trade);
         failedTradesManager.add(trade);
+    }
+
+    // If trade is in preparation (if taker role: before taker fee is paid; both roles: before deposit published)
+    // we just remove the trade from our list. We don't store those trades.
+    public void removePreparedTrade(Trade trade) {
+        trades.remove(trade);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Dispute
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void closeDisputedTrade(String tradeId) {
+        Optional<Trade> tradeOptional = getTradeById(tradeId);
+        if (tradeOptional.isPresent()) {
+            Trade trade = tradeOptional.get();
+            trade.setDisputeState(Trade.DisputeState.DISPUTE_CLOSED);
+            addTradeToClosedTrades(trade);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableList<Trade> getPendingTrades() {
-        return pendingTrades.getObservableList();
+    public ObservableList<Trade> getTrades() {
+        return trades.getObservableList();
+    }
+
+    public BooleanProperty pendingTradesInitializedProperty() {
+        return pendingTradesInitialized;
     }
 
     public boolean isMyOffer(Offer offer) {
         return offer.isMyOffer(keyRing);
     }
+
+    public Optional<Trade> getTradeById(String tradeId) {
+        return trades.stream().filter(e -> e.getId().equals(tradeId)).findFirst();
+    }
+
 }

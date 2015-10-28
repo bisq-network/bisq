@@ -17,10 +17,19 @@
 
 package io.bitsquare.gui.util.validation;
 
+import io.bitsquare.gui.util.BSFormatter;
+
+import javax.inject.Inject;
+
 /**
  * That validator accepts empty inputs
  */
 public class OptionalBtcValidator extends BtcValidator {
+
+    @Inject
+    public OptionalBtcValidator(BSFormatter formatter) {
+        super(formatter);
+    }
 
     @Override
     public ValidationResult validate(String input) {

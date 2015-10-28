@@ -17,23 +17,24 @@
 
 package io.bitsquare.gui.main.funds;
 
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.Activatable;
-import io.bitsquare.gui.common.view.ActivatableViewAndModel;
-import io.bitsquare.gui.common.view.CachingViewLoader;
-import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.common.view.View;
-import io.bitsquare.gui.common.view.ViewLoader;
+import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.funds.reserved.ReservedView;
 import io.bitsquare.gui.main.funds.transactions.TransactionsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
-
-import javax.inject.Inject;
-
+import io.bitsquare.gui.popups.FirstTimePopup;
+import io.bitsquare.gui.popups.WebViewPopup;
+import io.bitsquare.user.PopupId;
+import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+
+import javax.inject.Inject;
 
 @FxmlView
 public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
@@ -46,11 +47,13 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
+    private Preferences preferences;
 
     @Inject
-    public FundsView(CachingViewLoader viewLoader, Navigation navigation) {
+    public FundsView(CachingViewLoader viewLoader, Navigation navigation, Preferences preferences) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
+        this.preferences = preferences;
     }
 
     @Override
@@ -71,7 +74,7 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
     }
 
     @Override
-    public void doActivate() {
+    protected void activate() {
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
 
@@ -81,10 +84,13 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
             navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
         else if (root.getSelectionModel().getSelectedItem() == transactionsTab)
             navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class);
+
+        if (preferences.getShowAgainMap().get(PopupId.TRADE_WALLET) && !BitsquareApp.DEV_MODE)
+            new FirstTimePopup(preferences).url(WebViewPopup.getLocalUrl("tradeWallet.html")).show();
     }
 
     @Override
-    public void doDeactivate() {
+    protected void deactivate() {
         root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
         navigation.removeListener(navigationListener);
         currentTab = null;

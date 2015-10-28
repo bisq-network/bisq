@@ -18,17 +18,17 @@
   -->
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.cell.*?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.VBox?>
 <VBox fx:id="root" fx:controller="io.bitsquare.gui.main.funds.transactions.TransactionsView"
       spacing="10" xmlns:fx="http://javafx.com/fxml">
     <padding>
-        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+        <Insets bottom="0.0" left="10.0" right="10.0" top="10.0"/>
     </padding>
     <TableView fx:id="table" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn text="Date" fx:id="dateColumn" minWidth="100" sortable="false">
+            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="100" sortable="false">
                 <cellValueFactory>
                     <PropertyValueFactory property="date"/>
                 </cellValueFactory>
@@ -45,7 +45,7 @@
                 </cellValueFactory>
             </TableColumn>
 
-            <TableColumn text="Status" fx:id="confidenceColumn" minWidth="30" sortable="false"/>
+            <TableColumn text="Confirmations" fx:id="confidenceColumn" minWidth="30" sortable="false"/>
         </columns>
     </TableView>
 </VBox>

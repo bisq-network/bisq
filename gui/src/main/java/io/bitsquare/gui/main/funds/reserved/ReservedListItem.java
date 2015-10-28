@@ -23,23 +23,24 @@ import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
-
+import io.bitsquare.trade.Tradable;
+import io.bitsquare.trade.Trade;
+import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
-
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.scene.control.*;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ReservedListItem {
-    private final StringProperty addressString = new SimpleStringProperty();
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
     private final BalanceListener balanceListener;
 
     private final Label balanceLabel;
 
+    private final Tradable tradable;
     private final AddressEntry addressEntry;
 
     private final WalletService walletService;
@@ -49,14 +50,15 @@ public class ReservedListItem {
     private final ConfidenceProgressIndicator progressIndicator;
 
     private final Tooltip tooltip;
-
+    private final String addressString;
     private Coin balance;
 
-    public ReservedListItem(AddressEntry addressEntry, WalletService walletService, BSFormatter formatter) {
+    public ReservedListItem(Tradable tradable, AddressEntry addressEntry, WalletService walletService, BSFormatter formatter) {
+        this.tradable = tradable;
         this.addressEntry = addressEntry;
         this.walletService = walletService;
         this.formatter = formatter;
-        this.addressString.set(getAddress().toString());
+        addressString = addressEntry.getAddressString();
 
         // confidence
         progressIndicator = new ConfidenceProgressIndicator();
@@ -96,7 +98,34 @@ public class ReservedListItem {
     private void updateBalance(Coin balance) {
         this.balance = balance;
         if (balance != null) {
-            balanceLabel.setText(formatter.formatCoin(balance));
+            if (tradable instanceof Trade) {
+                Trade trade = (Trade) tradable;
+                Trade.Phase phase = trade.getState().getPhase();
+                switch (phase) {
+                    case PREPARATION:
+                    case TAKER_FEE_PAID:
+                        balanceLabel.setText(formatter.formatCoinWithCode(balance) + " locked in deposit");
+                        break;
+                    case DEPOSIT_PAID:
+                    case FIAT_SENT:
+                    case FIAT_RECEIVED:
+                        // TODO show amount locked
+                        balanceLabel.setText("Locked in deposit");
+                        break;
+                    case PAYOUT_PAID:
+                        balanceLabel.setText(formatter.formatCoinWithCode(balance) + " in wallet");
+                        break;
+                    case WITHDRAWN:
+                        log.error("Invalid state at updateBalance (WITHDRAWN)");
+                        balanceLabel.setText(formatter.formatCoinWithCode(balance) + " already withdrawn");
+                        break;
+                    case DISPUTE:
+                        balanceLabel.setText(formatter.formatCoinWithCode(balance) + " locked because of open ticket");
+                        break;
+                }
+
+            } else
+                balanceLabel.setText(formatter.formatCoin(balance));
         }
     }
 
@@ -128,23 +157,18 @@ public class ReservedListItem {
 
     public final String getLabel() {
         switch (addressEntry.getContext()) {
-            case REGISTRATION_FEE:
-                return "Registration fee";
             case TRADE:
-                checkNotNull(addressEntry.getOfferId());
-                return "Offer ID: " + addressEntry.getOfferId();
-            case ARBITRATOR_DEPOSIT:
+                if (tradable instanceof Trade)
+                    return "Trade ID: " + addressEntry.getShortOfferId();
+                else
+                    return "Offer ID: " + addressEntry.getShortOfferId();
+            case ARBITRATOR:
                 return "Arbitration deposit";
         }
         return "";
     }
 
-
-    public final StringProperty addressStringProperty() {
-        return this.addressString;
-    }
-
-    Address getAddress() {
+    private Address getAddress() {
         return addressEntry.getAddress();
     }
 
@@ -166,5 +190,9 @@ public class ReservedListItem {
 
     public Coin getBalance() {
         return balance;
+    }
+
+    public String getAddressString() {
+        return addressString;
     }
 }

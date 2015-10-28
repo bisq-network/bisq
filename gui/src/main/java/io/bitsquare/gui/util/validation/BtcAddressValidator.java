@@ -18,7 +18,6 @@
 package io.bitsquare.gui.util.validation;
 
 import io.bitsquare.user.Preferences;
-
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 
@@ -26,7 +25,7 @@ import javax.inject.Inject;
 
 public final class BtcAddressValidator extends InputValidator {
 
-    private Preferences preferences;
+    private final Preferences preferences;
 
     @Inject
     public BtcAddressValidator(Preferences preferences) {

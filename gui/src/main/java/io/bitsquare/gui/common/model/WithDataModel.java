@@ -17,11 +17,15 @@
 
 package io.bitsquare.gui.common.model;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public abstract class WithDataModel<D> {
+public class WithDataModel<D> {
+    protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    protected final D dataModel;
+    public final D dataModel;
 
     protected WithDataModel(D dataModel) {
         this.dataModel = checkNotNull(dataModel, "Delegate object must not be null");

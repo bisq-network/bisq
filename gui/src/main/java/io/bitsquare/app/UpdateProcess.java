@@ -17,32 +17,26 @@
 
 package io.bitsquare.app;
 
-import io.bitsquare.util.Utilities;
-
 import com.google.inject.Inject;
-
-import java.io.IOException;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-import java.util.List;
-import java.util.Timer;
-
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.vinumeris.updatefx.Crypto;
 import com.vinumeris.updatefx.UpdateFX;
 import com.vinumeris.updatefx.UpdateSummary;
 import com.vinumeris.updatefx.Updater;
+import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.common.util.Utilities;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import org.bouncycastle.math.ec.ECPoint;
-import rx.Observable;
-import rx.subjects.BehaviorSubject;
-import rx.subjects.Subject;
+import org.reactfx.util.FxTimer;
+import org.reactfx.util.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.util.List;
 
 public class UpdateProcess {
     private static final Logger log = LoggerFactory.getLogger(UpdateProcess.class);
@@ -53,6 +47,7 @@ public class UpdateProcess {
     private static final Path ROOT_CLASS_PATH = UpdateFX.findCodePath(BitsquareAppMain.class);
 
     private final BitsquareEnvironment environment;
+    private ResultHandler resultHandler;
 
     public enum State {
         CHECK_FOR_UPDATES,
@@ -65,7 +60,6 @@ public class UpdateProcess {
     public final ObjectProperty<State> state = new SimpleObjectProperty<>(State.CHECK_FOR_UPDATES);
 
     private String releaseUrl;
-    private final Subject<State, State> process = BehaviorSubject.create();
     private Timer timeoutTimer;
 
     @Inject
@@ -77,17 +71,17 @@ public class UpdateProcess {
         UpdateFX.restartApp();
     }
 
-    public Observable<State> getProcess() {
-        return process.asObservable();
+    public void setResultHandler(ResultHandler resultHandler) {
+        this.resultHandler = resultHandler;
     }
 
     public void init() {
-        log.info("UpdateFX current version " + Version.PATCH_VERSION);
+        log.info("UpdateFX checking for patch version " + Version.PATCH_VERSION);
 
         // process.timeout() will cause an error state back but we don't want to break startup in case of an timeout
-        timeoutTimer = Utilities.setTimeout(10000, () -> {
+        timeoutTimer = FxTimer.runLater(Duration.ofMillis(10000), () -> {
             log.error("Timeout reached for UpdateFX");
-            process.onCompleted();
+            resultHandler.handleResult();
         });
         String userAgent = environment.getProperty(BitsquareEnvironment.APP_NAME_KEY) + Version.VERSION;
 
@@ -97,7 +91,7 @@ public class UpdateProcess {
             if (releaseUrl != null && releaseUrl.length() > 0) {
                 log.info("New release available at: " + releaseUrl);
                 state.set(State.NEW_RELEASE);
-                timeoutTimer.cancel();
+                timeoutTimer.stop();
                 return;
             }
             else {
@@ -121,11 +115,10 @@ public class UpdateProcess {
             log.trace("progressProperty newValue = " + newValue);
         });*/
 
-        log.info("Checking for updates!");
         updater.setOnSucceeded(event -> {
             try {
                 UpdateSummary summary = updater.get();
-                log.info("summary " + summary.toString());
+                //log.info("summary " + summary.toString());
                 if (summary.descriptions != null && summary.descriptions.size() > 0) {
                     log.info("One liner: {}", summary.descriptions.get(0).getOneLiner());
                     log.info("{}", summary.descriptions.get(0).getDescription());
@@ -135,13 +128,13 @@ public class UpdateProcess {
                     state.set(State.UPDATE_AVAILABLE);
                     // We stop the timeout and treat it not completed. 
                     // The user should click the restart button manually if there are updates available.
-                    timeoutTimer.cancel();
+                    timeoutTimer.stop();
                 }
                 else if (summary.highestVersion == Version.PATCH_VERSION) {
                     log.info("UP_TO_DATE");
                     state.set(State.UP_TO_DATE);
-                    timeoutTimer.cancel();
-                    process.onCompleted();
+                    timeoutTimer.stop();
+                    resultHandler.handleResult();
                 }
             } catch (Throwable e) {
                 log.error("Exception at processing UpdateSummary: " + e.getMessage());
@@ -149,8 +142,8 @@ public class UpdateProcess {
                 // we treat errors as update not as critical errors to prevent startup, 
                 // so we use state.onCompleted() instead of state.onError()
                 state.set(State.FAILURE);
-                timeoutTimer.cancel();
-                process.onCompleted();
+                timeoutTimer.stop();
+                resultHandler.handleResult();
             }
         });
         updater.setOnFailed(event -> {
@@ -160,8 +153,8 @@ public class UpdateProcess {
             // we treat errors as update not as critical errors to prevent startup, 
             // so we use state.onCompleted() instead of state.onError()
             state.set(State.FAILURE);
-            timeoutTimer.cancel();
-            process.onCompleted();
+            timeoutTimer.stop();
+            resultHandler.handleResult();
         });
 
         Thread thread = new Thread(updater, "Online update check");

@@ -17,23 +17,16 @@
 
 package io.bitsquare.gui.main.portfolio.openoffer;
 
+import com.google.inject.Inject;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.offer.OpenOffer;
-
-import com.google.inject.Inject;
-
 import javafx.collections.ObservableList;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> implements ViewModel {
-    private static final Logger log = LoggerFactory.getLogger(OpenOffersViewModel.class);
-
     private final BSFormatter formatter;
 
 
@@ -54,7 +47,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     String getTradeId(OpenOfferListItem item) {
-        return item.getOffer().getId();
+        return item.getOffer().getShortId();
     }
 
     String getAmount(OpenOfferListItem item) {
@@ -66,15 +59,15 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     String getVolume(OpenOfferListItem item) {
-        return (item != null) ? formatter.formatVolumeWithMinVolume(item.getOffer()) : "";
+        return (item != null) ? formatter.formatVolumeWithMinVolumeWithCode(item.getOffer()) : "";
     }
 
     String getDirectionLabel(OpenOfferListItem item) {
-        return (item != null) ? formatter.formatDirection(dataModel.getDirection(item.getOffer())) : "";
+        return (item != null) ? formatter.getDirection(dataModel.getDirection(item.getOffer())) : "";
     }
 
     String getDate(OpenOfferListItem item) {
-        return formatter.formatDateTime(item.getOffer().getCreationDate());
+        return formatter.formatDateTime(item.getOffer().getDate());
     }
 
 }

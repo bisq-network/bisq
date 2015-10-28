@@ -19,26 +19,38 @@ package io.bitsquare.gui.main.portfolio.closedtrades;
 
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.components.Popups;
-
-import javax.inject.Inject;
-
+import io.bitsquare.gui.popups.OfferDetailsPopup;
+import io.bitsquare.gui.popups.TradeDetailsPopup;
+import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.trade.Tradable;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.offer.OpenOffer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 
-@FxmlView
-public class ClosedTradesView extends ActivatableViewAndModel<GridPane, ClosedTradesViewModel> {
+import javax.inject.Inject;
 
-    @FXML TableView<ClosedTradesListItem> table;
-    @FXML TableColumn<ClosedTradesListItem, ClosedTradesListItem> priceColumn, amountColumn, volumeColumn,
+@FxmlView
+public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTradesViewModel> {
+
+    @FXML
+    TableView<ClosedTradableListItem> table;
+    @FXML
+    TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, tradeIdColumn, stateColumn;
+    private final BSFormatter formatter;
+    private final OfferDetailsPopup offerDetailsPopup;
+    private final TradeDetailsPopup tradeDetailsPopup;
 
     @Inject
-    public ClosedTradesView(ClosedTradesViewModel model) {
+    public ClosedTradesView(ClosedTradesViewModel model, BSFormatter formatter, OfferDetailsPopup offerDetailsPopup, TradeDetailsPopup tradeDetailsPopup) {
         super(model);
+        this.formatter = formatter;
+        this.offerDetailsPopup = offerDetailsPopup;
+        this.tradeDetailsPopup = tradeDetailsPopup;
     }
 
     @Override
@@ -56,38 +68,37 @@ public class ClosedTradesView extends ActivatableViewAndModel<GridPane, ClosedTr
     }
 
     @Override
-    public void doActivate() {
+    protected void activate() {
         table.setItems(model.getList());
     }
 
-    private void openOfferDetails(ClosedTradesListItem item) {
-        // TODO Open popup with details view
-        log.debug("Trade details " + item);
-        Popups.openWarningPopup("Under construction", "This will open a details " +
-                "popup but that is not implemented yet.");
-    }
 
     private void setTradeIdColumnCellFactory() {
         tradeIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
         tradeIdColumn.setCellFactory(
-                new Callback<TableColumn<ClosedTradesListItem, ClosedTradesListItem>, TableCell<ClosedTradesListItem,
-                        ClosedTradesListItem>>() {
+                new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
+                        ClosedTradableListItem>>() {
 
                     @Override
-                    public TableCell<ClosedTradesListItem, ClosedTradesListItem> call(TableColumn<ClosedTradesListItem,
-                            ClosedTradesListItem> column) {
-                        return new TableCell<ClosedTradesListItem, ClosedTradesListItem>() {
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(TableColumn<ClosedTradableListItem,
+                            ClosedTradableListItem> column) {
+                        return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
                             private Hyperlink hyperlink;
 
                             @Override
-                            public void updateItem(final ClosedTradesListItem item, boolean empty) {
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
                                     hyperlink = new Hyperlink(model.getTradeId(item));
-                                    hyperlink.setId("id-link");
                                     Tooltip.install(hyperlink, new Tooltip(model.getTradeId(item)));
-                                    hyperlink.setOnAction(event -> openOfferDetails(item));
+                                    hyperlink.setOnAction(event -> {
+                                        Tradable tradable = item.getTradable();
+                                        if (tradable instanceof Trade)
+                                            tradeDetailsPopup.show((Trade) tradable);
+                                        else if (tradable instanceof OpenOffer)
+                                            offerDetailsPopup.show(tradable.getOffer());
+                                    });
                                     setGraphic(hyperlink);
                                 }
                                 else {
@@ -103,14 +114,14 @@ public class ClosedTradesView extends ActivatableViewAndModel<GridPane, ClosedTr
     private void setDateColumnCellFactory() {
         dateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         dateColumn.setCellFactory(
-                new Callback<TableColumn<ClosedTradesListItem, ClosedTradesListItem>, TableCell<ClosedTradesListItem,
-                        ClosedTradesListItem>>() {
+                new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
+                        ClosedTradableListItem>>() {
                     @Override
-                    public TableCell<ClosedTradesListItem, ClosedTradesListItem> call(
-                            TableColumn<ClosedTradesListItem, ClosedTradesListItem> column) {
-                        return new TableCell<ClosedTradesListItem, ClosedTradesListItem>() {
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
                             @Override
-                            public void updateItem(final ClosedTradesListItem item, boolean empty) {
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(model.getDate(item));
@@ -125,14 +136,14 @@ public class ClosedTradesView extends ActivatableViewAndModel<GridPane, ClosedTr
     private void setStateColumnCellFactory() {
         stateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         stateColumn.setCellFactory(
-                new Callback<TableColumn<ClosedTradesListItem, ClosedTradesListItem>, TableCell<ClosedTradesListItem,
-                        ClosedTradesListItem>>() {
+                new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
+                        ClosedTradableListItem>>() {
                     @Override
-                    public TableCell<ClosedTradesListItem, ClosedTradesListItem> call(
-                            TableColumn<ClosedTradesListItem, ClosedTradesListItem> column) {
-                        return new TableCell<ClosedTradesListItem, ClosedTradesListItem>() {
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
                             @Override
-                            public void updateItem(final ClosedTradesListItem item, boolean empty) {
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(model.getState(item));
@@ -148,14 +159,14 @@ public class ClosedTradesView extends ActivatableViewAndModel<GridPane, ClosedTr
     private void setAmountColumnCellFactory() {
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
-                new Callback<TableColumn<ClosedTradesListItem, ClosedTradesListItem>, TableCell<ClosedTradesListItem,
-                        ClosedTradesListItem>>() {
+                new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
+                        ClosedTradableListItem>>() {
                     @Override
-                    public TableCell<ClosedTradesListItem, ClosedTradesListItem> call(
-                            TableColumn<ClosedTradesListItem, ClosedTradesListItem> column) {
-                        return new TableCell<ClosedTradesListItem, ClosedTradesListItem>() {
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
                             @Override
-                            public void updateItem(final ClosedTradesListItem item, boolean empty) {
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setText(model.getAmount(item));
                             }
@@ -167,14 +178,14 @@ public class ClosedTradesView extends ActivatableViewAndModel<GridPane, ClosedTr
     private void setPriceColumnCellFactory() {
         priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         priceColumn.setCellFactory(
-                new Callback<TableColumn<ClosedTradesListItem, ClosedTradesListItem>, TableCell<ClosedTradesListItem,
-                        ClosedTradesListItem>>() {
+                new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
+                        ClosedTradableListItem>>() {
                     @Override
-                    public TableCell<ClosedTradesListItem, ClosedTradesListItem> call(
-                            TableColumn<ClosedTradesListItem, ClosedTradesListItem> column) {
-                        return new TableCell<ClosedTradesListItem, ClosedTradesListItem>() {
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
                             @Override
-                            public void updateItem(final ClosedTradesListItem item, boolean empty) {
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setText(model.getPrice(item));
                             }
@@ -186,14 +197,14 @@ public class ClosedTradesView extends ActivatableViewAndModel<GridPane, ClosedTr
     private void setVolumeColumnCellFactory() {
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         volumeColumn.setCellFactory(
-                new Callback<TableColumn<ClosedTradesListItem, ClosedTradesListItem>, TableCell<ClosedTradesListItem,
-                        ClosedTradesListItem>>() {
+                new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
+                        ClosedTradableListItem>>() {
                     @Override
-                    public TableCell<ClosedTradesListItem, ClosedTradesListItem> call(
-                            TableColumn<ClosedTradesListItem, ClosedTradesListItem> column) {
-                        return new TableCell<ClosedTradesListItem, ClosedTradesListItem>() {
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
                             @Override
-                            public void updateItem(final ClosedTradesListItem item, boolean empty) {
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(model.getVolume(item));
@@ -208,14 +219,14 @@ public class ClosedTradesView extends ActivatableViewAndModel<GridPane, ClosedTr
     private void setDirectionColumnCellFactory() {
         directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         directionColumn.setCellFactory(
-                new Callback<TableColumn<ClosedTradesListItem, ClosedTradesListItem>, TableCell<ClosedTradesListItem,
-                        ClosedTradesListItem>>() {
+                new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
+                        ClosedTradableListItem>>() {
                     @Override
-                    public TableCell<ClosedTradesListItem, ClosedTradesListItem> call(
-                            TableColumn<ClosedTradesListItem, ClosedTradesListItem> column) {
-                        return new TableCell<ClosedTradesListItem, ClosedTradesListItem>() {
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
                             @Override
-                            public void updateItem(final ClosedTradesListItem item, boolean empty) {
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setText(model.getDirectionLabel(item));
                             }

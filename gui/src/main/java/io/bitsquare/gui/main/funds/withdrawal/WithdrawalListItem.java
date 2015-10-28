@@ -23,19 +23,13 @@ import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
-
+import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
 
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.scene.control.*;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-
 public class WithdrawalListItem {
-    private final StringProperty addressString = new SimpleStringProperty();
     private final BalanceListener balanceListener;
 
     private final Label balanceLabel;
@@ -51,12 +45,13 @@ public class WithdrawalListItem {
     private final Tooltip tooltip;
 
     private Coin balance;
+    private final String addressString;
 
     public WithdrawalListItem(AddressEntry addressEntry, WalletService walletService, BSFormatter formatter) {
         this.addressEntry = addressEntry;
         this.walletService = walletService;
         this.formatter = formatter;
-        this.addressString.set(getAddress().toString());
+        addressString = addressEntry.getAddressString();
 
         // confidence
         progressIndicator = new ConfidenceProgressIndicator();
@@ -128,23 +123,15 @@ public class WithdrawalListItem {
 
     public final String getLabel() {
         switch (addressEntry.getContext()) {
-            case REGISTRATION_FEE:
-                return "Registration fee";
             case TRADE:
-                checkNotNull(addressEntry.getOfferId());
-                return "Offer ID: " + addressEntry.getOfferId();
-            case ARBITRATOR_DEPOSIT:
-                return "Arbitration deposit";
+                return "Offer ID: " + addressEntry.getShortOfferId();
+            case ARBITRATOR:
+                return "Arbitration fee";
         }
         return "";
     }
 
-
-    public final StringProperty addressStringProperty() {
-        return this.addressString;
-    }
-
-    Address getAddress() {
+    private Address getAddress() {
         return addressEntry.getAddress();
     }
 
@@ -166,5 +153,9 @@ public class WithdrawalListItem {
 
     public Coin getBalance() {
         return balance;
+    }
+
+    public String getAddressString() {
+        return addressString;
     }
 }

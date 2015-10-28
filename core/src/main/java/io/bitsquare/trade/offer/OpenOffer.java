@@ -21,15 +21,14 @@ import io.bitsquare.app.Version;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.TradableList;
-import io.bitsquare.util.Utilities;
-
-import java.io.Serializable;
-
-import java.util.Date;
-import java.util.Timer;
-
+import org.reactfx.util.FxTimer;
+import org.reactfx.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.Serializable;
+import java.time.Duration;
+import java.util.Date;
 
 public class OpenOffer implements Tradable, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -37,7 +36,8 @@ public class OpenOffer implements Tradable, Serializable {
 
     private static final Logger log = LoggerFactory.getLogger(OpenOffer.class);
 
-    transient private static final long TIMEOUT = 5000;
+    // Timeout for offer reservation during takeoffer process. If deposit tx is not completed in that time we reset the offer to AVAILABLE state. 
+    transient private static final long TIMEOUT = 30 * 1000;
 
     public enum State {
         AVAILABLE,
@@ -58,12 +58,17 @@ public class OpenOffer implements Tradable, Serializable {
     }
 
     public Date getDate() {
-        return offer.getCreationDate();
+        return offer.getDate();
     }
 
     @Override
     public String getId() {
         return offer.getId();
+    }
+
+    @Override
+    public String getShortId() {
+        return offer.getShortId();
     }
 
     public Offer getOffer() {
@@ -94,16 +99,18 @@ public class OpenOffer implements Tradable, Serializable {
     private void startTimeout() {
         stopTimeout();
 
-        timeoutTimer = Utilities.setTimeout(TIMEOUT, () -> {
-            log.debug("Timeout reached");
-            if (state == State.RESERVED)
-                setState(State.AVAILABLE);
-        });
+        timeoutTimer = FxTimer.runLater(
+                Duration.ofMillis(TIMEOUT),
+                () -> {
+                    log.debug("Timeout reached");
+                    if (state == State.RESERVED)
+                        setState(State.AVAILABLE);
+                });
     }
 
-    protected void stopTimeout() {
+    private void stopTimeout() {
         if (timeoutTimer != null) {
-            timeoutTimer.cancel();
+            timeoutTimer.stop();
             timeoutTimer = null;
         }
     }

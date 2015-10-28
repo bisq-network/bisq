@@ -39,49 +39,45 @@
 
     <dependencies>
         <dependency>
+            <groupId>io.bitsquare</groupId>
+            <artifactId>common</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.bitsquare</groupId>
+            <artifactId>network</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.msopentech.thali</groupId>
+            <artifactId>universal</artifactId>
+            <version>0.0.3-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.msopentech.thali</groupId>
+            <artifactId>java</artifactId>
+            <version>0.0.3-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
             <groupId>org.bitcoinj</groupId>
             <artifactId>bitcoinj-core</artifactId>
-            <version>0.13.d13665c-SNAPSHOT</version>
+            <version>0.13.2</version>
         </dependency>
 
-        <dependency>
-            <groupId>net.tomp2p</groupId>
-            <artifactId>tomp2p-all</artifactId>
-            <version>5.0-Beta7</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
-            <version>1.52</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
-            <version>3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>16.0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.2.4</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.reactivex</groupId>
-            <artifactId>rxjava</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
-            <version>4.1.1.RELEASE</version>
-        </dependency>
         <dependency>
             <groupId>net.sf.jopt-simple</groupId>
             <artifactId>jopt-simple</artifactId>
@@ -93,27 +89,6 @@
             <artifactId>qrgen</artifactId>
             <version>1.3</version>
         </dependency>
-        <!-- <dependency>
-             <groupId>com.google.code.findbugs</groupId>
-             <artifactId>jsr305</artifactId>
-             <version>2.0.1</version>
-         </dependency>-->
-        <!-- <dependency>
-             <groupId>net.jcip</groupId>
-             <artifactId>jcip-annotations</artifactId>
-             <version>1.0</version>
-         </dependency>-->
-        <dependency>
-            <groupId>org.jetbrains</groupId>
-            <artifactId>annotations</artifactId>
-            <version>13.0</version>
-        </dependency>
-
-        <!-- <dependency>
-             <groupId>org.fxmisc.easybind</groupId>
-             <artifactId>easybind</artifactId>
-             <version>1.0.2</version>
-         </dependency>-->
 
         <dependency>
             <groupId>com.codahale.metrics</groupId>
@@ -121,17 +96,16 @@
             <version>3.0.2</version>
         </dependency>
 
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-            <version>1.1.2</version>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.1.2</version>
-        </dependency>
-
+        <!-- <dependency>
+           <groupId>com.google.code.findbugs</groupId>
+           <artifactId>jsr305</artifactId>
+           <version>2.0.1</version>
+       </dependency>-->
+        <!-- <dependency>
+             <groupId>net.jcip</groupId>
+             <artifactId>jcip-annotations</artifactId>
+             <version>1.0</version>
+         </dependency>-->
 
     </dependencies>
 </project>

@@ -17,21 +17,20 @@
 
 package io.bitsquare.btc;
 
+import com.google.inject.Inject;
 import io.bitsquare.app.Version;
 import io.bitsquare.storage.Storage;
-
 import org.bitcoinj.core.Wallet;
 import org.bitcoinj.crypto.DeterministicKey;
-
-import com.google.inject.Inject;
-
-import java.io.Serializable;
-
-import java.util.ArrayList;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+
+/**
+ * The List supporting our persistence solution.
+ */
 public class AddressEntryList extends ArrayList<AddressEntry> implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
@@ -53,36 +52,33 @@ public class AddressEntryList extends ArrayList<AddressEntry> implements Seriali
         AddressEntryList persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
             for (AddressEntry addressEntry : persisted) {
-                addressEntry.setDeterministicKey((DeterministicKey) wallet.findKeyFromPubHash(addressEntry.getPubKeyHash()));
-                this.add(addressEntry);
+                DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubHash(addressEntry.getPubKeyHash());
+                if (keyFromPubHash != null) {
+                    addressEntry.setDeterministicKey(keyFromPubHash);
+                    add(addressEntry);
+                } else {
+                    log.warn("Key from addressEntry not found in that wallet " + addressEntry.toString());
+                }
             }
-        }
-        else {
-            // First time create registrationAddressEntry
-            createRegistrationAddressEntry();
+        } else {
+            add(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), AddressEntry.Context.ARBITRATOR));
+            storage.queueUpForSave();
         }
     }
 
     public AddressEntry getNewAddressEntry(AddressEntry.Context context, String offerId) {
         log.trace("getNewAddressEntry called with offerId " + offerId);
-        DeterministicKey key = wallet.freshReceiveKey();
-        AddressEntry addressEntry = new AddressEntry(key, wallet.getParams(), context, offerId);
+        AddressEntry addressEntry = new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context, offerId);
         add(addressEntry);
         storage.queueUpForSave();
         return addressEntry;
     }
 
-    private void createRegistrationAddressEntry() {
-        DeterministicKey registrationKey = wallet.currentReceiveKey();
-        AddressEntry registrationAddressEntry = new AddressEntry(registrationKey, wallet.getParams(), AddressEntry.Context.REGISTRATION_FEE);
-        add(registrationAddressEntry);
-        storage.queueUpForSave();
-    }
 
-    public AddressEntry getRegistrationAddressEntry() {
-        if (isEmpty())
-            createRegistrationAddressEntry();
-
-        return get(0);
+    public AddressEntry getArbitratorAddressEntry() {
+        if (size() > 0)
+            return get(0);
+        else
+            return null;
     }
 }

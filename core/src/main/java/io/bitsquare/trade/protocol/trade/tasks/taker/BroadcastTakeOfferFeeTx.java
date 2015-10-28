@@ -17,16 +17,12 @@
 
 package io.bitsquare.trade.protocol.trade.tasks.taker;
 
+import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-
 import org.bitcoinj.core.Transaction;
-
-import com.google.common.util.concurrent.FutureCallback;
-
 import org.jetbrains.annotations.NotNull;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +43,7 @@ public class BroadcastTakeOfferFeeTx extends TradeTask {
                         public void onSuccess(Transaction transaction) {
                             log.debug("Take offer fee published successfully. Transaction ID = " + transaction.getHashAsString());
 
+                            trade.setState(Trade.State.TAKER_FEE_PAID);
                             complete();
                         }
 

@@ -18,23 +18,49 @@
 package io.bitsquare.trade.protocol.trade.messages;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.MailboxMessage;
-
-import org.bitcoinj.core.Transaction;
-
-import java.io.Serializable;
+import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.messaging.MailboxMessage;
 
 import javax.annotation.concurrent.Immutable;
+import java.util.Arrays;
 
 @Immutable
-public class DepositTxPublishedMessage extends TradeMessage implements MailboxMessage, Serializable {
+public class DepositTxPublishedMessage extends TradeMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
-    public final Transaction depositTx;
+    public final byte[] depositTx;
+    private final Address senderAddress;
 
-    public DepositTxPublishedMessage(String tradeId, Transaction depositTx) {
+    public DepositTxPublishedMessage(String tradeId, byte[] depositTx, Address senderAddress) {
         super(tradeId);
         this.depositTx = depositTx;
+        this.senderAddress = senderAddress;
+    }
+
+    @Override
+    public Address getSenderAddress() {
+        return senderAddress;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DepositTxPublishedMessage)) return false;
+        if (!super.equals(o)) return false;
+
+        DepositTxPublishedMessage that = (DepositTxPublishedMessage) o;
+
+        if (!Arrays.equals(depositTx, that.depositTx)) return false;
+        return !(senderAddress != null ? !senderAddress.equals(that.senderAddress) : that.senderAddress != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (depositTx != null ? Arrays.hashCode(depositTx) : 0);
+        result = 31 * result + (senderAddress != null ? senderAddress.hashCode() : 0);
+        return result;
     }
 }

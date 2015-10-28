@@ -18,7 +18,7 @@
   -->
 
 <?import io.bitsquare.gui.components.TitledGroupBg?>
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.settings.network.NetworkSettingsView"
@@ -87,7 +87,7 @@
 
     <Label text="P2P bootstrap node addresses:" GridPane.rowIndex="7" GridPane.valignment="TOP"/>
     <TextArea fx:id="bootstrapNodeAddress" GridPane.rowIndex="7" GridPane.columnIndex="1"
-               mouseTransparent="true" focusTraversable="false"/>
+              mouseTransparent="true" focusTraversable="false"/>
 
     <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="200.0"/>

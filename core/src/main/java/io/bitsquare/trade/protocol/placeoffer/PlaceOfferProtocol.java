@@ -17,14 +17,12 @@
 
 package io.bitsquare.trade.protocol.placeoffer;
 
-import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.protocol.placeoffer.tasks.AddOfferToRemoteOfferBook;
 import io.bitsquare.trade.protocol.placeoffer.tasks.BroadcastCreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.ValidateOffer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,18 +31,16 @@ public class PlaceOfferProtocol {
 
     private final PlaceOfferModel model;
     private final TransactionResultHandler resultHandler;
-    private final ErrorMessageHandler errorMessageHandler;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public PlaceOfferProtocol(PlaceOfferModel model,
-                              TransactionResultHandler resultHandler,
-                              ErrorMessageHandler errorMessageHandler) {
+                              TransactionResultHandler resultHandler) {
         this.model = model;
         this.resultHandler = resultHandler;
-        this.errorMessageHandler = errorMessageHandler;
     }
 
 
@@ -68,9 +64,9 @@ public class PlaceOfferProtocol {
                                     model.offerAddedToOfferBook = false;
                                     log.debug("Offer removed from offer book.");
                                 },
-                                (message, throwable) -> log.error(message));
+                                errorMessage2 -> log.error(errorMessage2));
                     }
-                    errorMessageHandler.handleErrorMessage(errorMessage);
+                    log.error(errorMessage);
                 }
         );
         taskRunner.addTasks(

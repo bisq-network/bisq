@@ -17,12 +17,14 @@
 
 package io.bitsquare.trade.protocol.placeoffer.tasks;
 
+import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.p2p.Address;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
-
+import io.bitsquare.trade.protocol.trade.ArbitrationSelectionRule;
 import org.bitcoinj.core.Transaction;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,15 +39,26 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
     protected void run() {
         try {
             runInterceptHook();
-            Transaction transaction = model.tradeWalletService.createOfferFeeTx(
-                    model.walletService.getAddressEntry(model.offer.getId()));
+
+            Address selectedArbitratorAddress = ArbitrationSelectionRule.select(model.user.getAcceptedArbitratorAddresses(), model.offer);
+            log.debug("selectedArbitratorAddress " + selectedArbitratorAddress);
+            Arbitrator selectedArbitrator = model.user.getAcceptedArbitratorByAddress(selectedArbitratorAddress);
+            Transaction transaction = model.tradeWalletService.createTradingFeeTx(
+                    model.walletService.getAddressEntryByOfferId(model.offer.getId()),
+                    FeePolicy.CREATE_OFFER_FEE,
+                    selectedArbitrator.getBtcAddress());
 
             // We assume there will be no tx malleability. We add a check later in case the published offer has a different hash.
+            // As the txId is part of the offer and therefore change the hash data we need to be sure to have no
+            // tx malleability
             model.offer.setOfferFeePaymentTxID(transaction.getHashAsString());
             model.setTransaction(transaction);
 
             complete();
         } catch (Throwable t) {
+            model.offer.setErrorMessage("An error occurred.\n" +
+                    "Error message:\n"
+                    + t.getMessage());
             failed(t);
         }
     }

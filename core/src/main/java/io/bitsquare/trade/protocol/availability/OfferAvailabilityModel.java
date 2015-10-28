@@ -17,14 +17,12 @@
 
 package io.bitsquare.trade.protocol.availability;
 
+import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.taskrunner.Model;
-import io.bitsquare.crypto.PubKeyRing;
-import io.bitsquare.p2p.AddressService;
-import io.bitsquare.p2p.MessageService;
-import io.bitsquare.p2p.Peer;
+import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.P2PService;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.availability.messages.OfferMessage;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,26 +30,26 @@ public class OfferAvailabilityModel implements Model {
     private static final Logger log = LoggerFactory.getLogger(OfferAvailabilityModel.class);
 
     public final Offer offer;
-    private final PubKeyRing pubKeyRing;
-    public final MessageService messageService;
-    public final AddressService addressService;
+    public final PubKeyRing pubKeyRing;
+    public final P2PService p2PService;
 
-    private Peer peer;
+    private Address peerAddress;
     private OfferMessage message;
 
-    public OfferAvailabilityModel(Offer offer, PubKeyRing pubKeyRing, MessageService messageService, AddressService addressService) {
+    public OfferAvailabilityModel(Offer offer,
+                                  PubKeyRing pubKeyRing,
+                                  P2PService p2PService) {
         this.offer = offer;
         this.pubKeyRing = pubKeyRing;
-        this.messageService = messageService;
-        this.addressService = addressService;
+        this.p2PService = p2PService;
     }
 
-    public Peer getPeer() {
-        return peer;
+    public Address getPeerAddress() {
+        return peerAddress;
     }
 
-    public void setPeer(Peer peer) {
-        this.peer = peer;
+    public void setPeerAddress(Address peerAddress) {
+        this.peerAddress = peerAddress;
     }
 
     public void setMessage(OfferMessage message) {

@@ -17,27 +17,24 @@
 
 package io.bitsquare.trade.closed;
 
-import io.bitsquare.crypto.KeyRing;
+import com.google.inject.Inject;
+import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.TradableList;
 import io.bitsquare.trade.offer.Offer;
-
-import com.google.inject.Inject;
-
-import java.io.File;
-
-import javax.inject.Named;
-
 import javafx.collections.ObservableList;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Named;
+import java.io.File;
+import java.util.Optional;
 
 public class ClosedTradableManager {
     private static final Logger log = LoggerFactory.getLogger(ClosedTradableManager.class);
     private final TradableList<Tradable> closedTrades;
-    private KeyRing keyRing;
+    private final KeyRing keyRing;
 
     @Inject
     public ClosedTradableManager(KeyRing keyRing, @Named("storage.dir") File storageDir) {
@@ -57,5 +54,8 @@ public class ClosedTradableManager {
         return closedTrades.getObservableList();
     }
 
+    public Optional<Tradable> getTradableById(String id) {
+        return closedTrades.stream().filter(e -> e.getId().equals(id)).findFirst();
+    }
 
 }

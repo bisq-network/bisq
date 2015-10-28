@@ -17,89 +17,216 @@
 
 package io.bitsquare.gui.main.offer.takeoffer;
 
+import com.google.inject.Inject;
+import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.gui.common.model.Activatable;
-import io.bitsquare.gui.common.model.DataModel;
+import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.gui.common.model.ActivatableDataModel;
+import io.bitsquare.gui.popups.WalletPasswordPopup;
+import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.payment.PaymentAccount;
+import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.trade.handlers.TakeOfferResultHandler;
+import io.bitsquare.trade.handlers.TradeResultHandler;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
-
+import io.bitsquare.user.User;
+import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
-
-import com.google.inject.Inject;
-
-import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-
 import org.jetbrains.annotations.NotNull;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.List;
 
-class TakeOfferDataModel implements Activatable, DataModel {
-    private static final Logger log = LoggerFactory.getLogger(TakeOfferDataModel.class);
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
+/**
+ * Domain for that UI element.
+ * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
+ * That model is just responsible for the domain specific parts displayed needed in that UI element.
+ */
+class TakeOfferDataModel extends ActivatableDataModel {
     private final TradeManager tradeManager;
+    private final TradeWalletService tradeWalletService;
     private final WalletService walletService;
+    private final User user;
+    private final WalletPasswordPopup walletPasswordPopup;
     private final Preferences preferences;
+
+    private final Coin offerFeeAsCoin;
+    private final Coin networkFeeAsCoin;
+    private final Coin securityDepositAsCoin;
 
     private Offer offer;
     private AddressEntry addressEntry;
 
     final StringProperty btcCode = new SimpleStringProperty();
-
-    final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
     final BooleanProperty useMBTC = new SimpleBooleanProperty();
-
+    final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
     final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> securityDepositAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> offerFeeAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> networkFeeAsCoin = new SimpleObjectProperty<>();
 
     private BalanceListener balanceListener;
+    private PaymentAccount paymentAccount;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+
     @Inject
-    public TakeOfferDataModel(TradeManager tradeManager,
-                              WalletService walletService,
-                              Preferences preferences) {
+    TakeOfferDataModel(TradeManager tradeManager, TradeWalletService tradeWalletService,
+                       WalletService walletService, User user, WalletPasswordPopup walletPasswordPopup,
+                       Preferences preferences) {
         this.tradeManager = tradeManager;
+        this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
+        this.user = user;
+        this.walletPasswordPopup = walletPasswordPopup;
         this.preferences = preferences;
 
-        offerFeeAsCoin.set(FeePolicy.CREATE_OFFER_FEE);
-        networkFeeAsCoin.set(FeePolicy.TX_FEE);
+        offerFeeAsCoin = FeePolicy.CREATE_OFFER_FEE;
+        networkFeeAsCoin = FeePolicy.TX_FEE;
+        securityDepositAsCoin = FeePolicy.SECURITY_DEPOSIT;
     }
 
     @Override
-    public void activate() {
+    protected void activate() {
+        // when leaving screen we reset state
+        offer.setState(Offer.State.UNDEFINED);
+
         addBindings();
         addListeners();
+        updateBalance(walletService.getBalanceForAddress(addressEntry.getAddress()));
     }
 
     @Override
-    public void deactivate() {
+    protected void deactivate() {
         removeBindings();
         removeListeners();
         tradeManager.onCancelAvailabilityRequest(offer);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // called before activate
+    void initWithData(Offer offer) {
+        this.offer = offer;
+
+        ObservableList<PaymentAccount> possiblePaymentAccounts = getPossiblePaymentAccounts();
+        checkArgument(!possiblePaymentAccounts.isEmpty(), "possiblePaymentAccounts.isEmpty()");
+        paymentAccount = possiblePaymentAccounts.get(0);
+
+        amountAsCoin.set(offer.getAmount());
+
+        calculateVolume();
+        calculateTotalToPay();
+
+        addressEntry = walletService.getAddressEntryByOfferId(offer.getId());
+        checkNotNull(addressEntry, "addressEntry must not be null");
+
+        balanceListener = new BalanceListener(addressEntry.getAddress()) {
+            @Override
+            public void onBalanceChanged(@NotNull Coin balance) {
+                updateBalance(balance);
+            }
+        };
+
+        offer.resetState();
+    }
+
+    void checkOfferAvailability(ResultHandler resultHandler) {
+        tradeManager.checkOfferAvailability(offer, resultHandler);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI actions
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // errorMessageHandler is used only in the check availability phase. As soon we have a trade we write the error msg in the trade object as we want to 
+    // have it persisted as well.
+    void onTakeOffer(TradeResultHandler tradeResultHandler) {
+        if (walletService.getWallet().isEncrypted() && tradeWalletService.getAesKey() == null) {
+            walletPasswordPopup.show().onAesKey(aesKey -> {
+                tradeWalletService.setAesKey(aesKey);
+                doTakeOffer(tradeResultHandler);
+            });
+        } else {
+            doTakeOffer(tradeResultHandler);
+        }
+    }
+
+    private void doTakeOffer(TradeResultHandler tradeResultHandler) {
+        tradeManager.onTakeOffer(amountAsCoin.get(),
+                offer,
+                paymentAccount.getId(),
+                tradeResultHandler
+        );
+    }
+
+    void onSecurityDepositInfoDisplayed() {
+        preferences.setDisplaySecurityDepositInfo(false);
+    }
+
+    public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
+        if (paymentAccount != null)
+            this.paymentAccount = paymentAccount;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    Offer.Direction getDirection() {
+        return offer.getDirection();
+    }
+
+    boolean getDisplaySecurityDepositInfo() {
+        return preferences.getDisplaySecurityDepositInfo();
+    }
+
+    public Offer getOffer() {
+        return offer;
+    }
+
+    ObservableList<PaymentAccount> getPossiblePaymentAccounts() {
+        ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList(new ArrayList<>());
+        for (PaymentAccount paymentAccount : user.getPaymentAccounts()) {
+            if (paymentAccount.getPaymentMethod().equals(offer.getPaymentMethod())) {
+                for (TradeCurrency tradeCurrency : paymentAccount.getTradeCurrencies()) {
+                    if (tradeCurrency.getCode().equals(offer.getCurrencyCode())) {
+                        paymentAccounts.add(paymentAccount);
+                    }
+                }
+            }
+        }
+        return paymentAccounts;
+    }
+
+    boolean hasAcceptedArbitrators() {
+        return user.getAcceptedArbitrators().size() > 0;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Bindings, listeners
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addBindings() {
         btcCode.bind(preferences.btcDenominationProperty());
@@ -114,54 +241,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
     }
 
     private void removeListeners() {
-        if (addressEntry != null)
-            walletService.removeBalanceListener(balanceListener);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    void initWithData(Coin amount, Offer offer) {
-        this.offer = offer;
-        securityDepositAsCoin.set(offer.getSecurityDeposit());
-
-        if (amount != null && !amount.isGreaterThan(offer.getAmount()) && !offer.getMinAmount().isGreaterThan(amount))
-            amountAsCoin.set(amount);
-        else
-            amountAsCoin.set(offer.getAmount());
-
-        calculateVolume();
-        calculateTotalToPay();
-
-        addressEntry = walletService.getAddressEntry(offer.getId());
-        assert addressEntry != null;
-
-        balanceListener = new BalanceListener(addressEntry.getAddress()) {
-            @Override
-            public void onBalanceChanged(@NotNull Coin balance) {
-                updateBalance(balance);
-            }
-        };
-        updateBalance(walletService.getBalanceForAddress(addressEntry.getAddress()));
-
-        // delay a bit to get the listeners called
-        offer.resetState();
-        Platform.runLater(() -> tradeManager.onCheckOfferAvailability(offer));
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI calls
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    void onTakeOffer(TakeOfferResultHandler handler) {
-        tradeManager.onTakeOffer(amountAsCoin.get(), offer, handler);
-    }
-
-    void onSecurityDepositInfoDisplayed() {
-        preferences.setDisplaySecurityDepositInfo(false);
+        walletService.removeBalanceListener(balanceListener);
     }
 
 
@@ -180,25 +260,15 @@ class TakeOfferDataModel implements Activatable, DataModel {
 
     void calculateTotalToPay() {
         if (getDirection() == Offer.Direction.SELL)
-            totalToPayAsCoin.set(offerFeeAsCoin.get().add(networkFeeAsCoin.get()).add(securityDepositAsCoin.get()));
+            totalToPayAsCoin.set(offerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin));
         else
-            totalToPayAsCoin.set(offerFeeAsCoin.get().add(networkFeeAsCoin.get()).add(securityDepositAsCoin.get()).add(amountAsCoin.get()));
+            totalToPayAsCoin.set(offerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin).add(amountAsCoin.get()));
     }
 
     private void updateBalance(@NotNull Coin balance) {
         isWalletFunded.set(totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    Offer.Direction getDirection() {
-        return offer.getDirection();
-    }
-
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     boolean isMinAmountLessOrEqualAmount() {
         //noinspection SimplifiableIfStatement
         if (offer != null && offer.getMinAmount() != null && amountAsCoin.get() != null)
@@ -213,15 +283,39 @@ class TakeOfferDataModel implements Activatable, DataModel {
         return true;
     }
 
-    boolean getDisplaySecurityDepositInfo() {
-        return preferences.getDisplaySecurityDepositInfo();
+    public PaymentMethod getPaymentMethod() {
+        return offer.getPaymentMethod();
     }
 
-    WalletService getWalletService() {
-        return walletService;
+    public TradeCurrency getTradeCurrency() {
+        return new TradeCurrency(offer.getCurrencyCode());
     }
 
-    AddressEntry getAddressEntry() {
+    public Coin getSecurityDepositAsCoin() {
+        return securityDepositAsCoin;
+    }
+
+    public Coin getOfferFeeAsCoin() {
+        return offerFeeAsCoin;
+    }
+
+    public Coin getNetworkFeeAsCoin() {
+        return networkFeeAsCoin;
+    }
+
+    public AddressEntry getAddressEntry() {
         return addressEntry;
+    }
+
+    public boolean getShowTakeOfferConfirmation() {
+        return preferences.getShowTakeOfferConfirmation();
+    }
+
+    public void setShowTakeOfferConfirmation(boolean selected) {
+        preferences.setShowTakeOfferConfirmation(selected);
+    }
+
+    public List<Arbitrator> getArbitrators() {
+        return user.getAcceptedArbitrators();
     }
 }

@@ -17,33 +17,75 @@
 
 package io.bitsquare.arbitration;
 
-
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.p2p.DHTService;
+import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.P2PService;
+import io.bitsquare.p2p.storage.HashSetChangedListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-public interface ArbitratorService extends DHTService {
+/**
+ * Used to store arbitrators profile and load map of arbitrators
+ */
+public class ArbitratorService {
+    private static final Logger log = LoggerFactory.getLogger(ArbitratorService.class);
 
-    void addListener(Listener listener);
-
-    void removeListener(Listener listener);
-
-    void addArbitrator(Arbitrator arbitrator, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler);
-
-    void loadAllArbitrators(ArbitratorMapResultHandler resultHandler, ErrorMessageHandler errorMessageHandler);
-
-    interface Listener {
-        void onArbitratorAdded(Arbitrator arbitrator);
-
-        void onAllArbitratorsLoaded(Map<String, Arbitrator> arbitratorsMap);
-
-        void onArbitratorRemoved(Arbitrator arbitrator);
-    }
+    private P2PService p2PService;
 
     interface ArbitratorMapResultHandler {
         void handleResult(Map<String, Arbitrator> arbitratorsMap);
     }
-}
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Inject
+    public ArbitratorService(P2PService p2PService) {
+        this.p2PService = p2PService;
+    }
+
+    public void addHashSetChangedListener(HashSetChangedListener hashSetChangedListener) {
+        p2PService.addHashSetChangedListener(hashSetChangedListener);
+    }
+
+    public void addArbitrator(Arbitrator arbitrator, final ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        log.debug("addArbitrator arbitrator.hashCode() " + arbitrator.hashCode());
+        boolean result = p2PService.addData(arbitrator);
+        if (result) {
+            log.trace("Add arbitrator to network was successful. Arbitrator = " + arbitrator);
+            resultHandler.handleResult();
+        } else {
+            errorMessageHandler.handleErrorMessage("Add arbitrator failed");
+        }
+    }
+
+    public void removeArbitrator(Arbitrator arbitrator, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        log.debug("removeArbitrator arbitrator.hashCode() " + arbitrator.hashCode());
+        if (p2PService.removeData(arbitrator)) {
+            log.trace("Remove arbitrator from network was successful. Arbitrator = " + arbitrator);
+            resultHandler.handleResult();
+        } else {
+            errorMessageHandler.handleErrorMessage("Remove arbitrator failed");
+        }
+    }
+
+    P2PService getP2PService() {
+        return p2PService;
+    }
+
+    public Map<Address, Arbitrator> getArbitrators() {
+        final Map<Address, Arbitrator> arbitratorsMap = p2PService.getDataMap().values().stream()
+                .filter(e -> e.expirablePayload instanceof Arbitrator)
+                .map(e -> (Arbitrator) e.expirablePayload)
+                .collect(Collectors.toMap(e -> e.getArbitratorAddress(), e -> e));
+
+        return arbitratorsMap;
+    }
+}

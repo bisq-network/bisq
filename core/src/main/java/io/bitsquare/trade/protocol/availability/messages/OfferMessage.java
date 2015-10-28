@@ -18,14 +18,12 @@
 package io.bitsquare.trade.protocol.availability.messages;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.Message;
-
-import java.io.Serializable;
+import io.bitsquare.p2p.messaging.MailMessage;
 
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-public abstract class OfferMessage implements Message, Serializable {
+public abstract class OfferMessage implements MailMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 

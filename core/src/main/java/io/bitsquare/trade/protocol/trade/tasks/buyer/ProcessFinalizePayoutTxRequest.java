@@ -19,10 +19,8 @@ package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.protocol.trade.messages.FinalizePayoutTxRequest;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,15 +38,19 @@ public class ProcessFinalizePayoutTxRequest extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+            log.debug("current trade state " + trade.getState());
             FinalizePayoutTxRequest message = (FinalizePayoutTxRequest) processModel.getTradeMessage();
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);
 
             processModel.tradingPeer.setSignature(checkNotNull(message.sellerSignature));
             processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(message.sellerPayoutAddress));
-            trade.setLockTime(nonNegativeLongOf(message.lockTime));
+            trade.setLockTimeAsBlockHeight(nonNegativeLongOf(message.lockTime));
 
-            trade.setTradeState(TradeState.BuyerState.FIAT_PAYMENT_RECEIPT_MSG_RECEIVED);
+            trade.setState(Trade.State.FIAT_PAYMENT_RECEIPT_MSG_RECEIVED);
+
+            // update to the latest peer address of our peer if the message is correct
+            trade.setTradingPeerAddress(processModel.getTempTradingPeerAddress());
 
             complete();
         } catch (Throwable t) {

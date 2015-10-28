@@ -20,14 +20,15 @@ package io.bitsquare.gui.main.portfolio.pendingtrades;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepDetailsView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import io.bitsquare.gui.util.Layout;
-
-import javafx.scene.layout.*;
-
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class TradeSubView extends HBox {
-    private static final Logger log = LoggerFactory.getLogger(TradeSubView.class);
+    protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     protected final PendingTradesViewModel model;
     protected VBox leftVBox;
@@ -44,21 +45,22 @@ public abstract class TradeSubView extends HBox {
 
         setSpacing(Layout.PADDING_WINDOW);
         buildViews();
-
     }
 
-    public void activate() {
+    protected void activate() {
+        // don't call tradeStepDetailsView.activate() as that will be called when state is set
     }
 
-    public void deactivate() {
+    protected void deactivate() {
         if (tradeStepDetailsView != null)
-            tradeStepDetailsView.deactivate();
+            tradeStepDetailsView.doDeactivate();
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Misc
     ///////////////////////////////////////////////////////////////////////////////////////////
+
 
     private void buildViews() {
         addLeftBox();
@@ -76,11 +78,10 @@ public abstract class TradeSubView extends HBox {
     private void createAndAddTradeStepView(Class<? extends TradeStepDetailsView> viewClass) {
         try {
             tradeStepDetailsView = viewClass.getDeclaredConstructor(PendingTradesViewModel.class).newInstance(model);
+            contentPane.getChildren().setAll(tradeStepDetailsView);
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        contentPane.getChildren().setAll(tradeStepDetailsView);
     }
 
     private void addLeftBox() {

@@ -17,35 +17,27 @@
 
 package io.bitsquare.gui;
 
-import io.bitsquare.BitsquareModule;
+import com.google.inject.Singleton;
+import com.google.inject.name.Names;
+import io.bitsquare.app.AppModule;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.gui.common.fxml.FxmlViewLoader;
 import io.bitsquare.gui.common.view.CachingViewLoader;
 import io.bitsquare.gui.common.view.ViewFactory;
 import io.bitsquare.gui.common.view.ViewLoader;
 import io.bitsquare.gui.common.view.guice.InjectorViewFactory;
-import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.offer.offerbook.OfferBook;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Transitions;
-import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
-import io.bitsquare.gui.util.validation.BtcValidator;
-import io.bitsquare.gui.util.validation.FiatValidator;
-import io.bitsquare.gui.util.validation.InputValidator;
-import io.bitsquare.gui.util.validation.PasswordValidator;
+import io.bitsquare.gui.util.validation.*;
 import io.bitsquare.locale.BSResources;
-
-import com.google.inject.Singleton;
-import com.google.inject.name.Names;
+import javafx.stage.Stage;
+import org.springframework.core.env.Environment;
 
 import java.util.ResourceBundle;
 
-import javafx.stage.Stage;
-
-import org.springframework.core.env.Environment;
-
-public class GuiModule extends BitsquareModule {
+public class GuiModule extends AppModule {
 
     private final Stage primaryStage;
 
@@ -66,10 +58,9 @@ public class GuiModule extends BitsquareModule {
         bind(Navigation.class).in(Singleton.class);
 
         bind(OfferBook.class).in(Singleton.class);
-        bind(OverlayManager.class).in(Singleton.class);
         bind(BSFormatter.class).in(Singleton.class);
 
-        bind(BankAccountNumberValidator.class).in(Singleton.class);
+        bind(IBANValidator.class).in(Singleton.class);
         bind(BtcValidator.class).in(Singleton.class);
         bind(FiatValidator.class).in(Singleton.class);
         bind(InputValidator.class).in(Singleton.class);
@@ -77,7 +68,6 @@ public class GuiModule extends BitsquareModule {
         bind(Transitions.class).in(Singleton.class);
 
         bind(Stage.class).toInstance(primaryStage);
-        Popups.primaryStage = primaryStage;
 
         bindConstant().annotatedWith(Names.named(MainView.TITLE_KEY)).to(env.getRequiredProperty(BitsquareEnvironment.APP_NAME_KEY));
     }

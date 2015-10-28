@@ -17,39 +17,41 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
+import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.components.Popups;
-import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.gui.popups.OpenEmergencyTicketPopup;
+import io.bitsquare.gui.popups.TradeDetailsPopup;
 import io.bitsquare.trade.Trade;
-
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.Fiat;
-
-import java.util.Date;
-
-import javax.inject.Inject;
-
-import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
+
+import javax.inject.Inject;
+import java.util.Date;
 
 @FxmlView
 public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTradesViewModel> {
 
-    @FXML AnchorPane tradeStepPane;
+    private final TradeDetailsPopup tradeDetailsPopup;
     @FXML TableView<PendingTradesListItem> table;
     @FXML TableColumn<PendingTradesListItem, Fiat> priceColumn;
     @FXML TableColumn<PendingTradesListItem, Fiat> tradeVolumeColumn;
     @FXML TableColumn<PendingTradesListItem, PendingTradesListItem> directionColumn;
-    @FXML TableColumn<PendingTradesListItem, String> idColumn;
+    @FXML
+    TableColumn<PendingTradesListItem, PendingTradesListItem> idColumn;
     @FXML TableColumn<PendingTradesListItem, Date> dateColumn;
     @FXML TableColumn<PendingTradesListItem, Coin> tradeAmountColumn;
 
@@ -65,8 +67,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradesView(PendingTradesViewModel model) {
+    public PendingTradesView(PendingTradesViewModel model, TradeDetailsPopup tradeDetailsPopup) {
         super(model);
+        this.tradeDetailsPopup = tradeDetailsPopup;
     }
 
     @Override
@@ -80,63 +83,67 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPlaceholder(new Label("No pending trades available"));
-
+        table.setMinHeight(100);
         selectedItemChangeListener = (ov, oldValue, newValue) -> {
             model.onSelectTrade(newValue);
             log.debug("selectedItemChangeListener {} ", newValue);
-            setNewSubView(newValue != null && newValue.getTrade() != null);
+            if (newValue != null)
+                setNewSubView(newValue.getTrade());
         };
 
         appFocusChangeListener = (observable, oldValue, newValue) -> {
             if (newValue && model.getSelectedItem() != null) {
                 // Focus selectedItem from model
                 int index = table.getItems().indexOf(model.getSelectedItem());
-                Platform.runLater(() -> {
+                UserThread.execute(() -> {
                     table.requestFocus();
-                    Platform.runLater(() -> table.getFocusModel().focus(index));
+                    UserThread.execute(() -> table.getFocusModel().focus(index));
                 });
             }
         };
 
         currentTradeChangeListener = (observable, oldValue, newValue) -> {
             log.debug("currentTradeChangeListener {} ", newValue);
-            setNewSubView(newValue != null);
+            setNewSubView(newValue);
         };
     }
 
     @Override
-    public void doActivate() {
+    protected void activate() {
         appFocusProperty = root.getScene().getWindow().focusedProperty();
         appFocusProperty.addListener(appFocusChangeListener);
         model.currentTrade().addListener(currentTradeChangeListener);
+        setNewSubView(model.currentTrade().get());
         table.setItems(model.getList());
         table.getSelectionModel().selectedItemProperty().addListener(selectedItemChangeListener);
         PendingTradesListItem selectedItem = model.getSelectedItem();
         if (selectedItem != null) {
-            // addSubView();
-
             // Select and focus selectedItem from model
             int index = table.getItems().indexOf(selectedItem);
-            Platform.runLater(() -> {
+            UserThread.execute(() -> {
                 table.getSelectionModel().select(index);
                 table.requestFocus();
-                Platform.runLater(() -> table.getFocusModel().focus(index));
+                UserThread.execute(() -> table.getFocusModel().focus(index));
             });
         }
-        else {
-            //removeSubView();
-        }
 
-        /*if (currentSubView != null)
-            currentSubView.activate();*/
+        // we add hidden emergency shortcut to open support ticket
+        root.getScene().setOnKeyReleased(keyEvent -> {
+            if (new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
+                new OpenEmergencyTicketPopup().onOpenTicket(() -> model.dataModel.onOpenSupportTicket()).show();
+        });
     }
 
     @Override
-    public void doDeactivate() {
+    protected void deactivate() {
         table.getSelectionModel().selectedItemProperty().removeListener(selectedItemChangeListener);
-        model.currentTrade().removeListener(currentTradeChangeListener);
-        appFocusProperty.removeListener(appFocusChangeListener);
-        appFocusProperty = null;
+        if (model.currentTrade() != null)
+            model.currentTrade().removeListener(currentTradeChangeListener);
+
+        if (appFocusProperty != null) {
+            appFocusProperty.removeListener(appFocusChangeListener);
+            appFocusProperty = null;
+        }
 
         if (currentSubView != null)
             currentSubView.deactivate();
@@ -147,18 +154,13 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     // Subviews
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setNewSubView(boolean isTradeSelected) {
-        log.debug("setNewSubView {}", isTradeSelected);
+    private void setNewSubView(Trade trade) {
         if (currentSubView != null) {
             currentSubView.deactivate();
-
-            if (!isTradeSelected) {
-                tradeStepPane.getChildren().remove(currentSubView);
-                currentSubView = null;
-            }
+            root.getChildren().remove(currentSubView);
         }
 
-        if (isTradeSelected) {
+        if (trade != null) {
             if (model.isOfferer()) {
                 if (model.isBuyOffer())
                     currentSubView = new BuyerSubView(model);
@@ -171,24 +173,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 else
                     currentSubView = new BuyerSubView(model);
             }
+            currentSubView.setMinHeight(420);
+            VBox.setVgrow(currentSubView, Priority.ALWAYS);
+            root.getChildren().add(1, currentSubView);
 
             currentSubView.activate();
-            AnchorPane.setTopAnchor(currentSubView, 0d);
-            AnchorPane.setRightAnchor(currentSubView, 0d);
-            AnchorPane.setBottomAnchor(currentSubView, 0d);
-            AnchorPane.setLeftAnchor(currentSubView, 0d);
-            tradeStepPane.getChildren().setAll(currentSubView);
         }
-    }
-
-    private void openOfferDetails(String id) {
-        // TODO Open popup with details view
-        log.debug("Trade details " + id);
-        GUIUtil.copyToClipboard(id);
-        Popups.openWarningPopup("Under construction",
-                "The trader ID was copied to the clipboard. " +
-                        "Use that to identify your trading peer in the IRC chat room \n\n" +
-                        "Later this will open a details popup but that is not implemented yet.");
     }
 
 
@@ -197,24 +187,24 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setTradeIdColumnCellFactory() {
+        idColumn.setCellValueFactory((pendingTradesListItem) -> new ReadOnlyObjectWrapper<>(pendingTradesListItem.getValue()));
         idColumn.setCellFactory(
-                new Callback<TableColumn<PendingTradesListItem, String>, TableCell<PendingTradesListItem, String>>() {
+                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem, PendingTradesListItem>>() {
 
                     @Override
-                    public TableCell<PendingTradesListItem, String> call(TableColumn<PendingTradesListItem,
-                            String> column) {
-                        return new TableCell<PendingTradesListItem, String>() {
+                    public TableCell<PendingTradesListItem, PendingTradesListItem> call(TableColumn<PendingTradesListItem,
+                            PendingTradesListItem> column) {
+                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
                             private Hyperlink hyperlink;
 
                             @Override
-                            public void updateItem(final String id, boolean empty) {
-                                super.updateItem(id, empty);
+                            public void updateItem(final PendingTradesListItem item, boolean empty) {
+                                super.updateItem(item, empty);
 
-                                if (id != null && !empty) {
-                                    hyperlink = new Hyperlink(model.formatTradeId(id));
-                                    hyperlink.setId("id-link");
-                                    Tooltip.install(hyperlink, new Tooltip(model.formatTradeId(id)));
-                                    hyperlink.setOnAction(event -> openOfferDetails(id));
+                                if (item != null && !empty) {
+                                    hyperlink = new Hyperlink(model.formatTradeId(item.getId()));
+                                    Tooltip.install(hyperlink, new Tooltip(model.formatTradeId(item.getId())));
+                                    hyperlink.setOnAction(event -> tradeDetailsPopup.show(item.getTrade()));
                                     setGraphic(hyperlink);
                                 }
                                 else {

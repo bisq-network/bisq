@@ -16,8 +16,7 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.StackPane?>
 <StackPane fx:id="root" fx:controller="io.bitsquare.gui.main.MainView"
-           prefHeight="750" prefWidth="1000" stylesheets="/io/bitsquare/gui/bitsquare.css"
            xmlns:fx="http://javafx.com/fxml">
 </StackPane>

@@ -17,38 +17,42 @@
 
 package io.bitsquare.locale;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import io.bitsquare.user.Preferences;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class LanguageUtil {
+    private static final Logger log = LoggerFactory.getLogger(LanguageUtil.class);
 
-    public static List<String> getAllLanguageLocaleCodes() {
+    public static List<String> getAllLanguageCodes() {
         List<Locale> allLocales = Arrays.asList(Locale.getAvailableLocales());
-        final Set<String> allLocaleCodesAsSet =
-                allLocales.stream().filter(locale -> !"".equals(locale.getLanguage())).map(locale ->
-                        new Locale(locale.getLanguage(), "").getISO3Language()).collect(Collectors.toSet());
+        final Set<String> allLocaleCodesAsSet = allLocales.stream()
+                .filter(locale -> !"".equals(locale.getLanguage()) && !"".equals(locale.getDisplayLanguage()))
+                .map(locale -> new Locale(locale.getLanguage(), "").getLanguage())
+                .collect(Collectors.toSet());
         List<String> allLocaleCodes = new ArrayList<>();
         allLocaleCodes.addAll(allLocaleCodesAsSet);
-        allLocaleCodes.sort(String::compareTo);
+        allLocaleCodes.sort((o1, o2) -> getDisplayName(o1).compareTo(getDisplayName(o2)));
         return allLocaleCodes;
     }
 
+    public static String getDefaultLanguage() {
+        // might be set later in pref or config, so not use Preferences.getDefaultLocale() anywhere in the code
+        return Preferences.getDefaultLocale().getLanguage();
+    }
+
     public static String getDefaultLanguageLocaleAsCode() {
-        if (Locale.getDefault() != null)
-            return new Locale(Locale.getDefault().getLanguage(), "").getISO3Language();
-        else
-            return getEnglishLanguageLocaleCode();
+        return new Locale(LanguageUtil.getDefaultLanguage(), "").getLanguage();
     }
 
     public static String getEnglishLanguageLocaleCode() {
-        return new Locale(Locale.ENGLISH.getLanguage(), "").getISO3Language();
+        return new Locale(Locale.ENGLISH.getLanguage(), "").getLanguage();
     }
 
     public static String getDisplayName(String code) {
-        return new Locale(code).getDisplayName();
+        return new Locale(code.toUpperCase()).getDisplayName(Preferences.getDefaultLocale());
     }
 }

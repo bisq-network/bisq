@@ -17,79 +17,70 @@
 
 package io.bitsquare.gui.main.offer.createoffer;
 
+import com.google.inject.Inject;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.gui.common.model.Activatable;
-import io.bitsquare.gui.common.model.DataModel;
+import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.gui.common.model.ActivatableDataModel;
+import io.bitsquare.gui.popups.WalletPasswordPopup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
+import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.P2PService;
+import io.bitsquare.payment.PaymentAccount;
+import io.bitsquare.payment.SepaAccount;
+import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOfferManager;
-import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
-
+import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.SetChangeListener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
-
-import com.google.inject.Inject;
-
-import java.util.UUID;
-
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-
 import org.jetbrains.annotations.NotNull;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Domain for that UI element.
  * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
  * That model is just responsible for the domain specific parts displayed needed in that UI element.
  */
-class CreateOfferDataModel implements Activatable, DataModel {
-    private static final Logger log = LoggerFactory.getLogger(CreateOfferDataModel.class);
-
-
+class CreateOfferDataModel extends ActivatableDataModel {
     private final OpenOfferManager openOfferManager;
     private final WalletService walletService;
-    private final AccountSettings accountSettings;
+    private final TradeWalletService tradeWalletService;
     private final Preferences preferences;
     private final User user;
+    private final Address address;
+    private final KeyRing keyRing;
+    private final WalletPasswordPopup walletPasswordPopup;
     private final BSFormatter formatter;
     private final String offerId;
     private final AddressEntry addressEntry;
-    final ObjectProperty<Coin> offerFeeAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> networkFeeAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> securityDepositAsCoin = new SimpleObjectProperty<>();
+    private final Coin offerFeeAsCoin;
+    private final Coin networkFeeAsCoin;
+    private final Coin securityDepositAsCoin;
     private final BalanceListener balanceListener;
-    private final ChangeListener<FiatAccount> currentFiatAccountListener;
+    private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
     private Offer.Direction direction;
 
-    final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
-    final StringProperty transactionId = new SimpleStringProperty();
-    final StringProperty bankAccountCurrency = new SimpleStringProperty();
-    final StringProperty bankAccountCounty = new SimpleStringProperty();
-    final StringProperty bankAccountType = new SimpleStringProperty();
-    final StringProperty fiatCode = new SimpleStringProperty();
+    private TradeCurrency tradeCurrency;
+
+    final StringProperty tradeCurrencyCode = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
 
-    final BooleanProperty requestPlaceOfferSuccess = new SimpleBooleanProperty();
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
     final BooleanProperty useMBTC = new SimpleBooleanProperty();
 
@@ -99,9 +90,9 @@ class CreateOfferDataModel implements Activatable, DataModel {
     final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
 
-    final ObservableList<Country> acceptedCountries = FXCollections.observableArrayList();
-    final ObservableList<String> acceptedLanguageCodes = FXCollections.observableArrayList();
-    final ObservableList<Arbitrator> acceptedArbitrators = FXCollections.observableArrayList();
+    final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
+
+    private PaymentAccount paymentAccount;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -110,23 +101,24 @@ class CreateOfferDataModel implements Activatable, DataModel {
 
 
     @Inject
-    CreateOfferDataModel(OpenOfferManager openOfferManager, WalletService walletService,
-                         AccountSettings accountSettings, Preferences preferences, User user, BSFormatter formatter) {
+    CreateOfferDataModel(OpenOfferManager openOfferManager, WalletService walletService, TradeWalletService tradeWalletService,
+                         Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,
+                         WalletPasswordPopup walletPasswordPopup, BSFormatter formatter) {
         this.openOfferManager = openOfferManager;
         this.walletService = walletService;
-        this.accountSettings = accountSettings;
+        this.tradeWalletService = tradeWalletService;
         this.preferences = preferences;
         this.user = user;
+        this.keyRing = keyRing;
+        this.walletPasswordPopup = walletPasswordPopup;
         this.formatter = formatter;
-        this.offerId = UUID.randomUUID().toString();
 
-        addressEntry = walletService.getAddressEntry(offerId);
-
-        offerFeeAsCoin.set(FeePolicy.CREATE_OFFER_FEE);
-        networkFeeAsCoin.set(FeePolicy.TX_FEE);
-
-        // we need to set it here already as it is used before activate
-        securityDepositAsCoin.set(accountSettings.getSecurityDeposit());
+        address = p2PService.getAddress();
+        offerId = UUID.randomUUID().toString();
+        addressEntry = walletService.getAddressEntryByOfferId(offerId);
+        offerFeeAsCoin = FeePolicy.CREATE_OFFER_FEE;
+        networkFeeAsCoin = FeePolicy.TX_FEE;
+        securityDepositAsCoin = FeePolicy.SECURITY_DEPOSIT;
 
         balanceListener = new BalanceListener(getAddressEntry().getAddress()) {
             @Override
@@ -135,32 +127,24 @@ class CreateOfferDataModel implements Activatable, DataModel {
             }
         };
 
-        currentFiatAccountListener = (observable, oldValue, newValue) -> {
-            applyBankAccount(newValue);
-        };
+        paymentAccountsChangeListener = change -> paymentAccounts.setAll(user.getPaymentAccounts());
     }
 
+
     @Override
-    public void activate() {
+    protected void activate() {
         addBindings();
         addListeners();
 
-        // might be changed after screen change
-        if (accountSettings != null) {
-            // set it here again to cover the case of an securityDeposit change after a screen change
-            securityDepositAsCoin.set(accountSettings.getSecurityDeposit());
-
-            acceptedCountries.setAll(accountSettings.getAcceptedCountries());
-            acceptedLanguageCodes.setAll(accountSettings.getAcceptedLanguageLocaleCodes());
-            acceptedArbitrators.setAll(accountSettings.getAcceptedArbitrators());
-        }
-
+        paymentAccounts.setAll(user.getPaymentAccounts());
         updateBalance(walletService.getBalanceForAddress(getAddressEntry().getAddress()));
-        applyBankAccount(user.currentFiatAccountProperty().get());
+
+        if (direction == Offer.Direction.BUY)
+            calculateTotalToPay();
     }
 
     @Override
-    public void deactivate() {
+    protected void deactivate() {
         removeBindings();
         removeListeners();
     }
@@ -175,13 +159,12 @@ class CreateOfferDataModel implements Activatable, DataModel {
 
     private void addListeners() {
         walletService.addBalanceListener(balanceListener);
-        user.currentFiatAccountProperty().addListener(currentFiatAccountListener);
-
+        user.getPaymentAccountsAsObservable().addListener(paymentAccountsChangeListener);
     }
 
     private void removeListeners() {
         walletService.removeBalanceListener(balanceListener);
-        user.currentFiatAccountProperty().removeListener(currentFiatAccountListener);
+        user.getPaymentAccountsAsObservable().removeListener(paymentAccountsChangeListener);
     }
 
 
@@ -189,8 +172,14 @@ class CreateOfferDataModel implements Activatable, DataModel {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void initWithData(Offer.Direction direction) {
+    void initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         this.direction = direction;
+        this.tradeCurrency = tradeCurrency;
+
+        tradeCurrencyCode.set(tradeCurrency.getCode());
+        PaymentAccount account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
+        if (account != null)
+            paymentAccount = account;
     }
 
 
@@ -198,23 +187,67 @@ class CreateOfferDataModel implements Activatable, DataModel {
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void onPlaceOffer() {
-        // data validation is done in the trade domain
-        openOfferManager.onPlaceOffer(offerId,
+    Offer getOffer() {
+        long fiatPrice = priceAsFiat.get() != null ? priceAsFiat.get().getValue() : 0L;
+        long amount = amountAsCoin.get() != null ? amountAsCoin.get().getValue() : 0L;
+        long minAmount = minAmountAsCoin.get() != null ? minAmountAsCoin.get().getValue() : 0L;
+
+        List<String> acceptedCountryCodes = null;
+        if (paymentAccount instanceof SepaAccount)
+            acceptedCountryCodes = ((SepaAccount) paymentAccount).getAcceptedCountryCodes();
+
+        // That is optional and set to null if not supported (AltCoins, OKPay,...)
+        Country country = paymentAccount.getCountry();
+
+        return new Offer(offerId,
+                address,
+                keyRing.getPubKeyRing(),
                 direction,
-                priceAsFiat.get(),
-                amountAsCoin.get(),
-                minAmountAsCoin.get(),
-                (transaction) -> {
-                    transactionId.set(transaction.getHashAsString());
-                    requestPlaceOfferSuccess.set(true);
-                },
-                requestPlaceOfferErrorMessage::set
+                fiatPrice,
+                amount,
+                minAmount,
+                paymentAccount.getPaymentMethod().getId(),
+                tradeCurrencyCode.get(),
+                country,
+                paymentAccount.getId(),
+                user.getAcceptedArbitratorAddresses(),
+                acceptedCountryCodes);
+    }
+
+    void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
+        if (walletService.getWallet().isEncrypted() && tradeWalletService.getAesKey() == null) {
+            walletPasswordPopup.show().onAesKey(aesKey -> {
+                tradeWalletService.setAesKey(aesKey);
+                doPlaceOffer(offer, resultHandler);
+            });
+        } else {
+            doPlaceOffer(offer, resultHandler);
+        }
+    }
+
+    private void doPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
+        openOfferManager.onPlaceOffer(offer,
+                resultHandler
         );
     }
 
     void onSecurityDepositInfoDisplayed() {
         preferences.setDisplaySecurityDepositInfo(false);
+    }
+
+
+    public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
+        if (paymentAccount != null)
+            this.paymentAccount = paymentAccount;
+    }
+
+    public void onCurrencySelected(TradeCurrency tradeCurrency) {
+        if (tradeCurrency != null) {
+            this.tradeCurrency = tradeCurrency;
+            tradeCurrencyCode.set(tradeCurrency.getCode());
+
+            paymentAccount.setSelectedTradeCurrency(tradeCurrency);
+        }
     }
 
 
@@ -234,10 +267,6 @@ class CreateOfferDataModel implements Activatable, DataModel {
         return direction;
     }
 
-    WalletService getWalletService() {
-        return walletService;
-    }
-
     String getOfferId() {
         return offerId;
     }
@@ -250,6 +279,17 @@ class CreateOfferDataModel implements Activatable, DataModel {
         return preferences.getDisplaySecurityDepositInfo();
     }
 
+    public TradeCurrency getTradeCurrency() {
+        return tradeCurrency;
+    }
+
+    public PaymentAccount getPaymentAccount() {
+        return paymentAccount;
+    }
+
+    boolean hasAcceptedArbitrators() {
+        return user.getAcceptedArbitrators().size() > 0;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
@@ -277,11 +317,11 @@ class CreateOfferDataModel implements Activatable, DataModel {
     }
 
     void calculateTotalToPay() {
-        if (securityDepositAsCoin.get() != null) {
+        if (securityDepositAsCoin != null) {
             if (direction == Offer.Direction.BUY)
-                totalToPayAsCoin.set(offerFeeAsCoin.get().add(networkFeeAsCoin.get()).add(securityDepositAsCoin.get()));
+                totalToPayAsCoin.set(offerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin));
             else
-                totalToPayAsCoin.set(offerFeeAsCoin.get().add(networkFeeAsCoin.get()).add(securityDepositAsCoin.get()).add(amountAsCoin.get()));
+                totalToPayAsCoin.set(offerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin).add(amountAsCoin.get()));
         }
     }
 
@@ -289,13 +329,27 @@ class CreateOfferDataModel implements Activatable, DataModel {
         isWalletFunded.set(totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0);
     }
 
-    private void applyBankAccount(FiatAccount fiatAccount) {
-        if (fiatAccount != null) {
-            bankAccountType.set(fiatAccount.type.toString());
-            bankAccountCurrency.set(fiatAccount.currencyCode);
-            bankAccountCounty.set(fiatAccount.country.name);
+    public Coin getOfferFeeAsCoin() {
+        return offerFeeAsCoin;
+    }
 
-            fiatCode.set(fiatAccount.currencyCode);
-        }
+    public Coin getNetworkFeeAsCoin() {
+        return networkFeeAsCoin;
+    }
+
+    public Coin getSecurityDepositAsCoin() {
+        return securityDepositAsCoin;
+    }
+
+    public List<Arbitrator> getArbitrators() {
+        return user.getAcceptedArbitrators();
+    }
+
+    public void setShowPlaceOfferConfirmation(boolean selected) {
+        preferences.setShowPlaceOfferConfirmation(selected);
+    }
+
+    public boolean getShowPlaceOfferConfirmation() {
+        return preferences.getShowPlaceOfferConfirmation();
     }
 }

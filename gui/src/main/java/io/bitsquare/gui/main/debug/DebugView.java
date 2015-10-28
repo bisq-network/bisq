@@ -30,53 +30,32 @@ import io.bitsquare.trade.protocol.placeoffer.tasks.BroadcastCreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.trade.protocol.placeoffer.tasks.ValidateOffer;
 import io.bitsquare.trade.protocol.trade.BuyerAsOffererProtocol;
+import io.bitsquare.trade.protocol.trade.BuyerAsTakerProtocol;
+import io.bitsquare.trade.protocol.trade.SellerAsOffererProtocol;
 import io.bitsquare.trade.protocol.trade.SellerAsTakerProtocol;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.CreateDepositTxInputs;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.ProcessDepositTxInputsRequest;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.ProcessFinalizePayoutTxRequest;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.ProcessPublishDepositTxRequest;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.SendDepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.SendFiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.SendPayDepositRequest;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.SendPayoutTxFinalizedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.SignAndFinalizePayoutTx;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.SignAndPublishDepositTx;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.VerifyAndSignContract;
-import io.bitsquare.trade.protocol.trade.tasks.offerer.VerifyTakeOfferFeePayment;
-import io.bitsquare.trade.protocol.trade.tasks.offerer.VerifyTakerAccount;
-import io.bitsquare.trade.protocol.trade.tasks.seller.CommitDepositTx;
-import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignContract;
-import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignDepositTx;
-import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessDepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessFiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessPayDepositRequest;
-import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessPayoutTxFinalizedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SendDepositTxInputsRequest;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SendFinalizePayoutTxRequest;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SendPublishDepositTxRequest;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SignPayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.*;
+import io.bitsquare.trade.protocol.trade.tasks.offerer.*;
+import io.bitsquare.trade.protocol.trade.tasks.seller.*;
 import io.bitsquare.trade.protocol.trade.tasks.shared.CommitPayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.shared.InitWaitPeriodForOpenDispute;
 import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
-import io.bitsquare.trade.protocol.trade.tasks.taker.BroadcastTakeOfferFeeTx;
-import io.bitsquare.trade.protocol.trade.tasks.taker.CreateTakeOfferFeeTx;
-import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOfferFeePayment;
-import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOffererAccount;
-
-import java.util.Arrays;
-
-import javax.inject.Inject;
-
+import io.bitsquare.trade.protocol.trade.tasks.shared.SignPayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.taker.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.ComboBox;
 import javafx.util.StringConverter;
+
+import javax.inject.Inject;
+import java.util.Arrays;
 
 @FxmlView
 public class DebugView extends InitializableView {
 
 
-    @FXML ComboBox<Class> taskComboBox;
+    @FXML
+    ComboBox<Class> taskComboBox1, taskComboBox2;
 
     @Inject
     public DebugView() {
@@ -84,7 +63,7 @@ public class DebugView extends InitializableView {
 
     @Override
     public void initialize() {
-        final ObservableList<Class> items = FXCollections.observableArrayList(Arrays.asList(
+        final ObservableList<Class> items1 = FXCollections.observableArrayList(Arrays.asList(
                         /*---- Protocol ----*/
                         OfferAvailabilityProtocol.class,
                         GetPeerAddress.class,
@@ -104,15 +83,18 @@ public class DebugView extends InitializableView {
                         
                         /*---- Protocol ----*/
                         BuyerAsOffererProtocol.class,
-                        ProcessDepositTxInputsRequest.class,
-                        CreateDepositTxInputs.class,
-                        SendPayDepositRequest.class,
-
-                        ProcessPublishDepositTxRequest.class,
+                        ProcessPayDepositRequest.class,
+                        VerifyArbitrationSelection.class,
                         VerifyTakerAccount.class,
-                        VerifyAndSignContract.class,
-                        SignAndPublishDepositTx.class,
-                        SendDepositTxPublishedMessage.class,
+                        CreateAndSignContract.class,
+                        CreateAndSignDepositTxAsBuyer.class,
+                        LoadTakeOfferFeeTx.class,
+                        InitWaitPeriodForOpenDispute.class,
+                        SetupDepositBalanceListener.class,
+                        SendPublishDepositTxRequest.class,
+
+                        ProcessDepositTxPublishedMessage.class,
+                        AddDepositTxToWallet.class,
 
                         VerifyTakeOfferFeePayment.class,
                         SendFiatTransferStartedMessage.class,
@@ -127,18 +109,17 @@ public class DebugView extends InitializableView {
 
                         /*---- Protocol ----*/
                         SellerAsTakerProtocol.class,
+                        SelectArbitrator.class,
                         CreateTakeOfferFeeTx.class,
                         BroadcastTakeOfferFeeTx.class,
-                        SendDepositTxInputsRequest.class,
+                        CreateDepositTxInputsAsSeller.class,
+                        SendPayDepositRequest.class,
 
-                        ProcessPayDepositRequest.class,
+                        ProcessPublishDepositTxRequest.class,
                         VerifyOffererAccount.class,
-                        CreateAndSignContract.class,
-                        CreateAndSignDepositTx.class,
-                        SendPublishDepositTxRequest.class,
-
-                        ProcessDepositTxPublishedMessage.class,
-                        CommitDepositTx.class,
+                        VerifyAndSignContract.class,
+                        SignAndPublishDepositTxAsSeller.class,
+                        SendDepositTxPublishedMessage.class,
 
                         ProcessFiatTransferStartedMessage.class,
 
@@ -148,14 +129,87 @@ public class DebugView extends InitializableView {
 
                         ProcessPayoutTxFinalizedMessage.class,
                         CommitPayoutTx.class,
-                        SetupPayoutTxLockTimeReachedListener.class
+                        SetupPayoutTxLockTimeReachedListener.class,
+                        Boolean.class /* used as seperator*/
+                )
+        );
+        final ObservableList<Class> items2 = FXCollections.observableArrayList(Arrays.asList(
+                        /*---- Protocol ----*/
+                        BuyerAsTakerProtocol.class,
+                        SelectArbitrator.class,
+                        CreateTakeOfferFeeTx.class,
+                        BroadcastTakeOfferFeeTx.class,
+                        CreateDepositTxInputsAsSeller.class,
+                        SendPayDepositRequest.class,
+
+                        ProcessPublishDepositTxRequest.class,
+                        VerifyOffererAccount.class,
+                        VerifyAndSignContract.class,
+                        SignAndPublishDepositTxAsSeller.class,
+                        SendDepositTxPublishedMessage.class,
+
+                        VerifyOfferFeePayment.class,
+                        SignPayoutTx.class,
+                        SendFiatTransferStartedMessage.class,
+
+                        ProcessFinalizePayoutTxRequest.class,
+                        SignAndFinalizePayoutTx.class,
+                        CommitPayoutTx.class,
+                        SendPayoutTxFinalizedMessage.class,
+                        SetupPayoutTxLockTimeReachedListener.class,
+                        Boolean.class, /* used as seperator*/
+                        
+                        
+                         /*---- Protocol ----*/
+                        SellerAsOffererProtocol.class,
+                        ProcessPayDepositRequest.class,
+                        VerifyArbitrationSelection.class,
+                        VerifyTakerAccount.class,
+                        InitWaitPeriodForOpenDispute.class,
+                        CreateAndSignContract.class,
+                        CreateAndSignDepositTxAsBuyer.class,
+                        SetupDepositBalanceListener.class,
+                        SendPublishDepositTxRequest.class,
+
+                        ProcessDepositTxPublishedMessage.class,
+                        AddDepositTxToWallet.class,
+
+                        ProcessFiatTransferStartedMessage.class,
+
+                        VerifyTakeOfferFeePayment.class,
+                        SignPayoutTx.class,
+                        SendFinalizePayoutTxRequest.class,
+
+                        ProcessPayoutTxFinalizedMessage.class,
+                        CommitPayoutTx.class,
+                        SetupPayoutTxLockTimeReachedListener.class,
+                        Boolean.class /* used as seperator*/
                 )
         );
 
+        taskComboBox1.setVisibleRowCount(items1.size());
+        taskComboBox1.setItems(items1);
+        taskComboBox1.setConverter(new StringConverter<Class>() {
+            @Override
+            public String toString(Class item) {
+                if (item.getSimpleName().contains("Protocol"))
+                    return "--- " + item.getSimpleName() + " ---";
+                else if (item.getSimpleName().contains("Boolean"))
+                    return "";
+                else
+                    return item.getSimpleName();
+            }
 
-        taskComboBox.setVisibleRowCount(items.size());
-        taskComboBox.setItems(items);
-        taskComboBox.setConverter(new StringConverter<Class>() {
+            @Override
+            public Class fromString(String s) {
+                return null;
+            }
+        });
+
+
+        taskComboBox2.setVisibleRowCount(items2.size());
+        taskComboBox2.setItems(items2);
+        taskComboBox2.setConverter(new StringConverter<Class>() {
             @Override
             public String toString(Class item) {
                 if (item.getSimpleName().contains("Protocol"))
@@ -174,11 +228,21 @@ public class DebugView extends InitializableView {
     }
 
     @FXML
-    void onSelectTask() {
-        Class item = taskComboBox.getSelectionModel().getSelectedItem();
+    void onSelectTask1() {
+        Class item = taskComboBox1.getSelectionModel().getSelectedItem();
         if (!item.getSimpleName().contains("Protocol")) {
             Task.taskToIntercept = item;
         }
     }
+
+    @FXML
+    void onSelectTask2() {
+        Class item = taskComboBox2.getSelectionModel().getSelectedItem();
+        if (!item.getSimpleName().contains("Protocol")) {
+            Task.taskToIntercept = item;
+        }
+    }
+
+
 }
 

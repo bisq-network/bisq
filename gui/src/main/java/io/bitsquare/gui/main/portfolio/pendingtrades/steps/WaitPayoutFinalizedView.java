@@ -20,17 +20,10 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.util.Layout;
 
-import javafx.scene.control.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static io.bitsquare.gui.util.ComponentBuilder.*;
+import static io.bitsquare.gui.util.FormBuilder.addMultilineLabel;
+import static io.bitsquare.gui.util.FormBuilder.addTitledGroupBg;
 
 public class WaitPayoutFinalizedView extends TradeStepDetailsView {
-    private static final Logger log = LoggerFactory.getLogger(WaitPayoutFinalizedView.class);
-
-    private Label infoLabel;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -41,13 +34,13 @@ public class WaitPayoutFinalizedView extends TradeStepDetailsView {
     }
 
     @Override
-    public void activate() {
-        super.activate();
+    public void doActivate() {
+        super.doActivate();
     }
 
     @Override
-    public void deactivate() {
-        super.deactivate();
+    public void doDeactivate() {
+        super.doDeactivate();
     }
 
     public void setInfoLabelText(String text) {
@@ -55,14 +48,36 @@ public class WaitPayoutFinalizedView extends TradeStepDetailsView {
             infoLabel.setText(text);
     }
 
+    @Override
+    protected void displayRequestCheckPayment() {
+        // we cannot do anything here, beside restart in case of software bugs
+    }
+
+    @Override
+    protected void displayOpenForDisputeForm() {
+        infoLabel.setStyle(" -fx-text-fill: -bs-error-red;");
+        infoLabel.setText("The trading peer has not finalized the payout transaction!\n" +
+                "The max. period for the trade has elapsed (" +
+                model.getDateFromBlocks(openDisputeTimeInBlocks) + ")." +
+                "\nPlease contact now the arbitrator for opening a dispute.");
+
+        addOpenDisputeButton();
+    }
+
+    @Override
+    protected void disputeInProgress() {
+        super.disputeInProgress();
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Build view
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     protected void buildGridEntries() {
-        getAndAddTitledGroupBg(gridPane, gridRow, 1, "Information");
-        infoLabel = getAndAddInfoLabel(gridPane, gridRow++, Layout.FIRST_ROW_DISTANCE);
+        infoTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, "Information");
+        infoLabel = addMultilineLabel(gridPane, gridRow, Layout.FIRST_ROW_DISTANCE);
     }
 }
 

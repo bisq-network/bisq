@@ -17,37 +17,69 @@
 
 package io.bitsquare.trade.offer;
 
-import io.bitsquare.common.handlers.FaultHandler;
+import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.p2p.DHTService;
+import io.bitsquare.p2p.P2PService;
+import io.bitsquare.p2p.storage.HashSetChangedListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import javafx.beans.property.ReadOnlyLongProperty;
+/**
+ * Handles storage and retrieval of offers.
+ * Uses an invalidation flag to only request the full offer map in case there was a change (anyone has added or removed an offer).
+ */
+public class OfferBookService {
+    private static final Logger log = LoggerFactory.getLogger(OfferBookService.class);
 
-public interface OfferBookService extends DHTService {
+    private P2PService p2PService;
 
-    void getOffers(String fiatCode);
 
-    void addOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler);
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void removeOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler);
+    @Inject
+    public OfferBookService(P2PService p2PService) {
+        this.p2PService = p2PService;
+    }
 
-    void removeOfferAtShutDown(Offer offer);
+    public void addHashSetChangedListener(HashSetChangedListener hashSetChangedListener) {
+        p2PService.addHashSetChangedListener(hashSetChangedListener);
+    }
 
-    void addListener(Listener listener);
+    public void addOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        boolean result = p2PService.addData(offer);
+        if (result) {
+            log.trace("Add offer to network was successful. Offer = " + offer);
+            resultHandler.handleResult();
+        } else {
+            errorMessageHandler.handleErrorMessage("Add offer failed");
+        }
+    }
 
-    void removeListener(Listener listener);
+    public void removeOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        if (p2PService.removeData(offer)) {
+            log.trace("Remove offer from network was successful. Offer = " + offer);
+            if (resultHandler != null) resultHandler.handleResult();
+        } else {
+            if (errorMessageHandler != null) errorMessageHandler.handleErrorMessage("Remove offer failed");
+        }
+    }
 
-    ReadOnlyLongProperty invalidationTimestampProperty();
+    public List<Offer> getOffers() {
+        final List<Offer> offers = p2PService.getDataMap().values().stream()
+                .filter(e -> e.expirablePayload instanceof Offer)
+                .map(e -> (Offer) e.expirablePayload)
+                .collect(Collectors.toList());
+        return offers;
+    }
 
-    void requestInvalidationTimeStampFromDHT(String fiatCode);
-
-    interface Listener {
-        void onOfferAdded(Offer offer);
-
-        void onOffersReceived(List<Offer> offers);
-
-        void onOfferRemoved(Offer offer);
+    public void removeOfferAtShutDown(Offer offer) {
+        log.debug("removeOfferAtShutDown " + offer);
+        removeOffer(offer, null, null);
     }
 }

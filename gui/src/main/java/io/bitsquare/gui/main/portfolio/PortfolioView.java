@@ -19,11 +19,7 @@ package io.bitsquare.gui.main.portfolio;
 
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.Activatable;
-import io.bitsquare.gui.common.view.ActivatableViewAndModel;
-import io.bitsquare.gui.common.view.CachingViewLoader;
-import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.common.view.View;
-import io.bitsquare.gui.common.view.ViewLoader;
+import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.portfolio.closedtrades.ClosedTradesView;
 import io.bitsquare.gui.main.portfolio.failedtrades.FailedTradesView;
@@ -31,26 +27,26 @@ import io.bitsquare.gui.main.portfolio.openoffer.OpenOffersView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.failed.FailedTradesManager;
-
-import javax.inject.Inject;
-
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+
+import javax.inject.Inject;
 
 @FxmlView
 public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @FXML Tab openOffersTab, pendingTradesTab, closedTradesTab;
-    private Tab failedTradesTab = new Tab("Failed");
+    private final Tab failedTradesTab = new Tab("Failed");
     private Tab currentTab;
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private FailedTradesManager failedTradesManager;
+    private final FailedTradesManager failedTradesManager;
 
     @Inject
     public PortfolioView(CachingViewLoader viewLoader, Navigation navigation, FailedTradesManager failedTradesManager) {
@@ -62,13 +58,11 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
     @Override
     public void initialize() {
         navigationListener = viewPath -> {
-            log.debug("navigationListener");
             if (viewPath.size() == 3 && viewPath.indexOf(PortfolioView.class) == 1)
                 loadView(viewPath.tip());
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-            log.debug("tabChangeListener");
             if (newValue == openOffersTab)
                 navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class);
             else if (newValue == pendingTradesTab)
@@ -81,17 +75,14 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
     }
 
     @Override
-    public void doActivate() {
+    protected void activate() {
         failedTradesManager.getFailedTrades().addListener((ListChangeListener<Trade>) c -> {
             if (failedTradesManager.getFailedTrades().size() > 0 && root.getTabs().size() == 3)
                 root.getTabs().add(failedTradesTab);
-            else
-                root.getTabs().remove(failedTradesTab);
         });
         if (failedTradesManager.getFailedTrades().size() > 0 && root.getTabs().size() == 3)
             root.getTabs().add(failedTradesTab);
-        else
-            root.getTabs().remove(failedTradesTab);
+
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
 
@@ -106,7 +97,7 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
     }
 
     @Override
-    public void doDeactivate() {
+    protected void deactivate() {
         root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
         navigation.removeListener(navigationListener);
         currentTab = null;

@@ -18,48 +18,59 @@
 package io.bitsquare.trade.protocol.trade.messages;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.fiat.FiatAccount;
-
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionOutput;
-
-import java.io.Serializable;
-
-import java.util.List;
+import io.bitsquare.btc.data.RawInput;
+import io.bitsquare.common.util.Utilities;
+import io.bitsquare.payment.PaymentAccountContractData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.concurrent.Immutable;
+import java.util.List;
 
 @Immutable
-public class PublishDepositTxRequest extends TradeMessage implements Serializable {
+public class PublishDepositTxRequest extends TradeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
-    public final FiatAccount sellerFiatAccount;
-    public final String sellerAccountId;
-    public final String sellerContractAsJson;
-    public final String sellerContractSignature;
-    public final String sellerPayoutAddressString;
-    public final Transaction sellersPreparedDepositTx;
-    public final List<TransactionOutput> sellerConnectedOutputsForAllInputs;
-    public final byte[] sellerTradeWalletPubKey;
+    private static final Logger log = LoggerFactory.getLogger(PublishDepositTxRequest.class);
+
+    public final PaymentAccountContractData offererPaymentAccountContractData;
+    public final String offererAccountId;
+    public final String offererContractAsJson;
+    public final String offererContractSignature;
+    public final String offererPayoutAddressString;
+    public final byte[] preparedDepositTx;
+    public final List<RawInput> offererInputs;
+    public final int openDisputeTimeAsBlockHeight;
+    public final int checkPaymentTimeAsBlockHeight;
+    public final byte[] offererTradeWalletPubKey;
 
     public PublishDepositTxRequest(String tradeId,
-                                   FiatAccount sellerFiatAccount,
-                                   String sellerAccountId,
-                                   byte[] sellerTradeWalletPubKey,
-                                   String sellerContractAsJson,
-                                   String sellerContractSignature,
-                                   String sellerPayoutAddressString,
-                                   Transaction sellersPreparedDepositTx,
-                                   List<TransactionOutput> sellerConnectedOutputsForAllInputs) {
+                                   PaymentAccountContractData offererPaymentAccountContractData,
+                                   String offererAccountId,
+                                   byte[] offererTradeWalletPubKey,
+                                   String offererContractAsJson,
+                                   String offererContractSignature,
+                                   String offererPayoutAddressString,
+                                   byte[] preparedDepositTx,
+                                   List<RawInput> offererInputs,
+                                   int openDisputeTimeAsBlockHeight,
+                                   int checkPaymentTimeAsBlockHeight) {
         super(tradeId);
-        this.sellerFiatAccount = sellerFiatAccount;
-        this.sellerAccountId = sellerAccountId;
-        this.sellerTradeWalletPubKey = sellerTradeWalletPubKey;
-        this.sellerContractAsJson = sellerContractAsJson;
-        this.sellerContractSignature = sellerContractSignature;
-        this.sellerPayoutAddressString = sellerPayoutAddressString;
-        this.sellersPreparedDepositTx = sellersPreparedDepositTx;
-        this.sellerConnectedOutputsForAllInputs = sellerConnectedOutputsForAllInputs;
+        this.offererPaymentAccountContractData = offererPaymentAccountContractData;
+        this.offererAccountId = offererAccountId;
+        this.offererTradeWalletPubKey = offererTradeWalletPubKey;
+        this.offererContractAsJson = offererContractAsJson;
+        this.offererContractSignature = offererContractSignature;
+        this.offererPayoutAddressString = offererPayoutAddressString;
+        this.preparedDepositTx = preparedDepositTx;
+        this.offererInputs = offererInputs;
+        this.openDisputeTimeAsBlockHeight = openDisputeTimeAsBlockHeight;
+        this.checkPaymentTimeAsBlockHeight = checkPaymentTimeAsBlockHeight;
+
+        log.trace("offererPaymentAccount size " + Utilities.objectToByteArray(offererPaymentAccountContractData).length);
+        log.trace("offererTradeWalletPubKey size " + offererTradeWalletPubKey.length);
+        log.trace("preparedDepositTx size " + preparedDepositTx.length);
+        log.trace("offererInputs size " + Utilities.objectToByteArray(offererInputs).length);
     }
 }

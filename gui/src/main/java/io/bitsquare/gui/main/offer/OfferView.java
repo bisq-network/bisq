@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.offer;
 
+import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.View;
@@ -26,17 +27,15 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.offer.createoffer.CreateOfferView;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookView;
 import io.bitsquare.gui.main.offer.takeoffer.TakeOfferView;
+import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.offer.Offer;
-
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.Fiat;
+import javafx.collections.ListChangeListener;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.layout.AnchorPane;
 
 import java.util.List;
-
-import javafx.application.Platform;
-import javafx.collections.ListChangeListener;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
 
 public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
@@ -46,8 +45,6 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private AnchorPane createOfferPane;
     private AnchorPane takeOfferPane;
     private Navigation.Listener listener;
-    private Coin amount;
-    private Fiat price;
     private Offer offer;
 
     private final ViewLoader viewLoader;
@@ -55,6 +52,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private final Offer.Direction direction;
     private Tab createOfferTab;
     private Tab takeOfferTab;
+    private TradeCurrency tradeCurrency;
 
     protected OfferView(ViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
@@ -73,11 +71,11 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     @Override
     protected void activate() {
         // We need to remove open validation error popups
-        // Platform.runLater needed as focus-out event is called after selectedIndexProperty changed
+        // UserThread.execute needed as focus-out event is called after selectedIndexProperty changed
         // TODO Find a way to do that in the InputTextField directly, but a tab change does not trigger any event...
         TabPane tabPane = root;
         tabPane.getSelectionModel().selectedIndexProperty()
-                .addListener((observableValue, oldValue, newValue) -> Platform.runLater(InputTextField::hideErrorMessageDisplay));
+                .addListener((observableValue, oldValue, newValue) -> UserThread.execute(InputTextField::hideErrorMessageDisplay));
 
         // We want to get informed when a tab get closed
         tabPane.getTabs().addListener((ListChangeListener<Tab>) change -> {
@@ -91,6 +89,8 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             }
         });
 
+        tradeCurrency = CurrencyUtil.getDefaultFiatCurrency();
+
         navigation.addListener(listener);
         navigation.navigateTo(MainView.class, this.getClass(), OfferBookView.class);
     }
@@ -100,15 +100,11 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         navigation.removeListener(listener);
     }
 
-    public void createOffer(Coin amount, Fiat price) {
-        this.amount = amount;
-        this.price = price;
+    public void createOffer() {
         navigation.navigateTo(MainView.class, this.getClass(), CreateOfferView.class);
     }
 
-    public void takeOffer(Coin amount, Fiat price, Offer offer) {
-        this.amount = amount;
-        this.price = price;
+    public void takeOffer(Offer offer) {
         this.offer = offer;
         navigation.navigateTo(MainView.class, this.getClass(), TakeOfferView.class);
     }
@@ -128,17 +124,14 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
             OfferActionHandler offerActionHandler = new OfferActionHandler() {
                 @Override
-                public void createOffer(Coin amount, Fiat price) {
-                    OfferView.this.amount = amount;
-                    OfferView.this.price = price;
+                public void onCreateOffer(TradeCurrency tradeCurrency) {
+                    OfferView.this.tradeCurrency = tradeCurrency;
                     OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(),
                             CreateOfferView.class);
                 }
 
                 @Override
-                public void takeOffer(Coin amount, Fiat price, Offer offer) {
-                    OfferView.this.amount = amount;
-                    OfferView.this.price = price;
+                public void onTakeOffer(Offer offer) {
                     OfferView.this.offer = offer;
                     OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(),
                             TakeOfferView.class);
@@ -153,12 +146,11 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
             createOfferView = (CreateOfferView) view;
-            createOfferView.initWithData(direction, amount, price);
-            createOfferPane = ((CreateOfferView) view).getRoot();
+            createOfferView.initWithData(direction, tradeCurrency);
+            createOfferPane = createOfferView.getRoot();
             createOfferTab = new Tab("Create offer");
-            createOfferView.setCloseHandler(() -> {
-                tabPane.getTabs().remove(createOfferTab);
-            });
+            // close handler from close on create offer action
+            createOfferView.setCloseHandler(() -> tabPane.getTabs().remove(createOfferTab));
             createOfferTab.setContent(createOfferPane);
             tabPane.getTabs().add(createOfferTab);
             tabPane.getSelectionModel().select(createOfferTab);
@@ -168,12 +160,11 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
             takeOfferView = (TakeOfferView) view;
-            takeOfferView.initWithData(amount, offer);
+            takeOfferView.initWithData(offer);
             takeOfferPane = ((TakeOfferView) view).getRoot();
             takeOfferTab = new Tab("Take offer");
-            takeOfferView.setCloseHandler(() -> {
-                tabPane.getTabs().remove(takeOfferTab);
-            });
+            // close handler from close on take offer action
+            takeOfferView.setCloseHandler(() -> tabPane.getTabs().remove(takeOfferTab));
             takeOfferTab.setContent(takeOfferPane);
             tabPane.getTabs().add(takeOfferTab);
             tabPane.getSelectionModel().select(takeOfferTab);
@@ -182,7 +173,10 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
 
     private void onCreateOfferViewRemoved() {
-        createOfferView = null;
+        if (createOfferView != null) {
+            createOfferView.onClose();
+            createOfferView = null;
+        }
         offerBookView.enableCreateOfferButton();
 
         // update the navigation state
@@ -190,16 +184,19 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     }
 
     private void onTakeOfferViewRemoved() {
-        takeOfferView = null;
+        if (takeOfferView != null) {
+            takeOfferView.onClose();
+            takeOfferView = null;
+        }
 
         // update the navigation state
         navigation.navigateTo(MainView.class, this.getClass(), OfferBookView.class);
     }
 
     public interface OfferActionHandler {
-        void createOffer(Coin amount, Fiat price);
+        void onCreateOffer(TradeCurrency tradeCurrency);
 
-        void takeOffer(Coin amount, Fiat price, Offer offer);
+        void onTakeOffer(Offer offer);
     }
 
     public interface CloseHandler {

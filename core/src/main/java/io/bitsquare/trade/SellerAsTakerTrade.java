@@ -18,19 +18,19 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.Peer;
+import io.bitsquare.p2p.Address;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.SellerAsTakerProtocol;
 import io.bitsquare.trade.protocol.trade.TakerProtocol;
-
 import org.bitcoinj.core.Coin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Serializable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static com.google.common.base.Preconditions.checkArgument;
 
 public class SellerAsTakerTrade extends SellerTrade implements TakerTrade, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -43,15 +43,18 @@ public class SellerAsTakerTrade extends SellerTrade implements TakerTrade, Seria
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SellerAsTakerTrade(Offer offer, Coin tradeAmount, Peer tradingPeer, Storage<? extends TradableList> storage) {
-        super(offer, tradeAmount, tradingPeer, storage);
+    public SellerAsTakerTrade(Offer offer, Coin tradeAmount, Address tradingPeerAddress, Storage<? extends TradableList> storage) {
+        super(offer, tradeAmount, tradingPeerAddress, storage);
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-
-        initStateProperties();
-        initAmountProperty();
+        try {
+            in.defaultReadObject();
+            initStateProperties();
+            initAmountProperty();
+        } catch (Throwable t) {
+            log.trace("Cannot be deserialized." + t.getMessage());
+        }
     }
 
     @Override
@@ -66,7 +69,7 @@ public class SellerAsTakerTrade extends SellerTrade implements TakerTrade, Seria
 
     @Override
     public void takeAvailableOffer() {
-        assert tradeProtocol instanceof TakerProtocol;
+        checkArgument(tradeProtocol instanceof TakerProtocol, "tradeProtocol NOT instanceof TakerProtocol");
         ((TakerProtocol) tradeProtocol).takeAvailableOffer();
     }
 }

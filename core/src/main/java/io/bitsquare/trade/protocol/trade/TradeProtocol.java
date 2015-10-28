@@ -17,114 +17,99 @@
 
 package io.bitsquare.trade.protocol.trade;
 
-import io.bitsquare.common.handlers.ErrorMessageHandler;
-import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.crypto.MessageWithPubKey;
-import io.bitsquare.crypto.PubKeyRing;
-import io.bitsquare.p2p.DecryptedMessageHandler;
+import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.Peer;
-import io.bitsquare.p2p.listener.GetPeerAddressListener;
-import io.bitsquare.trade.BuyerTrade;
-import io.bitsquare.trade.SellerTrade;
+import io.bitsquare.p2p.messaging.DecryptedMailListener;
+import io.bitsquare.p2p.messaging.DecryptedMessageWithPubKey;
+import io.bitsquare.trade.OffererTrade;
+import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
-import io.bitsquare.util.Utilities;
-
-import java.util.Timer;
-
+import org.reactfx.util.FxTimer;
+import org.reactfx.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.security.PublicKey;
+import java.time.Duration;
+import java.util.Optional;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
 public abstract class TradeProtocol {
     private static final Logger log = LoggerFactory.getLogger(TradeProtocol.class);
-    private static final long TIMEOUT = 10000;
+    private static final long TIMEOUT = 30 * 1000;
 
     protected final ProcessModel processModel;
-    private DecryptedMessageHandler decryptedMessageHandler;
-    protected Timer timeoutTimer;
+    private final DecryptedMailListener decryptedMailListener;
+    private Timer timeoutTimer;
     protected Trade trade;
 
-    public TradeProtocol(ProcessModel processModel) {
-        this.processModel = processModel;
+    public TradeProtocol(Trade trade) {
+        this.trade = trade;
+        this.processModel = trade.getProcessModel();
 
-        decryptedMessageHandler = this::handleMessageWithPubKey;
+        decryptedMailListener = (decryptedMessageWithPubKey, peerAddress) -> {
+            // We check the sig only as soon we have stored the peers pubKeyRing.
+            PubKeyRing tradingPeerPubKeyRing = processModel.tradingPeer.getPubKeyRing();
+            PublicKey signaturePubKey = decryptedMessageWithPubKey.signaturePubKey;
+            if (tradingPeerPubKeyRing != null && signaturePubKey.equals(tradingPeerPubKeyRing.getMsgSignaturePubKey())) {
+                Message message = decryptedMessageWithPubKey.message;
+                log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + peerAddress);
+                if (message instanceof TradeMessage) {
+                    TradeMessage tradeMessage = (TradeMessage) message;
+                    nonEmptyStringOf(tradeMessage.tradeId);
 
-        processModel.getMessageService().addDecryptedMessageHandler(decryptedMessageHandler);
+                    if (tradeMessage.tradeId.equals(processModel.getId())) {
+                        doHandleDecryptedMessage(tradeMessage, peerAddress);
+                    }
+                }
+            } else {
+                // it might be that we received a msg from the arbitrator, we don't handle that here but we don't want to log an error
+                Optional<Arbitrator> arbitratorOptional = processModel.getArbitratorManager().getArbitratorsObservableMap().values().stream()
+                        .filter(e -> e.getArbitratorAddress().equals(trade.getArbitratorAddress())).findFirst();
+                PubKeyRing arbitratorPubKeyRing = null;
+                if (arbitratorOptional.isPresent())
+                    arbitratorPubKeyRing = arbitratorOptional.get().getPubKeyRing();
+
+                if ((arbitratorPubKeyRing != null && !signaturePubKey.equals(arbitratorPubKeyRing.getMsgSignaturePubKey())))
+                    log.error("Signature used in seal message does not match the one stored with that trade for the trading peer or arbitrator.");
+            }
+        };
+        processModel.getP2PService().addDecryptedMailListener(decryptedMailListener);
     }
 
-    public void cleanup() {
+    public void completed() {
+        cleanup();
+    }
+
+    private void cleanup() {
         log.debug("cleanup " + this);
         stopTimeout();
-        if (decryptedMessageHandler != null)
-            processModel.getMessageService().removeDecryptedMessageHandler(decryptedMessageHandler);
+
+        processModel.getP2PService().removeDecryptedMailListener(decryptedMailListener);
+
     }
 
-    public void applyMailboxMessage(MessageWithPubKey messageWithPubKey, Trade trade) {
-        log.debug("applyMailboxMessage " + messageWithPubKey.getMessage());
-        if (messageWithPubKey.getSignaturePubKey().equals(processModel.tradingPeer.getPubKeyRing().getMsgSignaturePubKey()))
-            doApplyMailboxMessage(messageWithPubKey.getMessage(), trade);
+    public void applyMailboxMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Trade trade) {
+        log.debug("applyMailboxMessage " + decryptedMessageWithPubKey.message);
+        if (decryptedMessageWithPubKey.signaturePubKey.equals(processModel.tradingPeer.getPubKeyRing().getMsgSignaturePubKey()))
+            doApplyMailboxMessage(decryptedMessageWithPubKey.message, trade);
         else
             log.error("SignaturePubKey in message does not match the SignaturePubKey we have stored to that trading peer.");
     }
 
     protected abstract void doApplyMailboxMessage(Message message, Trade trade);
 
-    protected void findPeerAddress(PubKeyRing pubKeyRing, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        try {
-            processModel.getAddressService().findPeerAddress(pubKeyRing, new GetPeerAddressListener() {
-                @Override
-                public void onResult(Peer peer) {
-                    trade.setTradingPeer(peer);
-                    resultHandler.handleResult();
-                }
-
-                @Override
-                public void onFailed() {
-                    errorMessageHandler.handleErrorMessage("findPeerAddress failed");
-                }
-            });
-        } catch (Throwable t) {
-            errorMessageHandler.handleErrorMessage("findPeerAddress failed with error: " + t.getMessage());
-        }
-    }
-
-    protected void handleMessageWithPubKey(MessageWithPubKey messageWithPubKey, Peer sender) {
-        // We check the sig only as soon we have stored the peers pubKeyRing.
-        if (processModel.tradingPeer.getPubKeyRing() != null &&
-                !messageWithPubKey.getSignaturePubKey().equals(processModel.tradingPeer.getPubKeyRing().getMsgSignaturePubKey())) {
-            log.error("Signature used in seal message does not match the one stored with that trade for the trading peer.");
-        }
-        else {
-            Message message = messageWithPubKey.getMessage();
-            log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + sender);
-            if (message instanceof TradeMessage) {
-                TradeMessage tradeMessage = (TradeMessage) message;
-                nonEmptyStringOf(tradeMessage.tradeId);
-
-                if (tradeMessage.tradeId.equals(processModel.getId())) {
-                    doHandleDecryptedMessage(tradeMessage, sender);
-                }
-            }
-        }
-    }
-
-    protected abstract void doHandleDecryptedMessage(TradeMessage tradeMessage, Peer sender);
+    protected abstract void doHandleDecryptedMessage(TradeMessage tradeMessage, Address peerAddress);
 
     public void checkPayoutTxTimeLock(Trade trade) {
         this.trade = trade;
 
-        boolean needPayoutTxBroadcast = false;
-        if (trade instanceof SellerTrade)
-            needPayoutTxBroadcast = trade.tradeStateProperty().get() == TradeState.SellerState.PAYOUT_TX_COMMITTED;
-        else if (trade instanceof BuyerTrade)
-            needPayoutTxBroadcast = trade.tradeStateProperty().get() == TradeState.BuyerState.PAYOUT_TX_COMMITTED;
-
-        if (needPayoutTxBroadcast) {
+        if (trade.getState() == Trade.State.PAYOUT_TX_COMMITTED) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
                         log.debug("taskRunner needPayoutTxBroadcast completed");
@@ -140,15 +125,17 @@ public abstract class TradeProtocol {
     protected void startTimeout() {
         stopTimeout();
 
-        timeoutTimer = Utilities.setTimeout(TIMEOUT, () -> {
-            log.debug("Timeout reached");
-            trade.setErrorMessage("A timeout occured.");
+        timeoutTimer = FxTimer.runLater(Duration.ofMillis(TIMEOUT), () -> {
+            log.error("Timeout reached");
+            trade.setErrorMessage("A timeout occurred.");
+            cleanupTradable();
+            cleanup();
         });
     }
 
     protected void stopTimeout() {
         if (timeoutTimer != null) {
-            timeoutTimer.cancel();
+            timeoutTimer.stop();
             timeoutTimer = null;
         }
     }
@@ -159,6 +146,25 @@ public abstract class TradeProtocol {
 
     protected void handleTaskRunnerFault(String errorMessage) {
         log.error(errorMessage);
+        cleanupTradable();
         cleanup();
+    }
+
+    private void cleanupTradable() {
+        Trade.State tradeState = trade.getState();
+        log.debug("cleanupTradable tradeState=" + tradeState);
+        boolean isOffererTrade = trade instanceof OffererTrade;
+        if (isOffererTrade && (tradeState == Trade.State.DEPOSIT_PUBLISH_REQUESTED || tradeState == Trade.State.DEPOSIT_SEEN_IN_NETWORK))
+            processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer());
+
+        boolean isTakerTrade = trade instanceof TakerTrade;
+
+        if (isTakerTrade) {
+            if (tradeState.getPhase() == Trade.Phase.PREPARATION) {
+                processModel.getTradeManager().removePreparedTrade(trade);
+            } else if (tradeState.getPhase() == Trade.Phase.TAKER_FEE_PAID) {
+                processModel.getTradeManager().addTradeToFailedTrades(trade);
+            }
+        }
     }
 }

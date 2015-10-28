@@ -17,13 +17,10 @@
 
 package io.bitsquare.gui.util;
 
-import io.bitsquare.user.User;
-
 import org.bitcoinj.core.Coin;
+import org.junit.Test;
 
 import java.util.Locale;
-
-import org.junit.Test;
 
 import static org.junit.Assert.*;
 
@@ -31,7 +28,7 @@ public class BSFormatterTest {
 
     @Test
     public void testParseToBtc() {
-        BSFormatter formatter = new BSFormatter(new User(), null);
+        BSFormatter formatter = new BSFormatter();
         formatter.useMilliBitFormat(false);
         assertEquals(Coin.ZERO, formatter.parseToCoin("0"));
         assertEquals(Coin.COIN, formatter.parseToCoin("1"));
@@ -64,7 +61,7 @@ public class BSFormatterTest {
 
     @Test
     public void testFormatCoin() {
-        BSFormatter formatter = new BSFormatter(new User(), null);
+        BSFormatter formatter = new BSFormatter();
         formatter.useMilliBitFormat(false);
         assertEquals("1.00", formatter.formatCoin(Coin.COIN));
         assertEquals("1.0120", formatter.formatCoin(Coin.parseCoin("1.012")));
@@ -97,7 +94,7 @@ public class BSFormatterTest {
 
     @Test
     public void testFormatCoinWithCode() {
-        BSFormatter formatter = new BSFormatter(new User(), null);
+        BSFormatter formatter = new BSFormatter();
         formatter.useMilliBitFormat(false);
         assertEquals("1.00 BTC", formatter.formatCoinWithCode(Coin.COIN));
         assertEquals("1.01 BTC", formatter.formatCoinWithCode(Coin.parseCoin("1.01")));
@@ -132,7 +129,7 @@ public class BSFormatterTest {
 
     @Test
     public void testParseToBtcWith4Decimals() {
-        BSFormatter formatter = new BSFormatter(new User(), null);
+        BSFormatter formatter = new BSFormatter();
         formatter.useMilliBitFormat(false);
         assertEquals(Coin.parseCoin("0"), formatter.parseToCoinWith4Decimals("0"));
         assertEquals(Coin.parseCoin("0"), formatter.parseToCoinWith4Decimals(null));
@@ -143,7 +140,7 @@ public class BSFormatterTest {
 
     @Test
     public void testHasBtcValidDecimals() {
-        BSFormatter formatter = new BSFormatter(new User(), null);
+        BSFormatter formatter = new BSFormatter();
         formatter.useMilliBitFormat(false);
         formatter.setLocale(Locale.GERMAN);
         assertTrue(formatter.hasBtcValidDecimals(null));
@@ -159,31 +156,31 @@ public class BSFormatterTest {
 
     @Test
     public void testParseToFiatWith2Decimals() {
-        BSFormatter formatter = new BSFormatter(new User(), null);
+        BSFormatter formatter = new BSFormatter();
         formatter.useMilliBitFormat(false);
         formatter.setLocale(Locale.GERMAN);
-        assertEquals("0", formatter.parseToFiatWith2Decimals("0").toPlainString());
-        assertEquals("0", formatter.parseToFiatWith2Decimals(null).toPlainString());
-        assertEquals("0", formatter.parseToFiatWith2Decimals("s").toPlainString());
-        assertEquals("0.12", formatter.parseToFiatWith2Decimals("0.123").toPlainString());
-        assertEquals("0.13", formatter.parseToFiatWith2Decimals("0.125").toPlainString());
-        assertEquals("0.13", formatter.parseToFiatWith2Decimals("0,125").toPlainString());
+        assertEquals("0", formatter.parseToFiatWith2Decimals("0", "EUR").toPlainString());
+        assertEquals("0", formatter.parseToFiatWith2Decimals(null, "EUR").toPlainString());
+        assertEquals("0", formatter.parseToFiatWith2Decimals("s", "EUR").toPlainString());
+        assertEquals("0.12", formatter.parseToFiatWith2Decimals("0.123", "EUR").toPlainString());
+        assertEquals("0.13", formatter.parseToFiatWith2Decimals("0.125", "EUR").toPlainString());
+        assertEquals("0.13", formatter.parseToFiatWith2Decimals("0,125", "EUR").toPlainString());
     }
 
     @Test
     public void testHasFiatValidDecimals() {
-        BSFormatter formatter = new BSFormatter(new User(), null);
+        BSFormatter formatter = new BSFormatter();
         formatter.useMilliBitFormat(false);
         formatter.setLocale(Locale.GERMAN);
-        assertTrue(formatter.hasFiatValidDecimals(null));
-        assertTrue(formatter.hasFiatValidDecimals("0"));
-        assertTrue(formatter.hasFiatValidDecimals("0,01"));
-        assertTrue(formatter.hasFiatValidDecimals("0.01"));
-        assertTrue(formatter.hasFiatValidDecimals("0.09"));
-        assertTrue(formatter.hasFiatValidDecimals("20000000.01"));
-        assertFalse(formatter.hasFiatValidDecimals("20000000.0123"));
-        assertFalse(formatter.hasFiatValidDecimals("0.012"));
-        assertFalse(formatter.hasFiatValidDecimals("0.01222312312312313"));
+        assertTrue(formatter.hasFiatValidDecimals(null, "EUR"));
+        assertTrue(formatter.hasFiatValidDecimals("0", "EUR"));
+        assertTrue(formatter.hasFiatValidDecimals("0,01", "EUR"));
+        assertTrue(formatter.hasFiatValidDecimals("0.01", "EUR"));
+        assertTrue(formatter.hasFiatValidDecimals("0.09", "EUR"));
+        assertTrue(formatter.hasFiatValidDecimals("20000000.01", "EUR"));
+        assertFalse(formatter.hasFiatValidDecimals("20000000.0123", "EUR"));
+        assertFalse(formatter.hasFiatValidDecimals("0.012", "EUR"));
+        assertFalse(formatter.hasFiatValidDecimals("0.01222312312312313", "EUR"));
     }
 
 }

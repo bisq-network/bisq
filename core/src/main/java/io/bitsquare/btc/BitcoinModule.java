@@ -17,21 +17,17 @@
 
 package io.bitsquare.btc;
 
-import io.bitsquare.BitsquareModule;
-
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import io.bitsquare.app.AppModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 
 import java.io.File;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.springframework.core.env.Environment;
-
 import static com.google.inject.name.Names.named;
 
-public class BitcoinModule extends BitsquareModule {
+public class BitcoinModule extends AppModule {
     private static final Logger log = LoggerFactory.getLogger(BitcoinModule.class);
 
     public BitcoinModule(Environment env) {
@@ -54,13 +50,6 @@ public class BitcoinModule extends BitsquareModule {
         bind(AddressEntryList.class).in(Singleton.class);
         bind(TradeWalletService.class).in(Singleton.class);
         bind(WalletService.class).in(Singleton.class);
-        bind(BlockChainService.class).in(Singleton.class);
-    }
-
-    @Override
-    protected void doClose(Injector injector) {
-        log.trace("doClose " + getClass().getSimpleName());
-        injector.getInstance(WalletService.class).shutDown();
     }
 }
 

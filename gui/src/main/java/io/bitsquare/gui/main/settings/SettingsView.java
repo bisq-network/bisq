@@ -19,20 +19,16 @@ package io.bitsquare.gui.main.settings;
 
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.Activatable;
-import io.bitsquare.gui.common.view.ActivatableViewAndModel;
-import io.bitsquare.gui.common.view.CachingViewLoader;
-import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.common.view.View;
-import io.bitsquare.gui.common.view.ViewLoader;
+import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.settings.application.PreferencesView;
 import io.bitsquare.gui.main.settings.network.NetworkSettingsView;
-
-import javax.inject.Inject;
-
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+
+import javax.inject.Inject;
 
 @FxmlView
 public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
@@ -67,7 +63,7 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
     }
 
     @Override
-    public void doActivate() {
+    protected void activate() {
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
 
@@ -78,7 +74,7 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
     }
 
     @Override
-    public void doDeactivate() {
+    protected void deactivate() {
         root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
         navigation.removeListener(navigationListener);
     }

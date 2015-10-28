@@ -17,25 +17,21 @@
 
 package io.bitsquare.gui.main.portfolio.closedtrades;
 
-import io.bitsquare.gui.common.model.Activatable;
-import io.bitsquare.gui.common.model.DataModel;
+import com.google.inject.Inject;
+import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.offer.Offer;
-
-import com.google.inject.Inject;
-
-import java.util.stream.Collectors;
-
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
-class ClosedTradesDataModel implements Activatable, DataModel {
+import java.util.stream.Collectors;
 
+class ClosedTradesDataModel extends ActivatableDataModel {
     private final ClosedTradableManager closedTradableManager;
 
-    private final ObservableList<ClosedTradesListItem> list = FXCollections.observableArrayList();
+    private final ObservableList<ClosedTradableListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<Tradable> tradesListChangeListener;
 
     @Inject
@@ -46,17 +42,17 @@ class ClosedTradesDataModel implements Activatable, DataModel {
     }
 
     @Override
-    public void activate() {
+    protected void activate() {
         applyList();
         closedTradableManager.getClosedTrades().addListener(tradesListChangeListener);
     }
 
     @Override
-    public void deactivate() {
+    protected void deactivate() {
         closedTradableManager.getClosedTrades().removeListener(tradesListChangeListener);
     }
 
-    public ObservableList<ClosedTradesListItem> getList() {
+    public ObservableList<ClosedTradableListItem> getList() {
         return list;
     }
 
@@ -67,7 +63,7 @@ class ClosedTradesDataModel implements Activatable, DataModel {
     private void applyList() {
         list.clear();
 
-        list.addAll(closedTradableManager.getClosedTrades().stream().map(ClosedTradesListItem::new).collect(Collectors.toList()));
+        list.addAll(closedTradableManager.getClosedTrades().stream().map(ClosedTradableListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getTradable().getDate().compareTo(o1.getTradable().getDate()));

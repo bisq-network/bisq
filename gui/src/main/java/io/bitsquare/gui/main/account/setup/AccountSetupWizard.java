@@ -18,27 +18,22 @@
 package io.bitsquare.gui.main.account.setup;
 
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.common.view.ActivatableView;
-import io.bitsquare.gui.common.view.CachingViewLoader;
-import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.common.view.View;
-import io.bitsquare.gui.common.view.ViewLoader;
-import io.bitsquare.gui.common.view.Wizard;
+import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
-import io.bitsquare.gui.main.account.content.fiat.FiatAccountView;
+import io.bitsquare.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
 import io.bitsquare.gui.main.account.content.password.PasswordView;
-import io.bitsquare.gui.main.account.content.registration.RegistrationView;
-import io.bitsquare.gui.main.account.content.restrictions.RestrictionsView;
+import io.bitsquare.gui.main.account.content.paymentsaccount.PaymentAccountView;
 import io.bitsquare.gui.main.account.content.seedwords.SeedWordsView;
 import io.bitsquare.gui.main.offer.BuyOfferView;
-
-import javax.inject.Inject;
-
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.scene.control.*;
-import javafx.scene.image.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+
+import javax.inject.Inject;
 
 @FxmlView
 public class AccountSetupWizard extends ActivatableView implements Wizard {
@@ -46,7 +41,7 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
     @FXML VBox leftVBox;
     @FXML AnchorPane content;
 
-    private WizardItem seedWords, password, fiatAccount, restrictions, registration;
+    private WizardItem seedWords, password, fiatAccount, restrictions;
     private Navigation.Listener listener;
 
     private final ViewLoader viewLoader;
@@ -72,24 +67,15 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
             else if (viewClass == PasswordView.class) {
                 seedWords.onCompleted();
                 password.show();
-            }
-            else if (viewClass == RestrictionsView.class) {
+            } else if (viewClass == ArbitratorSelectionView.class) {
                 seedWords.onCompleted();
                 password.onCompleted();
                 restrictions.show();
-            }
-            else if (viewClass == FiatAccountView.class) {
+            } else if (viewClass == PaymentAccountView.class) {
                 seedWords.onCompleted();
                 password.onCompleted();
                 restrictions.onCompleted();
                 fiatAccount.show();
-            }
-            else if (viewClass == RegistrationView.class) {
-                seedWords.onCompleted();
-                password.onCompleted();
-                restrictions.onCompleted();
-                fiatAccount.onCompleted();
-                registration.show();
             }
         };
 
@@ -97,24 +83,22 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
                 "Backup wallet seed", "Write down the seed word for your wallet");
         password = new WizardItem(PasswordView.class,
                 "Setup password", "Protect your wallet with a password");
-        restrictions = new WizardItem(RestrictionsView.class,
+        restrictions = new WizardItem(ArbitratorSelectionView.class,
                 "Select arbitrators", "Select which arbitrators you want to use for trading");
-        fiatAccount = new WizardItem(FiatAccountView.class,
+        fiatAccount = new WizardItem(PaymentAccountView.class,
                 " Setup Payments account(s)", "You need to setup at least one payment account");
-        registration = new WizardItem(RegistrationView.class,
-                "Register your account", "The registration in the Blockchain requires a payment of 0.0002 BTC");
 
-        leftVBox.getChildren().addAll(seedWords, password, restrictions, fiatAccount, registration);
+        leftVBox.getChildren().addAll(seedWords, password, restrictions, fiatAccount);
     }
 
     @Override
-    public void activate() {
+    protected void activate() {
         navigation.addListener(listener);
         seedWords.show();
     }
 
     @Override
-    public void deactivate() {
+    protected void deactivate() {
         navigation.removeListener(listener);
     }
 
@@ -127,17 +111,11 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
         else if (currentStep instanceof PasswordView) {
             password.onCompleted();
             restrictions.show();
-        }
-        else if (currentStep instanceof RestrictionsView) {
+        } else if (currentStep instanceof ArbitratorSelectionView) {
             restrictions.onCompleted();
             fiatAccount.show();
-        }
-        else if (currentStep instanceof FiatAccountView) {
+        } else if (currentStep instanceof PaymentAccountView) {
             fiatAccount.onCompleted();
-            registration.show();
-        }
-        else if (currentStep instanceof RegistrationView) {
-            registration.onCompleted();
 
             if (navigation.getReturnPath() != null)
                 navigation.navigateTo(navigation.getReturnPath());
@@ -146,7 +124,7 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
         }
     }
 
-    protected void loadView(Class<? extends View> viewClass) {
+    private void loadView(Class<? extends View> viewClass) {
         View view = viewLoader.load(viewClass);
         content.getChildren().setAll(view.getRoot());
         if (view instanceof Wizard.Step)

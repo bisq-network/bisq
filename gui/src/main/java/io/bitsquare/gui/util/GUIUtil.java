@@ -17,20 +17,22 @@
 
 package io.bitsquare.gui.util;
 
-import javafx.scene.input.*;
-
+import javafx.geometry.Orientation;
+import javafx.scene.Node;
+import javafx.scene.control.ScrollBar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class GUIUtil {
     private static final Logger log = LoggerFactory.getLogger(GUIUtil.class);
 
-    public static void copyToClipboard(String content) {
-        if (content != null && content.length() > 0) {
-            Clipboard clipboard = Clipboard.getSystemClipboard();
-            ClipboardContent clipboardContent = new ClipboardContent();
-            clipboardContent.putString(content);
-            clipboard.setContent(clipboardContent);
+    public static double getScrollbarWidth(Node scrollablePane) {
+        Node node = scrollablePane.lookup(".scroll-bar");
+        if (node instanceof ScrollBar) {
+            final ScrollBar bar = (ScrollBar) node;
+            if (bar.getOrientation().equals(Orientation.VERTICAL))
+                return bar.getWidth();
         }
+        return 0;
     }
 }

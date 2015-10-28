@@ -22,18 +22,13 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.common.view.View;
 import io.bitsquare.gui.common.view.ViewFactory;
 import io.bitsquare.gui.common.view.ViewLoader;
-
-import java.io.IOException;
-
-import java.net.URL;
-
-import java.util.ResourceBundle;
+import javafx.fxml.FXMLLoader;
+import org.springframework.core.annotation.AnnotationUtils;
 
 import javax.inject.Inject;
-
-import javafx.fxml.FXMLLoader;
-
-import org.springframework.core.annotation.AnnotationUtils;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.springframework.core.annotation.AnnotationUtils.getDefaultValue;
@@ -92,7 +87,7 @@ public class FxmlViewLoader implements ViewLoader {
         }
     }
 
-    public View loadFromFxml(URL fxmlUrl) {
+    private View loadFromFxml(URL fxmlUrl) {
         checkNotNull(fxmlUrl, "FXML URL must not be null");
         try {
             FXMLLoader loader = new FXMLLoader(fxmlUrl, resourceBundle);

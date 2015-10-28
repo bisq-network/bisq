@@ -19,3 +19,5 @@ build
 .project
 .settings
 *.java.hsp
+
+gui/updatefx

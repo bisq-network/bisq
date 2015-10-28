@@ -17,33 +17,24 @@
 
 package io.bitsquare.trade.protocol.trade;
 
+import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.Peer;
+import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.trade.BuyerAsOffererTrade;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeState;
+import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.FinalizePayoutTxRequest;
-import io.bitsquare.trade.protocol.trade.messages.PublishDepositTxRequest;
+import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.CreateDepositTxInputs;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.ProcessDepositTxInputsRequest;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.ProcessFinalizePayoutTxRequest;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.ProcessPublishDepositTxRequest;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.SendDepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.SendFiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.SendPayDepositRequest;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.SendPayoutTxFinalizedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.SignAndFinalizePayoutTx;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.SignAndPublishDepositTx;
-import io.bitsquare.trade.protocol.trade.tasks.buyer.VerifyAndSignContract;
-import io.bitsquare.trade.protocol.trade.tasks.offerer.VerifyTakeOfferFeePayment;
-import io.bitsquare.trade.protocol.trade.tasks.offerer.VerifyTakerAccount;
+import io.bitsquare.trade.protocol.trade.tasks.buyer.*;
+import io.bitsquare.trade.protocol.trade.tasks.offerer.*;
 import io.bitsquare.trade.protocol.trade.tasks.shared.CommitPayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.shared.InitWaitPeriodForOpenDispute;
 import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static io.bitsquare.util.Validator.checkTradeId;
 
 public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtocol, OffererProtocol {
@@ -57,15 +48,13 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BuyerAsOffererProtocol(BuyerAsOffererTrade trade) {
-        super(trade.getProcessModel());
+        super(trade);
 
         this.buyerAsOffererTrade = trade;
 
-        // If we are after the timelock state we need to setup the listener again
-        TradeState tradeState = trade.tradeStateProperty().get();
-        if (tradeState == TradeState.BuyerState.PAYOUT_TX_COMMITTED ||
-                tradeState == TradeState.BuyerState.PAYOUT_TX_SENT ||
-                tradeState == TradeState.BuyerState.PAYOUT_BROAD_CASTED) {
+        // If we are after the time lock state we need to setup the listener again
+        Trade.State tradeState = trade.getState();
+        if (tradeState.getPhase() == Trade.Phase.PAYOUT_PAID) {
 
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
@@ -88,16 +77,15 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     public void doApplyMailboxMessage(Message message, Trade trade) {
         this.trade = trade;
 
-        // Find first the actual peer address, as it might have changed in the meantime
-        findPeerAddress(processModel.tradingPeer.getPubKeyRing(),
-                () -> {
-                    if (message instanceof FinalizePayoutTxRequest) {
-                        handle((FinalizePayoutTxRequest) message);
-                    }
-                },
-                (errorMessage -> {
-                    log.error(errorMessage);
-                }));
+        if (message instanceof MailboxMessage) {
+            MailboxMessage mailboxMessage = (MailboxMessage) message;
+            Address peerAddress = mailboxMessage.getSenderAddress();
+            if (message instanceof FinalizePayoutTxRequest) {
+                handle((FinalizePayoutTxRequest) message, peerAddress);
+            } else if (message instanceof DepositTxPublishedMessage) {
+                handle((DepositTxPublishedMessage) message, peerAddress);
+            }
+        }
     }
 
 
@@ -106,18 +94,25 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleTakeOfferRequest(TradeMessage message, Peer taker) {
+    public void handleTakeOfferRequest(TradeMessage message, Address peerAddress) {
         checkTradeId(processModel.getId(), message);
+        checkArgument(message instanceof PayDepositRequest);
         processModel.setTradeMessage(message);
-        buyerAsOffererTrade.setTradingPeer(taker);
+        processModel.setTempTradingPeerAddress(peerAddress);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
                 () -> handleTaskRunnerSuccess("handleTakeOfferRequest"),
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
-                ProcessDepositTxInputsRequest.class,
-                CreateDepositTxInputs.class,
-                SendPayDepositRequest.class
+                ProcessPayDepositRequest.class,
+                VerifyArbitrationSelection.class,
+                VerifyTakerAccount.class,
+                LoadTakeOfferFeeTx.class,
+                CreateAndSignContract.class,
+                CreateAndSignDepositTxAsBuyer.class,
+                InitWaitPeriodForOpenDispute.class,
+                SetupDepositBalanceListener.class,
+                SendPublishDepositTxRequest.class
         );
         startTimeout();
         taskRunner.run();
@@ -128,19 +123,17 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(PublishDepositTxRequest tradeMessage) {
+    private void handle(DepositTxPublishedMessage tradeMessage, Address peerAddress) {
         stopTimeout();
         processModel.setTradeMessage(tradeMessage);
+        processModel.setTempTradingPeerAddress(peerAddress);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
-                () -> handleTaskRunnerSuccess("PublishDepositTxRequest"),
+                () -> handleTaskRunnerSuccess("handle DepositTxPublishedMessage"),
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
-                ProcessPublishDepositTxRequest.class,
-                VerifyTakerAccount.class,
-                VerifyAndSignContract.class,
-                SignAndPublishDepositTx.class,
-                SendDepositTxPublishedMessage.class
+                ProcessDepositTxPublishedMessage.class,
+                AddDepositTxToWallet.class
         );
         taskRunner.run();
     }
@@ -153,7 +146,7 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     // User clicked the "bank transfer started" button
     @Override
     public void onFiatPaymentStarted() {
-        buyerAsOffererTrade.setTradeState(TradeState.BuyerState.FIAT_PAYMENT_STARTED);
+        buyerAsOffererTrade.setState(Trade.State.FIAT_PAYMENT_STARTED);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
                 () -> handleTaskRunnerSuccess("onFiatPaymentStarted"),
@@ -170,13 +163,14 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(FinalizePayoutTxRequest tradeMessage) {
+    private void handle(FinalizePayoutTxRequest tradeMessage, Address peerAddress) {
         log.debug("handle RequestFinalizePayoutTxMessage called");
         processModel.setTradeMessage(tradeMessage);
+        processModel.setTempTradingPeerAddress(peerAddress);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
                 () -> {
-                    handleTaskRunnerSuccess("FinalizePayoutTxRequest");
+                    handleTaskRunnerSuccess("handle FinalizePayoutTxRequest");
                     processModel.onComplete();
                 },
                 this::handleTaskRunnerFault);
@@ -197,14 +191,12 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, Peer sender) {
-        if (tradeMessage instanceof PublishDepositTxRequest) {
-            handle((PublishDepositTxRequest) tradeMessage);
-        }
-        else if (tradeMessage instanceof FinalizePayoutTxRequest) {
-            handle((FinalizePayoutTxRequest) tradeMessage);
-        }
-        else {
+    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, Address peerAddress) {
+        if (tradeMessage instanceof DepositTxPublishedMessage) {
+            handle((DepositTxPublishedMessage) tradeMessage, peerAddress);
+        } else if (tradeMessage instanceof FinalizePayoutTxRequest) {
+            handle((FinalizePayoutTxRequest) tradeMessage, peerAddress);
+        } else {
             log.error("Incoming decrypted tradeMessage not supported. " + tradeMessage);
         }
     }

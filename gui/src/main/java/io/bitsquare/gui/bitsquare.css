@@ -17,23 +17,31 @@ upper border on tab: cfcfcf
 lower border on tab: b5b5b5
 upper gradient color on tab: d3d3d3
 lower gradient color on tab: dddddd
+bg color of non edit textFields: fafafa
 */
+
+/* Splash */
 
 .root {
     -bs-grey: #666666;
-    -bs-light-grey: #cccccc;
     -bs-bg-grey: #dddddd;
-    -bs-bg-green: #00aa33;
-    -bs-error-red: #dd0000;
+    -bs-light-grey: #cccccc;
+    -bs-content-bg-grey: #f4f4f4;
+    -bs-very-light-grey: #f8f8f8;
 
     -fx-accent: #0f87c3;
+    -bs-green: #00aa33;
+    -bs-error-red: #dd0000;
+
+    -bs-blue-transparent: #0f87c344;
+    -bs-green-transparent: #00aa3344;
+
     -fx-default-button: derive(-fx-accent, 95%);
     -fx-focus-color: -fx-accent;
     -fx-faint-focus-color: #0f87c322;
     -fx-selection-bar: derive(-fx-accent, 50%);
 }
 
-/* Splash */
 #splash {
     -fx-background-color: #ffffff;
 }
@@ -44,7 +52,7 @@ lower gradient color on tab: dddddd
 
 #splash-bitcoin-network-label {
     -fx-text-fill: -fx-accent;
-    -fx-weight: bold;
+    -fx-font-weight: bold;
 }
 
 /* Main UI */
@@ -53,7 +61,7 @@ lower gradient color on tab: dddddd
 }
 
 #content-pane {
-    -fx-background-color: #f4f4f4;
+    -fx-background-color: -bs-content-bg-grey;
 }
 
 #footer-pane {
@@ -97,9 +105,8 @@ lower gradient color on tab: dddddd
 }
 
 #nav-balance-label {
-    -fx-font-weight: bold;
+    -fx-font-size: 10;
     -fx-alignment: center;
-    -fx-background-color: #dddddd;
 }
 
 #nav-alert-label {
@@ -221,12 +228,9 @@ textfield */
     -fx-fill: black;
 }
 
-.table-view .table-row-cell .copy-icon .text {
-    -fx-fill: -fx-accent;
-}
-
+.table-view .table-row-cell .copy-icon .text,
 .table-view .table-row-cell .copy-icon .text:hover {
-    -fx-fill: black;
+    -fx-fill: -fx-accent;
 }
 
 .table-view .table-row-cell:selected .copy-icon .text {
@@ -237,20 +241,29 @@ textfield */
     -fx-fill: black;
 }
 
-.table-view .table-row-cell .hyperlink .text {
-    -fx-fill: -fx-accent;
-}
-
-.table-view .table-row-cell .hyperlink .text:hover {
-    -fx-fill: black;
-}
-
 .table-view .table-row-cell:selected .hyperlink .text {
     -fx-fill: white;
 }
 
+.table-view .table-row-cell .hyperlink .text {
+    -fx-fill: -fx-accent;
+}
+
+.table-view .table-row-cell .hyperlink .text:hover,
+.table-view .table-row-cell:selected .hyperlink .tooltip .text,
 .table-view .table-row-cell:selected .hyperlink .text:hover {
     -fx-fill: black;
+}
+
+.table-view .table-row-cell .hyperlink:hover,
+.table-view .table-row-cell .hyperlink:visited,
+.table-view .table-row-cell .hyperlink:hover:visited {
+    -fx-underline: false;
+}
+
+.table-view .table-row-cell .hyperlink:focused {
+    -fx-border-style: none;
+    -fx-border-width: 0px;
 }
 
 /*******************************************************************************
@@ -269,7 +282,7 @@ textfield */
 }
 
 #clickable-icon:hover {
-    -fx-text-fill: #666666;
+    -fx-text-fill: -bs-grey;
 }
 
 /*******************************************************************************
@@ -364,12 +377,21 @@ textfield */
     -fx-border-insets: 0 0 0 -2;
 }
 
+#currency-info-label-disabled {
+    -fx-border-radius: 0 4 4 0;
+    -fx-padding: 4 4 4 4;
+    -fx-background-color: #e0e0e0;
+    -fx-border-color: #e0e0e0;
+    -fx-border-style: solid solid solid none;
+    -fx-border-insets: 0 0 0 -2;
+}
+
 #totals-separator {
     -fx-background: #AAAAAA;
 }
 
 #payment-info {
-    -fx-background-color: #f4f4f4;
+    -fx-background-color: -bs-content-bg-grey;
 }
 
 /* Account setup */
@@ -404,8 +426,8 @@ textfield */
 }
 
 #wizard-item-background-deactivated {
-    -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
-    -fx-outer-border: linear-gradient(to bottom, #dddddd, #ccc);
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, #F0F0F0);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, #ccc);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -426,7 +448,7 @@ textfield */
 }
 
 #wizard-item-background-completed {
-    -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, #F0F0F0);
     -fx-outer-border: linear-gradient(to bottom, #99ba9c, #619865);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
@@ -456,8 +478,8 @@ textfield */
 }
 
 #account-settings-item-background-disabled {
-    -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
-    -fx-outer-border: linear-gradient(to bottom, #dddddd, #ccc);
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, #F0F0F0);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, #ccc);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -467,8 +489,8 @@ textfield */
 }
 
 #account-settings-item-background-active {
-    -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
-    -fx-outer-border: linear-gradient(to bottom, #dddddd, #ccc);
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, #F0F0F0);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, #ccc);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -491,8 +513,8 @@ textfield */
 /* Pending trades */
 #trade-wizard-item-background-disabled {
     -fx-text-fill: -bs-grey;
-    -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
-    -fx-outer-border: linear-gradient(to bottom, #dddddd, #ccc);
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, #F0F0F0);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, #ccc);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -515,7 +537,7 @@ textfield */
 }
 
 #trade-wizard-item-background-completed {
-    -fx-body-color: linear-gradient(to bottom, #f4f4f4, #E1E9E1);
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, #E1E9E1);
     -fx-outer-border: linear-gradient(to bottom, #99ba9c, #619865);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
@@ -530,19 +552,19 @@ textfield */
     -fx-font-weight: bold;
     -fx-font-size: 14;
     -fx-text-fill: -bs-grey;
-    -fx-background-color: #f4f4f4;
+    -fx-background-color: -bs-content-bg-grey;
 }
 
 #titled-group-bg-label-active {
     -fx-font-weight: bold;
     -fx-font-size: 14;
     -fx-text-fill: -fx-accent;
-    -fx-background-color: #f4f4f4;
+    -fx-background-color: -bs-content-bg-grey;
 }
 
 #titled-group-bg {
-    -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
-    -fx-outer-border: linear-gradient(to bottom, #dddddd, #ccc);
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, #F0F0F0);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, #ccc);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -552,7 +574,7 @@ textfield */
 }
 
 #titled-group-bg-active {
-    -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, #F0F0F0);
     -fx-outer-border: linear-gradient(to bottom, #9bbdc9, #57acc9);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
@@ -562,9 +584,160 @@ textfield */
     -fx-background-radius: 3px, 3px, 2px, 1px;
 }
 
-/* TitledSeparator */
-#titled-separator:horizontal .line {
-    -fx-border-color: transparent #f4f4f4 transparent #f4f4f4;
-    -fx-background-color: transparent;
-    -fx-border-width: 10px;
+/* TableGroupHeadline */
+#table-group-headline {
+    -fx-background-color: -bs-content-bg-grey;
+    -fx-background-insets: 10 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+/* copied form modena.css text-input */
+#flowpane-checkboxes-bg {
+    -fx-text-fill: -fx-text-inner-color;
+    -fx-highlight-fill: derive(-fx-control-inner-background, -20%);
+    -fx-highlight-text-fill: -fx-text-inner-color;
+    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+    -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
+    linear-gradient(from 0px 0px to 0px 5px, derive(-fx-control-inner-background, -9%), -fx-control-inner-background);
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3, 2;
+    -fx-padding: 0.333333em 0.583em 0.333333em 0.583em; /* 4 7 4 7 */
+}
+
+#flowpane-checkboxes-non-editable-bg {
+    -fx-text-fill: -fx-text-inner-color;
+    -fx-highlight-fill: derive(-fx-control-inner-background, -20%);
+    -fx-highlight-text-fill: -fx-text-inner-color;
+    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+    -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
+    linear-gradient(from 0px 0px to 0px 5px, derive(-fx-control-inner-background, -9%), -bs-very-light-grey);
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3, 2;
+    -fx-padding: 0.333333em 0.583em 0.333333em 0.583em; /* 4 7 4 7 */
+}
+
+/* message-list-view*/
+#message-list-view.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background-color: white;
+}
+
+#message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
+    -fx-background-color: white;
+}
+
+#message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled {
+    -fx-background-color: white;
+}
+
+#message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background-color: white;
+}
+
+#message-list-view.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell {
+    -fx-background-color: white;
+}
+
+#message-list-view.list-cell {
+    -fx-padding: 0.25em 0.583em 0.25em 0.583em;
+}
+
+#message-list-view.list-view {
+    -fx-background-color: -fx-box-border, -fx-control-inner-background;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 1;
+}
+
+#message-list-view.list-view:focused {
+    -fx-background-color: -fx-box-border, -fx-control-inner-background;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 1;
+}
+
+/* bubble */
+#message-bubble-green {
+    -fx-background-color: -bs-green;
+    -fx-background-radius: 10 10 10 10;
+}
+
+#message-bubble-blue {
+    -fx-background-color: -fx-accent;
+    -fx-background-radius: 10 10 10 10;
+}
+
+#message-bubble-grey {
+    -fx-background-color: -bs-light-grey;
+    -fx-background-radius: 10 10 10 10;
+}
+
+.attachment-icon {
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+}
+
+.attachment-icon-black {
+    -fx-text-fill: black;
+    -fx-cursor: hand;
+}
+
+/********************************************************************************************************************
+ *
+ * Text validation
+ *
+ ********************************************************************************************************************/
+
+.text-field.validation_error, .text-area.validation_error .content, .date-picker.validation_error > .text-field {
+    -fx-background-color: red,
+    linear-gradient(
+            to bottom,
+            derive(#ff8986, 40%) 5%,
+            derive(#ff8986, 70%) 40%
+    );
+}
+
+/********************************************************************************************************************
+ *
+ * Chart
+ *
+ ********************************************************************************************************************/
+
+#charts .chart-legend {
+    -fx-font-size: 14;
+    -fx-alignment: center;
+}
+
+#charts .axis {
+    -fx-tick-label-fill: black;
+}
+
+#charts .chart-plot-background {
+    -fx-background-color: white;
+}
+
+#charts .default-color0.chart-area-symbol {
+    -fx-background-color: -bs-green, white;
+}
+
+#charts .default-color1.chart-area-symbol {
+    -fx-background-color: -fx-accent, white;
+}
+
+#charts .default-color0.chart-series-area-line {
+    -fx-stroke: -bs-green;
+}
+
+#charts .default-color1.chart-series-area-line {
+    -fx-stroke: -fx-accent;
+}
+
+#charts .default-color0.chart-series-area-fill {
+    -fx-fill: -bs-green-transparent;
+}
+
+#charts .default-color1.chart-series-area-fill {
+    -fx-fill: -bs-blue-transparent;
+}
+
+#charts .axis-label {
+    -fx-font-size: 16;
+    -fx-alignment: center;
 }

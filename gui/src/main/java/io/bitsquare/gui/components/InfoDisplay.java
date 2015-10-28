@@ -17,27 +17,22 @@
 
 package io.bitsquare.gui.components;
 
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.locale.BSResources;
-
-import javafx.application.Platform;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
-import javafx.scene.*;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import javafx.scene.text.*;
-
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.scene.Parent;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.control.OverrunStyle;
+import javafx.scene.layout.GridPane;
+import javafx.scene.text.TextFlow;
 
 /**
  * Convenience Component for info icon, info text and link display in a GridPane.
@@ -94,7 +89,7 @@ public class InfoDisplay extends Parent {
         testLabel.widthProperty().addListener((ov, o, n) -> {
             useReadMore = (double) n > textFlow.getWidth();
             link.setText(BSResources.get(useReadMore ? "shared.readMore" : "shared.openHelp"));
-            Platform.runLater(() -> textFlow.getChildren().setAll(label, link));
+            UserThread.execute(() -> textFlow.getChildren().setAll(label, link));
         });
 
         // update the width when the window gets resized
@@ -134,7 +129,7 @@ public class InfoDisplay extends Parent {
                 newValue.getWindow().widthProperty().addListener(listener);
                 // localToScene does deliver 0 instead of the correct x position when scene propery gets set,
                 // so we delay for 1 render cycle
-                Platform.runLater(() -> {
+                UserThread.execute(() -> {
                     label.setVisible(true);
                     label.prefWidthProperty().unbind();
                     label.setPrefWidth(newValue.getWindow().getWidth() - localToScene(0, 0).getX() - 35);
@@ -150,7 +145,7 @@ public class InfoDisplay extends Parent {
 
     public void setText(String text) {
         this.text.set(text);
-        Platform.runLater(() -> {
+        UserThread.execute(() -> {
             if (getScene() != null) {
                 label.setVisible(true);
                 label.prefWidthProperty().unbind();

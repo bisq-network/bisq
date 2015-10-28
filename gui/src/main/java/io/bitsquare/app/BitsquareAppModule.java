@@ -17,39 +17,31 @@
 
 package io.bitsquare.app;
 
-import io.bitsquare.BitsquareModule;
+import com.google.inject.Singleton;
+import io.bitsquare.alert.AlertModule;
 import io.bitsquare.arbitration.ArbitratorModule;
-import io.bitsquare.arbitration.tomp2p.TomP2PArbitratorModule;
 import io.bitsquare.btc.BitcoinModule;
-import io.bitsquare.crypto.CryptoModule;
-import io.bitsquare.crypto.KeyRing;
-import io.bitsquare.crypto.KeyStorage;
+import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.common.crypto.KeyStorage;
+import io.bitsquare.crypto.EncryptionServiceModule;
 import io.bitsquare.gui.GuiModule;
+import io.bitsquare.gui.common.view.CachingViewLoader;
 import io.bitsquare.p2p.P2PModule;
-import io.bitsquare.p2p.tomp2p.TomP2PModule;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradeModule;
 import io.bitsquare.trade.offer.OfferModule;
-import io.bitsquare.trade.offer.tomp2p.TomP2POfferModule;
-import io.bitsquare.user.AccountSettings;
 import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
-
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
+import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 
 import java.io.File;
 
-import javafx.stage.Stage;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.springframework.core.env.Environment;
-
 import static com.google.inject.name.Names.named;
 
-class BitsquareAppModule extends BitsquareModule {
+class BitsquareAppModule extends AppModule {
     private static final Logger log = LoggerFactory.getLogger(BitsquareAppModule.class);
 
     private final Stage primaryStage;
@@ -61,11 +53,11 @@ class BitsquareAppModule extends BitsquareModule {
 
     @Override
     protected void configure() {
+        bind(CachingViewLoader.class).in(Singleton.class);
         bind(KeyStorage.class).in(Singleton.class);
         bind(KeyRing.class).in(Singleton.class);
         bind(User.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);
-        bind(AccountSettings.class).in(Singleton.class);
 
         File storageDir = new File(env.getRequiredProperty(Storage.DIR_KEY));
         bind(File.class).annotatedWith(named(Storage.DIR_KEY)).toInstance(storageDir);
@@ -78,44 +70,44 @@ class BitsquareAppModule extends BitsquareModule {
 
         // ordering is used for shut down sequence
         install(tradeModule());
-        install(cryptoModule());
+        install(encryptionServiceModule());
         install(arbitratorModule());
         install(offerModule());
-        install(p2pModule());
+        install(torModule());
         install(bitcoinModule());
         install(guiModule());
+        install(alertModule());
     }
 
-    protected TradeModule tradeModule() {
+    private TradeModule tradeModule() {
         return new TradeModule(env);
     }
 
-    protected CryptoModule cryptoModule() {
-        return new CryptoModule(env);
+    private EncryptionServiceModule encryptionServiceModule() {
+        return new EncryptionServiceModule(env);
     }
 
-    protected ArbitratorModule arbitratorModule() {
-        return new TomP2PArbitratorModule(env);
+    private ArbitratorModule arbitratorModule() {
+        return new ArbitratorModule(env);
     }
 
-    protected OfferModule offerModule() {
-        return new TomP2POfferModule(env);
+    private AlertModule alertModule() {
+        return new AlertModule(env);
     }
 
-    protected P2PModule p2pModule() {
-        return new TomP2PModule(env);
+    private OfferModule offerModule() {
+        return new OfferModule(env);
     }
 
-    protected BitcoinModule bitcoinModule() {
+    private P2PModule torModule() {
+        return new P2PModule(env);
+    }
+
+    private BitcoinModule bitcoinModule() {
         return new BitcoinModule(env);
     }
 
-    protected GuiModule guiModule() {
+    private GuiModule guiModule() {
         return new GuiModule(env, primaryStage);
-    }
-
-    @Override
-    protected void doClose(Injector injector) {
-        log.trace("doClose " + getClass().getSimpleName());
     }
 }

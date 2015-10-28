@@ -19,12 +19,13 @@ package io.bitsquare.gui.util.validation;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class FiatValidatorTest {
     @Test
     public void testValidate() {
-        FiatValidator validator = new FiatValidator(null);
+        FiatValidator validator = new FiatValidator();
         NumberValidator.ValidationResult validationResult;
 
 
@@ -51,10 +52,8 @@ public class FiatValidatorTest {
         assertFalse(validator.validate("1,000.1").isValid);
         assertFalse(validator.validate("1.000,1").isValid);
         assertFalse(validator.validate("0.009").isValid);
-        assertFalse(validator.validate("1000000.01").isValid);
-
-        assertFalse(validator.validate(String.valueOf(FiatValidator.MIN_FIAT_VALUE - 0.0000001)).isValid);
-        assertFalse(validator.validate(String.valueOf(FiatValidator.MAX_FIAT_VALUE + 0.0000001)).isValid);
+        assertFalse(validator.validate(String.valueOf(FiatValidator.MIN_FIAT_VALUE - 1)).isValid);
+        assertFalse(validator.validate(String.valueOf(FiatValidator.MAX_FIAT_VALUE + 1)).isValid);
         assertFalse(validator.validate(String.valueOf(Double.MIN_VALUE)).isValid);
         assertFalse(validator.validate(String.valueOf(Double.MAX_VALUE)).isValid);
 

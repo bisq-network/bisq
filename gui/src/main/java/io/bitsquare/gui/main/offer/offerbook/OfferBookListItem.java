@@ -17,35 +17,17 @@
 
 package io.bitsquare.gui.main.offer.offerbook;
 
-import io.bitsquare.locale.Country;
 import io.bitsquare.trade.offer.Offer;
-
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 
 public class OfferBookListItem {
     private final Offer offer;
-    private final ObjectProperty<Country> bankAccountCountry = new SimpleObjectProperty<>();
 
-    public OfferBookListItem(Offer offer, Country bankAccountCountry) {
+    public OfferBookListItem(Offer offer) {
         this.offer = offer;
-        setBankAccountCountry(bankAccountCountry);
-    }
-
-    void setBankAccountCountry(Country bankAccountCountry) {
-        this.bankAccountCountry.set(bankAccountCountry);
     }
 
     public Offer getOffer() {
         return offer;
-    }
-
-    Country getBankAccountCountry() {
-        return bankAccountCountry.get();
-    }
-
-    ObjectProperty<Country> bankAccountCountryProperty() {
-        return bankAccountCountry;
     }
 }
 

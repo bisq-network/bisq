@@ -22,17 +22,24 @@ import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
-
+import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
+import javafx.scene.effect.BlurType;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.Effect;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.paint.Color;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
 
-import javafx.scene.control.*;
-import javafx.scene.effect.*;
-import javafx.scene.layout.*;
-import javafx.scene.paint.*;
-
 public class BalanceWithConfirmationTextField extends AnchorPane {
+
+    private static WalletService walletService;
+
+    public static void setWalletService(WalletService walletService) {
+        BalanceWithConfirmationTextField.walletService = walletService;
+    }
 
     private final TextField textField;
     private final Tooltip progressIndicatorTooltip;
@@ -70,7 +77,7 @@ public class BalanceWithConfirmationTextField extends AnchorPane {
         getChildren().addAll(textField, progressIndicator);
     }
 
-    public void setup(WalletService walletService, Address address, BSFormatter formatter) {
+    public void setup(Address address, BSFormatter formatter) {
         this.formatter = formatter;
         walletService.addAddressConfidenceListener(new AddressConfidenceListener(address) {
             @Override

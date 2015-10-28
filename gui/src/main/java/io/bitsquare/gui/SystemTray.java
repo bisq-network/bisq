@@ -18,21 +18,18 @@
 package io.bitsquare.gui;
 
 import io.bitsquare.BitsquareException;
+import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.util.Utilities;
-
-import java.awt.*;
-import java.awt.image.BufferedImage;
-
-import java.io.IOException;
-
 import javafx.application.Platform;
 import javafx.stage.Stage;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 /**
  * There is no JavaFX support yet, so we need to use AWT.
@@ -58,7 +55,7 @@ public class SystemTray {
         systemTray = new SystemTray(stage, onExit);
     }
 
-    public SystemTray(Stage stage, Runnable onExit) {
+    private SystemTray(Stage stage, Runnable onExit) {
         this.stage = stage;
         this.onExit = onExit;
         init();
@@ -116,11 +113,11 @@ public class SystemTray {
         toggleShowHideItem.addActionListener(e -> {
             if (stage.isShowing()) {
                 toggleShowHideItem.setLabel(SHOW_WINDOW_LABEL);
-                Platform.runLater(stage::hide);
+                UserThread.execute(stage::hide);
             }
             else {
                 toggleShowHideItem.setLabel(HIDE_WINDOW_LABEL);
-                Platform.runLater(stage::show);
+                UserThread.execute(stage::show);
             }
         });
 

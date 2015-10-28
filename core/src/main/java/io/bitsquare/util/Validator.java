@@ -18,10 +18,10 @@
 package io.bitsquare.util;
 
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-
 import org.bitcoinj.core.Coin;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Utility class for validating domain data.

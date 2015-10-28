@@ -18,12 +18,10 @@
 package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.p2p.listener.SendMessageListener;
+import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,28 +36,33 @@ public class SendFiatTransferStartedMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            FiatTransferStartedMessage tradeMessage = new FiatTransferStartedMessage(processModel.getId(),
-                    processModel.getAddressEntry().getAddressString()
-            );
 
-            processModel.getMessageService().sendEncryptedMessage(
-                    trade.getTradingPeer(),
+            processModel.getP2PService().sendEncryptedMailboxMessage(
+                    trade.getTradingPeerAddress(),
                     processModel.tradingPeer.getPubKeyRing(),
-                    tradeMessage,
-                    true,
-                    new SendMessageListener() {
+                    new FiatTransferStartedMessage(
+                            processModel.getId(),
+                            processModel.getAddressEntry().getAddressString(),
+                            processModel.getMyAddress()
+                    ),
+                    new SendMailboxMessageListener() {
                         @Override
-                        public void handleResult() {
-                            log.trace("Sending FiatTransferStartedMessage succeeded.");
-
-                            trade.setTradeState(TradeState.BuyerState.FIAT_PAYMENT_STARTED_MSG_SENT);
-
+                        public void onArrived() {
+                            log.trace("Message arrived at peer.");
+                            trade.setState(Trade.State.FIAT_PAYMENT_STARTED_MSG_SENT);
                             complete();
                         }
 
                         @Override
-                        public void handleFault() {
-                            appendToErrorMessage("Sending FiatTransferStartedMessage failed");
+                        public void onStoredInMailbox() {
+                            log.trace("Message stored in mailbox.");
+                            trade.setState(Trade.State.FIAT_PAYMENT_STARTED_MSG_SENT);
+                            complete();
+                        }
+
+                        @Override
+                        public void onFault() {
+                            appendToErrorMessage("FiatTransferStartedMessage sending failed");
                             failed();
                         }
                     }

@@ -18,20 +18,18 @@
 package io.bitsquare.storage;
 
 import com.google.common.base.Throwables;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Nullable;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * That class handles the storage of a particular object to disk using Java serialisation.
@@ -39,15 +37,15 @@ import org.slf4j.LoggerFactory;
  * Java serialisation is tolerant with added fields, but removing or changing existing fields will break the backwards compatibility.
  * Alternative frameworks for serialisation like Kyro or mapDB have shown problems with version migration, so we stuck with plain Java
  * serialisation.
- * <p/>
+ * <p>
  * For every data object we write a separate file to minimize the risk of corrupted files in case of inconsistency from newer versions.
  * In case of a corrupted file we backup the old file to a separate directory, so if it holds critical data it might be helpful for recovery.
- * <p/>
+ * <p>
  * We also backup at first read the file, so we have a valid file form the latest version in case a write operation corrupted the file.
- * <p/>
+ * <p>
  * The read operation is triggered just at object creation (startup) and is at the moment not executed on a background thread to avoid asynchronous behaviour.
  * As the data are small and it is just one read access the performance penalty is small and might be even worse to create and setup a thread for it.
- * <p/>
+ * <p>
  * The write operation used a background thread and supports a delayed write to avoid too many repeated write operations.
  */
 public class Storage<T extends Serializable> {
@@ -98,8 +96,7 @@ public class Storage<T extends Serializable> {
     // Save delayed and on a background thread
     public void queueUpForSave() {
         log.debug("save " + fileName);
-        if (storageFile == null)
-            throw new RuntimeException("storageFile = null. Call setupFileStorage before using read/write.");
+        checkNotNull(storageFile, "storageFile = null. Call setupFileStorage before using read/write.");
 
         fileManager.saveLater(serializable);
     }
@@ -129,7 +126,7 @@ public class Storage<T extends Serializable> {
                 log.info("Backup {} completed in {}msec", serializable.getClass().getSimpleName(), System.currentTimeMillis() - now);
 
                 return persistedObject;
-            } catch (ClassCastException | ClassNotFoundException | IOException e) {
+            } catch (ClassCastException | IOException e) {
                 e.printStackTrace();
                 log.error("Version of persisted class has changed. We cannot read the persisted data anymore. We make a backup and remove the inconsistent " +
                         "file.");

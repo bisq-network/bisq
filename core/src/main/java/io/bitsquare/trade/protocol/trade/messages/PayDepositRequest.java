@@ -18,52 +18,118 @@
 package io.bitsquare.trade.protocol.trade.messages;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.crypto.PubKeyRing;
-import io.bitsquare.fiat.FiatAccount;
-
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.TransactionOutput;
-
-import java.io.Serializable;
-
-import java.util.List;
+import io.bitsquare.btc.data.RawInput;
+import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.messaging.MailboxMessage;
+import io.bitsquare.payment.PaymentAccountContractData;
 
 import javax.annotation.concurrent.Immutable;
+import java.util.Arrays;
+import java.util.List;
 
 @Immutable
-public class PayDepositRequest extends TradeMessage implements Serializable {
+public class PayDepositRequest extends TradeMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
-    public final Coin tradeAmount;
-    public final List<TransactionOutput> buyerConnectedOutputsForAllInputs;
-    public final List<TransactionOutput> buyerOutputs;
-    public final byte[] buyerTradeWalletPubKey;
-    public final boolean isInitialRequest;
-    public final PubKeyRing buyerPubKeyRing;
-    public final FiatAccount buyerFiatAccount;
-    public final String buyerAccountId;
+    public final long tradeAmount;
+    public final byte[] takerTradeWalletPubKey;
+    public final List<RawInput> rawInputs;
+    public final long changeOutputValue;
+    public final String changeOutputAddress;
+    public final String takerPayoutAddressString;
+    public final PubKeyRing takerPubKeyRing;
+    public final PaymentAccountContractData takerPaymentAccountContractData;
+    public final String takerAccountId;
     public final String takeOfferFeeTxId;
+    public final List<Address> acceptedArbitratorAddresses;
+    public final Address arbitratorAddress;
+    private final Address senderAddress;
 
-    public PayDepositRequest(String tradeId,
-                             Coin tradeAmount,
-                             boolean isInitialRequest,
-                             List<TransactionOutput> buyerConnectedOutputsForAllInputs,
-                             List<TransactionOutput> buyerOutputs,
-                             byte[] buyerTradeWalletPubKey,
-                             PubKeyRing buyerPubKeyRing,
-                             FiatAccount buyerFiatAccount,
-                             String buyerAccountId,
-                             String takeOfferFeeTxId) {
+    public PayDepositRequest(Address senderAddress,
+                             String tradeId,
+                             long tradeAmount,
+                             List<RawInput> rawInputs,
+                             long changeOutputValue,
+                             String changeOutputAddress,
+                             byte[] takerTradeWalletPubKey,
+                             String takerPayoutAddressString,
+                             PubKeyRing takerPubKeyRing,
+                             PaymentAccountContractData takerPaymentAccountContractData,
+                             String takerAccountId,
+                             String takeOfferFeeTxId,
+                             List<Address> acceptedArbitratorAddresses,
+                             Address arbitratorAddress) {
         super(tradeId);
+        this.senderAddress = senderAddress;
         this.tradeAmount = tradeAmount;
-        this.isInitialRequest = isInitialRequest;
-        this.buyerPubKeyRing = buyerPubKeyRing;
-        this.buyerConnectedOutputsForAllInputs = buyerConnectedOutputsForAllInputs;
-        this.buyerOutputs = buyerOutputs;
-        this.buyerTradeWalletPubKey = buyerTradeWalletPubKey;
-        this.buyerFiatAccount = buyerFiatAccount;
-        this.buyerAccountId = buyerAccountId;
+        this.rawInputs = rawInputs;
+        this.changeOutputValue = changeOutputValue;
+        this.changeOutputAddress = changeOutputAddress;
+        this.takerPayoutAddressString = takerPayoutAddressString;
+        this.takerPubKeyRing = takerPubKeyRing;
+        this.takerTradeWalletPubKey = takerTradeWalletPubKey;
+        this.takerPaymentAccountContractData = takerPaymentAccountContractData;
+        this.takerAccountId = takerAccountId;
         this.takeOfferFeeTxId = takeOfferFeeTxId;
+        this.acceptedArbitratorAddresses = acceptedArbitratorAddresses;
+        this.arbitratorAddress = arbitratorAddress;
+    }
+
+    @Override
+    public Address getSenderAddress() {
+        return senderAddress;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PayDepositRequest)) return false;
+        if (!super.equals(o)) return false;
+
+        PayDepositRequest that = (PayDepositRequest) o;
+
+        if (tradeAmount != that.tradeAmount) return false;
+        if (changeOutputValue != that.changeOutputValue) return false;
+        if (!Arrays.equals(takerTradeWalletPubKey, that.takerTradeWalletPubKey)) return false;
+        if (rawInputs != null ? !rawInputs.equals(that.rawInputs) : that.rawInputs != null) return false;
+        if (changeOutputAddress != null ? !changeOutputAddress.equals(that.changeOutputAddress) : that.changeOutputAddress != null)
+            return false;
+        if (takerPayoutAddressString != null ? !takerPayoutAddressString.equals(that.takerPayoutAddressString) : that.takerPayoutAddressString != null)
+            return false;
+        if (takerPubKeyRing != null ? !takerPubKeyRing.equals(that.takerPubKeyRing) : that.takerPubKeyRing != null)
+            return false;
+        if (takerPaymentAccountContractData != null ? !takerPaymentAccountContractData.equals(that.takerPaymentAccountContractData) : that.takerPaymentAccountContractData != null)
+            return false;
+        if (takerAccountId != null ? !takerAccountId.equals(that.takerAccountId) : that.takerAccountId != null)
+            return false;
+        if (takeOfferFeeTxId != null ? !takeOfferFeeTxId.equals(that.takeOfferFeeTxId) : that.takeOfferFeeTxId != null)
+            return false;
+        if (acceptedArbitratorAddresses != null ? !acceptedArbitratorAddresses.equals(that.acceptedArbitratorAddresses) : that.acceptedArbitratorAddresses != null)
+            return false;
+        if (arbitratorAddress != null ? !arbitratorAddress.equals(that.arbitratorAddress) : that.arbitratorAddress != null)
+            return false;
+        return !(senderAddress != null ? !senderAddress.equals(that.senderAddress) : that.senderAddress != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (int) (tradeAmount ^ (tradeAmount >>> 32));
+        result = 31 * result + (takerTradeWalletPubKey != null ? Arrays.hashCode(takerTradeWalletPubKey) : 0);
+        result = 31 * result + (rawInputs != null ? rawInputs.hashCode() : 0);
+        result = 31 * result + (int) (changeOutputValue ^ (changeOutputValue >>> 32));
+        result = 31 * result + (changeOutputAddress != null ? changeOutputAddress.hashCode() : 0);
+        result = 31 * result + (takerPayoutAddressString != null ? takerPayoutAddressString.hashCode() : 0);
+        result = 31 * result + (takerPubKeyRing != null ? takerPubKeyRing.hashCode() : 0);
+        result = 31 * result + (takerPaymentAccountContractData != null ? takerPaymentAccountContractData.hashCode() : 0);
+        result = 31 * result + (takerAccountId != null ? takerAccountId.hashCode() : 0);
+        result = 31 * result + (takeOfferFeeTxId != null ? takeOfferFeeTxId.hashCode() : 0);
+        result = 31 * result + (acceptedArbitratorAddresses != null ? acceptedArbitratorAddresses.hashCode() : 0);
+        result = 31 * result + (arbitratorAddress != null ? arbitratorAddress.hashCode() : 0);
+        result = 31 * result + (senderAddress != null ? senderAddress.hashCode() : 0);
+        return result;
     }
 }

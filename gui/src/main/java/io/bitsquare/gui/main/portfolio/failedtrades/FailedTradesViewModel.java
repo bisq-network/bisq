@@ -17,24 +17,14 @@
 
 package io.bitsquare.gui.main.portfolio.failedtrades;
 
+import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.trade.BuyerTrade;
-import io.bitsquare.trade.SellerTrade;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeState;
-
-import com.google.inject.Inject;
-
 import javafx.collections.ObservableList;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataModel> implements ViewModel {
-    private static final Logger log = LoggerFactory.getLogger(FailedTradesViewModel.class);
-
     private final BSFormatter formatter;
 
 
@@ -50,7 +40,7 @@ class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataMod
     }
 
     String getTradeId(FailedTradesListItem item) {
-        return item.getTrade().getId();
+        return item.getTrade().getShortId();
     }
 
     String getAmount(FailedTradesListItem item) {
@@ -72,7 +62,7 @@ class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataMod
     }
 
     String getDirectionLabel(FailedTradesListItem item) {
-        return (item != null) ? formatter.formatDirection(dataModel.getDirection(item.getTrade().getOffer())) : "";
+        return (item != null) ? formatter.getDirection(dataModel.getDirection(item.getTrade().getOffer())) : "";
     }
 
     String getDate(FailedTradesListItem item) {
@@ -82,25 +72,13 @@ class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataMod
     String getState(FailedTradesListItem item) {
         if (item != null) {
             Trade trade = item.getTrade();
-            TradeState tradeState = trade.tradeStateProperty().get();
-            if (trade instanceof BuyerTrade) {
-                if (tradeState == TradeState.BuyerState.FAILED) {
-                    return "Failed";
-                }
-                else {
-                    log.error("Wrong state " + tradeState);
-                    return tradeState.toString();
-                }
-            }
-            else if (trade instanceof SellerTrade) {
-                if (tradeState == TradeState.SellerState.FAILED) {
-                    return "Failed";
-                }
-                else {
-                    log.error("Wrong state " + tradeState);
-                    return tradeState.toString();
-                }
-            }
+            //TODO
+            //if (trade.isFailedState())
+            return "Failed";
+           /* else {
+                log.error("Wrong state " + trade.getTradeState());
+                return trade.getTradeState().toString();
+            }*/
         }
         return "";
     }

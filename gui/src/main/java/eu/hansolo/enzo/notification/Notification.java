@@ -16,12 +16,10 @@
 
 package eu.hansolo.enzo.notification;
 
-import java.util.stream.IntStream;
-
+import io.bitsquare.common.UserThread;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ObjectPropertyBase;
 import javafx.collections.FXCollections;
@@ -30,17 +28,20 @@ import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.event.WeakEventHandler;
 import javafx.geometry.Pos;
-import javafx.scene.*;
-import javafx.scene.control.*;
-import javafx.scene.image.*;
-import javafx.scene.input.*;
-import javafx.scene.layout.*;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
-
 import org.controlsfx.control.PopOver;
+
+import java.util.stream.IntStream;
 
 
 /**
@@ -50,13 +51,13 @@ import org.controlsfx.control.PopOver;
  * {@code eu.hansolo.enzo.*} types are loaded from the enzo jar (see build.gradle for details).
  */
 public class Notification {
-    public static final Image INFO_ICON = new Image(Notifier.class.getResourceAsStream("info.png"));
-    public static final Image WARNING_ICON = new Image(Notifier.class.getResourceAsStream("warning.png"));
-    public static final Image SUCCESS_ICON = new Image(Notifier.class.getResourceAsStream("success.png"));
-    public static final Image ERROR_ICON = new Image(Notifier.class.getResourceAsStream("error.png"));
-    public final String TITLE;
-    public final String MESSAGE;
-    public final Image IMAGE;
+    private static final Image INFO_ICON = new Image(Notifier.class.getResourceAsStream("info.png"));
+    private static final Image WARNING_ICON = new Image(Notifier.class.getResourceAsStream("warning.png"));
+    private static final Image SUCCESS_ICON = new Image(Notifier.class.getResourceAsStream("success.png"));
+    private static final Image ERROR_ICON = new Image(Notifier.class.getResourceAsStream("error.png"));
+    private final String TITLE;
+    private final String MESSAGE;
+    private final Image IMAGE;
 
 
     // ******************** Constructors **************************************
@@ -68,7 +69,7 @@ public class Notification {
         this("", MESSAGE, IMAGE);
     }
 
-    public Notification(final String TITLE, final String MESSAGE, final Image IMAGE) {
+    private Notification(final String TITLE, final String MESSAGE, final Image IMAGE) {
         this.TITLE = TITLE;
         this.MESSAGE = MESSAGE;
         this.IMAGE = IMAGE;
@@ -313,7 +314,7 @@ public class Notification {
         private void preOrder() {
             if (popups.isEmpty()) return;
             IntStream.range(0, popups.size()).parallel().forEachOrdered(
-                    i -> Platform.runLater(() -> {
+                    i -> UserThread.execute(() -> {
                         switch (popupLocation) {
                             case TOP_LEFT:
                             case TOP_CENTER:
@@ -377,7 +378,7 @@ public class Notification {
 
             Timeline timeline = new Timeline(kfBegin, kfEnd);
             timeline.setDelay(popupLifetime);
-            timeline.setOnFinished(actionEvent -> Platform.runLater(() -> {
+            timeline.setOnFinished(actionEvent -> UserThread.execute(() -> {
                 popOver.hide();
                 popups.remove(popOver);
                 fireNotificationEvent(new NotificationEvent(NOTIFICATION, Notifier.this, popOver,

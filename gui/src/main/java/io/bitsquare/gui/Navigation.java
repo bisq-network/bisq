@@ -17,30 +17,27 @@
 
 package io.bitsquare.gui;
 
+import com.google.inject.Inject;
 import io.bitsquare.app.Version;
 import io.bitsquare.gui.common.view.View;
 import io.bitsquare.gui.common.view.ViewPath;
 import io.bitsquare.gui.main.MainView;
-import io.bitsquare.gui.main.offer.BuyOfferView;
+import io.bitsquare.gui.main.market.MarketView;
 import io.bitsquare.storage.Storage;
-
-import com.google.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Navigation implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
     transient private static final Logger log = LoggerFactory.getLogger(Navigation.class);
 
-    transient private static final ViewPath DEFAULT_VIEW_PATH = ViewPath.to(MainView.class, BuyOfferView.class);
+    transient private static final ViewPath DEFAULT_VIEW_PATH = ViewPath.to(MainView.class, MarketView.class);
 
 
     public interface Listener {
@@ -50,7 +47,7 @@ public class Navigation implements Serializable {
     // New listeners can be added during iteration so we use CopyOnWriteArrayList to
     // prevent invalid array modification
     transient private final List<Listener> listeners = new CopyOnWriteArrayList<>();
-    transient private final Storage<Navigation> storage;
+    transient private final Storage<Navigation> remoteStorage;
     transient private ViewPath currentPath;
     // Used for returning to the last important view. After setup is done we want to
     // return to the last opened view (e.g. sell/buy)
@@ -61,10 +58,10 @@ public class Navigation implements Serializable {
 
 
     @Inject
-    public Navigation(Storage<Navigation> storage) {
-        this.storage = storage;
+    public Navigation(Storage<Navigation> remoteStorage) {
+        this.remoteStorage = remoteStorage;
 
-        Navigation persisted = storage.initAndGetPersisted(this);
+        Navigation persisted = remoteStorage.initAndGetPersisted(this);
         if (persisted != null) {
             previousPath = persisted.getPreviousPath();
         }
@@ -106,7 +103,7 @@ public class Navigation implements Serializable {
 
         currentPath = newPath;
         previousPath = currentPath;
-        storage.queueUpForSave();
+        remoteStorage.queueUpForSave();
         listeners.stream().forEach((e) -> e.onNavigationRequested(currentPath));
     }
 

@@ -17,35 +17,22 @@
 
 package io.bitsquare.trade.offer;
 
-import io.bitsquare.BitsquareModule;
-
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
-
+import io.bitsquare.app.AppModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.core.env.Environment;
 
-public abstract class OfferModule extends BitsquareModule {
+public class OfferModule extends AppModule {
     private static final Logger log = LoggerFactory.getLogger(OfferModule.class);
 
-    protected OfferModule(Environment env) {
+    public OfferModule(Environment env) {
         super(env);
     }
 
     @Override
     protected final void configure() {
         bind(OpenOfferManager.class).in(Singleton.class);
-        doConfigure();
-    }
-
-    protected void doConfigure() {
-    }
-
-    @Override
-    protected void doClose(Injector injector) {
-        log.trace("doClose " + getClass().getSimpleName());
-        injector.getInstance(OpenOfferManager.class).shutDown();
+        bind(OfferBookService.class).in(Singleton.class);
     }
 }

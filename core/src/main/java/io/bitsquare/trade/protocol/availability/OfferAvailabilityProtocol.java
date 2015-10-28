@@ -20,34 +20,32 @@ package io.bitsquare.trade.protocol.availability;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.crypto.MessageWithPubKey;
-import io.bitsquare.p2p.DecryptedMessageHandler;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.Peer;
+import io.bitsquare.p2p.messaging.DecryptedMailListener;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.availability.messages.OfferAvailabilityResponse;
 import io.bitsquare.trade.protocol.availability.messages.OfferMessage;
 import io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress;
 import io.bitsquare.trade.protocol.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bitsquare.trade.protocol.availability.tasks.SendOfferAvailabilityRequest;
-import io.bitsquare.util.Utilities;
-
-import java.util.Timer;
-
+import org.reactfx.util.FxTimer;
+import org.reactfx.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
 public class OfferAvailabilityProtocol {
     private static final Logger log = LoggerFactory.getLogger(OfferAvailabilityProtocol.class);
 
-    private static final long TIMEOUT = 10000;
+    private static final long TIMEOUT = 30 * 1000;
 
     private final OfferAvailabilityModel model;
     private final ResultHandler resultHandler;
     private final ErrorMessageHandler errorMessageHandler;
-    private final DecryptedMessageHandler decryptedMessageHandler;
+    private final DecryptedMailListener decryptedMailListener;
     private Timer timeoutTimer;
 
     private TaskRunner<OfferAvailabilityModel> taskRunner;
@@ -61,12 +59,24 @@ public class OfferAvailabilityProtocol {
         this.model = model;
         this.resultHandler = resultHandler;
         this.errorMessageHandler = errorMessageHandler;
-        decryptedMessageHandler = this::handleDecryptedMessageWithPubKey;
+
+        decryptedMailListener = (decryptedMessageWithPubKey, peerAddress) -> {
+            Message message = decryptedMessageWithPubKey.message;
+            if (message instanceof OfferMessage) {
+                OfferMessage offerMessage = (OfferMessage) message;
+                nonEmptyStringOf(offerMessage.offerId);
+                if (message instanceof OfferAvailabilityResponse
+                        && model.offer.getId().equals(offerMessage.offerId)) {
+                    log.trace("handle OfferAvailabilityResponse = " + message.getClass().getSimpleName() + " from " + peerAddress);
+                    handle((OfferAvailabilityResponse) message);
+                }
+            }
+        };
     }
 
     private void cleanup() {
         stopTimeout();
-        model.messageService.removeDecryptedMessageHandler(decryptedMessageHandler);
+        model.p2PService.removeDecryptedMailListener(decryptedMailListener);
     }
 
 
@@ -78,7 +88,7 @@ public class OfferAvailabilityProtocol {
         // reset
         model.offer.setState(Offer.State.UNDEFINED);
 
-        model.messageService.addDecryptedMessageHandler(decryptedMessageHandler);
+        model.p2PService.addDecryptedMailListener(decryptedMailListener);
 
         taskRunner = new TaskRunner<>(model,
                 () -> {
@@ -88,6 +98,7 @@ public class OfferAvailabilityProtocol {
                 (errorMessage) -> {
                     log.error(errorMessage);
                     stopTimeout();
+                    errorMessageHandler.handleErrorMessage(errorMessage);
                 }
         );
         taskRunner.addTasks(
@@ -107,17 +118,6 @@ public class OfferAvailabilityProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    protected void handleDecryptedMessageWithPubKey(MessageWithPubKey messageWithPubKey, Peer sender) {
-        Message message = messageWithPubKey.getMessage();
-        log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + sender);
-        if (message instanceof OfferMessage) {
-            nonEmptyStringOf(((OfferMessage) message).offerId);
-            if (message instanceof OfferAvailabilityResponse && model.offer.getId().equals(((OfferMessage) message).offerId))
-                handle((OfferAvailabilityResponse) message);
-        }
-    }
-
 
     private void handle(OfferAvailabilityResponse message) {
         stopTimeout();
@@ -140,19 +140,18 @@ public class OfferAvailabilityProtocol {
         taskRunner.run();
     }
 
-    protected void startTimeout() {
+    private void startTimeout() {
         stopTimeout();
 
-        timeoutTimer = Utilities.setTimeout(TIMEOUT, () -> {
+        timeoutTimer = FxTimer.runLater(Duration.ofMillis(TIMEOUT), () -> {
             log.warn("Timeout reached");
             errorMessageHandler.handleErrorMessage("Timeout reached: Peer has not responded.");
-            model.offer.setState(Offer.State.TIMEOUT);
         });
     }
 
-    protected void stopTimeout() {
+    private void stopTimeout() {
         if (timeoutTimer != null) {
-            timeoutTimer.cancel();
+            timeoutTimer.stop();
             timeoutTimer = null;
         }
     }

@@ -17,11 +17,10 @@
 
 package io.bitsquare.gui.components;
 
-import io.bitsquare.util.Utilities;
-
 import eu.hansolo.enzo.notification.Notification;
 import eu.hansolo.enzo.notification.NotificationBuilder;
 import eu.hansolo.enzo.notification.NotifierBuilder;
+import io.bitsquare.common.util.Utilities;
 
 /**
  * Not sure if we stick with the eu.hansolo.enzo.notification.Notification implementation, so keep it behind a service

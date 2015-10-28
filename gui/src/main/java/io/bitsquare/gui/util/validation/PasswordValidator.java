@@ -21,12 +21,22 @@ import io.bitsquare.locale.BSResources;
 
 public final class PasswordValidator extends InputValidator {
 
+    private ValidationResult externalValidationResult;
+
     @Override
     public ValidationResult validate(String input) {
         ValidationResult result = validateIfNotEmpty(input);
         if (result.isValid)
             result = validateMinLength(input);
+
+        if (externalValidationResult != null && !externalValidationResult.isValid)
+            return externalValidationResult;
+        
         return result;
+    }
+
+    public void setExternalValidationResult(ValidationResult externalValidationResult) {
+        this.externalValidationResult = externalValidationResult;
     }
 
     private ValidationResult validateMinLength(String input) {

@@ -18,22 +18,49 @@
 package io.bitsquare.trade.protocol.trade.messages;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.MailboxMessage;
-
-import java.io.Serializable;
+import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.messaging.MailboxMessage;
 
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-public class FiatTransferStartedMessage extends TradeMessage implements MailboxMessage, Serializable {
+public class FiatTransferStartedMessage extends TradeMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     public final String buyerPayoutAddress;
+    private final Address senderAddress;
 
-    public FiatTransferStartedMessage(String tradeId,
-                                      String buyerPayoutAddress) {
+    public FiatTransferStartedMessage(String tradeId, String buyerPayoutAddress, Address senderAddress) {
         super(tradeId);
         this.buyerPayoutAddress = buyerPayoutAddress;
+        this.senderAddress = senderAddress;
+    }
+
+    @Override
+    public Address getSenderAddress() {
+        return senderAddress;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FiatTransferStartedMessage)) return false;
+        if (!super.equals(o)) return false;
+
+        FiatTransferStartedMessage that = (FiatTransferStartedMessage) o;
+
+        if (buyerPayoutAddress != null ? !buyerPayoutAddress.equals(that.buyerPayoutAddress) : that.buyerPayoutAddress != null)
+            return false;
+        return !(senderAddress != null ? !senderAddress.equals(that.senderAddress) : that.senderAddress != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (buyerPayoutAddress != null ? buyerPayoutAddress.hashCode() : 0);
+        result = 31 * result + (senderAddress != null ? senderAddress.hashCode() : 0);
+        return result;
     }
 }

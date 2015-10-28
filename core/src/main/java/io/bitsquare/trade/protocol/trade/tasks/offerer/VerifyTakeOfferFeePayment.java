@@ -20,7 +20,6 @@ package io.bitsquare.trade.protocol.trade.tasks.offerer;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +35,7 @@ public class VerifyTakeOfferFeePayment extends TradeTask {
         try {
             runInterceptHook();
             //TODO mocked yet, need a confidence listeners
-            int numOfPeersSeenTx = processModel.getWalletService().getNumOfPeersSeenTx(processModel.getTakeOfferFeeTxId());
+            // int numOfPeersSeenTx = processModel.getWalletService().getNumOfPeersSeenTx(processModel.getTakeOfferFeeTxId());
        /* if (numOfPeersSeenTx > 2) {
             resultHandler.handleResult();
         }*/

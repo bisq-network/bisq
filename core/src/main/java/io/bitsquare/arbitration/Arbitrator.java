@@ -18,165 +18,47 @@
 package io.bitsquare.arbitration;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.storage.Storage;
-
-import org.bitcoinj.core.Coin;
-
-import java.io.Serializable;
+import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.storage.data.PubKeyProtectedExpirablePayload;
 
 import java.security.PublicKey;
-
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 
-public class Arbitrator implements Serializable {
+public final class Arbitrator implements PubKeyProtectedExpirablePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Enums
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public enum ID_TYPE {
-        REAL_LIFE_ID,
-        NICKNAME,
-        COMPANY
-    }
-
-    public enum METHOD {
-        TLS_NOTARY,
-        SKYPE_SCREEN_SHARING,
-        SMART_PHONE_VIDEO_CHAT,
-        REQUIRE_REAL_ID,
-        BANK_STATEMENT,
-        OTHER
-    }
-
-    public enum ID_VERIFICATION {
-        PASSPORT,
-        GOV_ID,
-        UTILITY_BILLS,
-        FACEBOOK,
-        GOOGLE_PLUS,
-        TWITTER,
-        PGP,
-        BTC_OTC,
-        OTHER
-    }
-
-
-    final transient private Storage<Arbitrator> storage;
+    public static final long TTL = 10 * 24 * 60 * 60 * 1000; // 10 days
 
     // Persisted fields
-    private final String id;
-    private final byte[] pubKey;
-    private final PublicKey p2pSigPubKey;
-    private final String name;
-    private final Reputation reputation;
+    private final byte[] btcPubKey;
+    private final PubKeyRing pubKeyRing;
+    private final Address arbitratorAddress;
+    private final List<String> languageCodes;
+    private final String btcAddress;
+    private final long registrationDate;
+    private final String registrationSignature;
+    private final byte[] registrationPubKey;
 
-    // Mutable
-    private ID_TYPE idType;
-    private List<String> languageCodes;
-    private Coin fee;
-    private List<METHOD> arbitrationMethods;
-    private List<ID_VERIFICATION> idVerifications;
-    private String webUrl;
-    private String description;
-
-    public Arbitrator(Storage<Arbitrator> storage,
-                      String id,
-                      byte[] pubKey,
-                      PublicKey p2pSigPubKey,
-                      String name,
-                      Reputation reputation,
-                      ID_TYPE idType,
+    public Arbitrator(Address arbitratorAddress,
+                      byte[] btcPubKey,
+                      String btcAddress,
+                      PubKeyRing pubKeyRing,
                       List<String> languageCodes,
-                      Coin fee,
-                      List<METHOD> arbitrationMethods,
-                      List<ID_VERIFICATION> idVerifications,
-                      String webUrl,
-                      String description) {
-        this.storage = storage;
-        this.id = id;
-        this.pubKey = pubKey;
-        this.p2pSigPubKey = p2pSigPubKey;
-        this.name = name;
-        this.reputation = reputation;
-        this.idType = idType;
+                      Date registrationDate,
+                      byte[] registrationPubKey,
+                      String registrationSignature) {
+        this.arbitratorAddress = arbitratorAddress;
+        this.btcPubKey = btcPubKey;
+        this.btcAddress = btcAddress;
+        this.pubKeyRing = pubKeyRing;
         this.languageCodes = languageCodes;
-        this.fee = fee;
-        this.arbitrationMethods = arbitrationMethods;
-        this.idVerifications = idVerifications;
-        this.webUrl = webUrl;
-        this.description = description;
-    }
-
-    public void save() {
-        storage.queueUpForSave();
-    }
-
-    @Override
-    public int hashCode() {
-        if (id != null) {
-            return Objects.hashCode(id);
-        }
-        else {
-            return 0;
-        }
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof Arbitrator)) {
-            return false;
-        }
-        if (obj == this) {
-            return true;
-        }
-
-        Arbitrator other = (Arbitrator) obj;
-        return id != null && id.equals(other.getId());
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setDescription(String description) {
-        this.description = description;
-        save();
-    }
-
-    public void setIdType(ID_TYPE idType) {
-        this.idType = idType;
-        save();
-    }
-
-    public void setLanguageCodes(List<String> languageCodes) {
-        this.languageCodes = languageCodes;
-        save();
-    }
-
-    public void setFee(Coin fee) {
-        this.fee = fee;
-        save();
-    }
-
-    public void setArbitrationMethods(List<METHOD> arbitrationMethods) {
-        this.arbitrationMethods = arbitrationMethods;
-        save();
-    }
-
-    public void setIdVerifications(List<ID_VERIFICATION> idVerifications) {
-        this.idVerifications = idVerifications;
-        save();
-    }
-
-    public void setWebUrl(String webUrl) {
-        this.webUrl = webUrl;
-        save();
+        this.registrationDate = registrationDate.getTime();
+        this.registrationPubKey = registrationPubKey;
+        this.registrationSignature = registrationSignature;
     }
 
 
@@ -184,51 +66,88 @@ public class Arbitrator implements Serializable {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String getId() {
-        return id;
+    @Override
+    public long getTTL() {
+        return TTL;
     }
 
-    public byte[] getPubKey() {
-        return pubKey;
+    @Override
+    public PublicKey getPubKey() {
+        return pubKeyRing.getStorageSignaturePubKey();
     }
 
-    public PublicKey getP2pSigPubKey() {
-        return p2pSigPubKey;
+    public byte[] getBtcPubKey() {
+        return btcPubKey;
     }
 
-    public String getName() {
-        return name;
+    public PubKeyRing getPubKeyRing() {
+        return pubKeyRing;
     }
 
-    public ID_TYPE getIdType() {
-        return idType;
+    public Address getArbitratorAddress() {
+        return arbitratorAddress;
+    }
+
+    public Date getRegistrationDate() {
+        return new Date(registrationDate);
+    }
+
+    public String getBtcAddress() {
+        return btcAddress;
     }
 
     public List<String> getLanguageCodes() {
         return languageCodes;
     }
 
-    public Reputation getReputation() {
-        return reputation;
+    public String getRegistrationSignature() {
+        return registrationSignature;
     }
 
-    public Coin getFee() {
-        return fee;
+    public byte[] getRegistrationPubKey() {
+        return registrationPubKey;
     }
 
-    public List<METHOD> getArbitrationMethods() {
-        return arbitrationMethods;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Arbitrator)) return false;
+
+        Arbitrator that = (Arbitrator) o;
+
+        if (registrationDate != that.registrationDate) return false;
+        if (!Arrays.equals(btcPubKey, that.btcPubKey)) return false;
+        if (pubKeyRing != null ? !pubKeyRing.equals(that.pubKeyRing) : that.pubKeyRing != null) return false;
+        if (arbitratorAddress != null ? !arbitratorAddress.equals(that.arbitratorAddress) : that.arbitratorAddress != null)
+            return false;
+        if (languageCodes != null ? !languageCodes.equals(that.languageCodes) : that.languageCodes != null)
+            return false;
+        if (btcAddress != null ? !btcAddress.equals(that.btcAddress) : that.btcAddress != null) return false;
+        if (registrationSignature != null ? !registrationSignature.equals(that.registrationSignature) : that.registrationSignature != null)
+            return false;
+        return Arrays.equals(registrationPubKey, that.registrationPubKey);
+
     }
 
-    public List<ID_VERIFICATION> getIdVerifications() {
-        return idVerifications;
+    @Override
+    public int hashCode() {
+        int result = btcPubKey != null ? Arrays.hashCode(btcPubKey) : 0;
+        result = 31 * result + (pubKeyRing != null ? pubKeyRing.hashCode() : 0);
+        result = 31 * result + (arbitratorAddress != null ? arbitratorAddress.hashCode() : 0);
+        result = 31 * result + (languageCodes != null ? languageCodes.hashCode() : 0);
+        result = 31 * result + (btcAddress != null ? btcAddress.hashCode() : 0);
+        result = 31 * result + (int) (registrationDate ^ (registrationDate >>> 32));
+        result = 31 * result + (registrationSignature != null ? registrationSignature.hashCode() : 0);
+        result = 31 * result + (registrationPubKey != null ? Arrays.hashCode(registrationPubKey) : 0);
+        return result;
     }
 
-    public String getWebUrl() {
-        return webUrl;
-    }
-
-    public String getDescription() {
-        return description;
+    @Override
+    public String toString() {
+        return "Arbitrator{" +
+                "arbitratorAddress='" + arbitratorAddress + '\'' +
+                ", languageCodes=" + languageCodes +
+                ", btcAddress='" + btcAddress + '\'' +
+                '}';
     }
 }

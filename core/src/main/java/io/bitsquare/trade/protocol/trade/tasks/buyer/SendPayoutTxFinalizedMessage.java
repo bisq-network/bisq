@@ -18,12 +18,10 @@
 package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.p2p.listener.SendMessageListener;
+import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeState;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,30 +36,44 @@ public class SendPayoutTxFinalizedMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            PayoutTxFinalizedMessage tradeMessage = new PayoutTxFinalizedMessage(processModel.getId(), trade.getPayoutTx());
-            processModel.getMessageService().sendEncryptedMessage(
-                    trade.getTradingPeer(),
-                    processModel.tradingPeer.getPubKeyRing(),
-                    tradeMessage,
-                    true,
-                    new SendMessageListener() {
-                        @Override
-                        public void handleResult() {
-                            log.trace("PayoutTxFinalizedMessage successfully arrived at peer");
+            if (trade.getPayoutTx() != null) {
+                processModel.getP2PService().sendEncryptedMailboxMessage(
+                        trade.getTradingPeerAddress(),
+                        processModel.tradingPeer.getPubKeyRing(),
+                        new PayoutTxFinalizedMessage(
+                                processModel.getId(),
+                                trade.getPayoutTx().bitcoinSerialize(),
+                                processModel.getMyAddress()
+                        ),
+                        new SendMailboxMessageListener() {
+                            @Override
+                            public void onArrived() {
+                                log.trace("Message arrived at peer.");
+                                trade.setState(Trade.State.PAYOUT_TX_SENT);
+                                complete();
+                            }
 
-                            trade.setTradeState(TradeState.BuyerState.PAYOUT_TX_SENT);
+                            @Override
+                            public void onStoredInMailbox() {
+                                log.trace("Message stored in mailbox.");
+                                trade.setState(Trade.State.PAYOUT_TX_SENT);
+                                complete();
+                            }
 
-                            complete();
+                            @Override
+                            public void onFault() {
+                                appendToErrorMessage("PayoutTxFinalizedMessage sending failed");
+                                failed();
+                            }
                         }
-
-                        @Override
-                        public void handleFault() {
-                            appendToErrorMessage("Sending PayoutTxFinalizedMessage failed");
-                            failed();
-                        }
-                    });
+                );
+            } else {
+                log.error("trade.getPayoutTx() = " + trade.getPayoutTx());
+                failed("PayoutTx is null");
+            }
         } catch (Throwable t) {
             failed(t);
         }
+
     }
 }

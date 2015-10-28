@@ -21,7 +21,6 @@ import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.ProcessModel;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +30,7 @@ public abstract class TradeTask extends Task<Trade> {
     protected final ProcessModel processModel;
     protected final Trade trade;
 
-    public TradeTask(TaskRunner taskHandler, Trade trade) {
+    protected TradeTask(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
 
         this.trade = trade;

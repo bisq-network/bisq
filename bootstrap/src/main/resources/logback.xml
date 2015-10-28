@@ -23,8 +23,10 @@
         </encoder>
     </appender>
 
-    <root level="INFO">
+    <root level="TRACE">
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
+
+    <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="WARN"/>
 
 </configuration>

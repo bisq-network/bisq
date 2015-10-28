@@ -19,7 +19,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.control.cell.*?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.layout.*?>
 <VBox fx:id="root" fx:controller="io.bitsquare.gui.main.funds.withdrawal.WithdrawalView"
       spacing="10" xmlns:fx="http://javafx.com/fxml">
@@ -36,8 +36,7 @@
                 </cellValueFactory>
             </TableColumn>
             <TableColumn text="Balance" fx:id="balanceColumn" minWidth="50" sortable="false"/>
-            <TableColumn text="Copy" fx:id="copyColumn" minWidth="30" sortable="false"/>
-            <TableColumn text="Status" fx:id="confidenceColumn" minWidth="30" sortable="false"/>
+            <TableColumn text="Confirmations" fx:id="confidenceColumn" minWidth="30" sortable="false"/>
         </columns>
     </TableView>
 

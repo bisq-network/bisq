@@ -17,26 +17,19 @@
 
 package io.bitsquare.trade.protocol.trade.tasks.shared;
 
-import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.BuyerTrade;
-import io.bitsquare.trade.SellerTrade;
-import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeState;
-import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-
-import org.bitcoinj.core.StoredBlock;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.utils.Threading;
-
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
-
-import java.util.concurrent.ExecutionException;
-
+import io.bitsquare.common.UserThread;
+import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
+import org.bitcoinj.core.StoredBlock;
+import org.bitcoinj.core.Transaction;
 import org.jetbrains.annotations.NotNull;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.ExecutionException;
 
 public class SetupPayoutTxLockTimeReachedListener extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(SetupPayoutTxLockTimeReachedListener.class);
@@ -49,11 +42,10 @@ public class SetupPayoutTxLockTimeReachedListener extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            log.debug("ChainHeight/LockTime: {} / {}", processModel.getTradeWalletService().getBestChainHeight(), trade.getLockTime());
-            if (processModel.getTradeWalletService().getBestChainHeight() >= trade.getLockTime()) {
+            log.debug("ChainHeight/LockTime: {} / {}", processModel.getTradeWalletService().getBestChainHeight(), trade.getLockTimeAsBlockHeight());
+            if (processModel.getTradeWalletService().getBestChainHeight() >= trade.getLockTimeAsBlockHeight()) {
                 broadcastTx();
-            }
-            else {
+            } else {
                 ListenableFuture<StoredBlock> blockHeightFuture = processModel.getTradeWalletService().getBlockHeightFuture(trade.getPayoutTx());
                 blockHeightFuture.addListener(
                         () -> {
@@ -61,27 +53,23 @@ public class SetupPayoutTxLockTimeReachedListener extends TradeTask {
                                 log.debug("Block height reached " + blockHeightFuture.get().getHeight());
                             } catch (InterruptedException | ExecutionException e) {
                                 e.printStackTrace();
+                                Thread.currentThread().interrupt();
                             }
                             broadcastTx();
                         },
-                        Threading.USER_THREAD::execute);
+                        UserThread::execute);
             }
         } catch (Throwable t) {
             failed(t);
         }
     }
 
-    protected void broadcastTx() {
+    private void broadcastTx() {
         processModel.getTradeWalletService().broadcastTx(trade.getPayoutTx(), new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(Transaction transaction) {
                 log.debug("BroadcastTx succeeded. Transaction:" + transaction);
-
-                if (trade instanceof BuyerTrade)
-                    trade.setTradeState(TradeState.BuyerState.PAYOUT_BROAD_CASTED);
-                else if (trade instanceof SellerTrade)
-                    trade.setTradeState(TradeState.SellerState.PAYOUT_BROAD_CASTED);
-
+                trade.setState(Trade.State.PAYOUT_BROAD_CASTED);
                 complete();
             }
 

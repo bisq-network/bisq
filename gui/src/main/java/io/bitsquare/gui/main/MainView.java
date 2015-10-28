@@ -18,43 +18,35 @@
 package io.bitsquare.gui.main;
 
 import io.bitsquare.BitsquareException;
-import io.bitsquare.fiat.FiatAccount;
+import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.OverlayManager;
-import io.bitsquare.gui.common.view.CachingViewLoader;
-import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.common.view.InitializableView;
-import io.bitsquare.gui.common.view.View;
-import io.bitsquare.gui.common.view.ViewLoader;
-import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.components.SystemNotification;
 import io.bitsquare.gui.main.account.AccountView;
+import io.bitsquare.gui.main.disputes.DisputesView;
 import io.bitsquare.gui.main.funds.FundsView;
-import io.bitsquare.gui.main.home.HomeView;
-import io.bitsquare.gui.main.msg.MsgView;
+import io.bitsquare.gui.main.market.MarketView;
 import io.bitsquare.gui.main.offer.BuyOfferView;
 import io.bitsquare.gui.main.offer.SellOfferView;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.settings.SettingsView;
+import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.util.Transitions;
-import io.bitsquare.util.Utilities;
-
-import java.util.List;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-
-import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.*;
 import javafx.scene.control.*;
-import javafx.scene.effect.*;
-import javafx.scene.image.*;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.scene.paint.*;
-import javafx.scene.text.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.TextAlignment;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.util.List;
 
 import static javafx.scene.layout.AnchorPane.*;
 
@@ -63,11 +55,27 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     public static final String TITLE_KEY = "view.title";
 
+    public static BorderPane getBaseApplicationContainer() {
+        return baseApplicationContainer;
+    }
+
+    public static void blur() {
+        transitions.blur(baseApplicationContainer);
+    }
+
+    public static void blurLight() {
+        transitions.blur(baseApplicationContainer, Transitions.DEFAULT_DURATION, true, false, 5);
+    }
+
+    public static void removeBlur() {
+        transitions.removeBlur(baseApplicationContainer);
+    }
+
     private final ToggleGroup navButtons = new ToggleGroup();
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private final Transitions transitions;
+    private static Transitions transitions;
     private final String title;
     private ChangeListener<String> walletServiceErrorMsgListener;
     private ChangeListener<String> blockchainSyncIconIdListener;
@@ -84,6 +92,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Label updateInfoLabel;
     private List<String> persistedFilesCorrupted;
     private Tooltip downloadButtonTooltip;
+    private static BorderPane baseApplicationContainer;
 
     @Inject
     public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, Transitions transitions,
@@ -91,36 +100,36 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
-        this.transitions = transitions;
+        MainView.transitions = transitions;
         this.title = title;
     }
 
     @Override
     protected void initialize() {
-        ToggleButton homeButton = new NavButton(HomeView.class, "Overview") {{
-            setDisable(true); // TODO for alpha
-        }};
+        ToggleButton marketButton = new NavButton(MarketView.class, "Market");
         ToggleButton buyButton = new NavButton(BuyOfferView.class, "Buy BTC");
         ToggleButton sellButton = new NavButton(SellOfferView.class, "Sell BTC");
         ToggleButton portfolioButton = new NavButton(PortfolioView.class, "Portfolio");
         ToggleButton fundsButton = new NavButton(FundsView.class, "Funds");
-        ToggleButton msgButton = new NavButton(MsgView.class, "Messages") {{
-            setDisable(true); // TODO for alpha
-        }};
+        ToggleButton disputesButton = new NavButton(DisputesView.class, "Support");
         ToggleButton settingsButton = new NavButton(SettingsView.class, "Settings");
-        ToggleButton accountButton = new NavButton(AccountView.class, "Account") {{
-            setDisable(true); // TODO for alpha
-        }};
+        ToggleButton accountButton = new NavButton(AccountView.class, "Account");
         Pane portfolioButtonHolder = new Pane(portfolioButton);
-        Pane bankAccountComboBoxHolder = new Pane();
+        Pane disputesButtonHolder = new Pane(disputesButton);
 
-        HBox leftNavPane = new HBox(homeButton, buyButton, sellButton, portfolioButtonHolder, fundsButton, new Pane(msgButton)) {{
+        HBox leftNavPane = new HBox(marketButton, buyButton, sellButton, portfolioButtonHolder, fundsButton, disputesButtonHolder) {{
             setSpacing(10);
             setLeftAnchor(this, 10d);
             setTopAnchor(this, 0d);
         }};
 
-        HBox rightNavPane = new HBox(bankAccountComboBoxHolder, settingsButton, accountButton) {{
+        Tuple2<TextField, VBox> availableBalanceBox = getBalanceBox("Available balance");
+        availableBalanceBox.first.textProperty().bind(model.availableBalance);
+
+        Tuple2<TextField, VBox> lockedBalanceBox = getBalanceBox("Locked balance");
+        lockedBalanceBox.first.textProperty().bind(model.lockedBalance);
+
+        HBox rightNavPane = new HBox(availableBalanceBox.second, lockedBalanceBox.second, settingsButton, accountButton) {{
             setSpacing(10);
             setRightAnchor(this, 10d);
             setTopAnchor(this, 0d);
@@ -138,12 +147,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             setId("content-pane");
         }};
 
-        BorderPane baseApplicationContainer = new BorderPane(applicationContainer) {{
+        baseApplicationContainer = new BorderPane(applicationContainer) {{
             setId("base-content-container");
         }};
         baseApplicationContainer.setBottom(createFooter());
 
         setupNotificationIcon(portfolioButtonHolder);
+
+        setupDisputesIcon(disputesButtonHolder);
 
         navigation.addListener(viewPath -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0)
@@ -161,25 +172,21 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                     .setSelected(true);
         });
 
-        configureBlurring(baseApplicationContainer);
-
         VBox splashScreen = createSplashScreen();
 
         root.getChildren().addAll(baseApplicationContainer, splashScreen);
 
         model.showAppScreen.addListener((ov, oldValue, newValue) -> {
             if (newValue) {
-                bankAccountComboBoxHolder.getChildren().setAll(createBankAccountComboBox());
-
                 navigation.navigateToPreviousVisitedView();
 
                 if (!persistedFilesCorrupted.isEmpty()) {
                     // show warning that some files has been corrupted
-                    Popups.openWarningPopup("Those data base file(s) are not compatible with our current code base." +
+                    new Popup().warning("Those data base file(s) are not compatible with our current code base." +
                                     "\n" + persistedFilesCorrupted.toString() +
                                     "\n\nWe made a backup of the corrupted file(s) and applied the default values." +
                                     "\n\nThe backup is located at: [data directory]/db/corrupted"
-                    );
+                    ).show();
                 }
 
                 transitions.fadeOutAndRemove(splashScreen, 1500, actionEvent -> disposeSplashScreen());
@@ -187,7 +194,26 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         });
 
         // Delay a bit to give time for rendering the splash screen
-        Platform.runLater(model::initBackend);
+        UserThread.execute(model::initializeAllServices);
+    }
+
+    private Tuple2<TextField, VBox> getBalanceBox(String text) {
+        TextField textField = new TextField();
+        textField.setEditable(false);
+        textField.setPrefWidth(100);
+        textField.setMouseTransparent(true);
+        textField.setFocusTraversable(false);
+        textField.setStyle("-fx-alignment: center;  -fx-background-color: white;");
+
+        Label label = new Label(text);
+        label.setId("nav-balance-label");
+        label.setPadding(new Insets(0, 5, 0, 5));
+        label.setPrefWidth(textField.getPrefWidth());
+        VBox vBox = new VBox();
+        vBox.setSpacing(3);
+        vBox.setPadding(new Insets(11, 0, 0, 0));
+        vBox.getChildren().addAll(textField, label);
+        return new Tuple2(textField, vBox);
     }
 
     public void setPersistedFilesCorrupted(List<String> persistedFilesCorrupted) {
@@ -209,7 +235,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         blockchainSyncLabel.textProperty().bind(model.blockchainSyncInfo);
         walletServiceErrorMsgListener = (ov, oldValue, newValue) -> {
             blockchainSyncLabel.setId("splash-error-state-msg");
-            // error popup is called by error handler at createFooter
         };
         model.walletServiceErrorMsg.addListener(walletServiceErrorMsgListener);
 
@@ -258,7 +283,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         bootstrapErrorMsgListener = (ov, oldValue, newValue) -> {
             bootstrapStateLabel.setId("splash-error-state-msg");
             bootstrapIndicator.setVisible(false);
-            // error popup is handled by handler at createFooter
         };
         model.bootstrapErrorMsg.addListener(bootstrapErrorMsgListener);
 
@@ -353,6 +377,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         downloadButton.visibleProperty().unbind();
         downloadButton.managedProperty().unbind();
         downloadButtonTooltip.textProperty().unbind();
+
+        model.onSplashScreenRemoved();
     }
 
 
@@ -424,7 +450,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         bootstrapLabel.setId("footer-pane");
         setRightAnchor(bootstrapLabel, 100d);
         setBottomAnchor(bootstrapLabel, 7d);
-        bootstrapLabel.textProperty().bind(model.bootstrapInfoFooter);
+        bootstrapLabel.textProperty().bind(model.p2pNetworkInfoFooter);
 
         ImageView bootstrapIcon = new ImageView();
         setRightAnchor(bootstrapIcon, 60d);
@@ -435,18 +461,18 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         numPeersLabel.setId("footer-num-peers");
         setRightAnchor(numPeersLabel, 10d);
         setBottomAnchor(numPeersLabel, 7d);
-        numPeersLabel.textProperty().bind(model.numDHTPeers);
+        numPeersLabel.textProperty().bind(model.numP2PNetworkPeers);
         model.bootstrapErrorMsg.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 bootstrapLabel.setId("splash-error-state-msg");
                 bootstrapLabel.textProperty().unbind();
                 bootstrapLabel.setText("Not connected");
-                Popups.openErrorPopup("Error", "Connecting to the P2P network failed. \n" + newValue
-                        + "\nPlease check your internet connection.");
+                new Popup().error("Connecting to the P2P network failed. \n" + newValue
+                        + "\nPlease check your internet connection.").show();
             }
             else {
                 bootstrapLabel.setId("footer-pane");
-                bootstrapLabel.textProperty().bind(model.bootstrapInfoFooter);
+                bootstrapLabel.textProperty().bind(model.p2pNetworkInfoFooter);
             }
         });
 
@@ -459,11 +485,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         return footerContainer;
     }
 
-    private void setupNotificationIcon(Pane portfolioButtonHolder) {
-        Label numPendingTradesLabel = new Label();
-        numPendingTradesLabel.textProperty().bind(model.numPendingTradesAsString);
-        numPendingTradesLabel.relocate(5, 1);
-        numPendingTradesLabel.setId("nav-alert-label");
+    private void setupNotificationIcon(Pane buttonHolder) {
+        Label label = new Label();
+        label.textProperty().bind(model.numPendingTradesAsString);
+        label.relocate(5, 1);
+        label.setId("nav-alert-label");
 
         ImageView icon = new ImageView();
         icon.setLayoutX(0.5);
@@ -473,60 +499,37 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         notification.relocate(30, 9);
         notification.setMouseTransparent(true);
         notification.setEffect(new DropShadow(4, 1, 2, Color.GREY));
-        notification.getChildren().addAll(icon, numPendingTradesLabel);
+        notification.getChildren().addAll(icon, label);
         notification.visibleProperty().bind(model.showPendingTradesNotification);
-        portfolioButtonHolder.getChildren().add(notification);
+        buttonHolder.getChildren().add(notification);
 
         model.showPendingTradesNotification.addListener((ov, oldValue, newValue) -> {
             if (newValue)
-                SystemNotification.openInfoNotification(title, "You got a new trade message.");
+                SystemNotification.openInfoNotification(title, "You received a new trade message.");
         });
     }
 
-    private VBox createBankAccountComboBox() {
-        final ComboBox<FiatAccount> comboBox = new ComboBox<>(model.getBankAccounts());
-        comboBox.setLayoutY(12);
-        comboBox.setVisibleRowCount(5);
-        comboBox.setConverter(model.getBankAccountsConverter());
-        comboBox.disableProperty().bind(model.bankAccountsComboBoxDisable);
-        comboBox.promptTextProperty().bind(model.bankAccountsComboBoxPrompt);
+    private void setupDisputesIcon(Pane buttonHolder) {
+        Label label = new Label();
+        label.textProperty().bind(model.numOpenDisputesAsString);
+        label.relocate(5, 1);
+        label.setId("nav-alert-label");
 
-        comboBox.getSelectionModel().selectedItemProperty().addListener((ov, oldValue, newValue) ->
-                model.setCurrentBankAccount(newValue));
+        ImageView icon = new ImageView();
+        icon.setLayoutX(0.5);
+        icon.setId("image-alert-round");
 
-        model.currentBankAccount.addListener((ov, oldValue, newValue) ->
-                comboBox.getSelectionModel().select(newValue));
-        comboBox.getSelectionModel().select(model.currentBankAccount.get());
+        Pane notification = new Pane();
+        notification.relocate(30, 9);
+        notification.setMouseTransparent(true);
+        notification.setEffect(new DropShadow(4, 1, 2, Color.GREY));
+        notification.getChildren().addAll(icon, label);
+        notification.visibleProperty().bind(model.showOpenDisputesNotification);
+        buttonHolder.getChildren().add(notification);
 
-        final Label titleLabel = new Label("Bank account");
-        titleLabel.setMouseTransparent(true);
-        titleLabel.setId("nav-button-label");
-        comboBox.widthProperty().addListener((ov, o, n) ->
-                titleLabel.setLayoutX(((double) n - titleLabel.getWidth()) / 2));
-
-        VBox vBox = new VBox();
-        vBox.setPadding(new Insets(12, 8, 0, 5));
-        vBox.setSpacing(2);
-        vBox.setAlignment(Pos.CENTER);
-        vBox.getChildren().setAll(comboBox, titleLabel);
-
-        // TODO for alpha
-        vBox.setDisable(true);
-
-        return vBox;
-    }
-
-    private void configureBlurring(Node node) {
-        OverlayManager.addListener(new OverlayManager.OverlayListener() {
-            @Override
-            public void onBlurContentRequested() {
-                transitions.blur(node);
-            }
-
-            @Override
-            public void onRemoveBlurContentRequested() {
-                transitions.removeBlur(node);
-            }
+        model.showOpenDisputesNotification.addListener((ov, oldValue, newValue) -> {
+            if (newValue)
+                SystemNotification.openInfoNotification(title, "You received a dispute message.");
         });
     }
 
@@ -577,7 +580,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     }
 
     private void openBTCConnectionErrorPopup(String errorMsg) {
-        Popups.openErrorPopup("Error", "Connecting to the bitcoin network failed. \n" + errorMsg);
-        // + "\nPlease check your internet connection."
+        new Popup().error("Connecting to the bitcoin network failed. \n" + errorMsg).show();
     }
 }

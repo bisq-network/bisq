@@ -17,89 +17,56 @@
 
 package io.bitsquare.btc;
 
-import io.bitsquare.btc.listeners.AddressConfidenceListener;
-import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.btc.listeners.TxConfidenceListener;
-import io.bitsquare.crypto.CryptoService;
-import io.bitsquare.user.Preferences;
-
-import org.bitcoinj.core.AbstractWalletEventListener;
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.AddressFormatException;
-import org.bitcoinj.core.Block;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.DownloadProgressTracker;
-import org.bitcoinj.core.FilteredBlock;
-import org.bitcoinj.core.GetDataMessage;
-import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.Message;
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.Peer;
-import org.bitcoinj.core.PeerAddress;
-import org.bitcoinj.core.PeerEventListener;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence;
-import org.bitcoinj.core.TransactionInput;
-import org.bitcoinj.core.TransactionOutput;
-import org.bitcoinj.core.Wallet;
-import org.bitcoinj.core.WalletEventListener;
-import org.bitcoinj.kits.WalletAppKit;
-import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.params.RegTestParams;
-import org.bitcoinj.params.TestNet3Params;
-import org.bitcoinj.script.ScriptBuilder;
-import org.bitcoinj.utils.Threading;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.Service;
+import io.bitsquare.btc.listeners.AddressConfidenceListener;
+import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.btc.listeners.TxConfidenceListener;
+import io.bitsquare.common.UserThread;
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ExceptionHandler;
+import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.user.Preferences;
+import javafx.beans.property.*;
+import org.bitcoinj.core.*;
+import org.bitcoinj.kits.WalletAppKit;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.params.TestNet3Params;
+import org.bitcoinj.utils.Threading;
+import org.bitcoinj.wallet.DeterministicSeed;
+import org.jetbrains.annotations.NotNull;
+import org.reactfx.util.FxTimer;
+import org.reactfx.util.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.crypto.params.KeyParameter;
 
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.File;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.time.Duration;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ReadOnlyDoubleProperty;
-import javafx.beans.property.ReadOnlyIntegerProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-
-import org.jetbrains.annotations.NotNull;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import rx.Observable;
-import rx.subjects.BehaviorSubject;
-import rx.subjects.Subject;
-
-import static org.bitcoinj.script.ScriptOpCodes.OP_RETURN;
-
+/**
+ * WalletService handles all non trade specific wallet and bitcoin related services.
+ * It startup the wallet app kit and initialized the wallet.
+ */
 public class WalletService {
     private static final Logger log = LoggerFactory.getLogger(WalletService.class);
 
     public static final String DIR_KEY = "wallet.dir";
     public static final String PREFIX_KEY = "wallet.prefix";
-    private static final long STARTUP_TIMEOUT = 60;
+    private static final long STARTUP_TIMEOUT = 60 * 1000;
 
     private final List<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArrayList<>();
     private final List<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArrayList<>();
@@ -112,16 +79,15 @@ public class WalletService {
     private final TradeWalletService tradeWalletService;
     private final AddressEntryList addressEntryList;
     private final NetworkParameters params;
-    private final CryptoService cryptoService;
     private final File walletDir;
     private final String walletPrefix;
     private final UserAgent userAgent;
 
     private WalletAppKit walletAppKit;
     private Wallet wallet;
-    private AddressEntry registrationAddressEntry;
-    private AddressEntry arbitratorDepositAddressEntry;
+    private AddressEntry arbitratorAddressEntry;
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
+    public final BooleanProperty shutDownDone = new SimpleBooleanProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -129,14 +95,12 @@ public class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletService(RegTestHost regTestHost, CryptoService cryptoService,
-                         TradeWalletService tradeWalletService, AddressEntryList addressEntryList, UserAgent userAgent,
+    public WalletService(RegTestHost regTestHost, TradeWalletService tradeWalletService, AddressEntryList addressEntryList, UserAgent userAgent,
                          @Named(DIR_KEY) File walletDir, @Named(PREFIX_KEY) String walletPrefix, Preferences preferences) {
         this.regTestHost = regTestHost;
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
         this.params = preferences.getBitcoinNetwork().getParameters();
-        this.cryptoService = cryptoService;
         this.walletDir = new File(walletDir, "bitcoin");
         this.walletPrefix = walletPrefix;
         this.userAgent = userAgent;
@@ -147,14 +111,18 @@ public class WalletService {
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Observable<Object> initialize(Executor executor) {
-        Subject<Object, Object> status = BehaviorSubject.create();
-
+    public void initialize(@Nullable DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
         // Tell bitcoinj to execute event handlers on the JavaFX UI thread. This keeps things simple and means
         // we cannot forget to switch threads when adding event handlers. Unfortunately, the DownloadListener
         // we give to the app kit is currently an exception and runs on a library thread. It'll get fixed in
         // a future version.
-        Threading.USER_THREAD = executor;
+
+        Threading.USER_THREAD = UserThread.getExecutor();
+
+        Timer timeoutTimer = FxTimer.runLater(
+                Duration.ofMillis(STARTUP_TIMEOUT),
+                () -> exceptionHandler.handleException(new TimeoutException("Wallet did not initialize in " + STARTUP_TIMEOUT / 1000 + " seconds."))
+        );
 
         // If seed is non-null it means we are restoring from backup.
         walletAppKit = new WalletAppKit(params, walletDir, walletPrefix) {
@@ -166,30 +134,70 @@ public class WalletService {
                 if (params != RegTestParams.get())
                     walletAppKit.peerGroup().setMaxConnections(11);
                 walletAppKit.peerGroup().setBloomFilterFalsePositiveRate(0.00001);
-                initWallet();
+                wallet = walletAppKit.wallet();
+                wallet.addEventListener(walletEventListener);
+
+                addressEntryList.onWalletReady(wallet);
+                arbitratorAddressEntry = addressEntryList.getArbitratorAddressEntry();
+
+                walletAppKit.peerGroup().addEventListener(new PeerEventListener() {
+                    @Override
+                    public void onPeersDiscovered(Set<PeerAddress> peerAddresses) {
+                    }
+
+                    @Override
+                    public void onBlocksDownloaded(Peer peer, Block block, FilteredBlock filteredBlock, int blocksLeft) {
+                    }
+
+                    @Override
+                    public void onChainDownloadStarted(Peer peer, int blocksLeft) {
+                    }
+
+                    @Override
+                    public void onPeerConnected(Peer peer, int peerCount) {
+                        numPeers.set(peerCount);
+                    }
+
+                    @Override
+                    public void onPeerDisconnected(Peer peer, int peerCount) {
+                        numPeers.set(peerCount);
+                    }
+
+                    @Override
+                    public Message onPreMessageReceived(Peer peer, Message m) {
+                        return null;
+                    }
+
+                    @Override
+                    public void onTransaction(Peer peer, Transaction t) {
+                    }
+
+                    @Nullable
+                    @Override
+                    public List<Message> getData(Peer peer, GetDataMessage m) {
+                        return null;
+                    }
+                });
 
                 // set after wallet is ready
                 tradeWalletService.setWalletAppKit(walletAppKit);
-
-                status.onCompleted();
+                timeoutTimer.stop();
+                UserThread.execute(resultHandler::handleResult);
             }
         };
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
         if (params == RegTestParams.get()) {
-            log.debug("regTestHost " + regTestHost);
             if (regTestHost == RegTestHost.REG_TEST_SERVER) {
                 try {
                     walletAppKit.setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.SERVER_IP), params.getPort()));
                 } catch (UnknownHostException e) {
                     throw new RuntimeException(e);
                 }
-            }
-            else if (regTestHost == RegTestHost.LOCALHOST) {
+            } else if (regTestHost == RegTestHost.LOCALHOST) {
                 walletAppKit.connectToLocalHost();   // You should run a regtest mode bitcoind locally.}
             }
-        }
-        else if (params == MainNetParams.get()) {
+        } else if (params == MainNetParams.get()) {
             // Checkpoints are block headers that ship inside our app: for a new user, we pick the last header
             // in the checkpoints file and then download the rest from the network. It makes things much faster.
             // Checkpoint files are made using the BuildCheckpoints tool and usually we have to download the
@@ -200,102 +208,46 @@ public class WalletService {
                 e.printStackTrace();
                 log.error(e.toString());
             }
-        }
-        else if (params == TestNet3Params.get()) {
+        } else if (params == TestNet3Params.get()) {
             walletAppKit.setCheckpoints(getClass().getResourceAsStream("/wallet/checkpoints.testnet"));
         }
 
         walletAppKit.setDownloadListener(downloadListener)
                 .setBlockingStartup(false)
-                .setUserAgent(userAgent.getName(), userAgent.getVersion());
-
-        /*
-        // TODO restore from DeterministicSeed
-        if (seed != null)
-            walletAppKit.restoreWalletFromSeed(seed);
-            */
+                .setUserAgent(userAgent.getName(), userAgent.getVersion())
+                .restoreWalletFromSeed(seed);
 
         walletAppKit.addListener(new Service.Listener() {
             @Override
             public void failed(@NotNull Service.State from, @NotNull Throwable failure) {
                 walletAppKit = null;
                 log.error("walletAppKit failed");
-                status.onError(failure);
+                timeoutTimer.stop();
+                UserThread.execute(() -> exceptionHandler.handleException(failure));
             }
         }, Threading.USER_THREAD);
         walletAppKit.startAsync();
-        return status.timeout(STARTUP_TIMEOUT, TimeUnit.SECONDS);
-    }
-
-    private void initWallet() {
-        wallet = walletAppKit.wallet();
-        wallet.addEventListener(walletEventListener);
-
-        addressEntryList.onWalletReady(wallet);
-        registrationAddressEntry = addressEntryList.getRegistrationAddressEntry();
-
-        walletAppKit.peerGroup().addEventListener(new PeerEventListener() {
-            @Override
-            public void onPeersDiscovered(Set<PeerAddress> peerAddresses) {
-            }
-
-            @Override
-            public void onBlocksDownloaded(Peer peer, Block block, FilteredBlock filteredBlock, int blocksLeft) {
-            }
-
-            @Override
-            public void onChainDownloadStarted(Peer peer, int blocksLeft) {
-            }
-
-            @Override
-            public void onPeerConnected(Peer peer, int peerCount) {
-                log.trace("onPeerConnected " + peerCount);
-                Threading.USER_THREAD.execute(() -> numPeers.set(peerCount));
-            }
-
-            @Override
-            public void onPeerDisconnected(Peer peer, int peerCount) {
-                log.trace("onPeerDisconnected " + peerCount);
-                Threading.USER_THREAD.execute(() -> numPeers.set(peerCount));
-            }
-
-            @Override
-            public Message onPreMessageReceived(Peer peer, Message m) {
-                return null;
-            }
-
-            @Override
-            public void onTransaction(Peer peer, Transaction t) {
-            }
-
-            @Nullable
-            @Override
-            public List<Message> getData(Peer peer, GetDataMessage m) {
-                return null;
-            }
-        });
     }
 
     public void shutDown() {
         if (wallet != null)
             wallet.removeEventListener(walletEventListener);
+
         if (walletAppKit != null) {
-            walletAppKit.stopAsync();
             try {
+                walletAppKit.stopAsync();
                 walletAppKit.awaitTerminated(5, TimeUnit.SECONDS);
-            } catch (TimeoutException e) {
-                e.printStackTrace();
-                log.error("walletAppKit.awaitTerminated not terminated after 5 sec. Error message: " + e.getMessage());
+            } catch (Throwable e) {
+                // ignore
             }
+            shutDownDone.set(true);
         }
     }
 
-    public ReadOnlyDoubleProperty downloadPercentageProperty() {
-        return downloadListener.percentageProperty();
-    }
-
-    public Wallet getWallet() {
-        return wallet;
+    public void restoreSeedWords(DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+        walletAppKit.stopAsync();
+        walletAppKit.awaitTerminated();
+        initialize(seed, resultHandler, exceptionHandler);
     }
 
 
@@ -332,40 +284,26 @@ public class WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Get AddressInfo objects
+    // AddressInfo 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public List<AddressEntry> getAddressEntryList() {
         return ImmutableList.copyOf(addressEntryList);
     }
 
-    public AddressEntry getRegistrationAddressEntry() {
-        return registrationAddressEntry;
+    public AddressEntry getArbitratorAddressEntry() {
+        return arbitratorAddressEntry;
     }
 
-    public AddressEntry getArbitratorDepositAddressEntry() {
-        if (arbitratorDepositAddressEntry == null)
-            arbitratorDepositAddressEntry = addressEntryList.getNewAddressEntry(AddressEntry.Context.ARBITRATOR_DEPOSIT, null);
-
-        return arbitratorDepositAddressEntry;
-    }
-
-    public AddressEntry getAddressEntry(String offerId) {
-        log.trace("getAddressEntry called with offerId " + offerId);
+    public AddressEntry getAddressEntryByOfferId(String offerId) {
         Optional<AddressEntry> addressEntry = getAddressEntryList().stream().filter(e -> offerId.equals(e.getOfferId())).findFirst();
-
         if (addressEntry.isPresent())
             return addressEntry.get();
         else
             return addressEntryList.getNewAddressEntry(AddressEntry.Context.TRADE, offerId);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Create new AddressInfo objects
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private Optional<AddressEntry> getAddressEntryByAddressString(String address) {
+    private Optional<AddressEntry> getAddressEntryByAddress(String address) {
         return getAddressEntryList().stream().filter(e -> address.equals(e.getAddressString())).findFirst();
     }
 
@@ -445,17 +383,8 @@ public class WalletService {
                     transactionConfidence = confidence;
                 }
             }
-
         }
         return transactionConfidence;
-    }
-
-
-    @SuppressWarnings("UnusedDeclaration")
-    public boolean isRegistrationFeeConfirmed() {
-        assert getRegistrationAddressEntry() != null;
-        TransactionConfidence transactionConfidence = getConfidenceForAddress(getRegistrationAddressEntry().getAddress());
-        return TransactionConfidence.ConfidenceType.BUILDING.equals(transactionConfidence.getConfidenceType());
     }
 
 
@@ -463,8 +392,13 @@ public class WalletService {
     // Balance
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // BalanceType.AVAILABLE
+    public Coin getAvailableBalance() {
+        return wallet != null ? wallet.getBalance(Wallet.BalanceType.AVAILABLE) : Coin.ZERO;
+    }
+
     public Coin getBalanceForAddress(Address address) {
-        return wallet != null ? getBalance(wallet.calculateAllSpendCandidates(true), address) : Coin.ZERO;
+        return wallet != null ? getBalance(wallet.calculateAllSpendCandidates(), address) : Coin.ZERO;
     }
 
     private Coin getBalance(List<TransactionOutput> transactionOutputs, Address address) {
@@ -479,97 +413,27 @@ public class WalletService {
         return balance;
     }
 
-    Coin getWalletBalance() {
-        return wallet.getBalance(Wallet.BalanceType.ESTIMATED);
-    }
-
-    Coin getRegistrationBalance() {
-        return getBalanceForAddress(getRegistrationAddressEntry().getAddress());
-    }
-
-    public Coin getArbitratorDepositBalance() {
-        return getBalanceForAddress(getArbitratorDepositAddressEntry().getAddress());
-    }
-
-    @SuppressWarnings("UnusedDeclaration")
-    public boolean isRegistrationFeeBalanceNonZero() {
-        return getRegistrationBalance().compareTo(Coin.ZERO) > 0;
-    }
-
-    @SuppressWarnings("UnusedDeclaration")
-    public boolean isRegistrationFeeBalanceSufficient() {
-        return getRegistrationBalance().compareTo(FeePolicy.REGISTRATION_FEE) >= 0;
-    }
-
-    //TODO
-    @SuppressWarnings("SameReturnValue")
-    public int getNumOfPeersSeenTx(String txId) {
-        // TODO check from blockchain
-        // will be async
-        return 3;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Transactions
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void payRegistrationFee(String stringifiedFiatAccounts, FutureCallback<Transaction> callback) throws
-            InsufficientMoneyException {
-        log.debug("payRegistrationFee");
-        log.trace("stringifiedFiatAccounts " + stringifiedFiatAccounts);
-
-        Transaction tx = new Transaction(params);
-
-        byte[] data = cryptoService.digestMessageWithSignature(getRegistrationAddressEntry().getKeyPair(), stringifiedFiatAccounts);
-        tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, new ScriptBuilder().op(OP_RETURN).data(data).build());
-
-        // We don't take a fee at the moment
-        // 0.0000454 BTC will get extra to miners as it is lower then durst
-       /* Coin fee = FeePolicy.REGISTRATION_FEE
-                .subtract(Transaction.MIN_NONDUST_OUTPUT)
-                .subtract(FeePolicy.TX_FEE);
-        log.trace("fee: " + fee.toFriendlyString());
-        tx.addOutput(fee, feePolicy.getAddressForRegistrationFee());*/
-
-        Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
-        sendRequest.shuffleOutputs = false;
-
-        // We accept at the moment registration fee payment with 0 confirmations.
-        // The verification will be done at the end of the trade process again, and then a double spend would be
-        // detected and lead to arbitration.
-        // The last param (boolean includePending) is used for indicating that we accept 0 conf tx.
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, getRegistrationAddressEntry(), true);
-        sendRequest.changeAddress = getRegistrationAddressEntry().getAddress();
-        Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
-        Futures.addCallback(sendResult.broadcastComplete, callback);
-
-        log.debug("Registration transaction: " + tx);
-        printTxWithInputs("payRegistrationFee", tx);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Withdrawal
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String sendFunds(String withdrawFromAddress,
-                            String withdrawToAddress,
+    public String sendFunds(String fromAddress,
+                            String toAddress,
                             Coin amount,
-                            FutureCallback<Transaction> callback) throws AddressFormatException, InsufficientMoneyException, IllegalArgumentException {
+                            KeyParameter aesKey,
+                            FutureCallback<Transaction> callback) throws AddressFormatException, IllegalArgumentException, InsufficientMoneyException {
         Transaction tx = new Transaction(params);
-        tx.addOutput(amount.subtract(FeePolicy.TX_FEE), new Address(params, withdrawToAddress));
+        tx.addOutput(amount.subtract(FeePolicy.TX_FEE), new Address(params, toAddress));
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
+        sendRequest.aesKey = aesKey;
         sendRequest.shuffleOutputs = false;
-        // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
-        // wait for 1 confirmation)
-
-        Optional<AddressEntry> addressEntry = getAddressEntryByAddressString(withdrawFromAddress);
+        Optional<AddressEntry> addressEntry = getAddressEntryByAddress(fromAddress);
         if (!addressEntry.isPresent())
             throw new IllegalArgumentException("WithdrawFromAddress is not found in our wallets.");
 
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry.get(), true);
+        sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry.get());
         sendRequest.changeAddress = addressEntry.get().getAddress();
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         Futures.addCallback(sendResult.broadcastComplete, callback);
@@ -578,6 +442,45 @@ public class WalletService {
         log.debug("tx=" + tx);
 
         return tx.getHashAsString();
+    }
+
+    public void emptyWallet(String toAddress, KeyParameter aesKey, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler)
+            throws InsufficientMoneyException, AddressFormatException {
+        Wallet.SendRequest sendRequest = Wallet.SendRequest.emptyWallet(new Address(params, toAddress));
+        sendRequest.aesKey = aesKey;
+        Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
+        Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
+            @Override
+            public void onSuccess(Transaction result) {
+                resultHandler.handleResult();
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable t) {
+                errorMessageHandler.handleErrorMessage(t.getMessage());
+            }
+        });
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public ReadOnlyDoubleProperty downloadPercentageProperty() {
+        return downloadListener.percentageProperty();
+    }
+
+    public Wallet getWallet() {
+        return wallet;
+    }
+
+    public Transaction getTransactionFromSerializedTx(byte[] tx) {
+        return new Transaction(params, tx);
+    }
+
+    public ReadOnlyIntegerProperty numPeersProperty() {
+        return numPeers;
     }
 
 
@@ -595,13 +498,6 @@ public class WalletService {
         }
     }
 
-    public int getNumPeers() {
-        return numPeers.get();
-    }
-
-    public ReadOnlyIntegerProperty numPeersProperty() {
-        return numPeers;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Inner classes
@@ -613,13 +509,13 @@ public class WalletService {
         @Override
         protected void progress(double percentage, int blocksLeft, Date date) {
             super.progress(percentage, blocksLeft, date);
-            Threading.USER_THREAD.execute(() -> this.percentage.set(percentage / 100d));
+            UserThread.execute(() -> this.percentage.set(percentage / 100d));
         }
 
         @Override
         protected void doneDownload() {
             super.doneDownload();
-            Threading.USER_THREAD.execute(() -> this.percentage.set(1d));
+            UserThread.execute(() -> this.percentage.set(1d));
         }
 
         public ReadOnlyDoubleProperty percentageProperty() {
@@ -661,10 +557,69 @@ public class WalletService {
                 if (balanceListener.getAddress() != null)
                     balance = getBalanceForAddress(balanceListener.getAddress());
                 else
-                    balance = getWalletBalance();
+                    balance = getAvailableBalance();
 
                 balanceListener.onBalanceChanged(balance);
             }
         }
     }
+    
+     /* // TODO
+    private class BloomFilterForForeignTx extends AbstractPeerEventListener implements PeerFilterProvider {
+        private final String txId;
+
+        public BloomFilterForForeignTx(String txId) {
+            this.txId = txId;
+        }
+
+        @Override
+        public long getEarliestKeyCreationTime() {
+            return Utils.currentTimeSeconds();
+        }
+
+        @Override
+        public void beginBloomFilterCalculation() {
+        }
+
+        @Override
+        public int getBloomFilterElementCount() {
+            return 1;
+        }
+
+        @Override
+        public BloomFilter getBloomFilter(int size, double falsePositiveRate, long nTweak) {
+            BloomFilter filter = new BloomFilter(size, falsePositiveRate, nTweak);
+           *//* for (TransactionOutPoint pledge : allPledges.keySet()) {
+                filter.insert(pledge.bitcoinSerialize());
+            }*//*
+            // how to add txid ???
+            return filter;
+        }
+
+        @Override
+        public boolean isRequiringUpdateAllBloomFilter() {
+            return false;
+        }
+
+        @Override
+        public void endBloomFilterCalculation() {
+        }
+
+        @Override
+        public void onTransaction(Peer peer, Transaction t) {
+            // executor.checkOnThread();
+            // TODO: Gate this logic on t being announced by multiple peers.
+            //  checkForRevocation(t);
+            // TODO: Watch out for the confirmation. If no confirmation of the revocation occurs within N hours, alert the user.
+        }
+    }
+
+    // TODO
+    public void findTxInBlockChain(String txId) {
+        // https://groups.google.com/forum/?hl=de#!topic/bitcoinj/kinFP7lLsRE
+        // https://groups.google.com/forum/?hl=de#!topic/bitcoinj/f7m87kCWdb8
+        // https://groups.google.com/forum/?hl=de#!topic/bitcoinj/jNE5ohLExVM
+        walletAppKit.peerGroup().addPeerFilterProvider(new BloomFilterForForeignTx(txId));
+    }*/
+
 }

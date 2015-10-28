@@ -17,11 +17,11 @@
 
 package io.bitsquare.util.spring;
 
+import joptsimple.OptionSet;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import joptsimple.OptionSet;
 
 /**
  * Customizes {@link io.bitsquare.util.spring.JOptCommandLinePropertySource#getOptionValues(String)}

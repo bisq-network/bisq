@@ -17,6 +17,15 @@
 
 package io.bitsquare.app;
 
+import ch.qos.logback.classic.Logger;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.vinumeris.updatefx.UpdateFX;
+import io.bitsquare.alert.AlertManager;
+import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.UserThread;
+import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.SystemTray;
 import io.bitsquare.gui.common.view.CachingViewLoader;
 import io.bitsquare.gui.common.view.View;
@@ -24,54 +33,57 @@ import io.bitsquare.gui.common.view.ViewLoader;
 import io.bitsquare.gui.common.view.guice.InjectorViewFactory;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.debug.DebugView;
+import io.bitsquare.gui.popups.EmptyWalletPopup;
+import io.bitsquare.gui.popups.SendAlertMessagePopup;
 import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.p2p.P2PService;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.util.Utilities;
-
-import org.bitcoinj.utils.Threading;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-
-import java.io.IOException;
-
-import java.nio.file.Paths;
-
-import java.util.ArrayList;
-import java.util.List;
-
+import io.bitsquare.trade.offer.OpenOfferManager;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.scene.*;
-import javafx.scene.image.*;
-import javafx.scene.input.*;
-import javafx.scene.layout.*;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-
 import org.controlsfx.dialog.Dialogs;
-
+import org.reactfx.EventStreams;
+import org.reactfx.util.FxTimer;
 import org.slf4j.LoggerFactory;
-
-import ch.qos.logback.classic.Logger;
-import com.vinumeris.updatefx.UpdateFX;
 import org.springframework.core.env.Environment;
+
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
 
 public class BitsquareApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BitsquareApp.class);
 
-    public static final boolean DEV_MODE = false;
+    public static final boolean DEV_MODE = true;
 
     private static Environment env;
 
     private BitsquareAppModule bitsquareAppModule;
     private Injector injector;
-    private Stage primaryStage;
+
+    public static Stage getPrimaryStage() {
+        return primaryStage;
+    }
+
+    private static Stage primaryStage;
     private Scene scene;
-    private List<String> corruptedDatabaseFiles = new ArrayList<>();
+    private final List<String> corruptedDatabaseFiles = new ArrayList<>();
     private MainView mainView;
 
     public static Runnable shutDownHandler;
@@ -83,9 +95,11 @@ public class BitsquareApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
-        this.primaryStage = primaryStage;
+        BitsquareApp.primaryStage = primaryStage;
 
         Logging.setup(Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString());
+
+        UserThread.setExecutor(Platform::runLater);
 
         shutDownHandler = this::stop;
         restartDownHandler = this::restart;
@@ -93,17 +107,12 @@ public class BitsquareApp extends Application {
         // setup UncaughtExceptionHandler
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
             // Might come from another thread 
-            Platform.runLater(() -> showErrorPopup(throwable, true));
+            UserThread.execute(() -> showErrorPopup(throwable, false));
         };
         Thread.setDefaultUncaughtExceptionHandler(handler);
         Thread.currentThread().setUncaughtExceptionHandler(handler);
 
         try {
-            log.trace("BitsquareApp.start");
-
-            // Set user thread for callbacks from backend threads
-            Threading.USER_THREAD = Platform::runLater;
-
             // Use CrashFX for report crash logs
             /*CrashFX.setup("Bitsquare/" + Version.VERSION,
                     Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "crashes"),
@@ -126,7 +135,7 @@ public class BitsquareApp extends Application {
                     mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
             });
 
-            scene = new Scene(mainView.getRoot(), 1000, 650);
+            scene = new Scene(mainView.getRoot(), 1000, 740);
             scene.getStylesheets().setAll(
                     "/io/bitsquare/gui/bitsquare.css",
                     "/io/bitsquare/gui/images.css");
@@ -147,7 +156,14 @@ public class BitsquareApp extends Application {
                 else if (new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
                     //if (BitsquareApp.DEV_MODE)
                     showDebugWindow();
+                else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
+                    showFPSWindow();
+                else if (new KeyCodeCombination(KeyCode.E, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
+                    showEmptyWalletPopup();
+                else if (new KeyCodeCombination(KeyCode.A, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
+                    showSendAlertMessagePopup();
             });
+
 
             // configure the primary stage
             primaryStage.setTitle(env.getRequiredProperty(APP_NAME_KEY));
@@ -172,8 +188,20 @@ public class BitsquareApp extends Application {
 
             //showDebugWindow();
         } catch (Throwable throwable) {
-            showErrorPopup(throwable, true);
+            showErrorPopup(throwable, false);
         }
+    }
+
+    private void showSendAlertMessagePopup() {
+        AlertManager alertManager = injector.getInstance(AlertManager.class);
+        new SendAlertMessagePopup()
+                .onAddAlertMessage((alertMessage, privKeyString) -> alertManager.addAlertMessageIfKeyIsValid(alertMessage, privKeyString))
+                .onRemoveAlertMessage(privKeyString -> alertManager.removeAlertMessageIfKeyIsValid(privKeyString))
+                .show();
+    }
+
+    private void showEmptyWalletPopup() {
+        injector.getInstance(EmptyWalletPopup.class).show();
     }
 
     private void showErrorPopup(Throwable throwable, boolean doShutDown) {
@@ -184,11 +212,16 @@ public class BitsquareApp extends Application {
         }
         try {
             throwable.printStackTrace();
-            Dialogs.create()
-                    .owner(primaryStage)
-                    .title("Error")
-                    .message("A fatal exception occurred at startup.")
-                    .showException(throwable);
+            try {
+                Dialogs.create()
+                        .owner(primaryStage)
+                        .title("Error")
+                        .message("A fatal exception occurred at startup.")
+                        .showException(throwable);
+            } catch (Throwable throwable3) {
+                log.error("Error at displaying Throwable.");
+                throwable3.printStackTrace();
+            }
             if (doShutDown)
                 stop();
         } catch (Throwable throwable2) {
@@ -220,19 +253,71 @@ public class BitsquareApp extends Application {
         stage.show();
     }
 
-    @Override
-    public void stop() {
-        bitsquareAppModule.close(injector);
-        System.exit(0);
+
+    private void showFPSWindow() {
+        Label label = new Label();
+        EventStreams.animationTicks()
+                .latestN(100)
+                .map(ticks -> {
+                    int n = ticks.size() - 1;
+                    return n * 1_000_000_000.0 / (ticks.get(n) - ticks.get(0));
+                })
+                .map(d -> String.format("FPS: %.3f", d))
+                .feedTo(label.textProperty());
+
+        Pane root = new StackPane();
+        root.getChildren().add(label);
+        Stage stage = new Stage();
+        stage.setScene(new Scene(root));
+        stage.setTitle("FPS");
+        stage.initModality(Modality.NONE);
+        stage.initStyle(StageStyle.UTILITY);
+        stage.initOwner(scene.getWindow());
+        stage.setX(primaryStage.getX() + primaryStage.getWidth() + 10);
+        stage.setY(primaryStage.getY());
+        stage.setWidth(200);
+        stage.setHeight(100);
+        stage.show();
+
     }
 
-    public void restart() {
+    @Override
+    public void stop() {
+        gracefulShutDown(() -> {
+            log.info("App shutdown complete");
+            System.exit(0);
+        });
+    }
+
+    private void gracefulShutDown(ResultHandler resultHandler) {
+        log.debug("gracefulShutDown");
         try {
-            bitsquareAppModule.close(injector);
-            UpdateFX.restartApp();
+            if (injector != null) {
+                OpenOfferManager openOfferManager = injector.getInstance(OpenOfferManager.class);
+                openOfferManager.shutDown(() -> {
+                    P2PService p2PService = injector.getInstance(P2PService.class);
+                    p2PService.shutDown(() -> {
+                        WalletService walletService = injector.getInstance(WalletService.class);
+                        walletService.shutDownDone.addListener((observable, oldValue, newValue) -> {
+                            bitsquareAppModule.close(injector);
+                            resultHandler.handleResult();
+                        });
+                        injector.getInstance(WalletService.class).shutDown();
+                    });
+                });
+                // we wait max 5 sec.
+                FxTimer.runLater(Duration.ofMillis(5000), resultHandler::handleResult);
+            } else {
+                FxTimer.runLater(Duration.ofMillis(500), resultHandler::handleResult);
+            }
         } catch (Throwable t) {
-            // in dev mode restart does not work
-            stop();
+            log.info("App shutdown failed with exception");
+            t.printStackTrace();
+            System.exit(1);
         }
+    }
+
+    private void restart() {
+        gracefulShutDown(UpdateFX::restartApp);
     }
 }

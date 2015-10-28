@@ -17,26 +17,16 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps;
 
-import io.bitsquare.gui.components.InfoDisplay;
 import io.bitsquare.gui.components.TxIdTextField;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.util.Layout;
-
 import javafx.beans.value.ChangeListener;
-import javafx.scene.control.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static io.bitsquare.gui.util.ComponentBuilder.*;
+import static io.bitsquare.gui.util.FormBuilder.*;
 
 public class WaitTxInBlockchainView extends TradeStepDetailsView {
-    private static final Logger log = LoggerFactory.getLogger(WaitTxInBlockchainView.class);
-
     private final ChangeListener<String> txIdChangeListener;
     private TxIdTextField txIdTextField;
-    private Label infoLabel;
-    private InfoDisplay infoDisplay;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -46,20 +36,20 @@ public class WaitTxInBlockchainView extends TradeStepDetailsView {
     public WaitTxInBlockchainView(PendingTradesViewModel model) {
         super(model);
 
-        txIdChangeListener = (ov, oldValue, newValue) -> txIdTextField.setup(model.getWalletService(), newValue);
+        txIdChangeListener = (ov, oldValue, newValue) -> txIdTextField.setup(newValue);
     }
 
     @Override
-    public void activate() {
-        super.activate();
+    public void doActivate() {
+        super.doActivate();
 
         model.getTxId().addListener(txIdChangeListener);
-        txIdTextField.setup(model.getWalletService(), model.getTxId().get());
+        txIdTextField.setup(model.getTxId().get());
     }
 
     @Override
-    public void deactivate() {
-        super.deactivate();
+    public void doDeactivate() {
+        super.doDeactivate();
 
         model.getTxId().removeListener(txIdChangeListener);
         txIdTextField.cleanup();
@@ -75,11 +65,6 @@ public class WaitTxInBlockchainView extends TradeStepDetailsView {
             infoLabel.setText(text);
     }
 
-    public void setInfoDisplayField(String text) {
-        if (infoDisplay != null)
-            infoDisplay.setText(text);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Build view
@@ -87,11 +72,11 @@ public class WaitTxInBlockchainView extends TradeStepDetailsView {
 
     @Override
     protected void buildGridEntries() {
-        getAndAddTitledGroupBg(gridPane, gridRow, 1, "Blockchain confirmation");
-        txIdTextField = getAndAddLabelTxIdTextFieldPair(gridPane, gridRow++, "Deposit transaction ID:", Layout.FIRST_ROW_DISTANCE).txIdTextField;
+        addTitledGroupBg(gridPane, gridRow, 1, "Blockchain confirmation");
+        txIdTextField = addLabelTxIdTextField(gridPane, gridRow, "Deposit transaction ID:", Layout.FIRST_ROW_DISTANCE).second;
 
-        getAndAddTitledGroupBg(gridPane, gridRow, 1, "Information", Layout.GROUP_DISTANCE);
-        infoLabel = getAndAddInfoLabel(gridPane, gridRow++, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        infoTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1, "Information", Layout.GROUP_DISTANCE);
+        infoLabel = addMultilineLabel(gridPane, gridRow, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
     }
 }
 

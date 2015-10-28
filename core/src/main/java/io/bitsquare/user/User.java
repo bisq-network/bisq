@@ -17,31 +17,32 @@
 
 package io.bitsquare.user;
 
+import io.bitsquare.alert.Alert;
 import io.bitsquare.app.Version;
-import io.bitsquare.fiat.FiatAccount;
+import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.p2p.Address;
+import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.storage.Storage;
-
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.Serializable;
-
-import java.security.NoSuchAlgorithmException;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.annotation.Nullable;
-
-import javax.inject.Inject;
-
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-
+import javafx.collections.ObservableSet;
+import javafx.collections.SetChangeListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
+import java.util.stream.Collectors;
+
 
 /**
  * The User is persisted locally.
@@ -55,41 +56,71 @@ public class User implements Serializable {
 
     // Transient immutable fields
     transient final private Storage<User> storage;
+    transient private Set<TradeCurrency> tradeCurrenciesInPaymentAccounts;
 
     // Persisted fields
     private String accountID;
-    private List<FiatAccount> fiatAccounts = new ArrayList<>();
+    private Set<PaymentAccount> paymentAccounts = new HashSet<>();
+    private PaymentAccount currentPaymentAccount;
+    private List<String> acceptedLanguageLocaleCodes = new ArrayList<>();
+    private Alert developersAlert;
+    private Alert displayedAlert;
 
-    private FiatAccount currentFiatAccount;
+
+    @Nullable
+    private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
+    @Nullable
+    private Arbitrator registeredArbitrator;
 
     // Observable wrappers
-    transient final private ObservableList<FiatAccount> fiatAccountsObservableList = FXCollections.observableArrayList(fiatAccounts);
-    transient final private ObjectProperty<FiatAccount> currentFiatAccountProperty = new SimpleObjectProperty<>(currentFiatAccount);
+    transient final private ObservableSet<PaymentAccount> paymentAccountsAsObservable = FXCollections.observableSet(paymentAccounts);
+    transient final private ObjectProperty<PaymentAccount> currentPaymentAccountProperty = new SimpleObjectProperty<>(currentPaymentAccount);
+
 
     @Inject
-    public User(Storage<User> storage) throws NoSuchAlgorithmException {
+    public User(Storage<User> storage, KeyRing keyRing) throws NoSuchAlgorithmException {
         this.storage = storage;
 
         User persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
             accountID = persisted.getAccountId();
 
-            fiatAccounts = new ArrayList<>(persisted.getFiatAccounts());
-            fiatAccountsObservableList.setAll(fiatAccounts);
+            // The check is only needed to not break old versions where paymentAccounts was not included and is null,
+            // Can be removed later
+            if (persisted.getPaymentAccounts() != null)
+                paymentAccounts = new HashSet<>(persisted.getPaymentAccounts());
 
-            currentFiatAccount = persisted.getCurrentFiatAccount();
-            currentFiatAccountProperty.set(currentFiatAccount);
+            paymentAccountsAsObservable.addAll(paymentAccounts);
+
+            currentPaymentAccount = persisted.getCurrentPaymentAccount();
+            currentPaymentAccountProperty.set(currentPaymentAccount);
+
+            acceptedLanguageLocaleCodes = persisted.getAcceptedLanguageLocaleCodes();
+            acceptedArbitrators = persisted.getAcceptedArbitrators();
+            registeredArbitrator = persisted.getRegisteredArbitrator();
+            developersAlert = persisted.getDevelopersAlert();
+            displayedAlert = persisted.getDisplayedAlert();
+        } else {
+            accountID = String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode()));
+
+            acceptedLanguageLocaleCodes = new ArrayList<>(Arrays.asList(LanguageUtil.getDefaultLanguageLocaleAsCode(),
+                    LanguageUtil.getEnglishLanguageLocaleCode()));
+            acceptedArbitrators = new ArrayList<>();
         }
         storage.queueUpForSave();
+
         // Use that to guarantee update of the serializable field and to make a storage update in case of a change
-        fiatAccountsObservableList.addListener((ListChangeListener<FiatAccount>) change -> {
-            fiatAccounts = new ArrayList<>(fiatAccountsObservableList);
+        paymentAccountsAsObservable.addListener((SetChangeListener<PaymentAccount>) change -> {
+            paymentAccounts = new HashSet<>(paymentAccountsAsObservable);
+            tradeCurrenciesInPaymentAccounts = paymentAccounts.stream().flatMap(e -> e.getTradeCurrencies().stream()).collect(Collectors.toSet());
             storage.queueUpForSave();
         });
-        currentFiatAccountProperty.addListener((ov) -> {
-            currentFiatAccount = currentFiatAccountProperty.get();
+        currentPaymentAccountProperty.addListener((ov) -> {
+            currentPaymentAccount = currentPaymentAccountProperty.get();
             storage.queueUpForSave();
         });
+
+        tradeCurrenciesInPaymentAccounts = paymentAccounts.stream().flatMap(e -> e.getTradeCurrencies().stream()).collect(Collectors.toSet());
     }
 
     // for unit tests
@@ -99,8 +130,11 @@ public class User implements Serializable {
 
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        log.trace("Created from serialized form.");
+        try {
+            in.defaultReadObject();
+        } catch (Throwable t) {
+            log.trace("Cannot be deserialized." + t.getMessage());
+        }
     }
 
 
@@ -108,45 +142,56 @@ public class User implements Serializable {
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * @param fiatAccount
-     * @return If a Fiat Account with the same name already exists we return false. We use the account title as hashCode.
-     */
-    public boolean addFiatAccount(FiatAccount fiatAccount) {
-        if (fiatAccountsObservableList.contains(fiatAccount))
-            return false;
-
-        fiatAccountsObservableList.add(fiatAccount);
-        setCurrentFiatAccountProperty(fiatAccount);
-        return true;
+    public void addPaymentAccount(PaymentAccount paymentAccount) {
+        paymentAccountsAsObservable.add(paymentAccount);
+        setCurrentPaymentAccount(paymentAccount);
     }
 
-    // In case we edit an existing we remove the existing first
-    public void removeFiatAccount(FiatAccount fiatAccount) {
-        fiatAccountsObservableList.remove(fiatAccount);
+    public void removePaymentAccount(PaymentAccount paymentAccount) {
+        paymentAccountsAsObservable.remove(paymentAccount);
+    }
 
-        if (currentFiatAccount.equals(fiatAccount)) {
-            if (fiatAccountsObservableList.isEmpty())
-                setCurrentFiatAccountProperty(null);
-            else
-                setCurrentFiatAccountProperty(fiatAccountsObservableList.get(0));
+    public void setCurrentPaymentAccount(PaymentAccount paymentAccount) {
+        currentPaymentAccountProperty.set(paymentAccount);
+    }
+
+    public boolean addAcceptedLanguageLocale(String localeCode) {
+        if (!acceptedLanguageLocaleCodes.contains(localeCode)) {
+            boolean changed = acceptedLanguageLocaleCodes.add(localeCode);
+            if (changed)
+                storage.queueUpForSave();
+            return changed;
+        } else {
+            return false;
         }
     }
 
+    public boolean removeAcceptedLanguageLocale(String languageLocaleCode) {
+        boolean changed = acceptedLanguageLocaleCodes.remove(languageLocaleCode);
+        if (changed)
+            storage.queueUpForSave();
+        return changed;
+    }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    public void addAcceptedArbitrator(Arbitrator arbitrator) {
+        if (!acceptedArbitrators.contains(arbitrator) && !isMyOwnRegisteredArbitrator(arbitrator)) {
+            acceptedArbitrators.add(arbitrator);
+            storage.queueUpForSave();
+        }
+    }
 
-    // Will be written after registration.
-    // Public key from the input for the registration payment tx (or address) will be used
-    public void setAccountID(String accountID) {
-        this.accountID = accountID;
+    public boolean isMyOwnRegisteredArbitrator(Arbitrator arbitrator) {
+        return arbitrator.equals(registeredArbitrator);
+    }
+
+    public void removeAcceptedArbitrator(Arbitrator arbitrator) {
+        acceptedArbitrators.remove(arbitrator);
         storage.queueUpForSave();
     }
 
-    public void setCurrentFiatAccountProperty(@Nullable FiatAccount fiatAccount) {
-        currentFiatAccountProperty.set(fiatAccount);
+    public void setRegisteredArbitrator(Arbitrator arbitrator) {
+        this.registeredArbitrator = arbitrator;
+        storage.queueUpForSave();
     }
 
 
@@ -156,49 +201,132 @@ public class User implements Serializable {
 
     // TODO just a first attempt, refine when working on the embedded data for the reg. tx
     public String getStringifiedBankAccounts() {
-        String bankAccountUIDs = "";
-        for (int i = 0; i < fiatAccountsObservableList.size(); i++) {
-            FiatAccount fiatAccount = fiatAccountsObservableList.get(i);
-            bankAccountUIDs += fiatAccount.toString();
-
-            if (i < fiatAccountsObservableList.size() - 1) {
-                bankAccountUIDs += ", ";
-            }
-        }
-        return bankAccountUIDs;
+        return paymentAccounts.stream()
+                .map(PaymentAccount::getId)
+                .collect(Collectors.joining(", "));
     }
 
 
-    public FiatAccount getFiatAccount(String fiatAccountId) {
-        for (FiatAccount fiatAccount : fiatAccountsObservableList) {
-            if (fiatAccount.id.equals(fiatAccountId)) {
-                return fiatAccount;
-            }
-        }
-        return null;
+    public PaymentAccount getPaymentAccount(String paymentAccountId) {
+        Optional<PaymentAccount> optional = paymentAccounts.stream().filter(e -> e.getId().equals(paymentAccountId)).findAny();
+        if (optional.isPresent())
+            return optional.get();
+        else
+            return null;
     }
 
     public String getAccountId() {
         return accountID;
     }
 
-    public boolean isRegistered() {
+   /* public boolean isRegistered() {
         return getAccountId() != null;
+    }*/
+
+    private PaymentAccount getCurrentPaymentAccount() {
+        return currentPaymentAccount;
     }
 
-    private List<FiatAccount> getFiatAccounts() {
-        return fiatAccounts;
+    public ObjectProperty<PaymentAccount> currentPaymentAccountProperty() {
+        return currentPaymentAccountProperty;
     }
 
-    private FiatAccount getCurrentFiatAccount() {
-        return currentFiatAccount;
+    public Set<PaymentAccount> getPaymentAccounts() {
+        return paymentAccounts;
     }
 
-    public ObjectProperty<FiatAccount> currentFiatAccountProperty() {
-        return currentFiatAccountProperty;
+    public ObservableSet<PaymentAccount> getPaymentAccountsAsObservable() {
+        return paymentAccountsAsObservable;
     }
 
-    public ObservableList<FiatAccount> fiatAccountsObservableList() {
-        return fiatAccountsObservableList;
+    @Nullable
+    public Arbitrator getRegisteredArbitrator() {
+        return registeredArbitrator;
     }
+
+    @Nullable
+    public List<Arbitrator> getAcceptedArbitrators() {
+        return acceptedArbitrators;
+    }
+
+    public List<Address> getAcceptedArbitratorAddresses() {
+        return acceptedArbitrators.stream().map(Arbitrator::getArbitratorAddress).collect(Collectors.toList());
+    }
+
+    public List<String> getAcceptedLanguageLocaleCodes() {
+        return acceptedLanguageLocaleCodes;
+    }
+
+ /*   public List<String> getArbitratorAddresses(List<String> idList) {
+        List<String> receiverAddresses = new ArrayList<>();
+        for (Arbitrator arbitrator : getAcceptedArbitrators()) {
+            for (String id : idList) {
+                if (id.equals(arbitrator.getId()))
+                    receiverAddresses.add(arbitrator.getBtcAddress());
+            }
+        }
+        return receiverAddresses;
+    }*/
+
+    public Arbitrator getAcceptedArbitratorByAddress(Address address) {
+        return acceptedArbitrators.stream().filter(e -> e.getArbitratorAddress().equals(address)).findFirst().get();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+  /*  public Optional<TradeCurrency> getPaymentAccountForCurrency(TradeCurrency tradeCurrency) {
+        return getPaymentAccounts().stream()
+                .flatMap(e -> e.getTradeCurrencies().stream())
+                .filter(e -> e.equals(tradeCurrency))
+                .findFirst();
+    }*/
+
+    @Nullable
+    public PaymentAccount findFirstPaymentAccountWithCurrency(TradeCurrency tradeCurrency) {
+        for (PaymentAccount paymentAccount : paymentAccounts) {
+            for (TradeCurrency tradeCurrency1 : paymentAccount.getTradeCurrencies()) {
+                if (tradeCurrency1.equals(tradeCurrency))
+                    return paymentAccount;
+            }
+        }
+        return null;
+    }
+
+    public boolean hasMatchingLanguage(Arbitrator arbitrator) {
+        if (arbitrator != null) {
+            for (String acceptedCode : acceptedLanguageLocaleCodes) {
+                for (String itemCode : arbitrator.getLanguageCodes()) {
+                    if (acceptedCode.equals(itemCode))
+                        return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean hasPaymentAccountForCurrency(TradeCurrency tradeCurrency) {
+        return findFirstPaymentAccountWithCurrency(tradeCurrency) != null;
+    }
+
+    public void setDevelopersAlert(Alert developersAlert) {
+        this.developersAlert = developersAlert;
+        storage.queueUpForSave();
+    }
+
+    public Alert getDevelopersAlert() {
+        return developersAlert;
+    }
+
+    public void setDisplayedAlert(Alert displayedAlert) {
+        this.displayedAlert = displayedAlert;
+        storage.queueUpForSave();
+    }
+
+    public Alert getDisplayedAlert() {
+        return displayedAlert;
+    }
+
 }

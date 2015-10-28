@@ -19,50 +19,50 @@ package io.bitsquare.trade.offer;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.Restrictions;
+import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.crypto.KeyRing;
-import io.bitsquare.crypto.PubKeyRing;
-import io.bitsquare.fiat.FiatAccount;
+import io.bitsquare.common.util.JsonExclude;
 import io.bitsquare.locale.Country;
+import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.storage.data.PubKeyProtectedExpirablePayload;
+import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityProtocol;
-
+import javafx.beans.property.*;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
-
-import java.io.IOException;
-import java.io.Serializable;
-
-import java.util.Date;
-import java.util.List;
-
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-
-import org.jetbrains.annotations.NotNull;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.Preconditions.*;
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.security.PublicKey;
+import java.util.Date;
+import java.util.List;
 
-public class Offer implements Serializable {
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+public final class Offer implements PubKeyProtectedExpirablePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
+    @JsonExclude
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
+    @JsonExclude
     transient private static final Logger log = LoggerFactory.getLogger(Offer.class);
+
+    public static final long TTL = 10 * 60 * 1000; // 10 min.
 
     public enum Direction {BUY, SELL}
 
     public enum State {
         UNDEFINED,
+        OFFER_FEE_PAID,
         AVAILABLE,
         NOT_AVAILABLE,
         REMOVED,
-        OFFERER_OFFLINE,
-
-        TIMEOUT,
-        FAULT
+        OFFERER_OFFLINE
     }
 
 
@@ -70,31 +70,36 @@ public class Offer implements Serializable {
     private final String id;
     private final Direction direction;
     private final String currencyCode;
-    private final Date creationDate;
+    private final long date;
 
-    //TODO check with latest bitcoinJ version
-    // Fiat cause problems with offer removal (don` found out why, but we want plain objects anyway)
     private final long fiatPrice;
-    private final Coin amount;
-    private final Coin minAmount;
+    private final long amount;
+    private final long minAmount;
+    private final Address offererAddress;
+    @JsonExclude
     private final PubKeyRing pubKeyRing;
-    private final FiatAccount.Type fiatAccountType;
-    private final Country bankAccountCountry;
+    private final String paymentMethodName;
+    @Nullable
+    private final String paymentMethodCountryCode;
+    private final String offererPaymentAccountId;
 
-    private final Coin securityDeposit;
-    private final List<Country> acceptedCountries;
-    private final List<String> acceptedLanguageCodes;
-    private final String bankAccountUID;
-    private final List<String> arbitratorIds;
+    @Nullable
+    private final List<String> acceptedCountryCodes;
+    private final List<Address> arbitratorAddresses;
 
-    // Mutable property. Has to be set before offer is save in DHT as it changes the objects hash!
+    // Mutable property. Has to be set before offer is save in P2P network as it changes the objects hash!
     private String offerFeePaymentTxID;
-    private State state = State.UNDEFINED;
 
+    @JsonExclude
+    transient private State state = State.UNDEFINED;
     // Those state properties are transient and only used at runtime! 
     // don't access directly as it might be null; use getStateProperty() which creates an object if not instantiated
+    @JsonExclude
     transient private ObjectProperty<State> stateProperty = new SimpleObjectProperty<>(state);
+    @JsonExclude
     transient private OfferAvailabilityProtocol availabilityProtocol;
+    @JsonExclude
+    transient private StringProperty errorMessageProperty = new SimpleStringProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -102,52 +107,52 @@ public class Offer implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Offer(String id,
+                 Address offererAddress,
                  PubKeyRing pubKeyRing,
                  Direction direction,
                  long fiatPrice,
-                 Coin amount,
-                 Coin minAmount,
-                 FiatAccount.Type fiatAccountType,
+                 long amount,
+                 long minAmount,
+                 String paymentMethodName,
                  String currencyCode,
-                 Country bankAccountCountry,
-                 String bankAccountUID,
-                 List<String> arbitratorIds,
-                 Coin securityDeposit,
-                 List<Country> acceptedCountries,
-                 List<String> acceptedLanguageCodes) {
+                 @Nullable Country paymentMethodCountry,
+                 String offererPaymentAccountId,
+                 List<Address> arbitratorAddresses,
+                 @Nullable List<String> acceptedCountryCodes) {
         this.id = id;
+        this.offererAddress = offererAddress;
         this.pubKeyRing = pubKeyRing;
         this.direction = direction;
         this.fiatPrice = fiatPrice;
         this.amount = amount;
         this.minAmount = minAmount;
-        this.fiatAccountType = fiatAccountType;
+        this.paymentMethodName = paymentMethodName;
         this.currencyCode = currencyCode;
-        this.bankAccountCountry = bankAccountCountry;
-        this.bankAccountUID = bankAccountUID;
-        this.arbitratorIds = arbitratorIds;
-        this.securityDeposit = securityDeposit;
-        this.acceptedCountries = acceptedCountries;
+        this.paymentMethodCountryCode = paymentMethodCountry != null ? paymentMethodCountry.code : null;
+        this.offererPaymentAccountId = offererPaymentAccountId;
+        this.arbitratorAddresses = arbitratorAddresses;
+        this.acceptedCountryCodes = acceptedCountryCodes;
 
-        this.acceptedLanguageCodes = acceptedLanguageCodes;
-
-        creationDate = new Date();
+        date = new Date().getTime();
         setState(State.UNDEFINED);
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        stateProperty = new SimpleObjectProperty<>(state);
+        try {
+            in.defaultReadObject();
+            stateProperty = new SimpleObjectProperty<>(State.UNDEFINED);
+
+            // we don't need to fill it as the error message is only relevant locally, so we don't store it in the transmitted object
+            errorMessageProperty = new SimpleStringProperty();
+        } catch (Throwable t) {
+            log.trace("Cannot be deserialized." + t.getMessage());
+        }
     }
 
     public void validate() {
-        checkNotNull(getAcceptedCountries(), "AcceptedCountries is null");
-        checkNotNull(getAcceptedLanguageCodes(), "AcceptedLanguageLocales is null");
         checkNotNull(getAmount(), "Amount is null");
-        checkNotNull(getArbitratorIds(), "Arbitrator is null");
-        checkNotNull(getBankAccountId(), "BankAccountId is null");
-        checkNotNull(getSecurityDeposit(), "SecurityDeposit is null");
-        checkNotNull(getCreationDate(), "CreationDate is null");
+        checkNotNull(getArbitratorAddresses(), "Arbitrator is null");
+        checkNotNull(getDate(), "CreationDate is null");
         checkNotNull(getCurrencyCode(), "Currency is null");
         checkNotNull(getDirection(), "Direction is null");
         checkNotNull(getId(), "Id is null");
@@ -155,13 +160,11 @@ public class Offer implements Serializable {
         checkNotNull(getMinAmount(), "MinAmount is null");
         checkNotNull(getPrice(), "Price is null");
 
-        checkArgument(getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0, "MinAmount is less then " + Restrictions.MIN_TRADE_AMOUNT
-                .toFriendlyString());
-        checkArgument(getAmount().compareTo(Restrictions.MAX_TRADE_AMOUNT) <= 0, "Amount is larger then " + Restrictions.MAX_TRADE_AMOUNT.toFriendlyString());
+        checkArgument(getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0, "MinAmount is less then "
+                + Restrictions.MIN_TRADE_AMOUNT.toFriendlyString());
+        checkArgument(getAmount().compareTo(Restrictions.MAX_TRADE_AMOUNT) <= 0, "Amount is larger then "
+                + Restrictions.MAX_TRADE_AMOUNT.toFriendlyString());
         checkArgument(getAmount().compareTo(getMinAmount()) >= 0, "MinAmount is larger then Amount");
-
-        checkArgument(getSecurityDeposit().compareTo(Restrictions.MIN_SECURITY_DEPOSIT) >= 0,
-                "SecurityDeposit is less then " + Restrictions.MIN_SECURITY_DEPOSIT.toFriendlyString());
 
         checkArgument(getPrice().isPositive(), "Price is not a positive value");
         // TODO check upper and lower bounds for fiat
@@ -172,7 +175,7 @@ public class Offer implements Serializable {
     }
 
     public boolean isMyOffer(KeyRing keyRing) {
-        return getPubKeyRing().getHashString().equals(keyRing.getPubKeyRing().getHashString());
+        return getPubKeyRing().equals(keyRing.getPubKeyRing());
     }
 
     public Fiat getVolumeByAmount(Coin amount) {
@@ -183,11 +186,15 @@ public class Offer implements Serializable {
     }
 
     public Fiat getOfferVolume() {
-        return getVolumeByAmount(amount);
+        return getVolumeByAmount(getAmount());
     }
 
     public Fiat getMinOfferVolume() {
-        return getVolumeByAmount(minAmount);
+        return getVolumeByAmount(getMinAmount());
+    }
+
+    public String getReferenceText() {
+        return id.substring(0, 8);
     }
 
 
@@ -195,21 +202,16 @@ public class Offer implements Serializable {
     // Availability
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void checkOfferAvailability(OfferAvailabilityModel model) {
-        availabilityProtocol = new OfferAvailabilityProtocol(model,
-                () -> cancelAvailabilityRequest(),
-                (errorMessage) -> cancelAvailabilityRequest());
-        availabilityProtocol.checkOfferAvailability();
-    }
-
-
     public void checkOfferAvailability(OfferAvailabilityModel model, ResultHandler resultHandler) {
         availabilityProtocol = new OfferAvailabilityProtocol(model,
                 () -> {
                     cancelAvailabilityRequest();
                     resultHandler.handleResult();
                 },
-                (errorMessage) -> availabilityProtocol.cancel());
+                (errorMessage) -> {
+                    availabilityProtocol.cancel();
+                    log.error(errorMessage);
+                });
         availabilityProtocol.checkOfferAvailability();
     }
 
@@ -232,31 +234,52 @@ public class Offer implements Serializable {
         this.offerFeePaymentTxID = offerFeePaymentTxID;
     }
 
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessageProperty.set(errorMessage);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @NotNull
+    @Override
+    public long getTTL() {
+        return TTL;
+    }
+
+    @Override
+    public PublicKey getPubKey() {
+        return pubKeyRing.getStorageSignaturePubKey();
+    }
+
+
     public String getId() {
         return id;
+    }
+
+    public String getShortId() {
+        return id.substring(0, 8);
+    }
+
+    public Address getOffererAddress() {
+        return offererAddress;
     }
 
     public PubKeyRing getPubKeyRing() {
         return pubKeyRing;
     }
 
-
     public Fiat getPrice() {
         return Fiat.valueOf(currencyCode, fiatPrice);
     }
 
     public Coin getAmount() {
-        return amount;
+        return Coin.valueOf(amount);
     }
 
     public Coin getMinAmount() {
-        return minAmount;
+        return Coin.valueOf(minAmount);
     }
 
     public Direction getDirection() {
@@ -267,45 +290,34 @@ public class Offer implements Serializable {
         return direction == Direction.BUY ? Direction.SELL : Direction.BUY;
     }
 
-    public FiatAccount.Type getFiatAccountType() {
-        return fiatAccountType;
+    public PaymentMethod getPaymentMethod() {
+        return PaymentMethod.getPaymentMethodByName(paymentMethodName);
     }
 
     public String getCurrencyCode() {
         return currencyCode;
     }
 
-    public Country getBankAccountCountry() {
-        return bankAccountCountry;
+    @Nullable
+    public String getPaymentMethodCountryCode() {
+        return paymentMethodCountryCode;
     }
 
-    public List<Country> getAcceptedCountries() {
-        return acceptedCountries;
-    }
-
-    public List<String> getAcceptedLanguageCodes() {
-        return acceptedLanguageCodes;
+    @Nullable
+    public List<String> getAcceptedCountryCodes() {
+        return acceptedCountryCodes;
     }
 
     public String getOfferFeePaymentTxID() {
         return offerFeePaymentTxID;
     }
 
-    public List<String> getArbitratorIds() {
-        return arbitratorIds;
+    public List<Address> getArbitratorAddresses() {
+        return arbitratorAddresses;
     }
 
-    @NotNull
-    public Coin getSecurityDeposit() {
-        return securityDeposit;
-    }
-
-    public String getBankAccountId() {
-        return bankAccountUID;
-    }
-
-    public Date getCreationDate() {
-        return creationDate;
+    public Date getDate() {
+        return new Date(date);
     }
 
     public State getState() {
@@ -316,27 +328,83 @@ public class Offer implements Serializable {
         return stateProperty;
     }
 
+    public String getOffererPaymentAccountId() {
+        return offererPaymentAccountId;
+    }
+
+    public ReadOnlyStringProperty errorMessageProperty() {
+        return errorMessageProperty;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Offer)) return false;
+
+        Offer offer = (Offer) o;
+
+        if (date != offer.date) return false;
+        if (fiatPrice != offer.fiatPrice) return false;
+        if (amount != offer.amount) return false;
+        if (minAmount != offer.minAmount) return false;
+        if (id != null ? !id.equals(offer.id) : offer.id != null) return false;
+        if (direction != offer.direction) return false;
+        if (currencyCode != null ? !currencyCode.equals(offer.currencyCode) : offer.currencyCode != null) return false;
+        if (offererAddress != null ? !offererAddress.equals(offer.offererAddress) : offer.offererAddress != null)
+            return false;
+        if (pubKeyRing != null ? !pubKeyRing.equals(offer.pubKeyRing) : offer.pubKeyRing != null) return false;
+        if (paymentMethodName != null ? !paymentMethodName.equals(offer.paymentMethodName) : offer.paymentMethodName != null)
+            return false;
+        if (paymentMethodCountryCode != null ? !paymentMethodCountryCode.equals(offer.paymentMethodCountryCode) : offer.paymentMethodCountryCode != null)
+            return false;
+        if (offererPaymentAccountId != null ? !offererPaymentAccountId.equals(offer.offererPaymentAccountId) : offer.offererPaymentAccountId != null)
+            return false;
+        if (acceptedCountryCodes != null ? !acceptedCountryCodes.equals(offer.acceptedCountryCodes) : offer.acceptedCountryCodes != null)
+            return false;
+        if (arbitratorAddresses != null ? !arbitratorAddresses.equals(offer.arbitratorAddresses) : offer.arbitratorAddresses != null)
+            return false;
+        return !(offerFeePaymentTxID != null ? !offerFeePaymentTxID.equals(offer.offerFeePaymentTxID) : offer.offerFeePaymentTxID != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (direction != null ? direction.hashCode() : 0);
+        result = 31 * result + (currencyCode != null ? currencyCode.hashCode() : 0);
+        result = 31 * result + (int) (date ^ (date >>> 32));
+        result = 31 * result + (int) (fiatPrice ^ (fiatPrice >>> 32));
+        result = 31 * result + (int) (amount ^ (amount >>> 32));
+        result = 31 * result + (int) (minAmount ^ (minAmount >>> 32));
+        result = 31 * result + (offererAddress != null ? offererAddress.hashCode() : 0);
+        result = 31 * result + (pubKeyRing != null ? pubKeyRing.hashCode() : 0);
+        result = 31 * result + (paymentMethodName != null ? paymentMethodName.hashCode() : 0);
+        result = 31 * result + (paymentMethodCountryCode != null ? paymentMethodCountryCode.hashCode() : 0);
+        result = 31 * result + (offererPaymentAccountId != null ? offererPaymentAccountId.hashCode() : 0);
+        result = 31 * result + (acceptedCountryCodes != null ? acceptedCountryCodes.hashCode() : 0);
+        result = 31 * result + (arbitratorAddresses != null ? arbitratorAddresses.hashCode() : 0);
+        result = 31 * result + (offerFeePaymentTxID != null ? offerFeePaymentTxID.hashCode() : 0);
+        return result;
+    }
+
     @Override
     public String toString() {
         return "Offer{" +
                 "id='" + id + '\'' +
                 ", direction=" + direction +
                 ", currencyCode='" + currencyCode + '\'' +
-                ", creationDate=" + creationDate +
+                ", date=" + date +
                 ", fiatPrice=" + fiatPrice +
                 ", amount=" + amount +
                 ", minAmount=" + minAmount +
-               /* ", pubKeyRing=" + pubKeyRing +*/
-                ", fiatAccountType=" + fiatAccountType +
-                ", bankAccountCountry=" + bankAccountCountry +
-                ", securityDeposit=" + securityDeposit +
-                ", acceptedCountries=" + acceptedCountries +
-                ", acceptedLanguageCodes=" + acceptedLanguageCodes +
-                ", bankAccountUID='" + bankAccountUID + '\'' +
-                ", arbitratorIds=" + arbitratorIds +
+                ", address=" + offererAddress +
+                ", pubKeyRing.hashCode()=" + pubKeyRing.hashCode() +
+                ", paymentMethodName='" + paymentMethodName + '\'' +
+                ", paymentMethodCountryCode='" + paymentMethodCountryCode + '\'' +
+                ", offererPaymentAccountId='" + offererPaymentAccountId + '\'' +
+                ", acceptedCountryCodes=" + acceptedCountryCodes +
+                ", arbitratorAddresses=" + arbitratorAddresses +
                 ", offerFeePaymentTxID='" + offerFeePaymentTxID + '\'' +
-                ", state=" + state +
-                ", stateProperty=" + stateProperty +
                 '}';
     }
 }

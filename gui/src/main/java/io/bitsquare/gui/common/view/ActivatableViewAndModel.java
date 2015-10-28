@@ -18,8 +18,7 @@
 package io.bitsquare.gui.common.view;
 
 import io.bitsquare.gui.common.model.Activatable;
-
-import javafx.scene.*;
+import javafx.scene.Node;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -34,20 +33,17 @@ public abstract class ActivatableViewAndModel<R extends Node, M extends Activata
     }
 
     @Override
-    public final void activate() {
-        model.activate();
-        this.doActivate();
-    }
-
-    protected void doActivate() {
-    }
-
-    @Override
-    public final void deactivate() {
-        model.deactivate();
-        this.doDeactivate();
-    }
-
-    protected void doDeactivate() {
+    protected void prepareInitialize() {
+        if (root != null) {
+            root.sceneProperty().addListener((ov, oldValue, newValue) -> {
+                if (oldValue == null && newValue != null) {
+                    model._activate();
+                    activate();
+                } else if (oldValue != null && newValue == null) {
+                    model._deactivate();
+                    deactivate();
+                }
+            });
+        }
     }
 }

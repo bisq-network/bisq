@@ -17,28 +17,20 @@
 
 package io.bitsquare.gui.main.portfolio.openoffer;
 
+import com.google.inject.Inject;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.gui.common.model.Activatable;
-import io.bitsquare.gui.common.model.DataModel;
+import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOffer;
 import io.bitsquare.trade.offer.OpenOfferManager;
-
-import com.google.inject.Inject;
-
-import java.util.stream.Collectors;
-
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.stream.Collectors;
 
-class OpenOffersDataModel implements Activatable, DataModel {
-    private static final Logger log = LoggerFactory.getLogger(OpenOffersDataModel.class);
-
+class OpenOffersDataModel extends ActivatableDataModel {
     private final OpenOfferManager openOfferManager;
 
     private final ObservableList<OpenOfferListItem> list = FXCollections.observableArrayList();
@@ -52,18 +44,18 @@ class OpenOffersDataModel implements Activatable, DataModel {
     }
 
     @Override
-    public void activate() {
+    protected void activate() {
         applyList();
         openOfferManager.getOpenOffers().addListener(tradesListChangeListener);
     }
 
     @Override
-    public void deactivate() {
+    protected void deactivate() {
         openOfferManager.getOpenOffers().removeListener(tradesListChangeListener);
     }
 
     void onCancelOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        openOfferManager.onCancelOpenOffer(openOffer, resultHandler, errorMessageHandler);
+        openOfferManager.onRemoveOpenOffer(openOffer, resultHandler, errorMessageHandler);
     }
 
 
@@ -81,6 +73,6 @@ class OpenOffersDataModel implements Activatable, DataModel {
         list.addAll(openOfferManager.getOpenOffers().stream().map(OpenOfferListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
-        list.sort((o1, o2) -> o2.getOffer().getCreationDate().compareTo(o1.getOffer().getCreationDate()));
+        list.sort((o1, o2) -> o2.getOffer().getDate().compareTo(o1.getOffer().getDate()));
     }
 }

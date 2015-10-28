@@ -17,35 +17,21 @@
 
 package io.bitsquare.trade.protocol.trade;
 
+
+import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.Peer;
+import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.trade.SellerAsTakerTrade;
-import io.bitsquare.trade.SellerTrade;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeState;
-import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
+import io.bitsquare.trade.protocol.trade.messages.PublishDepositTxRequest;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.CommitDepositTx;
-import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignContract;
-import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignDepositTx;
-import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessDepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessFiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessPayDepositRequest;
-import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessPayoutTxFinalizedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SendDepositTxInputsRequest;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SendFinalizePayoutTxRequest;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SendPublishDepositTxRequest;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SignPayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.seller.*;
 import io.bitsquare.trade.protocol.trade.tasks.shared.CommitPayoutTx;
 import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
-import io.bitsquare.trade.protocol.trade.tasks.taker.BroadcastTakeOfferFeeTx;
-import io.bitsquare.trade.protocol.trade.tasks.taker.CreateTakeOfferFeeTx;
-import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOfferFeePayment;
-import io.bitsquare.trade.protocol.trade.tasks.taker.VerifyOffererAccount;
-
+import io.bitsquare.trade.protocol.trade.tasks.shared.SignPayoutTx;
+import io.bitsquare.trade.protocol.trade.tasks.taker.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,28 +46,25 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public SellerAsTakerProtocol(SellerAsTakerTrade trade) {
-        super(trade.getProcessModel());
+        super(trade);
 
         this.sellerAsTakerTrade = trade;
 
         processModel.tradingPeer.setPubKeyRing(trade.getOffer().getPubKeyRing());
 
-        // If we are after the timelock state we need to setup the listener again
-        if (trade instanceof SellerTrade) {
-            TradeState tradeState = trade.tradeStateProperty().get();
-            if (tradeState == TradeState.SellerState.PAYOUT_TX_RECEIVED ||
-                    tradeState == TradeState.SellerState.PAYOUT_TX_COMMITTED ||
-                    tradeState == TradeState.SellerState.PAYOUT_BROAD_CASTED) {
-                TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                        () -> {
-                            handleTaskRunnerSuccess("SetupPayoutTxLockTimeReachedListener");
-                            processModel.onComplete();
-                        },
-                        this::handleTaskRunnerFault);
+        // If we are after the timeLock state we need to setup the listener again
+        //TODO not sure if that is not called already from the checkPayoutTxTimeLock at tradeProtocol
+        Trade.State tradeState = trade.getState();
+        if (tradeState.getPhase() == Trade.Phase.PAYOUT_PAID) {
+            TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
+                    () -> {
+                        handleTaskRunnerSuccess("SetupPayoutTxLockTimeReachedListener");
+                        processModel.onComplete();
+                    },
+                    this::handleTaskRunnerFault);
 
-                taskRunner.addTasks(SetupPayoutTxLockTimeReachedListener.class);
-                taskRunner.run();
-            }
+            taskRunner.addTasks(SetupPayoutTxLockTimeReachedListener.class);
+            taskRunner.run();
         }
     }
 
@@ -94,23 +77,13 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     public void doApplyMailboxMessage(Message message, Trade trade) {
         this.trade = trade;
 
-        if (message instanceof PayoutTxFinalizedMessage) {
-            handle((PayoutTxFinalizedMessage) message);
-        }
-        else {
-            // Find first the actual peer address, as it might have changed in the meantime
-            findPeerAddress(trade.getOffer().getPubKeyRing(),
-                    () -> {
-                        if (message instanceof FiatTransferStartedMessage) {
-                            handle((FiatTransferStartedMessage) message);
-                        }
-                        else if (message instanceof DepositTxPublishedMessage) {
-                            handle((DepositTxPublishedMessage) message);
-                        }
-                    },
-                    (errorMessage -> {
-                        log.error(errorMessage);
-                    }));
+        if (message instanceof MailboxMessage) {
+            Address peerAddress = ((MailboxMessage) message).getSenderAddress();
+            if (message instanceof PayoutTxFinalizedMessage) {
+                handle((PayoutTxFinalizedMessage) message, peerAddress);
+            } else if (message instanceof FiatTransferStartedMessage) {
+                handle((FiatTransferStartedMessage) message, peerAddress);
+            }
         }
     }
 
@@ -126,9 +99,12 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
+                SelectArbitrator.class,
+                LoadCreateOfferFeeTx.class,
                 CreateTakeOfferFeeTx.class,
                 BroadcastTakeOfferFeeTx.class,
-                SendDepositTxInputsRequest.class
+                CreateDepositTxInputsAsSeller.class,
+                SendPayDepositRequest.class
         );
         startTimeout();
         taskRunner.run();
@@ -139,37 +115,22 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(PayDepositRequest tradeMessage) {
+    private void handle(PublishDepositTxRequest tradeMessage, Address sender) {
         log.debug("handle RequestPayDepositMessage");
         stopTimeout();
         processModel.setTradeMessage(tradeMessage);
+        processModel.setTempTradingPeerAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
                 () -> handleTaskRunnerSuccess("PayDepositRequest"),
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                ProcessPayDepositRequest.class,
+                ProcessPublishDepositTxRequest.class,
                 VerifyOffererAccount.class,
-                CreateAndSignContract.class,
-                CreateAndSignDepositTx.class,
-                SendPublishDepositTxRequest.class
-        );
-        startTimeout();
-        taskRunner.run();
-    }
-
-    private void handle(DepositTxPublishedMessage tradeMessage) {
-        stopTimeout();
-        processModel.setTradeMessage(tradeMessage);
-
-        TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
-                () -> handleTaskRunnerSuccess("DepositTxPublishedMessage"),
-                this::handleTaskRunnerFault);
-
-        taskRunner.addTasks(
-                ProcessDepositTxPublishedMessage.class,
-                CommitDepositTx.class
+                VerifyAndSignContract.class,
+                SignAndPublishDepositTxAsSeller.class,
+                SendDepositTxPublishedMessage.class
         );
         taskRunner.run();
     }
@@ -179,8 +140,9 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     // After peer has started Fiat tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(FiatTransferStartedMessage tradeMessage) {
+    private void handle(FiatTransferStartedMessage tradeMessage, Address sender) {
         processModel.setTradeMessage(tradeMessage);
+        processModel.setTempTradingPeerAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
                 () -> handleTaskRunnerSuccess("FiatTransferStartedMessage"),
@@ -198,7 +160,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     @Override
     public void onFiatPaymentReceived() {
-        sellerAsTakerTrade.setTradeState(TradeState.SellerState.FIAT_PAYMENT_RECEIPT);
+        sellerAsTakerTrade.setState(Trade.State.FIAT_PAYMENT_RECEIPT);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
                 () -> handleTaskRunnerSuccess("onFiatPaymentReceived"),
@@ -209,13 +171,13 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 SignPayoutTx.class,
                 SendFinalizePayoutTxRequest.class
         );
-        startTimeout();
         taskRunner.run();
     }
 
-    private void handle(PayoutTxFinalizedMessage tradeMessage) {
+    private void handle(PayoutTxFinalizedMessage tradeMessage, Address sender) {
         stopTimeout();
         processModel.setTradeMessage(tradeMessage);
+        processModel.setTempTradingPeerAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
                 () -> {
@@ -238,20 +200,14 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, Peer sender) {
-        if (tradeMessage instanceof PayDepositRequest) {
-            handle((PayDepositRequest) tradeMessage);
-        }
-        else if (tradeMessage instanceof DepositTxPublishedMessage) {
-            handle((DepositTxPublishedMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof FiatTransferStartedMessage) {
-            handle((FiatTransferStartedMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof PayoutTxFinalizedMessage) {
-            handle((PayoutTxFinalizedMessage) tradeMessage);
-        }
-        else {
+    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, Address sender) {
+        if (tradeMessage instanceof PublishDepositTxRequest) {
+            handle((PublishDepositTxRequest) tradeMessage, sender);
+        } else if (tradeMessage instanceof FiatTransferStartedMessage) {
+            handle((FiatTransferStartedMessage) tradeMessage, sender);
+        } else if (tradeMessage instanceof PayoutTxFinalizedMessage) {
+            handle((PayoutTxFinalizedMessage) tradeMessage, sender);
+        } else {
             log.error("Incoming message not supported. " + tradeMessage);
         }
     }

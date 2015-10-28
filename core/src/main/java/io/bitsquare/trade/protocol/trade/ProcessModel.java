@@ -18,36 +18,33 @@
 package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.arbitration.ArbitrationRepository;
+import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.data.RawInput;
+import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.taskrunner.Model;
-import io.bitsquare.crypto.CryptoService;
-import io.bitsquare.crypto.KeyRing;
-import io.bitsquare.crypto.PubKeyRing;
-import io.bitsquare.fiat.FiatAccount;
-import io.bitsquare.p2p.AddressService;
-import io.bitsquare.p2p.MessageService;
+import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.P2PService;
+import io.bitsquare.payment.PaymentAccountContractData;
+import io.bitsquare.trade.OffererTrade;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.user.User;
-
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionOutput;
-import org.bitcoinj.crypto.DeterministicKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-
 import java.util.List;
-
-import javax.annotation.Nullable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ProcessModel implements Model, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -56,57 +53,64 @@ public class ProcessModel implements Model, Serializable {
     private static final Logger log = LoggerFactory.getLogger(ProcessModel.class);
 
     // Transient/Immutable
-    transient private MessageService messageService;
-    transient private AddressService addressService;
+    transient private TradeManager tradeManager;
+    transient private OpenOfferManager openOfferManager;
     transient private WalletService walletService;
     transient private TradeWalletService tradeWalletService;
-    transient private BlockChainService blockChainService;
-    transient private CryptoService cryptoService;
-    transient private ArbitrationRepository arbitrationRepository;
+    transient private ArbitratorManager arbitratorManager;
     transient private Offer offer;
     transient private User user;
     transient private KeyRing keyRing;
+    transient private P2PService p2PService;
 
     // Mutable
     public final TradingPeer tradingPeer;
     transient private TradeMessage tradeMessage;
     private String takeOfferFeeTxId;
-    private List<TransactionOutput> connectedOutputsForAllInputs;
-    // private Coin payoutAmount;
-    private Transaction preparedDepositTx;
-    private List<TransactionOutput> outputs; // used to verify amounts with change outputs
     private byte[] payoutTxSignature;
     private Transaction takeOfferFeeTx;
 
+    private List<Address> takerAcceptedArbitratorAddresses;
+
+    // that is used to store temp. the peers address when we get an incoming message before the message is verified.
+    // After successful verified we copy that over to the trade.tradingPeerAddress
+    private Address tempTradingPeerAddress;
+    private byte[] preparedDepositTx;
+    private List<RawInput> rawInputs;
+    private long changeOutputValue;
+    @Nullable
+    private String changeOutputAddress;
 
     public ProcessModel() {
         tradingPeer = new TradingPeer();
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
+        try {
+            in.defaultReadObject();
+        } catch (Throwable t) {
+            log.trace("Cannot be deserialized." + t.getMessage());
+        }
     }
 
     public void onAllServicesInitialized(Offer offer,
-                                         MessageService messageService,
-                                         AddressService addressService,
+                                         TradeManager tradeManager,
+                                         OpenOfferManager openOfferManager,
+                                         P2PService p2PService,
                                          WalletService walletService,
                                          TradeWalletService tradeWalletService,
-                                         BlockChainService blockChainService,
-                                         CryptoService cryptoService,
-                                         ArbitrationRepository arbitrationRepository,
+                                         ArbitratorManager arbitratorManager,
                                          User user,
                                          KeyRing keyRing) {
         this.offer = offer;
-        this.messageService = messageService;
-        this.addressService = addressService;
+        this.tradeManager = tradeManager;
+        this.openOfferManager = openOfferManager;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
-        this.blockChainService = blockChainService;
-        this.cryptoService = cryptoService;
-        this.arbitrationRepository = arbitrationRepository;
+        this.arbitratorManager = arbitratorManager;
         this.user = user;
         this.keyRing = keyRing;
+        this.p2PService = p2PService;
     }
 
 
@@ -114,8 +118,13 @@ public class ProcessModel implements Model, Serializable {
     // Getter only
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public MessageService getMessageService() {
-        return messageService;
+
+    public TradeManager getTradeManager() {
+        return tradeManager;
+    }
+
+    public OpenOfferManager getOpenOfferManager() {
+        return openOfferManager;
     }
 
     public WalletService getWalletService() {
@@ -126,12 +135,8 @@ public class ProcessModel implements Model, Serializable {
         return tradeWalletService;
     }
 
-    public BlockChainService getBlockChainService() {
-        return blockChainService;
-    }
-
-    public byte[] getArbitratorPubKey() {
-        return arbitrationRepository.getDefaultArbitrator().getPubKey();
+    public byte[] getArbitratorPubKey(Address arbitratorAddress) {
+        return user.getAcceptedArbitratorByAddress(arbitratorAddress).getBtcPubKey();
     }
 
     public Offer getOffer() {
@@ -140,6 +145,14 @@ public class ProcessModel implements Model, Serializable {
 
     public String getId() {
         return offer.getId();
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public Address getMyAddress() {
+        return p2PService.getAddress();
     }
 
 
@@ -165,64 +178,23 @@ public class ProcessModel implements Model, Serializable {
         this.takeOfferFeeTx = takeOfferFeeTx;
     }
 
-    public FiatAccount getFiatAccount() {
-        return user.getFiatAccount(offer.getBankAccountId());
-    }
-
-    public DeterministicKey getRegistrationKeyPair() {
-        return walletService.getRegistrationAddressEntry().getKeyPair();
+    public PaymentAccountContractData getPaymentAccountContractData(Trade trade) {
+        if (trade instanceof OffererTrade)
+            return user.getPaymentAccount(offer.getOffererPaymentAccountId()).getContractData();
+        else
+            return user.getPaymentAccount(trade.getTakerPaymentAccountId()).getContractData();
     }
 
     public String getAccountId() {
         return user.getAccountId();
     }
 
-    public byte[] getRegistrationPubKey() {
-        return walletService.getRegistrationAddressEntry().getPubKey();
-    }
-
     public AddressEntry getAddressEntry() {
-        return walletService.getAddressEntry(offer.getId());
+        return walletService.getAddressEntryByOfferId(offer.getId());
     }
 
     public byte[] getTradeWalletPubKey() {
         return getAddressEntry().getPubKey();
-    }
-
-    @Nullable
-    public List<TransactionOutput> getConnectedOutputsForAllInputs() {
-        return connectedOutputsForAllInputs;
-    }
-
-    public void setConnectedOutputsForAllInputs(List<TransactionOutput> connectedOutputsForAllInputs) {
-        this.connectedOutputsForAllInputs = connectedOutputsForAllInputs;
-    }
-
-   /* @Nullable
-    public Coin getPayoutAmount() {
-        return payoutAmount;
-    }
-
-    public void setPayoutAmount(Coin payoutAmount) {
-        this.payoutAmount = payoutAmount;
-    }*/
-
-    @Nullable
-    public Transaction getPreparedDepositTx() {
-        return preparedDepositTx;
-    }
-
-    public void setPreparedDepositTx(Transaction preparedDepositTx) {
-        this.preparedDepositTx = preparedDepositTx;
-    }
-
-    @Nullable
-    public List<TransactionOutput> getOutputs() {
-        return outputs;
-    }
-
-    public void setOutputs(List<TransactionOutput> outputs) {
-        this.outputs = outputs;
     }
 
     @Nullable
@@ -250,19 +222,68 @@ public class ProcessModel implements Model, Serializable {
     public void onComplete() {
     }
 
-    public AddressService getAddressService() {
-        return addressService;
+    public P2PService getP2PService() {
+        return p2PService;
     }
 
     public PubKeyRing getPubKeyRing() {
         return keyRing.getPubKeyRing();
     }
 
-    public CryptoService getCryptoService() {
-        return cryptoService;
+    public KeyRing getKeyRing() {
+        return keyRing;
     }
 
-    public void setCryptoService(CryptoService cryptoService) {
-        this.cryptoService = cryptoService;
+    public void setTakerAcceptedArbitratorAddresses(List<Address> takerAcceptedArbitratorAddresses) {
+        this.takerAcceptedArbitratorAddresses = takerAcceptedArbitratorAddresses;
+    }
+
+    public List<Address> getTakerAcceptedArbitratorAddresses() {
+        return takerAcceptedArbitratorAddresses;
+    }
+
+    public void setTempTradingPeerAddress(Address tempTradingPeerAddress) {
+        this.tempTradingPeerAddress = tempTradingPeerAddress;
+    }
+
+    public Address getTempTradingPeerAddress() {
+        return tempTradingPeerAddress;
+    }
+
+    public ArbitratorManager getArbitratorManager() {
+        return arbitratorManager;
+    }
+
+    public void setPreparedDepositTx(byte[] preparedDepositTx) {
+        this.preparedDepositTx = preparedDepositTx;
+    }
+
+    public byte[] getPreparedDepositTx() {
+        return preparedDepositTx;
+    }
+
+    public void setRawInputs(List<RawInput> rawInputs) {
+        this.rawInputs = rawInputs;
+    }
+
+    public List<RawInput> getRawInputs() {
+        return rawInputs;
+    }
+
+    public void setChangeOutputValue(long changeOutputValue) {
+        this.changeOutputValue = changeOutputValue;
+    }
+
+    public long getChangeOutputValue() {
+        return changeOutputValue;
+    }
+
+    public void setChangeOutputAddress(String changeOutputAddress) {
+        this.changeOutputAddress = changeOutputAddress;
+    }
+
+    @Nullable
+    public String getChangeOutputAddress() {
+        return changeOutputAddress;
     }
 }

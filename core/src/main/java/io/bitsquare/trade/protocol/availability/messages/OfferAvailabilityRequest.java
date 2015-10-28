@@ -18,11 +18,9 @@
 package io.bitsquare.trade.protocol.availability.messages;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.crypto.PubKeyRing;
+import io.bitsquare.common.crypto.PubKeyRing;
 
-import java.io.Serializable;
-
-public class OfferAvailabilityRequest extends OfferMessage implements Serializable {
+public class OfferAvailabilityRequest extends OfferMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
@@ -40,8 +38,8 @@ public class OfferAvailabilityRequest extends OfferMessage implements Serializab
     @Override
     public String toString() {
         return "RequestIsOfferAvailableMessage{" +
-                "offerId=" + offerId +
-                "pubKeyRing=" + pubKeyRing != null ? pubKeyRing.toString() : "null" +
+                "\nofferId=" + offerId +
+                "\npubKeyRing=" + pubKeyRing != null ? pubKeyRing.toString() : "null" +
                 '}';
     }
 }

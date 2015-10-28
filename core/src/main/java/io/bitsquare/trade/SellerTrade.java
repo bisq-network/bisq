@@ -18,19 +18,17 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.Peer;
+import io.bitsquare.p2p.Address;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.SellerProtocol;
-
 import org.bitcoinj.core.Coin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 
-import java.util.Date;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static com.google.common.base.Preconditions.checkArgument;
 
 public abstract class SellerTrade extends Trade implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -38,8 +36,8 @@ public abstract class SellerTrade extends Trade implements Serializable {
 
     transient private static final Logger log = LoggerFactory.getLogger(BuyerAsTakerTrade.class);
 
-    public SellerTrade(Offer offer, Coin tradeAmount, Peer tradingPeer, Storage<? extends TradableList> storage) {
-        super(offer, tradeAmount, tradingPeer, storage);
+    public SellerTrade(Offer offer, Coin tradeAmount, Address tradingPeerAddress, Storage<? extends TradableList> storage) {
+        super(offer, tradeAmount, tradingPeerAddress, storage);
     }
 
     public SellerTrade(Offer offer, Storage<? extends TradableList> storage) {
@@ -48,26 +46,13 @@ public abstract class SellerTrade extends Trade implements Serializable {
 
     @Override
     protected void initStates() {
-        if (tradeState == null)
-            tradeState = TradeState.SellerState.PREPARATION;
-        initStateProperties();
+        if (state == null)
+            state = State.PREPARATION;
     }
 
     public void onFiatPaymentReceived() {
-        assert tradeProtocol instanceof SellerProtocol;
+        checkArgument(tradeProtocol instanceof SellerProtocol, "tradeProtocol NOT instanceof SellerProtocol");
         ((SellerProtocol) tradeProtocol).onFiatPaymentReceived();
-    }
-
-
-    public boolean isFailedState() {
-        return tradeState == TradeState.SellerState.FAILED;
-    }
-
-    public void setFailedState() {
-        TradeState tradeState = TradeState.SellerState.FAILED;
-        // We store the phase of the last state into the failed state
-        tradeState.setPhase(tradeState.getPhase());
-        setTradeState(tradeState);
     }
 
 
@@ -76,60 +61,12 @@ public abstract class SellerTrade extends Trade implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setTradeState(TradeState tradeState) {
-        super.setTradeState(tradeState);
+    public void setState(State state) {
+        super.setState(state);
 
-        switch ((TradeState.SellerState) tradeState) {
-
-            case PREPARATION:
-                break;
-
-            case DEPOSIT_PUBLISHED_MSG_RECEIVED:
-                takeOfferDate = new Date();
-                if (this instanceof OffererTrade)
-                    openOfferManager.closeOpenOffer(getOffer());
-                break;
-            case DEPOSIT_CONFIRMED:
-                break;
-
-            case FIAT_PAYMENT_STARTED_MSG_RECEIVED:
-                break;
-
-            case FIAT_PAYMENT_RECEIPT:
-                break;
-            case FIAT_PAYMENT_RECEIPT_MSG_SENT:
-                break;
-
-            case PAYOUT_TX_RECEIVED:
-                break;
-            case PAYOUT_TX_COMMITTED:
-                break;
-
-            case PAYOUT_BROAD_CASTED:
-                break;
-
-            case WITHDRAW_COMPLETED:
-                disposeProtocol();
-                break;
-
-            case FAILED:
-                disposeProtocol();
-                break;
-
-            default:
-                log.error("Unhandled state " + tradeState);
-                break;
-        }
+        if (state == State.WITHDRAW_COMPLETED)
+            tradeProtocol.completed();
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected void handleConfidenceResult() {
-        if (((TradeState.SellerState) tradeState).ordinal() < TradeState.SellerState.DEPOSIT_CONFIRMED.ordinal())
-            setTradeState(TradeState.SellerState.DEPOSIT_CONFIRMED);
-    }
 }

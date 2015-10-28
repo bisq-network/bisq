@@ -20,34 +20,35 @@ package io.bitsquare.gui.main.portfolio.openoffer;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
-import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.gui.popups.OfferDetailsPopup;
+import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.trade.offer.OpenOffer;
-
-import javax.inject.Inject;
-
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.image.*;
-import javafx.scene.layout.*;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 
+import javax.inject.Inject;
+
 @FxmlView
-public class OpenOffersView extends ActivatableViewAndModel<GridPane, OpenOffersViewModel> {
+public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersViewModel> {
 
     @FXML TableView<OpenOfferListItem> table;
     @FXML TableColumn<OpenOfferListItem, OpenOfferListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, offerIdColumn, removeItemColumn;
-    private Navigation navigation;
+    private final Navigation navigation;
+    private final OfferDetailsPopup offerDetailsPopup;
 
     @Inject
-    public OpenOffersView(OpenOffersViewModel model, Navigation navigation) {
+    public OpenOffersView(OpenOffersViewModel model, Navigation navigation, OfferDetailsPopup offerDetailsPopup) {
         super(model);
         this.navigation = navigation;
+        this.offerDetailsPopup = offerDetailsPopup;
     }
 
     @Override
@@ -65,7 +66,7 @@ public class OpenOffersView extends ActivatableViewAndModel<GridPane, OpenOffers
     }
 
     @Override
-    public void doActivate() {
+    protected void activate() {
         table.setItems(model.getList());
     }
 
@@ -73,28 +74,59 @@ public class OpenOffersView extends ActivatableViewAndModel<GridPane, OpenOffers
         model.onCancelOpenOffer(openOffer,
                 () -> {
                     log.debug("Remove offer was successful");
-                    Popups.openInfoPopup("You can withdraw the funds you paid in from the funds screens.");
-                    navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
+                    new Popup().information("You can withdraw the funds you paid in from the funds screens.")
+                            .onClose(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
+                            .show();
                 },
                 (message) -> {
                     log.error(message);
-                    Popups.openWarningPopup("Remove offer failed", message);
+                    new Popup().warning("Remove offer failed:\n" + message).show();
                 });
 
     }
 
-    private void openOfferDetails(OpenOfferListItem item) {
-        // TODO Open popup with details view
-        log.debug("openOfferDetails " + item);
-        GUIUtil.copyToClipboard(item.getOffer().getId());
-        Popups.openWarningPopup("Under construction",
-                "The offer ID was copied to the clipboard. " +
-                        "Use that to identify your trading peer in the IRC chat room \n\n" +
-                        "Later this will open a details popup but that is not implemented yet.");
-    }
+ /*   private void openOfferDetails(OpenOfferListItem item) {
+        Offer offer = item.getOffer();
+        int rowIndex = 0;
+        GridPane gridPane = new GridPane();
+        gridPane.setPrefWidth(700);
+        gridPane.setPadding(new Insets(30, 30, 30, 30));
+        gridPane.setHgap(Layout.GRID_GAP);
+        gridPane.setVgap(Layout.GRID_GAP);
+        gridPane.setStyle("-fx-background-color: -bs-content-bg-grey");
+        ColumnConstraints columnConstraints1 = new ColumnConstraints();
+        columnConstraints1.setHalignment(HPos.RIGHT);
+        columnConstraints1.setHgrow(Priority.SOMETIMES);
+        ColumnConstraints columnConstraints2 = new ColumnConstraints();
+        columnConstraints2.setHgrow(Priority.ALWAYS);
+        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
+
+        int rows = offer.getPaymentMethodCountry() == null ? 10 : 11;
+        addTitledGroupBg(gridPane, rowIndex, rows, "Offer details");
+        addLabelTextField(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_DISTANCE);
+        addLabelTextField(gridPane, ++rowIndex, "Creation date:", formatter.formatDateTime(offer.getDate()));
+        addLabelTextField(gridPane, ++rowIndex, "Offer direction:", formatter.formatDirection(offer.getDirection()));
+        addLabelTextField(gridPane, ++rowIndex, "Currency code:", offer.getCurrencyCode());
+        addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()));
+        addLabelTextField(gridPane, ++rowIndex, "Bitcoin amount:", formatter.formatCoin(offer.getAmount()));
+        addLabelTextField(gridPane, ++rowIndex, "Min. amount:", formatter.formatCoin(offer.getMinAmount()));
+        addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(offer.getPaymentMethod().getName()));
+        if (offer.getPaymentMethodCountry() != null)
+            addLabelTextField(gridPane, ++rowIndex, "Country of bank:", offer.getPaymentMethodCountry().code);
+        addLabelTextField(gridPane, ++rowIndex, "Accepted arbitrators:", formatter.arbitratorNamesToString(offer.getArbitratorNames()));
+
+        addLabelTxIdTextField(gridPane, ++rowIndex, "Create offer fee transaction ID:", offer.getOfferFeePaymentTxID());
+
+        Button closeButton = addButton(gridPane, ++rowIndex, "Close");
+        GridPane.setMargin(closeButton, new Insets(15, 0, 0, 0));
+        PopOver popover = PopOvers.getPopOver(gridPane);
+        PopOvers.showInCenter(popover);
+
+        closeButton.setOnAction(e -> popover.hide());
+    }*/
 
     private void setOfferIdColumnCellFactory() {
-        offerIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
+        offerIdColumn.setCellValueFactory((openOfferListItem) -> new ReadOnlyObjectWrapper<>(openOfferListItem.getValue()));
         offerIdColumn.setCellFactory(
                 new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem, OpenOfferListItem>>() {
 
@@ -102,17 +134,15 @@ public class OpenOffersView extends ActivatableViewAndModel<GridPane, OpenOffers
                     public TableCell<OpenOfferListItem, OpenOfferListItem> call(TableColumn<OpenOfferListItem,
                             OpenOfferListItem> column) {
                         return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
-                            private Hyperlink hyperlink;
 
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    hyperlink = new Hyperlink(model.getTradeId(item));
-                                    hyperlink.setId("id-link");
+                                    Hyperlink hyperlink = new Hyperlink(model.getTradeId(item));
                                     Tooltip.install(hyperlink, new Tooltip(model.getTradeId(item)));
-                                    hyperlink.setOnAction(event -> openOfferDetails(item));
+                                    hyperlink.setOnAction(event -> offerDetailsPopup.show(item.getOffer()));
                                     setGraphic(hyperlink);
                                 }
                                 else {
@@ -126,7 +156,7 @@ public class OpenOffersView extends ActivatableViewAndModel<GridPane, OpenOffers
     }
 
     private void setDateColumnCellFactory() {
-        dateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        dateColumn.setCellValueFactory((openOfferListItem) -> new ReadOnlyObjectWrapper<>(openOfferListItem.getValue()));
         dateColumn.setCellFactory(
                 new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem,
                         OpenOfferListItem>>() {
