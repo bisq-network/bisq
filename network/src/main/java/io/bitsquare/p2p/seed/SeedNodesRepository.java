@@ -9,7 +9,7 @@ public class SeedNodesRepository {
 
 
     protected List<Address> torSeedNodeAddresses = Arrays.asList(
-            new Address("3anjm5mw2sr6abx6.onion:8001")
+            new Address("lmvdenjkyvx2ovga.onion:8001")
     );
 
 

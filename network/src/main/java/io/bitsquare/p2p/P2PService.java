@@ -230,11 +230,6 @@ public class P2PService {
         });
     }
 
-    public void protocol() {
-        // networkNode.start
-        //      onTorNodeReady: sendGetAllDataMessage
-        //      onHiddenServiceReady: tryStartAuthentication
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
