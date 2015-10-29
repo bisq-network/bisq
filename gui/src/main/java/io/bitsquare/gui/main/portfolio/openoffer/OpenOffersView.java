@@ -38,8 +38,10 @@ import javax.inject.Inject;
 @FxmlView
 public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersViewModel> {
 
-    @FXML TableView<OpenOfferListItem> table;
-    @FXML TableColumn<OpenOfferListItem, OpenOfferListItem> priceColumn, amountColumn, volumeColumn,
+    @FXML
+    TableView<OpenOfferListItem> table;
+    @FXML
+    TableColumn<OpenOfferListItem, OpenOfferListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, offerIdColumn, removeItemColumn;
     private final Navigation navigation;
     private final OfferDetailsPopup offerDetailsPopup;
@@ -71,18 +73,22 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     }
 
     private void onCancelOpenOffer(OpenOffer openOffer) {
-        model.onCancelOpenOffer(openOffer,
-                () -> {
-                    log.debug("Remove offer was successful");
-                    new Popup().information("You can withdraw the funds you paid in from the funds screens.")
-                            .onClose(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
-                            .show();
-                },
-                (message) -> {
-                    log.error(message);
-                    new Popup().warning("Remove offer failed:\n" + message).show();
-                });
-
+        if (model.isAuthenticated()) {
+            model.onCancelOpenOffer(openOffer,
+                    () -> {
+                        log.debug("Remove offer was successful");
+                        new Popup().information("You can withdraw the funds you paid in from the funds screens.")
+                                .onClose(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
+                                .show();
+                    },
+                    (message) -> {
+                        log.error(message);
+                        new Popup().warning("Remove offer failed:\n" + message).show();
+                    });
+        } else {
+            new Popup().warning("You need to wait until your client is authenticated in the network.\n" +
+                    "That might take up to about 2 minutes at startup.").show();
+        }
     }
 
  /*   private void openOfferDetails(OpenOfferListItem item) {
@@ -144,8 +150,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                     Tooltip.install(hyperlink, new Tooltip(model.getTradeId(item)));
                                     hyperlink.setOnAction(event -> offerDetailsPopup.show(item.getOffer()));
                                     setGraphic(hyperlink);
-                                }
-                                else {
+                                } else {
                                     setGraphic(null);
                                     setId(null);
                                 }
@@ -281,8 +286,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 if (item != null) {
                                     button.setOnAction(event -> onCancelOpenOffer(item.getOpenOffer()));
                                     setGraphic(button);
-                                }
-                                else {
+                                } else {
                                     setGraphic(null);
                                 }
                             }

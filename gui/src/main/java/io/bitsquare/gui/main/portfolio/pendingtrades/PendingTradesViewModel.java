@@ -24,6 +24,7 @@ import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.*;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.Trade;
 import javafx.beans.property.*;
@@ -72,6 +73,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     private final InputValidator inputValidator;
     private final OKPayValidator okPayValidator;
     private final AltCoinAddressValidator altCoinAddressValidator;
+    private P2PService p2PService;
 
     private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>(PendingTradesViewModel.BuyerState.UNDEFINED);
     private final ObjectProperty<SellerState> sellerState = new SimpleObjectProperty<>(UNDEFINED);
@@ -92,7 +94,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                                   BICValidator bicValidator,
                                   InputValidator inputValidator,
                                   OKPayValidator okPayValidator,
-                                  AltCoinAddressValidator altCoinAddressValidator
+                                  AltCoinAddressValidator altCoinAddressValidator,
+                                  P2PService p2PService
     ) {
         super(dataModel);
 
@@ -103,6 +106,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         this.inputValidator = inputValidator;
         this.okPayValidator = okPayValidator;
         this.altCoinAddressValidator = altCoinAddressValidator;
+        this.p2PService = p2PService;
     }
 
     @Override
@@ -213,6 +217,10 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public BtcAddressValidator getBtcAddressValidator() {
         return btcAddressValidator;
+    }
+
+    public boolean isAuthenticated() {
+        return p2PService.isAuthenticated();
     }
 
     // columns

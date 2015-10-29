@@ -22,6 +22,7 @@ import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.TxIdTextField;
 import io.bitsquare.gui.components.paymentmethods.*;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
+import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.payment.PaymentMethod;
@@ -124,13 +125,18 @@ public class StartPaymentView extends TradeStepDetailsView {
 
     private void onPaymentStarted(ActionEvent actionEvent) {
         log.debug("onPaymentStarted");
-        paymentStartedButton.setDisable(true);
+        if (model.isAuthenticated()) {
+            paymentStartedButton.setDisable(true);
 
-        statusProgressIndicator.setVisible(true);
-        statusProgressIndicator.setProgress(-1);
-        statusLabel.setText("Sending message to trading partner...");
+            statusProgressIndicator.setVisible(true);
+            statusProgressIndicator.setProgress(-1);
+            statusLabel.setText("Sending message to trading partner...");
 
-        model.fiatPaymentStarted();
+            model.fiatPaymentStarted();
+        } else {
+            new Popup().warning("You need to wait until your client is authenticated in the network.\n" +
+                    "That might take up to about 2 minutes at startup.").show();
+        }
     }
 
 

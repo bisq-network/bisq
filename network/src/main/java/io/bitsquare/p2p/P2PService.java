@@ -17,7 +17,7 @@ import io.bitsquare.p2p.routing.Neighbor;
 import io.bitsquare.p2p.routing.Routing;
 import io.bitsquare.p2p.routing.RoutingListener;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
-import io.bitsquare.p2p.storage.HashSetChangedListener;
+import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.ProtectedExpirableDataStorage;
 import io.bitsquare.p2p.storage.data.ExpirableMailboxPayload;
 import io.bitsquare.p2p.storage.data.ExpirablePayload;
@@ -48,6 +48,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class P2PService {
     private static final Logger log = LoggerFactory.getLogger(P2PService.class);
 
+    @Nullable
     private final EncryptionService encryptionService;
     private final SetupListener setupListener;
     private KeyRing keyRing;
@@ -84,7 +85,7 @@ public class P2PService {
                       @Named(ProgramArguments.PORT_KEY) int port,
                       @Named(ProgramArguments.TOR_DIR) File torDir,
                       @Named(ProgramArguments.USE_LOCALHOST) boolean useLocalhost,
-                      EncryptionService encryptionService,
+                      @Nullable EncryptionService encryptionService,
                       KeyRing keyRing,
                       @Named("storage.dir") File storageDir) {
         this.encryptionService = encryptionService;
@@ -142,7 +143,27 @@ public class P2PService {
             @Override
             public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
                 authenticatedPeerAddresses.add(peerAddress);
-                authenticatedToFirstPeer = true;
+
+                if (!authenticatedToFirstPeer) {
+                    authenticatedToFirstPeer = true;
+
+                    Address address = connection.getPeerAddress();
+                    SettableFuture<Connection> future = sendMessage(address,
+                            new GetDataSetMessage(addToListAndGetNonce()));
+                    Futures.addCallback(future, new FutureCallback<Connection>() {
+                        @Override
+                        public void onSuccess(@Nullable Connection connection) {
+                            log.info("onPeerAddressAuthenticated Send GetAllDataMessage to " + address + " succeeded.");
+                            connectedSeedNodes.add(address);
+                        }
+
+                        @Override
+                        public void onFailure(Throwable throwable) {
+                            log.warn("onPeerAddressAuthenticated Send GetAllDataMessage to " + address + " failed. " +
+                                    "Exception:" + throwable.getMessage());
+                        }
+                    });
+                }
 
                 P2PService.this.authenticated = true;
                 dataStorage.setAuthenticated(true);
@@ -182,15 +203,18 @@ public class P2PService {
                 HashSet<ProtectedData> set = ((DataSetMessage) message).set;
                 set.stream().forEach(e -> dataStorage.add(e, connection.getPeerAddress()));
 
-                set.stream().filter(e -> e instanceof ProtectedMailboxData).forEach(e -> tryDecryptMailboxData((ProtectedMailboxData) e));
+                // TODO done in addHashSetChangedListener
+                // set.stream().filter(e -> e instanceof ProtectedMailboxData).forEach(e -> tryDecryptMailboxData((ProtectedMailboxData) e));
 
                 dataReceived();
             } else if (message instanceof SealedAndSignedMessage) {
-                try {
-                    DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService.decryptAndVerifyMessage((SealedAndSignedMessage) message);
-                    UserThread.execute(() -> decryptedMailListeners.stream().forEach(e -> e.onMailMessage(decryptedMessageWithPubKey, connection.getPeerAddress())));
-                } catch (CryptoException e) {
-                    log.info("Decryption of SealedAndSignedMessage failed. That is expected if the message is not intended for us.");
+                if (encryptionService != null) {
+                    try {
+                        DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService.decryptAndVerifyMessage((SealedAndSignedMessage) message);
+                        UserThread.execute(() -> decryptedMailListeners.stream().forEach(e -> e.onMailMessage(decryptedMessageWithPubKey, connection.getPeerAddress())));
+                    } catch (CryptoException e) {
+                        log.info("Decryption of SealedAndSignedMessage failed. That is expected if the message is not intended for us.");
+                    }
                 }
             }
         });
@@ -217,7 +241,7 @@ public class P2PService {
             }
         });
 
-        dataStorage.addHashSetChangedListener(new HashSetChangedListener() {
+        dataStorage.addHashMapChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedData entry) {
                 if (entry instanceof ProtectedMailboxData)
@@ -317,24 +341,26 @@ public class P2PService {
     }
 
     private void doSendEncryptedMailMessage(Address peerAddress, PubKeyRing pubKeyRing, MailMessage message, SendMailMessageListener sendMailMessageListener) {
-        try {
-            SealedAndSignedMessage sealedAndSignedMessage = encryptionService.encryptAndSignMessage(pubKeyRing, message);
-            SettableFuture<Connection> future = sendMessage(peerAddress, sealedAndSignedMessage);
-            Futures.addCallback(future, new FutureCallback<Connection>() {
-                @Override
-                public void onSuccess(@Nullable Connection connection) {
-                    UserThread.execute(() -> sendMailMessageListener.onArrived());
-                }
+        if (encryptionService != null) {
+            try {
+                SealedAndSignedMessage sealedAndSignedMessage = encryptionService.encryptAndSignMessage(pubKeyRing, message);
+                SettableFuture<Connection> future = sendMessage(peerAddress, sealedAndSignedMessage);
+                Futures.addCallback(future, new FutureCallback<Connection>() {
+                    @Override
+                    public void onSuccess(@Nullable Connection connection) {
+                        UserThread.execute(() -> sendMailMessageListener.onArrived());
+                    }
 
-                @Override
-                public void onFailure(Throwable throwable) {
-                    throwable.printStackTrace();
-                    UserThread.execute(() -> sendMailMessageListener.onFault());
-                }
-            });
-        } catch (CryptoException e) {
-            e.printStackTrace();
-            UserThread.execute(() -> sendMailMessageListener.onFault());
+                    @Override
+                    public void onFailure(Throwable throwable) {
+                        throwable.printStackTrace();
+                        UserThread.execute(() -> sendMailMessageListener.onFault());
+                    }
+                });
+            } catch (CryptoException e) {
+                e.printStackTrace();
+                UserThread.execute(() -> sendMailMessageListener.onFault());
+            }
         }
     }
 
@@ -358,34 +384,36 @@ public class P2PService {
     }
 
     private void trySendEncryptedMailboxMessage(Address peerAddress, PubKeyRing peersPubKeyRing, MailboxMessage message, SendMailboxMessageListener sendMailboxMessageListener) {
-        try {
-            SealedAndSignedMessage sealedAndSignedMessage = encryptionService.encryptAndSignMessage(peersPubKeyRing, message);
-            SettableFuture<Connection> future = sendMessage(peerAddress, sealedAndSignedMessage);
-            Futures.addCallback(future, new FutureCallback<Connection>() {
-                @Override
-                public void onSuccess(@Nullable Connection connection) {
-                    log.trace("SendEncryptedMailboxMessage onSuccess");
-                    UserThread.execute(() -> sendMailboxMessageListener.onArrived());
-                }
+        if (encryptionService != null) {
+            try {
+                SealedAndSignedMessage sealedAndSignedMessage = encryptionService.encryptAndSignMessage(peersPubKeyRing, message);
+                SettableFuture<Connection> future = sendMessage(peerAddress, sealedAndSignedMessage);
+                Futures.addCallback(future, new FutureCallback<Connection>() {
+                    @Override
+                    public void onSuccess(@Nullable Connection connection) {
+                        log.trace("SendEncryptedMailboxMessage onSuccess");
+                        UserThread.execute(() -> sendMailboxMessageListener.onArrived());
+                    }
 
-                @Override
-                public void onFailure(Throwable throwable) {
-                    log.trace("SendEncryptedMailboxMessage onFailure");
-                    log.debug(throwable.toString());
-                    log.info("We cannot send message to peer. Peer might be offline. We will store message in mailbox.");
-                    log.trace("create MailboxEntry with peerAddress " + peerAddress);
-                    PublicKey receiverStoragePublicKey = peersPubKeyRing.getStorageSignaturePubKey();
-                    addMailboxData(new ExpirableMailboxPayload(sealedAndSignedMessage,
-                                    keyRing.getStorageSignatureKeyPair().getPublic(),
-                                    receiverStoragePublicKey),
-                            receiverStoragePublicKey);
-                    UserThread.execute(() -> sendMailboxMessageListener.onStoredInMailbox());
-                }
-            });
-        } catch (CryptoException e) {
-            e.printStackTrace();
-            log.error("sendEncryptedMessage failed");
-            UserThread.execute(() -> sendMailboxMessageListener.onFault());
+                    @Override
+                    public void onFailure(Throwable throwable) {
+                        log.trace("SendEncryptedMailboxMessage onFailure");
+                        log.debug(throwable.toString());
+                        log.info("We cannot send message to peer. Peer might be offline. We will store message in mailbox.");
+                        log.trace("create MailboxEntry with peerAddress " + peerAddress);
+                        PublicKey receiverStoragePublicKey = peersPubKeyRing.getStorageSignaturePubKey();
+                        addMailboxData(new ExpirableMailboxPayload(sealedAndSignedMessage,
+                                        keyRing.getStorageSignatureKeyPair().getPublic(),
+                                        receiverStoragePublicKey),
+                                receiverStoragePublicKey);
+                        UserThread.execute(() -> sendMailboxMessageListener.onStoredInMailbox());
+                    }
+                });
+            } catch (CryptoException e) {
+                e.printStackTrace();
+                log.error("sendEncryptedMessage failed");
+                UserThread.execute(() -> sendMailboxMessageListener.onFault());
+            }
         }
     }
 
@@ -481,8 +509,8 @@ public class P2PService {
         p2pServiceListeners.remove(listener);
     }
 
-    public void addHashSetChangedListener(HashSetChangedListener hashSetChangedListener) {
-        dataStorage.addHashSetChangedListener(hashSetChangedListener);
+    public void addHashSetChangedListener(HashMapChangedListener hashMapChangedListener) {
+        dataStorage.addHashMapChangedListener(hashMapChangedListener);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -598,29 +626,31 @@ public class P2PService {
     }
 
     private void tryDecryptMailboxData(ProtectedMailboxData mailboxData) {
-        ExpirablePayload data = mailboxData.expirablePayload;
-        if (data instanceof ExpirableMailboxPayload) {
-            ExpirableMailboxPayload mailboxEntry = (ExpirableMailboxPayload) data;
-            SealedAndSignedMessage sealedAndSignedMessage = mailboxEntry.sealedAndSignedMessage;
-            try {
-                DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService.decryptAndVerifyMessage(sealedAndSignedMessage);
-                if (decryptedMessageWithPubKey.message instanceof MailboxMessage) {
-                    MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.message;
-                    Address senderAddress = mailboxMessage.getSenderAddress();
-                    checkNotNull(senderAddress, "senderAddress must not be null for mailbox messages");
+        if (encryptionService != null) {
+            ExpirablePayload data = mailboxData.expirablePayload;
+            if (data instanceof ExpirableMailboxPayload) {
+                ExpirableMailboxPayload mailboxEntry = (ExpirableMailboxPayload) data;
+                SealedAndSignedMessage sealedAndSignedMessage = mailboxEntry.sealedAndSignedMessage;
+                try {
+                    DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService.decryptAndVerifyMessage(sealedAndSignedMessage);
+                    if (decryptedMessageWithPubKey.message instanceof MailboxMessage) {
+                        MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.message;
+                        Address senderAddress = mailboxMessage.getSenderAddress();
+                        checkNotNull(senderAddress, "senderAddress must not be null for mailbox messages");
 
-                    log.trace("mailboxData.publicKey " + mailboxData.ownerStoragePubKey.hashCode());
-                    log.trace("keyRing.getStorageSignatureKeyPair().getPublic() " + keyRing.getStorageSignatureKeyPair().getPublic().hashCode());
-                    log.trace("keyRing.getMsgSignatureKeyPair().getPublic() " + keyRing.getMsgSignatureKeyPair().getPublic().hashCode());
-                    log.trace("keyRing.getMsgEncryptionKeyPair().getPublic() " + keyRing.getMsgEncryptionKeyPair().getPublic().hashCode());
+                        log.trace("mailboxData.publicKey " + mailboxData.ownerStoragePubKey.hashCode());
+                        log.trace("keyRing.getStorageSignatureKeyPair().getPublic() " + keyRing.getStorageSignatureKeyPair().getPublic().hashCode());
+                        log.trace("keyRing.getMsgSignatureKeyPair().getPublic() " + keyRing.getMsgSignatureKeyPair().getPublic().hashCode());
+                        log.trace("keyRing.getMsgEncryptionKeyPair().getPublic() " + keyRing.getMsgEncryptionKeyPair().getPublic().hashCode());
 
 
-                    mailboxMap.put(decryptedMessageWithPubKey, mailboxData);
-                    log.trace("Decryption of SealedAndSignedMessage succeeded. senderAddress=" + senderAddress + " / my address=" + getAddress());
-                    UserThread.execute(() -> decryptedMailboxListeners.stream().forEach(e -> e.onMailboxMessageAdded(decryptedMessageWithPubKey, senderAddress)));
+                        mailboxMap.put(decryptedMessageWithPubKey, mailboxData);
+                        log.trace("Decryption of SealedAndSignedMessage succeeded. senderAddress=" + senderAddress + " / my address=" + getAddress());
+                        UserThread.execute(() -> decryptedMailboxListeners.stream().forEach(e -> e.onMailboxMessageAdded(decryptedMessageWithPubKey, senderAddress)));
+                    }
+                } catch (CryptoException e) {
+                    log.trace("Decryption of SealedAndSignedMessage failed. That is expected if the message is not intended for us.");
                 }
-            } catch (CryptoException e) {
-                log.trace("Decryption of SealedAndSignedMessage failed. That is expected if the message is not intended for us.");
             }
         }
     }

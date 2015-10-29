@@ -31,7 +31,7 @@ public class ProtectedExpirableDataStorage {
 
     private final Routing routing;
     private final Map<BigInteger, ProtectedData> map = new ConcurrentHashMap<>();
-    private final List<HashSetChangedListener> hashSetChangedListeners = new CopyOnWriteArrayList<>();
+    private final List<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArrayList<>();
     private ConcurrentHashMap<BigInteger, Integer> sequenceNumberMap = new ConcurrentHashMap<>();
     private final Storage<ConcurrentHashMap> storage;
     private boolean authenticated;
@@ -104,12 +104,26 @@ public class ProtectedExpirableDataStorage {
         BigInteger hashOfPayload = getHashAsBigInteger(protectedData.expirablePayload);
         boolean containsKey = map.containsKey(hashOfPayload);
         boolean result = checkPublicKeys(protectedData, true)
-                && isSequenceNrValid(protectedData, hashOfPayload)
-                && checkSignature(protectedData)
-                && (!containsKey || checkIfStoredDataMatchesNewData(protectedData, hashOfPayload))
-                && doAddProtectedExpirableData(protectedData, hashOfPayload, sender);
+                && checkSignature(protectedData);
+
+        if (containsKey) {
+            result &= checkIfStoredDataMatchesNewData(protectedData, hashOfPayload)
+                    && isSequenceNrValid(protectedData, hashOfPayload);
+        }
 
         if (result) {
+            map.put(hashOfPayload, protectedData);
+            log.trace("Data added to our map and it will be broadcasted to our neighbors.");
+            UserThread.execute(() -> hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedData)));
+
+            StringBuilder sb = new StringBuilder("\n\nSet after addProtectedExpirableData:\n");
+            map.values().stream().forEach(e -> sb.append(e.toString() + "\n\n"));
+            sb.append("\n\n");
+            log.trace(sb.toString());
+
+            if (!containsKey)
+                broadcast(new AddDataMessage(protectedData), sender);
+
             sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
             storage.queueUpForSave();
         } else {
@@ -126,10 +140,14 @@ public class ProtectedExpirableDataStorage {
                 && checkPublicKeys(protectedData, false)
                 && isSequenceNrValid(protectedData, hashOfPayload)
                 && checkSignature(protectedData)
-                && checkIfStoredDataMatchesNewData(protectedData, hashOfPayload)
-                && doRemoveProtectedExpirableData(protectedData, hashOfPayload, sender);
+                && checkIfStoredDataMatchesNewData(protectedData, hashOfPayload);
+
 
         if (result) {
+            doRemoveProtectedExpirableData(protectedData, hashOfPayload);
+
+            broadcast(new RemoveDataMessage(protectedData), sender);
+
             sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
             storage.queueUpForSave();
         } else {
@@ -147,10 +165,13 @@ public class ProtectedExpirableDataStorage {
                 && isSequenceNrValid(protectedMailboxData, hashOfData)
                 && protectedMailboxData.receiversPubKey.equals(protectedMailboxData.ownerStoragePubKey) // at remove both keys are the same (only receiver is able to remove data)
                 && checkSignature(protectedMailboxData)
-                && checkIfStoredMailboxDataMatchesNewMailboxData(protectedMailboxData, hashOfData)
-                && doRemoveProtectedExpirableData(protectedMailboxData, hashOfData, sender);
+                && checkIfStoredMailboxDataMatchesNewMailboxData(protectedMailboxData, hashOfData);
 
         if (result) {
+            doRemoveProtectedExpirableData(protectedMailboxData, hashOfData);
+
+            broadcast(new RemoveMailboxDataMessage(protectedMailboxData), sender);
+
             sequenceNumberMap.put(hashOfData, protectedMailboxData.sequenceNumber);
             storage.queueUpForSave();
         } else {
@@ -190,8 +211,8 @@ public class ProtectedExpirableDataStorage {
         return new ProtectedMailboxData(expirableMailboxPayload, expirableMailboxPayload.getTTL(), storageSignaturePubKey.getPublic(), sequenceNumber, signature, receiversPublicKey);
     }
 
-    public void addHashSetChangedListener(HashSetChangedListener hashSetChangedListener) {
-        hashSetChangedListeners.add(hashSetChangedListener);
+    public void addHashMapChangedListener(HashMapChangedListener hashMapChangedListener) {
+        hashMapChangedListeners.add(hashMapChangedListener);
     }
 
     public void addMessageListener(MessageListener messageListener) {
@@ -203,11 +224,22 @@ public class ProtectedExpirableDataStorage {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void doRemoveProtectedExpirableData(ProtectedData protectedData, BigInteger hashOfPayload) {
+        map.remove(hashOfPayload);
+        log.trace("Data removed from our map. We broadcast the message to our neighbors.");
+        UserThread.execute(() -> hashMapChangedListeners.stream().forEach(e -> e.onRemoved(protectedData)));
+
+        StringBuilder sb = new StringBuilder("\n\nSet after removeProtectedExpirableData:\n");
+        map.values().stream().forEach(e -> sb.append(e.toString() + "\n\n"));
+        sb.append("\n\n");
+        log.trace(sb.toString());
+    }
+
     private boolean isSequenceNrValid(ProtectedData data, BigInteger hashOfData) {
         int newSequenceNumber = data.sequenceNumber;
         Integer storedSequenceNumber = sequenceNumberMap.get(hashOfData);
         if (sequenceNumberMap.containsKey(hashOfData) && newSequenceNumber <= storedSequenceNumber) {
-            log.warn("Sequence number is invalid. That might happen in rare cases. newSequenceNumber="
+            log.warn("Sequence number is invalid. newSequenceNumber="
                     + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber);
             return false;
         } else {
@@ -274,34 +306,6 @@ public class ProtectedExpirableDataStorage {
         }
     }
 
-    private boolean doAddProtectedExpirableData(ProtectedData data, BigInteger hashOfData, Address sender) {
-        map.put(hashOfData, data);
-        log.trace("Data added to our map and it will be broadcasted to our neighbors.");
-        UserThread.execute(() -> hashSetChangedListeners.stream().forEach(e -> e.onAdded(data)));
-        broadcast(new AddDataMessage(data), sender);
-
-        StringBuilder sb = new StringBuilder("\n\nSet after addProtectedExpirableData:\n");
-        map.values().stream().forEach(e -> sb.append(e.toString() + "\n\n"));
-        sb.append("\n\n");
-        log.trace(sb.toString());
-        return true;
-    }
-
-    private boolean doRemoveProtectedExpirableData(ProtectedData data, BigInteger hashOfData, Address sender) {
-        map.remove(hashOfData);
-        log.trace("Data removed from our map. We broadcast the message to our neighbors.");
-        UserThread.execute(() -> hashSetChangedListeners.stream().forEach(e -> e.onRemoved(data)));
-        if (data instanceof ProtectedMailboxData)
-            broadcast(new RemoveMailboxDataMessage((ProtectedMailboxData) data), sender);
-        else
-            broadcast(new RemoveDataMessage(data), sender);
-
-        StringBuilder sb = new StringBuilder("\n\nSet after removeProtectedExpirableData:\n");
-        map.values().stream().forEach(e -> sb.append(e.toString() + "\n\n"));
-        sb.append("\n\n");
-        log.trace(sb.toString());
-        return true;
-    }
 
     private void broadcast(BroadcastMessage message, Address sender) {
         if (authenticated) {

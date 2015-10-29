@@ -19,7 +19,7 @@ public class ProtectedData implements Serializable {
     public final int sequenceNumber;
     public final byte[] signature;
     @VisibleForTesting
-    public Date date;
+    transient public Date date;
 
     public ProtectedData(ExpirablePayload expirablePayload, long ttl, PublicKey ownerStoragePubKey, int sequenceNumber, byte[] signature) {
         this.expirablePayload = expirablePayload;
@@ -34,15 +34,6 @@ public class ProtectedData implements Serializable {
         try {
             in.defaultReadObject();
             ttl = expirablePayload.getTTL();
-
-            // in case the reported creation date is in the future 
-            // we reset the date to the current time
-            if (date.getTime() > new Date().getTime()) {
-                log.warn("Date of object is in future. " +
-                        "That might be ok as clocks are not synced but could be also a spam attack. " +
-                        "date=" + date + " / now=" + new Date());
-                date = new Date();
-            }
             date = new Date();
 
         } catch (Throwable t) {

@@ -219,14 +219,24 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
     }
 
     private void onRevoke() {
-        model.onRevoke(
-                () -> new Popup().information("You have successfully removed your arbitrator from the P2P network.").show(),
-                (errorMessage) -> new Popup().error("Could not remove arbitrator.\nError message: " + errorMessage).show());
+        if (model.isAuthenticated()) {
+            model.onRevoke(
+                    () -> new Popup().information("You have successfully removed your arbitrator from the P2P network.").show(),
+                    (errorMessage) -> new Popup().error("Could not remove arbitrator.\nError message: " + errorMessage).show());
+        } else {
+            new Popup().warning("You need to wait until your client is authenticated in the network.\n" +
+                    "That might take up to about 2 minutes at startup.").show();
+        }
     }
 
     private void onRegister() {
-        model.onRegister(
-                () -> new Popup().information("You have successfully registered your arbitrator to the P2P network.").show(),
-                (errorMessage) -> new Popup().error("Could not register arbitrator.\nError message: " + errorMessage).show());
+        if (model.isAuthenticated()) {
+            model.onRegister(
+                    () -> new Popup().information("You have successfully registered your arbitrator to the P2P network.").show(),
+                    (errorMessage) -> new Popup().error("Could not register arbitrator.\nError message: " + errorMessage).show());
+        } else {
+            new Popup().warning("You need to wait until your client is authenticated in the network.\n" +
+                    "That might take up to about 2 minutes at startup.").show();
+        }
     }
 }

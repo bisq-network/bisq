@@ -75,4 +75,6 @@ class OpenOffersDataModel extends ActivatableDataModel {
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getOffer().getDate().compareTo(o1.getOffer().getDate()));
     }
+
+
 }

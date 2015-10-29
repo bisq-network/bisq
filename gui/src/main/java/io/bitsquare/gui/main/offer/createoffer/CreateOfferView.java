@@ -201,17 +201,22 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void onPlaceOffer() {
         Offer offer = model.getOffer();
-        if (model.getShowPlaceOfferConfirmation()) {
-            offerDetailsPopup.onPlaceOffer(o -> model.onPlaceOffer(o)).show(offer);
-        } else {
-            if (model.hasAcceptedArbitrators()) {
-                model.onPlaceOffer(offer);
+        if (model.isAuthenticated()) {
+            if (model.getShowPlaceOfferConfirmation()) {
+                offerDetailsPopup.onPlaceOffer(o -> model.onPlaceOffer(o)).show(offer);
             } else {
-                new Popup().warning("You have no arbitrator selected.\n" +
-                        "Please select at least one arbitrator.").show();
+                if (model.hasAcceptedArbitrators()) {
+                    model.onPlaceOffer(offer);
+                } else {
+                    new Popup().warning("You have no arbitrator selected.\n" +
+                            "Please select at least one arbitrator.").show();
 
-                navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
+                    navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
+                }
             }
+        } else {
+            new Popup().warning("You need to wait until your client is authenticated in the network.\n" +
+                    "That might take up to about 2 minutes at startup.").show();
         }
     }
 

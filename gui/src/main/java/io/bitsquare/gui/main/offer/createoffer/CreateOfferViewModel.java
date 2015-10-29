@@ -26,6 +26,7 @@ import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.*;
@@ -42,6 +43,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 
 class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel> implements ViewModel {
     private final BtcValidator btcValidator;
+    private P2PService p2PService;
     private final BSFormatter formatter;
     private final FiatValidator fiatValidator;
 
@@ -100,11 +102,13 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     @Inject
     public CreateOfferViewModel(CreateOfferDataModel dataModel, FiatValidator fiatValidator, BtcValidator btcValidator,
+                                P2PService p2PService,
                                 BSFormatter formatter) {
         super(dataModel);
 
         this.fiatValidator = fiatValidator;
         this.btcValidator = btcValidator;
+        this.p2PService = p2PService;
         this.formatter = formatter;
 
         paymentLabel = BSResources.get("createOffer.fundsBox.paymentLabel", dataModel.getOfferId());
@@ -335,8 +339,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 if (!dataModel.isMinAmountLessOrEqualAmount()) {
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
                             BSResources.get("createOffer.validation.amountSmallerThanMinAmount")));
-                }
-                else {
+                } else {
                     amountValidationResult.set(result);
                     if (minAmount.get() != null)
                         minAmountValidationResult.set(isBtcInputValid(minAmount.get()));
@@ -357,8 +360,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 if (!dataModel.isMinAmountLessOrEqualAmount()) {
                     minAmountValidationResult.set(new InputValidator.ValidationResult(false,
                             BSResources.get("createOffer.validation.minAmountLargerThanAmount")));
-                }
-                else {
+                } else {
                     minAmountValidationResult.set(result);
                     if (amount.get() != null)
                         amountValidationResult.set(isBtcInputValid(amount.get()));
@@ -467,6 +469,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         return dataModel.hasAcceptedArbitrators();
     }
 
+    boolean isAuthenticated() {
+        return p2PService.isAuthenticated();
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -486,8 +492,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         if (!dataModel.isMinAmountLessOrEqualAmount()) {
             amountValidationResult.set(new InputValidator.ValidationResult(false,
                     BSResources.get("createOffer.validation.amountSmallerThanMinAmount")));
-        }
-        else {
+        } else {
             if (amount.get() != null)
                 amountValidationResult.set(isBtcInputValid(amount.get()));
             if (minAmount.get() != null)
@@ -524,7 +529,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     private void updateButtonDisableState() {
-        isPlaceOfferButtonDisabled.set(!(isBtcInputValid(amount.get()).isValid &&
+        isPlaceOfferButtonDisabled.set(
+                !(isBtcInputValid(amount.get()).isValid &&
                         isBtcInputValid(minAmount.get()).isValid &&
                         isFiatInputValid(price.get()).isValid &&
                         isFiatInputValid(volume.get()).isValid &&
@@ -544,4 +550,5 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     public boolean getShowPlaceOfferConfirmation() {
         return dataModel.getShowPlaceOfferConfirmation();
     }
+
 }

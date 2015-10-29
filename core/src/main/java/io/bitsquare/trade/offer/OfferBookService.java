@@ -20,7 +20,7 @@ package io.bitsquare.trade.offer;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.storage.HashSetChangedListener;
+import io.bitsquare.p2p.storage.HashMapChangedListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,8 +47,8 @@ public class OfferBookService {
         this.p2PService = p2PService;
     }
 
-    public void addHashSetChangedListener(HashSetChangedListener hashSetChangedListener) {
-        p2PService.addHashSetChangedListener(hashSetChangedListener);
+    public void addHashSetChangedListener(HashMapChangedListener hashMapChangedListener) {
+        p2PService.addHashSetChangedListener(hashMapChangedListener);
     }
 
     public void addOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {

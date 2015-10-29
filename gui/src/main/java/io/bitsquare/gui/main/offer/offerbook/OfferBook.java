@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.offer.offerbook;
 
-import io.bitsquare.p2p.storage.HashSetChangedListener;
+import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.data.ProtectedData;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.Offer;
@@ -53,7 +53,7 @@ public class OfferBook {
     @Inject
     OfferBook(OfferBookService offerBookService, TradeManager tradeManager) {
         this.offerBookService = offerBookService;
-        offerBookService.addHashSetChangedListener(new HashSetChangedListener() {
+        offerBookService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedData entry) {
                 log.debug("onAdded " + entry);

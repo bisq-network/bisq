@@ -211,8 +211,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             showWarning("You don't have an arbitrator selected.",
                     "You need to setup at least one arbitrator to be able to trade.\n" +
                             "Do you want to do this now?", ArbitratorSelectionView.class);
-        }
-        else {
+        } else {
             createOfferButton.setDisable(true);
             offerActionHandler.onCreateOffer(model.getTradeCurrency());
         }
@@ -231,21 +230,30 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private void onTakeOffer(Offer offer) {
-        offerActionHandler.onTakeOffer(offer);
+        if (model.isAuthenticated())
+            offerActionHandler.onTakeOffer(offer);
+        else
+            new Popup().warning("You need to wait until your client is authenticated in the network.\n" +
+                    "That might take up to about 2 minutes at startup.").show();
     }
 
     private void onRemoveOpenOffer(Offer offer) {
-        model.onRemoveOpenOffer(offer,
-                () -> {
-                    log.debug("Remove offer was successful");
-                    new Popup().information("You can withdraw the funds you paid in from the funds screens.").show();
-                    navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
-                },
-                (message) -> {
-                    log.error(message);
-                    new Popup().warning("Remove offer failed:\n" + message).show();
-                });
+        if (model.isAuthenticated()) {
+            model.onRemoveOpenOffer(offer,
+                    () -> {
+                        log.debug("Remove offer was successful");
+                        new Popup().information("You can withdraw the funds you paid in from the funds screens.").show();
+                        navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
+                    },
+                    (message) -> {
+                        log.error(message);
+                        new Popup().warning("Remove offer failed:\n" + message).show();
+                    });
 
+        } else {
+            new Popup().warning("You need to wait until your client is authenticated in the network.\n" +
+                    "That might take up to about 2 minutes at startup.").show();
+        }
     }
 
     private void showWarning(String masthead, String message, Class target) {
@@ -446,8 +454,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                             title = model.getDirectionLabel(offer);
                                             button.setOnAction(e -> onTakeOffer(offer));
                                         }
-                                    }
-                                    else {
+                                    } else {
                                         title = "Not matching";
                                         iconView.setId(null);
                                         button.setOnAction(e -> onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator));
@@ -455,8 +462,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                                     button.setText(title);
                                     setGraphic(button);
-                                }
-                                else {
+                                } else {
                                     setGraphic(null);
                                     TableRow tableRow = getTableRow();
                                     if (tableRow != null) tableRow.setOpacity(1);

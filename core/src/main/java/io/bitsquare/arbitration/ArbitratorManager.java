@@ -26,7 +26,7 @@ import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
-import io.bitsquare.p2p.storage.HashSetChangedListener;
+import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.data.ProtectedData;
 import io.bitsquare.user.User;
 import javafx.collections.FXCollections;
@@ -95,7 +95,7 @@ public class ArbitratorManager {
         this.arbitratorService = arbitratorService;
         this.user = user;
 
-        arbitratorService.addHashSetChangedListener(new HashSetChangedListener() {
+        arbitratorService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedData entry) {
                 applyArbitrators();

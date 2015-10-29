@@ -27,6 +27,7 @@ import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.payment.SepaAccount;
 import io.bitsquare.trade.offer.Offer;
@@ -49,6 +50,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final User user;
     private final OfferBook offerBook;
     private final Preferences preferences;
+    private final P2PService p2PService;
     private final BSFormatter formatter;
 
     private final FilteredList<OfferBookListItem> filteredItems;
@@ -69,7 +71,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     @Inject
     public OfferBookViewModel(User user, OpenOfferManager openOfferManager, OfferBook offerBook,
-                              Preferences preferences,
+                              Preferences preferences, P2PService p2PService,
                               BSFormatter formatter) {
         super();
 
@@ -77,6 +79,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.user = user;
         this.offerBook = offerBook;
         this.preferences = preferences;
+        this.p2PService = p2PService;
         this.formatter = formatter;
 
         offerBookListItems = offerBook.getOfferBookListItems();
@@ -153,6 +156,10 @@ class OfferBookViewModel extends ActivatableViewModel {
         ObservableList<TradeCurrency> list = preferences.getTradeCurrenciesAsObservable();
        /* list.add(0, new AllTradeCurrenciesEntry());*/
         return list;
+    }
+
+    boolean isAuthenticated() {
+        return p2PService.isAuthenticated();
     }
 
     public TradeCurrency getTradeCurrency() {

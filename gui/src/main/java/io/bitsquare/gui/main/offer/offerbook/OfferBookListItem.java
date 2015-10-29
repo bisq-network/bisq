@@ -26,6 +26,21 @@ public class OfferBookListItem {
         this.offer = offer;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof OfferBookListItem)) return false;
+
+        OfferBookListItem that = (OfferBookListItem) o;
+
+        return !(offer != null ? !offer.equals(that.offer) : that.offer != null);
+    }
+
+    @Override
+    public int hashCode() {
+        return offer != null ? offer.hashCode() : 0;
+    }
+
     public Offer getOffer() {
         return offer;
     }

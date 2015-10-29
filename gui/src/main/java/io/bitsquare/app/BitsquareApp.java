@@ -34,6 +34,7 @@ import io.bitsquare.gui.common.view.guice.InjectorViewFactory;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.popups.EmptyWalletPopup;
+import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.popups.SendAlertMessagePopup;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.p2p.P2PService;
@@ -213,11 +214,7 @@ public class BitsquareApp extends Application {
         try {
             throwable.printStackTrace();
             try {
-                Dialogs.create()
-                        .owner(primaryStage)
-                        .title("Error")
-                        .message("A fatal exception occurred at startup.")
-                        .showException(throwable);
+                new Popup().error(throwable.getMessage()).show();
             } catch (Throwable throwable3) {
                 log.error("Error at displaying Throwable.");
                 throwable3.printStackTrace();

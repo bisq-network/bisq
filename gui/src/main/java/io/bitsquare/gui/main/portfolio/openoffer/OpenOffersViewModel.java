@@ -23,16 +23,19 @@ import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.p2p.P2PService;
 import io.bitsquare.trade.offer.OpenOffer;
 import javafx.collections.ObservableList;
 
 class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> implements ViewModel {
+    private P2PService p2PService;
     private final BSFormatter formatter;
 
 
     @Inject
-    public OpenOffersViewModel(OpenOffersDataModel dataModel, BSFormatter formatter) {
+    public OpenOffersViewModel(OpenOffersDataModel dataModel, P2PService p2PService, BSFormatter formatter) {
         super(dataModel);
+        this.p2PService = p2PService;
 
         this.formatter = formatter;
     }
@@ -70,4 +73,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         return formatter.formatDateTime(item.getOffer().getDate());
     }
 
+    boolean isAuthenticated() {
+        return p2PService.isAuthenticated();
+    }
 }

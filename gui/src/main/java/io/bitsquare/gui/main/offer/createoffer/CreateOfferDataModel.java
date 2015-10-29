@@ -30,7 +30,6 @@ import io.bitsquare.gui.popups.WalletPasswordPopup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.TradeCurrency;
-import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.SepaAccount;
@@ -51,6 +50,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.UUID;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * Domain for that UI element.
  * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
@@ -62,8 +63,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final TradeWalletService tradeWalletService;
     private final Preferences preferences;
     private final User user;
-    private final Address address;
     private final KeyRing keyRing;
+    private P2PService p2PService;
     private final WalletPasswordPopup walletPasswordPopup;
     private final BSFormatter formatter;
     private final String offerId;
@@ -110,10 +111,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.preferences = preferences;
         this.user = user;
         this.keyRing = keyRing;
+        this.p2PService = p2PService;
         this.walletPasswordPopup = walletPasswordPopup;
         this.formatter = formatter;
 
-        address = p2PService.getAddress();
         offerId = UUID.randomUUID().toString();
         addressEntry = walletService.getAddressEntryByOfferId(offerId);
         offerFeeAsCoin = FeePolicy.CREATE_OFFER_FEE;
@@ -199,8 +200,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // That is optional and set to null if not supported (AltCoins, OKPay,...)
         Country country = paymentAccount.getCountry();
 
+        checkNotNull(p2PService.getAddress(), "Address must not be null");
         return new Offer(offerId,
-                address,
+                p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
                 direction,
                 fiatPrice,

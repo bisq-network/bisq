@@ -20,7 +20,7 @@ package io.bitsquare.alert;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.storage.HashSetChangedListener;
+import io.bitsquare.p2p.storage.HashMapChangedListener;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,8 +45,8 @@ public class AlertService {
         this.p2PService = p2PService;
     }
 
-    public void addHashSetChangedListener(HashSetChangedListener hashSetChangedListener) {
-        p2PService.addHashSetChangedListener(hashSetChangedListener);
+    public void addHashSetChangedListener(HashMapChangedListener hashMapChangedListener) {
+        p2PService.addHashSetChangedListener(hashMapChangedListener);
     }
 
     public void addAlertMessage(Alert alert, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {

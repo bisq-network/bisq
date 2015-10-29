@@ -19,7 +19,7 @@ package io.bitsquare.alert;
 
 import com.google.inject.Inject;
 import io.bitsquare.common.crypto.KeyRing;
-import io.bitsquare.p2p.storage.HashSetChangedListener;
+import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.data.ProtectedData;
 import io.bitsquare.user.User;
 import javafx.beans.property.ObjectProperty;
@@ -59,7 +59,7 @@ public class AlertManager {
         this.keyRing = keyRing;
         this.user = user;
 
-        alertService.addHashSetChangedListener(new HashSetChangedListener() {
+        alertService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedData entry) {
                 Serializable data = entry.expirablePayload;

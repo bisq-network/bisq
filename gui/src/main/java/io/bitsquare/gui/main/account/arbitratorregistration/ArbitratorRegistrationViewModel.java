@@ -183,4 +183,8 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
         registrationEditDisabled.set(!allDataValid || myArbitratorProperty.get() != null);
         revokeButtonDisabled.set(!allDataValid || myArbitratorProperty.get() == null);
     }
+
+    boolean isAuthenticated() {
+        return p2PService.isAuthenticated();
+    }
 }

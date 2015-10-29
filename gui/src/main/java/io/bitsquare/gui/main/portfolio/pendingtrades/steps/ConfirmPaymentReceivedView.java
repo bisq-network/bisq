@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps;
 
 import io.bitsquare.gui.components.TxIdTextField;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
+import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.util.Layout;
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
@@ -103,13 +104,18 @@ public class ConfirmPaymentReceivedView extends TradeStepDetailsView {
 
     private void onPaymentReceived(ActionEvent actionEvent) {
         log.debug("onPaymentReceived");
-        confirmFiatReceivedButton.setDisable(true);
+        if (model.isAuthenticated()) {
+            confirmFiatReceivedButton.setDisable(true);
 
-        statusProgressIndicator.setVisible(true);
-        statusProgressIndicator.setProgress(-1);
-        statusLabel.setText("Sending message to trading partner...");
+            statusProgressIndicator.setVisible(true);
+            statusProgressIndicator.setProgress(-1);
+            statusLabel.setText("Sending message to trading partner...");
 
-        model.fiatPaymentReceived();
+            model.fiatPaymentReceived();
+        } else {
+            new Popup().warning("You need to wait until your client is authenticated in the network.\n" +
+                    "That might take up to about 2 minutes at startup.").show();
+        }
     }
 
 
