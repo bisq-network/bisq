@@ -200,8 +200,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onPlaceOffer() {
-        Offer offer = model.getOffer();
         if (model.isAuthenticated()) {
+            Offer offer = model.getOffer();
             if (model.getShowPlaceOfferConfirmation()) {
                 offerDetailsPopup.onPlaceOffer(o -> model.onPlaceOffer(o)).show(offer);
             } else {
