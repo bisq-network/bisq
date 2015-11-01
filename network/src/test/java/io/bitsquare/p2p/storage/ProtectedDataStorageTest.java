@@ -51,7 +51,7 @@ public class ProtectedDataStorageTest {
         ProtectedExpirableDataStorage.CHECK_TTL_INTERVAL = 10 * 60 * 1000;
 
         keyRing1 = new KeyRing(new KeyStorage(new File("temp_keyStorage1")));
-        storageSignatureKeyPair1 = keyRing1.getStorageSignatureKeyPair();
+        storageSignatureKeyPair1 = keyRing1.getSignatureKeyPair();
         encryptionService1 = new EncryptionService(keyRing1);
         networkNode1 = TestUtils.getAndStartSeedNode(8001, encryptionService1, keyRing1, useClearNet, seedNodes).getP2PService().getNetworkNode();
         routing1 = new Routing(networkNode1, seedNodes);
@@ -59,10 +59,10 @@ public class ProtectedDataStorageTest {
 
         // for mailbox
         keyRing2 = new KeyRing(new KeyStorage(new File("temp_keyStorage2")));
-        storageSignatureKeyPair2 = keyRing2.getStorageSignatureKeyPair();
+        storageSignatureKeyPair2 = keyRing2.getSignatureKeyPair();
         encryptionService2 = new EncryptionService(keyRing2);
 
-        mockData = new MockData("mockData", keyRing1.getStorageSignatureKeyPair().getPublic());
+        mockData = new MockData("mockData", keyRing1.getSignatureKeyPair().getPublic());
         Thread.sleep(sleepTime);
     }
 
@@ -130,7 +130,7 @@ public class ProtectedDataStorageTest {
 
     @Test
     public void testMultiAddRemoveProtectedData() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
-        MockData mockData = new MockData("msg1", keyRing1.getStorageSignatureKeyPair().getPublic());
+        MockData mockData = new MockData("msg1", keyRing1.getSignatureKeyPair().getPublic());
         ProtectedData data = dataStorage1.getDataWithSignedSeqNr(mockData, storageSignatureKeyPair1);
         Assert.assertTrue(dataStorage1.add(data, null));
 
@@ -197,8 +197,8 @@ public class ProtectedDataStorageTest {
         MockMessage mockMessage = new MockMessage("MockMessage");
         SealedAndSignedMessage sealedAndSignedMessage = new SealedAndSignedMessage(encryptionService1.encryptAndSignMessage(keyRing1.getPubKeyRing(), mockMessage), null);
         ExpirableMailboxPayload expirableMailboxPayload = new ExpirableMailboxPayload(sealedAndSignedMessage,
-                keyRing1.getStorageSignatureKeyPair().getPublic(),
-                keyRing2.getStorageSignatureKeyPair().getPublic());
+                keyRing1.getSignatureKeyPair().getPublic(),
+                keyRing2.getSignatureKeyPair().getPublic());
 
         ProtectedMailboxData data = dataStorage1.getMailboxDataWithSignedSeqNr(expirableMailboxPayload, storageSignatureKeyPair1, storageSignatureKeyPair2.getPublic());
         Assert.assertTrue(dataStorage1.add(data, null));

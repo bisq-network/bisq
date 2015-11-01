@@ -17,39 +17,28 @@
 
 package io.bitsquare.common.crypto;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.inject.Inject;
 import java.security.KeyPair;
 
 public class KeyRing {
-    private static final Logger log = LoggerFactory.getLogger(KeyRing.class);
 
-    // Used for signing messages sent over the wire
     private final KeyPair signatureKeyPair;
-    // Used for encrypting messages sent over the wire (hybrid encryption scheme is used, so it is used only to encrypt a symmetric session key) 
     private final KeyPair encryptionKeyPair;
-
     private final PubKeyRing pubKeyRing;
 
     @Inject
     public KeyRing(KeyStorage keyStorage) {
         if (keyStorage.allKeyFilesExist()) {
-            signatureKeyPair = keyStorage.loadKeyPair(KeyStorage.Key.MSG_SIGNATURE);
-            encryptionKeyPair = keyStorage.loadKeyPair(KeyStorage.Key.MSG_ENCRYPTION);
+            signatureKeyPair = keyStorage.loadKeyPair(KeyStorage.KeyEntry.MSG_SIGNATURE);
+            encryptionKeyPair = keyStorage.loadKeyPair(KeyStorage.KeyEntry.MSG_ENCRYPTION);
         } else {
             // First time we create key pairs
             signatureKeyPair = Sig.generateKeyPair();
-            encryptionKeyPair = Encryption.generateEncryptionKeyPair();
+            encryptionKeyPair = Encryption.generateKeyPair();
             keyStorage.saveKeyRing(this);
         }
-        pubKeyRing = new PubKeyRing(signatureKeyPair.getPublic(), signatureKeyPair.getPublic(), encryptionKeyPair.getPublic());
-    }
 
-    //TODO
-    public KeyPair getStorageSignatureKeyPair() {
-        return signatureKeyPair;
+        pubKeyRing = new PubKeyRing(signatureKeyPair.getPublic(), encryptionKeyPair.getPublic());
     }
 
     public KeyPair getSignatureKeyPair() {

@@ -113,7 +113,7 @@ public class P2PServiceTest {
     public void testAdversaryAttacks() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
         p2PService3 = TestUtils.getAndAuthenticateP2PService(8003, encryptionService3, keyRing3, useLocalhost, seedNodes);
 
-        MockData origData = new MockData("mockData1", keyRing1.getStorageSignatureKeyPair().getPublic());
+        MockData origData = new MockData("mockData1", keyRing1.getSignatureKeyPair().getPublic());
 
         p2PService1.addData(origData);
         Assert.assertEquals(1, p2PService1.getDataMap().size());
@@ -122,7 +122,7 @@ public class P2PServiceTest {
 
 
         // p2PService3 is adversary 
-        KeyPair msgSignatureKeyPairAdversary = keyRing3.getStorageSignatureKeyPair();
+        KeyPair msgSignatureKeyPairAdversary = keyRing3.getSignatureKeyPair();
 
         // try to remove data -> fails
         Assert.assertFalse(p2PService3.removeData(origData));

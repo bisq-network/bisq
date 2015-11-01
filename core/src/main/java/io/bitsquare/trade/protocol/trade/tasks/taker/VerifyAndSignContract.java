@@ -80,7 +80,7 @@ public class VerifyAndSignContract extends TradeTask {
                 trade.setTakerContractSignature(signature);
 
                 try {
-                    Sig.verify(offerer.getPubKeyRing().getMsgSignaturePubKey(),
+                    Sig.verify(offerer.getPubKeyRing().getSignaturePubKey(),
                             contractAsJson,
                             offerer.getContractSignature());
                 } catch (Throwable t) {

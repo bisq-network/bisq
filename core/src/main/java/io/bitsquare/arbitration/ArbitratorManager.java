@@ -169,7 +169,7 @@ public class ArbitratorManager {
         arbitratorsObservableMap.clear();
         Map<Address, Arbitrator> filtered = map.values().stream()
                 .filter(e -> isPublicKeyInList(Utils.HEX.encode(e.getRegistrationPubKey()))
-                        && verifySignature(e.getPubKeyRing().getStorageSignaturePubKey(), e.getRegistrationPubKey(), e.getRegistrationSignature()))
+                        && verifySignature(e.getPubKeyRing().getSignaturePubKey(), e.getRegistrationPubKey(), e.getRegistrationSignature()))
                 .collect(Collectors.toMap(Arbitrator::getArbitratorAddress, Function.identity()));
 
         arbitratorsObservableMap.putAll(filtered);
@@ -233,7 +233,7 @@ public class ArbitratorManager {
     // An invited arbitrator will sign at registration his storageSignaturePubKey with that private key and attach the signature and pubKey to his data.
     // Other users will check the signature with the list of public keys hardcoded in the app.
     public String signStorageSignaturePubKey(ECKey key) {
-        String keyToSignAsHex = Utils.HEX.encode(keyRing.getPubKeyRing().getStorageSignaturePubKey().getEncoded());
+        String keyToSignAsHex = Utils.HEX.encode(keyRing.getPubKeyRing().getSignaturePubKey().getEncoded());
         return key.signMessage(keyToSignAsHex);
     }
 

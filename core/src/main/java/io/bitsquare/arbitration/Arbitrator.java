@@ -73,7 +73,7 @@ public final class Arbitrator implements PubKeyProtectedExpirablePayload {
 
     @Override
     public PublicKey getPubKey() {
-        return pubKeyRing.getStorageSignaturePubKey();
+        return pubKeyRing.getSignaturePubKey();
     }
 
     public byte[] getBtcPubKey() {

@@ -317,7 +317,7 @@ public class P2PService {
         log.trace("removeEntryFromMailbox");
         ProtectedMailboxData mailboxData = mailboxMap.get(decryptedMessageWithPubKey);
         if (mailboxData != null && mailboxData.expirablePayload instanceof ExpirableMailboxPayload) {
-            checkArgument(mailboxData.receiversPubKey.equals(keyRing.getStorageSignatureKeyPair().getPublic()),
+            checkArgument(mailboxData.receiversPubKey.equals(keyRing.getSignatureKeyPair().getPublic()),
                     "mailboxData.receiversPubKey is not matching with our key. That must not happen.");
             removeMailboxData((ExpirableMailboxPayload) mailboxData.expirablePayload, mailboxData.receiversPubKey);
             mailboxMap.remove(decryptedMessageWithPubKey);
@@ -404,9 +404,9 @@ public class P2PService {
                         log.debug(throwable.toString());
                         log.info("We cannot send message to peer. Peer might be offline. We will store message in mailbox.");
                         log.trace("create MailboxEntry with peerAddress " + peerAddress);
-                        PublicKey receiverStoragePublicKey = peersPubKeyRing.getStorageSignaturePubKey();
+                        PublicKey receiverStoragePublicKey = peersPubKeyRing.getSignaturePubKey();
                         addMailboxData(new ExpirableMailboxPayload(sealedAndSignedMessage,
-                                        keyRing.getStorageSignatureKeyPair().getPublic(),
+                                        keyRing.getSignatureKeyPair().getPublic(),
                                         receiverStoragePublicKey),
                                 receiverStoragePublicKey);
                         UserThread.execute(() -> sendMailboxMessageListener.onStoredInMailbox());
@@ -430,7 +430,7 @@ public class P2PService {
             throw new AuthenticationException("You must be authenticated before adding data to the P2P network.");
 
         try {
-            return dataStorage.add(dataStorage.getDataWithSignedSeqNr(expirablePayload, keyRing.getStorageSignatureKeyPair()), networkNode.getAddress());
+            return dataStorage.add(dataStorage.getDataWithSignedSeqNr(expirablePayload, keyRing.getSignatureKeyPair()), networkNode.getAddress());
         } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
             log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
             return false;
@@ -442,7 +442,7 @@ public class P2PService {
             throw new AuthenticationException("You must be authenticated before adding data to the P2P network.");
 
         try {
-            return dataStorage.add(dataStorage.getMailboxDataWithSignedSeqNr(expirableMailboxPayload, keyRing.getStorageSignatureKeyPair(), receiversPublicKey), networkNode.getAddress());
+            return dataStorage.add(dataStorage.getMailboxDataWithSignedSeqNr(expirableMailboxPayload, keyRing.getSignatureKeyPair(), receiversPublicKey), networkNode.getAddress());
         } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
             log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
             return false;
@@ -453,7 +453,7 @@ public class P2PService {
         if (!authenticatedToFirstPeer)
             throw new AuthenticationException("You must be authenticated before removing data from the P2P network.");
         try {
-            return dataStorage.remove(dataStorage.getDataWithSignedSeqNr(expirablePayload, keyRing.getStorageSignatureKeyPair()), networkNode.getAddress());
+            return dataStorage.remove(dataStorage.getDataWithSignedSeqNr(expirablePayload, keyRing.getSignatureKeyPair()), networkNode.getAddress());
         } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
             log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
             return false;
@@ -464,7 +464,7 @@ public class P2PService {
         if (!authenticatedToFirstPeer)
             throw new AuthenticationException("You must be authenticated before removing data from the P2P network.");
         try {
-            return dataStorage.removeMailboxData(dataStorage.getMailboxDataWithSignedSeqNr(expirableMailboxPayload, keyRing.getStorageSignatureKeyPair(), receiversPublicKey), networkNode.getAddress());
+            return dataStorage.removeMailboxData(dataStorage.getMailboxDataWithSignedSeqNr(expirableMailboxPayload, keyRing.getSignatureKeyPair(), receiversPublicKey), networkNode.getAddress());
         } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
             log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
             return false;
@@ -642,7 +642,7 @@ public class P2PService {
                         checkNotNull(senderAddress, "senderAddress must not be null for mailbox messages");
 
                         log.trace("mailboxData.publicKey " + mailboxData.ownerStoragePubKey.hashCode());
-                        log.trace("keyRing.getStorageSignatureKeyPair().getPublic() " + keyRing.getStorageSignatureKeyPair().getPublic().hashCode());
+                        log.trace("keyRing.getStorageSignatureKeyPair().getPublic() " + keyRing.getSignatureKeyPair().getPublic().hashCode());
                         log.trace("keyRing.getMsgSignatureKeyPair().getPublic() " + keyRing.getSignatureKeyPair().getPublic().hashCode());
                         log.trace("keyRing.getMsgEncryptionKeyPair().getPublic() " + keyRing.getEncryptionKeyPair().getPublic().hashCode());
 

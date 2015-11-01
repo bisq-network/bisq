@@ -27,26 +27,26 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.*;
-import java.security.cert.CertificateException;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
+import java.security.interfaces.DSAParams;
+import java.security.interfaces.DSAPrivateKey;
+import java.security.interfaces.RSAPrivateCrtKey;
+import java.security.spec.*;
 
 public class KeyStorage {
     private static final Logger log = LoggerFactory.getLogger(KeyStorage.class);
 
     public static final String DIR_KEY = "key.storage.dir";
 
-    public enum Key {
-        STORAGE_SIGNATURE("storageSignature", Sig.KEY_ALGO),
-        MSG_SIGNATURE("msgSignature", Sig.KEY_ALGO),
-        MSG_ENCRYPTION("msgEncryption", Encryption.ENCR_KEY_ALGO);
+    public enum KeyEntry {
+        MSG_SIGNATURE("sig", Sig.KEY_ALGO),
+        MSG_ENCRYPTION("enc", Encryption.ENCR_KEY_ALGO);
 
         private final String fileName;
         private final String algorithm;
 
-        Key(String fileName, String algorithm) {
+        KeyEntry(String fileName, String algorithm) {
             this.fileName = fileName;
             this.algorithm = algorithm;
         }
@@ -72,39 +72,26 @@ public class KeyStorage {
     private final File storageDir;
 
     @Inject
-    public KeyStorage(@Named(DIR_KEY) File storageDir) throws KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException {
+    public KeyStorage(@Named(DIR_KEY) File storageDir) {
         this.storageDir = storageDir;
     }
 
     public boolean allKeyFilesExist() {
-        return fileExists(KeyStorage.Key.STORAGE_SIGNATURE) && fileExists(KeyStorage.Key.MSG_SIGNATURE) && fileExists(KeyStorage.Key.MSG_ENCRYPTION);
+        return fileExists(KeyEntry.MSG_SIGNATURE) && fileExists(KeyEntry.MSG_ENCRYPTION);
     }
 
-    private boolean fileExists(Key key) {
-        return new File(storageDir + "/" + key.getFileName() + "Pub.key").exists();
+    private boolean fileExists(KeyEntry keyEntry) {
+        return new File(storageDir + "/" + keyEntry.getFileName() + ".key").exists();
     }
 
-    public KeyPair loadKeyPair(Key key) {
+    public KeyPair loadKeyPair(KeyEntry keyEntry) {
         // long now = System.currentTimeMillis();
         try {
-            KeyFactory keyFactory = KeyFactory.getInstance(key.getAlgorithm());
+            KeyFactory keyFactory = KeyFactory.getInstance(keyEntry.getAlgorithm());
             PublicKey publicKey;
             PrivateKey privateKey;
 
-            File filePublicKey = new File(storageDir + "/" + key.getFileName() + "Pub.key");
-            try (FileInputStream fis = new FileInputStream(filePublicKey.getPath())) {
-                byte[] encodedPublicKey = new byte[(int) filePublicKey.length()];
-                fis.read(encodedPublicKey);
-
-                X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(encodedPublicKey);
-                publicKey = keyFactory.generatePublic(publicKeySpec);
-            } catch (InvalidKeySpecException | IOException e) {
-                e.printStackTrace();
-                log.error(e.getMessage());
-                throw new RuntimeException("Could not load key " + key.toString(), e);
-            }
-
-            File filePrivateKey = new File(storageDir + "/" + key.getFileName() + "Priv.key");
+            File filePrivateKey = new File(storageDir + "/" + keyEntry.getFileName() + ".key");
             try (FileInputStream fis = new FileInputStream(filePrivateKey.getPath())) {
                 byte[] encodedPrivateKey = new byte[(int) filePrivateKey.length()];
                 fis.read(encodedPrivateKey);
@@ -114,39 +101,46 @@ public class KeyStorage {
             } catch (InvalidKeySpecException | IOException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
-                throw new RuntimeException("Could not load key " + key.toString(), e);
+                throw new RuntimeException("Could not load key " + keyEntry.toString(), e);
             }
+
+            if (privateKey instanceof RSAPrivateCrtKey) {
+                RSAPrivateCrtKey rsaPrivateKey = (RSAPrivateCrtKey) privateKey;
+                RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(rsaPrivateKey.getModulus(), rsaPrivateKey.getPublicExponent());
+                publicKey = keyFactory.generatePublic(publicKeySpec);
+            } else if (privateKey instanceof DSAPrivateKey) {
+                DSAPrivateKey dsaPrivateKey = (DSAPrivateKey) privateKey;
+                DSAParams dsaParams = dsaPrivateKey.getParams();
+                BigInteger p = dsaParams.getP();
+                BigInteger q = dsaParams.getQ();
+                BigInteger g = dsaParams.getG();
+                BigInteger y = g.modPow(dsaPrivateKey.getX(), p);
+                KeySpec publicKeySpec = new DSAPublicKeySpec(y, p, q, g);
+                publicKey = keyFactory.generatePublic(publicKeySpec);
+            } else {
+                throw new RuntimeException("Unsupported key algo" + keyEntry.getAlgorithm());
+            }
+
             //log.info("load completed in {} msec", System.currentTimeMillis() - now);
             return new KeyPair(publicKey, privateKey);
-
-        } catch (NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new RuntimeException("Could not load key " + key.toString(), e);
+            throw new RuntimeException("Could not load key " + keyEntry.toString(), e);
         }
     }
 
     public void saveKeyRing(KeyRing keyRing) {
-        saveKeyPair(keyRing.getStorageSignatureKeyPair(), Key.STORAGE_SIGNATURE.getFileName());
-        saveKeyPair(keyRing.getSignatureKeyPair(), Key.MSG_SIGNATURE.getFileName());
-        saveKeyPair(keyRing.getEncryptionKeyPair(), Key.MSG_ENCRYPTION.getFileName());
+        savePrivateKey(keyRing.getSignatureKeyPair().getPrivate(), KeyEntry.MSG_SIGNATURE.getFileName());
+        savePrivateKey(keyRing.getEncryptionKeyPair().getPrivate(), KeyEntry.MSG_ENCRYPTION.getFileName());
     }
 
-    public void saveKeyPair(KeyPair keyPair, String name) {
+    public void savePrivateKey(PrivateKey privateKey, String name) {
         if (!storageDir.exists())
             storageDir.mkdir();
 
-        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(keyPair.getPublic().getEncoded());
-        try (FileOutputStream fos = new FileOutputStream(storageDir + "/" + name + "Pub.key")) {
-            fos.write(x509EncodedKeySpec.getEncoded());
-        } catch (IOException e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-            throw new RuntimeException("Could not save key " + name, e);
-        }
-
-        PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(keyPair.getPrivate().getEncoded());
-        try (FileOutputStream fos = new FileOutputStream(storageDir + "/" + name + "Priv.key")) {
+        PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
+        try (FileOutputStream fos = new FileOutputStream(storageDir + "/" + name + ".key")) {
             fos.write(pkcs8EncodedKeySpec.getEncoded());
         } catch (IOException e) {
             e.printStackTrace();

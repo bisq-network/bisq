@@ -21,13 +21,14 @@ import io.bitsquare.app.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 
 /**
  * Same as KeyRing but with public keys only.
@@ -39,87 +40,65 @@ public class PubKeyRing implements Serializable {
 
     transient private static final Logger log = LoggerFactory.getLogger(PubKeyRing.class);
 
-    private final byte[] storageSignaturePubKeyBytes;
-    private final byte[] msgSignaturePubKeyBytes;
-    private final byte[] msgEncryptionPubKeyBytes;
+    private final byte[] signaturePubKeyBytes;
+    private final byte[] encryptionPubKeyBytes;
 
-    transient private PublicKey storageSignaturePubKey;
-    transient private PublicKey msgSignaturePubKey;
+    transient private PublicKey signaturePubKey;
     transient private PublicKey encryptionPubKey;
 
-    public PubKeyRing(PublicKey storageSignaturePubKey, PublicKey msgSignaturePubKey, PublicKey encryptionPubKey) {
-        this.storageSignaturePubKey = storageSignaturePubKey;
-        this.msgSignaturePubKey = msgSignaturePubKey;
+    public PubKeyRing(PublicKey signaturePubKey, PublicKey encryptionPubKey) {
+        this.signaturePubKey = signaturePubKey;
         this.encryptionPubKey = encryptionPubKey;
 
-        this.storageSignaturePubKeyBytes = new X509EncodedKeySpec(storageSignaturePubKey.getEncoded()).getEncoded();
-        this.msgSignaturePubKeyBytes = new X509EncodedKeySpec(msgSignaturePubKey.getEncoded()).getEncoded();
-        this.msgEncryptionPubKeyBytes = new X509EncodedKeySpec(encryptionPubKey.getEncoded()).getEncoded();
+        this.signaturePubKeyBytes = new X509EncodedKeySpec(signaturePubKey.getEncoded()).getEncoded();
+        this.encryptionPubKeyBytes = new X509EncodedKeySpec(encryptionPubKey.getEncoded()).getEncoded();
     }
 
-    public PublicKey getStorageSignaturePubKey() {
-        if (storageSignaturePubKey == null) {
-            try {
-                storageSignaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO).generatePublic(new X509EncodedKeySpec(storageSignaturePubKeyBytes));
-            } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-                e.printStackTrace();
-                log.error(e.getMessage());
-            }
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        try {
+            in.defaultReadObject();
+            signaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO).generatePublic(new X509EncodedKeySpec(signaturePubKeyBytes));
+            encryptionPubKey = KeyFactory.getInstance(Encryption.ENCR_KEY_ALGO).generatePublic(new X509EncodedKeySpec(encryptionPubKeyBytes));
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+        } catch (Throwable t) {
+            log.trace("Cannot be deserialized." + t.getMessage());
         }
-        return storageSignaturePubKey;
     }
 
-
-    public PublicKey getMsgSignaturePubKey() {
-        if (msgSignaturePubKey == null) {
-            try {
-                msgSignaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO).generatePublic(new X509EncodedKeySpec(msgSignaturePubKeyBytes));
-            } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-                e.printStackTrace();
-                log.error(e.getMessage());
-            }
-        }
-        return msgSignaturePubKey;
+    public PublicKey getSignaturePubKey() {
+        return signaturePubKey;
     }
 
     public PublicKey getEncryptionPubKey() {
-        if (encryptionPubKey == null) {
-            try {
-                encryptionPubKey = KeyFactory.getInstance(Encryption.ENCR_KEY_ALGO).generatePublic(new X509EncodedKeySpec(msgEncryptionPubKeyBytes));
-            } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-                e.printStackTrace();
-                log.error(e.getMessage());
-            }
-        }
         return encryptionPubKey;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof PubKeyRing)) return false;
 
         PubKeyRing that = (PubKeyRing) o;
 
-        if (!Arrays.equals(storageSignaturePubKeyBytes, that.storageSignaturePubKeyBytes)) return false;
-        if (!Arrays.equals(msgSignaturePubKeyBytes, that.msgSignaturePubKeyBytes)) return false;
-        return Arrays.equals(msgEncryptionPubKeyBytes, that.msgEncryptionPubKeyBytes);
+        if (signaturePubKey != null ? !signaturePubKey.equals(that.signaturePubKey) : that.signaturePubKey != null)
+            return false;
+        return !(encryptionPubKey != null ? !encryptionPubKey.equals(that.encryptionPubKey) : that.encryptionPubKey != null);
 
     }
 
     @Override
     public int hashCode() {
-        int result = storageSignaturePubKeyBytes != null ? Arrays.hashCode(storageSignaturePubKeyBytes) : 0;
-        result = 31 * result + (msgSignaturePubKeyBytes != null ? Arrays.hashCode(msgSignaturePubKeyBytes) : 0);
-        result = 31 * result + (msgEncryptionPubKeyBytes != null ? Arrays.hashCode(msgEncryptionPubKeyBytes) : 0);
+        int result = signaturePubKey != null ? signaturePubKey.hashCode() : 0;
+        result = 31 * result + (encryptionPubKey != null ? encryptionPubKey.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
         return "PubKeyRing{" +
-                "\nstorageSignaturePubKey=\n" + Util.pubKeyToString(getStorageSignaturePubKey()) +
-                "\n\nmsgSignaturePubKey=\n" + Util.pubKeyToString(getMsgSignaturePubKey()) +
+                "\n\nmsgSignaturePubKey=\n" + Util.pubKeyToString(getSignaturePubKey()) +
                 "\n\nmsgEncryptionPubKey=\n" + Util.pubKeyToString(getEncryptionPubKey()) +
                 '}';
     }

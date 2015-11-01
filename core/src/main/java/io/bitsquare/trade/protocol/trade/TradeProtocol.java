@@ -56,7 +56,7 @@ public abstract class TradeProtocol {
             // We check the sig only as soon we have stored the peers pubKeyRing.
             PubKeyRing tradingPeerPubKeyRing = processModel.tradingPeer.getPubKeyRing();
             PublicKey signaturePubKey = decryptedMessageWithPubKey.signaturePubKey;
-            if (tradingPeerPubKeyRing != null && signaturePubKey.equals(tradingPeerPubKeyRing.getMsgSignaturePubKey())) {
+            if (tradingPeerPubKeyRing != null && signaturePubKey.equals(tradingPeerPubKeyRing.getSignaturePubKey())) {
                 Message message = decryptedMessageWithPubKey.message;
                 log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + peerAddress);
                 if (message instanceof TradeMessage) {
@@ -75,7 +75,7 @@ public abstract class TradeProtocol {
                 if (arbitratorOptional.isPresent())
                     arbitratorPubKeyRing = arbitratorOptional.get().getPubKeyRing();
 
-                if ((arbitratorPubKeyRing != null && !signaturePubKey.equals(arbitratorPubKeyRing.getMsgSignaturePubKey())))
+                if ((arbitratorPubKeyRing != null && !signaturePubKey.equals(arbitratorPubKeyRing.getSignaturePubKey())))
                     log.error("Signature used in seal message does not match the one stored with that trade for the trading peer or arbitrator.");
             }
         };
@@ -96,7 +96,7 @@ public abstract class TradeProtocol {
 
     public void applyMailboxMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Trade trade) {
         log.debug("applyMailboxMessage " + decryptedMessageWithPubKey.message);
-        if (decryptedMessageWithPubKey.signaturePubKey.equals(processModel.tradingPeer.getPubKeyRing().getMsgSignaturePubKey()))
+        if (decryptedMessageWithPubKey.signaturePubKey.equals(processModel.tradingPeer.getPubKeyRing().getSignaturePubKey()))
             doApplyMailboxMessage(decryptedMessageWithPubKey.message, trade);
         else
             log.error("SignaturePubKey in message does not match the SignaturePubKey we have stored to that trading peer.");

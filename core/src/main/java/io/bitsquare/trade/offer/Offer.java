@@ -250,7 +250,7 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
 
     @Override
     public PublicKey getPubKey() {
-        return pubKeyRing.getStorageSignaturePubKey();
+        return pubKeyRing.getSignaturePubKey();
     }
 
 

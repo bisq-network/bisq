@@ -39,7 +39,7 @@ public class Encryption {
     public static final String ASYM_CIPHER = "RSA"; // TODO test with RSA/ECB/PKCS1Padding
     public static final String HMAC = "HmacSHA256";
 
-    public static KeyPair generateEncryptionKeyPair() {
+    public static KeyPair generateKeyPair() {
         long ts = System.currentTimeMillis();
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ENCR_KEY_ALGO);
@@ -187,7 +187,7 @@ public class Encryption {
             return cipher.doFinal(encryptedPayload);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
                 | BadPaddingException | IllegalBlockSizeException e) {
-            e.printStackTrace();
+            // errors when trying to decrypt foreign messages are normal
             throw new CryptoException(e);
         }
     }
