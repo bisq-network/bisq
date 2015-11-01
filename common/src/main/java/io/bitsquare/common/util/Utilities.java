@@ -208,13 +208,15 @@ public class Utilities {
         return result;
     }*/
 
-    public static <T> T byteArrayToObject(byte[] data) {
+    public static <T extends Serializable> T deserialize(byte[] data) {
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         ObjectInput in = null;
         Object result = null;
         try {
             in = new ObjectInputStream(bis);
             result = in.readObject();
+            if (!(result instanceof Serializable))
+                throw new RuntimeException("Object not of type Serializable");
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -234,14 +236,15 @@ public class Utilities {
         return (T) result;
     }
 
-    public static byte[] objectToByteArray(Object object) {
+    public static byte[] serialize(Serializable object) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutput out = null;
         byte[] result = null;
         try {
             out = new ObjectOutputStream(bos);
             out.writeObject(object);
-            result = bos.toByteArray();
+            out.flush();
+            result = bos.toByteArray().clone();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -249,13 +252,11 @@ public class Utilities {
                 if (out != null) {
                     out.close();
                 }
-            } catch (IOException ex) {
-                // ignore close exception
+            } catch (IOException ignore) {
             }
             try {
                 bos.close();
-            } catch (IOException ex) {
-                // ignore close exception
+            } catch (IOException ignore) {
             }
         }
         return result;

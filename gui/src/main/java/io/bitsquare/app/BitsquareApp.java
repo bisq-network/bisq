@@ -54,6 +54,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.controlsfx.dialog.Dialogs;
 import org.reactfx.EventStreams;
 import org.reactfx.util.FxTimer;
@@ -62,6 +63,7 @@ import org.springframework.core.env.Environment;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.security.Security;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -113,6 +115,8 @@ public class BitsquareApp extends Application {
         Thread.setDefaultUncaughtExceptionHandler(handler);
         Thread.currentThread().setUncaughtExceptionHandler(handler);
 
+        Security.addProvider(new BouncyCastleProvider());
+        
         try {
             // Use CrashFX for report crash logs
             /*CrashFX.setup("Bitsquare/" + Version.VERSION,

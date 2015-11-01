@@ -10,7 +10,9 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.CryptoException;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.common.crypto.SealedAndSigned;
 import io.bitsquare.crypto.EncryptionService;
+import io.bitsquare.crypto.SealedAndSignedMessage;
 import io.bitsquare.p2p.messaging.*;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.routing.Neighbor;
@@ -210,7 +212,8 @@ public class P2PService {
             } else if (message instanceof SealedAndSignedMessage) {
                 if (encryptionService != null) {
                     try {
-                        DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService.decryptAndVerifyMessage((SealedAndSignedMessage) message);
+                        SealedAndSignedMessage sealedAndSignedMessage = (SealedAndSignedMessage) message;
+                        DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService.decryptAndVerifyMessage(sealedAndSignedMessage.sealedAndSigned);
                         UserThread.execute(() -> decryptedMailListeners.stream().forEach(e -> e.onMailMessage(decryptedMessageWithPubKey, connection.getPeerAddress())));
                     } catch (CryptoException e) {
                         log.info("Decryption of SealedAndSignedMessage failed. That is expected if the message is not intended for us.");
@@ -343,7 +346,7 @@ public class P2PService {
     private void doSendEncryptedMailMessage(Address peerAddress, PubKeyRing pubKeyRing, MailMessage message, SendMailMessageListener sendMailMessageListener) {
         if (encryptionService != null) {
             try {
-                SealedAndSignedMessage sealedAndSignedMessage = encryptionService.encryptAndSignMessage(pubKeyRing, message);
+                SealedAndSignedMessage sealedAndSignedMessage = new SealedAndSignedMessage(encryptionService.encryptAndSignMessage(pubKeyRing, message), peerAddress);
                 SettableFuture<Connection> future = sendMessage(peerAddress, sealedAndSignedMessage);
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
@@ -386,7 +389,7 @@ public class P2PService {
     private void trySendEncryptedMailboxMessage(Address peerAddress, PubKeyRing peersPubKeyRing, MailboxMessage message, SendMailboxMessageListener sendMailboxMessageListener) {
         if (encryptionService != null) {
             try {
-                SealedAndSignedMessage sealedAndSignedMessage = encryptionService.encryptAndSignMessage(peersPubKeyRing, message);
+                SealedAndSignedMessage sealedAndSignedMessage = new SealedAndSignedMessage(encryptionService.encryptAndSignMessage(peersPubKeyRing, message), peerAddress);
                 SettableFuture<Connection> future = sendMessage(peerAddress, sealedAndSignedMessage);
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
@@ -630,9 +633,9 @@ public class P2PService {
             ExpirablePayload data = mailboxData.expirablePayload;
             if (data instanceof ExpirableMailboxPayload) {
                 ExpirableMailboxPayload mailboxEntry = (ExpirableMailboxPayload) data;
-                SealedAndSignedMessage sealedAndSignedMessage = mailboxEntry.sealedAndSignedMessage;
+                SealedAndSigned sealedAndSigned = mailboxEntry.sealedAndSignedMessage.sealedAndSigned;
                 try {
-                    DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService.decryptAndVerifyMessage(sealedAndSignedMessage);
+                    DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService.decryptAndVerifyMessage(sealedAndSigned);
                     if (decryptedMessageWithPubKey.message instanceof MailboxMessage) {
                         MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.message;
                         Address senderAddress = mailboxMessage.getSenderAddress();
@@ -640,8 +643,8 @@ public class P2PService {
 
                         log.trace("mailboxData.publicKey " + mailboxData.ownerStoragePubKey.hashCode());
                         log.trace("keyRing.getStorageSignatureKeyPair().getPublic() " + keyRing.getStorageSignatureKeyPair().getPublic().hashCode());
-                        log.trace("keyRing.getMsgSignatureKeyPair().getPublic() " + keyRing.getMsgSignatureKeyPair().getPublic().hashCode());
-                        log.trace("keyRing.getMsgEncryptionKeyPair().getPublic() " + keyRing.getMsgEncryptionKeyPair().getPublic().hashCode());
+                        log.trace("keyRing.getMsgSignatureKeyPair().getPublic() " + keyRing.getSignatureKeyPair().getPublic().hashCode());
+                        log.trace("keyRing.getMsgEncryptionKeyPair().getPublic() " + keyRing.getEncryptionKeyPair().getPublic().hashCode());
 
 
                         mailboxMap.put(decryptedMessageWithPubKey, mailboxData);

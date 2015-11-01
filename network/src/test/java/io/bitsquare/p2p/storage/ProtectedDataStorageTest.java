@@ -1,15 +1,12 @@
 package io.bitsquare.p2p.storage;
 
 import io.bitsquare.common.UserThread;
-import io.bitsquare.common.crypto.CryptoException;
-import io.bitsquare.common.crypto.CryptoUtil;
-import io.bitsquare.common.crypto.KeyRing;
-import io.bitsquare.common.crypto.KeyStorage;
+import io.bitsquare.common.crypto.*;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.crypto.EncryptionService;
+import io.bitsquare.crypto.SealedAndSignedMessage;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.TestUtils;
-import io.bitsquare.p2p.messaging.SealedAndSignedMessage;
 import io.bitsquare.p2p.mocks.MockMessage;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.routing.Routing;
@@ -89,8 +86,8 @@ public class ProtectedDataStorageTest {
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
         int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
-        byte[] signature = CryptoUtil.signStorageData(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         ProtectedData dataToRemove = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertTrue(dataStorage1.remove(dataToRemove, null));
         Assert.assertEquals(0, dataStorage1.getMap().size());
@@ -118,12 +115,12 @@ public class ProtectedDataStorageTest {
         // add with date in future
         data = dataStorage1.getDataWithSignedSeqNr(mockData, storageSignatureKeyPair1);
         int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
-        byte[] signature = CryptoUtil.signStorageData(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         ProtectedData dataWithFutureDate = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         dataWithFutureDate.date = new Date(new Date().getTime() + 60 * 60 * sleepTime);
         // force serialisation (date check is done in readObject)
-        ProtectedData newData = Utilities.byteArrayToObject(Utilities.objectToByteArray(dataWithFutureDate));
+        ProtectedData newData = Utilities.deserialize(Utilities.serialize(dataWithFutureDate));
         Assert.assertTrue(dataStorage1.add(newData, null));
         Thread.sleep(5);
         Assert.assertEquals(1, dataStorage1.getMap().size());
@@ -139,57 +136,57 @@ public class ProtectedDataStorageTest {
 
         // remove with not updated seq nr -> failure
         int newSequenceNumber = 0;
-        byte[] hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
-        byte[] signature = CryptoUtil.signStorageData(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         ProtectedData dataToRemove = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertFalse(dataStorage1.remove(dataToRemove, null));
 
         // remove with too high updated seq nr -> ok
         newSequenceNumber = 2;
-        hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
-        signature = CryptoUtil.signStorageData(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
+        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         dataToRemove = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertTrue(dataStorage1.remove(dataToRemove, null));
 
         // add with updated seq nr below previous -> failure
         newSequenceNumber = 1;
-        hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
-        signature = CryptoUtil.signStorageData(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
+        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         ProtectedData dataToAdd = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertFalse(dataStorage1.add(dataToAdd, null));
 
         // add with updated seq nr over previous -> ok
         newSequenceNumber = 3;
-        hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
-        signature = CryptoUtil.signStorageData(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
+        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         dataToAdd = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertTrue(dataStorage1.add(dataToAdd, null));
 
         // add with same seq nr  -> failure
         newSequenceNumber = 3;
-        hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
-        signature = CryptoUtil.signStorageData(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
+        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         dataToAdd = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertFalse(dataStorage1.add(dataToAdd, null));
 
         // add with same data but higher seq nr.  -> ok, ignore
         newSequenceNumber = 4;
-        hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
-        signature = CryptoUtil.signStorageData(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
+        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         dataToAdd = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertTrue(dataStorage1.add(dataToAdd, null));
 
         // remove with with same seq nr as prev. ignored -> failed
         newSequenceNumber = 4;
-        hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
-        signature = CryptoUtil.signStorageData(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
+        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         dataToRemove = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertFalse(dataStorage1.remove(dataToRemove, null));
 
         // remove with with higher seq nr -> ok
         newSequenceNumber = 5;
-        hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
-        signature = CryptoUtil.signStorageData(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
+        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         dataToRemove = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertTrue(dataStorage1.remove(dataToRemove, null));
     }
@@ -198,7 +195,7 @@ public class ProtectedDataStorageTest {
     public void testAddAndRemoveMailboxData() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
         // sender 
         MockMessage mockMessage = new MockMessage("MockMessage");
-        SealedAndSignedMessage sealedAndSignedMessage = encryptionService1.encryptAndSignMessage(keyRing1.getPubKeyRing(), mockMessage);
+        SealedAndSignedMessage sealedAndSignedMessage = new SealedAndSignedMessage(encryptionService1.encryptAndSignMessage(keyRing1.getPubKeyRing(), mockMessage), null);
         ExpirableMailboxPayload expirableMailboxPayload = new ExpirableMailboxPayload(sealedAndSignedMessage,
                 keyRing1.getStorageSignatureKeyPair().getPublic(),
                 keyRing2.getStorageSignatureKeyPair().getPublic());
@@ -210,34 +207,34 @@ public class ProtectedDataStorageTest {
 
         // receiver (storageSignatureKeyPair2)
         int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
 
         byte[] signature;
         ProtectedMailboxData dataToRemove;
 
         // wrong sig -> fail
-        signature = CryptoUtil.signStorageData(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
+        signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         dataToRemove = new ProtectedMailboxData(expirableMailboxPayload, data.ttl, storageSignatureKeyPair2.getPublic(), newSequenceNumber, signature, storageSignatureKeyPair2.getPublic());
         Assert.assertFalse(dataStorage1.removeMailboxData(dataToRemove, null));
 
         // wrong seq nr
-        signature = CryptoUtil.signStorageData(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
+        signature = Sig.sign(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
         dataToRemove = new ProtectedMailboxData(expirableMailboxPayload, data.ttl, storageSignatureKeyPair2.getPublic(), data.sequenceNumber, signature, storageSignatureKeyPair2.getPublic());
         Assert.assertFalse(dataStorage1.removeMailboxData(dataToRemove, null));
 
         // wrong signingKey
-        signature = CryptoUtil.signStorageData(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
+        signature = Sig.sign(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
         dataToRemove = new ProtectedMailboxData(expirableMailboxPayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature, storageSignatureKeyPair2.getPublic());
         Assert.assertFalse(dataStorage1.removeMailboxData(dataToRemove, null));
 
         // wrong peerPubKey
-        signature = CryptoUtil.signStorageData(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
+        signature = Sig.sign(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
         dataToRemove = new ProtectedMailboxData(expirableMailboxPayload, data.ttl, storageSignatureKeyPair2.getPublic(), newSequenceNumber, signature, storageSignatureKeyPair1.getPublic());
         Assert.assertFalse(dataStorage1.removeMailboxData(dataToRemove, null));
 
         // receiver can remove it (storageSignatureKeyPair2) -> all ok
         Assert.assertEquals(1, dataStorage1.getMap().size());
-        signature = CryptoUtil.signStorageData(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
+        signature = Sig.sign(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
         dataToRemove = new ProtectedMailboxData(expirableMailboxPayload, data.ttl, storageSignatureKeyPair2.getPublic(), newSequenceNumber, signature, storageSignatureKeyPair2.getPublic());
         Assert.assertTrue(dataStorage1.removeMailboxData(dataToRemove, null));
 

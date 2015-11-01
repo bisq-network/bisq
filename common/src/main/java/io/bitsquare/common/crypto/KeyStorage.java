@@ -18,7 +18,6 @@
 package io.bitsquare.common.crypto;
 
 import com.google.inject.Inject;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,14 +38,10 @@ public class KeyStorage {
 
     public static final String DIR_KEY = "key.storage.dir";
 
-    static {
-        Security.addProvider(new BouncyCastleProvider());
-    }
-
     public enum Key {
-        STORAGE_SIGNATURE("storageSignature", CryptoUtil.STORAGE_SIGN_KEY_ALGO),
-        MSG_SIGNATURE("msgSignature", CryptoUtil.MSG_SIGN_KEY_ALGO),
-        MSG_ENCRYPTION("msgEncryption", CryptoUtil.MSG_ENCR_KEY_ALGO);
+        STORAGE_SIGNATURE("storageSignature", Sig.KEY_ALGO),
+        MSG_SIGNATURE("msgSignature", Sig.KEY_ALGO),
+        MSG_ENCRYPTION("msgEncryption", Encryption.ENCR_KEY_ALGO);
 
         private final String fileName;
         private final String algorithm;
@@ -81,7 +76,7 @@ public class KeyStorage {
         this.storageDir = storageDir;
     }
 
-    public boolean allKeyFilesExist() throws CryptoException {
+    public boolean allKeyFilesExist() {
         return fileExists(KeyStorage.Key.STORAGE_SIGNATURE) && fileExists(KeyStorage.Key.MSG_SIGNATURE) && fileExists(KeyStorage.Key.MSG_ENCRYPTION);
     }
 
@@ -89,7 +84,7 @@ public class KeyStorage {
         return new File(storageDir + "/" + key.getFileName() + "Pub.key").exists();
     }
 
-    public KeyPair loadKeyPair(Key key) throws CryptoException {
+    public KeyPair loadKeyPair(Key key) {
         // long now = System.currentTimeMillis();
         try {
             KeyFactory keyFactory = KeyFactory.getInstance(key.getAlgorithm());
@@ -106,7 +101,7 @@ public class KeyStorage {
             } catch (InvalidKeySpecException | IOException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
-                throw new CryptoException("Could not load key " + key.toString(), e);
+                throw new RuntimeException("Could not load key " + key.toString(), e);
             }
 
             File filePrivateKey = new File(storageDir + "/" + key.getFileName() + "Priv.key");
@@ -119,7 +114,7 @@ public class KeyStorage {
             } catch (InvalidKeySpecException | IOException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
-                throw new CryptoException("Could not load key " + key.toString(), e);
+                throw new RuntimeException("Could not load key " + key.toString(), e);
             }
             //log.info("load completed in {} msec", System.currentTimeMillis() - now);
             return new KeyPair(publicKey, privateKey);
@@ -127,17 +122,17 @@ public class KeyStorage {
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new CryptoException("Could not load key " + key.toString(), e);
+            throw new RuntimeException("Could not load key " + key.toString(), e);
         }
     }
 
-    public void saveKeyRing(KeyRing keyRing) throws CryptoException {
+    public void saveKeyRing(KeyRing keyRing) {
         saveKeyPair(keyRing.getStorageSignatureKeyPair(), Key.STORAGE_SIGNATURE.getFileName());
-        saveKeyPair(keyRing.getMsgSignatureKeyPair(), Key.MSG_SIGNATURE.getFileName());
-        saveKeyPair(keyRing.getMsgEncryptionKeyPair(), Key.MSG_ENCRYPTION.getFileName());
+        saveKeyPair(keyRing.getSignatureKeyPair(), Key.MSG_SIGNATURE.getFileName());
+        saveKeyPair(keyRing.getEncryptionKeyPair(), Key.MSG_ENCRYPTION.getFileName());
     }
 
-    public void saveKeyPair(KeyPair keyPair, String name) throws CryptoException {
+    public void saveKeyPair(KeyPair keyPair, String name) {
         if (!storageDir.exists())
             storageDir.mkdir();
 
@@ -147,7 +142,7 @@ public class KeyStorage {
         } catch (IOException e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new CryptoException("Could not save key " + name, e);
+            throw new RuntimeException("Could not save key " + name, e);
         }
 
         PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(keyPair.getPrivate().getEncoded());
@@ -156,7 +151,7 @@ public class KeyStorage {
         } catch (IOException e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new CryptoException("Could not save key " + name, e);
+            throw new RuntimeException("Could not save key " + name, e);
         }
     }
 }

@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.tasks.offerer;
 
-import io.bitsquare.common.crypto.CryptoUtil;
+import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
@@ -75,7 +75,7 @@ public class CreateAndSignContract extends TradeTask {
                     taker.getTradeWalletPubKey()
             );
             String contractAsJson = Utilities.objectToJson(contract);
-            String signature = CryptoUtil.signMessage(processModel.getKeyRing().getMsgSignatureKeyPair().getPrivate(), contractAsJson);
+            String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);
 
             trade.setContract(contract);
             trade.setContractAsJson(contractAsJson);

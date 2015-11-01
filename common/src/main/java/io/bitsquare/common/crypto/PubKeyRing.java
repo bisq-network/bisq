@@ -45,22 +45,22 @@ public class PubKeyRing implements Serializable {
 
     transient private PublicKey storageSignaturePubKey;
     transient private PublicKey msgSignaturePubKey;
-    transient private PublicKey msgEncryptionPubKey;
+    transient private PublicKey encryptionPubKey;
 
-    public PubKeyRing(PublicKey storageSignaturePubKey, PublicKey msgSignaturePubKey, PublicKey msgEncryptionPubKey) {
+    public PubKeyRing(PublicKey storageSignaturePubKey, PublicKey msgSignaturePubKey, PublicKey encryptionPubKey) {
         this.storageSignaturePubKey = storageSignaturePubKey;
         this.msgSignaturePubKey = msgSignaturePubKey;
-        this.msgEncryptionPubKey = msgEncryptionPubKey;
+        this.encryptionPubKey = encryptionPubKey;
 
         this.storageSignaturePubKeyBytes = new X509EncodedKeySpec(storageSignaturePubKey.getEncoded()).getEncoded();
         this.msgSignaturePubKeyBytes = new X509EncodedKeySpec(msgSignaturePubKey.getEncoded()).getEncoded();
-        this.msgEncryptionPubKeyBytes = new X509EncodedKeySpec(msgEncryptionPubKey.getEncoded()).getEncoded();
+        this.msgEncryptionPubKeyBytes = new X509EncodedKeySpec(encryptionPubKey.getEncoded()).getEncoded();
     }
 
     public PublicKey getStorageSignaturePubKey() {
         if (storageSignaturePubKey == null) {
             try {
-                storageSignaturePubKey = KeyFactory.getInstance(CryptoUtil.STORAGE_SIGN_KEY_ALGO).generatePublic(new X509EncodedKeySpec(storageSignaturePubKeyBytes));
+                storageSignaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO).generatePublic(new X509EncodedKeySpec(storageSignaturePubKeyBytes));
             } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
@@ -73,7 +73,7 @@ public class PubKeyRing implements Serializable {
     public PublicKey getMsgSignaturePubKey() {
         if (msgSignaturePubKey == null) {
             try {
-                msgSignaturePubKey = KeyFactory.getInstance(CryptoUtil.MSG_SIGN_KEY_ALGO).generatePublic(new X509EncodedKeySpec(msgSignaturePubKeyBytes));
+                msgSignaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO).generatePublic(new X509EncodedKeySpec(msgSignaturePubKeyBytes));
             } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
@@ -82,16 +82,16 @@ public class PubKeyRing implements Serializable {
         return msgSignaturePubKey;
     }
 
-    public PublicKey getMsgEncryptionPubKey() {
-        if (msgEncryptionPubKey == null) {
+    public PublicKey getEncryptionPubKey() {
+        if (encryptionPubKey == null) {
             try {
-                msgEncryptionPubKey = KeyFactory.getInstance(CryptoUtil.MSG_ENCR_KEY_ALGO).generatePublic(new X509EncodedKeySpec(msgEncryptionPubKeyBytes));
+                encryptionPubKey = KeyFactory.getInstance(Encryption.ENCR_KEY_ALGO).generatePublic(new X509EncodedKeySpec(msgEncryptionPubKeyBytes));
             } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
             }
         }
-        return msgEncryptionPubKey;
+        return encryptionPubKey;
     }
 
     @Override
@@ -118,9 +118,9 @@ public class PubKeyRing implements Serializable {
     @Override
     public String toString() {
         return "PubKeyRing{" +
-                "\nstorageSignaturePubKey=\n" + CryptoUtil.pubKeyToString(getStorageSignaturePubKey()) +
-                "\n\nmsgSignaturePubKey=\n" + CryptoUtil.pubKeyToString(getMsgSignaturePubKey()) +
-                "\n\nmsgEncryptionPubKey=\n" + CryptoUtil.pubKeyToString(getMsgEncryptionPubKey()) +
+                "\nstorageSignaturePubKey=\n" + Util.pubKeyToString(getStorageSignaturePubKey()) +
+                "\n\nmsgSignaturePubKey=\n" + Util.pubKeyToString(getMsgSignaturePubKey()) +
+                "\n\nmsgEncryptionPubKey=\n" + Util.pubKeyToString(getEncryptionPubKey()) +
                 '}';
     }
 

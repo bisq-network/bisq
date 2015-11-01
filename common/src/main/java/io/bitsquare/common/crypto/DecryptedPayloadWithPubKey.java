@@ -15,54 +15,28 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.p2p.messaging;
+package io.bitsquare.common.crypto;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.common.util.Utilities;
 
-import javax.crypto.SealedObject;
+import java.io.Serializable;
 import java.security.PublicKey;
-import java.util.Arrays;
 
 /**
  * Packs the encrypted symmetric secretKey and the encrypted and signed message into one object.
  * SecretKey is encrypted with asymmetric pubKey of peer. Signed message is encrypted with secretKey.
  * Using that hybrid encryption model we are not restricted by data size and performance as symmetric encryption is very fast.
  */
-public final class SealedAndSignedMessage implements MailMessage {
+public final class DecryptedPayloadWithPubKey implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
-    public final SealedObject sealedSecretKey;
-    public final SealedObject sealedMessage;
-    public final PublicKey signaturePubKey;
+    public final Serializable payload;
+    public final PublicKey sigPublicKey;
 
-    public SealedAndSignedMessage(SealedObject sealedSecretKey, SealedObject sealedMessage, PublicKey signaturePubKey) {
-        this.sealedSecretKey = sealedSecretKey;
-        this.sealedMessage = sealedMessage;
-        this.signaturePubKey = signaturePubKey;
+    public DecryptedPayloadWithPubKey(Serializable payload, PublicKey sigPublicKey) {
+        this.payload = payload;
+        this.sigPublicKey = sigPublicKey;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof SealedAndSignedMessage)) return false;
-
-        SealedAndSignedMessage that = (SealedAndSignedMessage) o;
-
-        return Arrays.equals(Utilities.objectToByteArray(this), Utilities.objectToByteArray(that));
-    }
-
-    @Override
-    public int hashCode() {
-        byte[] bytes = Utilities.objectToByteArray(this);
-        return bytes != null ? Arrays.hashCode(bytes) : 0;
-    }
-
-    @Override
-    public String toString() {
-        return "SealedAndSignedMessage{" +
-                "hashCode=" + hashCode() +
-                '}';
-    }
 }

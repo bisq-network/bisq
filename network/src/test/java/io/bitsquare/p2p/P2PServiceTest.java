@@ -1,13 +1,10 @@
 package io.bitsquare.p2p;
 
-import io.bitsquare.common.crypto.CryptoException;
-import io.bitsquare.common.crypto.CryptoUtil;
-import io.bitsquare.common.crypto.KeyRing;
-import io.bitsquare.common.crypto.KeyStorage;
+import io.bitsquare.common.crypto.*;
 import io.bitsquare.crypto.EncryptionService;
+import io.bitsquare.crypto.SealedAndSignedMessage;
 import io.bitsquare.p2p.messaging.DecryptedMessageWithPubKey;
 import io.bitsquare.p2p.messaging.MailboxMessage;
-import io.bitsquare.p2p.messaging.SealedAndSignedMessage;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.p2p.mocks.MockMailboxMessage;
 import io.bitsquare.p2p.network.LocalhostNetworkNode;
@@ -161,8 +158,8 @@ public class P2PServiceTest {
 
         // try to manipulate seq nr. + pubKey + sig -> fails
         int sequenceNumberManipulated = origProtectedData.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(origProtectedData.expirablePayload, sequenceNumberManipulated));
-        byte[] signature = CryptoUtil.signStorageData(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(origProtectedData.expirablePayload, sequenceNumberManipulated));
+        byte[] signature = Sig.sign(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
         protectedDataManipulated = new ProtectedData(origProtectedData.expirablePayload, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
         Assert.assertFalse(p2PService3.removeData(protectedDataManipulated.expirablePayload));
         Thread.sleep(sleepTime);
@@ -183,8 +180,8 @@ public class P2PServiceTest {
         // first he tries to use the orig. pubKey in the data -> fails as pub keys not matching
         MockData manipulatedData = new MockData("mockData1_manipulated", origData.publicKey);
         sequenceNumberManipulated = 0;
-        hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(manipulatedData, sequenceNumberManipulated));
-        signature = CryptoUtil.signStorageData(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
+        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(manipulatedData, sequenceNumberManipulated));
+        signature = Sig.sign(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
         protectedDataManipulated = new ProtectedData(origProtectedData.expirablePayload, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
         Assert.assertFalse(p2PService3.addData(protectedDataManipulated.expirablePayload));
         Thread.sleep(sleepTime);
@@ -195,8 +192,8 @@ public class P2PServiceTest {
         // then he tries to use his pubKey but orig data payload -> fails as pub keys nto matching
         manipulatedData = new MockData("mockData1_manipulated", msgSignatureKeyPairAdversary.getPublic());
         sequenceNumberManipulated = 0;
-        hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(manipulatedData, sequenceNumberManipulated));
-        signature = CryptoUtil.signStorageData(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
+        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(manipulatedData, sequenceNumberManipulated));
+        signature = Sig.sign(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
         protectedDataManipulated = new ProtectedData(origProtectedData.expirablePayload, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
         Assert.assertFalse(p2PService3.addData(protectedDataManipulated.expirablePayload));
         Thread.sleep(sleepTime);
@@ -208,8 +205,8 @@ public class P2PServiceTest {
         // payload data has adversary's pubKey so he could hijack the owners data
         manipulatedData = new MockData("mockData1_manipulated", msgSignatureKeyPairAdversary.getPublic());
         sequenceNumberManipulated = 0;
-        hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(manipulatedData, sequenceNumberManipulated));
-        signature = CryptoUtil.signStorageData(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
+        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(manipulatedData, sequenceNumberManipulated));
+        signature = Sig.sign(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
         protectedDataManipulated = new ProtectedData(manipulatedData, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
         Assert.assertTrue(p2PService3.addData(protectedDataManipulated.expirablePayload));
         Thread.sleep(sleepTime);
@@ -228,8 +225,8 @@ public class P2PServiceTest {
         // finally he tries both previous attempts with same data - > same as before
         manipulatedData = new MockData("mockData1", origData.publicKey);
         sequenceNumberManipulated = 0;
-        hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(manipulatedData, sequenceNumberManipulated));
-        signature = CryptoUtil.signStorageData(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
+        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(manipulatedData, sequenceNumberManipulated));
+        signature = Sig.sign(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
         protectedDataManipulated = new ProtectedData(origProtectedData.expirablePayload, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
         Assert.assertFalse(p2PService3.addData(protectedDataManipulated.expirablePayload));
         Thread.sleep(sleepTime);
@@ -239,8 +236,8 @@ public class P2PServiceTest {
 
         manipulatedData = new MockData("mockData1", msgSignatureKeyPairAdversary.getPublic());
         sequenceNumberManipulated = 0;
-        hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(manipulatedData, sequenceNumberManipulated));
-        signature = CryptoUtil.signStorageData(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
+        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(manipulatedData, sequenceNumberManipulated));
+        signature = Sig.sign(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
         protectedDataManipulated = new ProtectedData(manipulatedData, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
         Assert.assertTrue(p2PService3.addData(protectedDataManipulated.expirablePayload));
         Thread.sleep(sleepTime);
@@ -275,7 +272,8 @@ public class P2PServiceTest {
             log.trace("message " + message);
             if (message instanceof SealedAndSignedMessage) {
                 try {
-                    DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService2.decryptAndVerifyMessage((SealedAndSignedMessage) message);
+                    SealedAndSignedMessage sealedAndSignedMessage = (SealedAndSignedMessage) message;
+                    DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService2.decryptAndVerifyMessage(sealedAndSignedMessage.sealedAndSigned);
                     Assert.assertEquals(mockMessage, decryptedMessageWithPubKey.message);
                     Assert.assertEquals(p2PService2.getAddress(), ((MailboxMessage) decryptedMessageWithPubKey.message).getSenderAddress());
                     latch2.countDown();

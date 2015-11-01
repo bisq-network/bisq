@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import com.google.common.util.concurrent.FutureCallback;
-import io.bitsquare.common.crypto.CryptoUtil;
+import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
@@ -44,7 +44,7 @@ public class SignAndPublishDepositTxAsSeller extends TradeTask {
             log.debug("----------");
             log.debug(trade.getContractAsJson());
             log.debug("----------");
-            byte[] contractHash = CryptoUtil.getHash(trade.getContractAsJson());
+            byte[] contractHash = Hash.getHash(trade.getContractAsJson());
             trade.setContractHash(contractHash);
             processModel.getTradeWalletService().takerSignsAndPublishesDepositTx(
                     true,

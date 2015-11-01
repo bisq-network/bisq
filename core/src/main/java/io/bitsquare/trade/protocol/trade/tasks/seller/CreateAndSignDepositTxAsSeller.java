@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.data.PreparedDepositTxAndOffererInputs;
-import io.bitsquare.common.crypto.CryptoUtil;
+import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
@@ -44,7 +44,7 @@ public class CreateAndSignDepositTxAsSeller extends TradeTask {
             Coin sellerInputAmount = FeePolicy.SECURITY_DEPOSIT.add(FeePolicy.TX_FEE).add(trade.getTradeAmount());
             Coin msOutputAmount = sellerInputAmount.add(FeePolicy.SECURITY_DEPOSIT);
 
-            byte[] contractHash = CryptoUtil.getHash(trade.getContractAsJson());
+            byte[] contractHash = Hash.getHash(trade.getContractAsJson());
             trade.setContractHash(contractHash);
             PreparedDepositTxAndOffererInputs result = processModel.getTradeWalletService().offererCreatesAndSignsDepositTx(
                     false,

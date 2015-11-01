@@ -22,77 +22,42 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
 
 public class KeyRing {
     private static final Logger log = LoggerFactory.getLogger(KeyRing.class);
 
-    // Used for signing storage data
-    private KeyPair storageSignatureKeyPair;
     // Used for signing messages sent over the wire
-    private KeyPair msgSignatureKeyPair;
+    private final KeyPair signatureKeyPair;
     // Used for encrypting messages sent over the wire (hybrid encryption scheme is used, so it is used only to encrypt a symmetric session key) 
-    private KeyPair msgEncryptionKeyPair;
+    private final KeyPair encryptionKeyPair;
 
-    private PubKeyRing pubKeyRing;
-    private final KeyStorage keyStorage;
+    private final PubKeyRing pubKeyRing;
 
     @Inject
-    public KeyRing(KeyStorage keyStorage) throws CryptoException {
-        this.keyStorage = keyStorage;
-
-        init(keyStorage);
-    }
-
-    // consider extra thread for loading (takes about 264 ms at first startup, then load only takes nearly no time)
-    private void init(KeyStorage keyStorage) throws CryptoException {
+    public KeyRing(KeyStorage keyStorage) {
         if (keyStorage.allKeyFilesExist()) {
-            storageSignatureKeyPair = keyStorage.loadKeyPair(KeyStorage.Key.STORAGE_SIGNATURE);
-            msgSignatureKeyPair = keyStorage.loadKeyPair(KeyStorage.Key.MSG_SIGNATURE);
-            msgEncryptionKeyPair = keyStorage.loadKeyPair(KeyStorage.Key.MSG_ENCRYPTION);
+            signatureKeyPair = keyStorage.loadKeyPair(KeyStorage.Key.MSG_SIGNATURE);
+            encryptionKeyPair = keyStorage.loadKeyPair(KeyStorage.Key.MSG_ENCRYPTION);
         } else {
             // First time we create key pairs
-            try {
-                this.storageSignatureKeyPair = CryptoUtil.generateStorageSignatureKeyPair();
-                this.msgSignatureKeyPair = CryptoUtil.generateMsgSignatureKeyPair();
-                this.msgEncryptionKeyPair = CryptoUtil.generateMsgEncryptionKeyPair();
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-                throw new CryptoException("Error at KeyRing constructor ", e);
-            }
+            signatureKeyPair = Sig.generateKeyPair();
+            encryptionKeyPair = Encryption.generateEncryptionKeyPair();
             keyStorage.saveKeyRing(this);
         }
-
-        pubKeyRing = new PubKeyRing(storageSignatureKeyPair.getPublic(), msgSignatureKeyPair.getPublic(), msgEncryptionKeyPair.getPublic());
+        pubKeyRing = new PubKeyRing(signatureKeyPair.getPublic(), signatureKeyPair.getPublic(), encryptionKeyPair.getPublic());
     }
 
-    // For unit testing
-    KeyRing() throws NoSuchAlgorithmException {
-        keyStorage = null;
-        this.storageSignatureKeyPair = CryptoUtil.generateStorageSignatureKeyPair();
-        this.msgSignatureKeyPair = CryptoUtil.generateMsgSignatureKeyPair();
-        this.msgEncryptionKeyPair = CryptoUtil.generateMsgEncryptionKeyPair();
-        pubKeyRing = new PubKeyRing(storageSignatureKeyPair.getPublic(), msgSignatureKeyPair.getPublic(), msgEncryptionKeyPair.getPublic());
-    }
-
-    KeyRing(KeyPair storageSignatureKeyPair, KeyPair msgSignatureKeyPair, KeyPair msgEncryptionKeyPair) {
-        this.keyStorage = null;
-        this.storageSignatureKeyPair = storageSignatureKeyPair;
-        this.msgSignatureKeyPair = msgSignatureKeyPair;
-        this.msgEncryptionKeyPair = msgEncryptionKeyPair;
-        pubKeyRing = new PubKeyRing(storageSignatureKeyPair.getPublic(), msgSignatureKeyPair.getPublic(), msgEncryptionKeyPair.getPublic());
-    }
-
+    //TODO
     public KeyPair getStorageSignatureKeyPair() {
-        return storageSignatureKeyPair;
+        return signatureKeyPair;
     }
 
-    public KeyPair getMsgSignatureKeyPair() {
-        return msgSignatureKeyPair;
+    public KeyPair getSignatureKeyPair() {
+        return signatureKeyPair;
     }
 
-    public KeyPair getMsgEncryptionKeyPair() {
-        return msgEncryptionKeyPair;
+    public KeyPair getEncryptionKeyPair() {
+        return encryptionKeyPair;
     }
 
     public PubKeyRing getPubKeyRing() {

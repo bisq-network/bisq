@@ -17,7 +17,9 @@
 
 package io.bitsquare.common.util;
 
-public class Tuple3<A, B, C> {
+import java.io.Serializable;
+
+public class Tuple3<A, B, C> implements Serializable {
     final public A first;
     final public B second;
     final public C third;

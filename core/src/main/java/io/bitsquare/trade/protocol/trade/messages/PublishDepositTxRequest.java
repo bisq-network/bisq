@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.concurrent.Immutable;
+import java.util.ArrayList;
 import java.util.List;
 
 @Immutable
@@ -68,9 +69,9 @@ public class PublishDepositTxRequest extends TradeMessage {
         this.openDisputeTimeAsBlockHeight = openDisputeTimeAsBlockHeight;
         this.checkPaymentTimeAsBlockHeight = checkPaymentTimeAsBlockHeight;
 
-        log.trace("offererPaymentAccount size " + Utilities.objectToByteArray(offererPaymentAccountContractData).length);
+        log.trace("offererPaymentAccount size " + Utilities.serialize(offererPaymentAccountContractData).length);
         log.trace("offererTradeWalletPubKey size " + offererTradeWalletPubKey.length);
         log.trace("preparedDepositTx size " + preparedDepositTx.length);
-        log.trace("offererInputs size " + Utilities.objectToByteArray(offererInputs).length);
+        log.trace("offererInputs size " + Utilities.serialize(new ArrayList<>(offererInputs)).length);
     }
 }

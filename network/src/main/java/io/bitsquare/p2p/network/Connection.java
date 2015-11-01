@@ -355,7 +355,6 @@ public class Connection {
                         reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
                     }
                 } catch (IOException | ClassNotFoundException e) {
-                    log.error("Exception" + e);
                     inputHandlerStopped = true;
                     handleConnectionException(e);
                 }

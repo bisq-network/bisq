@@ -1,7 +1,7 @@
 package io.bitsquare.p2p.storage.data;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.messaging.SealedAndSignedMessage;
+import io.bitsquare.crypto.SealedAndSignedMessage;
 
 import java.security.PublicKey;
 

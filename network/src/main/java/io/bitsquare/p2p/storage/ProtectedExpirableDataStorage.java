@@ -2,7 +2,8 @@ package io.bitsquare.p2p.storage;
 
 import com.google.common.annotations.VisibleForTesting;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.common.crypto.CryptoUtil;
+import io.bitsquare.common.crypto.Hash;
+import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.network.IllegalRequest;
 import io.bitsquare.p2p.network.MessageListener;
@@ -192,8 +193,8 @@ public class ProtectedExpirableDataStorage {
         else
             sequenceNumber = 0;
 
-        byte[] hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(payload, sequenceNumber));
-        byte[] signature = CryptoUtil.signStorageData(ownerStoragePubKey.getPrivate(), hashOfDataAndSeqNr);
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(payload, sequenceNumber));
+        byte[] signature = Sig.sign(ownerStoragePubKey.getPrivate(), hashOfDataAndSeqNr);
         return new ProtectedData(payload, payload.getTTL(), ownerStoragePubKey.getPublic(), sequenceNumber, signature);
     }
 
@@ -206,8 +207,8 @@ public class ProtectedExpirableDataStorage {
         else
             sequenceNumber = 0;
 
-        byte[] hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(expirableMailboxPayload, sequenceNumber));
-        byte[] signature = CryptoUtil.signStorageData(storageSignaturePubKey.getPrivate(), hashOfDataAndSeqNr);
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(expirableMailboxPayload, sequenceNumber));
+        byte[] signature = Sig.sign(storageSignaturePubKey.getPrivate(), hashOfDataAndSeqNr);
         return new ProtectedMailboxData(expirableMailboxPayload, expirableMailboxPayload.getTTL(), storageSignaturePubKey.getPublic(), sequenceNumber, signature, receiversPublicKey);
     }
 
@@ -248,9 +249,9 @@ public class ProtectedExpirableDataStorage {
     }
 
     private boolean checkSignature(ProtectedData data) {
-        byte[] hashOfDataAndSeqNr = CryptoUtil.getHash(new DataAndSeqNr(data.expirablePayload, data.sequenceNumber));
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, data.sequenceNumber));
         try {
-            boolean result = CryptoUtil.verifyStorageData(data.ownerStoragePubKey, hashOfDataAndSeqNr, data.signature);
+            boolean result = Sig.verify(data.ownerStoragePubKey, hashOfDataAndSeqNr, data.signature);
             if (!result)
                 log.error("Signature verification failed at checkSignature. " +
                         "That should not happen. Consider it might be an attempt of fraud.");
@@ -317,6 +318,6 @@ public class ProtectedExpirableDataStorage {
     }
 
     private BigInteger getHashAsBigInteger(ExpirablePayload payload) {
-        return new BigInteger(CryptoUtil.getHash(payload));
+        return new BigInteger(Hash.getHash(payload));
     }
 }
