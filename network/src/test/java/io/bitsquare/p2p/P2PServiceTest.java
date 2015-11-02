@@ -3,7 +3,7 @@ package io.bitsquare.p2p;
 import io.bitsquare.common.crypto.*;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.crypto.SealedAndSignedMessage;
-import io.bitsquare.p2p.messaging.DecryptedMessageWithPubKey;
+import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.p2p.mocks.MockMailboxMessage;
@@ -110,7 +110,7 @@ public class P2PServiceTest {
     }
 
     @Test
-    public void testAdversaryAttacks() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
+    public void testAdversaryAttacks() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
         p2PService3 = TestUtils.getAndAuthenticateP2PService(8003, encryptionService3, keyRing3, useLocalhost, seedNodes);
 
         MockData origData = new MockData("mockData1", keyRing1.getSignatureKeyPair().getPublic());
@@ -273,9 +273,9 @@ public class P2PServiceTest {
             if (message instanceof SealedAndSignedMessage) {
                 try {
                     SealedAndSignedMessage sealedAndSignedMessage = (SealedAndSignedMessage) message;
-                    DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService2.decryptAndVerifyMessage(sealedAndSignedMessage.sealedAndSigned);
-                    Assert.assertEquals(mockMessage, decryptedMessageWithPubKey.message);
-                    Assert.assertEquals(p2PService2.getAddress(), ((MailboxMessage) decryptedMessageWithPubKey.message).getSenderAddress());
+                    DecryptedMsgWithPubKey decryptedMsgWithPubKey = encryptionService2.decryptAndVerify(sealedAndSignedMessage.sealedAndSigned);
+                    Assert.assertEquals(mockMessage, decryptedMsgWithPubKey.message);
+                    Assert.assertEquals(p2PService2.getAddress(), ((MailboxMessage) decryptedMsgWithPubKey.message).getSenderAddress());
                     latch2.countDown();
                 } catch (CryptoException e) {
                     e.printStackTrace();

@@ -19,7 +19,7 @@ package io.bitsquare.crypto;
 
 import io.bitsquare.common.crypto.*;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.messaging.DecryptedMessageWithPubKey;
+import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,22 +36,19 @@ public class EncryptionService {
         this.keyRing = keyRing;
     }
 
-    public SealedAndSigned encryptAndSignMessage(PubKeyRing pubKeyRing, Message message) throws CryptoException {
-        log.trace("encryptAndSignMessage message = " + message);
+    public SealedAndSigned encryptAndSign(PubKeyRing pubKeyRing, Message message) throws CryptoException {
         KeyPair signatureKeyPair = keyRing.getSignatureKeyPair();
-        return Encryption.encryptHybridWithSignature(message,
-                signatureKeyPair.getPrivate(),
-                signatureKeyPair.getPublic(),
-                pubKeyRing.getEncryptionPubKey());
+        return Encryption.encryptHybridWithSignature(message, signatureKeyPair, pubKeyRing.getEncryptionPubKey());
     }
 
-    public DecryptedMessageWithPubKey decryptAndVerifyMessage(SealedAndSigned sealedAndSigned) throws CryptoException {
-        DecryptedPayloadWithPubKey decryptedPayloadWithPubKey = Encryption.decryptHybridWithSignature(sealedAndSigned, keyRing.getEncryptionKeyPair().getPrivate());
+    public DecryptedMsgWithPubKey decryptAndVerify(SealedAndSigned sealedAndSigned) throws CryptoException {
+        DecryptedPayloadWithPubKey decryptedPayloadWithPubKey = Encryption.decryptHybridWithSignature(sealedAndSigned,
+                keyRing.getEncryptionKeyPair().getPrivate());
         if (decryptedPayloadWithPubKey.payload instanceof Message) {
-            //log.trace("Decryption needed {} ms", System.currentTimeMillis() - ts);
-            return new DecryptedMessageWithPubKey((Message) decryptedPayloadWithPubKey.payload, decryptedPayloadWithPubKey.sigPublicKey);
+            return new DecryptedMsgWithPubKey((Message) decryptedPayloadWithPubKey.payload,
+                    decryptedPayloadWithPubKey.sigPublicKey);
         } else {
-            throw new CryptoException("messageObject is not instance of Message");
+            throw new CryptoException("decryptedPayloadWithPubKey.payload is not instance of Message");
         }
     }
 }

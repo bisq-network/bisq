@@ -8,25 +8,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
 
-//TODO
+//TODO: Borrowed form BitcoinJ/Lighthouse. Remove Protos dependency, check complete code logic.
 public class ScryptUtil {
     private static final Logger log = LoggerFactory.getLogger(ScryptUtil.class);
 
-    public ScryptUtil() {
-    }
-
-    public static final Protos.ScryptParameters SCRYPT_PARAMETERS = Protos.ScryptParameters.newBuilder()
-            .setP(6)
-            .setR(8)
-            .setN(32768)
-            .setSalt(ByteString.copyFrom(KeyCrypterScrypt.randomSalt()))
-            .build();
-
-    public interface ScryptKeyDerivationResultHandler {
+    public interface DeriveKeyResultHandler {
         void handleResult(KeyParameter aesKey);
     }
 
-    public static void deriveKeyWithScrypt(KeyCrypterScrypt keyCrypterScrypt, String password, ScryptKeyDerivationResultHandler resultHandler) {
+    public static KeyCrypterScrypt getKeyCrypterScrypt() {
+        Protos.ScryptParameters scryptParameters = Protos.ScryptParameters.newBuilder()
+                .setP(6)
+                .setR(8)
+                .setN(32768)
+                .setSalt(ByteString.copyFrom(KeyCrypterScrypt.randomSalt()))
+                .build();
+        return new KeyCrypterScrypt(scryptParameters);
+    }
+
+    public static void deriveKeyWithScrypt(KeyCrypterScrypt keyCrypterScrypt, String password, DeriveKeyResultHandler resultHandler) {
         new Thread(() -> {
             log.info("Doing key derivation");
 

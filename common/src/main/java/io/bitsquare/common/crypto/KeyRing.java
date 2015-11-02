@@ -21,7 +21,6 @@ import javax.inject.Inject;
 import java.security.KeyPair;
 
 public class KeyRing {
-
     private final KeyPair signatureKeyPair;
     private final KeyPair encryptionKeyPair;
     private final PubKeyRing pubKeyRing;
@@ -51,5 +50,37 @@ public class KeyRing {
 
     public PubKeyRing getPubKeyRing() {
         return pubKeyRing;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof KeyRing)) return false;
+
+        KeyRing keyRing = (KeyRing) o;
+
+        if (signatureKeyPair != null ? !signatureKeyPair.equals(keyRing.signatureKeyPair) : keyRing.signatureKeyPair != null)
+            return false;
+        if (encryptionKeyPair != null ? !encryptionKeyPair.equals(keyRing.encryptionKeyPair) : keyRing.encryptionKeyPair != null)
+            return false;
+        return !(pubKeyRing != null ? !pubKeyRing.equals(keyRing.pubKeyRing) : keyRing.pubKeyRing != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = signatureKeyPair != null ? signatureKeyPair.hashCode() : 0;
+        result = 31 * result + (encryptionKeyPair != null ? encryptionKeyPair.hashCode() : 0);
+        result = 31 * result + (pubKeyRing != null ? pubKeyRing.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "KeyRing{" +
+                "signatureKeyPair.hashCode()=" + signatureKeyPair.hashCode() +
+                ", encryptionKeyPair.hashCode()=" + encryptionKeyPair.hashCode() +
+                ", pubKeyRing.hashCode()=" + pubKeyRing.hashCode() +
+                '}';
     }
 }

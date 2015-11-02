@@ -30,7 +30,7 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.messaging.DecryptedMessageWithPubKey;
+import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOfferManager;
@@ -149,7 +149,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     private final ProcessModel processModel;
 
     // Mutable
-    private DecryptedMessageWithPubKey decryptedMessageWithPubKey;
+    private DecryptedMsgWithPubKey decryptedMsgWithPubKey;
     private Date takeOfferDate = new Date(0); // in some error cases the date is not set and cause null pointers, so we set a default
 
     protected State state;
@@ -236,8 +236,8 @@ abstract public class Trade implements Tradable, Model, Serializable {
 
         tradeProtocol.checkPayoutTxTimeLock(this);
 
-        if (decryptedMessageWithPubKey != null) {
-            tradeProtocol.applyMailboxMessage(decryptedMessageWithPubKey, this);
+        if (decryptedMsgWithPubKey != null) {
+            tradeProtocol.applyMailboxMessage(decryptedMsgWithPubKey, this);
         }
     }
 
@@ -280,13 +280,13 @@ abstract public class Trade implements Tradable, Model, Serializable {
         return depositTx;
     }
 
-    public void setMailboxMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        log.trace("setMailboxMessage " + decryptedMessageWithPubKey);
-        this.decryptedMessageWithPubKey = decryptedMessageWithPubKey;
+    public void setMailboxMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey) {
+        log.trace("setMailboxMessage " + decryptedMsgWithPubKey);
+        this.decryptedMsgWithPubKey = decryptedMsgWithPubKey;
     }
 
-    public DecryptedMessageWithPubKey getMailboxMessage() {
-        return decryptedMessageWithPubKey;
+    public DecryptedMsgWithPubKey getMailboxMessage() {
+        return decryptedMsgWithPubKey;
     }
 
     public void setStorage(Storage<? extends TradableList> storage) {
@@ -618,7 +618,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
                 ", date=" + takeOfferDate +
                 ", processModel=" + processModel +
                 ", processState=" + state +
-                ", messageWithPubKey=" + decryptedMessageWithPubKey +
+                ", messageWithPubKey=" + decryptedMsgWithPubKey +
                 ", depositTx=" + depositTx +
                /* ", contract=" + contract +
                 ", contractAsJson='" + contractAsJson + '\'' +*/

@@ -34,6 +34,7 @@ import java.security.interfaces.DSAPrivateKey;
 import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.spec.*;
 
+// TODO: use a password protection for storage?
 public class KeyStorage {
     private static final Logger log = LoggerFactory.getLogger(KeyStorage.class);
 
@@ -41,7 +42,7 @@ public class KeyStorage {
 
     public enum KeyEntry {
         MSG_SIGNATURE("sig", Sig.KEY_ALGO),
-        MSG_ENCRYPTION("enc", Encryption.ENCR_KEY_ALGO);
+        MSG_ENCRYPTION("enc", Encryption.ASYM_KEY_ALGO);
 
         private final String fileName;
         private final String algorithm;
@@ -87,7 +88,7 @@ public class KeyStorage {
     public KeyPair loadKeyPair(KeyEntry keyEntry) {
         // long now = System.currentTimeMillis();
         try {
-            KeyFactory keyFactory = KeyFactory.getInstance(keyEntry.getAlgorithm());
+            KeyFactory keyFactory = KeyFactory.getInstance(keyEntry.getAlgorithm(), "BC");
             PublicKey publicKey;
             PrivateKey privateKey;
 
@@ -123,7 +124,7 @@ public class KeyStorage {
 
             //log.info("load completed in {} msec", System.currentTimeMillis() - now);
             return new KeyPair(publicKey, privateKey);
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchProviderException e) {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new RuntimeException("Could not load key " + keyEntry.toString(), e);

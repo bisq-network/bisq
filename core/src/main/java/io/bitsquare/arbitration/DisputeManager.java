@@ -30,7 +30,7 @@ import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
-import io.bitsquare.p2p.messaging.DecryptedMessageWithPubKey;
+import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Contract;
@@ -68,8 +68,8 @@ public class DisputeManager {
     transient private final ObservableList<Dispute> disputesObservableList;
     private final String disputeInfo;
     private final P2PServiceListener p2PServiceListener;
-    private final List<DecryptedMessageWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArrayList<>();
-    private final List<DecryptedMessageWithPubKey> decryptedMailMessageWithPubKeys = new CopyOnWriteArrayList<>();
+    private final List<DecryptedMsgWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArrayList<>();
+    private final List<DecryptedMsgWithPubKey> decryptedMailMessageWithPubKeys = new CopyOnWriteArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

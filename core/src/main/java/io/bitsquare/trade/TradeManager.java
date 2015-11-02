@@ -31,7 +31,7 @@ import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.messaging.DecryptedMailListener;
 import io.bitsquare.p2p.messaging.DecryptedMailboxListener;
-import io.bitsquare.p2p.messaging.DecryptedMessageWithPubKey;
+import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.failed.FailedTradesManager;
@@ -114,8 +114,8 @@ public class TradeManager {
 
         p2PService.addDecryptedMailListener(new DecryptedMailListener() {
             @Override
-            public void onMailMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Address peerAddress) {
-                Message message = decryptedMessageWithPubKey.message;
+            public void onMailMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, Address peerAddress) {
+                Message message = decryptedMsgWithPubKey.message;
 
                 // Handler for incoming initial messages from taker
                 if (message instanceof PayDepositRequest) {
@@ -126,10 +126,10 @@ public class TradeManager {
         });
         p2PService.addDecryptedMailboxListener(new DecryptedMailboxListener() {
             @Override
-            public void onMailboxMessageAdded(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Address senderAddress) {
-                log.trace("onMailboxMessageAdded decryptedMessageWithPubKey: " + decryptedMessageWithPubKey);
+            public void onMailboxMessageAdded(DecryptedMsgWithPubKey decryptedMsgWithPubKey, Address senderAddress) {
+                log.trace("onMailboxMessageAdded decryptedMessageWithPubKey: " + decryptedMsgWithPubKey);
                 log.trace("onMailboxMessageAdded senderAddress: " + senderAddress);
-                Message message = decryptedMessageWithPubKey.message;
+                Message message = decryptedMsgWithPubKey.message;
                 if (message instanceof PayDepositRequest) {
                     //TODO is that used????
                     PayDepositRequest payDepositRequest = (PayDepositRequest) message;
@@ -143,7 +143,7 @@ public class TradeManager {
                     String tradeId = ((TradeMessage) message).tradeId;
                     Optional<Trade> tradeOptional = trades.stream().filter(e -> e.getId().equals(tradeId)).findAny();
                     if (tradeOptional.isPresent())
-                        tradeOptional.get().setMailboxMessage(decryptedMessageWithPubKey);
+                        tradeOptional.get().setMailboxMessage(decryptedMsgWithPubKey);
                 }
             }
         });
@@ -203,7 +203,7 @@ public class TradeManager {
             initTrade(trade);
 
             // after we are authenticated we remove mailbox messages. 
-            DecryptedMessageWithPubKey mailboxMessage = trade.getMailboxMessage();
+            DecryptedMsgWithPubKey mailboxMessage = trade.getMailboxMessage();
             if (mailboxMessage != null) {
                 p2PService.removeEntryFromMailbox(mailboxMessage);
                 trade.setMailboxMessage(null);

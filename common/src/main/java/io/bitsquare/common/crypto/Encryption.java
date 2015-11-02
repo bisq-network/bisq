@@ -30,24 +30,28 @@ import java.io.Serializable;
 import java.security.*;
 import java.util.Arrays;
 
+// TODO: which counter modes and paddings should we use?
+// https://security.stackexchange.com/questions/52665/which-is-the-best-cipher-mode-and-padding-mode-for-aes-encryption
 public class Encryption {
     private static final Logger log = LoggerFactory.getLogger(Encryption.class);
 
-    public static final String ENCR_KEY_ALGO = "RSA";
-    public static final String SYM_KEY_ALGO = "AES";
-    public static final String SYM_CIPHER = "AES"; // java.security.NoSuchAlgorithmException: AES/ECB/PKCS5Padding KeyGenerator not available
-    public static final String ASYM_CIPHER = "RSA"; // TODO test with RSA/ECB/PKCS1Padding
+    public static final String ASYM_KEY_ALGO = "RSA"; // RSA/NONE/OAEPWithSHA256AndMGF1Padding
+    public static final String ASYM_CIPHER = "RSA";
+
+    public static final String SYM_KEY_ALGO = "AES"; // AES/CTR/NoPadding
+    public static final String SYM_CIPHER = "AES";
+
     public static final String HMAC = "HmacSHA256";
 
     public static KeyPair generateKeyPair() {
         long ts = System.currentTimeMillis();
         try {
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ENCR_KEY_ALGO);
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ASYM_KEY_ALGO, "BC");
             keyPairGenerator.initialize(2048);
             KeyPair keyPair = keyPairGenerator.genKeyPair();
             log.trace("Generate msgEncryptionKeyPair needed {} ms", System.currentTimeMillis() - ts);
             return keyPair;
-        } catch (NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             e.printStackTrace();
             throw new RuntimeException("Could not create key.");
         }
@@ -60,11 +64,11 @@ public class Encryption {
 
     public static byte[] encrypt(byte[] payload, SecretKey secretKey) throws CryptoException {
         try {
-            Cipher cipher = Cipher.getInstance(SYM_CIPHER);
+            Cipher cipher = Cipher.getInstance(SYM_CIPHER, "BC");
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
             return cipher.doFinal(payload);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
-                | BadPaddingException | IllegalBlockSizeException e) {
+                | BadPaddingException | IllegalBlockSizeException | NoSuchProviderException e) {
             e.printStackTrace();
             throw new CryptoException(e);
         }
@@ -72,11 +76,11 @@ public class Encryption {
 
     public static byte[] decrypt(byte[] encryptedPayload, SecretKey secretKey) throws CryptoException {
         try {
-            Cipher cipher = Cipher.getInstance(SYM_CIPHER);
+            Cipher cipher = Cipher.getInstance(SYM_CIPHER, "BC");
             cipher.init(Cipher.DECRYPT_MODE, secretKey);
             return cipher.doFinal(encryptedPayload);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
-                | BadPaddingException | IllegalBlockSizeException e) {
+                | BadPaddingException | IllegalBlockSizeException | NoSuchProviderException e) {
             e.printStackTrace();
             throw new CryptoException(e);
         }
@@ -99,7 +103,7 @@ public class Encryption {
                 outputStream.write(hmac);
                 outputStream.flush();
                 payloadWithHmac = outputStream.toByteArray().clone();
-            } catch (IOException e) {
+            } catch (IOException | NoSuchProviderException e) {
                 e.printStackTrace();
                 throw new RuntimeException("Could not create hmac");
             } finally {
@@ -122,14 +126,14 @@ public class Encryption {
         try {
             byte[] hmacTest = getHmac(message, secretKey);
             return Arrays.equals(hmacTest, hmac);
-        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchProviderException e) {
             e.printStackTrace();
             throw new RuntimeException("Could not create cipher");
         }
     }
 
-    private static byte[] getHmac(byte[] payload, SecretKey secretKey) throws NoSuchAlgorithmException, InvalidKeyException {
-        Mac mac = Mac.getInstance(HMAC);
+    private static byte[] getHmac(byte[] payload, SecretKey secretKey) throws NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException {
+        Mac mac = Mac.getInstance(HMAC, "BC");
         mac.init(secretKey);
         return mac.doFinal(payload);
     }
@@ -170,11 +174,11 @@ public class Encryption {
 
     public static byte[] encrypt(byte[] payload, PublicKey publicKey) throws CryptoException {
         try {
-            Cipher cipher = Cipher.getInstance(ASYM_CIPHER);
+            Cipher cipher = Cipher.getInstance(ASYM_CIPHER, "BC");
             cipher.init(Cipher.ENCRYPT_MODE, publicKey);
             return cipher.doFinal(payload);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
-                | BadPaddingException | IllegalBlockSizeException e) {
+                | BadPaddingException | IllegalBlockSizeException | NoSuchProviderException e) {
             e.printStackTrace();
             throw new CryptoException("Couldn't encrypt payload");
         }
@@ -182,11 +186,11 @@ public class Encryption {
 
     public static byte[] decrypt(byte[] encryptedPayload, PrivateKey privateKey) throws CryptoException {
         try {
-            Cipher cipher = Cipher.getInstance(ASYM_CIPHER);
+            Cipher cipher = Cipher.getInstance(ASYM_CIPHER, "BC");
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
             return cipher.doFinal(encryptedPayload);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
-                | BadPaddingException | IllegalBlockSizeException e) {
+                | BadPaddingException | IllegalBlockSizeException | NoSuchProviderException e) {
             // errors when trying to decrypt foreign messages are normal
             throw new CryptoException(e);
         }
@@ -199,14 +203,13 @@ public class Encryption {
 
     /**
      * @param payload             The data to encrypt.
-     * @param sigPrivateKey       The private key for signing.
-     * @param sigPublicKey        The public key used for signing.
+     * @param signatureKeyPair    The key pair for signing.
      * @param encryptionPublicKey The public key used for encryption.
      * @return A SealedAndSigned object.
      * @throws CryptoException
      */
-    public static SealedAndSigned encryptHybridWithSignature(Serializable payload, PrivateKey sigPrivateKey,
-                                                             PublicKey sigPublicKey, PublicKey encryptionPublicKey)
+    public static SealedAndSigned encryptHybridWithSignature(Serializable payload, KeyPair signatureKeyPair,
+                                                             PublicKey encryptionPublicKey)
             throws CryptoException {
         // Create a symmetric key
         SecretKey secretKey = generateSecretKey();
@@ -214,22 +217,15 @@ public class Encryption {
         // Encrypt secretKey with receivers publicKey 
         byte[] encryptedSecretKey = encrypt(secretKey.getEncoded(), encryptionPublicKey);
 
-        // Encrypt with sym key and add hmac
+        // Encrypt with sym key payload with appended hmac
         byte[] encryptedPayloadWithHmac = encryptPayloadWithHmac(payload, secretKey);
 
         // sign hash of encryptedPayloadWithHmac
         byte[] hash = Hash.getHash(encryptedPayloadWithHmac);
-        try {
-            byte[] signature = Sig.sign(sigPrivateKey, hash);
+        byte[] signature = Sig.sign(signatureKeyPair.getPrivate(), hash);
 
-            // Pack all together
-            return new SealedAndSigned(encryptedSecretKey, encryptedPayloadWithHmac, signature, sigPublicKey);
-        } catch (SignatureException | NoSuchAlgorithmException | InvalidKeyException e) {
-            e.printStackTrace();
-            throw new CryptoException(e);
-        }
-
-
+        // Pack all together
+        return new SealedAndSigned(encryptedSecretKey, encryptedPayloadWithHmac, signature, signatureKeyPair.getPublic());
     }
 
     /**
@@ -240,18 +236,14 @@ public class Encryption {
      */
     public static DecryptedPayloadWithPubKey decryptHybridWithSignature(SealedAndSigned sealedAndSigned, PrivateKey privateKey) throws CryptoException {
         SecretKey secretKey = getSecretKeyFromBytes(decrypt(sealedAndSigned.encryptedSecretKey, privateKey));
-        try {
-            boolean isValid = Sig.verify(sealedAndSigned.sigPublicKey,
-                    Hash.getHash(sealedAndSigned.encryptedPayloadWithHmac),
-                    sealedAndSigned.signature);
-            if (!isValid)
-                throw new CryptoException("Signature verification failed.");
-
-            Serializable decryptedPayload = Utilities.deserialize(decryptPayloadWithHmac(sealedAndSigned.encryptedPayloadWithHmac, secretKey));
-            return new DecryptedPayloadWithPubKey(decryptedPayload, sealedAndSigned.sigPublicKey);
-        } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
+        boolean isValid = Sig.verify(sealedAndSigned.sigPublicKey,
+                Hash.getHash(sealedAndSigned.encryptedPayloadWithHmac),
+                sealedAndSigned.signature);
+        if (!isValid)
             throw new CryptoException("Signature verification failed.");
-        }
+
+        Serializable decryptedPayload = Utilities.deserialize(decryptPayloadWithHmac(sealedAndSigned.encryptedPayloadWithHmac, secretKey));
+        return new DecryptedPayloadWithPubKey(decryptedPayload, sealedAndSigned.sigPublicKey);
     }
 
 
@@ -265,10 +257,11 @@ public class Encryption {
 
     private static SecretKey generateSecretKey() {
         try {
-            KeyGenerator keyPairGenerator = KeyGenerator.getInstance(SYM_CIPHER);
+            KeyGenerator keyPairGenerator = KeyGenerator.getInstance(SYM_CIPHER, "BC");
             keyPairGenerator.init(256);
             return keyPairGenerator.generateKey();
-        } catch (NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+            e.printStackTrace();
             throw new RuntimeException("Couldn't generate key");
         }
     }

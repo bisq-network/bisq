@@ -22,7 +22,7 @@ import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.messaging.DecryptedMailListener;
-import io.bitsquare.p2p.messaging.DecryptedMessageWithPubKey;
+import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
@@ -94,10 +94,10 @@ public abstract class TradeProtocol {
 
     }
 
-    public void applyMailboxMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Trade trade) {
-        log.debug("applyMailboxMessage " + decryptedMessageWithPubKey.message);
-        if (decryptedMessageWithPubKey.signaturePubKey.equals(processModel.tradingPeer.getPubKeyRing().getSignaturePubKey()))
-            doApplyMailboxMessage(decryptedMessageWithPubKey.message, trade);
+    public void applyMailboxMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, Trade trade) {
+        log.debug("applyMailboxMessage " + decryptedMsgWithPubKey.message);
+        if (decryptedMsgWithPubKey.signaturePubKey.equals(processModel.tradingPeer.getPubKeyRing().getSignaturePubKey()))
+            doApplyMailboxMessage(decryptedMsgWithPubKey.message, trade);
         else
             log.error("SignaturePubKey in message does not match the SignaturePubKey we have stored to that trading peer.");
     }

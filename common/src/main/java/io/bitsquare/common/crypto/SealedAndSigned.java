@@ -23,11 +23,6 @@ import java.io.Serializable;
 import java.security.PublicKey;
 import java.util.Arrays;
 
-/**
- * Packs the encrypted symmetric secretKey and the encrypted and signed message into one object.
- * SecretKey is encrypted with asymmetric pubKey of peer. Signed message is encrypted with secretKey.
- * Using that hybrid encryption model we are not restricted by data size and performance as symmetric encryption is very fast.
- */
 public final class SealedAndSigned implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;

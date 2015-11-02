@@ -103,7 +103,8 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
             if (wallet.isEncrypted())
                 keyCrypterScrypt = (KeyCrypterScrypt) wallet.getKeyCrypter();
             else
-                keyCrypterScrypt = new KeyCrypterScrypt(ScryptUtil.SCRYPT_PARAMETERS);
+                keyCrypterScrypt = ScryptUtil.getKeyCrypterScrypt();
+           
 
             ScryptUtil.deriveKeyWithScrypt(keyCrypterScrypt, passwordField.getText(), aesKey -> {
                 deriveStatusLabel.setText("");

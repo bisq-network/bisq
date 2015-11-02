@@ -22,14 +22,14 @@ import io.bitsquare.p2p.Message;
 
 import java.security.PublicKey;
 
-public final class DecryptedMessageWithPubKey implements MailMessage {
+public final class DecryptedMsgWithPubKey implements MailMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     public final Message message;
     public final PublicKey signaturePubKey;
 
-    public DecryptedMessageWithPubKey(Message message, PublicKey signaturePubKey) {
+    public DecryptedMsgWithPubKey(Message message, PublicKey signaturePubKey) {
         this.message = message;
         this.signaturePubKey = signaturePubKey;
     }
@@ -37,9 +37,9 @@ public final class DecryptedMessageWithPubKey implements MailMessage {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DecryptedMessageWithPubKey)) return false;
+        if (!(o instanceof DecryptedMsgWithPubKey)) return false;
 
-        DecryptedMessageWithPubKey that = (DecryptedMessageWithPubKey) o;
+        DecryptedMsgWithPubKey that = (DecryptedMsgWithPubKey) o;
 
         if (message != null ? !message.equals(that.message) : that.message != null) return false;
         return !(signaturePubKey != null ? !signaturePubKey.equals(that.signaturePubKey) : that.signaturePubKey != null);

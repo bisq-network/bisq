@@ -36,7 +36,7 @@ public class Sig {
     private static final Logger log = LoggerFactory.getLogger(Sig.class);
 
     public static final String KEY_ALGO = "DSA";
-    public static final String ALGO = "SHA1withDSA"; //TODO better SHA512withECDSA
+    public static final String ALGO = "SHA256withDSA";
 
 
     /**
@@ -45,12 +45,12 @@ public class Sig {
     public static KeyPair generateKeyPair() {
         long ts = System.currentTimeMillis();
         try {
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(KEY_ALGO);
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(KEY_ALGO, "BC");
             keyPairGenerator.initialize(1024);
             KeyPair keyPair = keyPairGenerator.genKeyPair();
             log.trace("Generate msgSignatureKeyPair needed {} ms", System.currentTimeMillis() - ts);
             return keyPair;
-        } catch (NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             e.printStackTrace();
             throw new RuntimeException("Could not create key.");
         }
@@ -65,12 +65,15 @@ public class Sig {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeyException
      */
-    public static byte[] sign(PrivateKey privateKey, byte[] data)
-            throws SignatureException, NoSuchAlgorithmException, InvalidKeyException {
-        Signature sig = Signature.getInstance(ALGO);
-        sig.initSign(privateKey);
-        sig.update(data);
-        return sig.sign();
+    public static byte[] sign(PrivateKey privateKey, byte[] data) throws CryptoException {
+        try {
+            Signature sig = Signature.getInstance(ALGO, "BC");
+            sig.initSign(privateKey);
+            sig.update(data);
+            return sig.sign();
+        } catch (SignatureException | NoSuchProviderException | InvalidKeyException | NoSuchAlgorithmException e) {
+            throw new CryptoException("Signing failed. " + e.getMessage());
+        }
     }
 
     /**
@@ -81,8 +84,7 @@ public class Sig {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeyException
      */
-    public static String sign(PrivateKey privateKey, String message)
-            throws SignatureException, NoSuchAlgorithmException, InvalidKeyException {
+    public static String sign(PrivateKey privateKey, String message) throws CryptoException {
         byte[] sigAsBytes = sign(privateKey, message.getBytes(Charsets.UTF_8));
         return Base64.toBase64String(sigAsBytes);
     }
@@ -96,12 +98,16 @@ public class Sig {
      * @throws InvalidKeyException
      * @throws SignatureException
      */
-    public static boolean verify(PublicKey publicKey, byte[] data, byte[] signature)
-            throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        Signature sig = Signature.getInstance(ALGO);
-        sig.initVerify(publicKey);
-        sig.update(data);
-        return sig.verify(signature);
+    public static boolean verify(PublicKey publicKey, byte[] data, byte[] signature) throws CryptoException {
+        byte[] sigAsBytes = new byte[0];
+        try {
+            Signature sig = Signature.getInstance(ALGO, "BC");
+            sig.initVerify(publicKey);
+            sig.update(data);
+            return sig.verify(signature);
+        } catch (SignatureException | NoSuchProviderException | InvalidKeyException | NoSuchAlgorithmException e) {
+            throw new CryptoException("Signature verification failed. " + e.getMessage());
+        }
     }
 
     /**
@@ -113,8 +119,7 @@ public class Sig {
      * @throws InvalidKeyException
      * @throws SignatureException
      */
-    public static boolean verify(PublicKey publicKey, String message, String signature)
-            throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    public static boolean verify(PublicKey publicKey, String message, String signature) throws CryptoException {
         return verify(publicKey, message.getBytes(Charsets.UTF_8), Base64.decode(signature));
     }
 }

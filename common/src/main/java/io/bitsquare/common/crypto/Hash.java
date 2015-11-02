@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 
 public class Hash {
     private static final Logger log = LoggerFactory.getLogger(Hash.class);
@@ -38,8 +39,8 @@ public class Hash {
     public static byte[] getHash(byte[] data) {
         MessageDigest digest;
         try {
-            digest = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
+            digest = MessageDigest.getInstance("SHA-256", "BC");
+        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             log.error("Could not create MessageDigest for hash. " + e.getMessage());
             throw new RuntimeException(e);
         }

@@ -80,7 +80,7 @@ public class ProtectedDataStorageTest {
     }
 
     @Test
-    public void testAddAndRemove() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
+    public void testAddAndRemove() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
         ProtectedData data = dataStorage1.getDataWithSignedSeqNr(mockData, storageSignatureKeyPair1);
         Assert.assertTrue(dataStorage1.add(data, null));
         Assert.assertEquals(1, dataStorage1.getMap().size());
@@ -94,7 +94,7 @@ public class ProtectedDataStorageTest {
     }
 
     @Test
-    public void testExpirableData() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
+    public void testExpirableData() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
         ProtectedExpirableDataStorage.CHECK_TTL_INTERVAL = 10;
         // CHECK_TTL_INTERVAL is used in constructor of ProtectedExpirableDataStorage so we recreate it here
         dataStorage1 = new ProtectedExpirableDataStorage(routing1, new File("dummy"));
@@ -129,7 +129,7 @@ public class ProtectedDataStorageTest {
     }
 
     @Test
-    public void testMultiAddRemoveProtectedData() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
+    public void testMultiAddRemoveProtectedData() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
         MockData mockData = new MockData("msg1", keyRing1.getSignatureKeyPair().getPublic());
         ProtectedData data = dataStorage1.getDataWithSignedSeqNr(mockData, storageSignatureKeyPair1);
         Assert.assertTrue(dataStorage1.add(data, null));
@@ -192,10 +192,11 @@ public class ProtectedDataStorageTest {
     }
 
     @Test
-    public void testAddAndRemoveMailboxData() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
+    public void testAddAndRemoveMailboxData() throws InterruptedException, NoSuchAlgorithmException, CertificateException,
+            KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
         // sender 
         MockMessage mockMessage = new MockMessage("MockMessage");
-        SealedAndSignedMessage sealedAndSignedMessage = new SealedAndSignedMessage(encryptionService1.encryptAndSignMessage(keyRing1.getPubKeyRing(), mockMessage), null);
+        SealedAndSignedMessage sealedAndSignedMessage = new SealedAndSignedMessage(encryptionService1.encryptAndSign(keyRing1.getPubKeyRing(), mockMessage), null);
         ExpirableMailboxPayload expirableMailboxPayload = new ExpirableMailboxPayload(sealedAndSignedMessage,
                 keyRing1.getSignatureKeyPair().getPublic(),
                 keyRing2.getSignatureKeyPair().getPublic());

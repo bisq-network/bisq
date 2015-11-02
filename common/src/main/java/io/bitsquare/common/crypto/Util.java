@@ -17,18 +17,14 @@
 
 package io.bitsquare.common.crypto;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 
 public class Util {
-    private static final Logger log = LoggerFactory.getLogger(Util.class);
-
     public static String pubKeyToString(PublicKey publicKey) {
         final X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
-        return java.util.Base64.getEncoder().encodeToString(x509EncodedKeySpec.getEncoded());
+        return Base64.getEncoder().encodeToString(x509EncodedKeySpec.getEncoded());
     }
 }
 

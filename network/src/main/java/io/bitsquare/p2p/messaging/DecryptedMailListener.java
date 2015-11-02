@@ -4,5 +4,5 @@ import io.bitsquare.p2p.Address;
 
 public interface DecryptedMailListener {
 
-    void onMailMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Address peerAddress);
+    void onMailMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, Address peerAddress);
 }

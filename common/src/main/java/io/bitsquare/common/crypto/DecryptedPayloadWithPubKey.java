@@ -22,11 +22,6 @@ import io.bitsquare.app.Version;
 import java.io.Serializable;
 import java.security.PublicKey;
 
-/**
- * Packs the encrypted symmetric secretKey and the encrypted and signed message into one object.
- * SecretKey is encrypted with asymmetric pubKey of peer. Signed message is encrypted with secretKey.
- * Using that hybrid encryption model we are not restricted by data size and performance as symmetric encryption is very fast.
- */
 public final class DecryptedPayloadWithPubKey implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
@@ -39,4 +34,30 @@ public final class DecryptedPayloadWithPubKey implements Serializable {
         this.sigPublicKey = sigPublicKey;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DecryptedPayloadWithPubKey)) return false;
+
+        DecryptedPayloadWithPubKey that = (DecryptedPayloadWithPubKey) o;
+
+        if (payload != null ? !payload.equals(that.payload) : that.payload != null) return false;
+        return !(sigPublicKey != null ? !sigPublicKey.equals(that.sigPublicKey) : that.sigPublicKey != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = payload != null ? payload.hashCode() : 0;
+        result = 31 * result + (sigPublicKey != null ? sigPublicKey.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "DecryptedPayloadWithPubKey{" +
+                "payload=" + payload +
+                ", sigPublicKey.hashCode()=" + sigPublicKey.hashCode() +
+                '}';
+    }
 }

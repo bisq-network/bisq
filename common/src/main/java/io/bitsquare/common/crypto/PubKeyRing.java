@@ -26,13 +26,14 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 
 /**
  * Same as KeyRing but with public keys only.
- * Used to sent over the wire to other peer.
+ * Used to send public keys over the wire to other peer.
  */
 public class PubKeyRing implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -57,9 +58,9 @@ public class PubKeyRing implements Serializable {
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            signaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO).generatePublic(new X509EncodedKeySpec(signaturePubKeyBytes));
-            encryptionPubKey = KeyFactory.getInstance(Encryption.ENCR_KEY_ALGO).generatePublic(new X509EncodedKeySpec(encryptionPubKeyBytes));
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+            signaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(signaturePubKeyBytes));
+            encryptionPubKey = KeyFactory.getInstance(Encryption.ASYM_KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(encryptionPubKeyBytes));
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
             e.printStackTrace();
             log.error(e.getMessage());
         } catch (Throwable t) {
@@ -98,8 +99,8 @@ public class PubKeyRing implements Serializable {
     @Override
     public String toString() {
         return "PubKeyRing{" +
-                "\n\nmsgSignaturePubKey=\n" + Util.pubKeyToString(getSignaturePubKey()) +
-                "\n\nmsgEncryptionPubKey=\n" + Util.pubKeyToString(getEncryptionPubKey()) +
+                "\n\nsignaturePubKey=\n" + Util.pubKeyToString(getSignaturePubKey()) +
+                "\n\nencryptionPubKey=\n" + Util.pubKeyToString(getEncryptionPubKey()) +
                 '}';
     }
 

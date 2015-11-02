@@ -2,6 +2,7 @@ package io.bitsquare.p2p.storage;
 
 import com.google.common.annotations.VisibleForTesting;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.crypto.CryptoException;
 import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.p2p.Address;
@@ -16,7 +17,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.math.BigInteger;
-import java.security.*;
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -185,7 +187,8 @@ public class ProtectedExpirableDataStorage {
         return map;
     }
 
-    public ProtectedData getDataWithSignedSeqNr(ExpirablePayload payload, KeyPair ownerStoragePubKey) throws NoSuchAlgorithmException, SignatureException, InvalidKeyException {
+    public ProtectedData getDataWithSignedSeqNr(ExpirablePayload payload, KeyPair ownerStoragePubKey)
+            throws CryptoException {
         BigInteger hashOfData = getHashAsBigInteger(payload);
         int sequenceNumber;
         if (sequenceNumberMap.containsKey(hashOfData))
@@ -198,8 +201,9 @@ public class ProtectedExpirableDataStorage {
         return new ProtectedData(payload, payload.getTTL(), ownerStoragePubKey.getPublic(), sequenceNumber, signature);
     }
 
-    public ProtectedMailboxData getMailboxDataWithSignedSeqNr(ExpirableMailboxPayload expirableMailboxPayload, KeyPair storageSignaturePubKey, PublicKey receiversPublicKey)
-            throws NoSuchAlgorithmException, SignatureException, InvalidKeyException {
+    public ProtectedMailboxData getMailboxDataWithSignedSeqNr(ExpirableMailboxPayload expirableMailboxPayload,
+                                                              KeyPair storageSignaturePubKey, PublicKey receiversPublicKey)
+            throws CryptoException {
         BigInteger hashOfData = getHashAsBigInteger(expirableMailboxPayload);
         int sequenceNumber;
         if (sequenceNumberMap.containsKey(hashOfData))
@@ -209,7 +213,8 @@ public class ProtectedExpirableDataStorage {
 
         byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(expirableMailboxPayload, sequenceNumber));
         byte[] signature = Sig.sign(storageSignaturePubKey.getPrivate(), hashOfDataAndSeqNr);
-        return new ProtectedMailboxData(expirableMailboxPayload, expirableMailboxPayload.getTTL(), storageSignaturePubKey.getPublic(), sequenceNumber, signature, receiversPublicKey);
+        return new ProtectedMailboxData(expirableMailboxPayload, expirableMailboxPayload.getTTL(),
+                storageSignaturePubKey.getPublic(), sequenceNumber, signature, receiversPublicKey);
     }
 
     public void addHashMapChangedListener(HashMapChangedListener hashMapChangedListener) {
@@ -257,7 +262,7 @@ public class ProtectedExpirableDataStorage {
                         "That should not happen. Consider it might be an attempt of fraud.");
 
             return result;
-        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+        } catch (CryptoException e) {
             log.error("Signature verification failed at checkSignature");
             return false;
         }
