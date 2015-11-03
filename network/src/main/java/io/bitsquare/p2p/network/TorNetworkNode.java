@@ -44,7 +44,7 @@ public class TorNetworkNode extends NetworkNode {
     private Timer shutDownTimeoutTimer, selfTestTimer, selfTestTimeoutTimer;
     private TimerTask selfTestTimeoutTask, selfTestTask;
     private AtomicBoolean selfTestRunning = new AtomicBoolean(false);
-    private int nonce;
+    private long nonce;
     private int errorCounter;
     private int restartCounter;
     private Runnable shutDownCompleteHandler;
@@ -79,7 +79,7 @@ public class TorNetworkNode extends NetworkNode {
                     selfTestTimeoutTimer.schedule(selfTestTimeoutTask, TIMEOUT);
                     // might be interrupted by timeout task
                     if (selfTestRunning.get()) {
-                        nonce = random.nextInt();
+                        nonce = random.nextLong();
                         log.trace("send msg with nonce " + nonce);
 
                         try {
@@ -281,7 +281,10 @@ public class TorNetworkNode extends NetworkNode {
             TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode1 = new TorNode<JavaOnionProxyManager, JavaOnionProxyContext>(
                     torDir) {
             };
-            log.trace("\n\n##### TorNode created. Took " + (System.currentTimeMillis() - ts) + " ms\n\n");
+            log.info("\n\n############################################################\n" +
+                    "TorNode created:" +
+                    "\nTook " + (System.currentTimeMillis() - ts) + " ms"
+                    + "\n############################################################\n");
             return torNode1;
         };
         ListenableFuture<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>> future = executorService.submit(task);
@@ -303,7 +306,11 @@ public class TorNetworkNode extends NetworkNode {
             long ts = System.currentTimeMillis();
             log.debug("Create hidden service");
             HiddenServiceDescriptor hiddenServiceDescriptor = torNode.createHiddenService(port);
-            log.debug("\n\n##### Hidden service created. Address = " + hiddenServiceDescriptor.getFullAddress() + ". Took " + (System.currentTimeMillis() - ts) + " ms\n\n");
+            log.info("\n\n############################################################\n" +
+                    "Hidden service created:" +
+                    "\nAddress=" + hiddenServiceDescriptor.getFullAddress() +
+                    "\nTook " + (System.currentTimeMillis() - ts) + " ms"
+                    + "\n############################################################\n");
 
             return hiddenServiceDescriptor;
         };

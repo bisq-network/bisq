@@ -987,7 +987,7 @@ public class TradeWalletService {
 
     private void verifyTransaction(Transaction transaction) throws TransactionVerificationException {
         try {
-            log.trace("Verify transaction");
+            log.trace("Verify transaction " + transaction);
             transaction.verify();
         } catch (Throwable t) {
             t.printStackTrace();

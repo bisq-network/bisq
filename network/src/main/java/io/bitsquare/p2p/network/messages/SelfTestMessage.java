@@ -7,9 +7,9 @@ public final class SelfTestMessage implements Message {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
-    public final Integer nonce;
+    public final long nonce;
 
-    public SelfTestMessage(Integer nonce) {
+    public SelfTestMessage(long nonce) {
         this.nonce = nonce;
     }
 }

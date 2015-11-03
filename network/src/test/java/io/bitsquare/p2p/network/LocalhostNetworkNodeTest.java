@@ -2,12 +2,15 @@ package io.bitsquare.p2p.network;
 
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.routing.messages.RequestAuthenticationMessage;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.security.Security;
 import java.util.concurrent.CountDownLatch;
 
 // TorNode created. Took 6 sec.
@@ -16,6 +19,12 @@ import java.util.concurrent.CountDownLatch;
 @Ignore
 public class LocalhostNetworkNodeTest {
     private static final Logger log = LoggerFactory.getLogger(LocalhostNetworkNodeTest.class);
+
+    @Before
+    public void setup() {
+        Security.addProvider(new BouncyCastleProvider());
+    }
+
 
     @Test
     public void testMessage() throws InterruptedException, IOException {

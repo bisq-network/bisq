@@ -205,6 +205,7 @@ public class TradeManager {
             // after we are authenticated we remove mailbox messages. 
             DecryptedMsgWithPubKey mailboxMessage = trade.getMailboxMessage();
             if (mailboxMessage != null) {
+                log.trace("initPendingTrades/removeEntryFromMailbox mailboxMessage = " + mailboxMessage);
                 p2PService.removeEntryFromMailbox(mailboxMessage);
                 trade.setMailboxMessage(null);
             }

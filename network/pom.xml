@@ -22,6 +22,8 @@
             <groupId>com.msopentech.thali</groupId>
             <artifactId>universal</artifactId>
             <version>0.0.3-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/libs/universal-0.0.3-SNAPSHOT.jar</systemPath>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -33,6 +35,8 @@
             <groupId>com.msopentech.thali</groupId>
             <artifactId>java</artifactId>
             <version>0.0.3-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/libs/java-0.0.3-SNAPSHOT.jar</systemPath>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>

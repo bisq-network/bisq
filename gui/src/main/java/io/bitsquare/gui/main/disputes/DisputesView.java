@@ -82,8 +82,6 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         boolean isArbitrator = arbitratorManager.getArbitratorsObservableMap().values().stream()
                 .filter(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(keyRing.getPubKeyRing()))
                 .findAny().isPresent();
-        log.debug("arbitratorManager.getArbitratorsObservableMap() " + arbitratorManager.getArbitratorsObservableMap().size());
-        log.debug("updateArbitratorsDisputesTabDisableState isArbitrator=" + isArbitrator);
         arbitratorsDisputesTab.setDisable(!isArbitrator);
         if (arbitratorsDisputesTab.getContent() != null)
             arbitratorsDisputesTab.getContent().setDisable(!isArbitrator);

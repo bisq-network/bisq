@@ -11,9 +11,11 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -22,9 +24,8 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     private static final Logger log = LoggerFactory.getLogger(NetworkNode.class);
 
     protected final int port;
-    private final Map<Address, Connection> outBoundConnections = new ConcurrentHashMap<>();
-    private final Map<Address, Connection> inBoundAuthenticatedConnections = new ConcurrentHashMap<>();
-    private final List<Connection> inBoundTempConnections = new CopyOnWriteArrayList<>();
+    private final List<Connection> outBoundConnections = new CopyOnWriteArrayList<>();
+    private final List<Connection> inBoundConnections = new CopyOnWriteArrayList<>();
     private final List<MessageListener> messageListeners = new CopyOnWriteArrayList<>();
     private final List<ConnectionListener> connectionListeners = new CopyOnWriteArrayList<>();
     protected final List<SetupListener> setupListeners = new CopyOnWriteArrayList<>();
@@ -58,32 +59,21 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
         Callable<Connection> task = () -> {
             Thread.currentThread().setName("Outgoing-connection-to-" + peerAddress);
-            Connection connection = outBoundConnections.get(peerAddress);
+
+            Optional<Connection> outboundConnectionOptional = getOutboundConnection(peerAddress);
+            Connection connection = outboundConnectionOptional.isPresent() ? outboundConnectionOptional.get() : null;
 
             if (connection != null && connection.isStopped()) {
-                // can happen because of threading...
                 log.trace("We have a connection which is already stopped in outBoundConnections. Connection.uid=" + connection.getUid());
-                outBoundConnections.remove(peerAddress);
+                outBoundConnections.remove(connection);
                 connection = null;
             }
 
             if (connection == null) {
-                Optional<Connection> connectionOptional = inBoundAuthenticatedConnections.values().stream()
-                        .filter(e -> peerAddress.equals(e.getPeerAddress()))
-                        .findAny();
-                if (connectionOptional.isPresent())
-                    connection = connectionOptional.get();
+                Optional<Connection> inboundConnectionOptional = getInboundConnection(peerAddress);
+                if (inboundConnectionOptional.isPresent()) connection = inboundConnectionOptional.get();
                 if (connection != null)
-                    log.trace("We have found a connection in inBoundAuthenticatedConnections. Connection.uid=" + connection.getUid());
-            }
-            if (connection == null) {
-                Optional<Connection> connectionOptional = inBoundTempConnections.stream()
-                        .filter(e -> peerAddress.equals(e.getPeerAddress()))
-                        .findAny();
-                if (connectionOptional.isPresent())
-                    connection = connectionOptional.get();
-                if (connection != null)
-                    log.trace("We have found a connection in inBoundTempConnections. Connection.uid=" + connection.getUid());
+                    log.trace("We have found a connection in inBoundConnections. Connection.uid=" + connection.getUid());
             }
 
             if (connection == null) {
@@ -113,7 +103,11 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                                     NetworkNode.this.onError(throwable);
                                 }
                             });
-                    outBoundConnections.put(peerAddress, connection);
+                    if (!outBoundConnections.contains(connection))
+                        outBoundConnections.add(connection);
+                    else
+                        log.error("We have already that connection in our list. That must not happen. "
+                                + outBoundConnections + " / connection=" + connection);
 
                     log.info("\n\nNetworkNode created new outbound connection:"
                             + "\npeerAddress=" + peerAddress.port
@@ -144,6 +138,16 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         return resultFuture;
     }
 
+    private Optional<Connection> getOutboundConnection(Address peerAddress) {
+        return outBoundConnections.stream()
+                .filter(e -> peerAddress.equals(e.getPeerAddress())).findAny();
+    }
+
+    private Optional<Connection> getInboundConnection(Address peerAddress) {
+        return inBoundConnections.stream()
+                .filter(e -> peerAddress.equals(e.getPeerAddress())).findAny();
+    }
+
     public SettableFuture<Connection> sendMessage(Connection connection, Message message) {
         final SettableFuture<Connection> resultFuture = SettableFuture.create();
 
@@ -164,9 +168,8 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     }
 
     public Set<Connection> getAllConnections() {
-        Set<Connection> set = new HashSet<>(inBoundAuthenticatedConnections.values());
-        set.addAll(outBoundConnections.values());
-        set.addAll(inBoundTempConnections);
+        Set<Connection> set = new HashSet<>(inBoundConnections);
+        set.addAll(outBoundConnections);
         return set;
     }
 
@@ -226,22 +229,8 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     public void onDisconnect(Reason reason, Connection connection) {
         Address peerAddress = connection.getPeerAddress();
         log.trace("onDisconnect connection " + connection + ", peerAddress= " + peerAddress);
-        if (peerAddress != null) {
-            inBoundAuthenticatedConnections.remove(peerAddress);
-            outBoundConnections.remove(peerAddress);
-        } else {
-            // try to find if we have connection
-            outBoundConnections.values().stream()
-                    .filter(e -> e.equals(connection))
-                    .findAny()
-                    .ifPresent(e -> outBoundConnections.remove(e.getPeerAddress()));
-            inBoundAuthenticatedConnections.values().stream()
-                    .filter(e -> e.equals(connection))
-                    .findAny()
-                    .ifPresent(e -> inBoundAuthenticatedConnections.remove(e.getPeerAddress()));
-        }
-        inBoundTempConnections.remove(connection);
-
+        outBoundConnections.remove(connection);
+        inBoundConnections.remove(connection);
         connectionListeners.stream().forEach(e -> e.onDisconnect(reason, connection));
     }
 
@@ -280,28 +269,21 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
             @Override
             public void onConnection(Connection connection) {
                 // we still have not authenticated so put it to the temp list
-                inBoundTempConnections.add(connection);
+                if (!inBoundConnections.contains(connection))
+                    inBoundConnections.add(connection);
                 NetworkNode.this.onConnection(connection);
             }
 
             @Override
             public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
                 NetworkNode.this.onPeerAddressAuthenticated(peerAddress, connection);
-                // now we know the the peers address is correct and we add it to inBoundConnections and 
-                // remove it from tempConnections
-                inBoundAuthenticatedConnections.put(peerAddress, connection);
-                inBoundTempConnections.remove(connection);
             }
 
             @Override
             public void onDisconnect(Reason reason, Connection connection) {
                 Address peerAddress = connection.getPeerAddress();
                 log.trace("onDisconnect at incoming connection to peerAddress " + peerAddress);
-                if (peerAddress != null)
-                    inBoundAuthenticatedConnections.remove(peerAddress);
-
-                inBoundTempConnections.remove(connection);
-
+                inBoundConnections.remove(connection);
                 NetworkNode.this.onDisconnect(reason, connection);
             }
 

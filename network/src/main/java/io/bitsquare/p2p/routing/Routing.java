@@ -24,7 +24,15 @@ import java.util.stream.Collectors;
 public class Routing {
     private static final Logger log = LoggerFactory.getLogger(Routing.class);
 
+    private static int simulateAuthTorNode = 2 * 1000;
+
+    public static void setSimulateAuthTorNode(int simulateAuthTorNode) {
+        Routing.simulateAuthTorNode = simulateAuthTorNode;
+    }
+
     private static int MAX_CONNECTIONS = 8;
+    private static int MAINTENANCE_INTERVAL = new Random().nextInt(15 * 60 * 1000) + 15 * 60 * 1000; // 15-30 min.
+    private static int PING_AFTER_CONNECTION_INACTIVITY = 5 * 60 * 1000;   // 5 min
     private long startAuthTs;
 
     public static void setMaxConnections(int maxConnections) {
@@ -33,10 +41,10 @@ public class Routing {
 
     private final NetworkNode networkNode;
     private final List<Address> seedNodes;
-    private final Map<Address, Integer> nonceMap = new ConcurrentHashMap<>();
+    private final Map<Address, Long> nonceMap = new ConcurrentHashMap<>();
     private final List<RoutingListener> routingListeners = new CopyOnWriteArrayList<>();
     private final Map<Address, Neighbor> connectedNeighbors = new ConcurrentHashMap<>();
-    private final Map<Address, Neighbor> reportedNeighbors = new ConcurrentHashMap<>();
+    private final List<Address> reportedNeighborAddresses = new CopyOnWriteArrayList<>();
     private final Map<Address, Runnable> authenticationCompleteHandlers = new ConcurrentHashMap<>();
     private final Timer maintenanceTimer = new Timer();
     private final ExecutorService executorService = Executors.newCachedThreadPool();
@@ -72,7 +80,7 @@ public class Routing {
             @Override
             public void onDisconnect(Reason reason, Connection connection) {
                 // only removes authenticated nodes
-                if (connection.getPeerAddress() != null)
+                if (connection.isAuthenticated())
                     removeNeighbor(connection.getPeerAddress());
             }
 
@@ -99,14 +107,13 @@ public class Routing {
             }
         });
 
-        int maintenanceInterval = new Random().nextInt(15 * 60 * 1000) + 15 * 60 * 1000; // 15-30 min.
         maintenanceTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 disconnectOldConnections();
                 pingNeighbors();
             }
-        }, maintenanceInterval, maintenanceInterval);
+        }, MAINTENANCE_INTERVAL, MAINTENANCE_INTERVAL);
     }
 
     private void disconnectOldConnections() {
@@ -128,7 +135,30 @@ public class Routing {
     }
 
     private void pingNeighbors() {
+        log.trace("pingNeighbors");
+        List<Neighbor> connectedNeighborsList = new ArrayList<>(connectedNeighbors.values());
+        connectedNeighborsList.stream()
+                .filter(e -> (new Date().getTime() - e.connection.getLastActivityDate().getTime()) > PING_AFTER_CONNECTION_INACTIVITY)
+                .forEach(e -> {
+                    SettableFuture<Connection> future = networkNode.sendMessage(e.connection, new PingMessage(e.getPingNonce()));
+                    Futures.addCallback(future, new FutureCallback<Connection>() {
+                        @Override
+                        public void onSuccess(Connection connection) {
+                            log.trace("PingMessage sent successfully");
+                        }
 
+                        @Override
+                        public void onFailure(@NotNull Throwable throwable) {
+                            log.info("PingMessage sending failed " + throwable.getMessage());
+                            removeNeighbor(e.address);
+                        }
+                    });
+                    try {
+                        Thread.sleep(new Random().nextInt(5000) + 5000);
+                    } catch (InterruptedException ignored) {
+                        Thread.currentThread().interrupt();
+                    }
+                });
     }
 
 
@@ -146,12 +176,13 @@ public class Routing {
         }
     }
 
-    public void broadcast(BroadcastMessage message, Address sender) {
+    public void broadcast(BroadcastMessage message, @Nullable Address sender) {
         log.trace("Broadcast message to " + connectedNeighbors.values().size() + " neighbors.");
+        log.trace("message = " + message);
         connectedNeighbors.values().parallelStream()
                 .filter(e -> !e.address.equals(sender))
                 .forEach(neighbor -> {
-                    log.trace("Broadcast message " + message + " from " + getAddress() + " to " + neighbor.address + ".");
+                    log.trace("Broadcast message from " + getAddress() + " to " + neighbor.address + ".");
                     SettableFuture<Connection> future = networkNode.sendMessage(neighbor.address, message);
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
@@ -184,20 +215,18 @@ public class Routing {
         routingListeners.remove(routingListener);
     }
 
-    public Map<Address, Neighbor> getReportedNeighbors() {
-        return reportedNeighbors;
-    }
-
     public Map<Address, Neighbor> getConnectedNeighbors() {
         return connectedNeighbors;
     }
 
-    public Map<Address, Neighbor> getAllNeighbors() {
-        Map<Address, Neighbor> hashMap = new ConcurrentHashMap<>(reportedNeighbors);
-        hashMap.putAll(connectedNeighbors);
+    // Use ArrayList not List as we need it serializable
+    public ArrayList<Address> getAllNeighborAddresses() {
+        ArrayList<Address> allNeighborAddresses = new ArrayList<>(reportedNeighborAddresses);
+        allNeighborAddresses.addAll(connectedNeighbors.values().stream()
+                .map(e -> e.address).collect(Collectors.toList()));
         // remove own address and seed nodes
-        hashMap.remove(getAddress());
-        return hashMap;
+        allNeighborAddresses.remove(getAddress());
+        return allNeighborAddresses;
     }
 
 
@@ -239,7 +268,7 @@ public class Routing {
                 alreadyConnected[0] = true;
         });
         if (!alreadyConnected[0]) {
-            int nonce = addToMapAndGetNonce(address);
+            long nonce = addToMapAndGetNonce(address);
             SettableFuture<Connection> future = networkNode.sendMessage(address, new RequestAuthenticationMessage(getAddress(), nonce));
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
@@ -287,12 +316,17 @@ public class Routing {
                 // inconsistent state (removal of connection from NetworkNode.authenticatedConnections)
                 try {
                     Thread.sleep(100);
-                } catch (InterruptedException ignored) {
+                } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
 
+                try {
+                    if (simulateAuthTorNode > 0) Thread.sleep(simulateAuthTorNode);
+                } catch (InterruptedException e1) {
+                    Thread.currentThread().interrupt();
+                }
                 log.trace("processAuthenticationMessage: connection.shutDown complete. RequestAuthenticationMessage from " + peerAddress + " at " + getAddress());
-                int nonce = addToMapAndGetNonce(peerAddress);
+                long nonce = addToMapAndGetNonce(peerAddress);
                 SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new ChallengeMessage(getAddress(), requestAuthenticationMessage.nonce, nonce));
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
@@ -324,12 +358,12 @@ public class Routing {
         } else if (message instanceof ChallengeMessage) {
             ChallengeMessage challengeMessage = (ChallengeMessage) message;
             Address peerAddress = challengeMessage.address;
-            connection.setPeerAddress(peerAddress);
             log.trace("ChallengeMessage from " + peerAddress + " at " + getAddress());
+            HashMap<Address, Long> tempNonceMap = new HashMap<>(nonceMap);
             boolean verified = verifyNonceAndAuthenticatePeerAddress(challengeMessage.requesterNonce, peerAddress);
             if (verified) {
-                HashMap<Address, Neighbor> allNeighbors = new HashMap<>(getAllNeighbors());
-                SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new GetNeighborsMessage(getAddress(), challengeMessage.challengerNonce, allNeighbors));
+                SettableFuture<Connection> future = networkNode.sendMessage(peerAddress,
+                        new GetNeighborsMessage(getAddress(), challengeMessage.challengerNonce, getAllNeighborAddresses()));
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
                     public void onSuccess(Connection connection) {
@@ -346,6 +380,8 @@ public class Routing {
                         removeNeighbor(peerAddress);
                     }
                 });
+            } else {
+                log.warn("verifyNonceAndAuthenticatePeerAddress failed. challengeMessage=" + challengeMessage + " / nonceMap=" + tempNonceMap);
             }
         } else if (message instanceof GetNeighborsMessage) {
             GetNeighborsMessage getNeighborsMessage = (GetNeighborsMessage) message;
@@ -355,9 +391,10 @@ public class Routing {
             if (verified) {
                 setAuthenticated(connection, peerAddress);
                 purgeReportedNeighbors();
-                HashMap<Address, Neighbor> allNeighbors = new HashMap<>(getAllNeighbors());
-                SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new NeighborsMessage(allNeighbors));
-                log.trace("sent NeighborsMessage to " + peerAddress + " from " + getAddress() + " with allNeighbors=" + allNeighbors.values());
+                SettableFuture<Connection> future = networkNode.sendMessage(peerAddress,
+                        new NeighborsMessage(getAllNeighborAddresses()));
+                log.trace("sent NeighborsMessage to " + peerAddress + " from " + getAddress()
+                        + " with allNeighbors=" + getAllNeighborAddresses());
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
                     public void onSuccess(Connection connection) {
@@ -372,19 +409,19 @@ public class Routing {
                 });
 
                 // now we add the reported neighbors to our own set
-                final HashMap<Address, Neighbor> neighbors = ((GetNeighborsMessage) message).neighbors;
-                log.trace("Received neighbors: " + neighbors);
+                ArrayList<Address> neighborAddresses = ((GetNeighborsMessage) message).neighborAddresses;
+                log.trace("Received neighbors: " + neighborAddresses);
                 // remove ourselves
-                neighbors.remove(getAddress());
-                addToReportedNeighbors(neighbors, connection);
+                neighborAddresses.remove(getAddress());
+                addToReportedNeighbors(neighborAddresses, connection);
             }
         } else if (message instanceof NeighborsMessage) {
             log.trace("NeighborsMessage from " + connection.getPeerAddress() + " at " + getAddress());
-            final HashMap<Address, Neighbor> neighbors = ((NeighborsMessage) message).neighbors;
-            log.trace("Received neighbors: " + neighbors);
+            ArrayList<Address> neighborAddresses = ((NeighborsMessage) message).neighborAddresses;
+            log.trace("Received neighbors: " + neighborAddresses);
             // remove ourselves
-            neighbors.remove(getAddress());
-            addToReportedNeighbors(neighbors, connection);
+            neighborAddresses.remove(getAddress());
+            addToReportedNeighbors(neighborAddresses, connection);
 
             log.info("\n\nAuthenticationComplete\nPeer with address " + connection.getPeerAddress().toString()
                     + " authenticated (" + connection.getObjectId() + "). Took "
@@ -398,36 +435,42 @@ public class Routing {
         }
     }
 
-    private void addToReportedNeighbors(HashMap<Address, Neighbor> neighbors, Connection connection) {
+    private void addToReportedNeighbors(ArrayList<Address> neighborAddresses, Connection connection) {
         // we disconnect misbehaving nodes trying to send too many neighbors
         // reported neighbors include the peers connected neighbors which is normally max. 8 but we give some headroom 
         // for safety
-        if (neighbors.size() > 1100) {
+        if (neighborAddresses.size() > 1100) {
             connection.shutDown();
         } else {
-            reportedNeighbors.putAll(neighbors);
+            reportedNeighborAddresses.addAll(neighborAddresses);
             purgeReportedNeighbors();
         }
     }
 
     private void purgeReportedNeighbors() {
-        int all = getAllNeighbors().size();
+        int all = getAllNeighborAddresses().size();
         if (all > 1000) {
             int diff = all - 100;
-            ArrayList<Neighbor> reportedNeighborsList = new ArrayList<>(reportedNeighbors.values());
+            List<Address> list = getNotConnectedNeighborAddresses();
             for (int i = 0; i < diff; i++) {
-                Neighbor neighborToRemove = reportedNeighborsList.remove(new Random().nextInt(reportedNeighborsList.size()));
-                reportedNeighbors.remove(neighborToRemove.address);
+                Address neighborToRemove = list.remove(new Random().nextInt(list.size()));
+                reportedNeighborAddresses.remove(neighborToRemove);
             }
         }
     }
 
+    private List<Address> getNotConnectedNeighborAddresses() {
+        ArrayList<Address> reportedNeighborsList = new ArrayList<>(getAllNeighborAddresses());
+        connectedNeighbors.values().stream().forEach(e -> reportedNeighborsList.remove(e.address));
+        return reportedNeighborsList;
+    }
+
     private void authenticateToNextRandomNeighbor() {
         if (getConnectedNeighbors().size() <= MAX_CONNECTIONS) {
-            Neighbor randomNotConnectedNeighbor = getRandomNotConnectedNeighbor();
-            if (randomNotConnectedNeighbor != null) {
-                log.info("We try to build an authenticated connection to a random neighbor. " + randomNotConnectedNeighbor);
-                authenticateToPeer(randomNotConnectedNeighbor.address, null, () -> authenticateToNextRandomNeighbor());
+            Address randomNotConnectedNeighborAddress = getRandomNotConnectedNeighborAddress();
+            if (randomNotConnectedNeighborAddress != null) {
+                log.info("We try to build an authenticated connection to a random neighbor. " + randomNotConnectedNeighborAddress);
+                authenticateToPeer(randomNotConnectedNeighborAddress, null, () -> authenticateToNextRandomNeighbor());
             } else {
                 log.info("No more neighbors available for connecting.");
             }
@@ -442,7 +485,7 @@ public class Routing {
         if (authenticationCompleteHandler != null)
             authenticationCompleteHandlers.put(address, authenticationCompleteHandler);
 
-        int nonce = addToMapAndGetNonce(address);
+        long nonce = addToMapAndGetNonce(address);
         SettableFuture<Connection> future = networkNode.sendMessage(address, new RequestAuthenticationMessage(getAddress(), nonce));
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
@@ -459,34 +502,43 @@ public class Routing {
         });
     }
 
-    private int addToMapAndGetNonce(Address address) {
-        int nonce = new Random().nextInt();
+    private long addToMapAndGetNonce(Address peerAddress) {
+        long nonce = new Random().nextLong();
         while (nonce == 0) {
-            nonce = new Random().nextInt();
+            nonce = new Random().nextLong();
         }
-        nonceMap.put(address, nonce);
+        log.trace("addToMapAndGetNonce nonceMap=" + nonceMap + " / peerAddress=" + peerAddress);
+        nonceMap.put(peerAddress, nonce);
         return nonce;
     }
 
-    private boolean verifyNonceAndAuthenticatePeerAddress(int peersNonce, Address peerAddress) {
-        int nonce = nonceMap.remove(peerAddress);
+    private boolean verifyNonceAndAuthenticatePeerAddress(long peersNonce, Address peerAddress) {
+        log.trace("verifyNonceAndAuthenticatePeerAddress nonceMap=" + nonceMap + " / peerAddress=" + peerAddress);
+        long nonce = nonceMap.remove(peerAddress);
         boolean result = nonce == peersNonce;
         return result;
     }
 
-    private void setAuthenticated(Connection connection, Address address) {
-        log.info("We got the connection from " + getAddress() + " to " + address + " authenticated.");
-        Neighbor neighbor = new Neighbor(address);
-        addConnectedNeighbor(address, neighbor);
+    private void setAuthenticated(Connection connection, Address peerAddress) {
+        log.info("\n\n############################################################\n" +
+                "We are authenticated to:" +
+                "\nconnection=" + connection
+                + "\nmyAddress=" + getAddress()
+                + "\npeerAddress= " + peerAddress
+                + "\n############################################################\n");
 
-        connection.onAuthenticationComplete(address, connection);
+        connection.onAuthenticationComplete(peerAddress, connection);
+
+        Neighbor neighbor = new Neighbor(connection);
+        addConnectedNeighbor(peerAddress, neighbor);
+
         routingListeners.stream().forEach(e -> e.onConnectionAuthenticated(connection));
+
+        log.debug("\n### setAuthenticated post connection " + connection);
     }
 
-    private Neighbor getRandomNotConnectedNeighbor() {
-        List<Neighbor> list = reportedNeighbors.values().stream()
-                .filter(e -> !connectedNeighbors.values().contains(e))
-                .collect(Collectors.toList());
+    private Address getRandomNotConnectedNeighborAddress() {
+        List<Address> list = getNotConnectedNeighborAddresses();
         if (list.size() > 0) {
             Collections.shuffle(list);
             return list.get(0);
@@ -532,16 +584,17 @@ public class Routing {
     // Neighbors
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void removeNeighbor(Address address) {
-        reportedNeighbors.remove(address);
+    private void removeNeighbor(@Nullable Address peerAddress) {
+        reportedNeighborAddresses.remove(peerAddress);
 
         Neighbor disconnectedNeighbor;
-        disconnectedNeighbor = connectedNeighbors.remove(address);
+        disconnectedNeighbor = connectedNeighbors.remove(peerAddress);
 
         if (disconnectedNeighbor != null)
-            UserThread.execute(() -> routingListeners.stream().forEach(e -> e.onNeighborRemoved(address)));
+            UserThread.execute(() -> routingListeners.stream().forEach(e -> e.onNeighborRemoved(peerAddress)));
 
-        nonceMap.remove(address);
+        log.trace("removeNeighbor nonceMap=" + nonceMap + " / peerAddress=" + peerAddress);
+        nonceMap.remove(peerAddress);
     }
 
     private void addConnectedNeighbor(Address address, Neighbor neighbor) {
@@ -577,9 +630,9 @@ public class Routing {
     }
 
     public void printReportedNeighborsMap() {
-        StringBuilder result = new StringBuilder("\nReported neighbors for node " + getAddress() + ":");
-        reportedNeighbors.values().stream().forEach(e -> {
-            result.append("\n\t" + e.address);
+        StringBuilder result = new StringBuilder("\nReported neighborAddresses for node " + getAddress() + ":");
+        reportedNeighborAddresses.stream().forEach(e -> {
+            result.append("\n\t" + e);
         });
         result.append("\n");
         log.info(result.toString());

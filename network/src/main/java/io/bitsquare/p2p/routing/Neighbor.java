@@ -1,26 +1,37 @@
 package io.bitsquare.p2p.routing;
 
 import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.network.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.util.Random;
 
 public class Neighbor implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(Neighbor.class);
 
+    public final Connection connection;
     public final Address address;
-    private int pingNonce;
+    private long pingNonce;
 
-    public Neighbor(Address address) {
-        this.address = address;
+    public Neighbor(Connection connection) {
+        this.connection = connection;
+        this.address = connection.getPeerAddress();
+        pingNonce = new Random().nextLong();
     }
 
-    public void setPingNonce(int pingNonce) {
-        this.pingNonce = pingNonce;
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        try {
+            in.defaultReadObject();
+            pingNonce = new Random().nextLong();
+        } catch (Throwable t) {
+            log.trace("Cannot be deserialized." + t.getMessage());
+        }
     }
 
-    public int getPingNonce() {
+    public long getPingNonce() {
         return pingNonce;
     }
 

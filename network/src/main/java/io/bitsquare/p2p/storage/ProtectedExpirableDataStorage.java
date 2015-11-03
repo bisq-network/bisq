@@ -15,6 +15,7 @@ import io.bitsquare.storage.Storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.math.BigInteger;
 import java.security.KeyPair;
@@ -69,6 +70,7 @@ public class ProtectedExpirableDataStorage {
                     }
                 } else {
                     log.warn("Connection is not authenticated yet. We don't accept storage operations form non-authenticated nodes.");
+                    log.warn("Connection = " + connection);
                     connection.reportIllegalRequest(IllegalRequest.NotAuthenticated);
                 }
             }
@@ -103,7 +105,7 @@ public class ProtectedExpirableDataStorage {
         this.authenticated = authenticated;
     }
 
-    public boolean add(ProtectedData protectedData, Address sender) {
+    public boolean add(ProtectedData protectedData, @Nullable Address sender) {
         BigInteger hashOfPayload = getHashAsBigInteger(protectedData.expirablePayload);
         boolean containsKey = map.containsKey(hashOfPayload);
         boolean result = checkPublicKeys(protectedData, true)
@@ -119,9 +121,10 @@ public class ProtectedExpirableDataStorage {
             log.trace("Data added to our map and it will be broadcasted to our neighbors.");
             UserThread.execute(() -> hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedData)));
 
-            StringBuilder sb = new StringBuilder("\n\nSet after addProtectedExpirableData:\n");
-            map.values().stream().forEach(e -> sb.append(e.toString() + "\n\n"));
-            sb.append("\n\n");
+            StringBuilder sb = new StringBuilder("\n\n----------------------------------------------------\n" +
+                    "Data set after addProtectedExpirableData:");
+            map.values().stream().forEach(e -> sb.append("\n\n").append(e.toString()));
+            sb.append("\n----------------------------------------------------\n\n");
             log.trace(sb.toString());
 
             if (!containsKey)
@@ -130,12 +133,12 @@ public class ProtectedExpirableDataStorage {
             sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
             storage.queueUpForSave();
         } else {
-            log.debug("add failed");
+            log.trace("add failed");
         }
         return result;
     }
 
-    public boolean remove(ProtectedData protectedData, Address sender) {
+    public boolean remove(ProtectedData protectedData, @Nullable Address sender) {
         BigInteger hashOfPayload = getHashAsBigInteger(protectedData.expirablePayload);
         boolean containsKey = map.containsKey(hashOfPayload);
         if (!containsKey) log.debug("Remove data ignored as we don't have an entry for that data.");
@@ -159,7 +162,7 @@ public class ProtectedExpirableDataStorage {
         return result;
     }
 
-    public boolean removeMailboxData(ProtectedMailboxData protectedMailboxData, Address sender) {
+    public boolean removeMailboxData(ProtectedMailboxData protectedMailboxData, @Nullable Address sender) {
         BigInteger hashOfData = getHashAsBigInteger(protectedMailboxData.expirablePayload);
         boolean containsKey = map.containsKey(hashOfData);
         if (!containsKey) log.debug("Remove data ignored as we don't have an entry for that data.");
@@ -245,7 +248,7 @@ public class ProtectedExpirableDataStorage {
         int newSequenceNumber = data.sequenceNumber;
         Integer storedSequenceNumber = sequenceNumberMap.get(hashOfData);
         if (sequenceNumberMap.containsKey(hashOfData) && newSequenceNumber <= storedSequenceNumber) {
-            log.warn("Sequence number is invalid. newSequenceNumber="
+            log.trace("Sequence number is invalid. newSequenceNumber="
                     + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber);
             return false;
         } else {
@@ -313,7 +316,7 @@ public class ProtectedExpirableDataStorage {
     }
 
 
-    private void broadcast(BroadcastMessage message, Address sender) {
+    private void broadcast(BroadcastMessage message, @Nullable Address sender) {
         if (authenticated) {
             routing.broadcast(message, sender);
             log.trace("Broadcast message " + message);

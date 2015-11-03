@@ -34,7 +34,7 @@ import java.security.interfaces.DSAPrivateKey;
 import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.spec.*;
 
-// TODO: use a password protection for storage?
+// TODO: use a password protection for key storage
 public class KeyStorage {
     private static final Logger log = LoggerFactory.getLogger(KeyStorage.class);
 
@@ -139,6 +139,7 @@ public class KeyStorage {
     public void savePrivateKey(PrivateKey privateKey, String name) {
         if (!storageDir.exists())
             storageDir.mkdir();
+
 
         PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
         try (FileOutputStream fos = new FileOutputStream(storageDir + "/" + name + ".key")) {

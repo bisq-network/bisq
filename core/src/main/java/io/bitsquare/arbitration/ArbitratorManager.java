@@ -173,18 +173,12 @@ public class ArbitratorManager {
                 .collect(Collectors.toMap(Arbitrator::getArbitratorAddress, Function.identity()));
 
         arbitratorsObservableMap.putAll(filtered);
-
-        log.debug("filtered arbitrators: " + arbitratorsObservableMap.values());
-        log.trace("user.getAcceptedArbitrators(): " + user.getAcceptedArbitrators().toString());
-
         // we need to remove accepted arbitrators which are not available anymore
         if (user.getAcceptedArbitrators() != null) {
             List<Arbitrator> removeList = user.getAcceptedArbitrators().stream()
                     .filter(e -> !arbitratorsObservableMap.containsValue(e))
                     .collect(Collectors.toList());
             removeList.stream().forEach(user::removeAcceptedArbitrator);
-            log.trace("removeList arbitrators: " + removeList.toString());
-            log.trace("user.getAcceptedArbitrators(): " + user.getAcceptedArbitrators().toString());
 
             // if we don't have any arbitrator anymore we set all matching
             if (user.getAcceptedArbitrators().isEmpty()) {
@@ -192,8 +186,6 @@ public class ArbitratorManager {
                         .filter(arbitrator -> user.hasMatchingLanguage(arbitrator))
                         .forEach(arbitrator -> user.addAcceptedArbitrator(arbitrator));
             }
-
-            log.trace("user.getAcceptedArbitrators(): " + user.getAcceptedArbitrators().toString());
         }
     }
 

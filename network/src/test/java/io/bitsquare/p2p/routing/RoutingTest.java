@@ -107,7 +107,7 @@ public class RoutingTest {
         P2PService p2PService1 = seedNode1.getP2PService();
         latch.await();
         Thread.sleep(500);
-        Assert.assertEquals(0, p2PService1.getRouting().getAllNeighbors().size());
+        Assert.assertEquals(0, p2PService1.getRouting().getAllNeighborAddresses().size());
     }
 
     @Test
@@ -180,8 +180,8 @@ public class RoutingTest {
         });
         P2PService p2PService2 = seedNode2.getP2PService();
         latch.await();
-        Assert.assertEquals(1, p2PService1.getRouting().getAllNeighbors().size());
-        Assert.assertEquals(1, p2PService2.getRouting().getAllNeighbors().size());
+        Assert.assertEquals(1, p2PService1.getRouting().getAllNeighborAddresses().size());
+        Assert.assertEquals(1, p2PService2.getRouting().getAllNeighborAddresses().size());
     }
 
     // @Test

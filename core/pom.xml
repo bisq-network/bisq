@@ -50,29 +50,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.msopentech.thali</groupId>
-            <artifactId>universal</artifactId>
-            <version>0.0.3-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-simple</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.msopentech.thali</groupId>
-            <artifactId>java</artifactId>
-            <version>0.0.3-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-simple</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
             <groupId>org.bitcoinj</groupId>
             <artifactId>bitcoinj-core</artifactId>
             <version>0.13.2</version>

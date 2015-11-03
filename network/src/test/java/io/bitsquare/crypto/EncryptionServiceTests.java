@@ -26,6 +26,7 @@ import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import io.bitsquare.p2p.messaging.MailboxMessage;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -38,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 import java.security.cert.CertificateException;
 
 import static org.junit.Assert.assertEquals;
@@ -50,10 +52,13 @@ public class EncryptionServiceTests {
 
     private PubKeyRing pubKeyRing;
     private KeyRing keyRing;
-    private File dir = new File("/tmp/bitsquare_tests");
+    private File dir;
 
     @Before
     public void setup() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, CryptoException {
+        Security.addProvider(new BouncyCastleProvider());
+        dir = File.createTempFile("temp_tests", "");
+        dir.delete();
         dir.mkdir();
         KeyStorage keyStorage = new KeyStorage(dir);
         keyRing = new KeyRing(keyStorage);

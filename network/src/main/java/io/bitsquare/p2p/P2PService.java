@@ -141,24 +141,24 @@ public class P2PService {
 
             @Override
             public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
+                checkArgument(peerAddress.equals(connection.getPeerAddress()));
                 authenticatedPeerAddresses.add(peerAddress);
 
                 if (!authenticatedToFirstPeer) {
                     authenticatedToFirstPeer = true;
 
-                    Address address = connection.getPeerAddress();
-                    SettableFuture<Connection> future = sendMessage(address,
+                    SettableFuture<Connection> future = sendMessage(peerAddress,
                             new GetDataSetMessage(addToListAndGetNonce()));
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
                         public void onSuccess(@Nullable Connection connection) {
-                            log.info("onPeerAddressAuthenticated Send GetAllDataMessage to " + address + " succeeded.");
-                            connectedSeedNodes.add(address);
+                            log.info("onPeerAddressAuthenticated Send GetAllDataMessage to " + peerAddress + " succeeded.");
+                            connectedSeedNodes.add(peerAddress);
                         }
 
                         @Override
                         public void onFailure(Throwable throwable) {
-                            log.warn("onPeerAddressAuthenticated Send GetAllDataMessage to " + address + " failed. " +
+                            log.warn("onPeerAddressAuthenticated Send GetAllDataMessage to " + peerAddress + " failed. " +
                                     "Exception:" + throwable.getMessage());
                         }
                     });
@@ -171,9 +171,8 @@ public class P2PService {
 
             @Override
             public void onDisconnect(Reason reason, Connection connection) {
-                Address peerAddress = connection.getPeerAddress();
-                if (peerAddress != null)
-                    authenticatedPeerAddresses.remove(peerAddress);
+                if (connection.isAuthenticated())
+                    authenticatedPeerAddresses.remove(connection.getPeerAddress());
             }
 
             @Override
@@ -195,11 +194,15 @@ public class P2PService {
                     });
                 }
             } else if (message instanceof DataSetMessage) {
-                log.trace("Received AllDataMessage: " + message);
+                DataSetMessage dataSetMessage = (DataSetMessage) message;
+                StringBuilder sb = new StringBuilder("Received DataSetMessage:\n\n");
+                dataSetMessage.set.stream().forEach(e -> sb.append(e.toString() + "\n"));
+                sb.append("\n");
+                log.trace(sb.toString());
                 // we keep that connection open as the bootstrapping peer will use that for the authentication
 
                 // as we are not authenticated yet the data adding will not be broadcasted 
-                HashSet<ProtectedData> set = ((DataSetMessage) message).set;
+                HashSet<ProtectedData> set = dataSetMessage.set;
                 set.stream().forEach(e -> dataStorage.add(e, connection.getPeerAddress()));
 
                 dataReceived();
@@ -664,7 +667,7 @@ public class P2PService {
                                 e -> e.onMailboxMessageAdded(decryptedMsgWithPubKey, senderAddress)));
                     }
                 } catch (CryptoException e) {
-                    log.trace("Decryption of SealedAndSignedMessage failed. That is expected if the message is not intended for us.");
+                    log.trace("Decryption of SealedAndSignedMessage failed. That is expected if the message is not intended for us. " + e.getMessage());
                 }
             }
         }

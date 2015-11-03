@@ -13,6 +13,7 @@ import io.bitsquare.p2p.seed.SeedNode;
 import io.bitsquare.p2p.storage.data.DataAndSeqNr;
 import io.bitsquare.p2p.storage.data.ProtectedData;
 import io.bitsquare.p2p.storage.mocks.MockData;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,16 +41,27 @@ public class P2PServiceTest {
     private EncryptionService encryptionService1, encryptionService2, encryptionService3;
     private P2PService p2PService1, p2PService2, p2PService3;
     private SeedNode seedNode1, seedNode2, seedNode3;
-
+    private File dir1, dir2, dir3;
     @Before
     public void setup() throws InterruptedException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, CryptoException {
+        Security.addProvider(new BouncyCastleProvider());
+        dir1 = File.createTempFile("temp_tests1", "");
+        dir1.delete();
+        dir1.mkdir();
+        dir2 = File.createTempFile("temp_tests2", "");
+        dir2.delete();
+        dir2.mkdir();
+        dir3 = File.createTempFile("temp_tests3", "");
+        dir3.delete();
+        dir3.mkdir();
+
         LocalhostNetworkNode.setSimulateTorDelayTorNode(10);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(100);
         Routing.setMaxConnections(8);
 
-        keyRing1 = new KeyRing(new KeyStorage(new File("temp_keyStorage1")));
-        keyRing2 = new KeyRing(new KeyStorage(new File("temp_keyStorage2")));
-        keyRing3 = new KeyRing(new KeyStorage(new File("temp_keyStorage3")));
+        keyRing1 = new KeyRing(new KeyStorage(dir1));
+        keyRing2 = new KeyRing(new KeyStorage(dir2));
+        keyRing3 = new KeyRing(new KeyStorage(dir3));
         encryptionService1 = new EncryptionService(keyRing1);
         encryptionService2 = new EncryptionService(keyRing2);
         encryptionService3 = new EncryptionService(keyRing3);

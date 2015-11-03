@@ -24,8 +24,8 @@ import java.util.function.Consumer;
 public class LocalhostNetworkNode extends NetworkNode {
     private static final Logger log = LoggerFactory.getLogger(LocalhostNetworkNode.class);
 
-    private static int simulateTorDelayTorNode = 0;
-    private static int simulateTorDelayHiddenService = 0;
+    private static int simulateTorDelayTorNode = 2 * 1000;
+    private static int simulateTorDelayHiddenService = 2 * 1000;
     private Address address;
 
     public static void setSimulateTorDelayTorNode(int simulateTorDelayTorNode) {
@@ -94,7 +94,10 @@ public class LocalhostNetworkNode extends NetworkNode {
             long ts = System.currentTimeMillis();
             log.trace("[simulation] Create TorNode");
             if (simulateTorDelayTorNode > 0) Thread.sleep(simulateTorDelayTorNode);
-            log.trace("\n\n##### TorNode created [simulation]. Took " + (System.currentTimeMillis() - ts) + " ms\n\n");
+            log.info("\n\n############################################################\n" +
+                    "TorNode created [simulation]:" +
+                    "\nTook " + (System.currentTimeMillis() - ts) + " ms"
+                    + "\n############################################################\n");
             return null;
         };
         ListenableFuture<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>> future = executorService.submit(task);
@@ -114,7 +117,10 @@ public class LocalhostNetworkNode extends NetworkNode {
             long ts = System.currentTimeMillis();
             log.debug("[simulation] Create hidden service");
             if (simulateTorDelayHiddenService > 0) Thread.sleep(simulateTorDelayHiddenService);
-            log.debug("\n\n##### Hidden service created [simulation]. Took " + (System.currentTimeMillis() - ts) + " ms\n\n");
+            log.info("\n\n############################################################\n" +
+                    "Hidden service created [simulation]:" +
+                    "\nTook " + (System.currentTimeMillis() - ts) + " ms"
+                    + "\n############################################################\n");
             return null;
         };
         ListenableFuture<HiddenServiceDescriptor> future = executorService.submit(task);

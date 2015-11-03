@@ -153,7 +153,8 @@ public class DisputeManager {
             log.debug("decryptedMessageWithPubKey.message " + message);
             if (message instanceof DisputeMessage) {
                 dispatchMessage((DisputeMessage) message);
-                p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
+                //TODO
+                //p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
             }
         });
         decryptedMailboxMessageWithPubKeys.clear();

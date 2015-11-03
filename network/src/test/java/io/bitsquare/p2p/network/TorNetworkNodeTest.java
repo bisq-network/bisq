@@ -5,6 +5,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.mocks.MockMessage;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -12,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.Security;
 import java.util.concurrent.CountDownLatch;
 
 // TorNode created. Took 6 sec.
@@ -21,6 +24,11 @@ import java.util.concurrent.CountDownLatch;
 public class TorNetworkNodeTest {
     private static final Logger log = LoggerFactory.getLogger(TorNetworkNodeTest.class);
     private CountDownLatch latch;
+
+    @Before
+    public void setup() {
+        Security.addProvider(new BouncyCastleProvider());
+    }
 
     @Test
     public void testTorNodeBeforeSecondReady() throws InterruptedException, IOException {

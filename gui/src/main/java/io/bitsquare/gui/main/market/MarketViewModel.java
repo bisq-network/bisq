@@ -68,7 +68,6 @@ class MarketViewModel extends ActivatableViewModel {
     protected void activate() {
         offerBookListItems.addListener(listChangeListener);
         offerBook.fillOfferBookListItems();
-        //updateChartData(offerBookListItems);
     }
 
     @Override

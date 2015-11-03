@@ -2,22 +2,21 @@ package io.bitsquare.p2p.routing.messages;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.Address;
-import io.bitsquare.p2p.routing.Neighbor;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 
 public final class GetNeighborsMessage implements AuthenticationMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     public final Address address;
-    public final int challengerNonce;
-    public final HashMap<Address, Neighbor> neighbors;
+    public final long challengerNonce;
+    public final ArrayList<Address> neighborAddresses;
 
-    public GetNeighborsMessage(Address address, int challengerNonce, HashMap<Address, Neighbor> neighbors) {
+    public GetNeighborsMessage(Address address, long challengerNonce, ArrayList<Address> neighborAddresses) {
         this.address = address;
         this.challengerNonce = challengerNonce;
-        this.neighbors = neighbors;
+        this.neighborAddresses = neighborAddresses;
     }
 
     @Override
@@ -25,7 +24,7 @@ public final class GetNeighborsMessage implements AuthenticationMessage {
         return "GetNeighborsMessage{" +
                 "address=" + address +
                 ", challengerNonce=" + challengerNonce +
-                ", neighbors=" + neighbors +
+                ", neighborAddresses=" + neighborAddresses +
                 '}';
     }
 }

@@ -81,7 +81,6 @@ public class Encryption {
             return cipher.doFinal(encryptedPayload);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
                 | BadPaddingException | IllegalBlockSizeException | NoSuchProviderException e) {
-            e.printStackTrace();
             throw new CryptoException(e);
         }
     }

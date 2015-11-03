@@ -8,9 +8,9 @@ public final class RequestAuthenticationMessage implements AuthenticationMessage
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     public final Address address;
-    public final int nonce;
+    public final long nonce;
 
-    public RequestAuthenticationMessage(Address address, int nonce) {
+    public RequestAuthenticationMessage(Address address, long nonce) {
         this.address = address;
         this.nonce = nonce;
     }

@@ -6,9 +6,9 @@ public final class PongMessage implements MaintenanceMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
-    public final int nonce;
+    public final long nonce;
 
-    public PongMessage(int nonce) {
+    public PongMessage(long nonce) {
         this.nonce = nonce;
     }
 

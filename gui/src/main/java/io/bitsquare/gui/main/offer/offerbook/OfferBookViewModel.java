@@ -122,8 +122,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     public void onSetTradeCurrency(TradeCurrency tradeCurrency) {
         this.tradeCurrency = tradeCurrency;
         tradeCurrencyCode.set(tradeCurrency.getCode());
-       /* if (!(tradeCurrency instanceof AllTradeCurrenciesEntry))*/
-        //offerBook.getOffers(tradeCurrencyCode.get());
+        filterList();
     }
 
     public void onSetPaymentMethod(PaymentMethod paymentMethod) {
@@ -273,11 +272,12 @@ class OfferBookViewModel extends ActivatableViewModel {
         filteredItems.setPredicate(offerBookListItem -> {
             Offer offer = offerBookListItem.getOffer();
             boolean directionResult = offer.getDirection() != direction;
+            boolean currencyResult = offer.getCurrencyCode().equals(tradeCurrency.getCode());
             boolean paymentMethodResult = true;
-            if (!(paymentMethod instanceof AllPaymentMethodsEntry))
+            if (!(paymentMethod instanceof AllPaymentMethodsEntry)) 
                 paymentMethodResult = offer.getPaymentMethod().equals(paymentMethod);
 
-            return directionResult && paymentMethodResult;
+            return directionResult && currencyResult && paymentMethodResult;
         });
     }
 

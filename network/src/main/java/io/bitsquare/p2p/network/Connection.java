@@ -90,6 +90,7 @@ public class Connection {
 
         lastActivityDate = new Date();
 
+        log.trace("\nNew connection created " + this.toString());
         connectionListener.onConnection(this);
     }
 
@@ -148,10 +149,6 @@ public class Connection {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Socket getSocket() {
-        return socket;
-    }
-
     @Nullable
     public Address getPeerAddress() {
         return peerAddress;
@@ -169,14 +166,6 @@ public class Connection {
         return uid;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setPeerAddress(Address peerAddress) {
-        this.peerAddress = peerAddress;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ShutDown
@@ -198,6 +187,7 @@ public class Connection {
         if (!shutDownInProgress) {
             log.info("\n\nShutDown connection:"
                     + "\npeerAddress=" + peerAddress
+                    + "\nobjectId=" + getObjectId()
                     + "\nuid=" + getUid()
                     + "\nisAuthenticated=" + isAuthenticated
                     + "\nsocket.getPort()=" + socket.getPort()
@@ -205,9 +195,12 @@ public class Connection {
             log.debug("ShutDown " + this.getObjectId());
             log.debug("ShutDown connection requested. Connection=" + this.toString());
 
-            shutDownInProgress = true;
-            inputHandlerStopped = true;
             if (!stopped) {
+                stopped = true;
+                shutDownInProgress = true;
+                inputHandlerStopped = true;
+                connectionListener.onDisconnect(ConnectionListener.Reason.SHUT_DOWN, Connection.this);
+
                 if (sendCloseConnectionMessage) {
                     sendMessage(new CloseConnectionMessage());
                     try {
@@ -217,8 +210,6 @@ public class Connection {
                         Thread.currentThread().interrupt();
                     }
                 }
-                stopped = true;
-                connectionListener.onDisconnect(ConnectionListener.Reason.SHUT_DOWN, Connection.this);
 
                 try {
                     socket.close();
@@ -282,7 +273,7 @@ public class Connection {
     @Override
     public String toString() {
         return "Connection{" +
-                "OBJECT ID=" + super.toString().split("@")[1] +
+                "objectId=" + getObjectId() +
                 ", uid=" + uid +
                 ", port=" + port +
                 ", isAuthenticated=" + isAuthenticated +
@@ -310,7 +301,7 @@ public class Connection {
                 try {
                     log.trace("InputHandler waiting for incoming messages connection=" + Connection.this.getObjectId());
                     Object rawInputObject = in.readObject();
-                    log.trace("New data arrived at inputHandler of connection=" + Connection.this.getObjectId()
+                    log.trace("New data arrived at inputHandler of connection=" + Connection.this.toString()
                             + " rawInputObject " + rawInputObject);
 
                     int size = ByteArrayUtils.objectToByteArray(rawInputObject).length;
@@ -339,10 +330,12 @@ public class Connection {
                             if (serializable instanceof Message) {
                                 lastActivityDate = new Date();
                                 Message message = (Message) serializable;
-                                if (message instanceof CloseConnectionMessage)
+                                if (message instanceof CloseConnectionMessage) {
+                                    inputHandlerStopped = true;
                                     shutDown(false);
-                                else
+                                } else {
                                     executorService.submit(() -> messageListener.onMessage(message, Connection.this));
+                                }
                             } else {
                                 reportIllegalRequest(IllegalRequest.InvalidDataType);
                             }
@@ -355,6 +348,9 @@ public class Connection {
                         reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
                     }
                 } catch (IOException | ClassNotFoundException e) {
+                    log.error("Exception at Connection.InputHandler. Connection=" + Connection.this.toString());
+                    log.error("Exception=" + e.getMessage());
+                    e.printStackTrace();
                     inputHandlerStopped = true;
                     handleConnectionException(e);
                 }

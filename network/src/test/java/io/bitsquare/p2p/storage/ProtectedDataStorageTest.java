@@ -15,6 +15,7 @@ import io.bitsquare.p2p.storage.data.ExpirableMailboxPayload;
 import io.bitsquare.p2p.storage.data.ProtectedData;
 import io.bitsquare.p2p.storage.data.ProtectedMailboxData;
 import io.bitsquare.p2p.storage.mocks.MockData;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -44,13 +45,24 @@ public class ProtectedDataStorageTest {
     private KeyRing keyRing1, keyRing2;
     private MockData mockData;
     private int sleepTime = 100;
+    private File dir1;
+    private File dir2;
 
     @Before
     public void setup() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
+        Security.addProvider(new BouncyCastleProvider());
+        dir1 = File.createTempFile("temp_tests1", "");
+        dir1.delete();
+        dir1.mkdir();
+        dir2 = File.createTempFile("temp_tests2", "");
+        dir2.delete();
+        dir2.mkdir();
+
         UserThread.executor = Executors.newSingleThreadExecutor();
         ProtectedExpirableDataStorage.CHECK_TTL_INTERVAL = 10 * 60 * 1000;
 
-        keyRing1 = new KeyRing(new KeyStorage(new File("temp_keyStorage1")));
+        keyRing1 = new KeyRing(new KeyStorage(dir1));
+
         storageSignatureKeyPair1 = keyRing1.getSignatureKeyPair();
         encryptionService1 = new EncryptionService(keyRing1);
         networkNode1 = TestUtils.getAndStartSeedNode(8001, encryptionService1, keyRing1, useClearNet, seedNodes).getP2PService().getNetworkNode();
@@ -58,7 +70,7 @@ public class ProtectedDataStorageTest {
         dataStorage1 = new ProtectedExpirableDataStorage(routing1, new File("dummy"));
 
         // for mailbox
-        keyRing2 = new KeyRing(new KeyStorage(new File("temp_keyStorage2")));
+        keyRing2 = new KeyRing(new KeyStorage(dir2));
         storageSignatureKeyPair2 = keyRing2.getSignatureKeyPair();
         encryptionService2 = new EncryptionService(keyRing2);
 
@@ -148,11 +160,18 @@ public class ProtectedDataStorageTest {
         dataToRemove = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertTrue(dataStorage1.remove(dataToRemove, null));
 
+        // add to empty map, any seq nr. -> ok
+        newSequenceNumber = 2;
+        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
+        ProtectedData dataToAdd = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
+        Assert.assertTrue(dataStorage1.add(dataToAdd, null));
+
         // add with updated seq nr below previous -> failure
         newSequenceNumber = 1;
         hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
         signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
-        ProtectedData dataToAdd = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
+        dataToAdd = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertFalse(dataStorage1.add(dataToAdd, null));
 
         // add with updated seq nr over previous -> ok

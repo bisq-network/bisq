@@ -8,10 +8,10 @@ public final class ChallengeMessage implements AuthenticationMessage {
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     public final Address address;
-    public final int requesterNonce;
-    public final int challengerNonce;
+    public final long requesterNonce;
+    public final long challengerNonce;
 
-    public ChallengeMessage(Address address, int requesterNonce, int challengerNonce) {
+    public ChallengeMessage(Address address, long requesterNonce, long challengerNonce) {
         this.address = address;
         this.requesterNonce = requesterNonce;
         this.challengerNonce = challengerNonce;
