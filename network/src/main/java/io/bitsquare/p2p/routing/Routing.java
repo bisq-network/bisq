@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class Routing {
     private static final Logger log = LoggerFactory.getLogger(Routing.class);
 
-    private static int simulateAuthTorNode = 2 * 1000;
+    private static int simulateAuthTorNode = 0;
 
     public static void setSimulateAuthTorNode(int simulateAuthTorNode) {
         Routing.simulateAuthTorNode = simulateAuthTorNode;

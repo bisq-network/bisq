@@ -124,7 +124,7 @@ public class P2PService {
 
         // routing layer
         routing = new Routing(networkNode, seedNodeAddresses);
-
+        if (useLocalhost) Routing.setSimulateAuthTorNode(2 * 1000);
 
         // storage layer
         dataStorage = new ProtectedExpirableDataStorage(routing, storageDir);

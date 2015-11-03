@@ -3,8 +3,8 @@ package io.bitsquare.p2p.network;
 import com.google.common.util.concurrent.*;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
+import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bitsquare.p2p.Address;
-import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.Utils;
 import io.bitsquare.p2p.network.messages.SelfTestMessage;
 import io.nucleo.net.HiddenServiceDescriptor;
@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -51,6 +52,12 @@ public class TorNetworkNode extends NetworkNode {
     private Runnable shutDownCompleteHandler;
     private boolean torShutDownComplete, networkNodeShutDownDoneComplete;
 
+    static {
+        try {
+            new Socks5Proxy("", 0);
+        } catch (UnknownHostException e) {
+        }
+    }
 
     // /////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -121,16 +128,13 @@ public class TorNetworkNode extends NetworkNode {
             }
         };
 
-        addMessageListener(new MessageListener() {
-            @Override
-            public void onMessage(Message message, Connection connection) {
-                if (message instanceof SelfTestMessage) {
-                    if (((SelfTestMessage) message).nonce == nonce) {
-                        runSelfTest();
-                    } else {
-                        log.error("Nonce not matching our challenge. That should never happen.");
-                        selfTestFailed();
-                    }
+        addMessageListener((message, connection) -> {
+            if (message instanceof SelfTestMessage) {
+                if (((SelfTestMessage) message).nonce == nonce) {
+                    runSelfTest();
+                } else {
+                    log.error("Nonce not matching our challenge. That should never happen.");
+                    selfTestFailed();
                 }
             }
         });
@@ -143,7 +147,8 @@ public class TorNetworkNode extends NetworkNode {
 
     @Override
     public void start(@Nullable SetupListener setupListener) {
-        if (setupListener != null) addSetupListener(setupListener);
+        if (setupListener != null)
+            addSetupListener(setupListener);
 
         // executorService might have been shutdown before a restart, so we create a new one
         executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
@@ -300,7 +305,7 @@ public class TorNetworkNode extends NetworkNode {
             }
 
             public void onFailure(Throwable throwable) {
-                log.error("TorNode creation failed");
+                log.error("TorNode creation failed with exception: " + throwable.getMessage());
                 restartTor();
             }
         });

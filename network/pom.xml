@@ -23,7 +23,7 @@
             <artifactId>universal</artifactId>
             <version>0.0.3-SNAPSHOT</version>
             <scope>system</scope>
-            <systemPath>${basedir}/libs/universal-0.0.3-SNAPSHOT.jar</systemPath>
+            <systemPath>${basedir}/src/main/resources/jars/universal-0.0.3-SNAPSHOT.jar</systemPath>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -31,18 +31,35 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
         <dependency>
             <groupId>com.msopentech.thali</groupId>
             <artifactId>java</artifactId>
             <version>0.0.3-SNAPSHOT</version>
             <scope>system</scope>
-            <systemPath>${basedir}/libs/java-0.0.3-SNAPSHOT.jar</systemPath>
+            <systemPath>${basedir}/src/main/resources/jars/java-0.0.3-SNAPSHOT.jar</systemPath>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-simple</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.ravn.jsocks</groupId>
+            <artifactId>jsocks</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/src/main/resources/jars/jsocks-0.0.1-SNAPSHOT.jar</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>net.freehaven</groupId>
+            <artifactId>jtorctl</artifactId>
+            <version>2015-09</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/src/main/resources/jars/jtorctl-2015-09.jar</systemPath>
         </dependency>
 
     </dependencies>
