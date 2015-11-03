@@ -179,6 +179,7 @@ public class Routing {
     public void broadcast(BroadcastMessage message, @Nullable Address sender) {
         log.trace("Broadcast message to " + connectedNeighbors.values().size() + " neighbors.");
         log.trace("message = " + message);
+        log.trace("connectedNeighbors = " + connectedNeighbors);
         connectedNeighbors.values().parallelStream()
                 .filter(e -> !e.address.equals(sender))
                 .forEach(neighbor -> {
@@ -369,9 +370,9 @@ public class Routing {
                     public void onSuccess(Connection connection) {
                         log.trace("GetNeighborsMessage sent successfully from " + getAddress() + " to " + peerAddress);
 
-                        // we wait to get the success to reduce the time span of the moment of 
+                       /* // we wait to get the success to reduce the time span of the moment of 
                         // authentication at both sides of the connection
-                        setAuthenticated(connection, peerAddress);
+                        setAuthenticated(connection, peerAddress);*/
                     }
 
                     @Override
@@ -392,7 +393,7 @@ public class Routing {
                 setAuthenticated(connection, peerAddress);
                 purgeReportedNeighbors();
                 SettableFuture<Connection> future = networkNode.sendMessage(peerAddress,
-                        new NeighborsMessage(getAllNeighborAddresses()));
+                        new NeighborsMessage(getAddress(), getAllNeighborAddresses()));
                 log.trace("sent NeighborsMessage to " + peerAddress + " from " + getAddress()
                         + " with allNeighbors=" + getAllNeighborAddresses());
                 Futures.addCallback(future, new FutureCallback<Connection>() {
@@ -417,7 +418,8 @@ public class Routing {
             }
         } else if (message instanceof NeighborsMessage) {
             log.trace("NeighborsMessage from " + connection.getPeerAddress() + " at " + getAddress());
-            ArrayList<Address> neighborAddresses = ((NeighborsMessage) message).neighborAddresses;
+            NeighborsMessage neighborsMessage = (NeighborsMessage) message;
+            ArrayList<Address> neighborAddresses = neighborsMessage.neighborAddresses;
             log.trace("Received neighbors: " + neighborAddresses);
             // remove ourselves
             neighborAddresses.remove(getAddress());
@@ -426,6 +428,10 @@ public class Routing {
             log.info("\n\nAuthenticationComplete\nPeer with address " + connection.getPeerAddress().toString()
                     + " authenticated (" + connection.getObjectId() + "). Took "
                     + (System.currentTimeMillis() - startAuthTs) + " ms. \n\n");
+
+            // we wait until the handshake is completed before setting the authenticate flag
+            // authentication at both sides of the connection
+            setAuthenticated(connection, neighborsMessage.address);
 
             Runnable authenticationCompleteHandler = authenticationCompleteHandlers.remove(connection.getPeerAddress());
             if (authenticationCompleteHandler != null)
@@ -461,22 +467,33 @@ public class Routing {
 
     private List<Address> getNotConnectedNeighborAddresses() {
         ArrayList<Address> reportedNeighborsList = new ArrayList<>(getAllNeighborAddresses());
+        log.debug("## getNotConnectedNeighborAddresses ");
+        log.debug("##  reportedNeighborsList=" + reportedNeighborsList);
         connectedNeighbors.values().stream().forEach(e -> reportedNeighborsList.remove(e.address));
+        log.debug("##  connectedNeighbors=" + connectedNeighbors);
+        log.debug("##  reportedNeighborsList=" + reportedNeighborsList);
         return reportedNeighborsList;
     }
 
     private void authenticateToNextRandomNeighbor() {
-        if (getConnectedNeighbors().size() <= MAX_CONNECTIONS) {
-            Address randomNotConnectedNeighborAddress = getRandomNotConnectedNeighborAddress();
-            if (randomNotConnectedNeighborAddress != null) {
-                log.info("We try to build an authenticated connection to a random neighbor. " + randomNotConnectedNeighborAddress);
-                authenticateToPeer(randomNotConnectedNeighborAddress, null, () -> authenticateToNextRandomNeighbor());
-            } else {
-                log.info("No more neighbors available for connecting.");
+        executorService.submit(() -> {
+            try {
+                Thread.sleep(new Random().nextInt(200) + 200);
+            } catch (InterruptedException ignored) {
+                Thread.currentThread().interrupt();
             }
-        } else {
-            log.info("We have already enough connections.");
-        }
+            if (getConnectedNeighbors().size() <= MAX_CONNECTIONS) {
+                Address randomNotConnectedNeighborAddress = getRandomNotConnectedNeighborAddress();
+                if (randomNotConnectedNeighborAddress != null) {
+                    log.info("We try to build an authenticated connection to a random neighbor. " + randomNotConnectedNeighborAddress);
+                    authenticateToPeer(randomNotConnectedNeighborAddress, null, () -> authenticateToNextRandomNeighbor());
+                } else {
+                    log.info("No more neighbors available for connecting.");
+                }
+            } else {
+                log.info("We have already enough connections.");
+            }
+        });
     }
 
     public void authenticateToPeer(Address address, @Nullable Runnable authenticationCompleteHandler, @Nullable Runnable faultHandler) {

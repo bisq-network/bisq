@@ -168,9 +168,9 @@ public class OpenOfferManager {
         executor.allowCoreThreadTimeOut(true);
         executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
 
-        checkArgument(Offer.TTL > 60000, "Offer.TTL <= 60");
+        checkArgument(Offer.TTL > 120000, "Offer.TTL <= 120");
         long period = Offer.TTL - 120000; // 2 min before TTL expires
-        executor.scheduleAtFixedRate(this::rePublishOffers, 0, period, TimeUnit.SECONDS);
+        executor.scheduleAtFixedRate(this::rePublishOffers, 500, period, TimeUnit.MILLISECONDS);
     }
 
     private void rePublishOffers() {

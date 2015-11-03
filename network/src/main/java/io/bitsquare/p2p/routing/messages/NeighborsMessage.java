@@ -9,9 +9,11 @@ public final class NeighborsMessage implements AuthenticationMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
+    public final Address address;
     public final ArrayList<Address> neighborAddresses;
 
-    public NeighborsMessage(ArrayList<Address> neighborAddresses) {
+    public NeighborsMessage(Address address, ArrayList<Address> neighborAddresses) {
+        this.address = address;
         this.neighborAddresses = neighborAddresses;
     }
 
