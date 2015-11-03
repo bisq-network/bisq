@@ -46,6 +46,7 @@ import javax.inject.Named;
 import java.io.File;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -166,7 +167,7 @@ public class OpenOfferManager {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                Thread.currentThread().setName("RepublishOffers-%d");
+                Thread.currentThread().setName("RepublishOffers-" + String.valueOf(new Random().nextInt(1000)));
                 rePublishOffers();
                 try {
                 } catch (Throwable t) {

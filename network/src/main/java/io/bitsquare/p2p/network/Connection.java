@@ -71,7 +71,7 @@ public class Connection {
         uid = UUID.randomUUID().toString();
 
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat("Connection-%d")
+                .setNameFormat("Connection-" + socket.getLocalPort())
                 .setDaemon(true)
                 .build();
 

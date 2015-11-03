@@ -39,7 +39,7 @@ public class Routing {
     private final Map<Address, Long> nonceMap = new ConcurrentHashMap<>();
     private final List<RoutingListener> routingListeners = new CopyOnWriteArrayList<>();
     private final Map<Address, Neighbor> connectedNeighbors = new ConcurrentHashMap<>();
-    private final List<Address> reportedNeighborAddresses = new CopyOnWriteArrayList<>();
+    private final Set<Address> reportedNeighborAddresses = Collections.synchronizedSet(new HashSet<>());
     private final Map<Address, Runnable> authenticationCompleteHandlers = new ConcurrentHashMap<>();
     private final Timer maintenanceTimer = new Timer();
     private final ExecutorService executorService;
@@ -182,8 +182,9 @@ public class Routing {
     public void broadcast(BroadcastMessage message, @Nullable Address sender) {
         log.trace("Broadcast message to " + connectedNeighbors.values().size() + " neighbors.");
         log.trace("message = " + message);
-        log.trace("connectedNeighbors = " + connectedNeighbors);
-        connectedNeighbors.values().parallelStream()
+        printConnectedNeighborsMap();
+
+        connectedNeighbors.values().stream()
                 .filter(e -> !e.address.equals(sender))
                 .forEach(neighbor -> {
                     log.trace("Broadcast message from " + getAddress() + " to " + neighbor.address + ".");
@@ -459,20 +460,20 @@ public class Routing {
             int diff = all - 100;
             List<Address> list = getNotConnectedNeighborAddresses();
             for (int i = 0; i < diff; i++) {
-                Address neighborToRemove = list.remove(new Random().nextInt(list.size()));
-                reportedNeighborAddresses.remove(neighborToRemove);
+                Address toRemove = list.remove(new Random().nextInt(list.size()));
+                reportedNeighborAddresses.remove(toRemove);
             }
         }
     }
 
     private List<Address> getNotConnectedNeighborAddresses() {
-        ArrayList<Address> reportedNeighborsList = new ArrayList<>(getAllNeighborAddresses());
+        ArrayList<Address> list = new ArrayList<>(getAllNeighborAddresses());
         log.debug("## getNotConnectedNeighborAddresses ");
-        log.debug("##  reportedNeighborsList=" + reportedNeighborsList);
-        connectedNeighbors.values().stream().forEach(e -> reportedNeighborsList.remove(e.address));
+        log.debug("##  reportedNeighborsList=" + list);
+        connectedNeighbors.values().stream().forEach(e -> list.remove(e.address));
         log.debug("##  connectedNeighbors=" + connectedNeighbors);
-        log.debug("##  reportedNeighborsList=" + reportedNeighborsList);
-        return reportedNeighborsList;
+        log.debug("##  reportedNeighborsList=" + list);
+        return list;
     }
 
     private void authenticateToNextRandomNeighbor() {
@@ -610,6 +611,10 @@ public class Routing {
         if (disconnectedNeighbor != null)
             UserThread.execute(() -> routingListeners.stream().forEach(e -> e.onNeighborRemoved(peerAddress)));
 
+        log.trace("removeNeighbor [post]");
+        printConnectedNeighborsMap();
+        printReportedNeighborsMap();
+        
         log.trace("removeNeighbor nonceMap=" + nonceMap + " / peerAddress=" + peerAddress);
         nonceMap.remove(peerAddress);
     }
@@ -626,6 +631,9 @@ public class Routing {
 
         if (connectedNeighbors.size() > MAX_CONNECTIONS)
             disconnectOldConnections();
+
+        log.trace("addConnectedNeighbor [post]");
+        printConnectedNeighborsMap();
     }
 
     private Address getAddress() {
