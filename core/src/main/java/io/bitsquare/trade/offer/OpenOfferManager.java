@@ -17,7 +17,6 @@
 
 package io.bitsquare.trade.offer;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
@@ -47,10 +46,11 @@ import javax.inject.Named;
 import java.io.File;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.inject.internal.util.$Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
@@ -70,7 +70,7 @@ public class OpenOfferManager {
     private boolean shutDownRequested;
     private ScheduledThreadPoolExecutor executor;
     private P2PServiceListener p2PServiceListener;
-
+    private final Timer timer = new Timer();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -96,9 +96,13 @@ public class OpenOfferManager {
         openOffersStorage = new Storage<>(storageDir);
         this.openOffers = new TradableList<>(openOffersStorage, "OpenOffers");
 
+        init();
+    }
+
+    private void init() {
         // In case the app did get killed the shutDown from the modules is not called, so we use a shutdown hook
-        Thread shutDownHookThread = new Thread(OpenOfferManager.this::shutDown, "OpenOfferManager.ShutDownHook");
-        Runtime.getRuntime().addShutdownHook(shutDownHookThread);
+        Runtime.getRuntime().addShutdownHook(new Thread(OpenOfferManager.this::shutDown,
+                "OpenOfferManager.ShutDownHook"));
 
         // Handler for incoming offer availability requests
         p2PService.addDecryptedMailListener((decryptedMessageWithPubKey, peerAddress) -> {
@@ -155,25 +159,27 @@ public class OpenOfferManager {
     }
 
     private void startRePublishThread() {
-        if (p2PServiceListener != null) p2PService.removeP2PServiceListener(p2PServiceListener);
+        if (p2PServiceListener != null)
+            p2PService.removeP2PServiceListener(p2PServiceListener);
 
-        ThreadFactoryBuilder builder = new ThreadFactoryBuilder()
-                .setDaemon(true)
-                .setNameFormat("Re-publish offers thread")
-                .setPriority(Thread.MIN_PRIORITY);  // Avoid competing with the GUI thread.
-
-        // An executor that starts up threads when needed and shuts them down later.
-        executor = new ScheduledThreadPoolExecutor(1, builder.build());
-        executor.setKeepAliveTime(5, TimeUnit.SECONDS);
-        executor.allowCoreThreadTimeOut(true);
-        executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-
-        checkArgument(Offer.TTL > 120000, "Offer.TTL <= 120");
-        long period = Offer.TTL - 120000; // 2 min before TTL expires
-        executor.scheduleAtFixedRate(this::rePublishOffers, 500, period, TimeUnit.MILLISECONDS);
+        long period = (long) (Offer.TTL * 0.8);
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                Thread.currentThread().setName("RepublishOffers-%d");
+                rePublishOffers();
+                try {
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    log.error("Executing task failed. " + t.getMessage());
+                }
+            }
+        };
+        timer.scheduleAtFixedRate(timerTask, 500, period);
     }
 
     private void rePublishOffers() {
+        log.trace("rePublishOffers");
         for (OpenOffer openOffer : openOffers) {
             offerBookService.addOffer(openOffer.getOffer(),
                     () -> log.debug("Successful added offer to P2P network"),

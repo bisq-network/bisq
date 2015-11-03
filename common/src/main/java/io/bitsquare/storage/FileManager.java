@@ -39,7 +39,6 @@ import com.google.common.io.Files;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.bitsquare.common.UserThread;
 import org.bitcoinj.core.Utils;
-import org.bitcoinj.utils.Threading;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +48,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.ReentrantLock;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -62,8 +60,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class FileManager<T> {
     private static final Logger log = LoggerFactory.getLogger(FileManager.class);
-    private static final ReentrantLock lock = Threading.lock("FileManager");
-    private static Thread.UncaughtExceptionHandler uncaughtExceptionHandler;
 
     private final File dir;
     private final File storageFile;
@@ -85,7 +81,7 @@ public class FileManager<T> {
 
         ThreadFactoryBuilder builder = new ThreadFactoryBuilder()
                 .setDaemon(true)
-                .setNameFormat("FileManager thread")
+                .setNameFormat("FileManager-%d")
                 .setPriority(Thread.MIN_PRIORITY);  // Avoid competing with the GUI thread.
 
         // An executor that starts up threads when needed and shuts them down later.
@@ -144,40 +140,32 @@ public class FileManager<T> {
         executor.schedule(saver, delay, delayTimeUnit);
     }
 
-    public T read(File file) {
+    public synchronized T read(File file) {
         log.debug("read" + file);
-        lock.lock();
         try (final FileInputStream fileInputStream = new FileInputStream(file);
              final ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
             return (T) objectInputStream.readObject();
         } catch (Throwable t) {
             log.error("Exception at read: " + t.getMessage());
             return null;
-        } finally {
-            lock.unlock();
         }
     }
 
-    public void removeFile(String fileName) {
+    public synchronized void removeFile(String fileName) {
         log.debug("removeFile" + fileName);
         File file = new File(dir, fileName);
-        lock.lock();
-        try {
-            boolean result = file.delete();
-            if (!result)
-                log.warn("Could not delete file: " + file.toString());
+        boolean result = file.delete();
+        if (!result)
+            log.warn("Could not delete file: " + file.toString());
 
-            File backupDir = new File(Paths.get(dir.getAbsolutePath(), "backup").toString());
-            if (backupDir.exists()) {
-                File backupFile = new File(Paths.get(dir.getAbsolutePath(), "backup", fileName).toString());
-                if (backupFile.exists()) {
-                    result = backupFile.delete();
-                    if (!result)
-                        log.warn("Could not delete backupFile: " + file.toString());
-                }
+        File backupDir = new File(Paths.get(dir.getAbsolutePath(), "backup").toString());
+        if (backupDir.exists()) {
+            File backupFile = new File(Paths.get(dir.getAbsolutePath(), "backup", fileName).toString());
+            if (backupFile.exists()) {
+                result = backupFile.delete();
+                if (!result)
+                    log.warn("Could not delete backupFile: " + file.toString());
             }
-        } finally {
-            lock.unlock();
         }
     }
 
@@ -200,34 +188,24 @@ public class FileManager<T> {
         }
     }
 
-    public void removeAndBackupFile(String fileName) throws IOException {
-        lock.lock();
-        try {
-            File corruptedBackupDir = new File(Paths.get(dir.getAbsolutePath(), "corrupted").toString());
-            if (!corruptedBackupDir.exists())
-                if (!corruptedBackupDir.mkdir())
-                    log.warn("make dir failed");
+    public synchronized void removeAndBackupFile(String fileName) throws IOException {
+        File corruptedBackupDir = new File(Paths.get(dir.getAbsolutePath(), "corrupted").toString());
+        if (!corruptedBackupDir.exists())
+            if (!corruptedBackupDir.mkdir())
+                log.warn("make dir failed");
 
-            File corruptedFile = new File(Paths.get(dir.getAbsolutePath(), "corrupted", fileName).toString());
-            renameTempFileToFile(storageFile, corruptedFile);
-        } finally {
-            lock.unlock();
-        }
+        File corruptedFile = new File(Paths.get(dir.getAbsolutePath(), "corrupted", fileName).toString());
+        renameTempFileToFile(storageFile, corruptedFile);
     }
 
-    public void backupFile(String fileName) throws IOException {
-        lock.lock();
-        try {
-            File backupDir = new File(Paths.get(dir.getAbsolutePath(), "backup").toString());
-            if (!backupDir.exists())
-                if (!backupDir.mkdir())
-                    log.warn("make dir failed");
+    public synchronized void backupFile(String fileName) throws IOException {
+        File backupDir = new File(Paths.get(dir.getAbsolutePath(), "backup").toString());
+        if (!backupDir.exists())
+            if (!backupDir.mkdir())
+                log.warn("make dir failed");
 
-            File backupFile = new File(Paths.get(dir.getAbsolutePath(), "backup", fileName).toString());
-            Files.copy(storageFile, backupFile);
-        } finally {
-            lock.unlock();
-        }
+        File backupFile = new File(Paths.get(dir.getAbsolutePath(), "backup", fileName).toString());
+        Files.copy(storageFile, backupFile);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -240,8 +218,7 @@ public class FileManager<T> {
         UserThread.execute(() -> log.info("Save {} completed in {}msec", storageFile, System.currentTimeMillis() - now));
     }
 
-    private void saveToFile(T serializable, File dir, File storageFile) {
-        lock.lock();
+    private synchronized void saveToFile(T serializable, File dir, File storageFile) {
         File tempFile = null;
         FileOutputStream fileOutputStream = null;
         ObjectOutputStream objectOutputStream = null;
@@ -292,27 +269,21 @@ public class FileManager<T> {
                 e.printStackTrace();
                 log.error("Cannot close resources." + e.getMessage());
             }
-            lock.unlock();
         }
     }
 
-    private void renameTempFileToFile(File tempFile, File file) throws IOException {
-        lock.lock();
-        try {
-            if (Utils.isWindows()) {
-                // Work around an issue on Windows whereby you can't rename over existing files.
-                final File canonical = file.getCanonicalFile();
-                if (canonical.exists() && !canonical.delete()) {
-                    throw new IOException("Failed to delete canonical file for replacement with save");
-                }
-                if (!tempFile.renameTo(canonical)) {
-                    throw new IOException("Failed to rename " + tempFile + " to " + canonical);
-                }
-            } else if (!tempFile.renameTo(file)) {
-                throw new IOException("Failed to rename " + tempFile + " to " + file);
+    private synchronized void renameTempFileToFile(File tempFile, File file) throws IOException {
+        if (Utils.isWindows()) {
+            // Work around an issue on Windows whereby you can't rename over existing files.
+            final File canonical = file.getCanonicalFile();
+            if (canonical.exists() && !canonical.delete()) {
+                throw new IOException("Failed to delete canonical file for replacement with save");
             }
-        } finally {
-            lock.unlock();
+            if (!tempFile.renameTo(canonical)) {
+                throw new IOException("Failed to rename " + tempFile + " to " + canonical);
+            }
+        } else if (!tempFile.renameTo(file)) {
+            throw new IOException("Failed to rename " + tempFile + " to " + file);
         }
     }
 }

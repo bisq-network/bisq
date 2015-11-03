@@ -58,71 +58,77 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         final SettableFuture<Connection> resultFuture = SettableFuture.create();
 
         Callable<Connection> task = () -> {
-            Thread.currentThread().setName("Outgoing-connection-to-" + peerAddress);
+            try {
+                Thread.currentThread().setName("Outgoing-connection-to-" + peerAddress);
 
-            Optional<Connection> outboundConnectionOptional = getOutboundConnection(peerAddress);
-            Connection connection = outboundConnectionOptional.isPresent() ? outboundConnectionOptional.get() : null;
+                Optional<Connection> outboundConnectionOptional = getOutboundConnection(peerAddress);
+                Connection connection = outboundConnectionOptional.isPresent() ? outboundConnectionOptional.get() : null;
 
-            if (connection != null && connection.isStopped()) {
-                log.trace("We have a connection which is already stopped in outBoundConnections. Connection.uid=" + connection.getUid());
-                outBoundConnections.remove(connection);
-                connection = null;
-            }
-
-            if (connection == null) {
-                Optional<Connection> inboundConnectionOptional = getInboundConnection(peerAddress);
-                if (inboundConnectionOptional.isPresent()) connection = inboundConnectionOptional.get();
-                if (connection != null)
-                    log.trace("We have found a connection in inBoundConnections. Connection.uid=" + connection.getUid());
-            }
-
-            if (connection == null) {
-                try {
-                    Socket socket = getSocket(peerAddress); // can take a while when using tor
-                    connection = new Connection(socket,
-                            (message1, connection1) -> NetworkNode.this.onMessage(message1, connection1),
-                            new ConnectionListener() {
-                                @Override
-                                public void onConnection(Connection connection) {
-                                    NetworkNode.this.onConnection(connection);
-                                }
-
-                                @Override
-                                public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
-                                    NetworkNode.this.onPeerAddressAuthenticated(peerAddress, connection);
-                                }
-
-                                @Override
-                                public void onDisconnect(Reason reason, Connection connection) {
-                                    log.trace("onDisconnect at outgoing connection to peerAddress " + peerAddress);
-                                    NetworkNode.this.onDisconnect(reason, connection);
-                                }
-
-                                @Override
-                                public void onError(Throwable throwable) {
-                                    NetworkNode.this.onError(throwable);
-                                }
-                            });
-                    if (!outBoundConnections.contains(connection))
-                        outBoundConnections.add(connection);
-                    else
-                        log.error("We have already that connection in our list. That must not happen. "
-                                + outBoundConnections + " / connection=" + connection);
-
-                    log.info("\n\nNetworkNode created new outbound connection:"
-                            + "\npeerAddress=" + peerAddress.port
-                            + "\nconnection.uid=" + connection.getUid()
-                            + "\nmessage=" + message
-                            + "\n\n");
-                } catch (Throwable t) {
-                    resultFuture.setException(t);
-                    return null;
+                if (connection != null && connection.isStopped()) {
+                    log.trace("We have a connection which is already stopped in outBoundConnections. Connection.uid=" + connection.getUid());
+                    outBoundConnections.remove(connection);
+                    connection = null;
                 }
+
+                if (connection == null) {
+                    Optional<Connection> inboundConnectionOptional = getInboundConnection(peerAddress);
+                    if (inboundConnectionOptional.isPresent()) connection = inboundConnectionOptional.get();
+                    if (connection != null)
+                        log.trace("We have found a connection in inBoundConnections. Connection.uid=" + connection.getUid());
+                }
+
+                if (connection == null) {
+                    try {
+                        Socket socket = getSocket(peerAddress); // can take a while when using tor
+                        connection = new Connection(socket,
+                                (message1, connection1) -> NetworkNode.this.onMessage(message1, connection1),
+                                new ConnectionListener() {
+                                    @Override
+                                    public void onConnection(Connection connection) {
+                                        NetworkNode.this.onConnection(connection);
+                                    }
+
+                                    @Override
+                                    public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
+                                        NetworkNode.this.onPeerAddressAuthenticated(peerAddress, connection);
+                                    }
+
+                                    @Override
+                                    public void onDisconnect(Reason reason, Connection connection) {
+                                        log.trace("onDisconnect at outgoing connection to peerAddress " + peerAddress);
+                                        NetworkNode.this.onDisconnect(reason, connection);
+                                    }
+
+                                    @Override
+                                    public void onError(Throwable throwable) {
+                                        NetworkNode.this.onError(throwable);
+                                    }
+                                });
+                        if (!outBoundConnections.contains(connection))
+                            outBoundConnections.add(connection);
+                        else
+                            log.error("We have already that connection in our list. That must not happen. "
+                                    + outBoundConnections + " / connection=" + connection);
+
+                        log.info("\n\nNetworkNode created new outbound connection:"
+                                + "\npeerAddress=" + peerAddress.port
+                                + "\nconnection.uid=" + connection.getUid()
+                                + "\nmessage=" + message
+                                + "\n\n");
+                    } catch (Throwable t) {
+                        resultFuture.setException(t);
+                        return null;
+                    }
+                }
+
+                connection.sendMessage(message);
+
+                return connection;
+            } catch (Throwable t) {
+                t.printStackTrace();
+                log.error("Executing task failed. " + t.getMessage());
+                throw t;
             }
-
-            connection.sendMessage(message);
-
-            return connection;
         };
 
         ListenableFuture<Connection> future = executorService.submit(task);

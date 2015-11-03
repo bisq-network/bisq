@@ -21,6 +21,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -60,48 +61,62 @@ public class TorNetworkNode extends NetworkNode {
 
         this.torDir = torDir;
 
+        init();
+    }
+
+    private void init() {
         selfTestTimeoutTask = new TimerTask() {
             @Override
             public void run() {
-                log.error("A timeout occurred at self test");
-                stopSelfTestTimer();
-                selfTestFailed();
+                try {
+                    log.error("A timeout occurred at self test");
+                    stopSelfTestTimer();
+                    selfTestFailed();
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    log.error("Executing task failed. " + t.getMessage());
+                }
             }
         };
 
         selfTestTask = new TimerTask() {
             @Override
             public void run() {
-                stopTimeoutTimer();
-                if (selfTestRunning.get()) {
-                    log.debug("running self test");
-                    selfTestTimeoutTimer = new Timer();
-                    selfTestTimeoutTimer.schedule(selfTestTimeoutTask, TIMEOUT);
-                    // might be interrupted by timeout task
+                try {
+                    stopTimeoutTimer();
                     if (selfTestRunning.get()) {
-                        nonce = random.nextLong();
-                        log.trace("send msg with nonce " + nonce);
+                        log.debug("running self test");
+                        selfTestTimeoutTimer = new Timer();
+                        selfTestTimeoutTimer.schedule(selfTestTimeoutTask, TIMEOUT);
+                        // might be interrupted by timeout task
+                        if (selfTestRunning.get()) {
+                            nonce = random.nextLong();
+                            log.trace("send msg with nonce " + nonce);
 
-                        try {
-                            SettableFuture<Connection> future = sendMessage(new Address(hiddenServiceDescriptor.getFullAddress()), new SelfTestMessage(nonce));
-                            Futures.addCallback(future, new FutureCallback<Connection>() {
-                                @Override
-                                public void onSuccess(Connection connection) {
-                                    log.trace("Sending self test message succeeded");
-                                }
+                            try {
+                                SettableFuture<Connection> future = sendMessage(new Address(hiddenServiceDescriptor.getFullAddress()), new SelfTestMessage(nonce));
+                                Futures.addCallback(future, new FutureCallback<Connection>() {
+                                    @Override
+                                    public void onSuccess(Connection connection) {
+                                        log.trace("Sending self test message succeeded");
+                                    }
 
-                                @Override
-                                public void onFailure(Throwable throwable) {
-                                    log.error("Error at sending self test message. Exception = " + throwable);
-                                    stopTimeoutTimer();
-                                    throwable.printStackTrace();
-                                    selfTestFailed();
-                                }
-                            });
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                                    @Override
+                                    public void onFailure(Throwable throwable) {
+                                        log.error("Error at sending self test message. Exception = " + throwable);
+                                        stopTimeoutTimer();
+                                        throwable.printStackTrace();
+                                        selfTestFailed();
+                                    }
+                                });
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    log.error("Executing task failed. " + t.getMessage());
                 }
             }
         };
@@ -144,11 +159,7 @@ public class TorNetworkNode extends NetworkNode {
                 TorNetworkNode.this.hiddenServiceDescriptor = hiddenServiceDescriptor;
 
                 startServer(hiddenServiceDescriptor.getServerSocket());
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException ignored) {
-                    Thread.currentThread().interrupt();
-                }
+                Uninterruptibles.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
 
                 setupListeners.stream().forEach(e -> e.onHiddenServiceReady());
 
@@ -252,12 +263,7 @@ public class TorNetworkNode extends NetworkNode {
         restartCounter++;
         if (restartCounter <= MAX_RESTART_ATTEMPTS) {
             shutDown(() -> {
-                try {
-                    Thread.sleep(WAIT_BEFORE_RESTART);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    Thread.currentThread().interrupt();
-                }
+                Uninterruptibles.sleepUninterruptibly(WAIT_BEFORE_RESTART, TimeUnit.MILLISECONDS);
                 log.warn("We restart tor as too many self tests failed.");
                 start(null);
             });

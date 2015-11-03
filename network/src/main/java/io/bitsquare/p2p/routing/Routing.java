@@ -1,8 +1,6 @@
 package io.bitsquare.p2p.routing;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.SettableFuture;
+import com.google.common.util.concurrent.*;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Utils;
@@ -15,10 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 public class Routing {
@@ -47,7 +42,7 @@ public class Routing {
     private final List<Address> reportedNeighborAddresses = new CopyOnWriteArrayList<>();
     private final Map<Address, Runnable> authenticationCompleteHandlers = new ConcurrentHashMap<>();
     private final Timer maintenanceTimer = new Timer();
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
+    private final ExecutorService executorService;
     private volatile boolean shutDownInProgress;
 
 
@@ -61,6 +56,17 @@ public class Routing {
         // We copy it as we remove ourselves later from the list if we are a seed node
         this.seedNodes = new CopyOnWriteArrayList<>(seeds);
 
+        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat("Routing-%d")
+                .setDaemon(true)
+                .build();
+
+        executorService = new ThreadPoolExecutor(5, 50, 10L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(50), threadFactory);
+
+        init(networkNode);
+    }
+
+    private void init(NetworkNode networkNode) {
         networkNode.addMessageListener((message, connection) -> {
             if (message instanceof AuthenticationMessage)
                 processAuthenticationMessage((AuthenticationMessage) message, connection);
@@ -110,8 +116,13 @@ public class Routing {
         maintenanceTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                disconnectOldConnections();
-                pingNeighbors();
+                try {
+                    disconnectOldConnections();
+                    pingNeighbors();
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    log.error("Executing task failed. " + t.getMessage());
+                }
             }
         }, MAINTENANCE_INTERVAL, MAINTENANCE_INTERVAL);
     }
@@ -126,11 +137,7 @@ public class Routing {
             Connection connection = authenticatedConnections.remove(0);
             log.info("Shutdown oldest connection with last activity date=" + connection.getLastActivityDate() + " / connection=" + connection);
             connection.shutDown(() -> disconnectOldConnections());
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException ignored) {
-                Thread.currentThread().interrupt();
-            }
+            Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -153,11 +160,7 @@ public class Routing {
                             removeNeighbor(e.address);
                         }
                     });
-                    try {
-                        Thread.sleep(new Random().nextInt(5000) + 5000);
-                    } catch (InterruptedException ignored) {
-                        Thread.currentThread().interrupt();
-                    }
+                    Uninterruptibles.sleepUninterruptibly(new Random().nextInt(5000) + 5000, TimeUnit.MILLISECONDS);
                 });
     }
 
@@ -247,16 +250,16 @@ public class Routing {
     public void startAuthentication(List<Address> connectedSeedNodes) {
         connectedSeedNodes.forEach(connectedSeedNode -> {
             executorService.submit(() -> {
-                sendRequestAuthenticationMessage(seedNodes, connectedSeedNode);
                 try {
+                    sendRequestAuthenticationMessage(seedNodes, connectedSeedNode);
                     // give a random pause of 3-5 sec. before using the next
-                    Thread.sleep(new Random().nextInt(2000) + 3000);
-                } catch (InterruptedException ignored) {
-                    Thread.currentThread().interrupt();
+                    Uninterruptibles.sleepUninterruptibly(new Random().nextInt(2000) + 3000, TimeUnit.MILLISECONDS);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    log.error("Executing task failed. " + t.getMessage());
                 }
             });
         });
-
     }
 
     private void sendRequestAuthenticationMessage(final List<Address> remainingSeedNodes, final Address address) {
@@ -315,17 +318,11 @@ public class Routing {
             connection.shutDown(() -> {
                 // we delay a bit as listeners for connection.onDisconnect are on other threads and might lead to 
                 // inconsistent state (removal of connection from NetworkNode.authenticatedConnections)
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
+                Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
 
-                try {
-                    if (simulateAuthTorNode > 0) Thread.sleep(simulateAuthTorNode);
-                } catch (InterruptedException e1) {
-                    Thread.currentThread().interrupt();
-                }
+                if (simulateAuthTorNode > 0)
+                    Uninterruptibles.sleepUninterruptibly(simulateAuthTorNode, TimeUnit.MILLISECONDS);
+
                 log.trace("processAuthenticationMessage: connection.shutDown complete. RequestAuthenticationMessage from " + peerAddress + " at " + getAddress());
                 long nonce = addToMapAndGetNonce(peerAddress);
                 SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new ChallengeMessage(getAddress(), requestAuthenticationMessage.nonce, nonce));
@@ -413,25 +410,25 @@ public class Routing {
                 ArrayList<Address> neighborAddresses = ((GetNeighborsMessage) message).neighborAddresses;
                 log.trace("Received neighbors: " + neighborAddresses);
                 // remove ourselves
-                neighborAddresses.remove(getAddress());
                 addToReportedNeighbors(neighborAddresses, connection);
             }
         } else if (message instanceof NeighborsMessage) {
-            log.trace("NeighborsMessage from " + connection.getPeerAddress() + " at " + getAddress());
             NeighborsMessage neighborsMessage = (NeighborsMessage) message;
+            Address peerAddress = neighborsMessage.address;
+            log.trace("NeighborsMessage from " + peerAddress + " at " + getAddress());
             ArrayList<Address> neighborAddresses = neighborsMessage.neighborAddresses;
             log.trace("Received neighbors: " + neighborAddresses);
             // remove ourselves
-            neighborAddresses.remove(getAddress());
             addToReportedNeighbors(neighborAddresses, connection);
-
-            log.info("\n\nAuthenticationComplete\nPeer with address " + connection.getPeerAddress().toString()
-                    + " authenticated (" + connection.getObjectId() + "). Took "
-                    + (System.currentTimeMillis() - startAuthTs) + " ms. \n\n");
 
             // we wait until the handshake is completed before setting the authenticate flag
             // authentication at both sides of the connection
-            setAuthenticated(connection, neighborsMessage.address);
+
+            log.info("\n\nAuthenticationComplete\nPeer with address " + peerAddress
+                    + " authenticated (" + connection.getObjectId() + "). Took "
+                    + (System.currentTimeMillis() - startAuthTs) + " ms. \n\n");
+
+            setAuthenticated(connection, peerAddress);
 
             Runnable authenticationCompleteHandler = authenticationCompleteHandlers.remove(connection.getPeerAddress());
             if (authenticationCompleteHandler != null)
@@ -442,18 +439,21 @@ public class Routing {
     }
 
     private void addToReportedNeighbors(ArrayList<Address> neighborAddresses, Connection connection) {
+        log.trace("addToReportedNeighbors");
         // we disconnect misbehaving nodes trying to send too many neighbors
         // reported neighbors include the peers connected neighbors which is normally max. 8 but we give some headroom 
         // for safety
         if (neighborAddresses.size() > 1100) {
             connection.shutDown();
         } else {
+            neighborAddresses.remove(getAddress());
             reportedNeighborAddresses.addAll(neighborAddresses);
             purgeReportedNeighbors();
         }
     }
 
     private void purgeReportedNeighbors() {
+        log.trace("purgeReportedNeighbors");
         int all = getAllNeighborAddresses().size();
         if (all > 1000) {
             int diff = all - 100;
@@ -478,20 +478,21 @@ public class Routing {
     private void authenticateToNextRandomNeighbor() {
         executorService.submit(() -> {
             try {
-                Thread.sleep(new Random().nextInt(200) + 200);
-            } catch (InterruptedException ignored) {
-                Thread.currentThread().interrupt();
-            }
-            if (getConnectedNeighbors().size() <= MAX_CONNECTIONS) {
-                Address randomNotConnectedNeighborAddress = getRandomNotConnectedNeighborAddress();
-                if (randomNotConnectedNeighborAddress != null) {
-                    log.info("We try to build an authenticated connection to a random neighbor. " + randomNotConnectedNeighborAddress);
-                    authenticateToPeer(randomNotConnectedNeighborAddress, null, () -> authenticateToNextRandomNeighbor());
+                Uninterruptibles.sleepUninterruptibly(new Random().nextInt(200) + 200, TimeUnit.MILLISECONDS);
+                if (getConnectedNeighbors().size() <= MAX_CONNECTIONS) {
+                    Address randomNotConnectedNeighborAddress = getRandomNotConnectedNeighborAddress();
+                    if (randomNotConnectedNeighborAddress != null) {
+                        log.info("We try to build an authenticated connection to a random neighbor. " + randomNotConnectedNeighborAddress);
+                        authenticateToPeer(randomNotConnectedNeighborAddress, null, () -> authenticateToNextRandomNeighbor());
+                    } else {
+                        log.info("No more neighbors available for connecting.");
+                    }
                 } else {
-                    log.info("No more neighbors available for connecting.");
+                    log.info("We have already enough connections.");
                 }
-            } else {
-                log.info("We have already enough connections.");
+            } catch (Throwable t) {
+                t.printStackTrace();
+                log.error("Executing task failed. " + t.getMessage());
             }
         });
     }
@@ -531,9 +532,8 @@ public class Routing {
 
     private boolean verifyNonceAndAuthenticatePeerAddress(long peersNonce, Address peerAddress) {
         log.trace("verifyNonceAndAuthenticatePeerAddress nonceMap=" + nonceMap + " / peerAddress=" + peerAddress);
-        long nonce = nonceMap.remove(peerAddress);
-        boolean result = nonce == peersNonce;
-        return result;
+        Long nonce = nonceMap.remove(peerAddress);
+        return nonce != null && nonce == peersNonce;
     }
 
     private void setAuthenticated(Connection connection, Address peerAddress) {

@@ -51,9 +51,10 @@ public class SetupPayoutTxLockTimeReachedListener extends TradeTask {
                         () -> {
                             try {
                                 log.debug("Block height reached " + blockHeightFuture.get().getHeight());
-                            } catch (InterruptedException | ExecutionException e) {
-                                e.printStackTrace();
+                            } catch (InterruptedException e) {
                                 Thread.currentThread().interrupt();
+                            } catch (ExecutionException e) {
+                                e.printStackTrace();
                             }
                             broadcastTx();
                         },

@@ -1,10 +1,13 @@
 package io.bitsquare.p2p.network;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.common.util.concurrent.Uninterruptibles;
 import io.bitsquare.common.ByteArrayUtils;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.Utils;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
+import javafx.concurrent.Task;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,9 +19,7 @@ import java.net.SocketTimeoutException;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 public class Connection {
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
@@ -37,18 +38,18 @@ public class Connection {
     private final String uid;
 
     private final Map<IllegalRequest, Integer> illegalRequests = new ConcurrentHashMap<>();
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
+    private final ExecutorService executorService;
     private ObjectOutputStream out;
     private ObjectInputStream in;
+
+    @Nullable
+    private Address peerAddress;
+    private boolean isAuthenticated;
 
     private volatile boolean stopped;
     private volatile boolean shutDownInProgress;
     private volatile boolean inputHandlerStopped;
-
     private volatile Date lastActivityDate;
-    @Nullable
-    private Address peerAddress;
-    private boolean isAuthenticated;
 
 
     //TODO got java.util.zip.DataFormatException: invalid distance too far back
@@ -69,6 +70,17 @@ public class Connection {
 
         uid = UUID.randomUUID().toString();
 
+        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat("Connection-%d")
+                .setDaemon(true)
+                .build();
+
+        executorService = new ThreadPoolExecutor(5, 50, 10L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(50), threadFactory);
+
+        init();
+    }
+
+    private void init() {
         try {
             socket.setSoTimeout(SOCKET_TIMEOUT);
             // Need to access first the ObjectOutputStream otherwise the ObjectInputStream would block
@@ -203,12 +215,8 @@ public class Connection {
 
                 if (sendCloseConnectionMessage) {
                     sendMessage(new CloseConnectionMessage());
-                    try {
-                        // give a bit of time for closing gracefully
-                        Thread.sleep(100);
-                    } catch (InterruptedException ignored) {
-                        Thread.currentThread().interrupt();
-                    }
+                    // give a bit of time for closing gracefully
+                    Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
                 }
 
                 try {
@@ -296,61 +304,79 @@ public class Connection {
     private class InputHandler implements Runnable {
         @Override
         public void run() {
-            Thread.currentThread().setName("InputHandler-" + socket.getLocalPort());
-            while (!inputHandlerStopped) {
-                try {
-                    log.trace("InputHandler waiting for incoming messages connection=" + Connection.this.getObjectId());
-                    Object rawInputObject = in.readObject();
-                    log.trace("New data arrived at inputHandler of connection=" + Connection.this.toString()
-                            + " rawInputObject " + rawInputObject);
+            try {
+                Thread.currentThread().setName("InputHandler-" + socket.getLocalPort());
+                while (!inputHandlerStopped) {
+                    try {
+                        log.trace("InputHandler waiting for incoming messages connection=" + Connection.this.getObjectId());
+                        Object rawInputObject = in.readObject();
+                        log.trace("New data arrived at inputHandler of connection=" + Connection.this.toString()
+                                + " rawInputObject " + rawInputObject);
 
-                    int size = ByteArrayUtils.objectToByteArray(rawInputObject).length;
-                    if (size <= MAX_MSG_SIZE) {
-                        Serializable serializable = null;
-                        if (useCompression) {
-                            if (rawInputObject instanceof byte[]) {
-                                byte[] compressedObjectAsBytes = (byte[]) rawInputObject;
-                                size = compressedObjectAsBytes.length;
-                                //log.trace("Read object compressed data size: " + size);
-                                serializable = Utils.decompress(compressedObjectAsBytes);
-                            } else {
-                                reportIllegalRequest(IllegalRequest.InvalidDataType);
-                            }
-                        } else {
-                            if (rawInputObject instanceof Serializable) {
-                                serializable = (Serializable) rawInputObject;
-                            } else {
-                                reportIllegalRequest(IllegalRequest.InvalidDataType);
-                            }
-                        }
-                        //log.trace("Read object decompressed data size: " + ByteArrayUtils.objectToByteArray(serializable).length);
-
-                        // compressed size might be bigger theoretically so we check again after decompression
+                        int size = ByteArrayUtils.objectToByteArray(rawInputObject).length;
                         if (size <= MAX_MSG_SIZE) {
-                            if (serializable instanceof Message) {
-                                lastActivityDate = new Date();
-                                Message message = (Message) serializable;
-                                if (message instanceof CloseConnectionMessage) {
-                                    inputHandlerStopped = true;
-                                    shutDown(false);
+                            Serializable serializable = null;
+                            if (useCompression) {
+                                if (rawInputObject instanceof byte[]) {
+                                    byte[] compressedObjectAsBytes = (byte[]) rawInputObject;
+                                    size = compressedObjectAsBytes.length;
+                                    //log.trace("Read object compressed data size: " + size);
+                                    serializable = Utils.decompress(compressedObjectAsBytes);
                                 } else {
-                                    executorService.submit(() -> messageListener.onMessage(message, Connection.this));
+                                    reportIllegalRequest(IllegalRequest.InvalidDataType);
                                 }
                             } else {
-                                reportIllegalRequest(IllegalRequest.InvalidDataType);
+                                if (rawInputObject instanceof Serializable) {
+                                    serializable = (Serializable) rawInputObject;
+                                } else {
+                                    reportIllegalRequest(IllegalRequest.InvalidDataType);
+                                }
+                            }
+                            //log.trace("Read object decompressed data size: " + ByteArrayUtils.objectToByteArray(serializable).length);
+
+                            // compressed size might be bigger theoretically so we check again after decompression
+                            if (size <= MAX_MSG_SIZE) {
+                                if (serializable instanceof Message) {
+                                    lastActivityDate = new Date();
+                                    Message message = (Message) serializable;
+                                    if (message instanceof CloseConnectionMessage) {
+                                        inputHandlerStopped = true;
+                                        shutDown(false);
+                                    } else {
+                                        Task task = new Task() {
+                                            @Override
+                                            protected Object call() throws Exception {
+                                                return null;
+                                            }
+                                        };
+                                        executorService.submit(() -> {
+                                            try {
+                                                messageListener.onMessage(message, Connection.this);
+                                            } catch (Throwable t) {
+                                                t.printStackTrace();
+                                                log.error("Executing task failed. " + t.getMessage());
+                                            }
+                                        });
+                                    }
+                                } else {
+                                    reportIllegalRequest(IllegalRequest.InvalidDataType);
+                                }
+                            } else {
+                                log.error("Received decompressed data exceeds max. msg size.");
+                                reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
                             }
                         } else {
-                            log.error("Received decompressed data exceeds max. msg size.");
+                            log.error("Received compressed data exceeds max. msg size.");
                             reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
                         }
-                    } else {
-                        log.error("Received compressed data exceeds max. msg size.");
-                        reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
+                    } catch (IOException | ClassNotFoundException e) {
+                        inputHandlerStopped = true;
+                        handleConnectionException(e);
                     }
-                } catch (IOException | ClassNotFoundException e) {
-                    inputHandlerStopped = true;
-                    handleConnectionException(e);
                 }
+            } catch (Throwable t) {
+                t.printStackTrace();
+                log.error("Executing task failed. " + t.getMessage());
             }
         }
     }

@@ -3,6 +3,7 @@ package io.bitsquare.p2p;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bitsquare.app.ProgramArguments;
@@ -35,8 +36,7 @@ import java.io.File;
 import java.math.BigInteger;
 import java.security.PublicKey;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -47,15 +47,20 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class P2PService {
     private static final Logger log = LoggerFactory.getLogger(P2PService.class);
 
+    private final SeedNodesRepository seedNodesRepository;
+    private final int port;
+    private final File torDir;
+    private final boolean useLocalhost;
     @Nullable
     private final EncryptionService encryptionService;
-    private final SetupListener setupListener;
+    private SetupListener setupListener;
     private KeyRing keyRing;
+    private final File storageDir;
     private final NetworkStatistics networkStatistics;
 
-    private final NetworkNode networkNode;
-    private final Routing routing;
-    private final ProtectedExpirableDataStorage dataStorage;
+    private NetworkNode networkNode;
+    private Routing routing;
+    private ProtectedExpirableDataStorage dataStorage;
     private final List<DecryptedMailListener> decryptedMailListeners = new CopyOnWriteArrayList<>();
     private final List<DecryptedMailboxListener> decryptedMailboxListeners = new CopyOnWriteArrayList<>();
     private final List<P2PServiceListener> p2pServiceListeners = new CopyOnWriteArrayList<>();
@@ -73,7 +78,7 @@ public class P2PService {
     private boolean allSeedNodesRequested;
     private Timer sendGetAllDataMessageTimer;
     private volatile boolean hiddenServiceReady;
-
+    private final ExecutorService executorService;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -87,11 +92,27 @@ public class P2PService {
                       @Nullable EncryptionService encryptionService,
                       KeyRing keyRing,
                       @Named("storage.dir") File storageDir) {
+        this.seedNodesRepository = seedNodesRepository;
+        this.port = port;
+        this.torDir = torDir;
+        this.useLocalhost = useLocalhost;
         this.encryptionService = encryptionService;
         this.keyRing = keyRing;
+        this.storageDir = storageDir;
 
         networkStatistics = new NetworkStatistics();
 
+        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat("P2PService-%d")
+                .setDaemon(true)
+                .build();
+
+        executorService = new ThreadPoolExecutor(5, 50, 10L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(50), threadFactory);
+
+        init();
+    }
+
+    private void init() {
         // network layer
         if (useLocalhost) {
             networkNode = new LocalhostNetworkNode(port);
@@ -578,7 +599,12 @@ public class P2PService {
                         sendGetAllDataMessageTimer.schedule(new TimerTask() {
                             @Override
                             public void run() {
-                                sendGetAllDataMessage(remainingSeedNodeAddresses);
+                                try {
+                                    sendGetAllDataMessage(remainingSeedNodeAddresses);
+                                } catch (Throwable t) {
+                                    t.printStackTrace();
+                                    log.error("Executing task failed. " + t.getMessage());
+                                }
                             }
                         }, new Random().nextInt(2000) + 1000);
                     } else {

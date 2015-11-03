@@ -33,7 +33,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
-import org.bitcoinj.core.Context;
 import org.bitcoinj.core.Wallet;
 import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.crypto.MnemonicCode;
@@ -198,31 +197,27 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         log.info("Attempting wallet restore using seed '{}' from date {}", seedWordsTextArea.getText(), datePicker.getValue());
         long date = datePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC);
         DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(seedWordsTextArea.getText()), null, "", date);
-        Context ctx = Context.get();
-        new Thread(() -> {
-            Context.propagate(ctx);
-            walletService.restoreSeedWords(seed,
-                    () -> UserThread.execute(() -> {
-                        log.debug("Wallet restored with seed words");
+        walletService.restoreSeedWords(seed,
+                () -> UserThread.execute(() -> {
+                    log.debug("Wallet restored with seed words");
 
-                        new Popup()
-                                .information("Wallet restored successfully with the new seed words.\n\n" +
-                                        "You need to restart now the application.")
-                                .closeButtonText("Restart")
-                                .onClose(() -> BitsquareApp.restartDownHandler.run()).show();
-                    }),
-                    throwable -> UserThread.execute(() -> {
-                        log.error(throwable.getMessage());
-                        new Popup()
-                                .headLine("Wrong password")
-                                .warning("Please try entering your password again, carefully checking for typos or spelling errors.")
-                                .show();
+                    new Popup()
+                            .information("Wallet restored successfully with the new seed words.\n\n" +
+                                    "You need to restart now the application.")
+                            .closeButtonText("Restart")
+                            .onClose(() -> BitsquareApp.restartDownHandler.run()).show();
+                }),
+                throwable -> UserThread.execute(() -> {
+                    log.error(throwable.getMessage());
+                    new Popup()
+                            .headLine("Wrong password")
+                            .warning("Please try entering your password again, carefully checking for typos or spelling errors.")
+                            .show();
 
-                        new Popup()
-                                .error("An error occurred when restoring the wallet with seed words.\n" +
-                                        "Error message: " + throwable.getMessage())
-                                .show();
-                    }));
-        }, "Restore wallet thread").start();
+                    new Popup()
+                            .error("An error occurred when restoring the wallet with seed words.\n" +
+                                    "Error message: " + throwable.getMessage())
+                            .show();
+                }));
     }
 }

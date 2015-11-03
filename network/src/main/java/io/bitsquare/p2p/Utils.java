@@ -8,6 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.ServerSocket;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -37,11 +38,13 @@ public class Utils {
     public static void shutDownExecutorService(ExecutorService executorService, long waitBeforeShutDown) {
         executorService.shutdown();
         try {
-            executorService.awaitTermination(waitBeforeShutDown, TimeUnit.MILLISECONDS);
+            boolean done = executorService.awaitTermination(waitBeforeShutDown, TimeUnit.MILLISECONDS);
+            if (!done) log.trace("Not all tasks completed at shutdown.");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        executorService.shutdownNow();
+        final List<Runnable> rejected = executorService.shutdownNow();
+        log.debug("Rejected tasks: {}", rejected.size());
     }
 
     public static byte[] compress(Serializable input) {

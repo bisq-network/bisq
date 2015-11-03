@@ -245,9 +245,18 @@ public class WalletService {
     }
 
     public void restoreSeedWords(DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
-        walletAppKit.stopAsync();
-        walletAppKit.awaitTerminated();
-        initialize(seed, resultHandler, exceptionHandler);
+        Context ctx = Context.get();
+        new Thread(() -> {
+            try {
+                Context.propagate(ctx);
+                walletAppKit.stopAsync();
+                walletAppKit.awaitTerminated();
+                initialize(seed, resultHandler, exceptionHandler);
+            } catch (Throwable t) {
+                t.printStackTrace();
+                log.error("Executing task failed. " + t.getMessage());
+            }
+        }, "RestoreWallet-%d").start();
     }
 
 

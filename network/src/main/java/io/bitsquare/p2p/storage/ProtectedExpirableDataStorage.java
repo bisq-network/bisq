@@ -52,6 +52,10 @@ public class ProtectedExpirableDataStorage {
 
         storage = new Storage<>(storageDir);
 
+        init();
+    }
+
+    private void init() {
         ConcurrentHashMap<BigInteger, Integer> persisted = storage.initAndGetPersisted(sequenceNumberMap, "sequenceNumberMap");
         if (persisted != null) {
             sequenceNumberMap = persisted;
@@ -79,9 +83,14 @@ public class ProtectedExpirableDataStorage {
         timer.scheduleAtFixedRate(new TimerTask() {
                                       @Override
                                       public void run() {
-                                          log.info("removeExpiredEntries called ");
-                                          map.entrySet().stream().filter(entry -> entry.getValue().isExpired())
-                                                  .forEach(entry -> map.remove(entry.getKey()));
+                                          try {
+                                              log.info("removeExpiredEntries called ");
+                                              map.entrySet().stream().filter(entry -> entry.getValue().isExpired())
+                                                      .forEach(entry -> map.remove(entry.getKey()));
+                                          } catch (Throwable t) {
+                                              t.printStackTrace();
+                                              log.error("Executing task failed. " + t.getMessage());
+                                          }
                                       }
                                   },
                 CHECK_TTL_INTERVAL,

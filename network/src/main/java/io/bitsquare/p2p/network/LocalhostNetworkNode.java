@@ -1,9 +1,6 @@
 package io.bitsquare.p2p.network;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.*;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 import io.bitsquare.p2p.Address;
@@ -19,6 +16,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class LocalhostNetworkNode extends NetworkNode {
@@ -92,8 +90,9 @@ public class LocalhostNetworkNode extends NetworkNode {
     private void createTorNode(final Consumer<TorNode> resultHandler) {
         Callable<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>> task = () -> {
             long ts = System.currentTimeMillis();
-            log.trace("[simulation] Create TorNode");
-            if (simulateTorDelayTorNode > 0) Thread.sleep(simulateTorDelayTorNode);
+            if (simulateTorDelayTorNode > 0)
+                Uninterruptibles.sleepUninterruptibly(simulateTorDelayTorNode, TimeUnit.MILLISECONDS);
+
             log.info("\n\n############################################################\n" +
                     "TorNode created [simulation]:" +
                     "\nTook " + (System.currentTimeMillis() - ts) + " ms"
@@ -115,8 +114,9 @@ public class LocalhostNetworkNode extends NetworkNode {
     private void createHiddenService(final Consumer<HiddenServiceDescriptor> resultHandler) {
         Callable<HiddenServiceDescriptor> task = () -> {
             long ts = System.currentTimeMillis();
-            log.debug("[simulation] Create hidden service");
-            if (simulateTorDelayHiddenService > 0) Thread.sleep(simulateTorDelayHiddenService);
+            if (simulateTorDelayHiddenService > 0)
+                Uninterruptibles.sleepUninterruptibly(simulateTorDelayHiddenService, TimeUnit.MILLISECONDS);
+
             log.info("\n\n############################################################\n" +
                     "Hidden service created [simulation]:" +
                     "\nTook " + (System.currentTimeMillis() - ts) + " ms"
