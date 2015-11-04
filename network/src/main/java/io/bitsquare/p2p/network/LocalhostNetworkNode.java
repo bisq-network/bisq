@@ -3,6 +3,7 @@ package io.bitsquare.p2p.network;
 import com.google.common.util.concurrent.*;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Address;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.TorNode;
@@ -14,9 +15,8 @@ import java.io.IOException;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.Random;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 public class LocalhostNetworkNode extends NetworkNode {
@@ -47,7 +47,11 @@ public class LocalhostNetworkNode extends NetworkNode {
     public void start(@Nullable SetupListener setupListener) {
         if (setupListener != null) addSetupListener(setupListener);
 
-        executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat("NetworkNode-" + port)
+                .setDaemon(true)
+                .build();
+        executorService = MoreExecutors.listeningDecorator(new ThreadPoolExecutor(5, 50, 10L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(50), threadFactory));
 
         //Tor delay simulation
         createTorNode(torNode -> {
@@ -89,6 +93,7 @@ public class LocalhostNetworkNode extends NetworkNode {
 
     private void createTorNode(final Consumer<TorNode> resultHandler) {
         Callable<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>> task = () -> {
+            Thread.currentThread().setName("CreateTorNode-" + new Random().nextInt(1000));
             long ts = System.currentTimeMillis();
             if (simulateTorDelayTorNode > 0)
                 Uninterruptibles.sleepUninterruptibly(simulateTorDelayTorNode, TimeUnit.MILLISECONDS);
@@ -102,7 +107,7 @@ public class LocalhostNetworkNode extends NetworkNode {
         ListenableFuture<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>> future = executorService.submit(task);
         Futures.addCallback(future, new FutureCallback<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>>() {
             public void onSuccess(TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode) {
-                resultHandler.accept(torNode);
+                UserThread.execute(() -> resultHandler.accept(torNode));
             }
 
             public void onFailure(Throwable throwable) {
@@ -113,6 +118,7 @@ public class LocalhostNetworkNode extends NetworkNode {
 
     private void createHiddenService(final Consumer<HiddenServiceDescriptor> resultHandler) {
         Callable<HiddenServiceDescriptor> task = () -> {
+            Thread.currentThread().setName("CreateHiddenService-" + new Random().nextInt(1000));
             long ts = System.currentTimeMillis();
             if (simulateTorDelayHiddenService > 0)
                 Uninterruptibles.sleepUninterruptibly(simulateTorDelayHiddenService, TimeUnit.MILLISECONDS);
@@ -126,7 +132,7 @@ public class LocalhostNetworkNode extends NetworkNode {
         ListenableFuture<HiddenServiceDescriptor> future = executorService.submit(task);
         Futures.addCallback(future, new FutureCallback<HiddenServiceDescriptor>() {
             public void onSuccess(HiddenServiceDescriptor hiddenServiceDescriptor) {
-                resultHandler.accept(hiddenServiceDescriptor);
+                UserThread.execute(() -> resultHandler.accept(hiddenServiceDescriptor));
             }
 
             public void onFailure(Throwable throwable) {

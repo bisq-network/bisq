@@ -3,6 +3,7 @@ package io.bitsquare.p2p.network;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.bitsquare.common.ByteArrayUtils;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.Utils;
@@ -21,41 +22,42 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
 
+/**
+ * Connection is created by the server thread or by send message from NetworkNode.
+ * All handlers are called on User thread.
+ * Shared data between InputHandler thread and that
+ */
 public class Connection {
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
     private static final int MAX_MSG_SIZE = 5 * 1024 * 1024;         // 5 MB of compressed data
     private static final int MAX_ILLEGAL_REQUESTS = 5;
     private static final int SOCKET_TIMEOUT = 30 * 60 * 1000;        // 30 min.
+    private InputHandler inputHandler;
 
     public static int getMaxMsgSize() {
         return MAX_MSG_SIZE;
     }
 
-    private final Socket socket;
     private final int port;
-    private final MessageListener messageListener;
-    private final ConnectionListener connectionListener;
     private final String uid;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-    private final Map<IllegalRequest, Integer> illegalRequests = new ConcurrentHashMap<>();
-    private final ExecutorService executorService;
-    private ObjectOutputStream out;
-    private ObjectInputStream in;
+    // set in init
+    private ObjectOutputStream objectOutputStream;
+    // holder of state shared between InputHandler and Connection
+    private SharedSpace sharedSpace;
 
+    // mutable data, set from other threads but not changed internally.
     @Nullable
     private Address peerAddress;
-    private boolean isAuthenticated;
 
     private volatile boolean stopped;
     private volatile boolean shutDownInProgress;
-    private volatile boolean inputHandlerStopped;
-    private volatile Date lastActivityDate;
-
 
     //TODO got java.util.zip.DataFormatException: invalid distance too far back
     // java.util.zip.DataFormatException: invalid literal/lengths set
     // use GZIPInputStream but problems with blocking
-    private boolean useCompression = false;
+    boolean useCompression = false;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -63,24 +65,14 @@ public class Connection {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Connection(Socket socket, MessageListener messageListener, ConnectionListener connectionListener) {
-        this.socket = socket;
         port = socket.getLocalPort();
-        this.messageListener = messageListener;
-        this.connectionListener = connectionListener;
-
         uid = UUID.randomUUID().toString();
 
-        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat("Connection-" + socket.getLocalPort())
-                .setDaemon(true)
-                .build();
-
-        executorService = new ThreadPoolExecutor(5, 50, 10L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(50), threadFactory);
-
-        init();
+        init(socket, messageListener, connectionListener);
     }
 
-    private void init() {
+    private void init(Socket socket, MessageListener messageListener, ConnectionListener connectionListener) {
+        sharedSpace = new SharedSpace(this, socket, messageListener, connectionListener, useCompression);
         try {
             socket.setSoTimeout(SOCKET_TIMEOUT);
             // Need to access first the ObjectOutputStream otherwise the ObjectInputStream would block
@@ -88,35 +80,34 @@ public class Connection {
             // When you construct an ObjectInputStream, in the constructor the class attempts to read a header that 
             // the associated ObjectOutputStream on the other end of the connection has written.
             // It will not return until that header has been read. 
-            if (useCompression) {
-                out = new ObjectOutputStream(socket.getOutputStream());
-                in = new ObjectInputStream(socket.getInputStream());
-            } else {
-                out = new ObjectOutputStream(socket.getOutputStream());
-                in = new ObjectInputStream(socket.getInputStream());
-            }
-            executorService.submit(new InputHandler());
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+
+            // We create a thread for handling inputStream data
+            inputHandler = new InputHandler(sharedSpace, objectInputStream, port);
+            executorService.submit(inputHandler);
         } catch (IOException e) {
-            handleConnectionException(e);
+            sharedSpace.handleConnectionException(e);
         }
 
-        lastActivityDate = new Date();
+        sharedSpace.updateLastActivityDate();
 
         log.trace("\nNew connection created " + this.toString());
-        connectionListener.onConnection(this);
+        UserThread.execute(() -> connectionListener.onConnection(this));
     }
 
-    public void onAuthenticationComplete(Address peerAddress, Connection connection) {
-        isAuthenticated = true;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public synchronized void setAuthenticated(Address peerAddress, Connection connection) {
         this.peerAddress = peerAddress;
-        connectionListener.onPeerAddressAuthenticated(peerAddress, connection);
-    }
-
-    public boolean isStopped() {
-        return stopped;
+        UserThread.execute(() -> sharedSpace.getConnectionListener().onPeerAddressAuthenticated(peerAddress, connection));
     }
 
     public void sendMessage(Message message) {
+        // That method we get called form user thread
         if (!stopped) {
             try {
                 log.trace("writeObject " + message + " on connection with port " + port);
@@ -132,28 +123,22 @@ public class Connection {
                         // log.trace("Write object data size: " + ByteArrayUtils.objectToByteArray(message).length);
                         objectToWrite = message;
                     }
-                    out.writeObject(objectToWrite);
-                    out.flush();
+                    objectOutputStream.writeObject(objectToWrite);
+                    objectOutputStream.flush();
 
-                    lastActivityDate = new Date();
+                    sharedSpace.updateLastActivityDate();
                 }
             } catch (IOException e) {
-                handleConnectionException(e);
+                // an exception lead to a shutdown
+                sharedSpace.handleConnectionException(e);
             }
         } else {
-            connectionListener.onDisconnect(ConnectionListener.Reason.ALREADY_CLOSED, Connection.this);
+            UserThread.execute(() -> sharedSpace.getConnectionListener().onDisconnect(ConnectionListener.Reason.ALREADY_CLOSED, this));
         }
     }
 
     public void reportIllegalRequest(IllegalRequest illegalRequest) {
-        log.warn("We got reported an illegal request " + illegalRequest);
-        int prevCounter = illegalRequests.get(illegalRequest);
-        if (prevCounter > illegalRequest.limit) {
-            log.warn("We close connection as we received too many illegal requests.\n" + illegalRequests.toString());
-            shutDown();
-        } else {
-            illegalRequests.put(illegalRequest, ++prevCounter);
-        }
+        sharedSpace.reportIllegalRequest(illegalRequest);
     }
 
 
@@ -162,20 +147,24 @@ public class Connection {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Nullable
-    public Address getPeerAddress() {
+    public synchronized Address getPeerAddress() {
         return peerAddress;
     }
 
     public Date getLastActivityDate() {
-        return lastActivityDate;
+        return sharedSpace.getLastActivityDate();
     }
 
-    public boolean isAuthenticated() {
-        return isAuthenticated;
+    public synchronized boolean isAuthenticated() {
+        return peerAddress != null;
     }
 
     public String getUid() {
         return uid;
+    }
+
+    public boolean isStopped() {
+        return stopped;
     }
 
 
@@ -191,7 +180,7 @@ public class Connection {
         shutDown(true, null);
     }
 
-    private void shutDown(boolean sendCloseConnectionMessage) {
+    void shutDown(boolean sendCloseConnectionMessage) {
         shutDown(sendCloseConnectionMessage, null);
     }
 
@@ -201,17 +190,18 @@ public class Connection {
                     + "\npeerAddress=" + peerAddress
                     + "\nobjectId=" + getObjectId()
                     + "\nuid=" + getUid()
-                    + "\nisAuthenticated=" + isAuthenticated
-                    + "\nsocket.getPort()=" + socket.getPort()
+                    + "\nisAuthenticated=" + isAuthenticated()
+                    + "\nsocket.getPort()=" + sharedSpace.getSocket().getPort()
                     + "\n\n");
             log.debug("ShutDown " + this.getObjectId());
             log.debug("ShutDown connection requested. Connection=" + this.toString());
 
             if (!stopped) {
                 stopped = true;
+                inputHandler.stop();
+
                 shutDownInProgress = true;
-                inputHandlerStopped = true;
-                connectionListener.onDisconnect(ConnectionListener.Reason.SHUT_DOWN, Connection.this);
+                UserThread.execute(() -> sharedSpace.getConnectionListener().onDisconnect(ConnectionListener.Reason.SHUT_DOWN, this));
 
                 if (sendCloseConnectionMessage) {
                     sendMessage(new CloseConnectionMessage());
@@ -220,7 +210,7 @@ public class Connection {
                 }
 
                 try {
-                    socket.close();
+                    sharedSpace.getSocket().close();
                 } catch (SocketException e) {
                     log.trace("SocketException at shutdown might be expected " + e.getMessage());
                 } catch (IOException e) {
@@ -238,24 +228,6 @@ public class Connection {
         }
     }
 
-    private void handleConnectionException(Exception e) {
-        if (e instanceof SocketException) {
-            if (socket.isClosed())
-                connectionListener.onDisconnect(ConnectionListener.Reason.SOCKET_CLOSED, Connection.this);
-            else
-                connectionListener.onDisconnect(ConnectionListener.Reason.RESET, Connection.this);
-        } else if (e instanceof SocketTimeoutException) {
-            connectionListener.onDisconnect(ConnectionListener.Reason.TIMEOUT, Connection.this);
-        } else if (e instanceof EOFException) {
-            connectionListener.onDisconnect(ConnectionListener.Reason.PEER_DISCONNECTED, Connection.this);
-        } else {
-            log.info("Exception at connection with port " + socket.getLocalPort());
-            e.printStackTrace();
-            connectionListener.onDisconnect(ConnectionListener.Reason.UNKNOWN, Connection.this);
-        }
-
-        shutDown(false);
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -265,8 +237,7 @@ public class Connection {
         Connection that = (Connection) o;
 
         if (port != that.port) return false;
-        if (uid != null ? !uid.equals(that.uid) : that.uid != null) return false;
-        return !(peerAddress != null ? !peerAddress.equals(that.peerAddress) : that.peerAddress != null);
+        return !(uid != null ? !uid.equals(that.uid) : that.uid != null);
 
     }
 
@@ -274,21 +245,20 @@ public class Connection {
     public int hashCode() {
         int result = port;
         result = 31 * result + (uid != null ? uid.hashCode() : 0);
-        result = 31 * result + (peerAddress != null ? peerAddress.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
         return "Connection{" +
-                "objectId=" + getObjectId() +
-                ", uid=" + uid +
-                ", port=" + port +
-                ", isAuthenticated=" + isAuthenticated +
+                "port=" + port +
+                ", uid='" + uid + '\'' +
+                ", objectId='" + getObjectId() + '\'' +
+                ", sharedSpace=" + sharedSpace.toString() +
                 ", peerAddress=" + peerAddress +
-                ", lastActivityDate=" + lastActivityDate +
                 ", stopped=" + stopped +
-                ", inputHandlerStopped=" + inputHandlerStopped +
+                ", shutDownInProgress=" + shutDownInProgress +
+                ", useCompression=" + useCompression +
                 '}';
     }
 
@@ -298,50 +268,178 @@ public class Connection {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // SharedSpace
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Holds all shared data between Connection and InputHandler
+     */
+    private static class SharedSpace {
+        private static final Logger log = LoggerFactory.getLogger(SharedSpace.class);
+
+        private final Connection connection;
+        private final Socket socket;
+        private final MessageListener messageListener;
+        private final ConnectionListener connectionListener;
+        private final boolean useCompression;
+        private final Map<IllegalRequest, Integer> illegalRequests = new ConcurrentHashMap<>();
+
+        // mutable
+        private Date lastActivityDate;
+
+        public SharedSpace(Connection connection, Socket socket, MessageListener messageListener,
+                           ConnectionListener connectionListener, boolean useCompression) {
+            this.connection = connection;
+            this.socket = socket;
+            this.messageListener = messageListener;
+            this.connectionListener = connectionListener;
+            this.useCompression = useCompression;
+        }
+
+        public synchronized void updateLastActivityDate() {
+            lastActivityDate = new Date();
+        }
+
+        public synchronized Date getLastActivityDate() {
+            return lastActivityDate;
+        }
+
+        public void reportIllegalRequest(IllegalRequest illegalRequest) {
+            log.warn("We got reported an illegal request " + illegalRequest);
+            int prevCounter = illegalRequests.get(illegalRequest);
+            if (prevCounter > illegalRequest.maxTolerance) {
+                log.warn("We close connection as we received too many illegal requests.\n" + illegalRequests.toString());
+                connection.shutDown(false);
+            } else {
+                illegalRequests.put(illegalRequest, ++prevCounter);
+            }
+        }
+
+        public void handleConnectionException(Exception e) {
+            if (e instanceof SocketException) {
+                if (socket.isClosed())
+                    UserThread.execute(() -> connectionListener.onDisconnect(ConnectionListener.Reason.SOCKET_CLOSED, connection));
+                else
+                    UserThread.execute(() -> connectionListener.onDisconnect(ConnectionListener.Reason.RESET, connection));
+            } else if (e instanceof SocketTimeoutException) {
+                UserThread.execute(() -> connectionListener.onDisconnect(ConnectionListener.Reason.TIMEOUT, connection));
+            } else if (e instanceof EOFException) {
+                UserThread.execute(() -> connectionListener.onDisconnect(ConnectionListener.Reason.PEER_DISCONNECTED, connection));
+            } else {
+                log.info("Exception at connection with port " + socket.getLocalPort());
+                e.printStackTrace();
+                UserThread.execute(() -> connectionListener.onDisconnect(ConnectionListener.Reason.UNKNOWN, connection));
+            }
+
+            connection.shutDown(false);
+        }
+
+        public void onMessage(Message message) {
+            UserThread.execute(() -> messageListener.onMessage(message, connection));
+        }
+
+        public boolean useCompression() {
+            return useCompression;
+        }
+
+        public void shutDown(boolean sendCloseConnectionMessage) {
+            connection.shutDown(sendCloseConnectionMessage);
+        }
+
+        public ConnectionListener getConnectionListener() {
+            return connectionListener;
+        }
+
+        public Socket getSocket() {
+            return socket;
+        }
+
+        public String getConnectionId() {
+            return connection.getObjectId();
+        }
+
+        @Override
+        public String toString() {
+            return "SharedSpace{" +
+                    ", socket=" + socket +
+                    ", useCompression=" + useCompression +
+                    ", illegalRequests=" + illegalRequests +
+                    ", lastActivityDate=" + lastActivityDate +
+                    '}';
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // InputHandler
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private class InputHandler implements Runnable {
+    private static class InputHandler implements Runnable {
+        private static final Logger log = LoggerFactory.getLogger(InputHandler.class);
+
+        private final SharedSpace sharedSpace;
+        private final ObjectInputStream objectInputStream;
+        private final int port;
+        private final ExecutorService executorService;
+        private volatile boolean stopped;
+
+        public InputHandler(SharedSpace sharedSpace, ObjectInputStream objectInputStream, int port) {
+            this.sharedSpace = sharedSpace;
+            this.objectInputStream = objectInputStream;
+            this.port = port;
+
+            final ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                    .setNameFormat("InputHandler-onMessage-" + port)
+                    .setDaemon(true)
+                    .build();
+            executorService = new ThreadPoolExecutor(5, 50, 10L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(50), threadFactory);
+        }
+
+        public void stop() {
+            stopped = true;
+            Utils.shutDownExecutorService(executorService);
+        }
+
         @Override
         public void run() {
             try {
-                Thread.currentThread().setName("InputHandler-" + socket.getLocalPort());
-                while (!inputHandlerStopped) {
+                Thread.currentThread().setName("InputHandler-" + port);
+                while (!stopped && !Thread.currentThread().isInterrupted()) {
                     try {
-                        log.trace("InputHandler waiting for incoming messages connection=" + Connection.this.getObjectId());
-                        Object rawInputObject = in.readObject();
-                        log.trace("New data arrived at inputHandler of connection=" + Connection.this.toString()
+                        log.trace("InputHandler waiting for incoming messages connection=" + sharedSpace.getConnectionId());
+                        Object rawInputObject = objectInputStream.readObject();
+                        log.trace("New data arrived at inputHandler of connection=" + sharedSpace.getConnectionId()
                                 + " rawInputObject " + rawInputObject);
 
                         int size = ByteArrayUtils.objectToByteArray(rawInputObject).length;
-                        if (size <= MAX_MSG_SIZE) {
+                        if (size <= getMaxMsgSize()) {
                             Serializable serializable = null;
-                            if (useCompression) {
+                            if (sharedSpace.useCompression()) {
                                 if (rawInputObject instanceof byte[]) {
                                     byte[] compressedObjectAsBytes = (byte[]) rawInputObject;
                                     size = compressedObjectAsBytes.length;
                                     //log.trace("Read object compressed data size: " + size);
                                     serializable = Utils.decompress(compressedObjectAsBytes);
                                 } else {
-                                    reportIllegalRequest(IllegalRequest.InvalidDataType);
+                                    sharedSpace.reportIllegalRequest(IllegalRequest.InvalidDataType);
                                 }
                             } else {
                                 if (rawInputObject instanceof Serializable) {
                                     serializable = (Serializable) rawInputObject;
                                 } else {
-                                    reportIllegalRequest(IllegalRequest.InvalidDataType);
+                                    sharedSpace.reportIllegalRequest(IllegalRequest.InvalidDataType);
                                 }
                             }
                             //log.trace("Read object decompressed data size: " + ByteArrayUtils.objectToByteArray(serializable).length);
 
                             // compressed size might be bigger theoretically so we check again after decompression
-                            if (size <= MAX_MSG_SIZE) {
+                            if (size <= getMaxMsgSize()) {
                                 if (serializable instanceof Message) {
-                                    lastActivityDate = new Date();
+                                    sharedSpace.updateLastActivityDate();
                                     Message message = (Message) serializable;
                                     if (message instanceof CloseConnectionMessage) {
-                                        inputHandlerStopped = true;
-                                        shutDown(false);
+                                        stopped = true;
+                                        sharedSpace.shutDown(false);
                                     } else {
                                         Task task = new Task() {
                                             @Override
@@ -351,7 +449,7 @@ public class Connection {
                                         };
                                         executorService.submit(() -> {
                                             try {
-                                                messageListener.onMessage(message, Connection.this);
+                                                sharedSpace.onMessage(message);
                                             } catch (Throwable t) {
                                                 t.printStackTrace();
                                                 log.error("Executing task failed. " + t.getMessage());
@@ -359,25 +457,34 @@ public class Connection {
                                         });
                                     }
                                 } else {
-                                    reportIllegalRequest(IllegalRequest.InvalidDataType);
+                                    sharedSpace.reportIllegalRequest(IllegalRequest.InvalidDataType);
                                 }
                             } else {
                                 log.error("Received decompressed data exceeds max. msg size.");
-                                reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
+                                sharedSpace.reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
                             }
                         } else {
                             log.error("Received compressed data exceeds max. msg size.");
-                            reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
+                            sharedSpace.reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
                         }
                     } catch (IOException | ClassNotFoundException e) {
-                        inputHandlerStopped = true;
-                        handleConnectionException(e);
+                        stopped = true;
+                        sharedSpace.handleConnectionException(e);
                     }
                 }
             } catch (Throwable t) {
                 t.printStackTrace();
                 log.error("Executing task failed. " + t.getMessage());
             }
+        }
+
+        @Override
+        public String toString() {
+            return "InputHandler{" +
+                    "sharedSpace=" + sharedSpace +
+                    ", port=" + port +
+                    ", stopped=" + stopped +
+                    '}';
         }
     }
 }

@@ -107,7 +107,7 @@ public class RoutingTest {
         P2PService p2PService1 = seedNode1.getP2PService();
         latch.await();
         Thread.sleep(500);
-        Assert.assertEquals(0, p2PService1.getRouting().getAllNeighborAddresses().size());
+        Assert.assertEquals(0, p2PService1.getRouting().getAllPeerAddresses().size());
     }
 
     @Test
@@ -180,8 +180,8 @@ public class RoutingTest {
         });
         P2PService p2PService2 = seedNode2.getP2PService();
         latch.await();
-        Assert.assertEquals(1, p2PService1.getRouting().getAllNeighborAddresses().size());
-        Assert.assertEquals(1, p2PService2.getRouting().getAllNeighborAddresses().size());
+        Assert.assertEquals(1, p2PService1.getRouting().getAllPeerAddresses().size());
+        Assert.assertEquals(1, p2PService2.getRouting().getAllPeerAddresses().size());
     }
 
     // @Test
@@ -201,9 +201,9 @@ public class RoutingTest {
         // node1: close connection
         // node1 -> node2 ChallengeMessage on new connection
         // node2: authentication to node1 done if nonce ok
-        // node2 -> node1 GetNeighborsMessage
+        // node2 -> node1 GetPeersMessage
         // node1: authentication to node2 done if nonce ok
-        // node1 -> node2 NeighborsMessage
+        // node1 -> node2 PeersMessage
 
         // first authentication from seedNode2 to seedNode1, then from seedNode1 to seedNode2
         CountDownLatch latch1 = new CountDownLatch(2);
@@ -228,7 +228,7 @@ public class RoutingTest {
         seedNode1.getP2PService().getRouting().removeRoutingListener(routingListener1);
         seedNode2.getP2PService().getRouting().removeRoutingListener(routingListener2);
 
-        // wait until Neighbors msg finished
+        // wait until Peers msg finished
         Thread.sleep(sleepTime);
 
         // authentication: 
@@ -259,7 +259,7 @@ public class RoutingTest {
         });
         latch2.await();
 
-        // wait until Neighbors msg finished
+        // wait until Peers msg finished
         Thread.sleep(sleepTime);
 
 
@@ -282,9 +282,9 @@ public class RoutingTest {
         // node1: close connection
         // node1 -> node2 ChallengeMessage on new connection
         // node2: authentication to node1 done if nonce ok
-        // node2 -> node1 GetNeighborsMessage
+        // node2 -> node1 GetPeersMessage
         // node1: authentication to node2 done if nonce ok
-        // node1 -> node2 NeighborsMessage
+        // node1 -> node2 PeersMessage
 
         // first authentication from seedNode2 to seedNode1, then from seedNode1 to seedNode2
         CountDownLatch latch1 = new CountDownLatch(2);
@@ -364,8 +364,8 @@ public class RoutingTest {
         // total authentications at com nodes = 90, System load (nr. threads/used memory (MB)): 170/20
         // total authentications at 20 nodes = 380, System load (nr. threads/used memory (MB)): 525/46
         for (int i = 0; i < length; i++) {
-            nodes[i].getP2PService().getRouting().printConnectedNeighborsMap();
-            nodes[i].getP2PService().getRouting().printReportedNeighborsMap();
+            nodes[i].getP2PService().getRouting().printConnectedPeersMap();
+            nodes[i].getP2PService().getRouting().printReportedPeersMap();
         }
 
         CountDownLatch shutDownLatch = new CountDownLatch(length);

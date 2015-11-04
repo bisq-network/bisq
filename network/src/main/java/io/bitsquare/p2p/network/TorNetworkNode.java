@@ -3,10 +3,9 @@ package io.bitsquare.p2p.network;
 import com.google.common.util.concurrent.*;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
-import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Utils;
-import io.bitsquare.p2p.network.messages.SelfTestMessage;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.TorNode;
 import org.jetbrains.annotations.Nullable;
@@ -16,14 +15,10 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -34,7 +29,6 @@ public class TorNetworkNode extends NetworkNode {
     private static final Random random = new Random();
 
     private static final long TIMEOUT = 5000;
-    private static final long SELF_TEST_INTERVAL = 10 * 60 * 1000;
     private static final int MAX_ERRORS_BEFORE_RESTART = 3;
     private static final int MAX_RESTART_ATTEMPTS = 3;
     private static final int WAIT_BEFORE_RESTART = 2000;
@@ -43,21 +37,13 @@ public class TorNetworkNode extends NetworkNode {
     private final File torDir;
     private TorNode torNode;
     private HiddenServiceDescriptor hiddenServiceDescriptor;
-    private Timer shutDownTimeoutTimer, selfTestTimer, selfTestTimeoutTimer;
-    private TimerTask selfTestTimeoutTask, selfTestTask;
-    private AtomicBoolean selfTestRunning = new AtomicBoolean(false);
+    private Timer shutDownTimeoutTimer;
     private long nonce;
     private int errorCounter;
     private int restartCounter;
     private Runnable shutDownCompleteHandler;
     private boolean torShutDownComplete, networkNodeShutDownDoneComplete;
 
-    static {
-        try {
-            new Socks5Proxy("", 0);
-        } catch (UnknownHostException e) {
-        }
-    }
 
     // /////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -67,77 +53,6 @@ public class TorNetworkNode extends NetworkNode {
         super(port);
 
         this.torDir = torDir;
-
-        init();
-    }
-
-    private void init() {
-        selfTestTimeoutTask = new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    log.error("A timeout occurred at self test");
-                    stopSelfTestTimer();
-                    selfTestFailed();
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                    log.error("Executing task failed. " + t.getMessage());
-                }
-            }
-        };
-
-        selfTestTask = new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    stopTimeoutTimer();
-                    if (selfTestRunning.get()) {
-                        log.debug("running self test");
-                        selfTestTimeoutTimer = new Timer();
-                        selfTestTimeoutTimer.schedule(selfTestTimeoutTask, TIMEOUT);
-                        // might be interrupted by timeout task
-                        if (selfTestRunning.get()) {
-                            nonce = random.nextLong();
-                            log.trace("send msg with nonce " + nonce);
-
-                            try {
-                                SettableFuture<Connection> future = sendMessage(new Address(hiddenServiceDescriptor.getFullAddress()), new SelfTestMessage(nonce));
-                                Futures.addCallback(future, new FutureCallback<Connection>() {
-                                    @Override
-                                    public void onSuccess(Connection connection) {
-                                        log.trace("Sending self test message succeeded");
-                                    }
-
-                                    @Override
-                                    public void onFailure(Throwable throwable) {
-                                        log.error("Error at sending self test message. Exception = " + throwable);
-                                        stopTimeoutTimer();
-                                        throwable.printStackTrace();
-                                        selfTestFailed();
-                                    }
-                                });
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                    log.error("Executing task failed. " + t.getMessage());
-                }
-            }
-        };
-
-        addMessageListener((message, connection) -> {
-            if (message instanceof SelfTestMessage) {
-                if (((SelfTestMessage) message).nonce == nonce) {
-                    runSelfTest();
-                } else {
-                    log.error("Nonce not matching our challenge. That should never happen.");
-                    selfTestFailed();
-                }
-            }
-        });
     }
 
 
@@ -151,13 +66,17 @@ public class TorNetworkNode extends NetworkNode {
             addSetupListener(setupListener);
 
         // executorService might have been shutdown before a restart, so we create a new one
-        executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat("NetworkNode-" + port)
+                .setDaemon(true)
+                .build();
+        executorService = MoreExecutors.listeningDecorator(new ThreadPoolExecutor(5, 50, 10L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(50), threadFactory));
 
         // Create the tor node (takes about 6 sec.)
         createTorNode(torDir, torNode -> {
             TorNetworkNode.this.torNode = torNode;
 
-            setupListeners.stream().forEach(e -> e.onTorNodeReady());
+            setupListeners.stream().forEach(e -> UserThread.execute(() -> e.onTorNodeReady()));
 
             // Create Hidden Service (takes about 40 sec.)
             createHiddenService(torNode, port, hiddenServiceDescriptor -> {
@@ -166,10 +85,7 @@ public class TorNetworkNode extends NetworkNode {
                 startServer(hiddenServiceDescriptor.getServerSocket());
                 Uninterruptibles.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
 
-                setupListeners.stream().forEach(e -> e.onHiddenServiceReady());
-
-                // we are ready. so we start our periodic self test if our HS is available
-                // startSelfTest();
+                setupListeners.stream().forEach(e -> UserThread.execute(() -> e.onHiddenServiceReady()));
             });
         });
     }
@@ -188,13 +104,11 @@ public class TorNetworkNode extends NetworkNode {
         this.shutDownCompleteHandler = shutDownCompleteHandler;
         checkNotNull(executorService, "executorService must not be null");
 
-        selfTestRunning.set(false);
-        stopSelfTestTimer();
-
         shutDownTimeoutTimer = new Timer();
         shutDownTimeoutTimer.schedule(new TimerTask() {
             @Override
             public void run() {
+                Thread.currentThread().setName("ShutDownTimeoutTimer-" + new Random().nextInt(1000));
                 log.error("A timeout occurred at shutDown");
                 shutDownExecutorService();
             }
@@ -236,9 +150,9 @@ public class TorNetworkNode extends NetworkNode {
         });
     }
 
-    // /////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // shutdown, restart
-    // /////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void shutDownExecutorService() {
         shutDownTimeoutTimer.cancel();
@@ -252,14 +166,14 @@ public class TorNetworkNode extends NetworkNode {
             @Override
             public void onSuccess(Object o) {
                 log.info("Shutdown completed");
-                new Thread(shutDownCompleteHandler).start();
+                UserThread.execute(() -> shutDownCompleteHandler.run());
             }
 
             @Override
             public void onFailure(Throwable throwable) {
                 throwable.printStackTrace();
                 log.error("Shutdown executorService failed with exception: " + throwable.getMessage());
-                new Thread(shutDownCompleteHandler).start();
+                UserThread.execute(() -> shutDownCompleteHandler.run());
             }
         });
     }
@@ -284,6 +198,7 @@ public class TorNetworkNode extends NetworkNode {
 
     private void createTorNode(final File torDir, final Consumer<TorNode> resultHandler) {
         Callable<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>> task = () -> {
+            Thread.currentThread().setName("CreateTorNode-" + new Random().nextInt(1000));
             long ts = System.currentTimeMillis();
             if (torDir.mkdirs())
                 log.trace("Created directory for tor");
@@ -314,6 +229,7 @@ public class TorNetworkNode extends NetworkNode {
     private void createHiddenService(final TorNode torNode, final int port,
                                      final Consumer<HiddenServiceDescriptor> resultHandler) {
         Callable<HiddenServiceDescriptor> task = () -> {
+            Thread.currentThread().setName("CreateHiddenService-" + new Random().nextInt(1000));
             long ts = System.currentTimeMillis();
             log.debug("Create hidden service");
             HiddenServiceDescriptor hiddenServiceDescriptor = torNode.createHiddenService(port);
@@ -338,43 +254,6 @@ public class TorNetworkNode extends NetworkNode {
         });
     }
 
-
-    // /////////////////////////////////////////////////////////////////////////////////////////
-    // Self test
-    // /////////////////////////////////////////////////////////////////////////////////////////
-
-    private void startSelfTest() {
-        selfTestRunning.set(true);
-        //addListener(messageListener);
-        runSelfTest();
-    }
-
-    private void runSelfTest() {
-        stopSelfTestTimer();
-        selfTestTimer = new Timer();
-        selfTestTimer.schedule(selfTestTask, SELF_TEST_INTERVAL);
-    }
-
-    private void stopSelfTestTimer() {
-        stopTimeoutTimer();
-        if (selfTestTimer != null)
-            selfTestTimer.cancel();
-    }
-
-    private void stopTimeoutTimer() {
-        if (selfTestTimeoutTimer != null)
-            selfTestTimeoutTimer.cancel();
-    }
-
-    private void selfTestFailed() {
-        errorCounter++;
-        log.warn("Self test failed. Already " + errorCounter + " failure(s). Max. errors before restart: "
-                + MAX_ERRORS_BEFORE_RESTART);
-        if (errorCounter >= MAX_ERRORS_BEFORE_RESTART)
-            restartTor();
-        else
-            runSelfTest();
-    }
 
     @Override
     protected Socket getSocket(Address peerAddress) throws IOException {

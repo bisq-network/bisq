@@ -20,6 +20,7 @@ package io.bitsquare.trade.offer;
 import com.google.inject.Inject;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
@@ -167,8 +168,8 @@ public class OpenOfferManager {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                Thread.currentThread().setName("RepublishOffers-" + String.valueOf(new Random().nextInt(1000)));
-                rePublishOffers();
+                Thread.currentThread().setName("RepublishOffers-" + new Random().nextInt(1000));
+                UserThread.execute(() -> rePublishOffers());
                 try {
                 } catch (Throwable t) {
                     t.printStackTrace();

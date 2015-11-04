@@ -16,7 +16,7 @@ import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.crypto.SealedAndSignedMessage;
 import io.bitsquare.p2p.messaging.*;
 import io.bitsquare.p2p.network.*;
-import io.bitsquare.p2p.routing.Neighbor;
+import io.bitsquare.p2p.routing.Peer;
 import io.bitsquare.p2p.routing.Routing;
 import io.bitsquare.p2p.routing.RoutingListener;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
@@ -67,7 +67,7 @@ public class P2PService {
     private final Map<DecryptedMsgWithPubKey, ProtectedMailboxData> mailboxMap = new ConcurrentHashMap<>();
     private volatile boolean shutDownInProgress;
     private List<Address> seedNodeAddresses;
-    private List<Address> connectedSeedNodes = new CopyOnWriteArrayList<>();
+    private Set<Address> connectedSeedNodes = new HashSet<>();
     private Set<Address> authenticatedPeerAddresses = new HashSet<>();
     private boolean authenticatedToFirstPeer;
     private boolean allDataReceived;
@@ -245,17 +245,17 @@ public class P2PService {
 
         routing.addRoutingListener(new RoutingListener() {
             @Override
-            public void onFirstNeighborAdded(Neighbor neighbor) {
-                log.trace("onFirstNeighbor " + neighbor.toString());
+            public void onFirstPeerAdded(Peer peer) {
+                log.trace("onFirstPeer " + peer.toString());
             }
 
             @Override
-            public void onNeighborAdded(Neighbor neighbor) {
+            public void onPeerAdded(Peer peer) {
 
             }
 
             @Override
-            public void onNeighborRemoved(Address address) {
+            public void onPeerRemoved(Address address) {
 
             }
 
@@ -599,8 +599,9 @@ public class P2PService {
                         sendGetAllDataMessageTimer.schedule(new TimerTask() {
                             @Override
                             public void run() {
+                                Thread.currentThread().setName("SendGetAllDataMessageTimer-" + new Random().nextInt(1000));
                                 try {
-                                    sendGetAllDataMessage(remainingSeedNodeAddresses);
+                                    UserThread.execute(() -> sendGetAllDataMessage(remainingSeedNodeAddresses));
                                 } catch (Throwable t) {
                                     t.printStackTrace();
                                     log.error("Executing task failed. " + t.getMessage());

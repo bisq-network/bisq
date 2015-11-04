@@ -5,9 +5,9 @@ public enum IllegalRequest {
     NotAuthenticated(2),
     InvalidDataType(2);
 
-    public final int limit;
+    public final int maxTolerance;
 
-    IllegalRequest(int limit) {
-        this.limit = limit;
+    IllegalRequest(int maxTolerance) {
+        this.maxTolerance = maxTolerance;
     }
 }

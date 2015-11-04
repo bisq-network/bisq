@@ -4,13 +4,13 @@ import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.network.Connection;
 
 public abstract class AuthenticationListener implements RoutingListener {
-    public void onFirstNeighborAdded(Neighbor neighbor) {
+    public void onFirstPeerAdded(Peer peer) {
     }
 
-    public void onNeighborAdded(Neighbor neighbor) {
+    public void onPeerAdded(Peer peer) {
     }
 
-    public void onNeighborRemoved(Address address) {
+    public void onPeerRemoved(Address address) {
     }
 
     abstract public void onConnectionAuthenticated(Connection connection);

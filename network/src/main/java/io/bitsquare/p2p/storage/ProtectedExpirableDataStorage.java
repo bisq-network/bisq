@@ -20,10 +20,7 @@ import java.io.File;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -80,21 +77,21 @@ public class ProtectedExpirableDataStorage {
             }
         });
 
-        timer.scheduleAtFixedRate(new TimerTask() {
-                                      @Override
-                                      public void run() {
-                                          try {
-                                              log.info("removeExpiredEntries called ");
-                                              map.entrySet().stream().filter(entry -> entry.getValue().isExpired())
-                                                      .forEach(entry -> map.remove(entry.getKey()));
-                                          } catch (Throwable t) {
-                                              t.printStackTrace();
-                                              log.error("Executing task failed. " + t.getMessage());
-                                          }
-                                      }
-                                  },
-                CHECK_TTL_INTERVAL,
-                CHECK_TTL_INTERVAL);
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                Thread.currentThread().setName("RemoveExpiredEntriesTimer-" + new Random().nextInt(1000));
+                try {
+                    log.info("removeExpiredEntries called ");
+                    map.entrySet().stream().filter(entry -> entry.getValue().isExpired())
+                            .forEach(entry -> map.remove(entry.getKey()));
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    log.error("Executing task failed. " + t.getMessage());
+                }
+            }
+        };
+        timer.scheduleAtFixedRate(task, CHECK_TTL_INTERVAL, CHECK_TTL_INTERVAL);
     }
 
 
@@ -127,7 +124,7 @@ public class ProtectedExpirableDataStorage {
 
         if (result) {
             map.put(hashOfPayload, protectedData);
-            log.trace("Data added to our map and it will be broadcasted to our neighbors.");
+            log.trace("Data added to our map and it will be broadcasted to our peers.");
             UserThread.execute(() -> hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedData)));
 
             StringBuilder sb = new StringBuilder("\n\n----------------------------------------------------\n" +
@@ -244,7 +241,7 @@ public class ProtectedExpirableDataStorage {
 
     private void doRemoveProtectedExpirableData(ProtectedData protectedData, BigInteger hashOfPayload) {
         map.remove(hashOfPayload);
-        log.trace("Data removed from our map. We broadcast the message to our neighbors.");
+        log.trace("Data removed from our map. We broadcast the message to our peers.");
         UserThread.execute(() -> hashMapChangedListeners.stream().forEach(e -> e.onRemoved(protectedData)));
 
         StringBuilder sb = new StringBuilder("\n\nSet after removeProtectedExpirableData:\n");

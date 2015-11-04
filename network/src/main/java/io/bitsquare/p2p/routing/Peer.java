@@ -9,14 +9,14 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Random;
 
-public class Neighbor implements Serializable {
-    private static final Logger log = LoggerFactory.getLogger(Neighbor.class);
+public class Peer implements Serializable {
+    private static final Logger log = LoggerFactory.getLogger(Peer.class);
 
     public final Connection connection;
     public final Address address;
     private long pingNonce;
 
-    public Neighbor(Connection connection) {
+    public Peer(Connection connection) {
         this.connection = connection;
         this.address = connection.getPeerAddress();
         pingNonce = new Random().nextLong();
@@ -43,16 +43,16 @@ public class Neighbor implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Neighbor)) return false;
+        if (!(o instanceof Peer)) return false;
 
-        Neighbor neighbor = (Neighbor) o;
+        Peer peer = (Peer) o;
 
-        return !(address != null ? !address.equals(neighbor.address) : neighbor.address != null);
+        return !(address != null ? !address.equals(peer.address) : peer.address != null);
     }
 
     @Override
     public String toString() {
-        return "Neighbor{" +
+        return "Peer{" +
                 "address=" + address +
                 ", pingNonce=" + pingNonce +
                 '}';

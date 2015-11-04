@@ -4,11 +4,11 @@ import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.network.Connection;
 
 public interface RoutingListener {
-    void onFirstNeighborAdded(Neighbor neighbor);
+    void onFirstPeerAdded(Peer peer);
 
-    void onNeighborAdded(Neighbor neighbor);
+    void onPeerAdded(Peer peer);
 
-    void onNeighborRemoved(Address address);
+    void onPeerRemoved(Address address);
 
     // TODO remove
     void onConnectionAuthenticated(Connection connection);

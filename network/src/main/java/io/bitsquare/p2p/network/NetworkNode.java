@@ -1,6 +1,7 @@
 package io.bitsquare.p2p.network;
 
 import com.google.common.util.concurrent.*;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
 import org.jetbrains.annotations.NotNull;
@@ -11,10 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -24,8 +22,8 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     private static final Logger log = LoggerFactory.getLogger(NetworkNode.class);
 
     protected final int port;
-    private final List<Connection> outBoundConnections = new CopyOnWriteArrayList<>();
-    private final List<Connection> inBoundConnections = new CopyOnWriteArrayList<>();
+    private final Set<Connection> outBoundConnections = Collections.synchronizedSet(new HashSet<>());
+    private final Set<Connection> inBoundConnections = Collections.synchronizedSet(new HashSet<>());
     private final List<MessageListener> messageListeners = new CopyOnWriteArrayList<>();
     private final List<ConnectionListener> connectionListeners = new CopyOnWriteArrayList<>();
     protected final List<SetupListener> setupListeners = new CopyOnWriteArrayList<>();
@@ -55,119 +53,88 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     public SettableFuture<Connection> sendMessage(@NotNull Address peerAddress, Message message) {
         log.trace("sendMessage message=" + message);
         checkNotNull(peerAddress, "peerAddress must not be null");
-        final SettableFuture<Connection> resultFuture = SettableFuture.create();
 
-        Callable<Connection> task = () -> {
-            try {
-                Thread.currentThread().setName("Outgoing-connection-to-" + peerAddress);
+        Optional<Connection> outboundConnectionOptional = findOutboundConnection(peerAddress);
+        Connection connection = outboundConnectionOptional.isPresent() ? outboundConnectionOptional.get() : null;
+        if (connection != null)
+            log.trace("We have found a connection in outBoundConnections. Connection.uid=" + connection.getUid());
 
-                Optional<Connection> outboundConnectionOptional = getOutboundConnection(peerAddress);
-                Connection connection = outboundConnectionOptional.isPresent() ? outboundConnectionOptional.get() : null;
+        if (connection != null && connection.isStopped()) {
+            log.trace("We have a connection which is already stopped in outBoundConnections. Connection.uid=" + connection.getUid());
+            outBoundConnections.remove(connection);
+            connection = null;
+        }
 
-                if (connection != null && connection.isStopped()) {
-                    log.trace("We have a connection which is already stopped in outBoundConnections. Connection.uid=" + connection.getUid());
-                    outBoundConnections.remove(connection);
-                    connection = null;
-                }
+        if (connection == null) {
+            Optional<Connection> inboundConnectionOptional = findInboundConnection(peerAddress);
+            if (inboundConnectionOptional.isPresent()) connection = inboundConnectionOptional.get();
+            if (connection != null)
+                log.trace("We have found a connection in inBoundConnections. Connection.uid=" + connection.getUid());
+        }
 
-                if (connection == null) {
-                    Optional<Connection> inboundConnectionOptional = getInboundConnection(peerAddress);
-                    if (inboundConnectionOptional.isPresent()) connection = inboundConnectionOptional.get();
-                    if (connection != null)
-                        log.trace("We have found a connection in inBoundConnections. Connection.uid=" + connection.getUid());
-                }
-
-                if (connection == null) {
+        if (connection != null) {
+            return sendMessage(connection, message);
+        } else {
+            final SettableFuture<Connection> resultFuture = SettableFuture.create();
+            Callable<Connection> task = () -> {
+                Connection newConnection;
+                try {
+                    Thread.currentThread().setName("Outgoing-connection-to-" + peerAddress);
+                    log.trace("We have not found any connection for that peerAddress. " +
+                            "We will create a new outbound connection.");
                     try {
                         Socket socket = getSocket(peerAddress); // can take a while when using tor
-                        connection = new Connection(socket,
-                                (message1, connection1) -> NetworkNode.this.onMessage(message1, connection1),
-                                new ConnectionListener() {
-                                    @Override
-                                    public void onConnection(Connection connection) {
-                                        NetworkNode.this.onConnection(connection);
-                                    }
-
-                                    @Override
-                                    public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
-                                        NetworkNode.this.onPeerAddressAuthenticated(peerAddress, connection);
-                                    }
-
-                                    @Override
-                                    public void onDisconnect(Reason reason, Connection connection) {
-                                        log.trace("onDisconnect at outgoing connection to peerAddress " + peerAddress);
-                                        NetworkNode.this.onDisconnect(reason, connection);
-                                    }
-
-                                    @Override
-                                    public void onError(Throwable throwable) {
-                                        NetworkNode.this.onError(throwable);
-                                    }
-                                });
-                        if (!outBoundConnections.contains(connection))
-                            outBoundConnections.add(connection);
-                        else
-                            log.error("We have already that connection in our list. That must not happen. "
-                                    + outBoundConnections + " / connection=" + connection);
+                        newConnection = new Connection(socket, NetworkNode.this, NetworkNode.this);
+                        outBoundConnections.add(newConnection);
 
                         log.info("\n\nNetworkNode created new outbound connection:"
                                 + "\npeerAddress=" + peerAddress.port
-                                + "\nconnection.uid=" + connection.getUid()
+                                + "\nconnection.uid=" + newConnection.getUid()
                                 + "\nmessage=" + message
                                 + "\n\n");
                     } catch (Throwable t) {
-                        resultFuture.setException(t);
+                        UserThread.execute(() -> resultFuture.setException(t));
                         return null;
                     }
+
+                    newConnection.sendMessage(message);
+
+                    return newConnection;
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    log.error("Executing task failed. " + t.getMessage());
+                    UserThread.execute(() -> resultFuture.setException(t));
+                    throw t;
+                }
+            };
+
+            ListenableFuture<Connection> future = executorService.submit(task);
+            Futures.addCallback(future, new FutureCallback<Connection>() {
+                public void onSuccess(Connection connection) {
+                    UserThread.execute(() -> resultFuture.set(connection));
                 }
 
-                connection.sendMessage(message);
-
-                return connection;
-            } catch (Throwable t) {
-                t.printStackTrace();
-                log.error("Executing task failed. " + t.getMessage());
-                throw t;
-            }
-        };
-
-        ListenableFuture<Connection> future = executorService.submit(task);
-        Futures.addCallback(future, new FutureCallback<Connection>() {
-            public void onSuccess(Connection connection) {
-                resultFuture.set(connection);
-            }
-
-            public void onFailure(@NotNull Throwable throwable) {
-                resultFuture.setException(throwable);
-            }
-        });
-        return resultFuture;
-    }
-
-    private Optional<Connection> getOutboundConnection(Address peerAddress) {
-        return outBoundConnections.stream()
-                .filter(e -> peerAddress.equals(e.getPeerAddress())).findAny();
-    }
-
-    private Optional<Connection> getInboundConnection(Address peerAddress) {
-        return inBoundConnections.stream()
-                .filter(e -> peerAddress.equals(e.getPeerAddress())).findAny();
+                public void onFailure(@NotNull Throwable throwable) {
+                    UserThread.execute(() -> resultFuture.setException(throwable));
+                }
+            });
+            return resultFuture;
+        }
     }
 
     public SettableFuture<Connection> sendMessage(Connection connection, Message message) {
-        final SettableFuture<Connection> resultFuture = SettableFuture.create();
-
         ListenableFuture<Connection> future = executorService.submit(() -> {
             connection.sendMessage(message);
             return connection;
         });
+        final SettableFuture<Connection> resultFuture = SettableFuture.create();
         Futures.addCallback(future, new FutureCallback<Connection>() {
             public void onSuccess(Connection connection) {
-                resultFuture.set(connection);
+                UserThread.execute(() -> resultFuture.set(connection));
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                resultFuture.setException(throwable);
+                UserThread.execute(() -> resultFuture.setException(throwable));
             }
         });
         return resultFuture;
@@ -191,8 +158,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
             getAllConnections().stream().forEach(e -> e.shutDown());
 
             log.info("NetworkNode shutdown complete");
-            if (shutDownCompleteHandler != null) new Thread(shutDownCompleteHandler).start();
-            ;
+            if (shutDownCompleteHandler != null) UserThread.execute(() -> shutDownCompleteHandler.run());
         }
     }
 
@@ -220,7 +186,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     @Override
     public void onConnection(Connection connection) {
-        connectionListeners.stream().forEach(e -> e.onConnection(connection));
+        connectionListeners.stream().forEach(e -> UserThread.execute(() -> e.onConnection(connection)));
     }
 
     @Override
@@ -228,7 +194,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         log.trace("onAuthenticationComplete peerAddress=" + peerAddress);
         log.trace("onAuthenticationComplete connection=" + connection);
 
-        connectionListeners.stream().forEach(e -> e.onPeerAddressAuthenticated(peerAddress, connection));
+        connectionListeners.stream().forEach(e -> UserThread.execute(() -> e.onPeerAddressAuthenticated(peerAddress, connection)));
     }
 
     @Override
@@ -237,12 +203,12 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         log.trace("onDisconnect connection " + connection + ", peerAddress= " + peerAddress);
         outBoundConnections.remove(connection);
         inBoundConnections.remove(connection);
-        connectionListeners.stream().forEach(e -> e.onDisconnect(reason, connection));
+        connectionListeners.stream().forEach(e -> UserThread.execute(() -> e.onDisconnect(reason, connection)));
     }
 
     @Override
     public void onError(Throwable throwable) {
-        connectionListeners.stream().forEach(e -> e.onError(throwable));
+        connectionListeners.stream().forEach(e -> UserThread.execute(() -> e.onError(throwable)));
     }
 
 
@@ -260,7 +226,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     @Override
     public void onMessage(Message message, Connection connection) {
-        messageListeners.stream().forEach(e -> e.onMessage(message, connection));
+        messageListeners.stream().forEach(e -> UserThread.execute(() -> e.onMessage(message, connection)));
     }
 
 
@@ -269,36 +235,45 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void startServer(ServerSocket serverSocket) {
-        server = new Server(serverSocket, (message, connection) -> {
-            NetworkNode.this.onMessage(message, connection);
-        }, new ConnectionListener() {
-            @Override
-            public void onConnection(Connection connection) {
-                // we still have not authenticated so put it to the temp list
-                if (!inBoundConnections.contains(connection))
-                    inBoundConnections.add(connection);
-                NetworkNode.this.onConnection(connection);
-            }
+        server = new Server(serverSocket,
+                (message, connection) -> NetworkNode.this.onMessage(message, connection),
+                new ConnectionListener() {
+                    @Override
+                    public void onConnection(Connection connection) {
+                        // we still have not authenticated so put it to the temp list
+                        inBoundConnections.add(connection);
+                        NetworkNode.this.onConnection(connection);
+                    }
 
-            @Override
-            public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
-                NetworkNode.this.onPeerAddressAuthenticated(peerAddress, connection);
-            }
+                    @Override
+                    public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
+                        NetworkNode.this.onPeerAddressAuthenticated(peerAddress, connection);
+                    }
 
-            @Override
-            public void onDisconnect(Reason reason, Connection connection) {
-                Address peerAddress = connection.getPeerAddress();
-                log.trace("onDisconnect at incoming connection to peerAddress " + peerAddress);
-                inBoundConnections.remove(connection);
-                NetworkNode.this.onDisconnect(reason, connection);
-            }
+                    @Override
+                    public void onDisconnect(Reason reason, Connection connection) {
+                        Address peerAddress = connection.getPeerAddress();
+                        log.trace("onDisconnect at incoming connection to peerAddress " + peerAddress);
+                        inBoundConnections.remove(connection);
+                        NetworkNode.this.onDisconnect(reason, connection);
+                    }
 
-            @Override
-            public void onError(Throwable throwable) {
-                NetworkNode.this.onError(throwable);
-            }
-        });
+                    @Override
+                    public void onError(Throwable throwable) {
+                        NetworkNode.this.onError(throwable);
+                    }
+                });
         executorService.submit(server);
+    }
+
+    private Optional<Connection> findOutboundConnection(Address peerAddress) {
+        return outBoundConnections.stream()
+                .filter(e -> peerAddress.equals(e.getPeerAddress())).findAny();
+    }
+
+    private Optional<Connection> findInboundConnection(Address peerAddress) {
+        return inBoundConnections.stream()
+                .filter(e -> peerAddress.equals(e.getPeerAddress())).findAny();
     }
 
     abstract protected Socket getSocket(Address peerAddress) throws IOException;
