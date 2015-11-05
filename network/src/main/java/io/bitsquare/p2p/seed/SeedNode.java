@@ -1,5 +1,6 @@
 package io.bitsquare.p2p.seed;
 
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.p2p.Address;
@@ -10,7 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SeedNode {
     private static final Logger log = LoggerFactory.getLogger(SeedNode.class);
@@ -31,7 +33,6 @@ public class SeedNode {
 
     // args: port useLocalhost seedNodes
     // eg. 4444 true localhost:7777 localhost:8888 
-    // To stop enter: q
     public void processArgs(String[] args) {
         if (args.length > 0) {
             port = Integer.parseInt(args[0]);
@@ -45,29 +46,6 @@ public class SeedNode {
                         seedNodes.add(new Address(args[i]));
                     }
                 }
-            }
-        }
-    }
-
-    public void listenForExitCommand() {
-        Scanner scan = new Scanner(System.in);
-        String line;
-        while (!stopped && ((line = scan.nextLine()) != null)) {
-            if (line.equals("q")) {
-                Timer timeout = new Timer();
-                timeout.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        log.error("Timeout occurred at shutDown request");
-                        System.exit(1);
-                    }
-                }, 10 * 1000);
-
-                shutDown(() -> {
-                    timeout.cancel();
-                    log.debug("Shutdown seed node complete.");
-                    System.exit(0);
-                });
             }
         }
     }
@@ -103,7 +81,7 @@ public class SeedNode {
             stopped = true;
 
             p2PService.shutDown(() -> {
-                if (shutDownCompleteHandler != null) new Thread(shutDownCompleteHandler).start();
+                if (shutDownCompleteHandler != null) UserThread.execute(shutDownCompleteHandler);
             });
         }
     }

@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import java.security.PublicKey;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.Random;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
@@ -126,6 +127,7 @@ public abstract class TradeProtocol {
         stopTimeout();
 
         timeoutTimer = FxTimer.runLater(Duration.ofMillis(TIMEOUT), () -> {
+            Thread.currentThread().setName("TradeProtocol:Timeout-" + new Random().nextInt(1000));
             log.error("Timeout reached");
             trade.setErrorMessage("A timeout occurred.");
             cleanupTradable();

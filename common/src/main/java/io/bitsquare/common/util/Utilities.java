@@ -19,6 +19,9 @@ package io.bitsquare.common.util;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.*;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
@@ -32,6 +35,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -50,6 +60,58 @@ public class Utilities {
                 .create();
         return gson.toJson(object);
     }
+
+    public static ListeningExecutorService getListeningExecutorService(String name,
+                                                                       int corePoolSize,
+                                                                       int maximumPoolSize,
+                                                                       long keepAliveTime) {
+        return MoreExecutors.listeningDecorator(getThreadPoolExecutor(name, corePoolSize, maximumPoolSize, keepAliveTime));
+    }
+
+    public static ThreadPoolExecutor getThreadPoolExecutor(String name,
+                                                           int corePoolSize,
+                                                           int maximumPoolSize,
+                                                           long keepAliveTime) {
+        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat(name)
+                .setDaemon(true)
+                .build();
+        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime,
+                TimeUnit.SECONDS, new ArrayBlockingQueue<>(maximumPoolSize), threadFactory);
+        threadPoolExecutor.allowCoreThreadTimeOut(true);
+        threadPoolExecutor.setRejectedExecutionHandler((r, executor) -> log.warn("RejectedExecutionHandler called"));
+        return threadPoolExecutor;
+    }
+
+    public static Timer runTimerTaskWithRandomDelay(Runnable runnable, long minDelay, long maxDelay) {
+        return runTimerTaskWithRandomDelay(runnable, minDelay, maxDelay, TimeUnit.SECONDS);
+    }
+
+    public static Timer runTimerTaskWithRandomDelay(Runnable runnable, long minDelay, long maxDelay, TimeUnit timeUnit) {
+        return runTimerTask(runnable, new Random().nextInt((int) (maxDelay - minDelay)) + minDelay, timeUnit);
+    }
+
+    public static Timer runTimerTask(Runnable runnable, long delay) {
+        return runTimerTask(runnable, delay, TimeUnit.SECONDS);
+    }
+
+    public static Timer runTimerTask(Runnable runnable, long delay, TimeUnit timeUnit) {
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                Thread.currentThread().setName("TimerTask-" + new Random().nextInt(10000));
+                try {
+                    runnable.run();
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    log.error("Executing timerTask failed. " + t.getMessage());
+                }
+            }
+        }, timeUnit.convert(delay, timeUnit));
+        return timer;
+    }
+
 
     public static boolean isUnix() {
         return isOSX() || isLinux() || getOSName().contains("freebsd");

@@ -1,9 +1,11 @@
 package io.bitsquare.p2p.routing;
 
-import com.google.common.util.concurrent.*;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
-import io.bitsquare.p2p.Utils;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.routing.messages.*;
 import io.bitsquare.p2p.storage.messages.BroadcastMessage;
@@ -13,7 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class Routing {
@@ -39,10 +44,9 @@ public class Routing {
     private final Map<Address, Long> nonceMap = new ConcurrentHashMap<>();
     private final List<RoutingListener> routingListeners = new CopyOnWriteArrayList<>();
     private final Map<Address, Peer> authenticatedPeers = new ConcurrentHashMap<>();
-    private final Set<Address> reportedPeerAddresses = Collections.synchronizedSet(new HashSet<>());
+    private final Set<Address> reportedPeerAddresses = new CopyOnWriteArraySet<>();
     private final Map<Address, Runnable> authenticationCompleteHandlers = new ConcurrentHashMap<>();
     private final Timer maintenanceTimer = new Timer();
-    private final ExecutorService executorService;
     private volatile boolean shutDownInProgress;
 
 
@@ -55,13 +59,6 @@ public class Routing {
 
         // We copy it as we remove ourselves later from the list if we are a seed node
         this.seedNodes = new CopyOnWriteArrayList<>(seeds);
-
-        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat("Routing-%d")
-                .setDaemon(true)
-                .build();
-
-        executorService = new ThreadPoolExecutor(5, 50, 10L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(50), threadFactory);
 
         init(networkNode);
     }
@@ -116,7 +113,7 @@ public class Routing {
         maintenanceTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                Thread.currentThread().setName("RoutingMaintenanceTimer-" + new Random().nextInt(1000));
+                Thread.currentThread().setName("MaintenanceTimer-" + new Random().nextInt(1000));
                 try {
                     UserThread.execute(() -> {
                         disconnectOldConnections();
@@ -139,8 +136,11 @@ public class Routing {
             log.info("Number of connections exceeds MAX_CONNECTIONS. Current size=" + authenticatedConnections.size());
             Connection connection = authenticatedConnections.remove(0);
             log.info("Shutdown oldest connection with last activity date=" + connection.getLastActivityDate() + " / connection=" + connection);
-            connection.shutDown(() -> disconnectOldConnections());
-            Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
+
+            connection.shutDown(() -> Utilities.runTimerTask(() -> {
+                Thread.currentThread().setName("DelayDisconnectOldConnectionsTimer-" + new Random().nextInt(1000));
+                disconnectOldConnections();
+            }, 1, TimeUnit.MILLISECONDS));
         }
     }
 
@@ -149,7 +149,8 @@ public class Routing {
         List<Peer> connectedPeersList = new ArrayList<>(authenticatedPeers.values());
         connectedPeersList.stream()
                 .filter(e -> (new Date().getTime() - e.connection.getLastActivityDate().getTime()) > PING_AFTER_CONNECTION_INACTIVITY)
-                .forEach(e -> {
+                .forEach(e -> Utilities.runTimerTaskWithRandomDelay(() -> {
+                    Thread.currentThread().setName("DelayPingPeersTimer-" + new Random().nextInt(1000));
                     SettableFuture<Connection> future = networkNode.sendMessage(e.connection, new PingMessage(e.getPingNonce()));
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
@@ -163,8 +164,7 @@ public class Routing {
                             removePeer(e.address);
                         }
                     });
-                    Uninterruptibles.sleepUninterruptibly(new Random().nextInt(5000) + 5000, TimeUnit.MILLISECONDS);
-                });
+                }, 5, 10));
     }
 
 
@@ -177,8 +177,6 @@ public class Routing {
             shutDownInProgress = true;
             if (maintenanceTimer != null)
                 maintenanceTimer.cancel();
-
-            Utils.shutDownExecutorService(executorService);
         }
     }
 
@@ -253,16 +251,7 @@ public class Routing {
 
     public void startAuthentication(Set<Address> connectedSeedNodes) {
         connectedSeedNodes.forEach(connectedSeedNode -> {
-            executorService.submit(() -> {
-                try {
-                    sendRequestAuthenticationMessage(seedNodes, connectedSeedNode);
-                    // give a random pause of 3-5 sec. before using the next
-                    Uninterruptibles.sleepUninterruptibly(new Random().nextInt(2000) + 3000, TimeUnit.MILLISECONDS);
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                    log.error("Executing task failed. " + t.getMessage());
-                }
-            });
+            sendRequestAuthenticationMessage(seedNodes, connectedSeedNode);
         });
     }
 
@@ -319,44 +308,40 @@ public class Routing {
             RequestAuthenticationMessage requestAuthenticationMessage = (RequestAuthenticationMessage) message;
             Address peerAddress = requestAuthenticationMessage.address;
             log.trace("RequestAuthenticationMessage from " + peerAddress + " at " + getAddress());
-            connection.shutDown(() -> {
-                // we delay a bit as listeners for connection.onDisconnect are on other threads and might lead to 
-                // inconsistent state (removal of connection from NetworkNode.authenticatedConnections)
-                Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
 
-                if (simulateAuthTorNode > 0)
-                    Uninterruptibles.sleepUninterruptibly(simulateAuthTorNode, TimeUnit.MILLISECONDS);
-
-                log.trace("processAuthenticationMessage: connection.shutDown complete. RequestAuthenticationMessage from " + peerAddress + " at " + getAddress());
-                long nonce = addToMapAndGetNonce(peerAddress);
-                SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new ChallengeMessage(getAddress(), requestAuthenticationMessage.nonce, nonce));
-                Futures.addCallback(future, new FutureCallback<Connection>() {
-                    @Override
-                    public void onSuccess(Connection connection) {
-                        log.debug("onSuccess ");
-
-                        // TODO check nr. of connections, remove older connections (?)
-                    }
-
-                    @Override
-                    public void onFailure(Throwable throwable) {
-                        log.debug("onFailure ");
-                        // TODO skip to next node or retry?
+            connection.shutDown(() -> Utilities.runTimerTask(() -> {
+                        Thread.currentThread().setName("DelaySendChallengeMessageTimer-" + new Random().nextInt(1000));
+                        // we delay a bit as listeners for connection.onDisconnect are on other threads and might lead to 
+                        // inconsistent state (removal of connection from NetworkNode.authenticatedConnections)
+                        log.trace("processAuthenticationMessage: connection.shutDown complete. RequestAuthenticationMessage from " + peerAddress + " at " + getAddress());
+                        long nonce = addToMapAndGetNonce(peerAddress);
                         SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new ChallengeMessage(getAddress(), requestAuthenticationMessage.nonce, nonce));
                         Futures.addCallback(future, new FutureCallback<Connection>() {
                             @Override
                             public void onSuccess(Connection connection) {
-                                log.debug("onSuccess ");
+                                log.debug("onSuccess sending ChallengeMessage");
                             }
 
                             @Override
                             public void onFailure(Throwable throwable) {
-                                log.debug("onFailure ");
+                                log.warn("onFailure sending ChallengeMessage. We try again.");
+                                SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new ChallengeMessage(getAddress(), requestAuthenticationMessage.nonce, nonce));
+                                Futures.addCallback(future, new FutureCallback<Connection>() {
+                                    @Override
+                                    public void onSuccess(Connection connection) {
+                                        log.debug("onSuccess sending 2. ChallengeMessage");
+                                    }
+
+                                    @Override
+                                    public void onFailure(Throwable throwable) {
+                                        log.warn("onFailure sending ChallengeMessage. We give up.");
+                                    }
+                                });
                             }
                         });
-                    }
-                });
-            });
+                    },
+                    100 + simulateAuthTorNode,
+                    TimeUnit.MILLISECONDS));
         } else if (message instanceof ChallengeMessage) {
             ChallengeMessage challengeMessage = (ChallengeMessage) message;
             Address peerAddress = challengeMessage.address;
@@ -364,16 +349,13 @@ public class Routing {
             HashMap<Address, Long> tempNonceMap = new HashMap<>(nonceMap);
             boolean verified = verifyNonceAndAuthenticatePeerAddress(challengeMessage.requesterNonce, peerAddress);
             if (verified) {
+                connection.setPeerAddress(peerAddress);
                 SettableFuture<Connection> future = networkNode.sendMessage(peerAddress,
                         new GetPeersMessage(getAddress(), challengeMessage.challengerNonce, getAllPeerAddresses()));
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
                     public void onSuccess(Connection connection) {
                         log.trace("GetPeersMessage sent successfully from " + getAddress() + " to " + peerAddress);
-
-                       /* // we wait to get the success to reduce the time span of the moment of 
-                        // authentication at both sides of the connection
-                        setAuthenticated(connection, peerAddress);*/
                     }
 
                     @Override
@@ -480,25 +462,20 @@ public class Routing {
     }
 
     private void authenticateToNextRandomPeer() {
-        executorService.submit(() -> {
-            try {
-                Uninterruptibles.sleepUninterruptibly(new Random().nextInt(200) + 200, TimeUnit.MILLISECONDS);
-                if (getAuthenticatedPeers().size() <= MAX_CONNECTIONS) {
-                    Address randomNotConnectedPeerAddress = getRandomNotConnectedPeerAddress();
-                    if (randomNotConnectedPeerAddress != null) {
-                        log.info("We try to build an authenticated connection to a random peer. " + randomNotConnectedPeerAddress);
-                        authenticateToPeer(randomNotConnectedPeerAddress, null, () -> authenticateToNextRandomPeer());
-                    } else {
-                        log.info("No more peers available for connecting.");
-                    }
+        Utilities.runTimerTaskWithRandomDelay(() -> {
+            Thread.currentThread().setName("DelayAuthenticateToNextRandomPeerTimer-" + new Random().nextInt(1000));
+            if (getAuthenticatedPeers().size() <= MAX_CONNECTIONS) {
+                Address randomNotConnectedPeerAddress = getRandomNotConnectedPeerAddress();
+                if (randomNotConnectedPeerAddress != null) {
+                    log.info("We try to build an authenticated connection to a random peer. " + randomNotConnectedPeerAddress);
+                    authenticateToPeer(randomNotConnectedPeerAddress, null, () -> authenticateToNextRandomPeer());
                 } else {
-                    log.info("We have already enough connections.");
+                    log.info("No more peers available for connecting.");
                 }
-            } catch (Throwable t) {
-                t.printStackTrace();
-                log.error("Executing task failed. " + t.getMessage());
+            } else {
+                log.info("We have already enough connections.");
             }
-        });
+        }, 200, 400, TimeUnit.MILLISECONDS);
     }
 
     public void authenticateToPeer(Address address, @Nullable Runnable authenticationCompleteHandler, @Nullable Runnable faultHandler) {

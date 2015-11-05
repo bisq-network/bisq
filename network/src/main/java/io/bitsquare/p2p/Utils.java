@@ -8,10 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.ServerSocket;
-import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
@@ -29,22 +26,6 @@ public class Utils {
         } finally {
             return new Random().nextInt(10000) + 50000;
         }
-    }
-
-    public static void shutDownExecutorService(ExecutorService executorService) {
-        shutDownExecutorService(executorService, 200);
-    }
-
-    public static void shutDownExecutorService(ExecutorService executorService, long waitBeforeShutDown) {
-        executorService.shutdown();
-        try {
-            boolean done = executorService.awaitTermination(waitBeforeShutDown, TimeUnit.MILLISECONDS);
-            if (!done) log.trace("Not all tasks completed at shutdown.");
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        final List<Runnable> rejected = executorService.shutdownNow();
-        log.debug("Rejected tasks: {}", rejected.size());
     }
 
     public static byte[] compress(Serializable input) {

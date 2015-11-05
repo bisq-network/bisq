@@ -17,8 +17,9 @@
 
 package io.bitsquare.common;
 
+import com.google.common.util.concurrent.MoreExecutors;
+
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 public class UserThread {
 
@@ -30,7 +31,12 @@ public class UserThread {
         UserThread.executor = executor;
     }
 
-    public static Executor executor = Executors.newSingleThreadExecutor();
+    static {
+        // If not defined we use same thread as caller thread
+        executor = MoreExecutors.directExecutor();
+    }
+
+    private static Executor executor;
 
     public static void execute(Runnable command) {
         UserThread.executor.execute(command);

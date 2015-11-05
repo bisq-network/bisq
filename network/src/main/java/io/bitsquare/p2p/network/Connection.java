@@ -1,6 +1,6 @@
 package io.bitsquare.p2p.network;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.bitsquare.common.ByteArrayUtils;
 import io.bitsquare.common.UserThread;
@@ -20,7 +20,10 @@ import java.net.SocketTimeoutException;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Connection is created by the server thread or by send message from NetworkNode.
@@ -33,12 +36,13 @@ public class Connection {
     private static final int MAX_ILLEGAL_REQUESTS = 5;
     private static final int SOCKET_TIMEOUT = 30 * 60 * 1000;        // 30 min.
     private InputHandler inputHandler;
+    private boolean isAuthenticated;
 
     public static int getMaxMsgSize() {
         return MAX_MSG_SIZE;
     }
 
-    private final int port;
+    private final String portInfo;
     private final String uid;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
@@ -65,7 +69,7 @@ public class Connection {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Connection(Socket socket, MessageListener messageListener, ConnectionListener connectionListener) {
-        port = socket.getLocalPort();
+        portInfo = "localPort=" + socket.getLocalPort() + "/port=" + socket.getPort();
         uid = UUID.randomUUID().toString();
 
         init(socket, messageListener, connectionListener);
@@ -84,7 +88,7 @@ public class Connection {
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
 
             // We create a thread for handling inputStream data
-            inputHandler = new InputHandler(sharedSpace, objectInputStream, port);
+            inputHandler = new InputHandler(sharedSpace, objectInputStream, portInfo);
             executorService.submit(inputHandler);
         } catch (IOException e) {
             sharedSpace.handleConnectionException(e);
@@ -103,14 +107,14 @@ public class Connection {
 
     public synchronized void setAuthenticated(Address peerAddress, Connection connection) {
         this.peerAddress = peerAddress;
+        isAuthenticated = true;
         UserThread.execute(() -> sharedSpace.getConnectionListener().onPeerAddressAuthenticated(peerAddress, connection));
     }
 
     public void sendMessage(Message message) {
-        // That method we get called form user thread
         if (!stopped) {
             try {
-                log.trace("writeObject " + message + " on connection with port " + port);
+                log.trace("writeObject " + message + " on connection with port " + portInfo);
                 if (!stopped) {
                     Object objectToWrite;
                     if (useCompression) {
@@ -156,7 +160,7 @@ public class Connection {
     }
 
     public synchronized boolean isAuthenticated() {
-        return peerAddress != null;
+        return isAuthenticated;
     }
 
     public String getUid() {
@@ -204,30 +208,42 @@ public class Connection {
                 UserThread.execute(() -> sharedSpace.getConnectionListener().onDisconnect(ConnectionListener.Reason.SHUT_DOWN, this));
 
                 if (sendCloseConnectionMessage) {
-                    sendMessage(new CloseConnectionMessage());
-                    // give a bit of time for closing gracefully
-                    Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
-                }
+                    executorService.submit(() -> {
+                        Thread.currentThread().setName("Connection:Send-CloseConnectionMessage-" + this.getObjectId());
+                        try {
+                            sendMessage(new CloseConnectionMessage());
+                            // give a bit of time for closing gracefully
+                            Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
 
-                try {
-                    sharedSpace.getSocket().close();
-                } catch (SocketException e) {
-                    log.trace("SocketException at shutdown might be expected " + e.getMessage());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    Utils.shutDownExecutorService(executorService);
-
-                    log.debug("Connection shutdown complete " + this.toString());
-                    // dont use executorService as its shut down but call handler on own thread 
-                    // to not get interrupted by caller
-                    if (shutDownCompleteHandler != null)
-                        new Thread(shutDownCompleteHandler).start();
+                            UserThread.execute(() -> continueShutDown(shutDownCompleteHandler));
+                        } catch (Throwable t) {
+                            throw t;
+                        }
+                    });
+                } else {
+                    continueShutDown(shutDownCompleteHandler);
                 }
             }
         }
     }
 
+    private void continueShutDown(@Nullable Runnable shutDownCompleteHandler) {
+        try {
+            sharedSpace.getSocket().close();
+        } catch (SocketException e) {
+            log.trace("SocketException at shutdown might be expected " + e.getMessage());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            MoreExecutors.shutdownAndAwaitTermination(executorService, 500, TimeUnit.MILLISECONDS);
+
+            log.debug("Connection shutdown complete " + this.toString());
+            // dont use executorService as its shut down but call handler on own thread 
+            // to not get interrupted by caller
+            if (shutDownCompleteHandler != null)
+                UserThread.execute(shutDownCompleteHandler);
+        }
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -236,14 +252,14 @@ public class Connection {
 
         Connection that = (Connection) o;
 
-        if (port != that.port) return false;
+        if (portInfo != null ? !portInfo.equals(that.portInfo) : that.portInfo != null) return false;
         return !(uid != null ? !uid.equals(that.uid) : that.uid != null);
 
     }
 
     @Override
     public int hashCode() {
-        int result = port;
+        int result = portInfo != null ? portInfo.hashCode() : 0;
         result = 31 * result + (uid != null ? uid.hashCode() : 0);
         return result;
     }
@@ -251,7 +267,7 @@ public class Connection {
     @Override
     public String toString() {
         return "Connection{" +
-                "port=" + port +
+                "portInfo=" + portInfo +
                 ", uid='" + uid + '\'' +
                 ", objectId='" + getObjectId() + '\'' +
                 ", sharedSpace=" + sharedSpace.toString() +
@@ -264,6 +280,10 @@ public class Connection {
 
     public String getObjectId() {
         return super.toString().split("@")[1].toString();
+    }
+
+    public void setPeerAddress(@Nullable Address peerAddress) {
+        this.peerAddress = peerAddress;
     }
 
 
@@ -379,31 +399,23 @@ public class Connection {
 
         private final SharedSpace sharedSpace;
         private final ObjectInputStream objectInputStream;
-        private final int port;
-        private final ExecutorService executorService;
+        private final String portInfo;
         private volatile boolean stopped;
 
-        public InputHandler(SharedSpace sharedSpace, ObjectInputStream objectInputStream, int port) {
+        public InputHandler(SharedSpace sharedSpace, ObjectInputStream objectInputStream, String portInfo) {
             this.sharedSpace = sharedSpace;
             this.objectInputStream = objectInputStream;
-            this.port = port;
-
-            final ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                    .setNameFormat("InputHandler-onMessage-" + port)
-                    .setDaemon(true)
-                    .build();
-            executorService = new ThreadPoolExecutor(5, 50, 10L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(50), threadFactory);
+            this.portInfo = portInfo;
         }
 
         public void stop() {
             stopped = true;
-            Utils.shutDownExecutorService(executorService);
         }
 
         @Override
         public void run() {
             try {
-                Thread.currentThread().setName("InputHandler-" + port);
+                Thread.currentThread().setName("InputHandler-" + portInfo);
                 while (!stopped && !Thread.currentThread().isInterrupted()) {
                     try {
                         log.trace("InputHandler waiting for incoming messages connection=" + sharedSpace.getConnectionId());
@@ -447,14 +459,7 @@ public class Connection {
                                                 return null;
                                             }
                                         };
-                                        executorService.submit(() -> {
-                                            try {
-                                                sharedSpace.onMessage(message);
-                                            } catch (Throwable t) {
-                                                t.printStackTrace();
-                                                log.error("Executing task failed. " + t.getMessage());
-                                            }
-                                        });
+                                        sharedSpace.onMessage(message);
                                     }
                                 } else {
                                     sharedSpace.reportIllegalRequest(IllegalRequest.InvalidDataType);
@@ -482,7 +487,7 @@ public class Connection {
         public String toString() {
             return "InputHandler{" +
                     "sharedSpace=" + sharedSpace +
-                    ", port=" + port +
+                    ", port=" + portInfo +
                     ", stopped=" + stopped +
                     '}';
         }

@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.Date;
+import java.util.Random;
 
 public class OpenOffer implements Tradable, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -102,6 +103,7 @@ public class OpenOffer implements Tradable, Serializable {
         timeoutTimer = FxTimer.runLater(
                 Duration.ofMillis(TIMEOUT),
                 () -> {
+                    Thread.currentThread().setName("OpenOffer:Timeout-" + new Random().nextInt(1000));
                     log.debug("Timeout reached");
                     if (state == State.RESERVED)
                         setState(State.AVAILABLE);

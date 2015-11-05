@@ -50,8 +50,6 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import static com.google.inject.internal.util.$Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
@@ -70,7 +68,6 @@ public class OpenOfferManager {
     private final TradableList<OpenOffer> openOffers;
     private final Storage<TradableList<OpenOffer>> openOffersStorage;
     private boolean shutDownRequested;
-    private ScheduledThreadPoolExecutor executor;
     private P2PServiceListener p2PServiceListener;
     private final Timer timer = new Timer();
 
@@ -181,7 +178,7 @@ public class OpenOfferManager {
     }
 
     private void rePublishOffers() {
-        log.trace("rePublishOffers");
+        if (!openOffers.isEmpty()) log.trace("rePublishOffers");
         for (OpenOffer openOffer : openOffers) {
             offerBookService.addOffer(openOffer.getOffer(),
                     () -> log.debug("Successful added offer to P2P network"),
@@ -196,14 +193,8 @@ public class OpenOfferManager {
     }
 
     public void shutDown(Runnable completeHandler) {
-        if (executor != null) {
-            executor.shutdown();
-            try {
-                executor.awaitTermination(5, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
+        if (timer != null)
+            timer.cancel();
 
         if (!shutDownRequested) {
             log.debug("shutDown");

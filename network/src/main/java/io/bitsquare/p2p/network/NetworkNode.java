@@ -2,6 +2,7 @@ package io.bitsquare.p2p.network;
 
 import com.google.common.util.concurrent.*;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
 import org.jetbrains.annotations.NotNull;
@@ -10,11 +11,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.*;
-import java.util.concurrent.Callable;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -22,8 +27,8 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     private static final Logger log = LoggerFactory.getLogger(NetworkNode.class);
 
     protected final int port;
-    private final Set<Connection> outBoundConnections = Collections.synchronizedSet(new HashSet<>());
-    private final Set<Connection> inBoundConnections = Collections.synchronizedSet(new HashSet<>());
+    private final Set<Connection> outBoundConnections = new CopyOnWriteArraySet<>();
+    private final Set<Connection> inBoundConnections = new CopyOnWriteArraySet<>();
     private final List<MessageListener> messageListeners = new CopyOnWriteArrayList<>();
     private final List<ConnectionListener> connectionListeners = new CopyOnWriteArrayList<>();
     protected final List<SetupListener> setupListeners = new CopyOnWriteArrayList<>();
@@ -76,15 +81,16 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
             return sendMessage(connection, message);
         } else {
             final SettableFuture<Connection> resultFuture = SettableFuture.create();
-            Callable<Connection> task = () -> {
-                Connection newConnection;
+            ListenableFuture<Connection> future = executorService.submit(() -> {
+                Thread.currentThread().setName("NetworkNode:SendMessage-create-new-outbound-connection-to-" + peerAddress);
                 try {
-                    Thread.currentThread().setName("Outgoing-connection-to-" + peerAddress);
+                    Connection newConnection;
                     log.trace("We have not found any connection for that peerAddress. " +
                             "We will create a new outbound connection.");
                     try {
                         Socket socket = getSocket(peerAddress); // can take a while when using tor
                         newConnection = new Connection(socket, NetworkNode.this, NetworkNode.this);
+                        newConnection.setPeerAddress(peerAddress);
                         outBoundConnections.add(newConnection);
 
                         log.info("\n\nNetworkNode created new outbound connection:"
@@ -93,28 +99,26 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                                 + "\nmessage=" + message
                                 + "\n\n");
                     } catch (Throwable t) {
-                        UserThread.execute(() -> resultFuture.setException(t));
-                        return null;
+                        throw t;
                     }
 
                     newConnection.sendMessage(message);
 
                     return newConnection;
                 } catch (Throwable t) {
-                    t.printStackTrace();
-                    log.error("Executing task failed. " + t.getMessage());
-                    UserThread.execute(() -> resultFuture.setException(t));
                     throw t;
                 }
-            };
-
-            ListenableFuture<Connection> future = executorService.submit(task);
+            });
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 public void onSuccess(Connection connection) {
                     UserThread.execute(() -> resultFuture.set(connection));
                 }
 
                 public void onFailure(@NotNull Throwable throwable) {
+                    if (!(throwable instanceof ConnectException)) {
+                        throwable.printStackTrace();
+                        log.error("Executing task failed. " + throwable.getMessage());
+                    }
                     UserThread.execute(() -> resultFuture.setException(throwable));
                 }
             });
@@ -123,9 +127,15 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     }
 
     public SettableFuture<Connection> sendMessage(Connection connection, Message message) {
+        // connection.sendMessage might take a bit (compression, write to stream), so we use a thread to not block
         ListenableFuture<Connection> future = executorService.submit(() -> {
-            connection.sendMessage(message);
-            return connection;
+            Thread.currentThread().setName("NetworkNode:SendMessage-to-connection-" + connection.getObjectId());
+            try {
+                connection.sendMessage(message);
+                return connection;
+            } catch (Throwable t) {
+                throw t;
+            }
         });
         final SettableFuture<Connection> resultFuture = SettableFuture.create();
         Futures.addCallback(future, new FutureCallback<Connection>() {
@@ -233,6 +243,10 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected void createExecutor() {
+        executorService = Utilities.getListeningExecutorService("NetworkNode-" + port, 20, 50, 120L);
+    }
 
     protected void startServer(ServerSocket serverSocket) {
         server = new Server(serverSocket,

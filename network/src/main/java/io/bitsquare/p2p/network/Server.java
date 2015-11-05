@@ -29,13 +29,14 @@ public class Server implements Runnable {
     @Override
     public void run() {
         try {
-            Thread.currentThread().setName("Server-" + serverSocket.getLocalPort());
+            // Thread created by NetworkNode
+            Thread.currentThread().setName("NetworkNode:Server-" + serverSocket.getLocalPort());
             try {
                 while (!stopped && !Thread.currentThread().isInterrupted()) {
                     log.info("Ready to accept new clients on port " + serverSocket.getLocalPort());
                     final Socket socket = serverSocket.accept();
                     if (!stopped) {
-                        log.info("Accepted new client on port " + socket.getLocalPort());
+                        log.info("Accepted new client on localPort/port " + socket.getLocalPort() + "/" + socket.getPort());
                         Connection connection = new Connection(socket, messageListener, connectionListener);
                         log.info("\n\nServer created new inbound connection:"
                                 + "\nserverSocket.getLocalPort()=" + serverSocket.getLocalPort()

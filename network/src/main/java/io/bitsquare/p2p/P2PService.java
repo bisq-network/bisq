@@ -3,7 +3,6 @@ package io.bitsquare.p2p;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bitsquare.app.ProgramArguments;
@@ -12,6 +11,7 @@ import io.bitsquare.common.crypto.CryptoException;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.crypto.SealedAndSigned;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.crypto.SealedAndSignedMessage;
 import io.bitsquare.p2p.messaging.*;
@@ -36,7 +36,8 @@ import java.io.File;
 import java.math.BigInteger;
 import java.security.PublicKey;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -78,7 +79,6 @@ public class P2PService {
     private boolean allSeedNodesRequested;
     private Timer sendGetAllDataMessageTimer;
     private volatile boolean hiddenServiceReady;
-    private final ExecutorService executorService;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -101,13 +101,6 @@ public class P2PService {
         this.storageDir = storageDir;
 
         networkStatistics = new NetworkStatistics();
-
-        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat("P2PService-%d")
-                .setDaemon(true)
-                .build();
-
-        executorService = new ThreadPoolExecutor(5, 50, 10L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(50), threadFactory);
 
         init();
     }
@@ -204,7 +197,7 @@ public class P2PService {
 
         networkNode.addMessageListener((message, connection) -> {
             if (message instanceof GetDataSetMessage) {
-                log.trace("Received GetAllDataMessage: " + message);
+                log.trace("Received GetDataSetMessage: " + message);
 
                 // we only reply if we did not get the message form ourselves (in case we are a seed node)
                 if (!getDataSetMessageNonceList.contains(((GetDataSetMessage) message).nonce)) {
@@ -595,19 +588,17 @@ public class P2PService {
                     // we try to connect to 2 seed nodes
                     if (connectedSeedNodes.size() < 2 && !remainingSeedNodeAddresses.isEmpty()) {
                         // give a random pause of 1-3 sec. before using the next
-                        sendGetAllDataMessageTimer = new Timer();
-                        sendGetAllDataMessageTimer.schedule(new TimerTask() {
-                            @Override
-                            public void run() {
-                                Thread.currentThread().setName("SendGetAllDataMessageTimer-" + new Random().nextInt(1000));
-                                try {
-                                    UserThread.execute(() -> sendGetAllDataMessage(remainingSeedNodeAddresses));
-                                } catch (Throwable t) {
-                                    t.printStackTrace();
-                                    log.error("Executing task failed. " + t.getMessage());
-                                }
+
+                        if (sendGetAllDataMessageTimer != null) sendGetAllDataMessageTimer.cancel();
+                        sendGetAllDataMessageTimer = Utilities.runTimerTaskWithRandomDelay(() -> {
+                            Thread.currentThread().setName("SendGetAllDataMessageTimer-" + new Random().nextInt(1000));
+                            try {
+                                UserThread.execute(() -> sendGetAllDataMessage(remainingSeedNodeAddresses));
+                            } catch (Throwable t) {
+                                t.printStackTrace();
+                                log.error("Executing task failed. " + t.getMessage());
                             }
-                        }, new Random().nextInt(2000) + 1000);
+                        }, 1, 3);
                     } else {
                         allSeedNodesRequested = true;
                     }
@@ -617,7 +608,7 @@ public class P2PService {
                 public void onFailure(Throwable throwable) {
                     log.info("Send GetAllDataMessage to " + candidate + " failed. Exception:" + throwable.getMessage());
                     log.trace("We try to connect another random seed node. " + remainingSeedNodeAddresses);
-                    sendGetAllDataMessage(remainingSeedNodeAddresses);
+                    UserThread.execute(() -> sendGetAllDataMessage(remainingSeedNodeAddresses));
                 }
             });
         } else {

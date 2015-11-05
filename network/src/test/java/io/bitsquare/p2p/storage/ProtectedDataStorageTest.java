@@ -56,7 +56,7 @@ public class ProtectedDataStorageTest {
         dir2.delete();
         dir2.mkdir();
 
-        UserThread.executor = Executors.newSingleThreadExecutor();
+        UserThread.setExecutor(Executors.newSingleThreadExecutor());
         ProtectedExpirableDataStorage.CHECK_TTL_INTERVAL = 10 * 60 * 1000;
 
         keyRing1 = new KeyRing(new KeyStorage(dir1));

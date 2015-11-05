@@ -121,7 +121,10 @@ public class WalletService {
 
         Timer timeoutTimer = FxTimer.runLater(
                 Duration.ofMillis(STARTUP_TIMEOUT),
-                () -> exceptionHandler.handleException(new TimeoutException("Wallet did not initialize in " + STARTUP_TIMEOUT / 1000 + " seconds."))
+                () -> {
+                    Thread.currentThread().setName("WalletService:StartupTimeout-" + new Random().nextInt(1000));
+                    exceptionHandler.handleException(new TimeoutException("Wallet did not initialize in " + STARTUP_TIMEOUT / 1000 + " seconds."));
+                }
         );
 
         // If seed is non-null it means we are restoring from backup.

@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Paths;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -67,7 +68,7 @@ public class FileManager<T> {
     private final AtomicBoolean savePending;
     private final long delay;
     private final TimeUnit delayTimeUnit;
-    private final Callable<Void> saver;
+    private final Callable<Void> saveFileTask;
     private T serializable;
 
 
@@ -88,6 +89,7 @@ public class FileManager<T> {
         executor = new ScheduledThreadPoolExecutor(1, builder.build());
         executor.setKeepAliveTime(5, TimeUnit.SECONDS);
         executor.allowCoreThreadTimeOut(true);
+        executor.setMaximumPoolSize(10);
         executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
 
         // File must only be accessed from the auto-save executor from now on, to avoid simultaneous access.
@@ -95,7 +97,8 @@ public class FileManager<T> {
         this.delay = delay;
         this.delayTimeUnit = checkNotNull(delayTimeUnit);
 
-        saver = () -> {
+        saveFileTask = () -> {
+            Thread.currentThread().setName("Save-file-task-" + new Random().nextInt(10000));
             // Runs in an auto save thread.
             if (!savePending.getAndSet(false)) {
                 // Some other scheduled request already beat us to it.
@@ -137,7 +140,7 @@ public class FileManager<T> {
 
         if (savePending.getAndSet(true))
             return;   // Already pending.
-        executor.schedule(saver, delay, delayTimeUnit);
+        executor.schedule(saveFileTask, delay, delayTimeUnit);
     }
 
     public synchronized T read(File file) {
