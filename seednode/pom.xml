@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>bootstrap</artifactId>
+    <artifactId>seednode</artifactId>
 
     <build>
 
@@ -41,7 +41,7 @@
                     <minimizeJar>false</minimizeJar>
                     <transformers>
                         <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>io.bitsquare.app.bootstrap.BootstrapNodeMain</mainClass>
+                            <mainClass>io.bitsquare.p2p.seed.SeedNodeMain</mainClass>
                         </transformer>
                     </transformers>
                     <filters>
@@ -65,7 +65,7 @@
                         <configuration>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>bundled</shadedClassifierName>
-                            <finalName>BootstrapNodeMain</finalName>
+                            <finalName>SeedNodeMain</finalName>
                         </configuration>
                     </execution>
                 </executions>

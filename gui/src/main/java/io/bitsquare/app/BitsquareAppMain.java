@@ -17,7 +17,6 @@
 
 package io.bitsquare.app;
 
-import com.vinumeris.updatefx.UpdateFX;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.RegTestHost;
@@ -29,7 +28,6 @@ import joptsimple.OptionSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,6 +36,7 @@ import java.nio.file.Paths;
 import static io.bitsquare.app.BitsquareEnvironment.*;
 import static java.util.Arrays.asList;
 
+//TODO clean up 
 public class BitsquareAppMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(BitsquareAppMain.class);
 
@@ -63,15 +62,9 @@ public class BitsquareAppMain extends BitsquareExecutable {
         }
         BitsquareEnvironment bitsquareEnvironment = new BitsquareEnvironment(options);
 
-        // update dir need to be setup before UpdateFX bootstrap
+        // need to call that before BitsquareAppMain().execute(args)
         initAppDir(bitsquareEnvironment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY));
 
-        UpdateFX.bootstrap(BitsquareAppMain.class, new File(bitsquareEnvironment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY)).toPath(), args);
-    }
-
-    // That will be called from UpdateFX after updates are checked
-    public static void realMain(String[] args) throws Exception {
-        //log.trace("realMain");
         // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
         // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
         Thread.currentThread().setContextClassLoader(BitsquareAppMain.class.getClassLoader());
@@ -121,7 +114,6 @@ public class BitsquareAppMain extends BitsquareExecutable {
                 .withRequiredArg()
                 .ofType(BitcoinNetwork.class)
                 .withValuesConvertedBy(new EnumValueConverter(BitcoinNetwork.class));
-
 
         parser.accepts(RegTestHost.KEY, description("", RegTestHost.DEFAULT))
                 .withRequiredArg()

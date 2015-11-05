@@ -20,7 +20,6 @@ package io.bitsquare.app;
 import ch.qos.logback.classic.Logger;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.vinumeris.updatefx.UpdateFX;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.UserThread;
@@ -322,6 +321,7 @@ public class BitsquareApp extends Application {
     }
 
     private void restart() {
-        gracefulShutDown(UpdateFX::restartApp);
+        //TODO
+        //gracefulShutDown(UpdateFX::restartApp);
     }
 }

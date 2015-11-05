@@ -41,7 +41,7 @@
         <module>common</module>
         <module>core</module>
         <module>network</module>
-        <module>bootstrap</module>
+        <module>seednode</module>
         <module>gui</module>
     </modules>
 

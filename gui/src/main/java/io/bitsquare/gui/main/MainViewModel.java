@@ -462,6 +462,10 @@ class MainViewModel implements ViewModel {
 
     private void applyUpdateState(UpdateProcess.State state) {
         switch (state) {
+            case INIT:
+                updateInfo.set("");
+                updateIconId.set(null);
+                break;
             case CHECK_FOR_UPDATES:
                 updateInfo.set("Check for updates...");
                 updateIconId.set("image-update-in-progress");

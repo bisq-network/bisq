@@ -146,6 +146,7 @@
 }
 
 /* software update*/
+
 #image-update-in-progress {
     -fx-image: url("../../../images/update/update_in_progress.png");
 }

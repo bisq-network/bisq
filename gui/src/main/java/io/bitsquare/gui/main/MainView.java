@@ -340,7 +340,9 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         });
 
         ImageView updateIcon = new ImageView();
-        updateIcon.setId(model.updateIconId.get());
+        String id = model.updateIconId.get();
+        if (id != null && !id.equals(""))
+            updateIcon.setId(id);
 
         updateIconIdListener = (ov, oldValue, newValue) -> {
             updateIcon.setId(newValue);
@@ -410,8 +412,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 bitcoinNetworkLabel.setId("splash-error-state-msg");
                 bitcoinNetworkLabel.setText("Not connected");
                 openBTCConnectionErrorPopup(newValue);
-            }
-            else {
+            } else {
                 bitcoinNetworkLabel.setId("footer-bitcoin-network-label");
                 bitcoinNetworkLabel.setText(model.bitcoinNetworkAsString);
             }
@@ -469,8 +470,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 bootstrapLabel.setText("Not connected");
                 new Popup().error("Connecting to the P2P network failed. \n" + newValue
                         + "\nPlease check your internet connection.").show();
-            }
-            else {
+            } else {
                 bootstrapLabel.setId("footer-pane");
                 bootstrapLabel.textProperty().bind(model.p2pNetworkInfoFooter);
             }
@@ -559,8 +559,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 this.setGraphicTextGap(newValue ? -1 : 0);
                 if (newValue) {
                     this.getGraphic().setId("image-nav-" + viewId(viewClass) + "-active");
-                }
-                else {
+                } else {
                     this.getGraphic().setId("image-nav-" + viewId(viewClass));
                 }
             });

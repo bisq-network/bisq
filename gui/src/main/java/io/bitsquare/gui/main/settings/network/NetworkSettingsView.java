@@ -55,7 +55,7 @@ public class NetworkSettingsView extends InitializableView {
     @FXML
     ComboBox<BitcoinNetwork> netWorkComboBox;
     @FXML
-    TextArea bootstrapNodeAddress;
+    TextArea seedNodeNodeAddress;
 
     @Inject
     public NetworkSettingsView(WalletService walletService, P2PService p2PService, SeedNodesRepository bootstrapNodes, Preferences preferences, BSFormatter
