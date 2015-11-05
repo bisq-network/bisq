@@ -1,9 +1,9 @@
-package io.bitsquare.p2p.routing;
+package io.bitsquare.p2p.peer;
 
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.network.Connection;
 
-public interface RoutingListener {
+public interface PeerListener {
     void onFirstPeerAdded(Peer peer);
 
     void onPeerAdded(Peer peer);

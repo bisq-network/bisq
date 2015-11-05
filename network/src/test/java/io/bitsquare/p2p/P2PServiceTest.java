@@ -8,7 +8,7 @@ import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.p2p.mocks.MockMailboxMessage;
 import io.bitsquare.p2p.network.LocalhostNetworkNode;
-import io.bitsquare.p2p.routing.Routing;
+import io.bitsquare.p2p.peer.PeerGroup;
 import io.bitsquare.p2p.seed.SeedNode;
 import io.bitsquare.p2p.storage.data.DataAndSeqNr;
 import io.bitsquare.p2p.storage.data.ProtectedData;
@@ -57,7 +57,7 @@ public class P2PServiceTest {
 
         LocalhostNetworkNode.setSimulateTorDelayTorNode(10);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(100);
-        Routing.setMaxConnections(8);
+        PeerGroup.setMaxConnections(8);
 
         keyRing1 = new KeyRing(new KeyStorage(dir1));
         keyRing2 = new KeyRing(new KeyStorage(dir2));

@@ -8,7 +8,7 @@ import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.network.IllegalRequest;
 import io.bitsquare.p2p.network.MessageListener;
-import io.bitsquare.p2p.routing.Routing;
+import io.bitsquare.p2p.peer.PeerGroup;
 import io.bitsquare.p2p.storage.data.*;
 import io.bitsquare.p2p.storage.messages.*;
 import io.bitsquare.storage.Storage;
@@ -30,7 +30,7 @@ public class ProtectedExpirableDataStorage {
     @VisibleForTesting
     public static int CHECK_TTL_INTERVAL = 10 * 60 * 1000;
 
-    private final Routing routing;
+    private final PeerGroup peerGroup;
     private final Map<BigInteger, ProtectedData> map = new ConcurrentHashMap<>();
     private final List<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArrayList<>();
     private ConcurrentHashMap<BigInteger, Integer> sequenceNumberMap = new ConcurrentHashMap<>();
@@ -44,8 +44,8 @@ public class ProtectedExpirableDataStorage {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ProtectedExpirableDataStorage(Routing routing, File storageDir) {
-        this.routing = routing;
+    public ProtectedExpirableDataStorage(PeerGroup peerGroup, File storageDir) {
+        this.peerGroup = peerGroup;
 
         storage = new Storage<>(storageDir);
 
@@ -103,7 +103,7 @@ public class ProtectedExpirableDataStorage {
         if (!shutDownInProgress) {
             shutDownInProgress = true;
             timer.cancel();
-            routing.shutDown();
+            peerGroup.shutDown();
         }
     }
 
@@ -231,7 +231,7 @@ public class ProtectedExpirableDataStorage {
     }
 
     public void addMessageListener(MessageListener messageListener) {
-        routing.addMessageListener(messageListener);
+        peerGroup.addMessageListener(messageListener);
     }
 
 
@@ -324,7 +324,7 @@ public class ProtectedExpirableDataStorage {
 
     private void broadcast(BroadcastMessage message, @Nullable Address sender) {
         if (authenticated) {
-            routing.broadcast(message, sender);
+            peerGroup.broadcast(message, sender);
             log.trace("Broadcast message " + message);
         } else {
             log.trace("Broadcast not allowed because we are not authenticated yet. That is normal after received AllDataMessage at startup.");

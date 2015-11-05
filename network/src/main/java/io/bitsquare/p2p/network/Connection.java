@@ -34,7 +34,7 @@ public class Connection {
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
     private static final int MAX_MSG_SIZE = 5 * 1024 * 1024;         // 5 MB of compressed data
     private static final int MAX_ILLEGAL_REQUESTS = 5;
-    private static final int SOCKET_TIMEOUT = 30 * 60 * 1000;        // 30 min.
+    private static final int SOCKET_TIMEOUT = 60 * 1000;        // 1 min.
     private InputHandler inputHandler;
     private boolean isAuthenticated;
 

@@ -3,6 +3,7 @@ package io.bitsquare.p2p.seed;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
+import org.bitcoinj.crypto.DRMWorkaround;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,8 @@ public class SeedNodeMain {
     // eg. 4444 true localhost:7777 localhost:8888 
     // To stop enter: q
     public static void main(String[] args) throws NoSuchAlgorithmException {
+
+        DRMWorkaround.maybeDisableExportControls();
         seedNodeMain = new SeedNodeMain(args);
     }
 

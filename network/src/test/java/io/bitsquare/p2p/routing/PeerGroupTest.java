@@ -6,6 +6,8 @@ import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.LocalhostNetworkNode;
+import io.bitsquare.p2p.peer.AuthenticationListener;
+import io.bitsquare.p2p.peer.PeerGroup;
 import io.bitsquare.p2p.seed.SeedNode;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -20,8 +22,8 @@ import java.util.concurrent.CountDownLatch;
 
 // need to define seed node addresses first before using tor version
 @Ignore
-public class RoutingTest {
-    private static final Logger log = LoggerFactory.getLogger(RoutingTest.class);
+public class PeerGroupTest {
+    private static final Logger log = LoggerFactory.getLogger(PeerGroupTest.class);
 
     boolean useLocalhost = true;
     private CountDownLatch latch;
@@ -33,7 +35,7 @@ public class RoutingTest {
     public void setup() throws InterruptedException {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(50);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(8);
-        Routing.setMaxConnections(100);
+        PeerGroup.setMaxConnections(100);
 
         seedNodes = new ArrayList<>();
         if (useLocalhost) {
@@ -107,7 +109,7 @@ public class RoutingTest {
         P2PService p2PService1 = seedNode1.getP2PService();
         latch.await();
         Thread.sleep(500);
-        Assert.assertEquals(0, p2PService1.getRouting().getAllPeerAddresses().size());
+        Assert.assertEquals(0, p2PService1.getPeerGroup().getAllPeerAddresses().size());
     }
 
     @Test
@@ -180,8 +182,8 @@ public class RoutingTest {
         });
         P2PService p2PService2 = seedNode2.getP2PService();
         latch.await();
-        Assert.assertEquals(1, p2PService1.getRouting().getAllPeerAddresses().size());
-        Assert.assertEquals(1, p2PService2.getRouting().getAllPeerAddresses().size());
+        Assert.assertEquals(1, p2PService1.getPeerGroup().getAllPeerAddresses().size());
+        Assert.assertEquals(1, p2PService2.getPeerGroup().getAllPeerAddresses().size());
     }
 
     // @Test
@@ -214,7 +216,7 @@ public class RoutingTest {
                 latch1.countDown();
             }
         };
-        seedNode1.getP2PService().getRouting().addRoutingListener(routingListener1);
+        seedNode1.getP2PService().getPeerGroup().addPeerListener(routingListener1);
 
         AuthenticationListener routingListener2 = new AuthenticationListener() {
             @Override
@@ -223,10 +225,10 @@ public class RoutingTest {
                 latch1.countDown();
             }
         };
-        seedNode2.getP2PService().getRouting().addRoutingListener(routingListener2);
+        seedNode2.getP2PService().getPeerGroup().addPeerListener(routingListener2);
         latch1.await();
-        seedNode1.getP2PService().getRouting().removeRoutingListener(routingListener1);
-        seedNode2.getP2PService().getRouting().removeRoutingListener(routingListener2);
+        seedNode1.getP2PService().getPeerGroup().removePeerListener(routingListener1);
+        seedNode2.getP2PService().getPeerGroup().removePeerListener(routingListener2);
 
         // wait until Peers msg finished
         Thread.sleep(sleepTime);
@@ -236,21 +238,21 @@ public class RoutingTest {
         // authentication from seedNode3 to seedNode2, then from seedNode2 to seedNode3
         SeedNode seedNode3 = getAndStartSeedNode(8003);
         CountDownLatch latch2 = new CountDownLatch(3);
-        seedNode1.getP2PService().getRouting().addRoutingListener(new AuthenticationListener() {
+        seedNode1.getP2PService().getPeerGroup().addPeerListener(new AuthenticationListener() {
             @Override
             public void onConnectionAuthenticated(Connection connection) {
                 log.debug("onConnectionAuthenticated " + connection);
                 latch2.countDown();
             }
         });
-        seedNode2.getP2PService().getRouting().addRoutingListener(new AuthenticationListener() {
+        seedNode2.getP2PService().getPeerGroup().addPeerListener(new AuthenticationListener() {
             @Override
             public void onConnectionAuthenticated(Connection connection) {
                 log.debug("onConnectionAuthenticated " + connection);
                 latch2.countDown();
             }
         });
-        seedNode3.getP2PService().getRouting().addRoutingListener(new AuthenticationListener() {
+        seedNode3.getP2PService().getPeerGroup().addPeerListener(new AuthenticationListener() {
             @Override
             public void onConnectionAuthenticated(Connection connection) {
                 log.debug("onConnectionAuthenticated " + connection);
@@ -295,7 +297,7 @@ public class RoutingTest {
                 latch1.countDown();
             }
         };
-        seedNode1.getP2PService().getRouting().addRoutingListener(routingListener1);
+        seedNode1.getP2PService().getPeerGroup().addPeerListener(routingListener1);
 
         AuthenticationListener routingListener2 = new AuthenticationListener() {
             @Override
@@ -304,13 +306,13 @@ public class RoutingTest {
                 latch1.countDown();
             }
         };
-        seedNode2.getP2PService().getRouting().addRoutingListener(routingListener2);
+        seedNode2.getP2PService().getPeerGroup().addPeerListener(routingListener2);
         latch1.await();
 
         // shut down node 2
         Thread.sleep(sleepTime);
-        seedNode1.getP2PService().getRouting().removeRoutingListener(routingListener1);
-        seedNode2.getP2PService().getRouting().removeRoutingListener(routingListener2);
+        seedNode1.getP2PService().getPeerGroup().removePeerListener(routingListener1);
+        seedNode2.getP2PService().getPeerGroup().removePeerListener(routingListener2);
         CountDownLatch shutDownLatch1 = new CountDownLatch(1);
         seedNode2.shutDown(() -> shutDownLatch1.countDown());
         shutDownLatch1.await();
@@ -325,7 +327,7 @@ public class RoutingTest {
                 latch3.countDown();
             }
         };
-        seedNode2.getP2PService().getRouting().addRoutingListener(routingListener2);
+        seedNode2.getP2PService().getPeerGroup().addPeerListener(routingListener2);
         latch3.await();
 
         Thread.sleep(sleepTime);
@@ -347,7 +349,7 @@ public class RoutingTest {
 
             latch = new CountDownLatch(i * 2);
             authentications += (i * 2);
-            node.getP2PService().getRouting().addRoutingListener(new AuthenticationListener() {
+            node.getP2PService().getPeerGroup().addPeerListener(new AuthenticationListener() {
                 @Override
                 public void onConnectionAuthenticated(Connection connection) {
                     log.debug("onConnectionAuthenticated " + connection);
@@ -364,8 +366,8 @@ public class RoutingTest {
         // total authentications at com nodes = 90, System load (nr. threads/used memory (MB)): 170/20
         // total authentications at 20 nodes = 380, System load (nr. threads/used memory (MB)): 525/46
         for (int i = 0; i < length; i++) {
-            nodes[i].getP2PService().getRouting().printConnectedPeersMap();
-            nodes[i].getP2PService().getRouting().printReportedPeersMap();
+            nodes[i].getP2PService().getPeerGroup().printConnectedPeersMap();
+            nodes[i].getP2PService().getPeerGroup().printReportedPeersMap();
         }
 
         CountDownLatch shutDownLatch = new CountDownLatch(length);

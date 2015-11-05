@@ -1,7 +1,7 @@
 package io.bitsquare.p2p.network;
 
 import io.bitsquare.p2p.Address;
-import io.bitsquare.p2p.routing.messages.RequestAuthenticationMessage;
+import io.bitsquare.p2p.peer.messages.RequestAuthenticationMessage;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Before;
 import org.junit.Ignore;

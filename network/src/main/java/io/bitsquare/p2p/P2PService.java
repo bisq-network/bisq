@@ -16,9 +16,9 @@ import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.crypto.SealedAndSignedMessage;
 import io.bitsquare.p2p.messaging.*;
 import io.bitsquare.p2p.network.*;
-import io.bitsquare.p2p.routing.Peer;
-import io.bitsquare.p2p.routing.Routing;
-import io.bitsquare.p2p.routing.RoutingListener;
+import io.bitsquare.p2p.peer.Peer;
+import io.bitsquare.p2p.peer.PeerGroup;
+import io.bitsquare.p2p.peer.PeerListener;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.ProtectedExpirableDataStorage;
@@ -60,7 +60,7 @@ public class P2PService {
     private final NetworkStatistics networkStatistics;
 
     private NetworkNode networkNode;
-    private Routing routing;
+    private PeerGroup peerGroup;
     private ProtectedExpirableDataStorage dataStorage;
     private final List<DecryptedMailListener> decryptedMailListeners = new CopyOnWriteArrayList<>();
     private final List<DecryptedMailboxListener> decryptedMailboxListeners = new CopyOnWriteArrayList<>();
@@ -106,7 +106,7 @@ public class P2PService {
     }
 
     private void init() {
-        // network layer
+        // network 
         if (useLocalhost) {
             networkNode = new LocalhostNetworkNode(port);
             seedNodeAddresses = seedNodesRepository.getLocalhostSeedNodeAddresses();
@@ -115,12 +115,12 @@ public class P2PService {
             seedNodeAddresses = seedNodesRepository.getTorSeedNodeAddresses();
         }
 
-        // routing layer
-        routing = new Routing(networkNode, seedNodeAddresses);
-        if (useLocalhost) Routing.setSimulateAuthTorNode(2 * 1000);
+        // peer group 
+        peerGroup = new PeerGroup(networkNode, seedNodeAddresses);
+        if (useLocalhost) PeerGroup.setSimulateAuthTorNode(2 * 1000);
 
-        // storage layer
-        dataStorage = new ProtectedExpirableDataStorage(routing, storageDir);
+        // storage 
+        dataStorage = new ProtectedExpirableDataStorage(peerGroup, storageDir);
 
 
         // Listeners
@@ -236,7 +236,7 @@ public class P2PService {
             }
         });
 
-        routing.addRoutingListener(new RoutingListener() {
+        peerGroup.addPeerListener(new PeerListener() {
             @Override
             public void onFirstPeerAdded(Peer peer) {
                 log.trace("onFirstPeer " + peer.toString());
@@ -306,8 +306,8 @@ public class P2PService {
             if (dataStorage != null)
                 dataStorage.shutDown();
 
-            if (routing != null)
-                routing.shutDown();
+            if (peerGroup != null)
+                peerGroup.shutDown();
 
             if (networkNode != null)
                 networkNode.shutDown(() -> {
@@ -351,7 +351,7 @@ public class P2PService {
             throw new AuthenticationException("You must be authenticated before sending direct messages.");
 
         if (!authenticatedPeerAddresses.contains(peerAddress))
-            routing.authenticateToPeer(peerAddress,
+            peerGroup.authenticateToPeer(peerAddress,
                     () -> doSendEncryptedMailMessage(peerAddress, pubKeyRing, message, sendMailMessageListener),
                     () -> UserThread.execute(() -> sendMailMessageListener.onFault()));
         else
@@ -395,7 +395,7 @@ public class P2PService {
         if (authenticatedPeerAddresses.contains(peerAddress)) {
             trySendEncryptedMailboxMessage(peerAddress, peersPubKeyRing, message, sendMailboxMessageListener);
         } else {
-            routing.authenticateToPeer(peerAddress,
+            peerGroup.authenticateToPeer(peerAddress,
                     () -> trySendEncryptedMailboxMessage(peerAddress, peersPubKeyRing, message, sendMailboxMessageListener),
                     () -> {
                         log.info("We cannot authenticate to peer. Peer might be offline. We will store message in mailbox.");
@@ -548,8 +548,8 @@ public class P2PService {
         return networkNode;
     }
 
-    public Routing getRouting() {
-        return routing;
+    public PeerGroup getPeerGroup() {
+        return peerGroup;
     }
 
     public Address getAddress() {
@@ -644,7 +644,7 @@ public class P2PService {
             checkArgument(networkNode.getAddress() != null, "Address must be set when we are authenticated");
             connectedSeedNodes.remove(networkNode.getAddress());
 
-            routing.startAuthentication(connectedSeedNodes);
+            peerGroup.startAuthentication(connectedSeedNodes);
         }
     }
 
