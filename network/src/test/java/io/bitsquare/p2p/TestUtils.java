@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.security.*;
-import java.util.ArrayList;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 public class TestUtils {
@@ -62,7 +62,7 @@ public class TestUtils {
         return result;
     }
 
-    public static SeedNode getAndStartSeedNode(int port, EncryptionService encryptionService, KeyRing keyRing, boolean useLocalhost, ArrayList<Address> seedNodes) throws InterruptedException {
+    public static SeedNode getAndStartSeedNode(int port, EncryptionService encryptionService, KeyRing keyRing, boolean useLocalhost, Set<Address> seedNodes) throws InterruptedException {
         SeedNode seedNode;
 
         if (useLocalhost) {
@@ -107,7 +107,7 @@ public class TestUtils {
         return seedNode;
     }
 
-    public static P2PService getAndAuthenticateP2PService(int port, EncryptionService encryptionService, KeyRing keyRing, boolean useLocalhost, ArrayList<Address> seedNodes) throws InterruptedException {
+    public static P2PService getAndAuthenticateP2PService(int port, EncryptionService encryptionService, KeyRing keyRing, boolean useLocalhost, Set<Address> seedNodes) throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
         if (seedNodes != null && !seedNodes.isEmpty()) {

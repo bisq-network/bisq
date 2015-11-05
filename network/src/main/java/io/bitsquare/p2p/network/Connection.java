@@ -18,7 +18,6 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.Date;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -34,7 +33,7 @@ public class Connection {
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
     private static final int MAX_MSG_SIZE = 5 * 1024 * 1024;         // 5 MB of compressed data
     private static final int MAX_ILLEGAL_REQUESTS = 5;
-    private static final int SOCKET_TIMEOUT = 60 * 1000;        // 1 min.
+    private static final int SOCKET_TIMEOUT = 10 * 60 * 1000;        // 10 min. //TODO set shorter
     private InputHandler inputHandler;
     private boolean isAuthenticated;
 
@@ -44,7 +43,7 @@ public class Connection {
 
     private final String portInfo;
     private final String uid;
-    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
 
     // set in init
     private ObjectOutputStream objectOutputStream;
@@ -89,7 +88,7 @@ public class Connection {
 
             // We create a thread for handling inputStream data
             inputHandler = new InputHandler(sharedSpace, objectInputStream, portInfo);
-            executorService.submit(inputHandler);
+            singleThreadExecutor.submit(inputHandler);
         } catch (IOException e) {
             sharedSpace.handleConnectionException(e);
         }
@@ -208,18 +207,19 @@ public class Connection {
                 UserThread.execute(() -> sharedSpace.getConnectionListener().onDisconnect(ConnectionListener.Reason.SHUT_DOWN, this));
 
                 if (sendCloseConnectionMessage) {
-                    executorService.submit(() -> {
-                        Thread.currentThread().setName("Connection:Send-CloseConnectionMessage-" + this.getObjectId());
+                    new Thread(() -> {
+                        Thread.currentThread().setName("Connection:SendCloseConnectionMessage-" + this.getObjectId());
                         try {
                             sendMessage(new CloseConnectionMessage());
                             // give a bit of time for closing gracefully
-                            Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
-
-                            UserThread.execute(() -> continueShutDown(shutDownCompleteHandler));
+                            Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
                         } catch (Throwable t) {
-                            throw t;
+                            t.printStackTrace();
+                            log.error(t.getMessage());
+                        } finally {
+                            UserThread.execute(() -> continueShutDown(shutDownCompleteHandler));
                         }
-                    });
+                    }).start();
                 } else {
                     continueShutDown(shutDownCompleteHandler);
                 }
@@ -235,7 +235,7 @@ public class Connection {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            MoreExecutors.shutdownAndAwaitTermination(executorService, 500, TimeUnit.MILLISECONDS);
+            MoreExecutors.shutdownAndAwaitTermination(singleThreadExecutor, 500, TimeUnit.MILLISECONDS);
 
             log.debug("Connection shutdown complete " + this.toString());
             // dont use executorService as its shut down but call handler on own thread 
@@ -302,7 +302,7 @@ public class Connection {
         private final MessageListener messageListener;
         private final ConnectionListener connectionListener;
         private final boolean useCompression;
-        private final Map<IllegalRequest, Integer> illegalRequests = new ConcurrentHashMap<>();
+        private final ConcurrentHashMap<IllegalRequest, Integer> illegalRequests = new ConcurrentHashMap<>();
 
         // mutable
         private Date lastActivityDate;

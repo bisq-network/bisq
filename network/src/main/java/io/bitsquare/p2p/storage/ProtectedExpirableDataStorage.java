@@ -20,9 +20,12 @@ import java.io.File;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.util.*;
+import java.util.Map;
+import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public class ProtectedExpirableDataStorage {
     private static final Logger log = LoggerFactory.getLogger(ProtectedExpirableDataStorage.class);
@@ -32,7 +35,7 @@ public class ProtectedExpirableDataStorage {
 
     private final PeerGroup peerGroup;
     private final Map<BigInteger, ProtectedData> map = new ConcurrentHashMap<>();
-    private final List<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArraySet<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArraySet<>();
     private ConcurrentHashMap<BigInteger, Integer> sequenceNumberMap = new ConcurrentHashMap<>();
     private final Storage<ConcurrentHashMap> storage;
     private boolean authenticated;

@@ -51,7 +51,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 public class DisputeManager {
@@ -68,8 +68,8 @@ public class DisputeManager {
     transient private final ObservableList<Dispute> disputesObservableList;
     private final String disputeInfo;
     private final P2PServiceListener p2PServiceListener;
-    private final List<DecryptedMsgWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArrayList<>();
-    private final List<DecryptedMsgWithPubKey> decryptedMailMessageWithPubKeys = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedMailMessageWithPubKeys = new CopyOnWriteArraySet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

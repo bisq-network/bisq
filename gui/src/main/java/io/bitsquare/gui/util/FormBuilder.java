@@ -30,8 +30,8 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public class FormBuilder {
     private static final Logger log = LoggerFactory.getLogger(FormBuilder.class);
@@ -633,7 +633,7 @@ public class FormBuilder {
     }
 
     public static void removeRowsFromGridPane(GridPane gridPane, int fromGridRow, int toGridRow) {
-        List<Node> nodes = new CopyOnWriteArrayList<>(gridPane.getChildren());
+        Set<Node> nodes = new CopyOnWriteArraySet<>(gridPane.getChildren());
         nodes.stream()
                 .filter(e -> GridPane.getRowIndex(e) >= fromGridRow && GridPane.getRowIndex(e) <= toGridRow)
                 .forEach(e -> gridPane.getChildren().remove(e));

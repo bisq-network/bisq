@@ -24,7 +24,6 @@
     <logger name="io.bitsquare.storage.FileManager" level="WARN"/>
 
     <logger name="org.bitcoinj" level="WARN"/>
-    <logger name="net.tomp2p" level="WARN"/>
 
     <logger name="org.bitcoinj.core.BitcoinSerializer" level="WARN"/>
     <logger name="org.bitcoinj.core.Peer" level="WARN"/>
@@ -36,10 +35,6 @@
    <logger name="org.bitcoinj.core.BitcoinSerializer" level="ERROR"/>
    <logger name="org.bitcoinj.core.Peer" level="ERROR"/>-->
 
-    <!-- <logger name="net.tomp2p.message.Encoder" level="WARN"/>
-     <logger name="net.tomp2p.message.Decoder" level="WARN"/>
-     <logger name="net.tomp2p.message.MessageHeaderCodec" level="WARN"/>
- 
  
      <logger name="io.netty.util" level="WARN"/>
      <logger name="io.netty.channel" level="WARN"/>

@@ -13,7 +13,8 @@ import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 // TorNode created. Took 6 sec.
@@ -27,7 +28,7 @@ public class PeerGroupTest {
 
     boolean useLocalhost = true;
     private CountDownLatch latch;
-    private ArrayList<Address> seedNodes;
+    private Set<Address> seedNodes;
     private int sleepTime;
     private SeedNode seedNode1, seedNode2, seedNode3;
 
@@ -37,7 +38,7 @@ public class PeerGroupTest {
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(8);
         PeerGroup.setMaxConnections(100);
 
-        seedNodes = new ArrayList<>();
+        seedNodes = new HashSet<>();
         if (useLocalhost) {
             //seedNodes.add(new Address("localhost:8001"));
             // seedNodes.add(new Address("localhost:8002"));
@@ -77,7 +78,7 @@ public class PeerGroupTest {
     public void testSingleSeedNode() throws InterruptedException {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(0);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(0);
-        seedNodes = new ArrayList<>();
+        seedNodes = new HashSet<>();
         seedNodes.add(new Address("localhost:8001"));
         seedNode1 = new SeedNode();
         latch = new CountDownLatch(2);
@@ -116,7 +117,7 @@ public class PeerGroupTest {
     public void test2SeedNodes() throws InterruptedException {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(0);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(0);
-        seedNodes = new ArrayList<>();
+        seedNodes = new HashSet<>();
         seedNodes.add(new Address("localhost:8001"));
         seedNodes.add(new Address("localhost:8002"));
 

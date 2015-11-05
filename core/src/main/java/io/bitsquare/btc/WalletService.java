@@ -52,7 +52,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -68,9 +68,9 @@ public class WalletService {
     public static final String PREFIX_KEY = "wallet.prefix";
     private static final long STARTUP_TIMEOUT = 60 * 1000;
 
-    private final List<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArrayList<>();
-    private final List<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArrayList<>();
-    private final List<BalanceListener> balanceListeners = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
 
     private final DownloadListener downloadListener = new DownloadListener();
     private final WalletEventListener walletEventListener = new BitsquareWalletEventListener();

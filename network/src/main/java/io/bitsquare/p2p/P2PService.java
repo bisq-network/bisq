@@ -1,5 +1,6 @@
 package io.bitsquare.p2p;
 
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
@@ -37,7 +38,7 @@ import java.math.BigInteger;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -62,20 +63,20 @@ public class P2PService {
     private NetworkNode networkNode;
     private PeerGroup peerGroup;
     private ProtectedExpirableDataStorage dataStorage;
-    private final List<DecryptedMailListener> decryptedMailListeners = new CopyOnWriteArrayList<>();
-    private final List<DecryptedMailboxListener> decryptedMailboxListeners = new CopyOnWriteArrayList<>();
-    private final List<P2PServiceListener> p2pServiceListeners = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArraySet<DecryptedMailListener> decryptedMailListeners = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<DecryptedMailboxListener> decryptedMailboxListeners = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<P2PServiceListener> p2pServiceListeners = new CopyOnWriteArraySet<>();
     private final Map<DecryptedMsgWithPubKey, ProtectedMailboxData> mailboxMap = new ConcurrentHashMap<>();
     private volatile boolean shutDownInProgress;
-    private List<Address> seedNodeAddresses;
+    private Set<Address> seedNodeAddresses;
     private Set<Address> connectedSeedNodes = new HashSet<>();
     private Set<Address> authenticatedPeerAddresses = new HashSet<>();
     private boolean authenticatedToFirstPeer;
     private boolean allDataReceived;
     public boolean authenticated;
     private boolean shutDownComplete;
-    private List<Runnable> shutDownResultHandlers = new CopyOnWriteArrayList<>();
-    private final List<Long> getDataSetMessageNonceList = new ArrayList<>();
+    private CopyOnWriteArraySet<Runnable> shutDownResultHandlers = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<Long> getDataSetMessageNonceList = new CopyOnWriteArraySet<>();
     private boolean allSeedNodesRequested;
     private Timer sendGetAllDataMessageTimer;
     private volatile boolean hiddenServiceReady;
@@ -565,11 +566,11 @@ public class P2PService {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void sendGetAllDataMessage(List<Address> seedNodeAddresses) {
+    private void sendGetAllDataMessage(Set<Address> seedNodeAddresses) {
         Address networkNodeAddress = networkNode.getAddress();
         if (networkNodeAddress != null)
             seedNodeAddresses.remove(networkNodeAddress);
-        List<Address> remainingSeedNodeAddresses = new CopyOnWriteArrayList<>(seedNodeAddresses);
+        List<Address> remainingSeedNodeAddresses = new ArrayList<>(seedNodeAddresses);
 
         if (!seedNodeAddresses.isEmpty()) {
             Collections.shuffle(remainingSeedNodeAddresses);
@@ -593,7 +594,7 @@ public class P2PService {
                         sendGetAllDataMessageTimer = Utilities.runTimerTaskWithRandomDelay(() -> {
                             Thread.currentThread().setName("SendGetAllDataMessageTimer-" + new Random().nextInt(1000));
                             try {
-                                UserThread.execute(() -> sendGetAllDataMessage(remainingSeedNodeAddresses));
+                                UserThread.execute(() -> sendGetAllDataMessage(Sets.newHashSet(remainingSeedNodeAddresses)));
                             } catch (Throwable t) {
                                 t.printStackTrace();
                                 log.error("Executing task failed. " + t.getMessage());
@@ -608,7 +609,7 @@ public class P2PService {
                 public void onFailure(Throwable throwable) {
                     log.info("Send GetAllDataMessage to " + candidate + " failed. Exception:" + throwable.getMessage());
                     log.trace("We try to connect another random seed node. " + remainingSeedNodeAddresses);
-                    UserThread.execute(() -> sendGetAllDataMessage(remainingSeedNodeAddresses));
+                    UserThread.execute(() -> sendGetAllDataMessage(Sets.newHashSet(remainingSeedNodeAddresses)));
                 }
             });
         } else {

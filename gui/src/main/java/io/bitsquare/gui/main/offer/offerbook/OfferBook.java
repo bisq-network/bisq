@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.Serializable;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * Holds and manages the unsorted and unfiltered offerbook list of both buy and sell offers.
@@ -91,7 +91,7 @@ public class OfferBook {
     public void fillOfferBookListItems() {
         log.debug("fillOfferBookListItems");
         List<Offer> offers = offerBookService.getOffers();
-        CopyOnWriteArrayList<OfferBookListItem> list = new CopyOnWriteArrayList<>();
+        CopyOnWriteArraySet<OfferBookListItem> list = new CopyOnWriteArraySet<>();
         offers.stream().forEach(e -> list.add(new OfferBookListItem(e)));
         offerBookListItems.clear();
         offerBookListItems.addAll(list);

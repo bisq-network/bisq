@@ -1,5 +1,6 @@
 package io.bitsquare.p2p.peer;
 
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
@@ -16,7 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -40,12 +40,12 @@ public class PeerGroup {
     }
 
     private final NetworkNode networkNode;
-    private final List<Address> seedNodes;
-    private final Map<Address, Long> nonceMap = new ConcurrentHashMap<>();
-    private final List<PeerListener> peerListeners = new CopyOnWriteArrayList<>();
-    private final Map<Address, Peer> authenticatedPeers = new ConcurrentHashMap<>();
-    private final Set<Address> reportedPeerAddresses = new CopyOnWriteArraySet<>();
-    private final Map<Address, Runnable> authenticationCompleteHandlers = new ConcurrentHashMap<>();
+    private final CopyOnWriteArraySet<Address> seedNodes;
+    private final ConcurrentHashMap<Address, Long> nonceMap = new ConcurrentHashMap<>();
+    private final CopyOnWriteArraySet<PeerListener> peerListeners = new CopyOnWriteArraySet<>();
+    private final ConcurrentHashMap<Address, Peer> authenticatedPeers = new ConcurrentHashMap<>();
+    private final CopyOnWriteArraySet<Address> reportedPeerAddresses = new CopyOnWriteArraySet<>();
+    private final ConcurrentHashMap<Address, Runnable> authenticationCompleteHandlers = new ConcurrentHashMap<>();
     private final Timer maintenanceTimer = new Timer();
     private volatile boolean shutDownInProgress;
 
@@ -54,11 +54,11 @@ public class PeerGroup {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PeerGroup(final NetworkNode networkNode, List<Address> seeds) {
+    public PeerGroup(final NetworkNode networkNode, Set<Address> seeds) {
         this.networkNode = networkNode;
 
         // We copy it as we remove ourselves later from the list if we are a seed node
-        this.seedNodes = new CopyOnWriteArrayList<>(seeds);
+        this.seedNodes = new CopyOnWriteArraySet<>(seeds);
 
         init(networkNode);
     }
@@ -146,7 +146,7 @@ public class PeerGroup {
 
     private void pingPeers() {
         log.trace("pingPeers");
-        List<Peer> connectedPeersList = new ArrayList<>(authenticatedPeers.values());
+        Set<Peer> connectedPeersList = new HashSet<>(authenticatedPeers.values());
         connectedPeersList.stream()
                 .filter(e -> (new Date().getTime() - e.connection.getLastActivityDate().getTime()) > PING_AFTER_CONNECTION_INACTIVITY)
                 .forEach(e -> Utilities.runTimerTaskWithRandomDelay(() -> {
@@ -225,9 +225,8 @@ public class PeerGroup {
         return authenticatedPeers;
     }
 
-    // Use ArrayList not List as we need it serializable
-    public ArrayList<Address> getAllPeerAddresses() {
-        ArrayList<Address> allPeerAddresses = new ArrayList<>(reportedPeerAddresses);
+    public Set<Address> getAllPeerAddresses() {
+        CopyOnWriteArraySet<Address> allPeerAddresses = new CopyOnWriteArraySet<>(reportedPeerAddresses);
         allPeerAddresses.addAll(authenticatedPeers.values().stream()
                 .map(e -> e.address).collect(Collectors.toList()));
         // remove own address and seed nodes
@@ -255,7 +254,7 @@ public class PeerGroup {
         });
     }
 
-    private void sendRequestAuthenticationMessage(final List<Address> remainingSeedNodes, final Address address) {
+    private void sendRequestAuthenticationMessage(Set<Address> remainingSeedNodes, final Address address) {
         log.info("We try to authenticate to a random seed node. " + address);
         startAuthTs = System.currentTimeMillis();
         final boolean[] alreadyConnected = {false};
@@ -285,8 +284,8 @@ public class PeerGroup {
         }
     }
 
-    private void getNextSeedNode(List<Address> remainingSeedNodes) {
-        List<Address> remainingSeedNodeAddresses = new CopyOnWriteArrayList<>(remainingSeedNodes);
+    private void getNextSeedNode(Set<Address> remainingSeedNodes) {
+        List<Address> remainingSeedNodeAddresses = new ArrayList<>(remainingSeedNodes);
 
         Address myAddress = getAddress();
         if (myAddress != null)
@@ -295,7 +294,7 @@ public class PeerGroup {
         if (!remainingSeedNodeAddresses.isEmpty()) {
             Collections.shuffle(remainingSeedNodeAddresses);
             Address address = remainingSeedNodeAddresses.remove(0);
-            sendRequestAuthenticationMessage(remainingSeedNodeAddresses, address);
+            sendRequestAuthenticationMessage(Sets.newHashSet(remainingSeedNodeAddresses), address);
         } else {
             log.info("No other seed node found. That is expected for the first seed node.");
         }
@@ -346,12 +345,14 @@ public class PeerGroup {
             ChallengeMessage challengeMessage = (ChallengeMessage) message;
             Address peerAddress = challengeMessage.address;
             log.trace("ChallengeMessage from " + peerAddress + " at " + getAddress());
+            log.trace("nonceMap" + nonceMap);
+            log.trace("challengeMessage" + challengeMessage);
             HashMap<Address, Long> tempNonceMap = new HashMap<>(nonceMap);
             boolean verified = verifyNonceAndAuthenticatePeerAddress(challengeMessage.requesterNonce, peerAddress);
             if (verified) {
                 connection.setPeerAddress(peerAddress);
                 SettableFuture<Connection> future = networkNode.sendMessage(peerAddress,
-                        new GetPeersMessage(getAddress(), challengeMessage.challengerNonce, getAllPeerAddresses()));
+                        new GetPeersMessage(getAddress(), challengeMessage.challengerNonce, new ArrayList<Address>(getAllPeerAddresses())));
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
                     public void onSuccess(Connection connection) {
@@ -376,7 +377,7 @@ public class PeerGroup {
                 setAuthenticated(connection, peerAddress);
                 purgeReportedPeers();
                 SettableFuture<Connection> future = networkNode.sendMessage(peerAddress,
-                        new PeersMessage(getAddress(), getAllPeerAddresses()));
+                        new PeersMessage(getAddress(), new ArrayList(getAllPeerAddresses())));
                 log.trace("sent PeersMessage to " + peerAddress + " from " + getAddress()
                         + " with allPeers=" + getAllPeerAddresses());
                 Futures.addCallback(future, new FutureCallback<Connection>() {
@@ -443,7 +444,7 @@ public class PeerGroup {
         int all = getAllPeerAddresses().size();
         if (all > 1000) {
             int diff = all - 100;
-            List<Address> list = getNotConnectedPeerAddresses();
+            List<Address> list = new ArrayList<>(getNotConnectedPeerAddresses());
             for (int i = 0; i < diff; i++) {
                 Address toRemove = list.remove(new Random().nextInt(list.size()));
                 reportedPeerAddresses.remove(toRemove);
@@ -451,13 +452,9 @@ public class PeerGroup {
         }
     }
 
-    private List<Address> getNotConnectedPeerAddresses() {
-        ArrayList<Address> list = new ArrayList<>(getAllPeerAddresses());
-        log.debug("## getNotConnectedPeerAddresses ");
-        log.debug("##  reportedPeersList=" + list);
+    private synchronized CopyOnWriteArraySet<Address> getNotConnectedPeerAddresses() {
+        CopyOnWriteArraySet<Address> list = new CopyOnWriteArraySet<>(getAllPeerAddresses());
         authenticatedPeers.values().stream().forEach(e -> list.remove(e.address));
-        log.debug("##  connectedPeers=" + authenticatedPeers);
-        log.debug("##  reportedPeersList=" + list);
         return list;
     }
 
@@ -536,7 +533,7 @@ public class PeerGroup {
     }
 
     private Address getRandomNotConnectedPeerAddress() {
-        List<Address> list = getNotConnectedPeerAddresses();
+        List<Address> list = new ArrayList<>(getNotConnectedPeerAddresses());
         if (list.size() > 0) {
             Collections.shuffle(list);
             return list.get(0);
@@ -591,7 +588,6 @@ public class PeerGroup {
         if (disconnectedPeer != null)
             UserThread.execute(() -> peerListeners.stream().forEach(e -> e.onPeerRemoved(peerAddress)));
 
-        log.trace("removePeer [post]");
         printConnectedPeersMap();
         printReportedPeersMap();
 

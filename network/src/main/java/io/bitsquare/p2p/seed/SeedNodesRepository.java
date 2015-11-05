@@ -1,41 +1,41 @@
 package io.bitsquare.p2p.seed;
 
+import com.google.common.collect.Sets;
 import io.bitsquare.p2p.Address;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 
 public class SeedNodesRepository {
 
 
-    protected List<Address> torSeedNodeAddresses = Arrays.asList(
+    protected Set<Address> torSeedNodeAddresses = Sets.newHashSet(
             new Address("lmvdenjkyvx2ovga.onion:8001")
     );
 
 
-    protected List<Address> localhostSeedNodeAddresses = Arrays.asList(
+    protected Set<Address> localhostSeedNodeAddresses = Sets.newHashSet(
             new Address("localhost:8001"),
             new Address("localhost:8002"),
             new Address("localhost:8003")
     );
 
-    public List<Address> getTorSeedNodeAddresses() {
+    public Set<Address> getTorSeedNodeAddresses() {
         return torSeedNodeAddresses;
     }
 
-    public List<Address> geSeedNodeAddresses(boolean useLocalhost) {
+    public Set<Address> geSeedNodeAddresses(boolean useLocalhost) {
         return useLocalhost ? localhostSeedNodeAddresses : torSeedNodeAddresses;
     }
 
-    public List<Address> getLocalhostSeedNodeAddresses() {
+    public Set<Address> getLocalhostSeedNodeAddresses() {
         return localhostSeedNodeAddresses;
     }
 
-    public void setTorSeedNodeAddresses(List<Address> torSeedNodeAddresses) {
+    public void setTorSeedNodeAddresses(Set<Address> torSeedNodeAddresses) {
         this.torSeedNodeAddresses = torSeedNodeAddresses;
     }
 
-    public void setLocalhostSeedNodeAddresses(List<Address> localhostSeedNodeAddresses) {
+    public void setLocalhostSeedNodeAddresses(Set<Address> localhostSeedNodeAddresses) {
         this.localhostSeedNodeAddresses = localhostSeedNodeAddresses;
     }
 }

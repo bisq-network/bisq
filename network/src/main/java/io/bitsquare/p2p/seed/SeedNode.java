@@ -11,15 +11,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class SeedNode {
     private static final Logger log = LoggerFactory.getLogger(SeedNode.class);
 
     private int port = 8001;
     private boolean useLocalhost = true;
-    private List<Address> seedNodes;
+    private Set<Address> seedNodes;
     private P2PService p2PService;
     protected boolean stopped;
 
@@ -41,7 +41,7 @@ public class SeedNode {
                 useLocalhost = ("true").equals(args[1]);
 
                 if (args.length > 2) {
-                    seedNodes = new ArrayList<>();
+                    seedNodes = new HashSet<>();
                     for (int i = 2; i < args.length; i++) {
                         seedNodes.add(new Address(args[i]));
                     }
@@ -54,7 +54,7 @@ public class SeedNode {
         createAndStartP2PService(null, null, port, useLocalhost, seedNodes, null);
     }
 
-    public void createAndStartP2PService(EncryptionService encryptionService, KeyRing keyRing, int port, boolean useLocalhost, @Nullable List<Address> seedNodes, @Nullable P2PServiceListener listener) {
+    public void createAndStartP2PService(EncryptionService encryptionService, KeyRing keyRing, int port, boolean useLocalhost, @Nullable Set<Address> seedNodes, @Nullable P2PServiceListener listener) {
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
         if (seedNodes != null && !seedNodes.isEmpty()) {
             if (useLocalhost)

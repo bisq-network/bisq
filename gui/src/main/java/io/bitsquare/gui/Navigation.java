@@ -29,8 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public class Navigation implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -46,7 +45,7 @@ public class Navigation implements Serializable {
 
     // New listeners can be added during iteration so we use CopyOnWriteArrayList to
     // prevent invalid array modification
-    transient private final List<Listener> listeners = new CopyOnWriteArrayList<>();
+    transient private final CopyOnWriteArraySet<Listener> listeners = new CopyOnWriteArraySet<>();
     transient private final Storage<Navigation> remoteStorage;
     transient private ViewPath currentPath;
     // Used for returning to the last important view. After setup is done we want to

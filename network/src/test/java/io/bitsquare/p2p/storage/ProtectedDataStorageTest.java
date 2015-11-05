@@ -24,8 +24,9 @@ import java.io.File;
 import java.io.IOException;
 import java.security.*;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 
@@ -34,7 +35,7 @@ public class ProtectedDataStorageTest {
     private static final Logger log = LoggerFactory.getLogger(ProtectedDataStorageTest.class);
 
     boolean useClearNet = true;
-    private ArrayList<Address> seedNodes = new ArrayList<>();
+    private Set<Address> seedNodes = new HashSet<>();
     private NetworkNode networkNode1;
     private PeerGroup peerGroup1;
     private EncryptionService encryptionService1, encryptionService2;

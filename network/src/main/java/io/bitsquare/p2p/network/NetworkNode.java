@@ -15,10 +15,8 @@ import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -27,11 +25,11 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     private static final Logger log = LoggerFactory.getLogger(NetworkNode.class);
 
     protected final int port;
-    private final Set<Connection> outBoundConnections = new CopyOnWriteArraySet<>();
-    private final Set<Connection> inBoundConnections = new CopyOnWriteArraySet<>();
-    private final List<MessageListener> messageListeners = new CopyOnWriteArrayList<>();
-    private final List<ConnectionListener> connectionListeners = new CopyOnWriteArrayList<>();
-    protected final List<SetupListener> setupListeners = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArraySet<Connection> outBoundConnections = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<Connection> inBoundConnections = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<ConnectionListener> connectionListeners = new CopyOnWriteArraySet<>();
+    protected final CopyOnWriteArraySet<SetupListener> setupListeners = new CopyOnWriteArraySet<>();
     protected ListeningExecutorService executorService;
     private Server server;
     private volatile boolean shutDownInProgress;

@@ -22,7 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.security.*;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 // TorNode created. Took 6 sec.
@@ -30,12 +31,13 @@ import java.util.concurrent.CountDownLatch;
 // Connection establishment takes about 4 sec.
 
 // need to define seed node addresses first before using tor version
+// Ignored for automated tests
 @Ignore
 public class P2PServiceTest {
     private static final Logger log = LoggerFactory.getLogger(P2PServiceTest.class);
 
     boolean useLocalhost = true;
-    private ArrayList<Address> seedNodes;
+    private Set<Address> seedNodes;
     private int sleepTime;
     private KeyRing keyRing1, keyRing2, keyRing3;
     private EncryptionService encryptionService1, encryptionService2, encryptionService3;
@@ -66,7 +68,7 @@ public class P2PServiceTest {
         encryptionService2 = new EncryptionService(keyRing2);
         encryptionService3 = new EncryptionService(keyRing3);
 
-        seedNodes = new ArrayList<>();
+        seedNodes = new HashSet<>();
         if (useLocalhost) {
             seedNodes.add(new Address("localhost:8001"));
             seedNodes.add(new Address("localhost:8002"));
