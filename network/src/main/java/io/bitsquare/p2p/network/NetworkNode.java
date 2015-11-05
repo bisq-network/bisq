@@ -85,20 +85,16 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                     Connection newConnection;
                     log.trace("We have not found any connection for that peerAddress. " +
                             "We will create a new outbound connection.");
-                    try {
-                        Socket socket = getSocket(peerAddress); // can take a while when using tor
-                        newConnection = new Connection(socket, NetworkNode.this, NetworkNode.this);
-                        newConnection.setPeerAddress(peerAddress);
-                        outBoundConnections.add(newConnection);
+                    Socket socket = getSocket(peerAddress); // can take a while when using tor
+                    newConnection = new Connection(socket, NetworkNode.this, NetworkNode.this);
+                    newConnection.setPeerAddress(peerAddress);
+                    outBoundConnections.add(newConnection);
 
-                        log.info("\n\nNetworkNode created new outbound connection:"
-                                + "\npeerAddress=" + peerAddress.port
-                                + "\nconnection.uid=" + newConnection.getUid()
-                                + "\nmessage=" + message
-                                + "\n\n");
-                    } catch (Throwable t) {
-                        throw t;
-                    }
+                    log.info("\n\nNetworkNode created new outbound connection:"
+                            + "\npeerAddress=" + peerAddress.port
+                            + "\nconnection.uid=" + newConnection.getUid()
+                            + "\nmessage=" + message
+                            + "\n\n");
 
                     newConnection.sendMessage(message);
 
