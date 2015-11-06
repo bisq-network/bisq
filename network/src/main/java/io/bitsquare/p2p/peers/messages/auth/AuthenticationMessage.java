@@ -1,4 +1,4 @@
-package io.bitsquare.p2p.peer.messages;
+package io.bitsquare.p2p.peers.messages.auth;
 
 import io.bitsquare.p2p.Message;
 

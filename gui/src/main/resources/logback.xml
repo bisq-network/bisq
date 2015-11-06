@@ -6,14 +6,18 @@
         </encoder>
     </appender>
 
-    <root level="TRACE">
+    <root level="INFO">
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-    <logger name="io.bitsquare.p2p" level="TRACE"/>
+    <!-- <logger name="io.bitsquare.p2p.peers.PeerGroup" level="TRACE"/>
+     <logger name="io.bitsquare.p2p.P2PService" level="TRACE"/>
+     <logger name="io.bitsquare.p2p.storage.ProtectedExpirableDataStorage" level="TRACE"/>
+     <logger name="io.bitsquare.p2p.network.LocalhostNetworkNode" level="TRACE"/>
+     <logger name="io.bitsquare.p2p.network.TorNetworkNode" level="TRACE"/>
+     <logger name="io.bitsquare.p2p.network.NetworkNode" level="TRACE"/>-->
 
 
-    <logger name="io.bitsquare" level="TRACE"/>
     <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="WARN"/>
 
     <logger name="io.bitsquare.btc.AddressBasedCoinSelector" level="OFF"/>

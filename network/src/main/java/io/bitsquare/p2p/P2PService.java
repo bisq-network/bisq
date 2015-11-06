@@ -15,9 +15,9 @@ import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.crypto.SealedAndSignedMessage;
 import io.bitsquare.p2p.messaging.*;
 import io.bitsquare.p2p.network.*;
-import io.bitsquare.p2p.peer.Peer;
-import io.bitsquare.p2p.peer.PeerGroup;
-import io.bitsquare.p2p.peer.PeerListener;
+import io.bitsquare.p2p.peers.Peer;
+import io.bitsquare.p2p.peers.PeerGroup;
+import io.bitsquare.p2p.peers.PeerListener;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.ProtectedExpirableDataStorage;
@@ -25,8 +25,8 @@ import io.bitsquare.p2p.storage.data.ExpirableMailboxPayload;
 import io.bitsquare.p2p.storage.data.ExpirablePayload;
 import io.bitsquare.p2p.storage.data.ProtectedData;
 import io.bitsquare.p2p.storage.data.ProtectedMailboxData;
-import io.bitsquare.p2p.storage.messages.AllDataMessage;
-import io.bitsquare.p2p.storage.messages.GetAllDataMessage;
+import io.bitsquare.p2p.storage.messages.GetDataRequest;
+import io.bitsquare.p2p.storage.messages.GetDataResponse;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import org.fxmisc.easybind.EasyBind;
@@ -153,17 +153,13 @@ public class P2PService implements SetupListener {
         });
 
         networkNode.addMessageListener((message, connection) -> {
-            if (message instanceof GetAllDataMessage) {
+            if (message instanceof GetDataRequest) {
                 log.trace("Received GetDataSetMessage: " + message);
-                networkNode.sendMessage(connection, new AllDataMessage(getDataSet()));
-            } else if (message instanceof AllDataMessage) {
-                AllDataMessage allDataMessage = (AllDataMessage) message;
-                HashSet<ProtectedData> set = allDataMessage.set;
+                networkNode.sendMessage(connection, new GetDataResponse(getDataSet()));
+            } else if (message instanceof GetDataResponse) {
+                GetDataResponse getDataResponse = (GetDataResponse) message;
+                HashSet<ProtectedData> set = getDataResponse.set;
                 if (!set.isEmpty()) {
-                    StringBuilder sb = new StringBuilder("Received DataSetMessage:\n\n");
-                    set.stream().forEach(e -> sb.append(e.toString() + "\n"));
-                    sb.append("\n");
-                    log.trace(sb.toString());
                     // we keep that connection open as the bootstrapping peer will use that for the authentication
                     // as we are not authenticated yet the data adding will not be broadcasted 
                     set.stream().forEach(e -> dataStorage.add(e, connection.getPeerAddress()));
@@ -272,7 +268,7 @@ public class P2PService implements SetupListener {
             Address candidate = remainingSeedNodeAddresses.remove(0);
             log.info("We try to send a GetAllDataMessage request to a random seed node. " + candidate);
 
-            SettableFuture<Connection> future = networkNode.sendMessage(candidate, new GetAllDataMessage());
+            SettableFuture<Connection> future = networkNode.sendMessage(candidate, new GetDataRequest());
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
                 public void onSuccess(@Nullable Connection connection) {
@@ -315,7 +311,7 @@ public class P2PService implements SetupListener {
     private void sendGetAllDataMessageAfterAuthentication(final Peer peer) {
         log.trace("sendGetDataSetMessageAfterAuthentication");
         // After authentication we request again data as we might have missed pushed data in the meantime
-        SettableFuture<Connection> future = networkNode.sendMessage(peer.connection, new GetAllDataMessage());
+        SettableFuture<Connection> future = networkNode.sendMessage(peer.connection, new GetDataRequest());
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
             public void onSuccess(@Nullable Connection connection) {

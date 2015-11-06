@@ -1,4 +1,4 @@
-package io.bitsquare.p2p.peer.messages;
+package io.bitsquare.p2p.peers.messages.maintenance;
 
 import io.bitsquare.app.Version;
 

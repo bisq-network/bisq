@@ -6,8 +6,8 @@ import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.LocalhostNetworkNode;
-import io.bitsquare.p2p.peer.AuthenticationListener;
-import io.bitsquare.p2p.peer.PeerGroup;
+import io.bitsquare.p2p.peers.AuthenticationListener;
+import io.bitsquare.p2p.peers.PeerGroup;
 import io.bitsquare.p2p.seed.SeedNode;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -370,8 +370,8 @@ public class PeerGroupTest {
         // total authentications at com nodes = 90, System load (nr. threads/used memory (MB)): 170/20
         // total authentications at 20 nodes = 380, System load (nr. threads/used memory (MB)): 525/46
         for (int i = 0; i < length; i++) {
-            nodes[i].getP2PService().getPeerGroup().printConnectedPeersMap();
-            nodes[i].getP2PService().getPeerGroup().printReportedPeersMap();
+            nodes[i].getP2PService().getPeerGroup().printAuthenticatedPeers();
+            nodes[i].getP2PService().getPeerGroup().printReportedPeers();
         }
 
         CountDownLatch shutDownLatch = new CountDownLatch(length);

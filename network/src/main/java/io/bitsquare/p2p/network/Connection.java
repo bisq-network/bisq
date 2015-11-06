@@ -188,15 +188,18 @@ public class Connection {
 
     private void shutDown(boolean sendCloseConnectionMessage, @Nullable Runnable shutDownCompleteHandler) {
         if (!stopped) {
-            log.info("\n\nShutDown connection:"
+            StringBuilder result = new StringBuilder("\n\n############################################################\n" +
+                    "ShutDown connection:"
                     + "\npeerAddress=" + peerAddress
-                    + "\nobjectId=" + getObjectId()
-                    + "\nuid=" + getUid()
-                    + "\nisAuthenticated=" + isAuthenticated()
-                    + "\nsocket.getPort()=" + sharedSpace.getSocket().getPort()
-                    + "\n\n");
-            log.debug("ShutDown " + this.getObjectId());
-            log.debug("ShutDown connection requested. Connection=" + this.toString());
+                    + "\nlocalPort/port=" + sharedSpace.getSocket().getLocalPort()
+                    + "/" + sharedSpace.getSocket().getPort()
+                    + "\nobjectId=" + getObjectId() + " / uid=" + getUid()
+                    + "\nisAuthenticated=" + isAuthenticated());
+            result.append("\n############################################################\n");
+            log.info(result.toString());
+
+            log.trace("ShutDown " + this.getObjectId());
+            log.trace("ShutDown connection requested. Connection=" + this.toString());
 
             stopped = true;
             sharedSpace.stop();

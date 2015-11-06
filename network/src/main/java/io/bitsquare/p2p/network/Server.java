@@ -38,13 +38,15 @@ public class Server implements Runnable {
                     if (!stopped) {
                         log.info("Accepted new client on localPort/port " + socket.getLocalPort() + "/" + socket.getPort());
                         Connection connection = new Connection(socket, messageListener, connectionListener);
-                        log.info("\n\nServer created new inbound connection:"
-                                + "\nserverSocket.getLocalPort()=" + serverSocket.getLocalPort()
-                                + "\nsocket.getPort()=" + socket.getPort()
-                                + "\nconnection.uid=" + connection.getUid()
-                                + "\n\n");
 
-                        log.info("Server created new socket with port " + socket.getPort());
+                        StringBuilder result = new StringBuilder("\n\n############################################################\n" +
+                                "Server created new inbound connection:"
+                                + "\nlocalPort/port=" + serverSocket.getLocalPort()
+                                + "/" + socket.getPort()
+                                + "\nconnection.uid=" + connection.getUid());
+                        result.append("\n############################################################\n");
+                        log.info(result.toString());
+
                         if (!stopped)
                             connections.add(connection);
                     }

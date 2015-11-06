@@ -95,7 +95,7 @@ public class Storage<T extends Serializable> {
 
     // Save delayed and on a background thread
     public void queueUpForSave() {
-        log.debug("save " + fileName);
+        log.trace("save " + fileName);
         checkNotNull(storageFile, "storageFile = null. Call setupFileStorage before using read/write.");
 
         fileManager.saveLater(serializable);
@@ -118,12 +118,12 @@ public class Storage<T extends Serializable> {
             long now = System.currentTimeMillis();
             try {
                 T persistedObject = fileManager.read(storageFile);
-                log.info("Read {} completed in {}msec", serializable.getClass().getSimpleName(), System.currentTimeMillis() - now);
+                log.trace("Read {} completed in {}msec", serializable.getClass().getSimpleName(), System.currentTimeMillis() - now);
 
                 // If we did not get any exception we can be sure the data are consistent so we make a backup 
                 now = System.currentTimeMillis();
                 fileManager.backupFile(fileName);
-                log.info("Backup {} completed in {}msec", serializable.getClass().getSimpleName(), System.currentTimeMillis() - now);
+                log.trace("Backup {} completed in {}msec", serializable.getClass().getSimpleName(), System.currentTimeMillis() - now);
 
                 return persistedObject;
             } catch (ClassCastException | IOException e) {

@@ -8,7 +8,7 @@ import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.network.IllegalRequest;
 import io.bitsquare.p2p.network.MessageListener;
-import io.bitsquare.p2p.peer.PeerGroup;
+import io.bitsquare.p2p.peers.PeerGroup;
 import io.bitsquare.p2p.storage.data.*;
 import io.bitsquare.p2p.storage.messages.*;
 import io.bitsquare.storage.Storage;
@@ -130,10 +130,10 @@ public class ProtectedExpirableDataStorage {
             log.trace("Data added to our map and it will be broadcasted to our peers.");
             UserThread.execute(() -> hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedData)));
 
-            StringBuilder sb = new StringBuilder("\n\n----------------------------------------------------\n" +
+            StringBuilder sb = new StringBuilder("\n\n############################################################\n" +
                     "Data set after addProtectedExpirableData:");
-            map.values().stream().forEach(e -> sb.append("\n\n").append(e.toString()));
-            sb.append("\n----------------------------------------------------\n\n");
+            map.values().stream().forEach(e -> sb.append("\n").append(e.toString()));
+            sb.append("\n############################################################\n");
             log.trace(sb.toString());
 
             if (!containsKey)
@@ -247,9 +247,10 @@ public class ProtectedExpirableDataStorage {
         log.trace("Data removed from our map. We broadcast the message to our peers.");
         UserThread.execute(() -> hashMapChangedListeners.stream().forEach(e -> e.onRemoved(protectedData)));
 
-        StringBuilder sb = new StringBuilder("\n\nSet after removeProtectedExpirableData:\n");
-        map.values().stream().forEach(e -> sb.append(e.toString() + "\n\n"));
-        sb.append("\n\n");
+        StringBuilder sb = new StringBuilder("\n\n############################################################\n" +
+                "Data set after removeProtectedExpirableData:");
+        map.values().stream().forEach(e -> sb.append("\n").append(e.toString()));
+        sb.append("\n############################################################\n");
         log.trace(sb.toString());
     }
 

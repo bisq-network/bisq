@@ -9,7 +9,7 @@ import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.TestUtils;
 import io.bitsquare.p2p.mocks.MockMessage;
 import io.bitsquare.p2p.network.NetworkNode;
-import io.bitsquare.p2p.peer.PeerGroup;
+import io.bitsquare.p2p.peers.PeerGroup;
 import io.bitsquare.p2p.storage.data.DataAndSeqNr;
 import io.bitsquare.p2p.storage.data.ExpirableMailboxPayload;
 import io.bitsquare.p2p.storage.data.ProtectedData;

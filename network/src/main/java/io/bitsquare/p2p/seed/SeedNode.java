@@ -51,7 +51,7 @@ public class SeedNode {
                 checkArgument(arg1.equals("true") || arg1.equals("false"));
                 useLocalhost = ("true").equals(arg1);
 
-                if (args.length == 3) {
+                if (args.length > 2) {
                     String arg2 = args[2];
                     checkArgument(arg2.contains(":") && arg2.split(":").length > 1 && arg2.split(":")[1].length() > 3, "Wrong program argument");
                     List<String> list = Arrays.asList(arg2.split("|"));
@@ -61,8 +61,8 @@ public class SeedNode {
                         seedNodes.add(new Address(e));
                     });
                     seedNodes.remove(mySeedNodeAddress);
-                } else {
-                    log.error("Wrong number of program arguments." +
+                } else if (args.length > 3) {
+                    log.error("Too many program arguments." +
                             "\nProgram arguments: myAddress useLocalhost seedNodes");
                 }
             }

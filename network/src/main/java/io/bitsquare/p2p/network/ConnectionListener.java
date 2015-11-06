@@ -4,7 +4,6 @@ package io.bitsquare.p2p.network;
 import io.bitsquare.p2p.Address;
 
 public interface ConnectionListener {
-
     enum Reason {
         SOCKET_CLOSED,
         RESET,

@@ -1,4 +1,4 @@
-package io.bitsquare.p2p.peer;
+package io.bitsquare.p2p.peers;
 
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.network.Connection;

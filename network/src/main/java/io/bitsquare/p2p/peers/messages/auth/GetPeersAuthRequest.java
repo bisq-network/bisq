@@ -1,28 +1,30 @@
-package io.bitsquare.p2p.peer.messages;
+package io.bitsquare.p2p.peers.messages.auth;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.Address;
 
-public final class ChallengeMessage implements AuthenticationMessage {
+import java.util.HashSet;
+
+public final class GetPeersAuthRequest implements AuthenticationMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     public final Address address;
-    public final long requesterNonce;
     public final long challengerNonce;
+    public final HashSet<Address> peerAddresses;
 
-    public ChallengeMessage(Address address, long requesterNonce, long challengerNonce) {
+    public GetPeersAuthRequest(Address address, long challengerNonce, HashSet<Address> peerAddresses) {
         this.address = address;
-        this.requesterNonce = requesterNonce;
         this.challengerNonce = challengerNonce;
+        this.peerAddresses = peerAddresses;
     }
 
     @Override
     public String toString() {
-        return "ChallengeMessage{" +
+        return "GetPeersMessage{" +
                 "address=" + address +
-                ", requesterNonce=" + requesterNonce +
                 ", challengerNonce=" + challengerNonce +
+                ", peerAddresses=" + peerAddresses +
                 '}';
     }
 }
