@@ -154,7 +154,7 @@ public class TradeManager {
             }
 
             @Override
-            public void onHiddenServiceReady() {
+            public void onHiddenServicePublished() {
             }
 
             @Override

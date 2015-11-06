@@ -79,10 +79,11 @@ public class PeerGroupTest {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(0);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(0);
         seedNodes = new HashSet<>();
-        seedNodes.add(new Address("localhost:8001"));
+        Address address = new Address("localhost:8001");
+        seedNodes.add(address);
         seedNode1 = new SeedNode();
         latch = new CountDownLatch(2);
-        seedNode1.createAndStartP2PService(null, null, 8001, useLocalhost, seedNodes, new P2PServiceListener() {
+        seedNode1.createAndStartP2PService(null, null, address, useLocalhost, seedNodes, new P2PServiceListener() {
             @Override
             public void onAllDataReceived() {
                 latch.countDown();
@@ -98,7 +99,7 @@ public class PeerGroupTest {
             }
 
             @Override
-            public void onHiddenServiceReady() {
+            public void onHiddenServicePublished() {
                 latch.countDown();
             }
 
@@ -118,13 +119,15 @@ public class PeerGroupTest {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(0);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(0);
         seedNodes = new HashSet<>();
-        seedNodes.add(new Address("localhost:8001"));
-        seedNodes.add(new Address("localhost:8002"));
+        Address address1 = new Address("localhost:8001");
+        seedNodes.add(address1);
+        Address address2 = new Address("localhost:8002");
+        seedNodes.add(address2);
 
         latch = new CountDownLatch(6);
 
         seedNode1 = new SeedNode();
-        seedNode1.createAndStartP2PService(null, null, 8001, useLocalhost, seedNodes, new P2PServiceListener() {
+        seedNode1.createAndStartP2PService(null, null, address1, useLocalhost, seedNodes, new P2PServiceListener() {
             @Override
             public void onAllDataReceived() {
                 latch.countDown();
@@ -141,7 +144,7 @@ public class PeerGroupTest {
             }
 
             @Override
-            public void onHiddenServiceReady() {
+            public void onHiddenServicePublished() {
                 latch.countDown();
             }
 
@@ -155,7 +158,7 @@ public class PeerGroupTest {
         Thread.sleep(500);
 
         seedNode2 = new SeedNode();
-        seedNode2.createAndStartP2PService(null, null, 8002, useLocalhost, seedNodes, new P2PServiceListener() {
+        seedNode2.createAndStartP2PService(null, null, address2, useLocalhost, seedNodes, new P2PServiceListener() {
             @Override
             public void onAllDataReceived() {
                 latch.countDown();
@@ -172,7 +175,7 @@ public class PeerGroupTest {
             }
 
             @Override
-            public void onHiddenServiceReady() {
+            public void onHiddenServicePublished() {
                 latch.countDown();
             }
 
@@ -382,7 +385,7 @@ public class PeerGroupTest {
         SeedNode seedNode = new SeedNode();
 
         latch = new CountDownLatch(1);
-        seedNode.createAndStartP2PService(null, null, port, useLocalhost, seedNodes, new P2PServiceListener() {
+        seedNode.createAndStartP2PService(null, null, new Address("localhost", port), useLocalhost, seedNodes, new P2PServiceListener() {
             @Override
             public void onAllDataReceived() {
                 latch.countDown();
@@ -398,7 +401,7 @@ public class PeerGroupTest {
             }
 
             @Override
-            public void onHiddenServiceReady() {
+            public void onHiddenServicePublished() {
 
             }
 

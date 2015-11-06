@@ -1,14 +1,18 @@
 package io.bitsquare.p2p.peer;
 
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
-import io.bitsquare.p2p.network.*;
-import io.bitsquare.p2p.peer.messages.*;
+import io.bitsquare.p2p.network.Connection;
+import io.bitsquare.p2p.network.ConnectionListener;
+import io.bitsquare.p2p.network.MessageListener;
+import io.bitsquare.p2p.network.NetworkNode;
+import io.bitsquare.p2p.peer.messages.MaintenanceMessage;
+import io.bitsquare.p2p.peer.messages.PingMessage;
+import io.bitsquare.p2p.peer.messages.PongMessage;
+import io.bitsquare.p2p.peer.messages.RequestAuthenticationMessage;
 import io.bitsquare.p2p.storage.messages.BroadcastMessage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,10 +25,13 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+
 public class PeerGroup {
     private static final Logger log = LoggerFactory.getLogger(PeerGroup.class);
 
-    private static int simulateAuthTorNode = 0;
+    static int simulateAuthTorNode = 0;
 
     public static void setSimulateAuthTorNode(int simulateAuthTorNode) {
         PeerGroup.simulateAuthTorNode = simulateAuthTorNode;
@@ -33,19 +40,18 @@ public class PeerGroup {
     private static int MAX_CONNECTIONS = 8;
     private static int MAINTENANCE_INTERVAL = new Random().nextInt(2 * 60 * 1000) + 2 * 60 * 1000; // 2-4 min.
     private static int PING_AFTER_CONNECTION_INACTIVITY = 30 * 1000;
-    private long startAuthTs;
 
     public static void setMaxConnections(int maxConnections) {
         MAX_CONNECTIONS = maxConnections;
     }
 
     private final NetworkNode networkNode;
-    private final CopyOnWriteArraySet<Address> seedNodes;
-    private final ConcurrentHashMap<Address, Long> nonceMap = new ConcurrentHashMap<>();
+
+
+    private final Set<Address> seedNodeAddresses;
     private final CopyOnWriteArraySet<PeerListener> peerListeners = new CopyOnWriteArraySet<>();
     private final ConcurrentHashMap<Address, Peer> authenticatedPeers = new ConcurrentHashMap<>();
     private final CopyOnWriteArraySet<Address> reportedPeerAddresses = new CopyOnWriteArraySet<>();
-    private final ConcurrentHashMap<Address, Runnable> authenticationCompleteHandlers = new ConcurrentHashMap<>();
     ;
 
     private final Timer maintenanceTimer = new Timer();
@@ -58,20 +64,39 @@ public class PeerGroup {
 
     public PeerGroup(final NetworkNode networkNode, Set<Address> seeds) {
         this.networkNode = networkNode;
-
-        // We copy it as we remove ourselves later from the list if we are a seed node
-        this.seedNodes = new CopyOnWriteArraySet<>(seeds);
+        this.seedNodeAddresses = seeds;
 
         init(networkNode);
     }
 
     private void init(NetworkNode networkNode) {
         networkNode.addMessageListener((message, connection) -> {
-            if (message instanceof AuthenticationMessage)
-                processAuthenticationMessage((AuthenticationMessage) message, connection);
-            else if (message instanceof MaintenanceMessage)
+            if (message instanceof MaintenanceMessage)
                 processMaintenanceMessage((MaintenanceMessage) message, connection);
+            else if (message instanceof RequestAuthenticationMessage) {
+                AuthenticationHandshake authenticationHandshake = new AuthenticationHandshake(networkNode, PeerGroup.this, getMyAddress());
+                SettableFuture<Connection> future = authenticationHandshake.processAuthenticationRequest((RequestAuthenticationMessage) message, connection);
+                Futures.addCallback(future, new FutureCallback<Connection>() {
+                    @Override
+                    public void onSuccess(@Nullable Connection connection) {
+                        if (connection != null) {
+                            UserThread.execute(() -> {
+                                setAuthenticated(connection, connection.getPeerAddress());
+                                purgeReportedPeers();
+                            });
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NotNull Throwable throwable) {
+                        throwable.printStackTrace();
+                        log.error("AuthenticationHandshake failed. " + throwable.getMessage());
+                        UserThread.execute(() -> removePeer(connection.getPeerAddress()));
+                    }
+                });
+            }
         });
+
 
         networkNode.addConnectionListener(new ConnectionListener() {
             @Override
@@ -93,24 +118,6 @@ public class PeerGroup {
 
             @Override
             public void onError(Throwable throwable) {
-            }
-        });
-
-        networkNode.addSetupListener(new SetupListener() {
-            @Override
-            public void onTorNodeReady() {
-            }
-
-            @Override
-            public void onHiddenServiceReady() {
-                // remove ourselves in case we are a seed node
-                Address myAddress = getAddress();
-                if (myAddress != null)
-                    seedNodes.remove(myAddress);
-            }
-
-            @Override
-            public void onSetupFailed(Throwable throwable) {
             }
         });
 
@@ -140,11 +147,7 @@ public class PeerGroup {
             log.info("Number of connections exceeds MAX_CONNECTIONS. Current size=" + authenticatedConnections.size());
             Connection connection = authenticatedConnections.remove(0);
             log.info("Shutdown oldest connection with last activity date=" + connection.getLastActivityDate() + " / connection=" + connection);
-
-            connection.shutDown(() -> Utilities.runTimerTask(() -> {
-                Thread.currentThread().setName("DelayDisconnectOldConnectionsTimer-" + new Random().nextInt(1000));
-                disconnectOldConnections();
-            }, 1, TimeUnit.MILLISECONDS));
+            connection.shutDown(() -> UserThread.runAfterRandomDelay(() -> disconnectOldConnections(), 100, 500, TimeUnit.MILLISECONDS));
         }
     }
 
@@ -153,8 +156,7 @@ public class PeerGroup {
         Set<Peer> connectedPeersList = new HashSet<>(authenticatedPeers.values());
         connectedPeersList.stream()
                 .filter(e -> (new Date().getTime() - e.connection.getLastActivityDate().getTime()) > PING_AFTER_CONNECTION_INACTIVITY)
-                .forEach(e -> Utilities.runTimerTaskWithRandomDelay(() -> {
-                    Thread.currentThread().setName("DelayPingPeersTimer-" + new Random().nextInt(1000));
+                .forEach(e -> UserThread.runAfterRandomDelay(() -> {
                     SettableFuture<Connection> future = networkNode.sendMessage(e.connection, new PingMessage(e.getPingNonce()));
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
@@ -176,6 +178,10 @@ public class PeerGroup {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void removeMySeedNodeAddressFromList(Address mySeedNodeAddress) {
+        seedNodeAddresses.remove(mySeedNodeAddress);
+    }
+
     public void shutDown() {
         if (!shutDownInProgress) {
             shutDownInProgress = true;
@@ -189,15 +195,16 @@ public class PeerGroup {
         log.trace("message = " + message);
         printConnectedPeersMap();
 
+        // TODO add randomized timing?
         authenticatedPeers.values().stream()
                 .filter(e -> !e.address.equals(sender))
                 .forEach(peer -> {
-                    log.trace("Broadcast message from " + getAddress() + " to " + peer.address + ".");
+                    log.trace("Broadcast message from " + getMyAddress() + " to " + peer.address + ".");
                     SettableFuture<Connection> future = networkNode.sendMessage(peer.address, message);
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
                         public void onSuccess(Connection connection) {
-                            log.trace("Broadcast from " + getAddress() + " to " + peer.address + " succeeded.");
+                            log.trace("Broadcast from " + getMyAddress() + " to " + peer.address + " succeeded.");
                         }
 
                         @Override
@@ -208,6 +215,270 @@ public class PeerGroup {
                     });
                 });
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Authentication to seed node
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void authenticateSeedNode(Address peerAddress) {
+        authenticateToSeedNode(new HashSet<>(seedNodeAddresses), peerAddress, true);
+    }
+
+    public void authenticateToSeedNode(Set<Address> remainingAddresses, Address peerAddress, boolean continueOnSuccess) {
+        checkArgument(!authenticatedPeers.containsKey(peerAddress),
+                "We have that peer already authenticated. That must never happen.");
+
+        AuthenticationHandshake authenticationHandshake = new AuthenticationHandshake(networkNode, this, getMyAddress());
+        SettableFuture<Connection> future = authenticationHandshake.requestAuthentication(remainingAddresses, peerAddress);
+        Futures.addCallback(future, new FutureCallback<Connection>() {
+            @Override
+            public void onSuccess(@Nullable Connection connection) {
+                if (connection != null) {
+                    setAuthenticated(connection, peerAddress);
+                    if (continueOnSuccess) {
+                        if (getAuthenticatedPeers().size() <= MAX_CONNECTIONS) {
+                            log.info("We still don't have enough connections. Lets try the reported peers.");
+                            authenticateToAnyReportedPeer();
+                        } else {
+                            log.info("We have already enough connections.");
+                        }
+                    } else {
+                        log.info("We have already tried all reported peers and seed nodes. " +
+                                "We stop bootstrapping now, but will repeat after an while.");
+                        UserThread.runAfter(() -> authenticateToAnyReportedPeer(), 60);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable throwable) {
+                throwable.printStackTrace();
+                log.error("AuthenticationHandshake failed. " + throwable.getMessage());
+                removePeer(peerAddress);
+
+                // If we fail we try again with the remaining set
+                remainingAddresses.remove(peerAddress);
+                List<Address> list = new ArrayList<>(remainingAddresses);
+                removeAuthenticatedPeersFromList(list);
+                if (!list.isEmpty()) {
+                    Address item = getAndRemoveRandomItem(list);
+                    log.info("We try to build an authenticated connection to a seed node. " + item);
+                    authenticateToSeedNode(remainingAddresses, item, true);
+                } else {
+                    log.info("We don't have any more seed nodes for connecting. Lets try the reported peers.");
+                    authenticateToAnyReportedPeer();
+                }
+            }
+        });
+    }
+
+
+    private void authenticateToAnyReportedPeer() {
+        // after we have at least one seed node we try to get reported peers connected
+        List<Address> list = new ArrayList<>(reportedPeerAddresses);
+        removeAuthenticatedPeersFromList(list);
+        if (!list.isEmpty()) {
+            Address item = getAndRemoveRandomItem(list);
+            log.info("We try to build an authenticated connection to a random peer. " + item + " / list=" + list);
+            authenticateToReportedPeer(new HashSet<>(list), item);
+        } else {
+            log.info("We don't have any reported peers for connecting. Lets try the remaining seed nodes.");
+            authenticateToRemainingSeedNodes();
+        }
+    }
+
+    public void authenticateToReportedPeer(Set<Address> remainingAddresses, Address peerAddress) {
+        checkArgument(!authenticatedPeers.containsKey(peerAddress),
+                "We have that peer already authenticated. That must never happen.");
+
+        AuthenticationHandshake authenticationHandshake = new AuthenticationHandshake(networkNode, this, getMyAddress());
+        SettableFuture<Connection> future = authenticationHandshake.requestAuthentication(remainingAddresses, peerAddress);
+        Futures.addCallback(future, new FutureCallback<Connection>() {
+            @Override
+            public void onSuccess(@Nullable Connection connection) {
+                if (connection != null) {
+                    setAuthenticated(connection, peerAddress);
+                    if (getAuthenticatedPeers().size() <= MAX_CONNECTIONS) {
+                        log.info("We still don't have enough connections. Lets try the remaining seed nodes.");
+                        authenticateToRemainingSeedNodes();
+                    } else {
+                        log.info("We have already enough connections.");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable throwable) {
+                throwable.printStackTrace();
+                log.error("AuthenticationHandshake failed. " + throwable.getMessage());
+                removePeer(peerAddress);
+            }
+        });
+    }
+
+    private void authenticateToRemainingSeedNodes() {
+        // after we have at least one seed node we try to get reported peers connected
+        List<Address> list = new ArrayList<>(seedNodeAddresses);
+        removeAuthenticatedPeersFromList(list);
+        if (!list.isEmpty()) {
+            Address item = getAndRemoveRandomItem(list);
+            log.info("We try to build an authenticated connection to a random seed node. " + item + " / list=" + list);
+            authenticateToSeedNode(new HashSet<>(list), item, false);
+        } else {
+            log.info("We don't have any more seed nodes for connecting. " +
+                    "We stop bootstrapping now, but will repeat after an while.");
+            UserThread.runAfter(() -> authenticateToAnyReportedPeer(), 60);
+        }
+    }
+
+
+    /*private void authenticateToAnyNode1(Set<Address> addresses, Address peerAddress, boolean prioritizeSeedNodes) {
+        checkArgument(!authenticatedPeers.containsKey(peerAddress),
+                "We have that peer already authenticated. That must never happen.");
+
+        AuthenticationHandshake authenticationHandshake = new AuthenticationHandshake(networkNode, this, getMyAddress());
+        SettableFuture<Connection> future = authenticationHandshake.requestAuthentication(addresses, peerAddress);
+        Futures.addCallback(future, new FutureCallback<Connection>() {
+            @Override
+            public void onSuccess(@Nullable Connection connection) {
+                setAuthenticated(connection, peerAddress);
+                authenticateToNextRandomPeer();
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                throwable.printStackTrace();
+                log.error("AuthenticationHandshake failed. " + throwable.getMessage());
+                removePeer(peerAddress);
+                authenticateToNextRandomPeer();
+            }
+        });
+    }
+
+    private void authenticateToNextRandomPeer() {
+        UserThread.runAfterRandomDelay(() -> {
+            log.info("authenticateToNextRandomPeer");
+            if (getAuthenticatedPeers().size() <= MAX_CONNECTIONS) {
+                Optional<Address> candidate = getRandomReportedPeerAddress();
+                if (candidate.isPresent()) {
+                    log.info("We try to build an authenticated connection to a random peer. " + candidate.get());
+                    authenticateToReportedPeer(candidate.get(), );
+                } else {
+                    log.info("No more reportedPeerAddresses available for connecting. We try the remaining seed nodes");
+                    candidate = getRandomSeedNodeAddress();
+                    if (candidate.isPresent()) {
+                        log.info("We try to build an authenticated connection to a random seed node. " + candidate.get());
+                        authenticateToReportedPeer(candidate.get(), get);
+                    } else {
+                        log.info("No more seed nodes available for connecting.");
+                    }
+                }
+            } else {
+                log.info("We have already enough connections.");
+            }
+        }, 200, 400, TimeUnit.MILLISECONDS);
+    }*/
+
+    private Optional<Address> getRandomSeedNodeAddress() {
+        List<Address> list = new ArrayList<>(seedNodeAddresses);
+        log.debug("### getRandomSeedNodeAddress list " + list);
+        removeAuthenticatedPeersFromList(list);
+        log.debug("### list post removeAuthenticatedPeersFromList " + list);
+        return getRandomEntry(list);
+    }
+
+    private Optional<Address> getRandomReportedPeerAddress() {
+        List<Address> list = new ArrayList<>(reportedPeerAddresses);
+        log.debug("### list reportedPeerAddresses " + reportedPeerAddresses);
+        log.debug("### list authenticatedPeers " + authenticatedPeers);
+        log.debug("### list pre " + list);
+        removeAuthenticatedPeersFromList(list);
+        log.debug("### list post " + list);
+        return getRandomEntry(list);
+    }
+
+    private void removeAuthenticatedPeersFromList(List<Address> list) {
+        authenticatedPeers.values().stream().forEach(e -> list.remove(e.address));
+    }
+
+    private Optional<Address> getRandomEntry(List<Address> list) {
+        if (list.size() > 0) {
+            Collections.shuffle(list);
+            return Optional.of(list.get(0));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Authentication to non-seed node peer
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void authenticateToPeer(Address peerAddress, @Nullable Runnable authenticationCompleteHandler, @Nullable Runnable faultHandler) {
+        checkArgument(!authenticatedPeers.containsKey(peerAddress),
+                "We have that seed node already authenticated. That must never happen.");
+
+        AuthenticationHandshake authenticationHandshake = new AuthenticationHandshake(networkNode, this, getMyAddress());
+        SettableFuture<Connection> future = authenticationHandshake.requestAuthenticationToPeer(peerAddress);
+        Futures.addCallback(future, new FutureCallback<Connection>() {
+            @Override
+            public void onSuccess(@Nullable Connection connection) {
+                if (connection != null) {
+                    setAuthenticated(connection, peerAddress);
+                    if (authenticationCompleteHandler != null)
+                        authenticationCompleteHandler.run();
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable throwable) {
+                throwable.printStackTrace();
+                log.error("AuthenticationHandshake failed. " + throwable.getMessage());
+                removePeer(peerAddress);
+                if (faultHandler != null)
+                    faultHandler.run();
+            }
+        });
+    }
+
+    void setAuthenticated(Connection connection, Address peerAddress) {
+        log.info("\n\n############################################################\n" +
+                "We are authenticated to:" +
+                "\nconnection=" + connection
+                + "\nmyAddress=" + getMyAddress()
+                + "\npeerAddress= " + peerAddress
+                + "\n############################################################\n");
+
+        connection.setAuthenticated(peerAddress, connection);
+
+        Peer peer = new Peer(connection);
+        addAuthenticatedPeer(peerAddress, peer);
+
+        peerListeners.stream().forEach(e -> e.onConnectionAuthenticated(connection));
+    }
+
+    private void addAuthenticatedPeer(Address address, Peer peer) {
+        boolean firstPeerAdded;
+        authenticatedPeers.put(address, peer);
+        firstPeerAdded = authenticatedPeers.size() == 1;
+
+        UserThread.execute(() -> peerListeners.stream().forEach(e -> e.onPeerAdded(peer)));
+
+        if (firstPeerAdded)
+            UserThread.execute(() -> peerListeners.stream().forEach(e -> e.onFirstAuthenticatePeer(peer)));
+
+        if (authenticatedPeers.size() > MAX_CONNECTIONS)
+            disconnectOldConnections();
+
+        printConnectedPeersMap();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Listeners
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addMessageListener(MessageListener messageListener) {
         networkNode.addMessageListener(messageListener);
@@ -225,6 +496,11 @@ public class PeerGroup {
         peerListeners.remove(peerListener);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public Map<Address, Peer> getAuthenticatedPeers() {
         return authenticatedPeers;
     }
@@ -233,202 +509,19 @@ public class PeerGroup {
         CopyOnWriteArraySet<Address> allPeerAddresses = new CopyOnWriteArraySet<>(reportedPeerAddresses);
         allPeerAddresses.addAll(authenticatedPeers.values().stream()
                 .map(e -> e.address).collect(Collectors.toList()));
-        // remove own address and seed nodes
-        allPeerAddresses.remove(getAddress());
         return allPeerAddresses;
     }
 
+    public Set<Address> getSeedNodeAddresses() {
+        return seedNodeAddresses;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Authentication
+    // Reported peers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // authentication example: 
-    // node2 -> node1 RequestAuthenticationMessage
-    // node1: close connection
-    // node1 -> node2 ChallengeMessage on new connection
-    // node2: authentication to node1 done if nonce ok
-    // node2 -> node1 GetPeersMessage
-    // node1: authentication to node2 done if nonce ok
-    // node1 -> node2 PeersMessage
-
-    public void startAuthentication(Set<Address> connectedSeedNodes) {
-        connectedSeedNodes.forEach(connectedSeedNode -> {
-            sendRequestAuthenticationMessage(seedNodes, connectedSeedNode);
-        });
-    }
-
-    private void sendRequestAuthenticationMessage(Set<Address> remainingSeedNodes, final Address address) {
-        log.info("We try to authenticate to a random seed node. " + address);
-        startAuthTs = System.currentTimeMillis();
-        final boolean[] alreadyConnected = {false};
-        authenticatedPeers.values().stream().forEach(e -> {
-            remainingSeedNodes.remove(e.address);
-            if (address.equals(e.address))
-                alreadyConnected[0] = true;
-        });
-        if (!alreadyConnected[0]) {
-            long nonce = addToMapAndGetNonce(address);
-            SettableFuture<Connection> future = networkNode.sendMessage(address, new RequestAuthenticationMessage(getAddress(), nonce));
-            Futures.addCallback(future, new FutureCallback<Connection>() {
-                @Override
-                public void onSuccess(@Nullable Connection connection) {
-                    log.info("send RequestAuthenticationMessage to " + address + " succeeded.");
-                }
-
-                @Override
-                public void onFailure(@NotNull Throwable throwable) {
-                    log.info("Send RequestAuthenticationMessage to " + address + " failed. Exception:" + throwable.getMessage());
-                    log.trace("We try to authenticate to another random seed nodes of that list: " + remainingSeedNodes);
-                    getNextSeedNode(remainingSeedNodes);
-                }
-            });
-        } else {
-            getNextSeedNode(remainingSeedNodes);
-        }
-    }
-
-    private void getNextSeedNode(Set<Address> remainingSeedNodes) {
-        List<Address> remainingSeedNodeAddresses = new ArrayList<>(remainingSeedNodes);
-
-        Address myAddress = getAddress();
-        if (myAddress != null)
-            remainingSeedNodeAddresses.remove(myAddress);
-
-        if (!remainingSeedNodeAddresses.isEmpty()) {
-            Collections.shuffle(remainingSeedNodeAddresses);
-            Address address = remainingSeedNodeAddresses.remove(0);
-            sendRequestAuthenticationMessage(Sets.newHashSet(remainingSeedNodeAddresses), address);
-        } else {
-            log.info("No other seed node found. That is expected for the first seed node.");
-        }
-    }
-
-
-    private void processAuthenticationMessage(AuthenticationMessage message, Connection connection) {
-        log.trace("processAuthenticationMessage " + message + " from " + connection.getPeerAddress() + " at " + getAddress());
-        if (message instanceof RequestAuthenticationMessage) {
-            RequestAuthenticationMessage requestAuthenticationMessage = (RequestAuthenticationMessage) message;
-            Address peerAddress = requestAuthenticationMessage.address;
-            log.trace("RequestAuthenticationMessage from " + peerAddress + " at " + getAddress());
-            connection.shutDown(() -> Utilities.runTimerTask(() -> {
-                        Thread.currentThread().setName("DelaySendChallengeMessageTimer-" + new Random().nextInt(1000));
-                        // we delay a bit as listeners for connection.onDisconnect are on other threads and might lead to 
-                        // inconsistent state (removal of connection from NetworkNode.authenticatedConnections)
-                        log.trace("processAuthenticationMessage: connection.shutDown complete. RequestAuthenticationMessage from " + peerAddress + " at " + getAddress());
-                        long nonce = addToMapAndGetNonce(peerAddress);
-                        SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new ChallengeMessage(getAddress(), requestAuthenticationMessage.nonce, nonce));
-                        Futures.addCallback(future, new FutureCallback<Connection>() {
-                            @Override
-                            public void onSuccess(Connection connection) {
-                                log.debug("onSuccess sending ChallengeMessage");
-                            }
-
-                            @Override
-                            public void onFailure(Throwable throwable) {
-                                log.warn("onFailure sending ChallengeMessage. We try again.");
-                                SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new ChallengeMessage(getAddress(), requestAuthenticationMessage.nonce, nonce));
-                                Futures.addCallback(future, new FutureCallback<Connection>() {
-                                    @Override
-                                    public void onSuccess(Connection connection) {
-                                        log.debug("onSuccess sending 2. ChallengeMessage");
-                                    }
-
-                                    @Override
-                                    public void onFailure(Throwable throwable) {
-                                        log.warn("onFailure sending ChallengeMessage. We give up.");
-                                    }
-                                });
-                            }
-                        });
-                    },
-                    100 + simulateAuthTorNode,
-                    TimeUnit.MILLISECONDS));
-        } else if (message instanceof ChallengeMessage) {
-            ChallengeMessage challengeMessage = (ChallengeMessage) message;
-            Address peerAddress = challengeMessage.address;
-            log.trace("ChallengeMessage from " + peerAddress + " at " + getAddress());
-            log.trace("nonceMap" + nonceMap);
-            log.trace("challengeMessage" + challengeMessage);
-            HashMap<Address, Long> tempNonceMap = new HashMap<>(nonceMap);
-            boolean verified = verifyNonceAndAuthenticatePeerAddress(challengeMessage.requesterNonce, peerAddress);
-            if (verified) {
-                connection.setPeerAddress(peerAddress);
-                SettableFuture<Connection> future = networkNode.sendMessage(peerAddress,
-                        new GetPeersMessage(getAddress(), challengeMessage.challengerNonce, new ArrayList<Address>(getAllPeerAddresses())));
-                Futures.addCallback(future, new FutureCallback<Connection>() {
-                    @Override
-                    public void onSuccess(Connection connection) {
-                        log.trace("GetPeersMessage sent successfully from " + getAddress() + " to " + peerAddress);
-                    }
-
-                    @Override
-                    public void onFailure(@NotNull Throwable throwable) {
-                        log.info("GetPeersMessage sending failed " + throwable.getMessage());
-                        removePeer(peerAddress);
-                    }
-                });
-            } else {
-                log.warn("verifyNonceAndAuthenticatePeerAddress failed. challengeMessage=" + challengeMessage + " / nonceMap=" + tempNonceMap);
-            }
-        } else if (message instanceof GetPeersMessage) {
-            GetPeersMessage getPeersMessage = (GetPeersMessage) message;
-            Address peerAddress = getPeersMessage.address;
-            log.trace("GetPeersMessage from " + peerAddress + " at " + getAddress());
-            boolean verified = verifyNonceAndAuthenticatePeerAddress(getPeersMessage.challengerNonce, peerAddress);
-            if (verified) {
-                setAuthenticated(connection, peerAddress);
-                purgeReportedPeers();
-                SettableFuture<Connection> future = networkNode.sendMessage(peerAddress,
-                        new PeersMessage(getAddress(), new ArrayList(getAllPeerAddresses())));
-                log.trace("sent PeersMessage to " + peerAddress + " from " + getAddress()
-                        + " with allPeers=" + getAllPeerAddresses());
-                Futures.addCallback(future, new FutureCallback<Connection>() {
-                    @Override
-                    public void onSuccess(Connection connection) {
-                        log.trace("PeersMessage sent successfully from " + getAddress() + " to " + peerAddress);
-                    }
-
-                    @Override
-                    public void onFailure(@NotNull Throwable throwable) {
-                        log.info("PeersMessage sending failed " + throwable.getMessage());
-                        removePeer(peerAddress);
-                    }
-                });
-
-                // now we add the reported peers to our own set
-                ArrayList<Address> peerAddresses = ((GetPeersMessage) message).peerAddresses;
-                log.trace("Received peers: " + peerAddresses);
-                // remove ourselves
-                addToReportedPeers(peerAddresses, connection);
-            }
-        } else if (message instanceof PeersMessage) {
-            PeersMessage peersMessage = (PeersMessage) message;
-            Address peerAddress = peersMessage.address;
-            log.trace("PeersMessage from " + peerAddress + " at " + getAddress());
-            ArrayList<Address> peerAddresses = peersMessage.peerAddresses;
-            log.trace("Received peers: " + peerAddresses);
-            // remove ourselves
-            addToReportedPeers(peerAddresses, connection);
-
-            // we wait until the handshake is completed before setting the authenticate flag
-            // authentication at both sides of the connection
-
-            log.info("\n\nAuthenticationComplete\nPeer with address " + peerAddress
-                    + " authenticated (" + connection.getObjectId() + "). Took "
-                    + (System.currentTimeMillis() - startAuthTs) + " ms. \n\n");
-
-            setAuthenticated(connection, peerAddress);
-
-            Runnable authenticationCompleteHandler = authenticationCompleteHandlers.remove(connection.getPeerAddress());
-            if (authenticationCompleteHandler != null)
-                authenticationCompleteHandler.run();
-
-            authenticateToNextRandomPeer();
-        }
-    }
-
-    private void addToReportedPeers(ArrayList<Address> peerAddresses, Connection connection) {
+    void addToReportedPeers(HashSet<Address> peerAddresses, Connection connection) {
         log.trace("addToReportedPeers");
         // we disconnect misbehaving nodes trying to send too many peers
         // reported peers include the peers connected peers which is normally max. 8 but we give some headroom 
@@ -436,113 +529,29 @@ public class PeerGroup {
         if (peerAddresses.size() > 1100) {
             connection.shutDown();
         } else {
-            peerAddresses.remove(getAddress());
+            peerAddresses.remove(getMyAddress());
             reportedPeerAddresses.addAll(peerAddresses);
             purgeReportedPeers();
         }
     }
 
-    private void purgeReportedPeers() {
+    void purgeReportedPeers() {
         log.trace("purgeReportedPeers");
         int all = getAllPeerAddresses().size();
         if (all > 1000) {
             int diff = all - 100;
-            List<Address> list = new ArrayList<>(getNotConnectedPeerAddresses());
+            List<Address> list = new LinkedList<>(getReportedNotConnectedPeerAddresses());
             for (int i = 0; i < diff; i++) {
-                Address toRemove = list.remove(new Random().nextInt(list.size()));
+                Address toRemove = getAndRemoveRandomItem(list);
                 reportedPeerAddresses.remove(toRemove);
             }
         }
     }
 
-    private synchronized CopyOnWriteArraySet<Address> getNotConnectedPeerAddresses() {
-        CopyOnWriteArraySet<Address> list = new CopyOnWriteArraySet<>(getAllPeerAddresses());
-        authenticatedPeers.values().stream().forEach(e -> list.remove(e.address));
-        return list;
-    }
-
-    private void authenticateToNextRandomPeer() {
-        Utilities.runTimerTaskWithRandomDelay(() -> {
-            Thread.currentThread().setName("DelayAuthenticateToNextRandomPeerTimer-" + new Random().nextInt(1000));
-            if (getAuthenticatedPeers().size() <= MAX_CONNECTIONS) {
-                Address randomNotConnectedPeerAddress = getRandomNotConnectedPeerAddress();
-                if (randomNotConnectedPeerAddress != null) {
-                    log.info("We try to build an authenticated connection to a random peer. " + randomNotConnectedPeerAddress);
-                    authenticateToPeer(randomNotConnectedPeerAddress, null, () -> authenticateToNextRandomPeer());
-                } else {
-                    log.info("No more peers available for connecting.");
-                }
-            } else {
-                log.info("We have already enough connections.");
-            }
-        }, 200, 400, TimeUnit.MILLISECONDS);
-    }
-
-    public void authenticateToPeer(Address address, @Nullable Runnable authenticationCompleteHandler, @Nullable Runnable faultHandler) {
-        startAuthTs = System.currentTimeMillis();
-
-        if (authenticationCompleteHandler != null)
-            authenticationCompleteHandlers.put(address, authenticationCompleteHandler);
-
-        long nonce = addToMapAndGetNonce(address);
-        SettableFuture<Connection> future = networkNode.sendMessage(address, new RequestAuthenticationMessage(getAddress(), nonce));
-        Futures.addCallback(future, new FutureCallback<Connection>() {
-            @Override
-            public void onSuccess(@Nullable Connection connection) {
-                log.debug("send RequestAuthenticationMessage succeeded");
-            }
-
-            @Override
-            public void onFailure(@NotNull Throwable throwable) {
-                log.info("send IdMessage failed. " + throwable.getMessage());
-                removePeer(address);
-                if (faultHandler != null) faultHandler.run();
-            }
-        });
-    }
-
-    private long addToMapAndGetNonce(Address peerAddress) {
-        long nonce = new Random().nextLong();
-        while (nonce == 0) {
-            nonce = new Random().nextLong();
-        }
-        log.trace("addToMapAndGetNonce nonceMap=" + nonceMap + " / peerAddress=" + peerAddress);
-        nonceMap.put(peerAddress, nonce);
-        return nonce;
-    }
-
-    private boolean verifyNonceAndAuthenticatePeerAddress(long peersNonce, Address peerAddress) {
-        log.trace("verifyNonceAndAuthenticatePeerAddress nonceMap=" + nonceMap + " / peerAddress=" + peerAddress);
-        Long nonce = nonceMap.remove(peerAddress);
-        return nonce != null && nonce == peersNonce;
-    }
-
-    private void setAuthenticated(Connection connection, Address peerAddress) {
-        log.info("\n\n############################################################\n" +
-                "We are authenticated to:" +
-                "\nconnection=" + connection
-                + "\nmyAddress=" + getAddress()
-                + "\npeerAddress= " + peerAddress
-                + "\n############################################################\n");
-
-        connection.setAuthenticated(peerAddress, connection);
-
-        Peer peer = new Peer(connection);
-        addAuthenticatedPeer(peerAddress, peer);
-
-        peerListeners.stream().forEach(e -> e.onConnectionAuthenticated(connection));
-
-        log.debug("\n### setAuthenticated post connection " + connection);
-    }
-
-    private Address getRandomNotConnectedPeerAddress() {
-        List<Address> list = new ArrayList<>(getNotConnectedPeerAddresses());
-        if (list.size() > 0) {
-            Collections.shuffle(list);
-            return list.get(0);
-        } else {
-            return null;
-        }
+    private Set<Address> getReportedNotConnectedPeerAddresses() {
+        Set<Address> set = new HashSet<>(reportedPeerAddresses);
+        authenticatedPeers.values().stream().forEach(e -> set.remove(e.address));
+        return set;
     }
 
 
@@ -551,7 +560,7 @@ public class PeerGroup {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void processMaintenanceMessage(MaintenanceMessage message, Connection connection) {
-        log.debug("Received message " + message + " at " + getAddress() + " from " + connection.getPeerAddress());
+        log.debug("Received message " + message + " at " + getMyAddress() + " from " + connection.getPeerAddress());
         if (message instanceof PingMessage) {
             SettableFuture<Connection> future = networkNode.sendMessage(connection, new PongMessage(((PingMessage) message).nonce));
             Futures.addCallback(future, new FutureCallback<Connection>() {
@@ -571,7 +580,7 @@ public class PeerGroup {
             if (peer != null) {
                 if (((PongMessage) message).nonce != peer.getPingNonce()) {
                     removePeer(peer.address);
-                    log.warn("PongMessage invalid: self/peer " + getAddress() + "/" + connection.getPeerAddress());
+                    log.warn("PongMessage invalid: self/peer " + getMyAddress() + "/" + connection.getPeerAddress());
                 }
             }
         }
@@ -582,40 +591,19 @@ public class PeerGroup {
     // Peers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void removePeer(@Nullable Address peerAddress) {
+    void removePeer(@Nullable Address peerAddress) {
         reportedPeerAddresses.remove(peerAddress);
 
-        Peer disconnectedPeer;
-        disconnectedPeer = authenticatedPeers.remove(peerAddress);
+        Peer disconnectedPeer = authenticatedPeers.remove(peerAddress);
 
         if (disconnectedPeer != null)
             UserThread.execute(() -> peerListeners.stream().forEach(e -> e.onPeerRemoved(peerAddress)));
 
         printConnectedPeersMap();
         printReportedPeersMap();
-
-        log.trace("removePeer nonceMap=" + nonceMap + " / peerAddress=" + peerAddress);
-        nonceMap.remove(peerAddress);
     }
 
-    private void addAuthenticatedPeer(Address address, Peer peer) {
-        boolean firstPeerAdded;
-        authenticatedPeers.put(address, peer);
-        firstPeerAdded = authenticatedPeers.size() == 1;
-
-        UserThread.execute(() -> peerListeners.stream().forEach(e -> e.onPeerAdded(peer)));
-
-        if (firstPeerAdded)
-            UserThread.execute(() -> peerListeners.stream().forEach(e -> e.onFirstPeerAdded(peer)));
-
-        if (authenticatedPeers.size() > MAX_CONNECTIONS)
-            disconnectOldConnections();
-
-        log.trace("addConnectedPeer [post]");
-        printConnectedPeersMap();
-    }
-
-    private Address getAddress() {
+    private Address getMyAddress() {
         return networkNode.getAddress();
     }
 
@@ -624,8 +612,12 @@ public class PeerGroup {
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private Address getAndRemoveRandomItem(List<Address> list) {
+        return list.remove(new Random().nextInt(list.size()));
+    }
+
     public void printConnectedPeersMap() {
-        StringBuilder result = new StringBuilder("\nConnected peers for node " + getAddress() + ":");
+        StringBuilder result = new StringBuilder("\nConnected peers for node " + getMyAddress() + ":");
         authenticatedPeers.values().stream().forEach(e -> {
             result.append("\n\t" + e.address);
         });
@@ -634,16 +626,11 @@ public class PeerGroup {
     }
 
     public void printReportedPeersMap() {
-        StringBuilder result = new StringBuilder("\nReported peerAddresses for node " + getAddress() + ":");
+        StringBuilder result = new StringBuilder("\nReported peerAddresses for node " + getMyAddress() + ":");
         reportedPeerAddresses.stream().forEach(e -> {
             result.append("\n\t" + e);
         });
         result.append("\n");
         log.info(result.toString());
     }
-
-    private String getObjectId() {
-        return super.toString().split("@")[1].toString();
-    }
-
 }

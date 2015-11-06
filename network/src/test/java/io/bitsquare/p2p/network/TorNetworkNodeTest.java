@@ -42,7 +42,7 @@ public class TorNetworkNodeTest {
             }
 
             @Override
-            public void onHiddenServiceReady() {
+            public void onHiddenServicePublished() {
                 log.debug("onReadyForReceivingMessages");
                 latch.countDown();
             }
@@ -65,7 +65,7 @@ public class TorNetworkNodeTest {
             }
 
             @Override
-            public void onHiddenServiceReady() {
+            public void onHiddenServicePublished() {
                 log.debug("onReadyForReceivingMessages");
 
             }
@@ -124,7 +124,7 @@ public class TorNetworkNodeTest {
             }
 
             @Override
-            public void onHiddenServiceReady() {
+            public void onHiddenServicePublished() {
                 log.debug("onReadyForReceivingMessages");
                 latch.countDown();
             }
@@ -144,7 +144,7 @@ public class TorNetworkNodeTest {
             }
 
             @Override
-            public void onHiddenServiceReady() {
+            public void onHiddenServicePublished() {
                 log.debug("onReadyForReceivingMessages");
                 latch.countDown();
             }

@@ -125,6 +125,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         ListenableFuture<Connection> future = executorService.submit(() -> {
             Thread.currentThread().setName("NetworkNode:SendMessage-to-connection-" + connection.getObjectId());
             try {
+                log.debug("## connection.sendMessage");
                 connection.sendMessage(message);
                 return connection;
             } catch (Throwable t) {
@@ -134,10 +135,12 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         final SettableFuture<Connection> resultFuture = SettableFuture.create();
         Futures.addCallback(future, new FutureCallback<Connection>() {
             public void onSuccess(Connection connection) {
+                log.debug("## connection.sendMessage onSuccess");
                 UserThread.execute(() -> resultFuture.set(connection));
             }
 
             public void onFailure(@NotNull Throwable throwable) {
+                log.debug("## connection.sendMessage onFailure");
                 UserThread.execute(() -> resultFuture.setException(throwable));
             }
         });

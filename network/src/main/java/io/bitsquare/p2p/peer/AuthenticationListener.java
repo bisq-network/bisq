@@ -4,7 +4,7 @@ import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.network.Connection;
 
 public abstract class AuthenticationListener implements PeerListener {
-    public void onFirstPeerAdded(Peer peer) {
+    public void onFirstAuthenticatePeer(Peer peer) {
     }
 
     public void onPeerAdded(Peer peer) {

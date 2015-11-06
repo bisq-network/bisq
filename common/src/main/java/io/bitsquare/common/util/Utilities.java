@@ -35,9 +35,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.net.URLEncoder;
-import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -82,36 +79,6 @@ public class Utilities {
         threadPoolExecutor.setRejectedExecutionHandler((r, executor) -> log.warn("RejectedExecutionHandler called"));
         return threadPoolExecutor;
     }
-
-    public static Timer runTimerTaskWithRandomDelay(Runnable runnable, long minDelay, long maxDelay) {
-        return runTimerTaskWithRandomDelay(runnable, minDelay, maxDelay, TimeUnit.SECONDS);
-    }
-
-    public static Timer runTimerTaskWithRandomDelay(Runnable runnable, long minDelay, long maxDelay, TimeUnit timeUnit) {
-        return runTimerTask(runnable, new Random().nextInt((int) (maxDelay - minDelay)) + minDelay, timeUnit);
-    }
-
-    public static Timer runTimerTask(Runnable runnable, long delay) {
-        return runTimerTask(runnable, delay, TimeUnit.SECONDS);
-    }
-
-    public static Timer runTimerTask(Runnable runnable, long delay, TimeUnit timeUnit) {
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                Thread.currentThread().setName("TimerTask-" + new Random().nextInt(10000));
-                try {
-                    runnable.run();
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                    log.error("Executing timerTask failed. " + t.getMessage());
-                }
-            }
-        }, timeUnit.convert(delay, timeUnit));
-        return timer;
-    }
-
 
     public static boolean isUnix() {
         return isOSX() || isLinux() || getOSName().contains("freebsd");

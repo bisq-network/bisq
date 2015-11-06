@@ -3,7 +3,6 @@ package io.bitsquare.p2p.seed;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.bitsquare.app.Logging;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.common.util.Utilities;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +11,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
-import java.util.Random;
 import java.util.Scanner;
 import java.util.Timer;
 import java.util.concurrent.Executors;
@@ -24,8 +22,8 @@ public class SeedNodeMain {
 
     private boolean stopped;
 
-    // args: port useLocalhost seedNodes
-    // eg. 4444 true localhost:7777 localhost:8888 
+    // args: myAddress (incl. port) useLocalhost seedNodes (separated with |)
+    // eg. lmvdenjkyvx2ovga.onion:8001 false eo5ay2lyzrfvx2nr.onion:8002|si3uu56adkyqkldl.onion:8003
     // To stop enter: q
     public static void main(String[] args) throws NoSuchAlgorithmException {
         Path path = Paths.get("seed_node_log");
@@ -62,8 +60,7 @@ public class SeedNodeMain {
             if (line.equals("q")) {
                 if (!stopped) {
                     stopped = true;
-                    Timer timeout = Utilities.runTimerTask(() -> {
-                        Thread.currentThread().setName("ShutdownTimeout-" + new Random().nextInt(1000));
+                    Timer timeout = UserThread.runAfter(() -> {
                         log.error("Timeout occurred at shutDown request");
                         System.exit(1);
                     }, 10);

@@ -119,7 +119,7 @@ public class ArbitratorManager {
                     }
 
                     @Override
-                    public void onHiddenServiceReady() {
+                    public void onHiddenServicePublished() {
                     }
 
                     @Override

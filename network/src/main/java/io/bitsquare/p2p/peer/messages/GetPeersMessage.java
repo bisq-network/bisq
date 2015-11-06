@@ -3,7 +3,7 @@ package io.bitsquare.p2p.peer.messages;
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.Address;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 
 public final class GetPeersMessage implements AuthenticationMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -11,9 +11,9 @@ public final class GetPeersMessage implements AuthenticationMessage {
 
     public final Address address;
     public final long challengerNonce;
-    public final ArrayList<Address> peerAddresses;
+    public final HashSet<Address> peerAddresses;
 
-    public GetPeersMessage(Address address, long challengerNonce, ArrayList<Address> peerAddresses) {
+    public GetPeersMessage(Address address, long challengerNonce, HashSet<Address> peerAddresses) {
         this.address = address;
         this.challengerNonce = challengerNonce;
         this.peerAddresses = peerAddresses;

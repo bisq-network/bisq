@@ -7,7 +7,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.TorNode;
@@ -79,12 +78,8 @@ public class TorNetworkNode extends NetworkNode {
                 TorNetworkNode.this.hiddenServiceDescriptor = hiddenServiceDescriptor;
 
                 startServer(hiddenServiceDescriptor.getServerSocket());
-                Runnable task = () -> {
-                    Thread.currentThread().setName("DelayNotifySetupListenersTimer-" + new Random().nextInt(1000));
-                    setupListeners.stream()
-                            .forEach(e -> UserThread.execute(() -> e.onHiddenServiceReady()));
-                };
-                Utilities.runTimerTask(task, 500, TimeUnit.MILLISECONDS);
+                UserThread.runAfter(() -> setupListeners.stream().forEach(e -> e.onHiddenServicePublished()),
+                        500, TimeUnit.MILLISECONDS);
             });
         });
     }
@@ -102,8 +97,7 @@ public class TorNetworkNode extends NetworkNode {
         log.info("Shutdown TorNetworkNode");
         this.shutDownCompleteHandler = shutDownCompleteHandler;
 
-        shutDownTimeoutTimer = Utilities.runTimerTask(() -> {
-            Thread.currentThread().setName("ShutDownTimeoutTimer-" + new Random().nextInt(1000));
+        shutDownTimeoutTimer = UserThread.runAfter(() -> {
             log.error("A timeout occurred at shutDown");
             shutDownExecutorService();
         }, SHUT_DOWN_TIMEOUT, TimeUnit.DAYS.MILLISECONDS);
@@ -176,8 +170,7 @@ public class TorNetworkNode extends NetworkNode {
     private void restartTor() {
         restartCounter++;
         if (restartCounter <= MAX_RESTART_ATTEMPTS) {
-            shutDown(() -> Utilities.runTimerTask(() -> {
-                Thread.currentThread().setName("RestartTorTimer-" + new Random().nextInt(1000));
+            shutDown(() -> UserThread.runAfter(() -> {
                 log.warn("We restart tor as starting tor failed.");
                 start(null);
             }, WAIT_BEFORE_RESTART, TimeUnit.MILLISECONDS));

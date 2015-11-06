@@ -249,7 +249,7 @@ class MainViewModel implements ViewModel {
             }
 
             @Override
-            public void onHiddenServiceReady() {
+            public void onHiddenServicePublished() {
                 p2pNetworkInfoFooter.set("Tor hidden service available.");
             }
 

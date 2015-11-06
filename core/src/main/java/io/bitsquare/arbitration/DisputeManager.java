@@ -121,7 +121,7 @@ public class DisputeManager {
             }
 
             @Override
-            public void onHiddenServiceReady() {
+            public void onHiddenServicePublished() {
             }
 
             @Override

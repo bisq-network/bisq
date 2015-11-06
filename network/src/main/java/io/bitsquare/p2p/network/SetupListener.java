@@ -5,7 +5,7 @@ public interface SetupListener {
 
     void onTorNodeReady();
 
-    void onHiddenServiceReady();
+    void onHiddenServicePublished();
 
     void onSetupFailed(Throwable throwable);
 

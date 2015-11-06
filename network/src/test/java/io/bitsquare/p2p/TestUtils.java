@@ -80,7 +80,7 @@ public class TestUtils {
         }
 
         CountDownLatch latch = new CountDownLatch(1);
-        seedNode.createAndStartP2PService(encryptionService, keyRing, port, useLocalhost, seedNodes, new P2PServiceListener() {
+        seedNode.createAndStartP2PService(encryptionService, keyRing, new Address("localhost", port), useLocalhost, seedNodes, new P2PServiceListener() {
             @Override
             public void onAllDataReceived() {
             }
@@ -94,7 +94,7 @@ public class TestUtils {
             }
 
             @Override
-            public void onHiddenServiceReady() {
+            public void onHiddenServicePublished() {
                 latch.countDown();
             }
 
@@ -134,7 +134,7 @@ public class TestUtils {
             }
 
             @Override
-            public void onHiddenServiceReady() {
+            public void onHiddenServicePublished() {
 
             }
 

@@ -6,22 +6,22 @@ import io.bitsquare.p2p.storage.data.ProtectedData;
 
 import java.util.HashSet;
 
-public final class DataSetMessage implements Message {
+public final class AllDataMessage implements Message {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     public final HashSet<ProtectedData> set;
 
-    public DataSetMessage(HashSet<ProtectedData> set) {
+    public AllDataMessage(HashSet<ProtectedData> set) {
         this.set = set;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DataSetMessage)) return false;
+        if (!(o instanceof AllDataMessage)) return false;
 
-        DataSetMessage that = (DataSetMessage) o;
+        AllDataMessage that = (AllDataMessage) o;
 
         return !(set != null ? !set.equals(that.set) : that.set != null);
 

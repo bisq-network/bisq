@@ -42,7 +42,7 @@ public class LocalhostNetworkNodeTest {
             }
 
             @Override
-            public void onHiddenServiceReady() {
+            public void onHiddenServicePublished() {
                 log.debug("onHiddenServiceReady");
                 startupLatch.countDown();
             }
@@ -65,7 +65,7 @@ public class LocalhostNetworkNodeTest {
             }
 
             @Override
-            public void onHiddenServiceReady() {
+            public void onHiddenServicePublished() {
                 log.debug("onHiddenServiceReady 2");
                 startupLatch.countDown();
             }

@@ -134,7 +134,7 @@ public class OpenOfferManager {
                 }
 
                 @Override
-                public void onHiddenServiceReady() {
+                public void onHiddenServicePublished() {
                 }
 
                 @Override

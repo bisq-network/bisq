@@ -11,13 +11,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 public class SeedNode {
     private static final Logger log = LoggerFactory.getLogger(SeedNode.class);
 
-    private int port = 8001;
+    private Address mySeedNodeAddress = new Address("localhost:8001");
     private boolean useLocalhost = false;
     private Set<Address> seedNodes;
     private P2PService p2PService;
@@ -31,30 +35,45 @@ public class SeedNode {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // args: port useLocalhost seedNodes
-    // eg. 4444 true localhost:7777 localhost:8888 
+    // args: myAddress (incl. port) useLocalhost seedNodes (separated with |)
+    // 2. and 3. args are optional
+    // eg. lmvdenjkyvx2ovga.onion:8001 false eo5ay2lyzrfvx2nr.onion:8002|si3uu56adkyqkldl.onion:8003
+    // or when using localhost:  localhost:8001 true localhost:8002|localhost:8003
     public void processArgs(String[] args) {
         if (args.length > 0) {
-            port = Integer.parseInt(args[0]);
+
+            String arg0 = args[0];
+            checkArgument(arg0.contains(":") && arg0.split(":").length == 2 && arg0.split(":")[1].length() == 4, "Wrong program argument");
+            mySeedNodeAddress = new Address(arg0);
 
             if (args.length > 1) {
-                useLocalhost = ("true").equals(args[1]);
+                String arg1 = args[1];
+                checkArgument(arg1.equals("true") || arg1.equals("false"));
+                useLocalhost = ("true").equals(arg1);
 
-                if (args.length > 2) {
+                if (args.length == 3) {
+                    String arg2 = args[2];
+                    checkArgument(arg2.contains(":") && arg2.split(":").length > 1 && arg2.split(":")[1].length() > 3, "Wrong program argument");
+                    List<String> list = Arrays.asList(arg2.split("|"));
                     seedNodes = new HashSet<>();
-                    for (int i = 2; i < args.length; i++) {
-                        seedNodes.add(new Address(args[i]));
-                    }
+                    list.forEach(e -> {
+                        checkArgument(e.contains(":") && e.split(":").length == 2 && e.split(":")[1].length() == 4, "Wrong program argument");
+                        seedNodes.add(new Address(e));
+                    });
+                    seedNodes.remove(mySeedNodeAddress);
+                } else {
+                    log.error("Wrong number of program arguments." +
+                            "\nProgram arguments: myAddress useLocalhost seedNodes");
                 }
             }
         }
     }
 
     public void createAndStartP2PService() {
-        createAndStartP2PService(null, null, port, useLocalhost, seedNodes, null);
+        createAndStartP2PService(null, null, mySeedNodeAddress, useLocalhost, seedNodes, null);
     }
 
-    public void createAndStartP2PService(EncryptionService encryptionService, KeyRing keyRing, int port, boolean useLocalhost, @Nullable Set<Address> seedNodes, @Nullable P2PServiceListener listener) {
+    public void createAndStartP2PService(EncryptionService encryptionService, KeyRing keyRing, Address mySeedNodeAddress, boolean useLocalhost, @Nullable Set<Address> seedNodes, @Nullable P2PServiceListener listener) {
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
         if (seedNodes != null && !seedNodes.isEmpty()) {
             if (useLocalhost)
@@ -63,7 +82,8 @@ public class SeedNode {
                 seedNodesRepository.setTorSeedNodeAddresses(seedNodes);
         }
 
-        p2PService = new P2PService(seedNodesRepository, port, new File("bitsquare_seed_node_" + port), useLocalhost, encryptionService, keyRing, new File("dummy"));
+        p2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.port, new File("bitsquare_seed_node_" + mySeedNodeAddress.port), useLocalhost, encryptionService, keyRing, new File("dummy"));
+        p2PService.removeMySeedNodeAddressFromList(mySeedNodeAddress);
         p2PService.start(listener);
     }
 

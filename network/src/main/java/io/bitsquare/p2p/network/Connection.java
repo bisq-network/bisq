@@ -103,7 +103,7 @@ public class Connection {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public synchronized void setAuthenticated(Address peerAddress, Connection connection) {
+    public void setAuthenticated(Address peerAddress, Connection connection) {
         this.peerAddress = peerAddress;
         isAuthenticated = true;
         UserThread.execute(() -> sharedSpace.getConnectionListener().onPeerAddressAuthenticated(peerAddress, connection));
@@ -149,7 +149,7 @@ public class Connection {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Nullable
-    public synchronized Address getPeerAddress() {
+    public Address getPeerAddress() {
         return peerAddress;
     }
 
@@ -157,7 +157,7 @@ public class Connection {
         return sharedSpace.getLastActivityDate();
     }
 
-    public synchronized boolean isAuthenticated() {
+    public boolean isAuthenticated() {
         return isAuthenticated;
     }
 
@@ -321,11 +321,11 @@ public class Connection {
             this.useCompression = useCompression;
         }
 
-        public synchronized void updateLastActivityDate() {
+        public void updateLastActivityDate() {
             lastActivityDate = new Date();
         }
 
-        public synchronized Date getLastActivityDate() {
+        public Date getLastActivityDate() {
             return lastActivityDate;
         }
 
