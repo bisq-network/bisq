@@ -46,6 +46,8 @@ public class PeerGroup {
     private final ConcurrentHashMap<Address, Peer> authenticatedPeers = new ConcurrentHashMap<>();
     private final CopyOnWriteArraySet<Address> reportedPeerAddresses = new CopyOnWriteArraySet<>();
     private final ConcurrentHashMap<Address, Runnable> authenticationCompleteHandlers = new ConcurrentHashMap<>();
+    ;
+
     private final Timer maintenanceTimer = new Timer();
     private volatile boolean shutDownInProgress;
 
@@ -82,6 +84,8 @@ public class PeerGroup {
 
             @Override
             public void onDisconnect(Reason reason, Connection connection) {
+                log.debug("onDisconnect connection=" + connection + " / reason=" + reason);
+                log.debug("##### onDisconnect connection.isAuthenticated()=" + connection.isAuthenticated());
                 // only removes authenticated nodes
                 if (connection.isAuthenticated())
                     removePeer(connection.getPeerAddress());
@@ -307,7 +311,6 @@ public class PeerGroup {
             RequestAuthenticationMessage requestAuthenticationMessage = (RequestAuthenticationMessage) message;
             Address peerAddress = requestAuthenticationMessage.address;
             log.trace("RequestAuthenticationMessage from " + peerAddress + " at " + getAddress());
-
             connection.shutDown(() -> Utilities.runTimerTask(() -> {
                         Thread.currentThread().setName("DelaySendChallengeMessageTimer-" + new Random().nextInt(1000));
                         // we delay a bit as listeners for connection.onDisconnect are on other threads and might lead to 

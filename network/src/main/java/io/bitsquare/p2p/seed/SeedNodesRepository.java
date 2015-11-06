@@ -9,7 +9,9 @@ public class SeedNodesRepository {
 
 
     protected Set<Address> torSeedNodeAddresses = Sets.newHashSet(
-            new Address("lmvdenjkyvx2ovga.onion:8001")
+            new Address("lmvdenjkyvx2ovga.onion:8001"),
+            new Address("eo5ay2lyzrfvx2nr.onion:8002"),
+            new Address("si3uu56adkyqkldl.onion:8003")
     );
 
 

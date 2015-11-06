@@ -118,7 +118,7 @@ public class P2PService {
 
         // peer group 
         peerGroup = new PeerGroup(networkNode, seedNodeAddresses);
-        if (useLocalhost) PeerGroup.setSimulateAuthTorNode(2 * 1000);
+        if (useLocalhost) PeerGroup.setSimulateAuthTorNode(1 * 1000);
 
         // storage 
         dataStorage = new ProtectedExpirableDataStorage(peerGroup, storageDir);

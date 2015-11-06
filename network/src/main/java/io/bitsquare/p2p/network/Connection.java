@@ -55,7 +55,6 @@ public class Connection {
     private Address peerAddress;
 
     private volatile boolean stopped;
-    private volatile boolean shutDownInProgress;
 
     //TODO got java.util.zip.DataFormatException: invalid distance too far back
     // java.util.zip.DataFormatException: invalid literal/lengths set
@@ -136,7 +135,7 @@ public class Connection {
                 sharedSpace.handleConnectionException(e);
             }
         } else {
-            UserThread.execute(() -> sharedSpace.getConnectionListener().onDisconnect(ConnectionListener.Reason.ALREADY_CLOSED, this));
+            log.debug("sendMessage after stopped");
         }
     }
 
@@ -188,7 +187,7 @@ public class Connection {
     }
 
     private void shutDown(boolean sendCloseConnectionMessage, @Nullable Runnable shutDownCompleteHandler) {
-        if (!shutDownInProgress) {
+        if (!stopped) {
             log.info("\n\nShutDown connection:"
                     + "\npeerAddress=" + peerAddress
                     + "\nobjectId=" + getObjectId()
@@ -199,35 +198,38 @@ public class Connection {
             log.debug("ShutDown " + this.getObjectId());
             log.debug("ShutDown connection requested. Connection=" + this.toString());
 
-            if (!stopped) {
-                stopped = true;
+            stopped = true;
+            sharedSpace.stop();
+            if (inputHandler != null)
                 inputHandler.stop();
 
-                shutDownInProgress = true;
-                UserThread.execute(() -> sharedSpace.getConnectionListener().onDisconnect(ConnectionListener.Reason.SHUT_DOWN, this));
-
-                if (sendCloseConnectionMessage) {
-                    new Thread(() -> {
-                        Thread.currentThread().setName("Connection:SendCloseConnectionMessage-" + this.getObjectId());
-                        try {
-                            sendMessage(new CloseConnectionMessage());
-                            // give a bit of time for closing gracefully
-                            Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
-                        } catch (Throwable t) {
-                            t.printStackTrace();
-                            log.error(t.getMessage());
-                        } finally {
-                            UserThread.execute(() -> continueShutDown(shutDownCompleteHandler));
-                        }
-                    }).start();
-                } else {
-                    continueShutDown(shutDownCompleteHandler);
-                }
+            if (sendCloseConnectionMessage) {
+                new Thread(() -> {
+                    Thread.currentThread().setName("Connection:SendCloseConnectionMessage-" + this.getObjectId());
+                    try {
+                        sendMessage(new CloseConnectionMessage());
+                        // give a bit of time for closing gracefully
+                        Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                        log.error(t.getMessage());
+                    } finally {
+                        UserThread.execute(() -> continueShutDown(shutDownCompleteHandler));
+                    }
+                }).start();
+            } else {
+                continueShutDown(shutDownCompleteHandler);
             }
         }
     }
 
     private void continueShutDown(@Nullable Runnable shutDownCompleteHandler) {
+        ConnectionListener.Reason shutDownReason = sharedSpace.getShutDownReason();
+        if (shutDownReason == null)
+            shutDownReason = ConnectionListener.Reason.SHUT_DOWN;
+        final ConnectionListener.Reason finalShutDownReason = shutDownReason;
+        UserThread.execute(() -> sharedSpace.getConnectionListener().onDisconnect(finalShutDownReason, this));
+
         try {
             sharedSpace.getSocket().close();
         } catch (SocketException e) {
@@ -272,8 +274,9 @@ public class Connection {
                 ", objectId='" + getObjectId() + '\'' +
                 ", sharedSpace=" + sharedSpace.toString() +
                 ", peerAddress=" + peerAddress +
+                ", isAuthenticated=" + isAuthenticated +
                 ", stopped=" + stopped +
-                ", shutDownInProgress=" + shutDownInProgress +
+                ", stopped=" + stopped +
                 ", useCompression=" + useCompression +
                 '}';
     }
@@ -306,6 +309,8 @@ public class Connection {
 
         // mutable
         private Date lastActivityDate;
+        private volatile boolean stopped;
+        private ConnectionListener.Reason shutDownReason;
 
         public SharedSpace(Connection connection, Socket socket, MessageListener messageListener,
                            ConnectionListener connectionListener, boolean useCompression) {
@@ -338,20 +343,21 @@ public class Connection {
         public void handleConnectionException(Exception e) {
             if (e instanceof SocketException) {
                 if (socket.isClosed())
-                    UserThread.execute(() -> connectionListener.onDisconnect(ConnectionListener.Reason.SOCKET_CLOSED, connection));
+                    shutDownReason = ConnectionListener.Reason.SOCKET_CLOSED;
                 else
-                    UserThread.execute(() -> connectionListener.onDisconnect(ConnectionListener.Reason.RESET, connection));
+                    shutDownReason = ConnectionListener.Reason.RESET;
             } else if (e instanceof SocketTimeoutException) {
-                UserThread.execute(() -> connectionListener.onDisconnect(ConnectionListener.Reason.TIMEOUT, connection));
+                shutDownReason = ConnectionListener.Reason.TIMEOUT;
             } else if (e instanceof EOFException) {
-                UserThread.execute(() -> connectionListener.onDisconnect(ConnectionListener.Reason.PEER_DISCONNECTED, connection));
+                shutDownReason = ConnectionListener.Reason.PEER_DISCONNECTED;
             } else {
+                shutDownReason = ConnectionListener.Reason.UNKNOWN;
                 log.info("Exception at connection with port " + socket.getLocalPort());
                 e.printStackTrace();
-                UserThread.execute(() -> connectionListener.onDisconnect(ConnectionListener.Reason.UNKNOWN, connection));
             }
 
-            connection.shutDown(false);
+            if (!stopped)
+                connection.shutDown(false);
         }
 
         public void onMessage(Message message) {
@@ -386,6 +392,14 @@ public class Connection {
                     ", illegalRequests=" + illegalRequests +
                     ", lastActivityDate=" + lastActivityDate +
                     '}';
+        }
+
+        public void stop() {
+            this.stopped = stopped;
+        }
+
+        public ConnectionListener.Reason getShutDownReason() {
+            return shutDownReason;
         }
     }
 

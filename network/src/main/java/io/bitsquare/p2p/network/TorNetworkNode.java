@@ -199,6 +199,7 @@ public class TorNetworkNode extends NetworkNode {
                 if (torDir.mkdirs())
                     log.trace("Created directory for tor");
 
+                log.info("TorDir = " + torDir.getAbsolutePath());
                 log.trace("Create TorNode");
                 TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode1 = new TorNode<JavaOnionProxyManager, JavaOnionProxyContext>(
                         torDir) {

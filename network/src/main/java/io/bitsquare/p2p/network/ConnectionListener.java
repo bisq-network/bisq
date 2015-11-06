@@ -11,7 +11,6 @@ public interface ConnectionListener {
         TIMEOUT,
         SHUT_DOWN,
         PEER_DISCONNECTED,
-        ALREADY_CLOSED,
         UNKNOWN
     }
 

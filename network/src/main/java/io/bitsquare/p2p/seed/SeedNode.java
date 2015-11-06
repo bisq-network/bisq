@@ -18,7 +18,7 @@ public class SeedNode {
     private static final Logger log = LoggerFactory.getLogger(SeedNode.class);
 
     private int port = 8001;
-    private boolean useLocalhost = true;
+    private boolean useLocalhost = false;
     private Set<Address> seedNodes;
     private P2PService p2PService;
     protected boolean stopped;

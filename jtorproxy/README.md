@@ -1,3 +1,6 @@
+Cloned from: https://github.com/ManfredKarrer/jtorproxy
+
+
 JTorProxy
 =========
 JTorProxy aims at providing an easy-to-use API for interfacing with Tor from Java. JTorProxy also supports hidden services through standard Java ServerSockets.

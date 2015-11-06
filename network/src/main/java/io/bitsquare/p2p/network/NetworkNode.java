@@ -99,8 +99,12 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                     newConnection.sendMessage(message);
 
                     return newConnection;
-                } catch (Throwable t) {
-                    throw t;
+                } catch (Throwable throwable) {
+                    if (!(throwable instanceof ConnectException || throwable instanceof IOException)) {
+                        throwable.printStackTrace();
+                        log.error("Executing task failed. " + throwable.getMessage());
+                    }
+                    throw throwable;
                 }
             });
             Futures.addCallback(future, new FutureCallback<Connection>() {
@@ -109,10 +113,6 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                 }
 
                 public void onFailure(@NotNull Throwable throwable) {
-                    if (!(throwable instanceof ConnectException)) {
-                        throwable.printStackTrace();
-                        log.error("Executing task failed. " + throwable.getMessage());
-                    }
                     UserThread.execute(() -> resultFuture.setException(throwable));
                 }
             });
