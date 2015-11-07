@@ -1,10 +1,12 @@
 package io.bitsquare.p2p.storage;
 
 import com.google.common.annotations.VisibleForTesting;
+import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.CryptoException;
 import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.crypto.Sig;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.network.IllegalRequest;
 import io.bitsquare.p2p.network.MessageListener;
@@ -21,12 +23,12 @@ import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Map;
-import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+// Run in UserThread
 public class ProtectedExpirableDataStorage {
     private static final Logger log = LoggerFactory.getLogger(ProtectedExpirableDataStorage.class);
 
@@ -48,6 +50,7 @@ public class ProtectedExpirableDataStorage {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public ProtectedExpirableDataStorage(PeerGroup peerGroup, File storageDir) {
+        Log.traceCall();
         this.peerGroup = peerGroup;
 
         storage = new Storage<>(storageDir);
@@ -56,12 +59,14 @@ public class ProtectedExpirableDataStorage {
     }
 
     private void init() {
+        Log.traceCall();
         ConcurrentHashMap<BigInteger, Integer> persisted = storage.initAndGetPersisted(sequenceNumberMap, "sequenceNumberMap");
         if (persisted != null) {
             sequenceNumberMap = persisted;
         }
 
         addMessageListener((message, connection) -> {
+            Log.traceCall("onMessage: Message=" + message);
             if (message instanceof DataMessage) {
                 if (connection.isAuthenticated()) {
                     log.trace("ProtectedExpirableDataMessage received " + message + " on connection " + connection);
@@ -80,21 +85,26 @@ public class ProtectedExpirableDataStorage {
             }
         });
 
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                Thread.currentThread().setName("RemoveExpiredEntriesTimer-" + new Random().nextInt(1000));
-                try {
-                    log.info("removeExpiredEntries called ");
-                    map.entrySet().stream().filter(entry -> entry.getValue().isExpired())
-                            .forEach(entry -> map.remove(entry.getKey()));
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                    log.error("Executing task failed. " + t.getMessage());
-                }
-            }
-        };
-        timer.scheduleAtFixedRate(task, CHECK_TTL_INTERVAL, CHECK_TTL_INTERVAL);
+        timer.scheduleAtFixedRate(new TimerTask() {
+                                      @Override
+                                      public void run() {
+                                          try {
+                                              Utilities.setThreadName("RemoveExpiredEntriesTimer");
+                                              UserThread.execute(() -> removeExpiredEntries());
+                                          } catch (Throwable t) {
+                                              t.printStackTrace();
+                                              log.error("Executing task failed. " + t.getMessage());
+                                          }
+                                      }
+                                  },
+                CHECK_TTL_INTERVAL, CHECK_TTL_INTERVAL);
+    }
+
+    private void removeExpiredEntries() {
+        Log.traceCall();
+        map.entrySet().stream()
+                .filter(entry -> entry.getValue().isExpired())
+                .forEach(entry -> map.remove(entry.getKey()));
     }
 
 
@@ -103,6 +113,7 @@ public class ProtectedExpirableDataStorage {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void shutDown() {
+        Log.traceCall();
         if (!shutDownInProgress) {
             shutDownInProgress = true;
             timer.cancel();
@@ -111,10 +122,12 @@ public class ProtectedExpirableDataStorage {
     }
 
     public void setAuthenticated() {
+        Log.traceCall();
         this.authenticated = true;
     }
 
     public boolean add(ProtectedData protectedData, @Nullable Address sender) {
+        Log.traceCall();
         BigInteger hashOfPayload = getHashAsBigInteger(protectedData.expirablePayload);
         boolean containsKey = map.containsKey(hashOfPayload);
         boolean result = checkPublicKeys(protectedData, true)
@@ -128,13 +141,13 @@ public class ProtectedExpirableDataStorage {
         if (result) {
             map.put(hashOfPayload, protectedData);
             log.trace("Data added to our map and it will be broadcasted to our peers.");
-            UserThread.execute(() -> hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedData)));
+            hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedData));
 
-            StringBuilder sb = new StringBuilder("\n\n############################################################\n" +
-                    "Data set after addProtectedExpirableData:");
-            map.values().stream().forEach(e -> sb.append("\n").append(e.toString()));
+            StringBuilder sb = new StringBuilder("\n\n############################################################\n");
+            sb.append("Data set after addProtectedExpirableData:");
+            map.values().stream().forEach(e -> sb.append("\n").append(e.toString()).append("\n"));
             sb.append("\n############################################################\n");
-            log.trace(sb.toString());
+            log.info(sb.toString());
 
             if (!containsKey)
                 broadcast(new AddDataMessage(protectedData), sender);
@@ -148,6 +161,7 @@ public class ProtectedExpirableDataStorage {
     }
 
     public boolean remove(ProtectedData protectedData, @Nullable Address sender) {
+        Log.traceCall();
         BigInteger hashOfPayload = getHashAsBigInteger(protectedData.expirablePayload);
         boolean containsKey = map.containsKey(hashOfPayload);
         if (!containsKey) log.debug("Remove data ignored as we don't have an entry for that data.");
@@ -172,6 +186,7 @@ public class ProtectedExpirableDataStorage {
     }
 
     public boolean removeMailboxData(ProtectedMailboxData protectedMailboxData, @Nullable Address sender) {
+        Log.traceCall();
         BigInteger hashOfData = getHashAsBigInteger(protectedMailboxData.expirablePayload);
         boolean containsKey = map.containsKey(hashOfData);
         if (!containsKey) log.debug("Remove data ignored as we don't have an entry for that data.");
@@ -196,11 +211,13 @@ public class ProtectedExpirableDataStorage {
     }
 
     public Map<BigInteger, ProtectedData> getMap() {
+        Log.traceCall();
         return map;
     }
 
     public ProtectedData getDataWithSignedSeqNr(ExpirablePayload payload, KeyPair ownerStoragePubKey)
             throws CryptoException {
+        Log.traceCall();
         BigInteger hashOfData = getHashAsBigInteger(payload);
         int sequenceNumber;
         if (sequenceNumberMap.containsKey(hashOfData))
@@ -216,6 +233,7 @@ public class ProtectedExpirableDataStorage {
     public ProtectedMailboxData getMailboxDataWithSignedSeqNr(ExpirableMailboxPayload expirableMailboxPayload,
                                                               KeyPair storageSignaturePubKey, PublicKey receiversPublicKey)
             throws CryptoException {
+        Log.traceCall();
         BigInteger hashOfData = getHashAsBigInteger(expirableMailboxPayload);
         int sequenceNumber;
         if (sequenceNumberMap.containsKey(hashOfData))
@@ -230,10 +248,12 @@ public class ProtectedExpirableDataStorage {
     }
 
     public void addHashMapChangedListener(HashMapChangedListener hashMapChangedListener) {
+        Log.traceCall();
         hashMapChangedListeners.add(hashMapChangedListener);
     }
 
     private void addMessageListener(MessageListener messageListener) {
+        Log.traceCall();
         peerGroup.addMessageListener(messageListener);
     }
 
@@ -243,9 +263,10 @@ public class ProtectedExpirableDataStorage {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void doRemoveProtectedExpirableData(ProtectedData protectedData, BigInteger hashOfPayload) {
+        Log.traceCall();
         map.remove(hashOfPayload);
         log.trace("Data removed from our map. We broadcast the message to our peers.");
-        UserThread.execute(() -> hashMapChangedListeners.stream().forEach(e -> e.onRemoved(protectedData)));
+        hashMapChangedListeners.stream().forEach(e -> e.onRemoved(protectedData));
 
         StringBuilder sb = new StringBuilder("\n\n############################################################\n" +
                 "Data set after removeProtectedExpirableData:");
@@ -255,6 +276,7 @@ public class ProtectedExpirableDataStorage {
     }
 
     private boolean isSequenceNrValid(ProtectedData data, BigInteger hashOfData) {
+        Log.traceCall();
         int newSequenceNumber = data.sequenceNumber;
         Integer storedSequenceNumber = sequenceNumberMap.get(hashOfData);
         if (sequenceNumberMap.containsKey(hashOfData) && newSequenceNumber <= storedSequenceNumber) {
@@ -267,6 +289,7 @@ public class ProtectedExpirableDataStorage {
     }
 
     private boolean checkSignature(ProtectedData data) {
+        Log.traceCall();
         byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, data.sequenceNumber));
         try {
             boolean result = Sig.verify(data.ownerStoragePubKey, hashOfDataAndSeqNr, data.signature);
@@ -282,6 +305,7 @@ public class ProtectedExpirableDataStorage {
     }
 
     private boolean checkPublicKeys(ProtectedData data, boolean isAddOperation) {
+        Log.traceCall();
         boolean result = false;
         if (data.expirablePayload instanceof ExpirableMailboxPayload) {
             ExpirableMailboxPayload expirableMailboxPayload = (ExpirableMailboxPayload) data.expirablePayload;
@@ -299,6 +323,7 @@ public class ProtectedExpirableDataStorage {
     }
 
     private boolean checkIfStoredDataMatchesNewData(ProtectedData data, BigInteger hashOfData) {
+        Log.traceCall();
         ProtectedData storedData = map.get(hashOfData);
         boolean result = getHashAsBigInteger(storedData.expirablePayload).equals(hashOfData)
                 && storedData.ownerStoragePubKey.equals(data.ownerStoragePubKey);
@@ -309,6 +334,7 @@ public class ProtectedExpirableDataStorage {
     }
 
     private boolean checkIfStoredMailboxDataMatchesNewMailboxData(ProtectedMailboxData data, BigInteger hashOfData) {
+        Log.traceCall();
         ProtectedData storedData = map.get(hashOfData);
         if (storedData instanceof ProtectedMailboxData) {
             ProtectedMailboxData storedMailboxData = (ProtectedMailboxData) storedData;
@@ -325,8 +351,8 @@ public class ProtectedExpirableDataStorage {
         }
     }
 
-
     private void broadcast(BroadcastMessage message, @Nullable Address sender) {
+        Log.traceCall();
         if (authenticated) {
             peerGroup.broadcast(message, sender);
             log.trace("Broadcast message " + message);
@@ -336,6 +362,7 @@ public class ProtectedExpirableDataStorage {
     }
 
     private BigInteger getHashAsBigInteger(ExpirablePayload payload) {
+        Log.traceCall();
         return new BigInteger(Hash.getHash(payload));
     }
 }

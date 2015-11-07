@@ -214,7 +214,7 @@ class MainViewModel implements ViewModel {
             }
 
             @Override
-            public void onAllDataReceived() {
+            public void onRequestingDataCompleted() {
                 p2pNetworkInfoFooter.set("Data received from peer.");
                 p2pNetworkReady.set(true);
             }

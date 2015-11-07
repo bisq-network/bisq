@@ -129,7 +129,7 @@ public class DisputeManager {
             }
 
             @Override
-            public void onAllDataReceived() {
+            public void onRequestingDataCompleted() {
             }
 
             @Override

@@ -6,7 +6,9 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
+import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.TorNode;
@@ -18,15 +20,15 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+// Run in UserThread
 public class LocalhostNetworkNode extends NetworkNode {
     private static final Logger log = LoggerFactory.getLogger(LocalhostNetworkNode.class);
 
-    private static int simulateTorDelayTorNode = 1 * 100;
-    private static int simulateTorDelayHiddenService = 1 * 100;
+    private static volatile int simulateTorDelayTorNode = 1 * 100;
+    private static volatile int simulateTorDelayHiddenService = 1 * 100;
     private Address address;
 
     public static void setSimulateTorDelayTorNode(int simulateTorDelayTorNode) {
@@ -44,28 +46,32 @@ public class LocalhostNetworkNode extends NetworkNode {
 
     public LocalhostNetworkNode(int port) {
         super(port);
+        Log.traceCall();
     }
 
     @Override
     public void start(@Nullable SetupListener setupListener) {
+        Log.traceCall();
         if (setupListener != null) addSetupListener(setupListener);
 
-        createExecutor();
+        createExecutorService();
 
         //Tor delay simulation
         createTorNode(torNode -> {
+            Log.traceCall("torNode created");
             setupListeners.stream().forEach(e -> e.onTorNodeReady());
 
             // Create Hidden Service (takes about 40 sec.)
             createHiddenService(hiddenServiceDescriptor -> {
+                Log.traceCall("hiddenService created");
                 try {
-                    startServer(new ServerSocket(port));
+                    startServer(new ServerSocket(servicePort));
                 } catch (IOException e) {
                     e.printStackTrace();
+                    log.error("Exception at startServer: " + e.getMessage());
                 }
 
-                address = new Address("localhost", port);
-
+                address = new Address("localhost", servicePort);
 
                 setupListeners.stream().forEach(e -> e.onHiddenServicePublished());
             });
@@ -76,21 +82,26 @@ public class LocalhostNetworkNode extends NetworkNode {
     @Override
     @Nullable
     public Address getAddress() {
+        Log.traceCall();
         return address;
     }
 
+    // Called from NetworkNode thread
     @Override
-    protected Socket getSocket(Address peerAddress) throws IOException {
+    protected Socket createSocket(Address peerAddress) throws IOException {
+        Log.traceCall();
         return new Socket(peerAddress.hostName, peerAddress.port);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Tor delay simulation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createTorNode(final Consumer<TorNode> resultHandler) {
+        Log.traceCall();
         ListenableFuture<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>> future = executorService.submit(() -> {
-            Thread.currentThread().setName("NetworkNode:CreateTorNode-" + new Random().nextInt(1000));
+            Utilities.setThreadName("NetworkNode:CreateTorNode");
             try {
                 long ts = System.currentTimeMillis();
                 if (simulateTorDelayTorNode > 0)
@@ -100,6 +111,7 @@ public class LocalhostNetworkNode extends NetworkNode {
                         "TorNode created [simulation]:" +
                         "\nTook " + (System.currentTimeMillis() - ts) + " ms"
                         + "\n############################################################\n");
+                // as we are simulating we return null
                 return null;
             } catch (Throwable t) {
                 throw t;
@@ -107,18 +119,25 @@ public class LocalhostNetworkNode extends NetworkNode {
         });
         Futures.addCallback(future, new FutureCallback<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>>() {
             public void onSuccess(TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode) {
-                UserThread.execute(() -> resultHandler.accept(torNode));
+                UserThread.execute(() -> {
+                    // as we are simulating we return null
+                    resultHandler.accept(null);
+                });
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                log.error("[simulation] TorNode creation failed");
+                UserThread.execute(() -> {
+                    log.error("[simulation] TorNode creation failed. " + throwable.getMessage());
+                    throwable.printStackTrace();
+                });
             }
         });
     }
 
     private void createHiddenService(final Consumer<HiddenServiceDescriptor> resultHandler) {
+        Log.traceCall();
         ListenableFuture<HiddenServiceDescriptor> future = executorService.submit(() -> {
-            Thread.currentThread().setName("NetworkNode:CreateHiddenService-" + new Random().nextInt(1000));
+            Utilities.setThreadName("NetworkNode:CreateHiddenService");
             try {
                 long ts = System.currentTimeMillis();
                 if (simulateTorDelayHiddenService > 0)
@@ -128,6 +147,7 @@ public class LocalhostNetworkNode extends NetworkNode {
                         "Hidden service created [simulation]:" +
                         "\nTook " + (System.currentTimeMillis() - ts) + " ms"
                         + "\n############################################################\n");
+                // as we are simulating we return null
                 return null;
             } catch (Throwable t) {
                 throw t;
@@ -135,13 +155,18 @@ public class LocalhostNetworkNode extends NetworkNode {
         });
         Futures.addCallback(future, new FutureCallback<HiddenServiceDescriptor>() {
             public void onSuccess(HiddenServiceDescriptor hiddenServiceDescriptor) {
-                UserThread.execute(() -> resultHandler.accept(hiddenServiceDescriptor));
+                UserThread.execute(() -> {
+                    // as we are simulating we return null
+                    resultHandler.accept(null);
+                });
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                log.error("[simulation] Hidden service creation failed");
+                UserThread.execute(() -> {
+                    log.error("[simulation] Hidden service creation failed. " + throwable.getMessage());
+                    throwable.printStackTrace();
+                });
             }
         });
     }
-
 }

@@ -162,7 +162,7 @@ public class TradeManager {
             }
 
             @Override
-            public void onAllDataReceived() {
+            public void onRequestingDataCompleted() {
             }
 
             @Override

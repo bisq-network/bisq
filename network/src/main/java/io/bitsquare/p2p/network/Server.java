@@ -1,5 +1,6 @@
 package io.bitsquare.p2p.network;
 
+import io.bitsquare.app.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -7,20 +8,24 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
+// Runs in UserThread
 class Server implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(Server.class);
 
-    private final ServerSocket serverSocket;
     private final MessageListener messageListener;
     private final ConnectionListener connectionListener;
-    private final Set<Connection> connections = new HashSet<>();
+
+    // accessed from different threads
+    private final ServerSocket serverSocket;
+    private final Set<Connection> connections = new CopyOnWriteArraySet<>();
     private volatile boolean stopped;
 
 
     public Server(ServerSocket serverSocket, MessageListener messageListener, ConnectionListener connectionListener) {
+        Log.traceCall();
         this.serverSocket = serverSocket;
         this.messageListener = messageListener;
         this.connectionListener = connectionListener;
@@ -28,14 +33,15 @@ class Server implements Runnable {
 
     @Override
     public void run() {
+        Log.traceCall();
         try {
             // Thread created by NetworkNode
-            Thread.currentThread().setName("NetworkNode:Server-" + serverSocket.getLocalPort());
+            Thread.currentThread().setName("Server-" + serverSocket.getLocalPort());
             try {
                 while (!stopped && !Thread.currentThread().isInterrupted()) {
                     log.info("Ready to accept new clients on port " + serverSocket.getLocalPort());
                     final Socket socket = serverSocket.accept();
-                    if (!stopped) {
+                    if (!stopped && !Thread.currentThread().isInterrupted()) {
                         log.info("Accepted new client on localPort/port " + socket.getLocalPort() + "/" + socket.getPort());
                         Connection connection = new Connection(socket, messageListener, connectionListener);
 
@@ -61,6 +67,7 @@ class Server implements Runnable {
     }
 
     public void shutDown() {
+        Log.traceCall();
         if (!stopped) {
             stopped = true;
 

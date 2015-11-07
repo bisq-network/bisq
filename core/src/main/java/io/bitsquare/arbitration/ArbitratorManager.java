@@ -127,7 +127,7 @@ public class ArbitratorManager {
                     }
 
                     @Override
-                    public void onAllDataReceived() {
+                    public void onRequestingDataCompleted() {
                     }
 
                     @Override

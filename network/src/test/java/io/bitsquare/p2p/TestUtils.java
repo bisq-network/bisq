@@ -82,7 +82,7 @@ public class TestUtils {
         CountDownLatch latch = new CountDownLatch(1);
         seedNode.createAndStartP2PService(encryptionService, keyRing, new Address("localhost", port), useLocalhost, seedNodes, new P2PServiceListener() {
             @Override
-            public void onAllDataReceived() {
+            public void onRequestingDataCompleted() {
             }
 
             @Override
@@ -120,7 +120,7 @@ public class TestUtils {
         P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhost, encryptionService, keyRing, new File("dummy"));
         p2PService.start(new P2PServiceListener() {
             @Override
-            public void onAllDataReceived() {
+            public void onRequestingDataCompleted() {
             }
 
             @Override

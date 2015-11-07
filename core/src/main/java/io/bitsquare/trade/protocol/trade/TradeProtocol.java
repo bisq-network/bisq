@@ -19,6 +19,7 @@ package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.messaging.DecryptedMailListener;
@@ -36,7 +37,6 @@ import org.slf4j.LoggerFactory;
 import java.security.PublicKey;
 import java.time.Duration;
 import java.util.Optional;
-import java.util.Random;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
@@ -127,7 +127,7 @@ public abstract class TradeProtocol {
         stopTimeout();
 
         timeoutTimer = FxTimer.runLater(Duration.ofMillis(TIMEOUT), () -> {
-            Thread.currentThread().setName("TradeProtocol:Timeout-" + new Random().nextInt(1000));
+            Utilities.setThreadName("TradeProtocol:Timeout");
             log.error("Timeout reached");
             trade.setErrorMessage("A timeout occurred.");
             cleanupTradable();

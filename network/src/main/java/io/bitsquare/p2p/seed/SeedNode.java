@@ -1,5 +1,6 @@
 package io.bitsquare.p2p.seed;
 
+import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.crypto.EncryptionService;
@@ -29,6 +30,7 @@ public class SeedNode {
     private boolean stopped;
 
     public SeedNode() {
+        Log.traceCall();
     }
 
 
@@ -41,6 +43,7 @@ public class SeedNode {
     // eg. lmvdenjkyvx2ovga.onion:8001 20 false eo5ay2lyzrfvx2nr.onion:8002|si3uu56adkyqkldl.onion:8003
     // or when using localhost:  localhost:8001 20 true localhost:8002|localhost:8003
     public void processArgs(String[] args) {
+        Log.traceCall();
         if (args.length > 0) {
             String arg0 = args[0];
             checkArgument(arg0.contains(":") && arg0.split(":").length == 2 && arg0.split(":")[1].length() == 4, "Wrong program argument");
@@ -78,6 +81,7 @@ public class SeedNode {
     }
 
     public void createAndStartP2PService(EncryptionService encryptionService, KeyRing keyRing, Address mySeedNodeAddress, boolean useLocalhost, @Nullable Set<Address> seedNodes, @Nullable P2PServiceListener listener) {
+        Log.traceCall();
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
         if (seedNodes != null && !seedNodes.isEmpty()) {
             if (useLocalhost)
@@ -92,14 +96,17 @@ public class SeedNode {
     }
 
     public P2PService getP2PService() {
+        Log.traceCall();
         return p2PService;
     }
 
     public void shutDown() {
+        Log.traceCall();
         shutDown(null);
     }
 
     public void shutDown(@Nullable Runnable shutDownCompleteHandler) {
+        Log.traceCall();
         log.debug("Request shutdown seed node");
         if (!stopped) {
             stopped = true;

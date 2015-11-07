@@ -100,8 +100,9 @@ public class BitsquareApp extends Application {
     public void start(Stage primaryStage) throws IOException {
         BitsquareApp.primaryStage = primaryStage;
 
-        Logging.setup(Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString());
-
+        Log.setup(Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString());
+        Log.PRINT_TRACE_METHOD = DEV_MODE;
+       
         UserThread.setExecutor(Platform::runLater);
 
         shutDownHandler = this::stop;

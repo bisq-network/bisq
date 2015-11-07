@@ -5,7 +5,7 @@ import io.bitsquare.p2p.network.SetupListener;
 
 public interface P2PServiceListener extends SetupListener {
 
-    void onAllDataReceived();
+    void onRequestingDataCompleted();
 
     void onAuthenticated();
 }

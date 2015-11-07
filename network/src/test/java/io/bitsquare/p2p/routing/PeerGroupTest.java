@@ -85,7 +85,7 @@ public class PeerGroupTest {
         latch = new CountDownLatch(2);
         seedNode1.createAndStartP2PService(null, null, address, useLocalhost, seedNodes, new P2PServiceListener() {
             @Override
-            public void onAllDataReceived() {
+            public void onRequestingDataCompleted() {
                 latch.countDown();
             }
 
@@ -129,7 +129,7 @@ public class PeerGroupTest {
         seedNode1 = new SeedNode();
         seedNode1.createAndStartP2PService(null, null, address1, useLocalhost, seedNodes, new P2PServiceListener() {
             @Override
-            public void onAllDataReceived() {
+            public void onRequestingDataCompleted() {
                 latch.countDown();
             }
 
@@ -160,7 +160,7 @@ public class PeerGroupTest {
         seedNode2 = new SeedNode();
         seedNode2.createAndStartP2PService(null, null, address2, useLocalhost, seedNodes, new P2PServiceListener() {
             @Override
-            public void onAllDataReceived() {
+            public void onRequestingDataCompleted() {
                 latch.countDown();
             }
 
@@ -387,7 +387,7 @@ public class PeerGroupTest {
         latch = new CountDownLatch(1);
         seedNode.createAndStartP2PService(null, null, new Address("localhost", port), useLocalhost, seedNodes, new P2PServiceListener() {
             @Override
-            public void onAllDataReceived() {
+            public void onRequestingDataCompleted() {
                 latch.countDown();
             }
 

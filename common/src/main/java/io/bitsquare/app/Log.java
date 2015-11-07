@@ -24,7 +24,9 @@ import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import org.slf4j.LoggerFactory;
 
-public class Logging {
+public class Log {
+    public static boolean PRINT_TRACE_METHOD = true;
+
     public static void setup(String fileName) {
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
@@ -46,7 +48,7 @@ public class Logging {
 
         PatternLayoutEncoder encoder = new PatternLayoutEncoder();
         encoder.setContext(loggerContext);
-        encoder.setPattern("%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg %xEx%n");
+        encoder.setPattern("%highlight(%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg %xEx%n)");
         encoder.start();
 
         appender.setEncoder(encoder);
@@ -56,5 +58,23 @@ public class Logging {
 
         ch.qos.logback.classic.Logger logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         logbackLogger.addAppender(appender);
+    }
+
+    public static void traceCall() {
+        StackTraceElement stackTraceElement = new Throwable().getStackTrace()[1];
+        String methodName = stackTraceElement.getMethodName();
+        if (methodName.equals("<init>"))
+            methodName = "Constructor ";
+        String className = stackTraceElement.getClassName();
+        LoggerFactory.getLogger(className).trace("Called: {}", methodName);
+    }
+
+    public static void traceCall(String message) {
+        StackTraceElement stackTraceElement = new Throwable().getStackTrace()[1];
+        String methodName = stackTraceElement.getMethodName();
+        if (methodName.equals("<init>"))
+            methodName = "Constructor ";
+        String className = stackTraceElement.getClassName();
+        LoggerFactory.getLogger(className).trace("Called: {} [{}]", methodName, message);
     }
 }

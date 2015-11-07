@@ -1,7 +1,7 @@
 package io.bitsquare.p2p.seed;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import io.bitsquare.app.Logging;
+import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import org.bitcoinj.crypto.DRMWorkaround;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -28,11 +28,12 @@ public class SeedNodeMain {
     // To stop enter: q
     public static void main(String[] args) throws NoSuchAlgorithmException {
         Path path = Paths.get("seed_node_log");
-        Logging.setup(path.toString());
+        Log.setup(path.toString());
+        Log.PRINT_TRACE_METHOD = true;
         log.info("Log files under: " + path.toAbsolutePath().toString());
 
         DRMWorkaround.maybeDisableExportControls();
-        
+
         new SeedNodeMain(args);
     }
 
@@ -60,7 +61,7 @@ public class SeedNodeMain {
     public void listenForExitCommand() {
         Scanner scan = new Scanner(System.in);
         String line;
-        while (!stopped && ((line = scan.nextLine()) != null)) {
+        while (!stopped && !Thread.currentThread().isInterrupted() && ((line = scan.nextLine()) != null)) {
             if (line.equals("q")) {
                 if (!stopped) {
                     stopped = true;
@@ -70,11 +71,11 @@ public class SeedNodeMain {
                     }, 5);
 
                     if (seedNode != null) {
-                        seedNode.shutDown(() -> {
+                        UserThread.execute(() -> seedNode.shutDown(() -> {
                             timeout.cancel();
                             log.debug("Shutdown seed node complete.");
                             System.exit(0);
-                        });
+                        }));
                     }
                 }
             }

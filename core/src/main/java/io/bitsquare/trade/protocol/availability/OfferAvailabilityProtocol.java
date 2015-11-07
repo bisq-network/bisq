@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.availability;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.messaging.DecryptedMailListener;
 import io.bitsquare.trade.offer.Offer;
@@ -34,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.Random;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
@@ -145,7 +145,7 @@ public class OfferAvailabilityProtocol {
         stopTimeout();
 
         timeoutTimer = FxTimer.runLater(Duration.ofMillis(TIMEOUT), () -> {
-            Thread.currentThread().setName("OfferAvailabilityProtocol:Timeout-" + new Random().nextInt(1000));
+            Utilities.setThreadName("OfferAvailabilityProtocol:Timeout");
             log.warn("Timeout reached");
             errorMessageHandler.handleErrorMessage("Timeout reached: Peer has not responded.");
         });

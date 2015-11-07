@@ -4,7 +4,7 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
-import io.bitsquare.common.UserThread;
+import io.bitsquare.app.Log;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.network.Connection;
@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 
 // authentication example: 
@@ -43,6 +42,7 @@ public class AuthenticationHandshake {
     private MessageListener messageListener;
 
     public AuthenticationHandshake(NetworkNode networkNode, PeerGroup peerGroup, Address myAddress) {
+        Log.traceCall();
         this.networkNode = networkNode;
         this.peerGroup = peerGroup;
         this.myAddress = myAddress;
@@ -51,21 +51,25 @@ public class AuthenticationHandshake {
     }
 
     private void onFault(@NotNull Throwable throwable) {
+        Log.traceCall();
         cleanup();
-        UserThread.execute(() -> resultFuture.setException(throwable));
+        resultFuture.setException(throwable);
     }
 
     private void onSuccess(Connection connection) {
+        Log.traceCall();
         cleanup();
-        UserThread.execute(() -> resultFuture.set(connection));
+        resultFuture.set(connection);
     }
 
     private void cleanup() {
+        Log.traceCall();
         stopped = true;
         networkNode.removeMessageListener(messageListener);
     }
 
     public SettableFuture<Connection> requestAuthenticationToPeer(Address peerAddress) {
+        Log.traceCall();
         // Requesting peer
         resultFuture = SettableFuture.create();
         startAuthTs = System.currentTimeMillis();
@@ -88,6 +92,7 @@ public class AuthenticationHandshake {
     }
 
     public SettableFuture<Connection> requestAuthentication(Set<Address> remainingAddresses, Address peerAddress) {
+        Log.traceCall();
         // Requesting peer
         resultFuture = SettableFuture.create();
         startAuthTs = System.currentTimeMillis();
@@ -113,6 +118,7 @@ public class AuthenticationHandshake {
     }
 
     public SettableFuture<Connection> processAuthenticationRequest(AuthenticationRequest authenticationRequest, Connection connection) {
+        Log.traceCall();
         // Responding peer
         resultFuture = SettableFuture.create();
         startAuthTs = System.currentTimeMillis();
@@ -121,7 +127,31 @@ public class AuthenticationHandshake {
         log.trace("RequestAuthenticationMessage from " + peerAddress + " at " + myAddress);
         log.info("We shut down inbound connection from peer {} to establish a new " +
                 "connection with his reported address.", peerAddress);
-        connection.shutDown(() -> UserThread.runAfter(() -> {
+
+        //TODO check if causes problems without delay
+        connection.shutDown(() -> {
+            Log.traceCall();
+            if (!stopped) {
+                // we delay a bit as listeners for connection.onDisconnect are on other threads and might lead to 
+                // inconsistent state (removal of connection from NetworkNode.authenticatedConnections)
+                log.trace("processAuthenticationMessage: connection.shutDown complete. RequestAuthenticationMessage from " + peerAddress + " at " + myAddress);
+
+                SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new AuthenticationResponse(myAddress, authenticationRequest.nonce, getAndSetNonce()));
+                Futures.addCallback(future, new FutureCallback<Connection>() {
+                    @Override
+                    public void onSuccess(Connection connection) {
+                        log.trace("onSuccess sending ChallengeMessage");
+                    }
+
+                    @Override
+                    public void onFailure(@NotNull Throwable throwable) {
+                        log.warn("onFailure sending ChallengeMessage.");
+                        onFault(throwable);
+                    }
+                });
+            }
+        });
+       /* connection.shutDown(() -> UserThread.runAfter(() -> { Log.traceCall();
                     if (!stopped) {
                         // we delay a bit as listeners for connection.onDisconnect are on other threads and might lead to 
                         // inconsistent state (removal of connection from NetworkNode.authenticatedConnections)
@@ -130,12 +160,12 @@ public class AuthenticationHandshake {
                         SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new AuthenticationResponse(myAddress, authenticationRequest.nonce, getAndSetNonce()));
                         Futures.addCallback(future, new FutureCallback<Connection>() {
                             @Override
-                            public void onSuccess(Connection connection) {
+                            public void onSuccess(Connection connection) { Log.traceCall();
                                 log.trace("onSuccess sending ChallengeMessage");
                             }
 
                             @Override
-                            public void onFailure(@NotNull Throwable throwable) {
+                            public void onFailure(@NotNull Throwable throwable) { Log.traceCall();
                                 log.warn("onFailure sending ChallengeMessage.");
                                 onFault(throwable);
                             }
@@ -143,13 +173,15 @@ public class AuthenticationHandshake {
                     }
                 },
                 100 + PeerGroup.simulateAuthTorNode,
-                TimeUnit.MILLISECONDS));
+                TimeUnit.MILLISECONDS));*/
 
         return resultFuture;
     }
 
     private void setupMessageListener() {
+        Log.traceCall();
         messageListener = (message, connection) -> {
+            Log.traceCall();
             if (message instanceof AuthenticationMessage) {
                 if (message instanceof AuthenticationResponse) {
                     // Requesting peer
@@ -207,7 +239,7 @@ public class AuthenticationHandshake {
                         });
 
                         log.info("\n\nAuthenticationComplete: Peer with address " + peerAddress
-                                + " authenticated (" + connection.getObjectId() + "). Took "
+                                + " authenticated (" + connection.objectId + "). Took "
                                 + (System.currentTimeMillis() - startAuthTs) + " ms. \n\n");
 
                         onSuccess(connection);
@@ -227,7 +259,7 @@ public class AuthenticationHandshake {
                     // we wait until the handshake is completed before setting the authenticate flag
                     // authentication at both sides of the connection
                     log.info("\n\nAuthenticationComplete\nPeer with address " + peerAddress
-                            + " authenticated (" + connection.getObjectId() + "). Took "
+                            + " authenticated (" + connection.objectId + "). Took "
                             + (System.currentTimeMillis() - startAuthTs) + " ms. \n\n");
 
                     onSuccess(connection);
@@ -239,6 +271,7 @@ public class AuthenticationHandshake {
     }
 
     private void authenticateToNextRandomPeer(Set<Address> remainingAddresses) {
+        Log.traceCall();
         Optional<Tuple2<Address, Set<Address>>> tupleOptional = getRandomAddressAndRemainingSet(remainingAddresses);
         if (tupleOptional.isPresent()) {
             Tuple2<Address, Set<Address>> tuple = tupleOptional.get();
@@ -250,6 +283,7 @@ public class AuthenticationHandshake {
     }
 
     private Optional<Tuple2<Address, Set<Address>>> getRandomAddressAndRemainingSet(Set<Address> addresses) {
+        Log.traceCall();
         if (!addresses.isEmpty()) {
             List<Address> list = new ArrayList<>(addresses);
             Collections.shuffle(list);
@@ -261,6 +295,7 @@ public class AuthenticationHandshake {
     }
 
     private long getAndSetNonce() {
+        Log.traceCall();
         nonce = new Random().nextLong();
         while (nonce == 0)
             nonce = getAndSetNonce();

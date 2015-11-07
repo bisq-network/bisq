@@ -81,6 +81,7 @@ public class ArbitratorService {
     }
 
     public Map<Address, Arbitrator> getArbitrators() {
+        // TODO  java.lang.IllegalStateException: Duplicate key
         final Map<Address, Arbitrator> arbitratorsMap = p2PService.getDataMap().values().stream()
                 .filter(e -> e.expirablePayload instanceof Arbitrator)
                 .map(e -> (Arbitrator) e.expirablePayload)

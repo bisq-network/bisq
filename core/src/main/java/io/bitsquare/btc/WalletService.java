@@ -28,6 +28,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ExceptionHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.*;
 import org.bitcoinj.core.*;
@@ -122,7 +123,7 @@ public class WalletService {
         Timer timeoutTimer = FxTimer.runLater(
                 Duration.ofMillis(STARTUP_TIMEOUT),
                 () -> {
-                    Thread.currentThread().setName("WalletService:StartupTimeout-" + new Random().nextInt(1000));
+                    Utilities.setThreadName("WalletService:StartupTimeout");
                     exceptionHandler.handleException(new TimeoutException("Wallet did not initialize in " + STARTUP_TIMEOUT / 1000 + " seconds."));
                 }
         );

@@ -35,6 +35,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -370,6 +371,10 @@ public class Utilities {
             e.printStackTrace();
             throw e;
         }
+    }
+
+    public static void setThreadName(String name) {
+        Thread.currentThread().setName(name + "-" + new Random().nextInt(10000));
     }
 
     private static class AnnotationExclusionStrategy implements ExclusionStrategy {
