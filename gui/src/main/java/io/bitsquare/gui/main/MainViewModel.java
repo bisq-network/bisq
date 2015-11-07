@@ -206,30 +206,6 @@ class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private BooleanProperty initP2PNetwork() {
-    /*    if (networkService.getNetworkInfo() instanceof TomP2PNetworkInfo) {
-            TomP2PNetworkInfo networkInfo = (TomP2PNetworkInfo) networkService.getNetworkInfo();
-            networkInfo.numPeersProperty().addListener((observable, oldValue, newValue) -> {
-                numDHTPeers.set(String.valueOf(newValue) + " peers");
-                if ((int) newValue == 0) {
-                    if (lostP2PConnectionTimeoutTimer != null)
-                        lostP2PConnectionTimeoutTimer.stop();
-                    lostP2PConnectionTimeoutTimer = FxTimer.runLater(Duration.ofMillis(LOST_P2P_CONNECTION_TIMEOUT), () -> {
-                        log.trace("Connection lost timeout reached");
-                        bootstrapErrorMsg.set("We lost connection to the last peer.");
-                    });
-                } else if ((int) oldValue == 0 && (int) newValue > 0) {
-                    if (lostP2PConnectionTimeoutTimer != null) {
-                        lostP2PConnectionTimeoutTimer.stop();
-                        lostP2PConnectionTimeoutTimer = null;
-                    }
-                    bootstrapErrorMsg.set(null);
-                }
-            });
-
-            networkInfo.stateProperty().addListener((ov, oldValue, newValue) -> {
-                setBootstrapState(newValue);
-            });
-        }*/
         final BooleanProperty p2pNetworkReady = new SimpleBooleanProperty();
         p2PService.start(new P2PServiceListener() {
             @Override

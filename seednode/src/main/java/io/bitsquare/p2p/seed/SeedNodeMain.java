@@ -3,6 +3,7 @@ package io.bitsquare.p2p.seed;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.bitsquare.app.Logging;
 import io.bitsquare.common.UserThread;
+import org.bitcoinj.crypto.DRMWorkaround;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,9 @@ public class SeedNodeMain {
         Path path = Paths.get("seed_node_log");
         Logging.setup(path.toString());
         log.info("Log files under: " + path.toAbsolutePath().toString());
+
+        DRMWorkaround.maybeDisableExportControls();
+        
         new SeedNodeMain(args);
     }
 

@@ -49,7 +49,8 @@ public class P2PModule extends AppModule {
         File torDir = new File(env.getRequiredProperty(ProgramArguments.TOR_DIR));
         bind(File.class).annotatedWith(named(ProgramArguments.TOR_DIR)).toInstance(torDir);
 
-        Integer port = env.getProperty(ProgramArguments.PORT_KEY, int.class, Utils.findFreeSystemPort());
+        // use a fixed port as arbitrator use that for his ID
+        Integer port = env.getProperty(ProgramArguments.PORT_KEY, int.class, 9999);
         bind(int.class).annotatedWith(Names.named(ProgramArguments.PORT_KEY)).toInstance(port);
     }
 }

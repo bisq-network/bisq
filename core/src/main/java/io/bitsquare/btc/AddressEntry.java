@@ -21,10 +21,15 @@ import io.bitsquare.app.Version;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.params.TestNet3Params;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 /**
@@ -56,7 +61,8 @@ public class AddressEntry implements Serializable {
     private final Context context;
     private final byte[] pubKey;
     private final byte[] pubKeyHash;
-    private final NetworkParameters params;
+    private final String paramId;
+    transient private NetworkParameters params;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -75,8 +81,26 @@ public class AddressEntry implements Serializable {
         this.context = context;
         this.offerId = offerId;
 
+        paramId = params.getId();
+
         pubKey = keyPair.getPubKey();
         pubKeyHash = keyPair.getPubKeyHash();
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        try {
+            in.defaultReadObject();
+
+            if (MainNetParams.ID_MAINNET.equals(paramId))
+                params = MainNetParams.get();
+            else if (MainNetParams.ID_TESTNET.equals(paramId))
+                params = TestNet3Params.get();
+            else if (MainNetParams.ID_REGTEST.equals(paramId))
+                params = RegTestParams.get();
+
+        } catch (Throwable t) {
+            log.trace("Cannot be deserialized." + t.getMessage());
+        }
     }
 
     // Set after wallet is ready 

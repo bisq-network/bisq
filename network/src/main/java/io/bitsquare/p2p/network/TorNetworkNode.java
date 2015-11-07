@@ -8,6 +8,7 @@ import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.Utils;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.TorNode;
 import org.jetbrains.annotations.NotNull;
@@ -50,8 +51,8 @@ public class TorNetworkNode extends NetworkNode {
     // Constructor
     // /////////////////////////////////////////////////////////////////////////////////////////
 
-    public TorNetworkNode(int port, File torDir) {
-        super(port);
+    public TorNetworkNode(int servicePort, File torDir) {
+        super(servicePort);
 
         this.torDir = torDir;
     }
@@ -75,7 +76,7 @@ public class TorNetworkNode extends NetworkNode {
             setupListeners.stream().forEach(e -> UserThread.execute(() -> e.onTorNodeReady()));
 
             // Create Hidden Service (takes about 40 sec.)
-            createHiddenService(torNode, port, hiddenServiceDescriptor -> {
+            createHiddenService(torNode, Utils.findFreeSystemPort(), port, hiddenServiceDescriptor -> {
                 TorNetworkNode.this.hiddenServiceDescriptor = hiddenServiceDescriptor;
 
                 startServer(hiddenServiceDescriptor.getServerSocket());
@@ -113,7 +114,6 @@ public class TorNetworkNode extends NetworkNode {
         } else {
             log.error("executorService must not be null at shutDown");
         }
-
         ListenableFuture<?> future2 = executorService.submit(() -> {
             try {
                 long ts = System.currentTimeMillis();
@@ -176,8 +176,11 @@ public class TorNetworkNode extends NetworkNode {
                 start(null);
             }, WAIT_BEFORE_RESTART, TimeUnit.MILLISECONDS));
         } else {
-            log.error("We tried to restart tor " + restartCounter
-                    + " times, but we failed to get tor running. We give up now.");
+            String msg = "We tried to restart tor " + restartCounter
+                    + " times, but we failed to get tor running. We give up now.";
+            log.error(msg);
+            // TODO display better error msg
+            throw new RuntimeException(msg);
         }
     }
 
@@ -219,14 +222,14 @@ public class TorNetworkNode extends NetworkNode {
         });
     }
 
-    private void createHiddenService(final TorNode torNode, final int port,
-                                     final Consumer<HiddenServiceDescriptor> resultHandler) {
+    private void createHiddenService(TorNode torNode, int localPort, int servicePort,
+                                     Consumer<HiddenServiceDescriptor> resultHandler) {
         ListenableFuture<HiddenServiceDescriptor> future = executorService.submit(() -> {
             Thread.currentThread().setName("NetworkNode:CreateHiddenService-" + new Random().nextInt(1000));
             try {
                 long ts = System.currentTimeMillis();
                 log.debug("Create hidden service");
-                HiddenServiceDescriptor hiddenServiceDescriptor = torNode.createHiddenService(port);
+                HiddenServiceDescriptor hiddenServiceDescriptor = torNode.createHiddenService(localPort, servicePort);
                 log.info("\n\n############################################################\n" +
                         "Hidden service created:" +
                         "\nAddress=" + hiddenServiceDescriptor.getFullAddress() +

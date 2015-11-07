@@ -188,6 +188,11 @@ public class WalletService {
                 UserThread.execute(resultHandler::handleResult);
             }
         };
+
+        // TODO try to get bitcoinj running over our tor proxy
+       /* if (!params.getId().equals(NetworkParameters.ID_REGTEST))
+            walletAppKit.useTor();*/
+
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
         if (params == RegTestParams.get()) {

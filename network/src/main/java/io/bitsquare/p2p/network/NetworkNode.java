@@ -92,7 +92,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
                     log.info("\n\n############################################################\n" +
                             "NetworkNode created new outbound connection:"
-                            + "\npeerAddress=" + peerAddress.port
+                            + "\npeerAddress=" + peerAddress.getFullAddress()
                             + "\nconnection.uid=" + newConnection.getUid()
                             + "\nmessage=" + message
                             + "\n############################################################\n");

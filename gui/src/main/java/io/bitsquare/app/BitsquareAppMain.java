@@ -20,7 +20,6 @@ package io.bitsquare.app;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.RegTestHost;
-import io.bitsquare.p2p.Utils;
 import io.bitsquare.util.joptsimple.EnumValueConverter;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -101,7 +100,8 @@ public class BitsquareAppMain extends BitsquareExecutable {
                 .ofType(boolean.class);
         parser.accepts(ProgramArguments.NAME_KEY, description("Name of this node", null))
                 .withRequiredArg();
-        parser.accepts(ProgramArguments.PORT_KEY, description("Port to listen on", Utils.findFreeSystemPort()))
+        // use a fixed port as arbitrator use that for his ID
+        parser.accepts(ProgramArguments.PORT_KEY, description("Port to listen on", 9999))
                 .withRequiredArg()
                 .ofType(int.class);
         parser.accepts(ProgramArguments.USE_LOCALHOST, description("Use localhost network for development", false))
