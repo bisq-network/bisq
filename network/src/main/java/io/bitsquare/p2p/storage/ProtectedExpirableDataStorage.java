@@ -110,8 +110,8 @@ public class ProtectedExpirableDataStorage {
         }
     }
 
-    public void setAuthenticated(boolean authenticated) {
-        this.authenticated = authenticated;
+    public void setAuthenticated() {
+        this.authenticated = true;
     }
 
     public boolean add(ProtectedData protectedData, @Nullable Address sender) {
@@ -233,7 +233,7 @@ public class ProtectedExpirableDataStorage {
         hashMapChangedListeners.add(hashMapChangedListener);
     }
 
-    public void addMessageListener(MessageListener messageListener) {
+    private void addMessageListener(MessageListener messageListener) {
         peerGroup.addMessageListener(messageListener);
     }
 

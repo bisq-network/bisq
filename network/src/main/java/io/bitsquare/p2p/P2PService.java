@@ -58,7 +58,7 @@ public class P2PService implements SetupListener {
     private final boolean useLocalhost;
     @Nullable
     private final EncryptionService encryptionService;
-    private KeyRing keyRing;
+    private final KeyRing keyRing;
     private final File storageDir;
     private final NetworkStatistics networkStatistics;
 
@@ -71,12 +71,12 @@ public class P2PService implements SetupListener {
     private final Map<DecryptedMsgWithPubKey, ProtectedMailboxData> mailboxMap = new ConcurrentHashMap<>();
     private volatile boolean shutDownInProgress;
     private Address connectedSeedNode;
-    private Set<Address> authenticatedPeerAddresses = new HashSet<>();
+    private final Set<Address> authenticatedPeerAddresses = new HashSet<>();
     private boolean shutDownComplete;
-    private CopyOnWriteArraySet<Runnable> shutDownResultHandlers = new CopyOnWriteArraySet<>();
-    private BooleanProperty hiddenServicePublished = new SimpleBooleanProperty();
-    private BooleanProperty allDataLoaded = new SimpleBooleanProperty();
-    private BooleanProperty authenticated = new SimpleBooleanProperty();
+    private final CopyOnWriteArraySet<Runnable> shutDownResultHandlers = new CopyOnWriteArraySet<>();
+    private final BooleanProperty hiddenServicePublished = new SimpleBooleanProperty();
+    private final BooleanProperty allDataLoaded = new SimpleBooleanProperty();
+    private final BooleanProperty authenticated = new SimpleBooleanProperty();
     private MonadicBinding<Boolean> readyForAuthentication;
 
 
@@ -136,7 +136,7 @@ public class P2PService implements SetupListener {
                 authenticatedPeerAddresses.add(peerAddress);
                 authenticated.set(true);
 
-                dataStorage.setAuthenticated(true);
+                dataStorage.setAuthenticated();
                 UserThread.execute(() -> p2pServiceListeners.stream().forEach(e -> e.onAuthenticated()));
             }
 
@@ -277,7 +277,7 @@ public class P2PService implements SetupListener {
                 }
 
                 @Override
-                public void onFailure(Throwable throwable) {
+                public void onFailure(@NotNull Throwable throwable) {
                     log.info("Send GetAllDataMessage to " + candidate + " failed. " +
                             "That is expected if other seed nodes are offline." +
                             "\nException:" + throwable.getMessage());
@@ -396,7 +396,7 @@ public class P2PService implements SetupListener {
         if (encryptionService != null) {
             try {
                 SealedAndSignedMessage sealedAndSignedMessage = new SealedAndSignedMessage(
-                        encryptionService.encryptAndSign(pubKeyRing, message), peerAddress);
+                        encryptionService.encryptAndSign(pubKeyRing, message));
                 SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, sealedAndSignedMessage);
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
@@ -405,7 +405,7 @@ public class P2PService implements SetupListener {
                     }
 
                     @Override
-                    public void onFailure(Throwable throwable) {
+                    public void onFailure(@NotNull Throwable throwable) {
                         throwable.printStackTrace();
                         UserThread.execute(() -> sendMailMessageListener.onFault());
                     }
@@ -440,7 +440,7 @@ public class P2PService implements SetupListener {
         if (encryptionService != null) {
             try {
                 SealedAndSignedMessage sealedAndSignedMessage = new SealedAndSignedMessage(
-                        encryptionService.encryptAndSign(peersPubKeyRing, message), peerAddress);
+                        encryptionService.encryptAndSign(peersPubKeyRing, message));
                 SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, sealedAndSignedMessage);
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
@@ -450,7 +450,7 @@ public class P2PService implements SetupListener {
                     }
 
                     @Override
-                    public void onFailure(Throwable throwable) {
+                    public void onFailure(@NotNull Throwable throwable) {
                         log.trace("SendEncryptedMailboxMessage onFailure");
                         log.debug(throwable.toString());
                         log.info("We cannot send message to peer. Peer might be offline. We will store message in mailbox.");
@@ -488,15 +488,14 @@ public class P2PService implements SetupListener {
         }
     }
 
-    public boolean addMailboxData(ExpirableMailboxPayload expirableMailboxPayload, PublicKey receiversPublicKey) {
+    private void addMailboxData(ExpirableMailboxPayload expirableMailboxPayload, PublicKey receiversPublicKey) {
         checkAuthentication();
 
         try {
-            return dataStorage.add(dataStorage.getMailboxDataWithSignedSeqNr(expirableMailboxPayload,
+            dataStorage.add(dataStorage.getMailboxDataWithSignedSeqNr(expirableMailboxPayload,
                     keyRing.getSignatureKeyPair(), receiversPublicKey), networkNode.getAddress());
         } catch (CryptoException e) {
             log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
-            return false;
         }
     }
 
@@ -525,15 +524,14 @@ public class P2PService implements SetupListener {
         }
     }
 
-    public boolean removeMailboxData(ExpirableMailboxPayload expirableMailboxPayload, PublicKey receiversPublicKey) {
+    private void removeMailboxData(ExpirableMailboxPayload expirableMailboxPayload, PublicKey receiversPublicKey) {
         checkAuthentication();
 
         try {
-            return dataStorage.removeMailboxData(dataStorage.getMailboxDataWithSignedSeqNr(expirableMailboxPayload,
+            dataStorage.removeMailboxData(dataStorage.getMailboxDataWithSignedSeqNr(expirableMailboxPayload,
                     keyRing.getSignatureKeyPair(), receiversPublicKey), networkNode.getAddress());
         } catch (CryptoException e) {
             log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
-            return false;
         }
     }
 

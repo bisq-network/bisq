@@ -10,6 +10,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Address;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.TorNode;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,7 +101,7 @@ public class TorNetworkNode extends NetworkNode {
         shutDownTimeoutTimer = UserThread.runAfter(() -> {
             log.error("A timeout occurred at shutDown");
             shutDownExecutorService();
-        }, SHUT_DOWN_TIMEOUT, TimeUnit.DAYS.MILLISECONDS);
+        }, SHUT_DOWN_TIMEOUT, TimeUnit.MILLISECONDS);
 
         if (executorService != null) {
             executorService.submit(() -> super.shutDown(() -> {
@@ -135,7 +136,7 @@ public class TorNetworkNode extends NetworkNode {
             }
 
             @Override
-            public void onFailure(Throwable throwable) {
+            public void onFailure(@NotNull Throwable throwable) {
                 throwable.printStackTrace();
                 log.error("Shutdown torNode failed with exception: " + throwable.getMessage());
                 shutDownExecutorService();
@@ -211,7 +212,7 @@ public class TorNetworkNode extends NetworkNode {
                 resultHandler.accept(torNode);
             }
 
-            public void onFailure(Throwable throwable) {
+            public void onFailure(@NotNull Throwable throwable) {
                 log.error("TorNode creation failed with exception: " + throwable.getMessage());
                 restartTor();
             }
@@ -242,7 +243,7 @@ public class TorNetworkNode extends NetworkNode {
                 resultHandler.accept(hiddenServiceDescriptor);
             }
 
-            public void onFailure(Throwable throwable) {
+            public void onFailure(@NotNull Throwable throwable) {
                 log.error("Hidden service creation failed");
                 restartTor();
             }

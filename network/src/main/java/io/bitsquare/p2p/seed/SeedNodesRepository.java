@@ -8,14 +8,14 @@ import java.util.Set;
 public class SeedNodesRepository {
 
 
-    protected Set<Address> torSeedNodeAddresses = Sets.newHashSet(
+    private Set<Address> torSeedNodeAddresses = Sets.newHashSet(
             new Address("lmvdenjkyvx2ovga.onion:8001"),
             new Address("eo5ay2lyzrfvx2nr.onion:8002"),
             new Address("si3uu56adkyqkldl.onion:8003")
     );
 
 
-    protected Set<Address> localhostSeedNodeAddresses = Sets.newHashSet(
+    private Set<Address> localhostSeedNodeAddresses = Sets.newHashSet(
             new Address("localhost:8001"),
             new Address("localhost:8002"),
             new Address("localhost:8003")

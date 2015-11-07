@@ -6,10 +6,11 @@ import io.bitsquare.p2p.network.Connection;
 public interface PeerListener {
     void onFirstAuthenticatePeer(Peer peer);
 
+    // TODO never used
     void onPeerAdded(Peer peer);
 
+    // TODO never used
     void onPeerRemoved(Address address);
 
-    // TODO remove
     void onConnectionAuthenticated(Connection connection);
 }

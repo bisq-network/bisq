@@ -37,13 +37,15 @@ public class PeerGroup {
     }
 
     private static int MAX_CONNECTIONS = 8;
-    private static int MAINTENANCE_INTERVAL = new Random().nextInt(2 * 60 * 1000) + 2 * 60 * 1000; // 2-4 min.
-    private static int GET_PEERS_INTERVAL = 30000;//new Random().nextInt(2 * 60 * 1000) + 2 * 60 * 1000; // 2-4 min.
-    private static int PING_AFTER_CONNECTION_INACTIVITY = 30 * 1000;
 
     public static void setMaxConnections(int maxConnections) {
         MAX_CONNECTIONS = maxConnections;
     }
+
+    private static final int MAINTENANCE_INTERVAL = new Random().nextInt(2 * 60 * 1000) + 2 * 60 * 1000; // 2-4 min.
+    private static final int GET_PEERS_INTERVAL = new Random().nextInt(1 * 60 * 1000) + 1 * 60 * 1000; // 1-2 min.
+    private static final int PING_AFTER_CONNECTION_INACTIVITY = 30 * 1000;
+
 
     private final NetworkNode networkNode;
     private final Set<Address> seedNodeAddresses;
@@ -62,7 +64,7 @@ public class PeerGroup {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PeerGroup(final NetworkNode networkNode, Set<Address> seeds) {
+    public PeerGroup(NetworkNode networkNode, Set<Address> seeds) {
         this.networkNode = networkNode;
         this.seedNodeAddresses = seeds;
 
@@ -182,7 +184,7 @@ public class PeerGroup {
     // First we try to connect to 1 seed node. If we fail we try to connect to any reported peer.
     // After connection is authenticated, we try to connect to any reported peer as long we have not 
     // reached our max connection size.
-    public void authenticateToSeedNode(Set<Address> remainingAddresses, Address peerAddress, boolean continueOnSuccess) {
+    private void authenticateToSeedNode(Set<Address> remainingAddresses, Address peerAddress, boolean continueOnSuccess) {
         checkArgument(!authenticatedPeers.containsKey(peerAddress),
                 "We have that peer already authenticated. That must never happen.");
 
@@ -324,7 +326,7 @@ public class PeerGroup {
         });
     }
 
-    void setAuthenticated(Connection connection, Address peerAddress) {
+    private void setAuthenticated(Connection connection, Address peerAddress) {
         log.info("\n\n############################################################\n" +
                 "We are authenticated to:" +
                 "\nconnection=" + connection
@@ -381,7 +383,7 @@ public class PeerGroup {
             public void run() {
                 Thread.currentThread().setName("GetPeersTimer-" + new Random().nextInt(1000));
                 try {
-                    UserThread.execute(() -> sendAnnounceAndGetPeersMessage());
+                    UserThread.execute(() -> sendGetPeersRequest());
                 } catch (Throwable t) {
                     t.printStackTrace();
                     log.error("Executing task failed. " + t.getMessage());
@@ -426,8 +428,8 @@ public class PeerGroup {
                 }, 5, 10));
     }
 
-    private void sendAnnounceAndGetPeersMessage() {
-        log.trace("sendAnnounceAndGetPeersMessage");
+    private void sendGetPeersRequest() {
+        log.trace("sendGetPeersRequest");
         Set<Peer> connectedPeersList = new HashSet<>(authenticatedPeers.values());
         connectedPeersList.stream()
                 .forEach(e -> UserThread.runAfterRandomDelay(() -> {
@@ -436,12 +438,12 @@ public class PeerGroup {
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
                         public void onSuccess(Connection connection) {
-                            log.trace("AnnounceAndGetPeersMessage sent successfully");
+                            log.trace("sendGetPeersRequest sent successfully");
                         }
 
                         @Override
                         public void onFailure(@NotNull Throwable throwable) {
-                            log.info("AnnounceAndGetPeersMessage sending failed " + throwable.getMessage());
+                            log.info("sendGetPeersRequest sending failed " + throwable.getMessage());
                             removePeer(e.address);
                         }
                     });
@@ -481,7 +483,7 @@ public class PeerGroup {
             addToReportedPeers(peerAddresses, connection);
 
             SettableFuture<Connection> future = networkNode.sendMessage(connection,
-                    new GetPeersResponse(getMyAddress(), new HashSet<>(getAllPeerAddresses())));
+                    new GetPeersResponse(new HashSet<>(getAllPeerAddresses())));
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
                 public void onSuccess(Connection connection) {
@@ -528,7 +530,7 @@ public class PeerGroup {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Map<Address, Peer> getAuthenticatedPeers() {
+    private Map<Address, Peer> getAuthenticatedPeers() {
         return authenticatedPeers;
     }
 
@@ -562,7 +564,7 @@ public class PeerGroup {
         }
     }
 
-    void purgeReportedPeers() {
+    private void purgeReportedPeers() {
         log.trace("purgeReportedPeers");
         int all = getAllPeerAddresses().size();
         if (all > 1000) {
@@ -586,14 +588,14 @@ public class PeerGroup {
     // Peers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void removePeer(@Nullable Address peerAddress) {
+    private void removePeer(@Nullable Address peerAddress) {
         reportedPeerAddresses.remove(peerAddress);
 
-        Peer disconnectedPeer = authenticatedPeers.remove(peerAddress);
-
-        if (disconnectedPeer != null)
-            UserThread.execute(() -> peerListeners.stream().forEach(e -> e.onPeerRemoved(peerAddress)));
-
+        if (peerAddress != null) {
+            Peer disconnectedPeer = authenticatedPeers.remove(peerAddress);
+            if (disconnectedPeer != null)
+                UserThread.execute(() -> peerListeners.stream().forEach(e -> e.onPeerRemoved(peerAddress)));
+        }
         printAuthenticatedPeers();
         printReportedPeers();
     }
@@ -630,9 +632,7 @@ public class PeerGroup {
     public void printAuthenticatedPeers() {
         StringBuilder result = new StringBuilder("\n\n############################################################\n" +
                 "Authenticated peers for node " + getMyAddress() + ":");
-        authenticatedPeers.values().stream().forEach(e -> {
-            result.append("\n" + e.address);
-        });
+        authenticatedPeers.values().stream().forEach(e -> result.append("\n").append(e.address));
         result.append("\n############################################################\n");
         log.info(result.toString());
     }
@@ -640,9 +640,7 @@ public class PeerGroup {
     public void printReportedPeers() {
         StringBuilder result = new StringBuilder("\n\n############################################################\n" +
                 "Reported peers for node " + getMyAddress() + ":");
-        reportedPeerAddresses.stream().forEach(e -> {
-            result.append("\n" + e);
-        });
+        reportedPeerAddresses.stream().forEach(e -> result.append("\n").append(e));
         result.append("\n############################################################\n");
         log.info(result.toString());
     }

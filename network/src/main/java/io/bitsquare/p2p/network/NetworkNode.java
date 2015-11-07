@@ -90,12 +90,13 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                     newConnection.setPeerAddress(peerAddress);
                     outBoundConnections.add(newConnection);
 
-                    log.info("\n\nNetworkNode created new outbound connection:"
+                    log.info("\n\n############################################################\n" +
+                            "NetworkNode created new outbound connection:"
                             + "\npeerAddress=" + peerAddress.port
                             + "\nconnection.uid=" + newConnection.getUid()
                             + "\nmessage=" + message
-                            + "\n\n");
-
+                            + "\n############################################################\n");
+                    
                     newConnection.sendMessage(message);
 
                     return newConnection;

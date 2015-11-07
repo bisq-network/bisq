@@ -63,7 +63,7 @@ public class SeedNodeMain {
                     Timer timeout = UserThread.runAfter(() -> {
                         log.error("Timeout occurred at shutDown request");
                         System.exit(1);
-                    }, 10);
+                    }, 5);
 
                     if (seedNode != null) {
                         seedNode.shutDown(() -> {

@@ -8,6 +8,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.network.Connection;
+import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.peers.messages.auth.*;
 import org.jetbrains.annotations.NotNull;
@@ -38,6 +39,8 @@ public class AuthenticationHandshake {
     private SettableFuture<Connection> resultFuture;
     private long startAuthTs;
     private long nonce = 0;
+    private boolean stopped;
+    private MessageListener messageListener;
 
     public AuthenticationHandshake(NetworkNode networkNode, PeerGroup peerGroup, Address myAddress) {
         this.networkNode = networkNode;
@@ -45,6 +48,21 @@ public class AuthenticationHandshake {
         this.myAddress = myAddress;
 
         setupMessageListener();
+    }
+
+    private void onFault(@NotNull Throwable throwable) {
+        cleanup();
+        UserThread.execute(() -> resultFuture.setException(throwable));
+    }
+
+    private void onSuccess(Connection connection) {
+        cleanup();
+        UserThread.execute(() -> resultFuture.set(connection));
+    }
+
+    private void cleanup() {
+        stopped = true;
+        networkNode.removeMessageListener(messageListener);
     }
 
     public SettableFuture<Connection> requestAuthenticationToPeer(Address peerAddress) {
@@ -62,7 +80,7 @@ public class AuthenticationHandshake {
             public void onFailure(@NotNull Throwable throwable) {
                 log.info("Send RequestAuthenticationMessage to " + peerAddress + " failed." +
                         "\nException:" + throwable.getMessage());
-                UserThread.execute(() -> resultFuture.setException(throwable));
+                onFault(throwable);
             }
         });
 
@@ -94,7 +112,6 @@ public class AuthenticationHandshake {
         return resultFuture;
     }
 
-
     public SettableFuture<Connection> processAuthenticationRequest(AuthenticationRequest authenticationRequest, Connection connection) {
         // Responding peer
         resultFuture = SettableFuture.create();
@@ -105,23 +122,25 @@ public class AuthenticationHandshake {
         log.info("We shut down inbound connection from peer {} to establish a new " +
                 "connection with his reported address.", peerAddress);
         connection.shutDown(() -> UserThread.runAfter(() -> {
-                    // we delay a bit as listeners for connection.onDisconnect are on other threads and might lead to 
-                    // inconsistent state (removal of connection from NetworkNode.authenticatedConnections)
-                    log.trace("processAuthenticationMessage: connection.shutDown complete. RequestAuthenticationMessage from " + peerAddress + " at " + myAddress);
+                    if (!stopped) {
+                        // we delay a bit as listeners for connection.onDisconnect are on other threads and might lead to 
+                        // inconsistent state (removal of connection from NetworkNode.authenticatedConnections)
+                        log.trace("processAuthenticationMessage: connection.shutDown complete. RequestAuthenticationMessage from " + peerAddress + " at " + myAddress);
 
-                    SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new AuthenticationResponse(myAddress, authenticationRequest.nonce, getAndSetNonce()));
-                    Futures.addCallback(future, new FutureCallback<Connection>() {
-                        @Override
-                        public void onSuccess(Connection connection) {
-                            log.trace("onSuccess sending ChallengeMessage");
-                        }
+                        SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new AuthenticationResponse(myAddress, authenticationRequest.nonce, getAndSetNonce()));
+                        Futures.addCallback(future, new FutureCallback<Connection>() {
+                            @Override
+                            public void onSuccess(Connection connection) {
+                                log.trace("onSuccess sending ChallengeMessage");
+                            }
 
-                        @Override
-                        public void onFailure(Throwable throwable) {
-                            log.warn("onFailure sending ChallengeMessage.");
-                            UserThread.execute(() -> resultFuture.setException(throwable));
-                        }
-                    });
+                            @Override
+                            public void onFailure(@NotNull Throwable throwable) {
+                                log.warn("onFailure sending ChallengeMessage.");
+                                onFault(throwable);
+                            }
+                        });
+                    }
                 },
                 100 + PeerGroup.simulateAuthTorNode,
                 TimeUnit.MILLISECONDS));
@@ -130,15 +149,13 @@ public class AuthenticationHandshake {
     }
 
     private void setupMessageListener() {
-        networkNode.addMessageListener((message, connection) -> {
+        messageListener = (message, connection) -> {
             if (message instanceof AuthenticationMessage) {
                 if (message instanceof AuthenticationResponse) {
                     // Requesting peer
                     AuthenticationResponse authenticationResponse = (AuthenticationResponse) message;
                     Address peerAddress = authenticationResponse.address;
                     log.trace("ChallengeMessage from " + peerAddress + " at " + myAddress);
-                    log.trace("challengeMessage" + authenticationResponse);
-                    // HashMap<Address, Long> tempNonceMap = new HashMap<>(nonceMap);
                     boolean verified = nonce != 0 && nonce == authenticationResponse.requesterNonce;
                     if (verified) {
                         connection.setPeerAddress(peerAddress);
@@ -153,12 +170,12 @@ public class AuthenticationHandshake {
                             @Override
                             public void onFailure(@NotNull Throwable throwable) {
                                 log.info("GetPeersMessage sending failed " + throwable.getMessage());
-                                UserThread.execute(() -> resultFuture.setException(throwable));
+                                onFault(throwable);
                             }
                         });
                     } else {
                         log.warn("verify nonce failed. challengeMessage=" + authenticationResponse + " / nonce=" + nonce);
-                        UserThread.execute(() -> resultFuture.setException(new Exception("Verify nonce failed. challengeMessage=" + authenticationResponse + " / nonceMap=" + nonce)));
+                        onFault(new Exception("Verify nonce failed. challengeMessage=" + authenticationResponse + " / nonceMap=" + nonce));
                     }
                 } else if (message instanceof GetPeersAuthRequest) {
                     // Responding peer
@@ -185,7 +202,7 @@ public class AuthenticationHandshake {
                             @Override
                             public void onFailure(@NotNull Throwable throwable) {
                                 log.info("PeersMessage sending failed " + throwable.getMessage());
-                                UserThread.execute(() -> resultFuture.setException(throwable));
+                                onFault(throwable);
                             }
                         });
 
@@ -193,10 +210,10 @@ public class AuthenticationHandshake {
                                 + " authenticated (" + connection.getObjectId() + "). Took "
                                 + (System.currentTimeMillis() - startAuthTs) + " ms. \n\n");
 
-                        UserThread.execute(() -> resultFuture.set(connection));
+                        onSuccess(connection);
                     } else {
-                        log.warn("verify nonce failed. getPeersMessage=" + getPeersAuthRequest + " / nonceMap=" + nonce);
-                        UserThread.execute(() -> resultFuture.setException(new Exception("Verify nonce failed. getPeersMessage=" + getPeersAuthRequest + " / nonceMap=" + nonce)));
+                        log.warn("verify nonce failed. getPeersMessage=" + getPeersAuthRequest + " / nonce=" + nonce);
+                        onFault(new Exception("Verify nonce failed. getPeersMessage=" + getPeersAuthRequest + " / nonce=" + nonce));
                     }
                 } else if (message instanceof GetPeersAuthResponse) {
                     // Requesting peer
@@ -213,12 +230,13 @@ public class AuthenticationHandshake {
                             + " authenticated (" + connection.getObjectId() + "). Took "
                             + (System.currentTimeMillis() - startAuthTs) + " ms. \n\n");
 
-                    UserThread.execute(() -> resultFuture.set(connection));
+                    onSuccess(connection);
                 }
             }
-        });
-    }
+        };
 
+        networkNode.addMessageListener(messageListener);
+    }
 
     private void authenticateToNextRandomPeer(Set<Address> remainingAddresses) {
         Optional<Tuple2<Address, Set<Address>>> tupleOptional = getRandomAddressAndRemainingSet(remainingAddresses);
@@ -227,7 +245,7 @@ public class AuthenticationHandshake {
             requestAuthentication(tuple.second, tuple.first);
         } else {
             log.info("No other seed node found. That is expected for the first seed node.");
-            UserThread.execute(() -> resultFuture.set(null));
+            onSuccess(null);
         }
     }
 

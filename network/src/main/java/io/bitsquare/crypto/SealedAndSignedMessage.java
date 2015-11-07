@@ -10,11 +10,9 @@ public final class SealedAndSignedMessage implements MailboxMessage {
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     public final SealedAndSigned sealedAndSigned;
-    public final Address peerAddress;
 
-    public SealedAndSignedMessage(SealedAndSigned sealedAndSigned, Address peerAddress) {
+    public SealedAndSignedMessage(SealedAndSigned sealedAndSigned) {
         this.sealedAndSigned = sealedAndSigned;
-        this.peerAddress = peerAddress;
     }
 
     @Override

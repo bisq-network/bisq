@@ -8,7 +8,6 @@ import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.Utils;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
-import javafx.concurrent.Task;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +58,7 @@ public class Connection {
     //TODO got java.util.zip.DataFormatException: invalid distance too far back
     // java.util.zip.DataFormatException: invalid literal/lengths set
     // use GZIPInputStream but problems with blocking
-    boolean useCompression = false;
+    private final boolean useCompression = false;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -182,23 +181,21 @@ public class Connection {
         shutDown(true, null);
     }
 
-    void shutDown(boolean sendCloseConnectionMessage) {
+    private void shutDown(boolean sendCloseConnectionMessage) {
         shutDown(sendCloseConnectionMessage, null);
     }
 
     private void shutDown(boolean sendCloseConnectionMessage, @Nullable Runnable shutDownCompleteHandler) {
         if (!stopped) {
-            StringBuilder result = new StringBuilder("\n\n############################################################\n" +
+            log.info("\n\n############################################################\n" +
                     "ShutDown connection:"
                     + "\npeerAddress=" + peerAddress
                     + "\nlocalPort/port=" + sharedSpace.getSocket().getLocalPort()
                     + "/" + sharedSpace.getSocket().getPort()
                     + "\nobjectId=" + getObjectId() + " / uid=" + getUid()
-                    + "\nisAuthenticated=" + isAuthenticated());
-            result.append("\n############################################################\n");
-            log.info(result.toString());
+                    + "\nisAuthenticated=" + isAuthenticated()
+                    + "\n############################################################\n");
 
-            log.trace("ShutDown " + this.getObjectId());
             log.trace("ShutDown connection requested. Connection=" + this.toString());
 
             stopped = true;
@@ -258,7 +255,8 @@ public class Connection {
         Connection that = (Connection) o;
 
         if (portInfo != null ? !portInfo.equals(that.portInfo) : that.portInfo != null) return false;
-        return !(uid != null ? !uid.equals(that.uid) : that.uid != null);
+        if (uid != null ? !uid.equals(that.uid) : that.uid != null) return false;
+        return !(peerAddress != null ? !peerAddress.equals(that.peerAddress) : that.peerAddress != null);
 
     }
 
@@ -266,6 +264,7 @@ public class Connection {
     public int hashCode() {
         int result = portInfo != null ? portInfo.hashCode() : 0;
         result = 31 * result + (uid != null ? uid.hashCode() : 0);
+        result = 31 * result + (peerAddress != null ? peerAddress.hashCode() : 0);
         return result;
     }
 
@@ -285,7 +284,7 @@ public class Connection {
     }
 
     public String getObjectId() {
-        return super.toString().split("@")[1].toString();
+        return super.toString().split("@")[1];
     }
 
     public void setPeerAddress(@Nullable Address peerAddress) {
@@ -398,7 +397,7 @@ public class Connection {
         }
 
         public void stop() {
-            this.stopped = stopped;
+            this.stopped = true;
         }
 
         public ConnectionListener.Reason getShutDownReason() {
@@ -470,12 +469,6 @@ public class Connection {
                                         stopped = true;
                                         sharedSpace.shutDown(false);
                                     } else {
-                                        Task task = new Task() {
-                                            @Override
-                                            protected Object call() throws Exception {
-                                                return null;
-                                            }
-                                        };
                                         sharedSpace.onMessage(message);
                                     }
                                 } else {

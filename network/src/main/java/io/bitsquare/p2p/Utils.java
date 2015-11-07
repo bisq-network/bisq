@@ -23,16 +23,15 @@ public class Utils {
             server.close();
             return port;
         } catch (IOException ignored) {
-        } finally {
             return new Random().nextInt(10000) + 50000;
-        }
+        } 
     }
 
     public static byte[] compress(Serializable input) {
         return compress(ByteArrayUtils.objectToByteArray(input));
     }
 
-    public static byte[] compress(byte[] input) {
+    private static byte[] compress(byte[] input) {
         Deflater compressor = new Deflater();
         compressor.setLevel(Deflater.BEST_SPEED);
         compressor.setInput(input);
@@ -45,19 +44,19 @@ public class Utils {
         }
         try {
             bos.close();
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         }
         return bos.toByteArray();
     }
 
-    public static byte[] decompress(byte[] compressedData, int offset, int length) {
-        Inflater decompressor = new Inflater();
-        decompressor.setInput(compressedData, offset, length);
+    private static byte[] decompress(byte[] compressedData, int offset, int length) {
+        Inflater inflater = new Inflater();
+        inflater.setInput(compressedData, offset, length);
         ByteArrayOutputStream bos = new ByteArrayOutputStream(length);
         byte[] buf = new byte[8192];
-        while (!decompressor.finished()) {
+        while (!inflater.finished()) {
             try {
-                int count = decompressor.inflate(buf);
+                int count = inflater.inflate(buf);
                 bos.write(buf, 0, count);
             } catch (DataFormatException e) {
                 e.printStackTrace();

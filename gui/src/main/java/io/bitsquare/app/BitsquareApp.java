@@ -53,7 +53,6 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import org.bitcoinj.crypto.DRMWorkaround;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.controlsfx.dialog.Dialogs;
 import org.reactfx.EventStreams;
@@ -115,10 +114,8 @@ public class BitsquareApp extends Application {
         Thread.setDefaultUncaughtExceptionHandler(handler);
         Thread.currentThread().setUncaughtExceptionHandler(handler);
 
-        DRMWorkaround.maybeDisableExportControls();
-        
         Security.addProvider(new BouncyCastleProvider());
-        
+
         try {
             // Use CrashFX for report crash logs
             /*CrashFX.setup("Bitsquare/" + Version.VERSION,
@@ -220,7 +217,11 @@ public class BitsquareApp extends Application {
         try {
             throwable.printStackTrace();
             try {
-                new Popup().error(throwable.getMessage()).show();
+                String message = throwable.getMessage();
+                if (message != null)
+                    new Popup().error(message).show();
+                else
+                    new Popup().error(throwable.toString()).show();
             } catch (Throwable throwable3) {
                 log.error("Error at displaying Throwable.");
                 throwable3.printStackTrace();

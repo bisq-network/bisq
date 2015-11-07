@@ -10,7 +10,7 @@ import java.net.SocketException;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Server implements Runnable {
+class Server implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(Server.class);
 
     private final ServerSocket serverSocket;
@@ -39,13 +39,12 @@ public class Server implements Runnable {
                         log.info("Accepted new client on localPort/port " + socket.getLocalPort() + "/" + socket.getPort());
                         Connection connection = new Connection(socket, messageListener, connectionListener);
 
-                        StringBuilder result = new StringBuilder("\n\n############################################################\n" +
+                        log.info("\n\n############################################################\n" +
                                 "Server created new inbound connection:"
                                 + "\nlocalPort/port=" + serverSocket.getLocalPort()
                                 + "/" + socket.getPort()
-                                + "\nconnection.uid=" + connection.getUid());
-                        result.append("\n############################################################\n");
-                        log.info(result.toString());
+                                + "\nconnection.uid=" + connection.getUid()
+                                + "\n############################################################\n");
 
                         if (!stopped)
                             connections.add(connection);

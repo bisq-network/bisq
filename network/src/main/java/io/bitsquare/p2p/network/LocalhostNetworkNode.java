@@ -10,12 +10,12 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Address;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.TorNode;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Random;
@@ -26,7 +26,7 @@ public class LocalhostNetworkNode extends NetworkNode {
     private static final Logger log = LoggerFactory.getLogger(LocalhostNetworkNode.class);
 
     private static int simulateTorDelayTorNode = 1 * 100;
-    private static int simulateTorDelayHiddenService = 2 * 100;
+    private static int simulateTorDelayHiddenService = 1 * 100;
     private Address address;
 
     public static void setSimulateTorDelayTorNode(int simulateTorDelayTorNode) {
@@ -60,8 +60,6 @@ public class LocalhostNetworkNode extends NetworkNode {
             createHiddenService(hiddenServiceDescriptor -> {
                 try {
                     startServer(new ServerSocket(port));
-                } catch (BindException e) {
-                    e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -112,7 +110,7 @@ public class LocalhostNetworkNode extends NetworkNode {
                 UserThread.execute(() -> resultHandler.accept(torNode));
             }
 
-            public void onFailure(Throwable throwable) {
+            public void onFailure(@NotNull Throwable throwable) {
                 log.error("[simulation] TorNode creation failed");
             }
         });
@@ -140,7 +138,7 @@ public class LocalhostNetworkNode extends NetworkNode {
                 UserThread.execute(() -> resultHandler.accept(hiddenServiceDescriptor));
             }
 
-            public void onFailure(Throwable throwable) {
+            public void onFailure(@NotNull Throwable throwable) {
                 log.error("[simulation] Hidden service creation failed");
             }
         });
