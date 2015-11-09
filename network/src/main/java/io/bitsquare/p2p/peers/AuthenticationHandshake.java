@@ -21,13 +21,13 @@ import java.util.*;
 
 
 // authentication example: 
-// node2 -> node1 RequestAuthenticationMessage
+// node2 -> node1 AuthenticationRequest
 // node1: close connection
-// node1 -> node2 ChallengeMessage on new connection
+// node1 -> node2 AuthenticationResponse on new connection
 // node2: authentication to node1 done if nonce ok
-// node2 -> node1 GetPeersMessage
+// node2 -> node1 GetPeersAuthRequest
 // node1: authentication to node2 done if nonce ok
-// node1 -> node2 PeersMessage
+// node1 -> node2 GetPeersAuthResponse
 
 public class AuthenticationHandshake implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(AuthenticationHandshake.class);
@@ -77,12 +77,12 @@ public class AuthenticationHandshake implements MessageListener {
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
                         public void onSuccess(Connection connection) {
-                            log.trace("GetPeersMessage sent successfully from " + myAddress + " to " + peerAddress);
+                            log.trace("GetPeersAuthRequest sent successfully from " + myAddress + " to " + peerAddress);
                         }
 
                         @Override
                         public void onFailure(@NotNull Throwable throwable) {
-                            log.info("GetPeersMessage sending failed " + throwable.getMessage());
+                            log.info("GetPeersAuthRequest sending failed " + throwable.getMessage());
                             onFault(throwable);
                         }
                     });
@@ -104,17 +104,17 @@ public class AuthenticationHandshake implements MessageListener {
 
                     SettableFuture<Connection> future = networkNode.sendMessage(peerAddress,
                             new GetPeersAuthResponse(myAddress, new HashSet<>(peerGroup.getAllPeerAddresses())));
-                    log.trace("sent PeersMessage to " + peerAddress + " from " + myAddress
+                    log.trace("sent GetPeersAuthResponse to " + peerAddress + " from " + myAddress
                             + " with allPeers=" + peerGroup.getAllPeerAddresses());
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
                         public void onSuccess(Connection connection) {
-                            log.trace("PeersMessage sent successfully from " + myAddress + " to " + peerAddress);
+                            log.trace("GetPeersAuthResponse sent successfully from " + myAddress + " to " + peerAddress);
                         }
 
                         @Override
                         public void onFailure(@NotNull Throwable throwable) {
-                            log.info("PeersMessage sending failed " + throwable.getMessage());
+                            log.info("GetPeersAuthResponse sending failed " + throwable.getMessage());
                             onFault(throwable);
                         }
                     });
@@ -132,16 +132,16 @@ public class AuthenticationHandshake implements MessageListener {
                 // Requesting peer
                 GetPeersAuthResponse getPeersAuthResponse = (GetPeersAuthResponse) message;
                 Address peerAddress = getPeersAuthResponse.address;
-                log.trace("PeersMessage from " + peerAddress + " at " + myAddress);
+                log.trace("GetPeersAuthResponse from " + peerAddress + " at " + myAddress);
                 HashSet<Address> peerAddresses = getPeersAuthResponse.peerAddresses;
                 log.trace("Received peers: " + peerAddresses);
                 peerGroup.addToReportedPeers(peerAddresses, connection);
 
                 // we wait until the handshake is completed before setting the authenticate flag
                 // authentication at both sides of the connection
-                log.info("\n\nAuthenticationComplete\nPeer with address " + peerAddress
+                log.info("AuthenticationComplete: Peer with address " + peerAddress
                         + " authenticated (" + connection.objectId + "). Took "
-                        + (System.currentTimeMillis() - startAuthTs) + " ms. \n\n");
+                        + (System.currentTimeMillis() - startAuthTs) + " ms.");
 
                 onSuccess(connection);
             }
@@ -176,7 +176,7 @@ public class AuthenticationHandshake implements MessageListener {
     }
 
     public SettableFuture<Connection> requestAuthentication(Set<Address> remainingAddresses, Address peerAddress) {
-        Log.traceCall();
+        Log.traceCall(peerAddress.getFullAddress());
         // Requesting peer
         resultFuture = SettableFuture.create();
         startAuthTs = System.currentTimeMillis();
@@ -193,8 +193,9 @@ public class AuthenticationHandshake implements MessageListener {
                 log.info("Send RequestAuthenticationMessage to " + peerAddress + " failed." +
                         "\nThat is expected if seed nodes are offline." +
                         "\nException:" + throwable.getMessage());
-                log.trace("We try to authenticate to another random seed nodes of that list: " + remainingAddresses);
-                authenticateToNextRandomPeer(remainingAddresses);
+                onFault(throwable);
+                // log.trace("We try to authenticate to another random seed nodes of that list: " + remainingAddresses);
+                // authenticateToNextRandomPeer(remainingAddresses);
             }
         });
 
@@ -267,7 +268,7 @@ public class AuthenticationHandshake implements MessageListener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void authenticateToNextRandomPeer(Set<Address> remainingAddresses) {
+  /*  private void authenticateToNextRandomPeer(Set<Address> remainingAddresses) {
         Log.traceCall();
         Optional<Tuple2<Address, Set<Address>>> tupleOptional = getRandomAddressAndRemainingSet(remainingAddresses);
         if (tupleOptional.isPresent()) {
@@ -277,7 +278,7 @@ public class AuthenticationHandshake implements MessageListener {
             log.info("No other seed node found. That is expected for the first seed node.");
             onSuccess(null);
         }
-    }
+    }*/
 
     private Optional<Tuple2<Address, Set<Address>>> getRandomAddressAndRemainingSet(Set<Address> addresses) {
         Log.traceCall();

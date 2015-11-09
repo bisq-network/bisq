@@ -17,7 +17,7 @@ public final class AuthenticationRequest implements AuthenticationMessage {
 
     @Override
     public String toString() {
-        return "RequestAuthenticationMessage{" +
+        return "AuthenticationRequest{" +
                 "address=" + address +
                 ", nonce=" + nonce +
                 '}';

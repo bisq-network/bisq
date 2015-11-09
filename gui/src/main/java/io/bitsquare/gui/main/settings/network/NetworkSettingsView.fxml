@@ -74,8 +74,8 @@
         </GridPane.margin>
     </TextField>
 
-    <Label text="Authenticated peers:" GridPane.rowIndex="5"/>
-    <TextArea fx:id="authenticatedPeersTextArea" GridPane.rowIndex="7" GridPane.columnIndex="1"
+    <Label text="Authenticated peers:" GridPane.rowIndex="4"/>
+    <TextArea fx:id="authenticatedPeersTextArea" GridPane.rowIndex="4" GridPane.columnIndex="1"
               mouseTransparent="true" focusTraversable="false"/>
 
     <columnConstraints>

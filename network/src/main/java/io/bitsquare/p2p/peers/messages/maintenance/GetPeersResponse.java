@@ -17,7 +17,7 @@ public final class GetPeersResponse implements MaintenanceMessage {
 
     @Override
     public String toString() {
-        return "GetPeersMessage{" +
+        return "GetPeersResponse{" +
                 ", peerAddresses=" + peerAddresses +
                 '}';
     }

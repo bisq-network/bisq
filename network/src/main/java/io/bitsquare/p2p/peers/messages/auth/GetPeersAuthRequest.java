@@ -21,7 +21,7 @@ public final class GetPeersAuthRequest implements AuthenticationMessage {
 
     @Override
     public String toString() {
-        return "GetPeersMessage{" +
+        return "GetPeersAuthRequest{" +
                 "address=" + address +
                 ", challengerNonce=" + challengerNonce +
                 ", peerAddresses=" + peerAddresses +

@@ -19,7 +19,7 @@ public final class GetPeersAuthResponse implements AuthenticationMessage {
 
     @Override
     public String toString() {
-        return "PeersMessage{" + "peerAddresses=" + peerAddresses + '}';
+        return "GetPeersAuthResponse{" + "peerAddresses=" + peerAddresses + '}';
     }
 
 }

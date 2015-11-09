@@ -19,7 +19,7 @@ public final class AuthenticationResponse implements AuthenticationMessage {
 
     @Override
     public String toString() {
-        return "ChallengeMessage{" +
+        return "AuthenticationResponse{" +
                 "address=" + address +
                 ", requesterNonce=" + requesterNonce +
                 ", challengerNonce=" + challengerNonce +

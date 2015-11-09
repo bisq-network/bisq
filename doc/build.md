@@ -67,6 +67,10 @@ To run it use:
 
     $ java -jar gui/target/shaded.jar
 
+For developing the following program arguments are useful (regtest mode):
+ 
+    $ java -jar gui/target/shaded.jar --bitcoin.network=regtest --useLocalhost=true --node.port=2222 --devTest=true --app.name=Bitsquare-Regtest-Alice
+
 Problems?
 ---------
 
