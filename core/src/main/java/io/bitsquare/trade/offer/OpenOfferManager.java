@@ -27,8 +27,8 @@ import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.P2PNetworkReadyListener;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.messaging.SendMailMessageListener;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradableList;
@@ -68,7 +68,7 @@ public class OpenOfferManager {
     private final TradableList<OpenOffer> openOffers;
     private final Storage<TradableList<OpenOffer>> openOffersStorage;
     private boolean shutDownRequested;
-    private P2PServiceListener p2PServiceListener;
+    private P2PNetworkReadyListener p2PNetworkReadyListener;
     private final Timer timer = new Timer();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -128,29 +128,13 @@ public class OpenOfferManager {
         // If offer removal at shutdown fails we don't want to have long term dangling dead offers, so we set TTL quite short and use re-publish as 
         // strategy. Offerers need to be online anyway.
         if (!p2PService.isAuthenticated()) {
-            p2PServiceListener = new P2PServiceListener() {
+            p2PNetworkReadyListener = new P2PNetworkReadyListener() {
                 @Override
-                public void onTorNodeReady() {
-                }
-
-                @Override
-                public void onHiddenServicePublished() {
-                }
-
-                @Override
-                public void onSetupFailed(Throwable throwable) {
-                }
-
-                @Override
-                public void onRequestingDataCompleted() {
-                }
-
-                @Override
-                public void onAuthenticated() {
+                public void onFirstPeerAuthenticated() {
                     startRePublishThread();
                 }
             };
-            p2PService.addP2PServiceListener(p2PServiceListener);
+            p2PService.addP2PServiceListener(p2PNetworkReadyListener);
 
         } else {
             startRePublishThread();
@@ -158,8 +142,8 @@ public class OpenOfferManager {
     }
 
     private void startRePublishThread() {
-        if (p2PServiceListener != null)
-            p2PService.removeP2PServiceListener(p2PServiceListener);
+        if (p2PNetworkReadyListener != null)
+            p2PService.removeP2PServiceListener(p2PNetworkReadyListener);
 
         long period = (long) (Offer.TTL * 0.8);
         TimerTask timerTask = new TimerTask() {

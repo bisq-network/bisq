@@ -211,7 +211,7 @@ public class ProtectedExpirableDataStorage {
     }
 
     public Map<BigInteger, ProtectedData> getMap() {
-        Log.traceCall();
+        //Log.traceCall();
         return map;
     }
 
@@ -362,7 +362,7 @@ public class ProtectedExpirableDataStorage {
     }
 
     private BigInteger getHashAsBigInteger(ExpirablePayload payload) {
-        Log.traceCall();
+        //Log.traceCall();
         return new BigInteger(Hash.getHash(payload));
     }
 }

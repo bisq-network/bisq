@@ -7,5 +7,5 @@ public interface P2PServiceListener extends SetupListener {
 
     void onRequestingDataCompleted();
 
-    void onAuthenticated();
+    void onFirstPeerAuthenticated();
 }

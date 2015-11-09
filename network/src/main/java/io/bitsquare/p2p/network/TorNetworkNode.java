@@ -228,14 +228,12 @@ public class TorNetworkNode extends NetworkNode {
         });
         Futures.addCallback(future, new FutureCallback<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>>() {
             public void onSuccess(TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode) {
-                Log.traceCall();
                 UserThread.execute(() -> {
                     resultHandler.accept(torNode);
                 });
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                Log.traceCall();
                 UserThread.execute(() -> {
                     log.error("TorNode creation failed with exception: " + throwable.getMessage());
                     restartTor();

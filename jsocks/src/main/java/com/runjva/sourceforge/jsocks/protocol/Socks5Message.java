@@ -95,7 +95,7 @@ class Socks5Message extends ProxyMessage {
         this.host = hostName;
         this.version = SOCKS_VERSION;
 
-        log.debug("Doing ATYP_DOMAINNAME");
+        //log.debug("Doing ATYP_DOMAINNAME");
 
         addrType = SOCKS_ATYP_DOMAINNAME;
         final byte addr[] = hostName.getBytes();

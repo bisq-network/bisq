@@ -220,7 +220,7 @@ class MainViewModel implements ViewModel {
             }
 
             @Override
-            public void onAuthenticated() {
+            public void onFirstPeerAuthenticated() {
                 p2pNetworkInfoFooter.set("Authenticated in P2P network.");
             }
 

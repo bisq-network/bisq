@@ -24,8 +24,8 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.P2PNetworkReadyListener;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.data.ProtectedData;
 import io.bitsquare.user.User;
@@ -86,7 +86,7 @@ public class ArbitratorManager {
     ));
     private static final String publicKeyForTesting = "027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee";
     private final boolean isDevTest;
-    private P2PServiceListener p2PServiceListener;
+    private P2PNetworkReadyListener p2PNetworkReadyListener;
 
     @Inject
     public ArbitratorManager(@Named(ProgramArguments.DEV_TEST) boolean isDevTest, KeyRing keyRing, ArbitratorService arbitratorService, User user) {
@@ -113,29 +113,13 @@ public class ArbitratorManager {
 
             P2PService p2PService = arbitratorService.getP2PService();
             if (!p2PService.isAuthenticated()) {
-                p2PServiceListener = new P2PServiceListener() {
+                p2PNetworkReadyListener = new P2PNetworkReadyListener() {
                     @Override
-                    public void onTorNodeReady() {
-                    }
-
-                    @Override
-                    public void onHiddenServicePublished() {
-                    }
-
-                    @Override
-                    public void onSetupFailed(Throwable throwable) {
-                    }
-
-                    @Override
-                    public void onRequestingDataCompleted() {
-                    }
-
-                    @Override
-                    public void onAuthenticated() {
+                    public void onFirstPeerAuthenticated() {
                         republishArbitrator();
                     }
                 };
-                p2PService.addP2PServiceListener(p2PServiceListener);
+                p2PService.addP2PServiceListener(p2PNetworkReadyListener);
 
             } else {
                 republishArbitrator();
@@ -152,7 +136,8 @@ public class ArbitratorManager {
     }
 
     private void republishArbitrator() {
-        if (p2PServiceListener != null) arbitratorService.getP2PService().removeP2PServiceListener(p2PServiceListener);
+        if (p2PNetworkReadyListener != null)
+            arbitratorService.getP2PService().removeP2PServiceListener(p2PNetworkReadyListener);
 
         Arbitrator registeredArbitrator = user.getRegisteredArbitrator();
         if (registeredArbitrator != null) {

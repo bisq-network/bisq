@@ -5,6 +5,7 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.ByteArrayUtils;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.Utils;
@@ -18,6 +19,8 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -33,7 +36,8 @@ public class Connection {
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
     private static final int MAX_MSG_SIZE = 5 * 1024 * 1024;         // 5 MB of compressed data
     private static final int MAX_ILLEGAL_REQUESTS = 5;
-    private static final int SOCKET_TIMEOUT = 10 * 60 * 1000;        // 10 min. //TODO set shorter
+    private static final int SEND_MESSAGE_TIMEOUT = 10 * 1000;        // 10 sec.
+    private static final int SOCKET_TIMEOUT = 30 * 60 * 1000;        // 30 min.
     private InputHandler inputHandler;
     private volatile boolean isAuthenticated;
 
@@ -69,9 +73,12 @@ public class Connection {
 
     public Connection(Socket socket, MessageListener messageListener, ConnectionListener connectionListener) {
         Log.traceCall();
-        portInfo = "localPort=" + socket.getLocalPort() + "/port=" + socket.getPort();
         uid = UUID.randomUUID().toString();
-
+        if (socket.getLocalPort() == 0)
+            portInfo = "port=" + socket.getPort();
+        else
+            portInfo = "localPort=" + socket.getLocalPort() + "/port=" + socket.getPort();
+        
         init(socket, messageListener, connectionListener);
     }
 
@@ -87,6 +94,7 @@ public class Connection {
             // It will not return until that header has been read. 
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+
 
             // We create a thread for handling inputStream data
             inputHandler = new InputHandler(sharedSpace, objectInputStream, portInfo);
@@ -121,6 +129,16 @@ public class Connection {
         Log.traceCall();
         if (!stopped) {
             try {
+                Timer timeoutTimer = new Timer();
+                timeoutTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        Utilities.setThreadName("SendMessageTimerTask");
+                        throw new RuntimeException("Timeout occurred: Send message " + message
+                                + " on connection with port " + portInfo + " failed.");
+                    }
+                }, SEND_MESSAGE_TIMEOUT);
+
                 log.info("writeObject " + message + " on connection with port " + portInfo);
                 Object objectToWrite;
                 if (useCompression) {
@@ -140,6 +158,7 @@ public class Connection {
                     }
                     sharedSpace.updateLastActivityDate();
                 }
+                timeoutTimer.cancel();
             } catch (IOException e) {
                 // an exception lead to a shutdown
                 sharedSpace.handleConnectionException(e);
@@ -223,16 +242,13 @@ public class Connection {
 
             log.trace("ShutDown connection requested. Connection=" + this.toString());
 
-            stopped = true;
-            sharedSpace.stop();
-            if (inputHandler != null)
-                inputHandler.stop();
-
             if (sendCloseConnectionMessage) {
                 new Thread(() -> {
                     Thread.currentThread().setName("Connection:SendCloseConnectionMessage-" + this.objectId);
+                    Log.traceCall("sendCloseConnectionMessage");
                     try {
                         sendMessage(new CloseConnectionMessage());
+                        // TODO increase delay
                         Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
                     } catch (Throwable t) {
                         t.printStackTrace();
@@ -249,6 +265,11 @@ public class Connection {
 
     private void continueShutDown(@Nullable Runnable shutDownCompleteHandler) {
         Log.traceCall();
+
+        stopped = true;
+        sharedSpace.stop();
+        if (inputHandler != null)
+            inputHandler.stop();
         ConnectionListener.Reason shutDownReason = sharedSpace.getShutDownReason();
         if (shutDownReason == null)
             shutDownReason = ConnectionListener.Reason.SHUT_DOWN;
@@ -365,7 +386,8 @@ public class Connection {
         }
 
         public void handleConnectionException(Exception e) {
-            Log.traceCall();
+            Log.traceCall(e.toString());
+            log.warn("Exception might be expected: " + e.toString());
             if (e instanceof SocketException) {
                 if (socket.isClosed())
                     shutDownReason = ConnectionListener.Reason.SOCKET_CLOSED;
@@ -388,12 +410,12 @@ public class Connection {
         }
 
         public void onMessage(Message message) {
-            Log.traceCall();
+            //Log.traceCall();
             UserThread.execute(() -> messageListener.onMessage(message, connection));
         }
 
         public boolean useCompression() {
-            Log.traceCall();
+            //Log.traceCall();
             return useCompression;
         }
 
@@ -403,7 +425,7 @@ public class Connection {
         }
 
         public synchronized ConnectionListener getConnectionListener() {
-            Log.traceCall();
+            // Log.traceCall();
             return connectionListener;
         }
 
@@ -413,7 +435,7 @@ public class Connection {
         }
 
         public String getConnectionId() {
-            Log.traceCall();
+            //Log.traceCall();
             return connection.objectId;
         }
 
@@ -423,7 +445,7 @@ public class Connection {
         }
 
         public synchronized ConnectionListener.Reason getShutDownReason() {
-            Log.traceCall();
+            //Log.traceCall();
             return shutDownReason;
         }
 

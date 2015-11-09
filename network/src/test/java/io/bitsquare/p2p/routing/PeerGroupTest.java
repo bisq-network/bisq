@@ -95,7 +95,7 @@ public class PeerGroupTest {
             }
 
             @Override
-            public void onAuthenticated() {
+            public void onFirstPeerAuthenticated() {
             }
 
             @Override
@@ -139,7 +139,7 @@ public class PeerGroupTest {
             }
 
             @Override
-            public void onAuthenticated() {
+            public void onFirstPeerAuthenticated() {
                 latch.countDown();
             }
 
@@ -170,7 +170,7 @@ public class PeerGroupTest {
             }
 
             @Override
-            public void onAuthenticated() {
+            public void onFirstPeerAuthenticated() {
                 latch.countDown();
             }
 
@@ -397,7 +397,7 @@ public class PeerGroupTest {
             }
 
             @Override
-            public void onAuthenticated() {
+            public void onFirstPeerAuthenticated() {
             }
 
             @Override

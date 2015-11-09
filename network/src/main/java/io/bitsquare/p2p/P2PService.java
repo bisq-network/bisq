@@ -141,7 +141,7 @@ public class P2PService implements SetupListener {
                 authenticated.set(true);
 
                 dataStorage.setAuthenticated();
-                p2pServiceListeners.stream().forEach(e -> e.onAuthenticated());
+                p2pServiceListeners.stream().forEach(e -> e.onFirstPeerAuthenticated());
             }
 
             @Override
@@ -660,7 +660,7 @@ public class P2PService implements SetupListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private HashSet<ProtectedData> getDataSet() {
-        Log.traceCall();
+        // Log.traceCall();
         return new HashSet<>(dataStorage.getMap().values());
     }
 

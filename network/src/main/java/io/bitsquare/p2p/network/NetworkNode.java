@@ -105,7 +105,6 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                             + "\n############################################################\n");
 
                     newConnection.sendMessage(message);
-
                     return newConnection; // can take a while when using tor
                 } catch (Throwable throwable) {
                     if (!(throwable instanceof ConnectException || throwable instanceof IOException)) {
@@ -138,7 +137,6 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         ListenableFuture<Connection> future = executorService.submit(() -> {
             Thread.currentThread().setName("NetworkNode:SendMessage-to-" + connection.objectId);
             try {
-                log.debug("## connection.sendMessage");
                 connection.sendMessage(message);
                 return connection;
             } catch (Throwable t) {

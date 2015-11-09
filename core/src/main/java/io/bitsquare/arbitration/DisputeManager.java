@@ -28,8 +28,8 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.P2PNetworkReadyListener;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.storage.Storage;
@@ -67,7 +67,7 @@ public class DisputeManager {
     private final DisputeList<Dispute> disputes;
     transient private final ObservableList<Dispute> disputesObservableList;
     private final String disputeInfo;
-    private final P2PServiceListener p2PServiceListener;
+    private final P2PNetworkReadyListener p2PNetworkReadyListener;
     private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedMailMessageWithPubKeys = new CopyOnWriteArraySet<>();
 
@@ -115,29 +115,13 @@ public class DisputeManager {
                 applyMessages();
         });
 
-        p2PServiceListener = new P2PServiceListener() {
+        p2PNetworkReadyListener = new P2PNetworkReadyListener() {
             @Override
-            public void onTorNodeReady() {
-            }
-
-            @Override
-            public void onHiddenServicePublished() {
-            }
-
-            @Override
-            public void onSetupFailed(Throwable throwable) {
-            }
-
-            @Override
-            public void onRequestingDataCompleted() {
-            }
-
-            @Override
-            public void onAuthenticated() {
+            public void onFirstPeerAuthenticated() {
                 applyMessages();
             }
         };
-        p2PService.addP2PServiceListener(p2PServiceListener);
+        p2PService.addP2PServiceListener(p2PNetworkReadyListener);
     }
 
     private void applyMessages() {
@@ -159,7 +143,7 @@ public class DisputeManager {
         });
         decryptedMailboxMessageWithPubKeys.clear();
 
-        p2PService.removeP2PServiceListener(p2PServiceListener);
+        p2PService.removeP2PServiceListener(p2PNetworkReadyListener);
     }
 
 

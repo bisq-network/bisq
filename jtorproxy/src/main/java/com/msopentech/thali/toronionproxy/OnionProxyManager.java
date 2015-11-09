@@ -323,7 +323,7 @@ public abstract class OnionProxyManager {
         }
 
         if (phase != null && phase.contains("PROGRESS=100")) {
-            LOG.info("Tor has already bootstrapped");
+            LOG.trace("Tor has already bootstrapped");
             return true;
         }
 

@@ -42,8 +42,8 @@ public class PeerGroup {
         MAX_CONNECTIONS = maxConnections;
     }
 
-    private static final int SEND_PING_INTERVAL = 100000000;// new Random().nextInt(2 * 60 * 1000) + 2 * 60 * 1000; // 2-4 min.
-    private static final int GET_PEERS_INTERVAL = 100000000;//new Random().nextInt(1 * 60 * 1000) + 1 * 60 * 1000; // 1-2 min.
+    private static final int SEND_PING_INTERVAL = new Random().nextInt(2 * 60 * 1000) + 2 * 60 * 1000; // 2-4 min.
+    private static final int GET_PEERS_INTERVAL = new Random().nextInt(1 * 60 * 1000) + 1 * 60 * 1000; // 1-2 min.
     private static final int PING_AFTER_CONNECTION_INACTIVITY = 30 * 1000;
     private static final int MAX_REPORTED_PEERS = 1000;
 
@@ -472,7 +472,7 @@ public class PeerGroup {
                         });
                     }, 5, 10));
         } else {
-            log.debug("No peers available for requesting.");
+            log.debug("No peers available for requesting data.");
         }
     }
 
@@ -641,7 +641,7 @@ public class PeerGroup {
     }
 
     private Address getMyAddress() {
-        Log.traceCall();
+        // Log.traceCall();
         return networkNode.getAddress();
     }
 

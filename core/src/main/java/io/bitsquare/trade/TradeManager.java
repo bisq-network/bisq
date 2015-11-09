@@ -27,8 +27,8 @@ import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.P2PNetworkReadyListener;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.messaging.DecryptedMailListener;
 import io.bitsquare.p2p.messaging.DecryptedMailboxListener;
 import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
@@ -81,7 +81,7 @@ public class TradeManager {
     private final Storage<TradableList<Trade>> tradableListStorage;
     private final TradableList<Trade> trades;
     private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
-    private P2PServiceListener p2PServiceListener;
+    private P2PNetworkReadyListener p2PNetworkReadyListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -148,29 +148,13 @@ public class TradeManager {
             }
         });
 
-        p2PServiceListener = new P2PServiceListener() {
+        p2PNetworkReadyListener = new P2PNetworkReadyListener() {
             @Override
-            public void onTorNodeReady() {
-            }
-
-            @Override
-            public void onHiddenServicePublished() {
-            }
-
-            @Override
-            public void onSetupFailed(Throwable throwable) {
-            }
-
-            @Override
-            public void onRequestingDataCompleted() {
-            }
-
-            @Override
-            public void onAuthenticated() {
+            public void onFirstPeerAuthenticated() {
                 initPendingTrades();
             }
         };
-        p2PService.addP2PServiceListener(p2PServiceListener);
+        p2PService.addP2PServiceListener(p2PNetworkReadyListener);
     }
 
 
@@ -185,7 +169,7 @@ public class TradeManager {
     }
 
     private void initPendingTrades() {
-        if (p2PServiceListener != null) p2PService.removeP2PServiceListener(p2PServiceListener);
+        if (p2PNetworkReadyListener != null) p2PService.removeP2PServiceListener(p2PNetworkReadyListener);
 
         List<Trade> failedTrades = new ArrayList<>();
         for (Trade trade : trades) {

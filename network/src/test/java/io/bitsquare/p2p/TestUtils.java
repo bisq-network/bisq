@@ -86,7 +86,7 @@ public class TestUtils {
             }
 
             @Override
-            public void onAuthenticated() {
+            public void onFirstPeerAuthenticated() {
             }
 
             @Override
@@ -129,7 +129,7 @@ public class TestUtils {
             }
 
             @Override
-            public void onAuthenticated() {
+            public void onFirstPeerAuthenticated() {
                 latch.countDown();
             }
 
