@@ -818,6 +818,7 @@ public class TradeWalletService {
 
         // We need to recreate the transaction otherwise we get a null pointer... 
         Transaction result = new Transaction(params, transaction.bitcoinSerialize());
+        result.getConfidence(Context.get()).setSource(TransactionConfidence.Source.SELF);
         log.trace("transaction " + result.toString());
 
         if (wallet != null)
@@ -835,6 +836,7 @@ public class TradeWalletService {
 
         // We need to recreate the tx otherwise we get a null pointer... 
         Transaction transaction = new Transaction(params, serializedTransaction);
+        transaction.getConfidence(Context.get()).setSource(TransactionConfidence.Source.NETWORK);
         log.trace("transaction " + transaction.toString());
 
         if (wallet != null)
@@ -941,9 +943,9 @@ public class TradeWalletService {
         transaction.addInput(p2SHMultiSigOutput);
         transaction.addOutput(buyerPayoutAmount, new Address(params, buyerAddressString));
         transaction.addOutput(sellerPayoutAmount, new Address(params, sellerAddressString));
-        transaction.setLockTime(lockTime);
         // When using lockTime we need to set sequenceNumber to 0 
         transaction.getInputs().stream().forEach(i -> i.setSequenceNumber(0));
+        transaction.setLockTime(lockTime);
         return transaction;
     }
 

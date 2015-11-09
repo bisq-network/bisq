@@ -45,12 +45,12 @@ class Server implements Runnable {
                         log.info("Accepted new client on localPort/port " + socket.getLocalPort() + "/" + socket.getPort());
                         Connection connection = new Connection(socket, messageListener, connectionListener);
 
-                        log.info("\n\n############################################################\n" +
+                        log.info("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                 "Server created new inbound connection:"
                                 + "\nlocalPort/port=" + serverSocket.getLocalPort()
                                 + "/" + socket.getPort()
                                 + "\nconnection.uid=" + connection.getUid()
-                                + "\n############################################################\n");
+                                + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 
                         if (!stopped)
                             connections.add(connection);

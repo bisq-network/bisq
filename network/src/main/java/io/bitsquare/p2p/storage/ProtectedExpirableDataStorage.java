@@ -8,8 +8,11 @@ import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.IllegalRequest;
 import io.bitsquare.p2p.network.MessageListener;
+import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.peers.PeerGroup;
 import io.bitsquare.p2p.storage.data.*;
 import io.bitsquare.p2p.storage.messages.*;
@@ -29,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 // Run in UserThread
-public class ProtectedExpirableDataStorage {
+public class ProtectedExpirableDataStorage implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(ProtectedExpirableDataStorage.class);
 
     @VisibleForTesting
@@ -40,7 +43,6 @@ public class ProtectedExpirableDataStorage {
     private final CopyOnWriteArraySet<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArraySet<>();
     private ConcurrentHashMap<BigInteger, Integer> sequenceNumberMap = new ConcurrentHashMap<>();
     private final Storage<ConcurrentHashMap> storage;
-    private boolean authenticated;
     private final Timer timer = new Timer();
     private volatile boolean shutDownInProgress;
 
@@ -65,25 +67,8 @@ public class ProtectedExpirableDataStorage {
             sequenceNumberMap = persisted;
         }
 
-        addMessageListener((message, connection) -> {
-            Log.traceCall("onMessage: Message=" + message);
-            if (message instanceof DataMessage) {
-                if (connection.isAuthenticated()) {
-                    log.trace("ProtectedExpirableDataMessage received " + message + " on connection " + connection);
-                    if (message instanceof AddDataMessage) {
-                        add(((AddDataMessage) message).data, connection.getPeerAddress());
-                    } else if (message instanceof RemoveDataMessage) {
-                        remove(((RemoveDataMessage) message).data, connection.getPeerAddress());
-                    } else if (message instanceof RemoveMailboxDataMessage) {
-                        removeMailboxData(((RemoveMailboxDataMessage) message).data, connection.getPeerAddress());
-                    }
-                } else {
-                    log.warn("Connection is not authenticated yet. We don't accept storage operations form non-authenticated nodes.");
-                    log.warn("Connection = " + connection);
-                    connection.reportIllegalRequest(IllegalRequest.NotAuthenticated);
-                }
-            }
-        });
+        NetworkNode networkNode = peerGroup.getNetworkNode();
+        networkNode.addMessageListener(this);
 
         timer.scheduleAtFixedRate(new TimerTask() {
                                       @Override
@@ -107,6 +92,31 @@ public class ProtectedExpirableDataStorage {
                 .forEach(entry -> map.remove(entry.getKey()));
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // MessageListener implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onMessage(Message message, Connection connection) {
+        Log.traceCall("Message=" + message);
+        if (message instanceof DataMessage) {
+            if (connection.isAuthenticated()) {
+                log.trace("ProtectedExpirableDataMessage received " + message + " on connection " + connection);
+                if (message instanceof AddDataMessage) {
+                    add(((AddDataMessage) message).data, connection.getPeerAddress());
+                } else if (message instanceof RemoveDataMessage) {
+                    remove(((RemoveDataMessage) message).data, connection.getPeerAddress());
+                } else if (message instanceof RemoveMailboxDataMessage) {
+                    removeMailboxData(((RemoveMailboxDataMessage) message).data, connection.getPeerAddress());
+                }
+            } else {
+                log.warn("Connection is not authenticated yet. We don't accept storage operations form non-authenticated nodes.");
+                log.warn("Connection = " + connection);
+                connection.reportIllegalRequest(IllegalRequest.NotAuthenticated);
+            }
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -119,11 +129,6 @@ public class ProtectedExpirableDataStorage {
             timer.cancel();
             peerGroup.shutDown();
         }
-    }
-
-    public void setAuthenticated() {
-        Log.traceCall();
-        this.authenticated = true;
     }
 
     public boolean add(ProtectedData protectedData, @Nullable Address sender) {
@@ -143,10 +148,10 @@ public class ProtectedExpirableDataStorage {
             log.trace("Data added to our map and it will be broadcasted to our peers.");
             hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedData));
 
-            StringBuilder sb = new StringBuilder("\n\n############################################################\n");
+            StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n");
             sb.append("Data set after addProtectedExpirableData:");
             map.values().stream().forEach(e -> sb.append("\n").append(e.toString()).append("\n"));
-            sb.append("\n############################################################\n");
+            sb.append("\n------------------------------------------------------------\n");
             log.info(sb.toString());
 
             if (!containsKey)
@@ -211,7 +216,6 @@ public class ProtectedExpirableDataStorage {
     }
 
     public Map<BigInteger, ProtectedData> getMap() {
-        //Log.traceCall();
         return map;
     }
 
@@ -252,11 +256,6 @@ public class ProtectedExpirableDataStorage {
         hashMapChangedListeners.add(hashMapChangedListener);
     }
 
-    private void addMessageListener(MessageListener messageListener) {
-        Log.traceCall();
-        peerGroup.addMessageListener(messageListener);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -268,11 +267,11 @@ public class ProtectedExpirableDataStorage {
         log.trace("Data removed from our map. We broadcast the message to our peers.");
         hashMapChangedListeners.stream().forEach(e -> e.onRemoved(protectedData));
 
-        StringBuilder sb = new StringBuilder("\n\n############################################################\n" +
+        StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n" +
                 "Data set after removeProtectedExpirableData:");
         map.values().stream().forEach(e -> sb.append("\n").append(e.toString()));
-        sb.append("\n############################################################\n");
-        log.trace(sb.toString());
+        sb.append("\n------------------------------------------------------------\n");
+        log.info(sb.toString());
     }
 
     private boolean isSequenceNrValid(ProtectedData data, BigInteger hashOfData) {
@@ -352,17 +351,12 @@ public class ProtectedExpirableDataStorage {
     }
 
     private void broadcast(BroadcastMessage message, @Nullable Address sender) {
-        Log.traceCall();
-        if (authenticated) {
-            peerGroup.broadcast(message, sender);
-            log.trace("Broadcast message " + message);
-        } else {
-            log.trace("Broadcast not allowed because we are not authenticated yet. That is normal after received AllDataMessage at startup.");
-        }
+        Log.traceCall(message.toString());
+        peerGroup.broadcast(message, sender);
     }
 
     private BigInteger getHashAsBigInteger(ExpirablePayload payload) {
-        //Log.traceCall();
         return new BigInteger(Hash.getHash(payload));
     }
+
 }

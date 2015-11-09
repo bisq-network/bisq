@@ -8,6 +8,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.ConnectionListener;
 import io.bitsquare.p2p.network.MessageListener;
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 // Run in UserThread
-public class PeerGroup {
+public class PeerGroup implements MessageListener, ConnectionListener {
     private static final Logger log = LoggerFactory.getLogger(PeerGroup.class);
 
     static int simulateAuthTorNode = 0;
@@ -70,46 +71,50 @@ public class PeerGroup {
         this.networkNode = networkNode;
         this.seedNodeAddresses = seeds;
 
-        init(networkNode);
-    }
-
-    private void init(NetworkNode networkNode) {
-        Log.traceCall();
-        networkNode.addMessageListener((message, connection) -> {
-            if (message instanceof MaintenanceMessage)
-                processMaintenanceMessage((MaintenanceMessage) message, connection);
-            else if (message instanceof AuthenticationRequest) {
-                processAuthenticationRequest(networkNode, (AuthenticationRequest) message, connection);
-            }
-        });
-
-        networkNode.addConnectionListener(new ConnectionListener() {
-            @Override
-            public void onConnection(Connection connection) {
-                Log.traceCall();
-            }
-
-            @Override
-            public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
-                Log.traceCall();
-            }
-
-            @Override
-            public void onDisconnect(Reason reason, Connection connection) {
-                Log.traceCall();
-                log.debug("onDisconnect connection=" + connection + " / reason=" + reason);
-                // only removes authenticated nodes
-                if (connection.isAuthenticated())
-                    removePeer(connection.getPeerAddress());
-            }
-
-            @Override
-            public void onError(Throwable throwable) {
-                Log.traceCall();
-            }
-        });
+        networkNode.addMessageListener(this);
+        networkNode.addConnectionListener(this);
 
         setupMaintenanceTimer();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // MessageListener implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onMessage(Message message, Connection connection) {
+        Log.traceCall();
+        if (message instanceof MaintenanceMessage)
+            processMaintenanceMessage((MaintenanceMessage) message, connection);
+        else if (message instanceof AuthenticationRequest) {
+            processAuthenticationRequest(networkNode, (AuthenticationRequest) message, connection);
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // ConnectionListener implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
+    }
+
+    @Override
+    public void onDisconnect(Reason reason, Connection connection) {
+        log.debug("onDisconnect connection=" + connection + " / reason=" + reason);
+        // only removes authenticated nodes
+        if (connection.isAuthenticated())
+            removePeer(connection.getPeerAddress());
+    }
+
+    @Override
+    public void onError(Throwable throwable) {
     }
 
 
@@ -122,6 +127,35 @@ public class PeerGroup {
         seedNodeAddresses.remove(mySeedNodeAddress);
     }
 
+    public void broadcast(BroadcastMessage message, @Nullable Address sender) {
+        Log.traceCall("Sender " + sender + ". Message " + message.toString());
+        if (authenticatedPeers.values().size() > 0) {
+            log.info("Broadcast message to {} peers. Message:", authenticatedPeers.values().size(), message);
+            // TODO add randomized timing?
+            authenticatedPeers.values().stream()
+                    .filter(e -> !e.address.equals(sender))
+                    .forEach(peer -> {
+                        log.trace("Broadcast message from " + getMyAddress() + " to " + peer.address + ".");
+                        SettableFuture<Connection> future = networkNode.sendMessage(peer.address, message);
+                        Futures.addCallback(future, new FutureCallback<Connection>() {
+                            @Override
+                            public void onSuccess(Connection connection) {
+                                log.trace("Broadcast from " + getMyAddress() + " to " + peer.address + " succeeded.");
+                            }
+
+                            @Override
+                            public void onFailure(@NotNull Throwable throwable) {
+                                log.info("Broadcast failed. " + throwable.getMessage());
+                                removePeer(peer.address);
+                            }
+                        });
+                    });
+        } else {
+            log.trace("Message {} not broadcasted because we are not authenticated yet. " +
+                    "That is expected at startup.", message);
+        }
+    }
+
     public void shutDown() {
         Log.traceCall();
         if (!shutDownInProgress) {
@@ -129,32 +163,6 @@ public class PeerGroup {
             if (sendPingTimer != null)
                 sendPingTimer.cancel();
         }
-    }
-
-    public void broadcast(BroadcastMessage message, @Nullable Address sender) {
-        Log.traceCall();
-        log.trace("Broadcast message to " + authenticatedPeers.values().size() + " peers.");
-        log.trace("message = " + message);
-
-        // TODO add randomized timing?
-        authenticatedPeers.values().stream()
-                .filter(e -> !e.address.equals(sender))
-                .forEach(peer -> {
-                    log.trace("Broadcast message from " + getMyAddress() + " to " + peer.address + ".");
-                    SettableFuture<Connection> future = networkNode.sendMessage(peer.address, message);
-                    Futures.addCallback(future, new FutureCallback<Connection>() {
-                        @Override
-                        public void onSuccess(Connection connection) {
-                            log.trace("Broadcast from " + getMyAddress() + " to " + peer.address + " succeeded.");
-                        }
-
-                        @Override
-                        public void onFailure(@NotNull Throwable throwable) {
-                            log.info("Broadcast failed. " + throwable.getMessage());
-                            removePeer(peer.address);
-                        }
-                    });
-                });
     }
 
 
@@ -536,16 +544,6 @@ public class PeerGroup {
     // Listeners
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addMessageListener(MessageListener messageListener) {
-        Log.traceCall();
-        networkNode.addMessageListener(messageListener);
-    }
-
-    public void removeMessageListener(MessageListener messageListener) {
-        Log.traceCall();
-        networkNode.removeMessageListener(messageListener);
-    }
-
     public void addPeerListener(PeerListener peerListener) {
         Log.traceCall();
         peerListeners.add(peerListener);
@@ -577,6 +575,10 @@ public class PeerGroup {
     public Set<Address> getSeedNodeAddresses() {
         Log.traceCall();
         return seedNodeAddresses;
+    }
+
+    public NetworkNode getNetworkNode() {
+        return networkNode;
     }
 
 
@@ -675,19 +677,20 @@ public class PeerGroup {
 
     public void printAuthenticatedPeers() {
         Log.traceCall();
-        StringBuilder result = new StringBuilder("\n\n############################################################\n" +
+        StringBuilder result = new StringBuilder("\n\n------------------------------------------------------------\n" +
                 "Authenticated peers for node " + getMyAddress() + ":");
         authenticatedPeers.values().stream().forEach(e -> result.append("\n").append(e.address));
-        result.append("\n############################################################\n");
+        result.append("\n------------------------------------------------------------\n");
         log.info(result.toString());
     }
 
     public void printReportedPeers() {
         Log.traceCall();
-        StringBuilder result = new StringBuilder("\n\n############################################################\n" +
+        StringBuilder result = new StringBuilder("\n\n------------------------------------------------------------\n" +
                 "Reported peers for node " + getMyAddress() + ":");
         reportedPeerAddresses.stream().forEach(e -> result.append("\n").append(e));
-        result.append("\n############################################################\n");
+        result.append("\n------------------------------------------------------------\n");
         log.info(result.toString());
     }
+
 }

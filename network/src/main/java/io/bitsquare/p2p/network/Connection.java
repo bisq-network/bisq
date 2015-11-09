@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
  * All handlers are called on User thread.
  * Shared data between InputHandler thread and that
  */
-public class Connection {
+public class Connection implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
     private static final int MAX_MSG_SIZE = 5 * 1024 * 1024;         // 5 MB of compressed data
     private static final int MAX_ILLEGAL_REQUESTS = 5;
@@ -40,10 +40,15 @@ public class Connection {
     private static final int SOCKET_TIMEOUT = 30 * 60 * 1000;        // 30 min.
     private InputHandler inputHandler;
     private volatile boolean isAuthenticated;
+    private String connectionId;
 
     public static int getMaxMsgSize() {
         return MAX_MSG_SIZE;
     }
+
+    private final Socket socket;
+    private final MessageListener messageListener;
+    private final ConnectionListener connectionListener;
 
     private final String portInfo;
     private final String uid;
@@ -72,19 +77,23 @@ public class Connection {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Connection(Socket socket, MessageListener messageListener, ConnectionListener connectionListener) {
+        this.socket = socket;
+        this.messageListener = messageListener;
+        this.connectionListener = connectionListener;
+
         Log.traceCall();
         uid = UUID.randomUUID().toString();
         if (socket.getLocalPort() == 0)
             portInfo = "port=" + socket.getPort();
         else
             portInfo = "localPort=" + socket.getLocalPort() + "/port=" + socket.getPort();
-        
-        init(socket, messageListener, connectionListener);
+
+        init();
     }
 
-    private void init(Socket socket, MessageListener messageListener, ConnectionListener connectionListener) {
+    private void init() {
         Log.traceCall();
-        sharedSpace = new SharedSpace(this, socket, messageListener, connectionListener, useCompression);
+        sharedSpace = new SharedSpace(this, socket);
         try {
             socket.setSoTimeout(SOCKET_TIMEOUT);
             // Need to access first the ObjectOutputStream otherwise the ObjectInputStream would block
@@ -97,7 +106,7 @@ public class Connection {
 
 
             // We create a thread for handling inputStream data
-            inputHandler = new InputHandler(sharedSpace, objectInputStream, portInfo);
+            inputHandler = new InputHandler(sharedSpace, objectInputStream, portInfo, this, useCompression);
             singleThreadExecutor.submit(inputHandler);
         } catch (IOException e) {
             sharedSpace.handleConnectionException(e);
@@ -117,11 +126,10 @@ public class Connection {
     // Called form UserThread
     public void setAuthenticated(Address peerAddress, Connection connection) {
         Log.traceCall();
-        synchronized (peerAddress) {
-            this.peerAddress = peerAddress;
-        }
+        this.peerAddress = peerAddress;
         isAuthenticated = true;
-        sharedSpace.getConnectionListener().onPeerAddressAuthenticated(peerAddress, connection);
+        if (!stopped)
+            connectionListener.onPeerAddressAuthenticated(peerAddress, connection);
     }
 
     // Called form various threads
@@ -178,6 +186,18 @@ public class Connection {
         this.peerAddress = peerAddress;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // MessageListener implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Only get non - CloseConnectionMessage messages
+    @Override
+    public void onMessage(Message message, Connection connection) {
+        // connection is null as we get called from InputHandler, which does not hold a reference to Connection
+        UserThread.execute(() -> messageListener.onMessage(message, this));
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -231,14 +251,14 @@ public class Connection {
     private void shutDown(boolean sendCloseConnectionMessage, @Nullable Runnable shutDownCompleteHandler) {
         Log.traceCall(this.toString());
         if (!stopped) {
-            log.info("\n\n############################################################\n" +
+            log.info("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                     "ShutDown connection:"
                     + "\npeerAddress=" + peerAddress
                     + "\nlocalPort/port=" + sharedSpace.getSocket().getLocalPort()
                     + "/" + sharedSpace.getSocket().getPort()
                     + "\nobjectId=" + objectId + " / uid=" + uid
                     + "\nisAuthenticated=" + isAuthenticated
-                    + "\n############################################################\n");
+                    + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 
             log.trace("ShutDown connection requested. Connection=" + this.toString());
 
@@ -275,7 +295,7 @@ public class Connection {
             shutDownReason = ConnectionListener.Reason.SHUT_DOWN;
         final ConnectionListener.Reason finalShutDownReason = shutDownReason;
         // keep UserThread.execute as its not clear if that is called from a non-UserThread
-        UserThread.execute(() -> sharedSpace.getConnectionListener().onDisconnect(finalShutDownReason, this));
+        UserThread.execute(() -> connectionListener.onDisconnect(finalShutDownReason, this));
 
         try {
             sharedSpace.getSocket().close();
@@ -289,6 +309,7 @@ public class Connection {
 
             log.debug("Connection shutdown complete " + this.toString());
             // keep UserThread.execute as its not clear if that is called from a non-UserThread
+
             if (shutDownCompleteHandler != null)
                 UserThread.execute(shutDownCompleteHandler);
         }
@@ -330,6 +351,11 @@ public class Connection {
                 '}';
     }
 
+    public String getConnectionId() {
+        return connectionId;
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // SharedSpace
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -343,9 +369,6 @@ public class Connection {
 
         private final Connection connection;
         private final Socket socket;
-        private final MessageListener messageListener;
-        private final ConnectionListener connectionListener;
-        private final boolean useCompression;
         private final ConcurrentHashMap<IllegalRequest, Integer> illegalRequests = new ConcurrentHashMap<>();
 
         // mutable
@@ -353,14 +376,10 @@ public class Connection {
         private volatile boolean stopped;
         private ConnectionListener.Reason shutDownReason;
 
-        public SharedSpace(Connection connection, Socket socket, MessageListener messageListener,
-                           ConnectionListener connectionListener, boolean useCompression) {
+        public SharedSpace(Connection connection, Socket socket) {
             Log.traceCall();
             this.connection = connection;
             this.socket = socket;
-            this.messageListener = messageListener;
-            this.connectionListener = connectionListener;
-            this.useCompression = useCompression;
         }
 
         public synchronized void updateLastActivityDate() {
@@ -387,7 +406,7 @@ public class Connection {
 
         public void handleConnectionException(Exception e) {
             Log.traceCall(e.toString());
-            log.warn("Exception might be expected: " + e.toString());
+            log.debug("Exception might be expected: " + e.toString());
             if (e instanceof SocketException) {
                 if (socket.isClosed())
                     shutDownReason = ConnectionListener.Reason.SOCKET_CLOSED;
@@ -409,34 +428,18 @@ public class Connection {
             }
         }
 
-        public void onMessage(Message message) {
-            //Log.traceCall();
-            UserThread.execute(() -> messageListener.onMessage(message, connection));
-        }
-
-        public boolean useCompression() {
-            //Log.traceCall();
-            return useCompression;
-        }
-
         public void shutDown(boolean sendCloseConnectionMessage) {
             Log.traceCall();
             connection.shutDown(sendCloseConnectionMessage);
         }
 
-        public synchronized ConnectionListener getConnectionListener() {
-            // Log.traceCall();
-            return connectionListener;
-        }
 
         public synchronized Socket getSocket() {
-            //Log.traceCall();
             return socket;
         }
 
         public String getConnectionId() {
-            //Log.traceCall();
-            return connection.objectId;
+            return connection.getConnectionId();
         }
 
         public void stop() {
@@ -445,7 +448,6 @@ public class Connection {
         }
 
         public synchronized ConnectionListener.Reason getShutDownReason() {
-            //Log.traceCall();
             return shutDownReason;
         }
 
@@ -453,12 +455,10 @@ public class Connection {
         public String toString() {
             return "SharedSpace{" +
                     ", socket=" + socket +
-                    ", useCompression=" + useCompression +
                     ", illegalRequests=" + illegalRequests +
                     ", lastActivityDate=" + lastActivityDate +
                     '}';
         }
-
     }
 
 
@@ -473,13 +473,18 @@ public class Connection {
         private final SharedSpace sharedSpace;
         private final ObjectInputStream objectInputStream;
         private final String portInfo;
+        private final MessageListener messageListener;
+        private final boolean useCompression;
+
         private volatile boolean stopped;
 
-        public InputHandler(SharedSpace sharedSpace, ObjectInputStream objectInputStream, String portInfo) {
+        public InputHandler(SharedSpace sharedSpace, ObjectInputStream objectInputStream, String portInfo, MessageListener messageListener, boolean useCompression) {
+            this.useCompression = useCompression;
             Log.traceCall();
             this.sharedSpace = sharedSpace;
             this.objectInputStream = objectInputStream;
             this.portInfo = portInfo;
+            this.messageListener = messageListener;
         }
 
         public void stop() {
@@ -502,7 +507,7 @@ public class Connection {
                         int size = ByteArrayUtils.objectToByteArray(rawInputObject).length;
                         if (size <= getMaxMsgSize()) {
                             Serializable serializable = null;
-                            if (sharedSpace.useCompression()) {
+                            if (useCompression) {
                                 if (rawInputObject instanceof byte[]) {
                                     byte[] compressedObjectAsBytes = (byte[]) rawInputObject;
                                     size = compressedObjectAsBytes.length;
@@ -529,7 +534,7 @@ public class Connection {
                                         stopped = true;
                                         sharedSpace.shutDown(false);
                                     } else if (!stopped) {
-                                        sharedSpace.onMessage(message);
+                                        messageListener.onMessage(message, null);
                                     }
                                 } else {
                                     sharedSpace.reportIllegalRequest(IllegalRequest.InvalidDataType);

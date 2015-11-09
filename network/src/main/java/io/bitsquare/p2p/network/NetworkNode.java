@@ -34,8 +34,9 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     protected final CopyOnWriteArraySet<SetupListener> setupListeners = new CopyOnWriteArraySet<>();
     protected ListeningExecutorService executorService;
     private Server server;
-    private volatile boolean shutDownInProgress;
+    private ConnectionListener startServerConnectionListener;
 
+    private volatile boolean shutDownInProgress;
     // accessed from different threads
     private final CopyOnWriteArraySet<Connection> outBoundConnections = new CopyOnWriteArraySet<>();
 
@@ -97,12 +98,12 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                     newConnection.setPeerAddress(peerAddress);
                     outBoundConnections.add(newConnection);
 
-                    log.info("\n\n############################################################\n" +
+                    log.info("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                             "NetworkNode created new outbound connection:"
                             + "\npeerAddress=" + peerAddress
                             + "\nconnection.uid=" + newConnection.getUid()
                             + "\nmessage=" + message
-                            + "\n############################################################\n");
+                            + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 
                     newConnection.sendMessage(message);
                     return newConnection; // can take a while when using tor
@@ -196,18 +197,8 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // ConnectionListener
+    // ConnectionListener implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void addConnectionListener(ConnectionListener connectionListener) {
-        Log.traceCall();
-        connectionListeners.add(connectionListener);
-    }
-
-    public void removeConnectionListener(ConnectionListener connectionListener) {
-        Log.traceCall();
-        connectionListeners.remove(connectionListener);
-    }
 
     @Override
     public void onConnection(Connection connection) {
@@ -241,8 +232,29 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // MessageListener
+    // MessageListener implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onMessage(Message message, Connection connection) {
+        Log.traceCall();
+        messageListeners.stream().forEach(e -> e.onMessage(message, connection));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Listeners
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addConnectionListener(ConnectionListener connectionListener) {
+        Log.traceCall();
+        connectionListeners.add(connectionListener);
+    }
+
+    public void removeConnectionListener(ConnectionListener connectionListener) {
+        Log.traceCall();
+        connectionListeners.remove(connectionListener);
+    }
 
     public void addMessageListener(MessageListener messageListener) {
         Log.traceCall();
@@ -252,12 +264,6 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     public void removeMessageListener(MessageListener messageListener) {
         Log.traceCall();
         messageListeners.remove(messageListener);
-    }
-
-    @Override
-    public void onMessage(Message message, Connection connection) {
-        Log.traceCall();
-        messageListeners.stream().forEach(e -> e.onMessage(message, connection));
     }
 
 
@@ -272,39 +278,40 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     protected void startServer(ServerSocket serverSocket) {
         Log.traceCall();
+        startServerConnectionListener = new ConnectionListener() {
+            @Override
+            public void onConnection(Connection connection) {
+                Log.traceCall();
+                // we still have not authenticated so put it to the temp list
+                inBoundConnections.add(connection);
+                NetworkNode.this.onConnection(connection);
+            }
+
+            @Override
+            public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
+                Log.traceCall();
+                NetworkNode.this.onPeerAddressAuthenticated(peerAddress, connection);
+            }
+
+            @Override
+            public void onDisconnect(Reason reason, Connection connection) {
+                Log.traceCall();
+                Address peerAddress = connection.getPeerAddress();
+                log.trace("onDisconnect at incoming connection to peerAddress (or connection) "
+                        + ((peerAddress == null) ? connection : peerAddress));
+                inBoundConnections.remove(connection);
+                NetworkNode.this.onDisconnect(reason, connection);
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                Log.traceCall();
+                NetworkNode.this.onError(throwable);
+            }
+        };
         server = new Server(serverSocket,
-                (message, connection) -> NetworkNode.this.onMessage(message, connection),
-                new ConnectionListener() {
-                    @Override
-                    public void onConnection(Connection connection) {
-                        Log.traceCall();
-                        // we still have not authenticated so put it to the temp list
-                        inBoundConnections.add(connection);
-                        NetworkNode.this.onConnection(connection);
-                    }
-
-                    @Override
-                    public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
-                        Log.traceCall();
-                        NetworkNode.this.onPeerAddressAuthenticated(peerAddress, connection);
-                    }
-
-                    @Override
-                    public void onDisconnect(Reason reason, Connection connection) {
-                        Log.traceCall();
-                        Address peerAddress = connection.getPeerAddress();
-                        log.trace("onDisconnect at incoming connection to peerAddress (or connection) "
-                                + ((peerAddress == null) ? connection : peerAddress));
-                        inBoundConnections.remove(connection);
-                        NetworkNode.this.onDisconnect(reason, connection);
-                    }
-
-                    @Override
-                    public void onError(Throwable throwable) {
-                        Log.traceCall();
-                        NetworkNode.this.onError(throwable);
-                    }
-                });
+                NetworkNode.this,
+                startServerConnectionListener);
         executorService.submit(server);
     }
 

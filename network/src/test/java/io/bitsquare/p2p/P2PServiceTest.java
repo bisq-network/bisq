@@ -282,7 +282,7 @@ public class P2PServiceTest {
         // send to online peer
         CountDownLatch latch2 = new CountDownLatch(2);
         MockMailboxMessage mockMessage = new MockMailboxMessage("MockMailboxMessage", p2PService2.getAddress());
-        p2PService2.addMessageListener((message, connection) -> {
+        p2PService2.getNetworkNode().addMessageListener((message, connection) -> {
             log.trace("message " + message);
             if (message instanceof SealedAndSignedMessage) {
                 try {

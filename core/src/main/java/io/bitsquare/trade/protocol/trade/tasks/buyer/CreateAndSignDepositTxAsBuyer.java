@@ -44,10 +44,10 @@ public class CreateAndSignDepositTxAsBuyer extends TradeTask {
             Coin buyerInputAmount = FeePolicy.SECURITY_DEPOSIT.add(FeePolicy.TX_FEE);
             Coin msOutputAmount = buyerInputAmount.add(FeePolicy.SECURITY_DEPOSIT).add(trade.getTradeAmount());
 
-            log.debug("getContractAsJson");
-            log.debug("----------");
-            log.debug(trade.getContractAsJson());
-            log.debug("----------");
+            log.info("\n\n------------------------------------------------------------\n"
+                    + "Contract as json\n"
+                    + trade.getContractAsJson()
+                    + "\n------------------------------------------------------------\n");
 
             byte[] contractHash = Hash.getHash(trade.getContractAsJson());
             trade.setContractHash(contractHash);

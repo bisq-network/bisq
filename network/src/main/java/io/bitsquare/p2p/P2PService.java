@@ -49,7 +49,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Represents our node in the P2P network
  */
-public class P2PService implements SetupListener {
+public class P2PService implements SetupListener, MessageListener, ConnectionListener, PeerListener {
     private static final Logger log = LoggerFactory.getLogger(P2PService.class);
 
     private final SeedNodesRepository seedNodesRepository;
@@ -126,94 +126,9 @@ public class P2PService implements SetupListener {
         dataStorage = new ProtectedExpirableDataStorage(peerGroup, storageDir);
 
 
-        networkNode.addConnectionListener(new ConnectionListener() {
-            @Override
-            public void onConnection(Connection connection) {
-                Log.traceCall();
-            }
-
-            @Override
-            public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
-                Log.traceCall();
-                checkArgument(peerAddress.equals(connection.getPeerAddress()),
-                        "peerAddress must match connection.getPeerAddress()");
-                authenticatedPeerAddresses.add(peerAddress);
-                authenticated.set(true);
-
-                dataStorage.setAuthenticated();
-                p2pServiceListeners.stream().forEach(e -> e.onFirstPeerAuthenticated());
-            }
-
-            @Override
-            public void onDisconnect(Reason reason, Connection connection) {
-                Log.traceCall();
-                if (connection.isAuthenticated())
-                    authenticatedPeerAddresses.remove(connection.getPeerAddress());
-            }
-
-            @Override
-            public void onError(Throwable throwable) {
-                Log.traceCall();
-                log.error("onError self/ConnectionException " + networkNode.getAddress() + "/" + throwable);
-            }
-        });
-
-        networkNode.addMessageListener((message, connection) -> {
-            Log.traceCall();
-            if (message instanceof GetDataRequest) {
-                log.trace("Received GetDataSetMessage: " + message);
-                networkNode.sendMessage(connection, new GetDataResponse(getDataSet()));
-            } else if (message instanceof GetDataResponse) {
-                GetDataResponse getDataResponse = (GetDataResponse) message;
-                HashSet<ProtectedData> set = getDataResponse.set;
-                if (!set.isEmpty()) {
-                    // we keep that connection open as the bootstrapping peer will use that for the authentication
-                    // as we are not authenticated yet the data adding will not be broadcasted 
-                    set.stream().forEach(e -> dataStorage.add(e, connection.getPeerAddress()));
-                } else {
-                    log.trace("Received DataSetMessage: Empty data set");
-                }
-                setRequestingDataCompleted();
-            } else if (message instanceof SealedAndSignedMessage) {
-                if (encryptionService != null) {
-                    try {
-                        SealedAndSignedMessage sealedAndSignedMessage = (SealedAndSignedMessage) message;
-                        DecryptedMsgWithPubKey decryptedMsgWithPubKey = encryptionService.decryptAndVerify(
-                                sealedAndSignedMessage.sealedAndSigned);
-                        decryptedMailListeners.stream().forEach(
-                                e -> e.onMailMessage(decryptedMsgWithPubKey, connection.getPeerAddress()));
-                    } catch (CryptoException e) {
-                        log.info("Decryption of SealedAndSignedMessage failed. " +
-                                "That is expected if the message is not intended for us.");
-                    }
-                }
-            }
-        });
-
-        peerGroup.addPeerListener(new PeerListener() {
-            @Override
-            public void onFirstAuthenticatePeer(Peer peer) {
-                Log.traceCall();
-                log.trace("onFirstAuthenticatePeer " + peer);
-                sendGetAllDataMessageAfterAuthentication(peer);
-
-            }
-
-            @Override
-            public void onPeerAdded(Peer peer) {
-                Log.traceCall();
-            }
-
-            @Override
-            public void onPeerRemoved(Address address) {
-                Log.traceCall();
-            }
-
-            @Override
-            public void onConnectionAuthenticated(Connection connection) {
-                Log.traceCall();
-            }
-        });
+        networkNode.addConnectionListener(this);
+        networkNode.addMessageListener(this);
+        peerGroup.addPeerListener(this);
 
         dataStorage.addHashMapChangedListener(new HashMapChangedListener() {
             @Override
@@ -242,6 +157,104 @@ public class P2PService implements SetupListener {
             if (newValue)
                 p2pServiceListeners.stream().forEach(e -> e.onRequestingDataCompleted());
         });
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // MessageListener implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onMessage(Message message, Connection connection) {
+        Log.traceCall();
+        if (message instanceof GetDataRequest) {
+            log.info("Received GetDataSetMessage: " + message);
+            networkNode.sendMessage(connection, new GetDataResponse(getDataSet()));
+        } else if (message instanceof GetDataResponse) {
+            GetDataResponse getDataResponse = (GetDataResponse) message;
+            log.info("Received GetDataResponse: " + message);
+            HashSet<ProtectedData> set = getDataResponse.set;
+            if (!set.isEmpty()) {
+                // we keep that connection open as the bootstrapping peer will use that for the authentication
+                // as we are not authenticated yet the data adding will not be broadcasted 
+                set.stream().forEach(e -> dataStorage.add(e, connection.getPeerAddress()));
+            } else {
+                log.trace("Received DataSetMessage: Empty data set");
+            }
+            setRequestingDataCompleted();
+        } else if (message instanceof SealedAndSignedMessage) {
+            if (encryptionService != null) {
+                try {
+                    SealedAndSignedMessage sealedAndSignedMessage = (SealedAndSignedMessage) message;
+                    DecryptedMsgWithPubKey decryptedMsgWithPubKey = encryptionService.decryptAndVerify(
+                            sealedAndSignedMessage.sealedAndSigned);
+                    log.info("Received SealedAndSignedMessage and decrypted it: " + decryptedMsgWithPubKey);
+                    decryptedMailListeners.stream().forEach(
+                            e -> e.onMailMessage(decryptedMsgWithPubKey, connection.getPeerAddress()));
+                } catch (CryptoException e) {
+                    log.info("Decryption of SealedAndSignedMessage failed. " +
+                            "That is expected if the message is not intended for us.");
+                }
+            }
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // ConnectionListener implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
+        Log.traceCall();
+        checkArgument(peerAddress.equals(connection.getPeerAddress()),
+                "peerAddress must match connection.getPeerAddress()");
+        authenticatedPeerAddresses.add(peerAddress);
+        authenticated.set(true);
+
+        p2pServiceListeners.stream().forEach(e -> e.onFirstPeerAuthenticated());
+    }
+
+    @Override
+    public void onDisconnect(Reason reason, Connection connection) {
+        Log.traceCall();
+        if (connection.isAuthenticated())
+            authenticatedPeerAddresses.remove(connection.getPeerAddress());
+    }
+
+    @Override
+    public void onError(Throwable throwable) {
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PeerListener implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onFirstAuthenticatePeer(Peer peer) {
+        Log.traceCall();
+        log.trace("onFirstAuthenticatePeer " + peer);
+        sendGetAllDataMessageAfterAuthentication(peer);
+
+    }
+
+    @Override
+    public void onPeerAdded(Peer peer) {
+        Log.traceCall();
+    }
+
+    @Override
+    public void onPeerRemoved(Address address) {
+        Log.traceCall();
+    }
+
+    @Override
+    public void onConnectionAuthenticated(Connection connection) {
+        Log.traceCall();
     }
 
 
@@ -578,16 +591,6 @@ public class P2PService implements SetupListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listeners
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void addMessageListener(MessageListener messageListener) {
-        Log.traceCall();
-        networkNode.addMessageListener(messageListener);
-    }
-
-    public void removeMessageListener(MessageListener messageListener) {
-        Log.traceCall();
-        networkNode.removeMessageListener(messageListener);
-    }
 
     public void addDecryptedMailListener(DecryptedMailListener listener) {
         Log.traceCall();
