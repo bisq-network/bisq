@@ -27,8 +27,8 @@ import java.util.function.Consumer;
 public class LocalhostNetworkNode extends NetworkNode {
     private static final Logger log = LoggerFactory.getLogger(LocalhostNetworkNode.class);
 
-    private static volatile int simulateTorDelayTorNode = 1 * 100;
-    private static volatile int simulateTorDelayHiddenService = 1 * 100;
+    private static volatile int simulateTorDelayTorNode = 2 * 1000;
+    private static volatile int simulateTorDelayHiddenService = 2 * 1000;
     private Address address;
 
     public static void setSimulateTorDelayTorNode(int simulateTorDelayTorNode) {
@@ -144,7 +144,7 @@ public class LocalhostNetworkNode extends NetworkNode {
                     Uninterruptibles.sleepUninterruptibly(simulateTorDelayHiddenService, TimeUnit.MILLISECONDS);
 
                 log.info("\n\n############################################################\n" +
-                        "Hidden service created [simulation]:" +
+                        "Hidden service published [simulation]:" +
                         "\nTook " + (System.currentTimeMillis() - ts) + " ms"
                         + "\n############################################################\n");
                 // as we are simulating we return null

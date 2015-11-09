@@ -77,8 +77,8 @@ public class ProtectedExpirableDataStorage implements MessageListener {
                                               Utilities.setThreadName("RemoveExpiredEntriesTimer");
                                               UserThread.execute(() -> removeExpiredEntries());
                                           } catch (Throwable t) {
-                                              t.printStackTrace();
                                               log.error("Executing task failed. " + t.getMessage());
+                                              t.printStackTrace();
                                           }
                                       }
                                   },

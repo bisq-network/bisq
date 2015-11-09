@@ -66,7 +66,6 @@ class BitsquareAppModule extends AppModule {
         bind(File.class).annotatedWith(named(KeyStorage.DIR_KEY)).toInstance(keyStorageDir);
 
         bind(BitsquareEnvironment.class).toInstance((BitsquareEnvironment) env);
-        bind(UpdateProcess.class).in(Singleton.class);
 
         // ordering is used for shut down sequence
         install(tradeModule());

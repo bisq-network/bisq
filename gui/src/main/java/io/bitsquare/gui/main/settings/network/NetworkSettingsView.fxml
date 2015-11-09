@@ -62,31 +62,20 @@
         </GridPane.margin>
     </TitledGroupBg>
 
-    <Label text="P2P network connection:" GridPane.rowIndex="3">
+    <Label text="My onion address:" GridPane.rowIndex="3">
         <GridPane.margin>
             <Insets top="50.0"/>
         </GridPane.margin>
     </Label>
-    <TextField fx:id="connectionType" GridPane.rowIndex="3" GridPane.columnIndex="1"
+    <TextField fx:id="onionAddress" GridPane.rowIndex="3" GridPane.columnIndex="1"
                mouseTransparent="true" focusTraversable="false">
         <GridPane.margin>
             <Insets top="50.0"/>
         </GridPane.margin>
     </TextField>
 
-    <Label text="Use UPnP:" GridPane.rowIndex="4"/>
-    <CheckBox fx:id="useUPnP" onAction="#onSelectUPnP" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
-
-    <Label text="P2P network connected peers:" GridPane.rowIndex="5"/>
-    <TextField fx:id="connectedPeersP2P" GridPane.rowIndex="5" GridPane.columnIndex="1"
-               mouseTransparent="true" focusTraversable="false"/>
-
-    <Label text="My external visible P2P network address:" GridPane.rowIndex="6"/>
-    <TextField fx:id="nodeAddress" GridPane.rowIndex="6" GridPane.columnIndex="1"
-               mouseTransparent="true" focusTraversable="false"/>
-
-    <Label text="P2P seed node addresses:" GridPane.rowIndex="7" GridPane.valignment="TOP"/>
-    <TextArea fx:id="seedNodeNodeAddress" GridPane.rowIndex="7" GridPane.columnIndex="1"
+    <Label text="Authenticated peers:" GridPane.rowIndex="5"/>
+    <TextArea fx:id="authenticatedPeersTextArea" GridPane.rowIndex="7" GridPane.columnIndex="1"
               mouseTransparent="true" focusTraversable="false"/>
 
     <columnConstraints>

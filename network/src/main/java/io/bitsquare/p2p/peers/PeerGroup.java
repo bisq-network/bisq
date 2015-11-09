@@ -185,8 +185,8 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                throwable.printStackTrace();
                 log.error("AuthenticationHandshake failed. " + throwable.getMessage());
+                throwable.printStackTrace();
                 removePeer(connection.getPeerAddress());
             }
         });
@@ -229,8 +229,8 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                throwable.printStackTrace();
                 log.error("AuthenticationHandshake failed. " + throwable.getMessage());
+                throwable.printStackTrace();
                 removePeer(peerAddress);
 
                 // If we fail we try again with the remaining set
@@ -291,8 +291,8 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                throwable.printStackTrace();
                 log.error("AuthenticationHandshake failed. " + throwable.getMessage());
+                throwable.printStackTrace();
                 removePeer(peerAddress);
 
                 log.info("Authentication failed. Lets try again with the remaining reported peer addresses.");
@@ -338,8 +338,8 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                throwable.printStackTrace();
                 log.error("AuthenticationHandshake failed. " + throwable.getMessage());
+                throwable.printStackTrace();
                 removePeer(peerAddress);
                 if (faultHandler != null)
                     faultHandler.run();
@@ -394,8 +394,8 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                         pingPeers();
                     });
                 } catch (Throwable t) {
-                    t.printStackTrace();
                     log.error("Executing task failed. " + t.getMessage());
+                    t.printStackTrace();
                 }
             }
         }, SEND_PING_INTERVAL, SEND_PING_INTERVAL);
@@ -407,8 +407,8 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                 try {
                     UserThread.execute(() -> trySendGetPeersRequest());
                 } catch (Throwable t) {
-                    t.printStackTrace();
                     log.error("Executing task failed. " + t.getMessage());
+                    t.printStackTrace();
                 }
             }
         }, GET_PEERS_INTERVAL, GET_PEERS_INTERVAL);

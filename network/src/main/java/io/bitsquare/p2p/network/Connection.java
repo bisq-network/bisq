@@ -5,7 +5,6 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.ByteArrayUtils;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.Utils;
@@ -19,13 +18,8 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Connection is created by the server thread or by sendMessage from NetworkNode.
@@ -137,16 +131,6 @@ public class Connection implements MessageListener {
         Log.traceCall();
         if (!stopped) {
             try {
-                Timer timeoutTimer = new Timer();
-                timeoutTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        Utilities.setThreadName("SendMessageTimerTask");
-                        throw new RuntimeException("Timeout occurred: Send message " + message
-                                + " on connection with port " + portInfo + " failed.");
-                    }
-                }, SEND_MESSAGE_TIMEOUT);
-
                 log.info("writeObject " + message + " on connection with port " + portInfo);
                 Object objectToWrite;
                 if (useCompression) {
@@ -166,7 +150,6 @@ public class Connection implements MessageListener {
                     }
                     sharedSpace.updateLastActivityDate();
                 }
-                timeoutTimer.cancel();
             } catch (IOException e) {
                 // an exception lead to a shutdown
                 sharedSpace.handleConnectionException(e);
@@ -271,8 +254,8 @@ public class Connection implements MessageListener {
                         // TODO increase delay
                         Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
                     } catch (Throwable t) {
-                        t.printStackTrace();
                         log.error(t.getMessage());
+                        t.printStackTrace();
                     } finally {
                         UserThread.execute(() -> continueShutDown(shutDownCompleteHandler));
                     }
@@ -302,8 +285,8 @@ public class Connection implements MessageListener {
         } catch (SocketException e) {
             log.trace("SocketException at shutdown might be expected " + e.getMessage());
         } catch (IOException e) {
-            e.printStackTrace();
             log.error("Exception at shutdown. " + e.getMessage());
+            e.printStackTrace();
         } finally {
             MoreExecutors.shutdownAndAwaitTermination(singleThreadExecutor, 500, TimeUnit.MILLISECONDS);
 
@@ -412,7 +395,7 @@ public class Connection implements MessageListener {
                     shutDownReason = ConnectionListener.Reason.SOCKET_CLOSED;
                 else
                     shutDownReason = ConnectionListener.Reason.RESET;
-            } else if (e instanceof SocketTimeoutException) {
+            } else if (e instanceof SocketTimeoutException || e instanceof TimeoutException) {
                 shutDownReason = ConnectionListener.Reason.TIMEOUT;
             } else if (e instanceof EOFException) {
                 shutDownReason = ConnectionListener.Reason.PEER_DISCONNECTED;

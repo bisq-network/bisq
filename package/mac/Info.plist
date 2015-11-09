@@ -44,7 +44,7 @@
         <key>JVMAppClasspath</key>
         <string></string>
         <key>JVMMainJarName</key>
-        <string>1.jar</string>
+        <string>2.jar</string>
         <key>JVMPreferencesID</key>
         <string>bitsquare</string>
         <key>JVMOptions</key>

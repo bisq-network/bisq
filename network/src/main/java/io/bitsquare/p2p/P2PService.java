@@ -28,7 +28,9 @@ import io.bitsquare.p2p.storage.data.ProtectedMailboxData;
 import io.bitsquare.p2p.storage.messages.GetDataRequest;
 import io.bitsquare.p2p.storage.messages.GetDataResponse;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 import org.jetbrains.annotations.NotNull;
@@ -60,7 +62,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final EncryptionService encryptionService;
     private final KeyRing keyRing;
     private final File storageDir;
-    private final NetworkStatistics networkStatistics;
 
     private NetworkNode networkNode;
     private PeerGroup peerGroup;
@@ -78,6 +79,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final BooleanProperty requestingDataCompleted = new SimpleBooleanProperty();
     private final BooleanProperty authenticated = new SimpleBooleanProperty();
     private MonadicBinding<Boolean> readyForAuthentication;
+    public final IntegerProperty numAuthenticatedPeers = new SimpleIntegerProperty(0);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -101,8 +103,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         this.keyRing = keyRing;
         this.storageDir = storageDir;
 
-        networkStatistics = new NetworkStatistics();
-
         init();
     }
 
@@ -120,7 +120,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         // peer group 
         peerGroup = new PeerGroup(networkNode, seedNodeAddresses);
-        if (useLocalhost) PeerGroup.setSimulateAuthTorNode(1 * 1000);
+        if (useLocalhost) PeerGroup.setSimulateAuthTorNode(2 * 1000);
 
         // storage 
         dataStorage = new ProtectedExpirableDataStorage(peerGroup, storageDir);
@@ -216,6 +216,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         authenticated.set(true);
 
         p2pServiceListeners.stream().forEach(e -> e.onFirstPeerAuthenticated());
+
+        numAuthenticatedPeers.set(authenticatedPeerAddresses.size());
     }
 
     @Override
@@ -223,6 +225,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         Log.traceCall();
         if (connection.isAuthenticated())
             authenticatedPeerAddresses.remove(connection.getPeerAddress());
+
+        numAuthenticatedPeers.set(authenticatedPeerAddresses.size());
     }
 
     @Override
@@ -506,8 +510,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                     }
                 });
             } catch (CryptoException e) {
-                e.printStackTrace();
                 log.error("sendEncryptedMessage failed");
+                e.printStackTrace();
                 sendMailboxMessageListener.onFault();
             }
         }
@@ -652,9 +656,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         return networkNode.getAddress();
     }
 
-    public NetworkStatistics getNetworkStatistics() {
-        Log.traceCall();
-        return networkStatistics;
+    public Set<Address> getAuthenticatedPeerAddresses() {
+        return authenticatedPeerAddresses;
     }
 
 

@@ -1,21 +1,21 @@
 #!/bin/bash
 
 cd ../../
+mkdir gui/deploy
 
 set -e
 
 # Extract the version numbers. 
-majorVersion=$( sed -n 's/^.*final int MAJOR_VERSION = //p' core/src/main/java/io/bitsquare/app/Version.java )
-minorVersion=$( sed -n 's/^.*final int MINOR_VERSION = //p' core/src/main/java/io/bitsquare/app/Version.java )
-# PatchVersion is used for ever increasing integer at UpdateFX. fullVersion contains major and minor version + patchVersion 
-patchVersion=$( sed -n 's/^.*final int PATCH_VERSION = //p' core/src/main/java/io/bitsquare/app/Version.java )
+majorVersion=$( sed -n 's/^.*final int MAJOR_VERSION = //p' common/src/main/java/io/bitsquare/app/Version.java )
+minorVersion=$( sed -n 's/^.*final int MINOR_VERSION = //p' common/src/main/java/io/bitsquare/app/Version.java )
+patchVersion=$( sed -n 's/^.*final int PATCH_VERSION = //p' common/src/main/java/io/bitsquare/app/Version.java )
 
 # remove trailing;
 majorVersion="${majorVersion:0:${#majorVersion}-1}"
 minorVersion="${minorVersion:0:${#minorVersion}-1}"
 patchVersion="${patchVersion:0:${#patchVersion}-1}"
 
-fullVersion=$( sed -n 's/^.*final String VERSION = "//p' core/src/main/java/io/bitsquare/app/Version.java )
+fullVersion=$( sed -n 's/^.*final String VERSION = "//p' common/src/main/java/io/bitsquare/app/Version.java )
 # remove trailing ";
 fullVersion=$majorVersion.$minorVersion.$patchVersion
 
@@ -29,9 +29,7 @@ sed "s|JAR_NAME_STRING_GOES_HERE|$patchVersion.jar|" package/mac/Info.template.p
 
 
 mvn clean package -DskipTests -Dmaven.javadoc.skip=true
-cp gui/target/shaded.jar gui/updatefx/builds/$patchVersion.jar
-
-java -jar ./updatefx/updatefx-app-1.3-SNAPSHOT.jar --url=http://bitsquare.io/updateFX/v03 gui/updatefx
+cp gui/target/shaded.jar gui/deploy/Bitsquare.jar
 
 $JAVA_HOME/bin/javapackager \
     -deploy \
@@ -45,7 +43,7 @@ $JAVA_HOME/bin/javapackager \
     -title Bitsquare \
     -vendor Bitsquare \
     -outdir gui/deploy \
-    -srcfiles gui/updatefx/builds/processed/$patchVersion.jar \
+    -srcfiles gui/target/shaded.jar \
     -appclass io.bitsquare.app.BitsquareAppMain \
     -outfile Bitsquare \
     -BjvmProperties=-Djava.net.preferIPv4Stack=true

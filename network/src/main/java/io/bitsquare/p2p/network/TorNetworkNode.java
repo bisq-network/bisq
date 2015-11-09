@@ -149,8 +149,8 @@ public class TorNetworkNode extends NetworkNode {
                 });
             } catch (Throwable e) {
                 UserThread.execute(() -> {
-                    e.printStackTrace();
                     log.error("Shutdown torNode failed with exception: " + e.getMessage());
+                    e.printStackTrace();
                     // We want to switch to UserThread
                     shutDownExecutorService();
                 });
@@ -175,8 +175,8 @@ public class TorNetworkNode extends NetworkNode {
                 log.info("Shutdown completed");
                 shutDownCompleteHandler.run();
             } catch (Throwable t) {
-                t.printStackTrace();
                 log.error("Shutdown executorService failed with exception: " + t.getMessage());
+                t.printStackTrace();
                 shutDownCompleteHandler.run();
             }
         }).start();

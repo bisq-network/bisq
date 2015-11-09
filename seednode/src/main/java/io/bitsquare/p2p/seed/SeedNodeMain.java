@@ -51,8 +51,8 @@ public class SeedNodeMain {
                 seedNode.processArgs(args);
                 seedNode.createAndStartP2PService();
             } catch (Throwable t) {
-                t.printStackTrace();
                 log.error("Executing task failed. " + t.getMessage());
+                t.printStackTrace();
             }
         });
         listenForExitCommand();

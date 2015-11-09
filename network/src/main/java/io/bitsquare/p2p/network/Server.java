@@ -61,8 +61,8 @@ class Server implements Runnable {
                     e.printStackTrace();
             }
         } catch (Throwable t) {
-            t.printStackTrace();
             log.error("Executing task failed. " + t.getMessage());
+            t.printStackTrace();
         }
     }
 
@@ -78,8 +78,8 @@ class Server implements Runnable {
             } catch (SocketException e) {
                 log.warn("SocketException at shutdown might be expected " + e.getMessage());
             } catch (IOException e) {
-                e.printStackTrace();
                 log.error("Exception at shutdown. " + e.getMessage());
+                e.printStackTrace();
             } finally {
                 log.info("Server shutdown complete");
             }

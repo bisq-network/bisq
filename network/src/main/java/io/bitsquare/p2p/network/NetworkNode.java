@@ -26,6 +26,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public abstract class NetworkNode implements MessageListener, ConnectionListener {
     private static final Logger log = LoggerFactory.getLogger(NetworkNode.class);
 
+    private static final int CREATE_SOCKET_TIMEOUT = 1 * 1000;        // 10 sec.
+
     protected final int servicePort;
 
     private final CopyOnWriteArraySet<Connection> inBoundConnections = new CopyOnWriteArraySet<>();

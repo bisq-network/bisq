@@ -20,7 +20,6 @@ package io.bitsquare.gui.main;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.components.SystemNotification;
@@ -79,19 +78,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private final String title;
     private ChangeListener<String> walletServiceErrorMsgListener;
     private ChangeListener<String> blockchainSyncIconIdListener;
-    private ChangeListener<String> bootstrapErrorMsgListener;
-    private ChangeListener<String> bootstrapIconIdListener;
-    private ChangeListener<Number> bootstrapProgressListener;
-    private ChangeListener<String> updateIconIdListener;
-    private Button restartButton;
-    private Button downloadButton;
-    private ProgressIndicator bootstrapIndicator;
-    private Label bootstrapStateLabel;
+    private ChangeListener<String> splashP2PNetworkErrorMsgListener;
+    private ChangeListener<String> splashP2PNetworkIconIdListener;
+    private ChangeListener<Number> splashP2PNetworkProgressListener;
+    private ProgressIndicator splashP2PNetworkIndicator;
+    private Label splashP2PNetworkLabel;
     private ProgressBar blockchainSyncIndicator;
     private Label blockchainSyncLabel;
-    private Label updateInfoLabel;
     private List<String> persistedFilesCorrupted;
-    private Tooltip downloadButtonTooltip;
     private static BorderPane baseApplicationContainer;
 
     @Inject
@@ -269,116 +263,68 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 blockchainSyncIcon, bitcoinNetworkLabel);
 
 
-        // createP2PNetworkBox
-        bootstrapStateLabel = new Label();
-        bootstrapStateLabel.setWrapText(true);
-        bootstrapStateLabel.setMaxWidth(500);
-        bootstrapStateLabel.setTextAlignment(TextAlignment.CENTER);
-        bootstrapStateLabel.textProperty().bind(model.bootstrapInfo);
+        // create P2PNetworkBox
+        splashP2PNetworkLabel = new Label();
+        splashP2PNetworkLabel.setWrapText(true);
+        splashP2PNetworkLabel.setMaxWidth(500);
+        splashP2PNetworkLabel.setTextAlignment(TextAlignment.CENTER);
+        splashP2PNetworkLabel.textProperty().bind(model.splashP2PNetworkInfo);
 
-        bootstrapIndicator = new ProgressIndicator();
-        bootstrapIndicator.setMaxSize(24, 24);
-        bootstrapIndicator.progressProperty().bind(model.bootstrapProgress);
+        splashP2PNetworkIndicator = new ProgressIndicator();
+        splashP2PNetworkIndicator.setMaxSize(24, 24);
+        splashP2PNetworkIndicator.progressProperty().bind(model.splashP2PNetworkProgress);
 
-        bootstrapErrorMsgListener = (ov, oldValue, newValue) -> {
-            bootstrapStateLabel.setId("splash-error-state-msg");
-            bootstrapIndicator.setVisible(false);
+        splashP2PNetworkErrorMsgListener = (ov, oldValue, newValue) -> {
+            splashP2PNetworkLabel.setId("splash-error-state-msg");
+            splashP2PNetworkIndicator.setVisible(false);
         };
-        model.bootstrapErrorMsg.addListener(bootstrapErrorMsgListener);
+        model.p2PNetworkErrorMsg.addListener(splashP2PNetworkErrorMsgListener);
 
-        ImageView bootstrapIcon = new ImageView();
-        bootstrapIcon.setVisible(false);
-        bootstrapIcon.setManaged(false);
 
-        bootstrapIconIdListener = (ov, oldValue, newValue) -> {
-            bootstrapIcon.setId(newValue);
-            bootstrapIcon.setVisible(true);
-            bootstrapIcon.setManaged(true);
+        ImageView splashP2PNetworkIcon = new ImageView();
+        splashP2PNetworkIcon.setId("image-connection-tor");
+        splashP2PNetworkIcon.setVisible(false);
+        splashP2PNetworkIcon.setManaged(false);
+        HBox.setMargin(splashP2PNetworkIcon, new Insets(0, 0, 5, 0));
+
+        splashP2PNetworkIconIdListener = (ov, oldValue, newValue) -> {
+            splashP2PNetworkIcon.setId(newValue);
+            splashP2PNetworkIcon.setVisible(true);
+            splashP2PNetworkIcon.setManaged(true);
         };
-        model.bootstrapIconId.addListener(bootstrapIconIdListener);
+        model.p2PNetworkIconId.addListener(splashP2PNetworkIconIdListener);
 
-        bootstrapProgressListener = (ov, oldValue, newValue) -> {
+        splashP2PNetworkProgressListener = (ov, oldValue, newValue) -> {
             if ((double) newValue >= 1) {
-                bootstrapIndicator.setVisible(false);
-                bootstrapIndicator.setManaged(false);
+                splashP2PNetworkIndicator.setVisible(false);
+                splashP2PNetworkIndicator.setManaged(false);
             }
         };
-        model.bootstrapProgress.addListener(bootstrapProgressListener);
+        model.splashP2PNetworkProgress.addListener(splashP2PNetworkProgressListener);
 
-        HBox bootstrapBox = new HBox();
-        bootstrapBox.setSpacing(10);
-        bootstrapBox.setAlignment(Pos.CENTER);
-        bootstrapBox.setPrefHeight(50);
-        bootstrapBox.getChildren().addAll(bootstrapStateLabel, bootstrapIndicator, bootstrapIcon);
+        HBox splashP2PNetworkBox = new HBox();
+        splashP2PNetworkBox.setSpacing(10);
+        splashP2PNetworkBox.setAlignment(Pos.CENTER);
+        splashP2PNetworkBox.setPrefHeight(50);
+        splashP2PNetworkBox.getChildren().addAll(splashP2PNetworkLabel, splashP2PNetworkIndicator, splashP2PNetworkIcon);
 
-
-        // createUpdateBox
-        updateInfoLabel = new Label();
-        updateInfoLabel.setTextAlignment(TextAlignment.RIGHT);
-        updateInfoLabel.textProperty().bind(model.updateInfo);
-
-        restartButton = new Button("Restart");
-        restartButton.setDefaultButton(true);
-        restartButton.visibleProperty().bind(model.showRestartButton);
-        restartButton.managedProperty().bind(model.showRestartButton);
-        restartButton.setOnAction(e -> model.restart());
-
-        downloadButton = new Button("Download");
-        downloadButton.setDefaultButton(true);
-        downloadButton.visibleProperty().bind(model.showDownloadButton);
-        downloadButton.managedProperty().bind(model.showDownloadButton);
-        downloadButtonTooltip = new Tooltip();
-        downloadButtonTooltip.textProperty().bind(model.newReleaseUrl);
-        downloadButton.setTooltip(downloadButtonTooltip);
-        downloadButton.setOnAction(e -> {
-            try {
-                Utilities.openWebPage(model.newReleaseUrl.get());
-            } catch (Exception e1) {
-                e1.printStackTrace();
-                log.error(e1.getMessage());
-            }
-        });
-
-        ImageView updateIcon = new ImageView();
-        String id = model.updateIconId.get();
-        if (id != null && !id.equals(""))
-            updateIcon.setId(id);
-
-        updateIconIdListener = (ov, oldValue, newValue) -> {
-            updateIcon.setId(newValue);
-            updateIcon.setVisible(true);
-            updateIcon.setManaged(true);
-        };
-        model.updateIconId.addListener(updateIconIdListener);
-
-        HBox updateBox = new HBox();
-        updateBox.setSpacing(10);
-        updateBox.setAlignment(Pos.CENTER);
-        updateBox.setPrefHeight(20);
-        updateBox.getChildren().addAll(updateInfoLabel, restartButton, downloadButton, updateIcon);
-
-        vBox.getChildren().addAll(logo, blockchainSyncBox, bootstrapBox, updateBox);
+        vBox.getChildren().addAll(logo, blockchainSyncBox, splashP2PNetworkBox);
         return vBox;
     }
 
     private void disposeSplashScreen() {
         model.walletServiceErrorMsg.removeListener(walletServiceErrorMsgListener);
         model.blockchainSyncIconId.removeListener(blockchainSyncIconIdListener);
-        model.bootstrapErrorMsg.removeListener(bootstrapErrorMsgListener);
-        model.bootstrapIconId.removeListener(bootstrapIconIdListener);
-        model.bootstrapProgress.removeListener(bootstrapProgressListener);
-        model.updateIconId.removeListener(updateIconIdListener);
+
+        model.p2PNetworkErrorMsg.removeListener(splashP2PNetworkErrorMsgListener);
+        model.p2PNetworkIconId.removeListener(splashP2PNetworkIconIdListener);
+        model.splashP2PNetworkProgress.removeListener(splashP2PNetworkProgressListener);
 
         blockchainSyncLabel.textProperty().unbind();
         blockchainSyncIndicator.progressProperty().unbind();
-        bootstrapStateLabel.textProperty().unbind();
-        bootstrapIndicator.progressProperty().unbind();
-        updateInfoLabel.textProperty().unbind();
-        restartButton.visibleProperty().unbind();
-        restartButton.managedProperty().unbind();
-        downloadButton.visibleProperty().unbind();
-        downloadButton.managedProperty().unbind();
-        downloadButtonTooltip.textProperty().unbind();
+
+        splashP2PNetworkLabel.textProperty().unbind();
+        splashP2PNetworkIndicator.progressProperty().unbind();
 
         model.onSplashScreenRemoved();
     }
@@ -446,37 +392,31 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         setBottomAnchor(versionLabel, 7d);
 
 
-        // P2P
-        Label bootstrapLabel = new Label();
-        bootstrapLabel.setId("footer-pane");
-        setRightAnchor(bootstrapLabel, 100d);
-        setBottomAnchor(bootstrapLabel, 7d);
-        bootstrapLabel.textProperty().bind(model.p2pNetworkInfoFooter);
+        // P2P Network
+        Label p2PNetworkLabel = new Label();
+        p2PNetworkLabel.setId("footer-pane");
+        setRightAnchor(p2PNetworkLabel, 33d);
+        setBottomAnchor(p2PNetworkLabel, 7d);
+        p2PNetworkLabel.textProperty().bind(model.p2PNetworkInfo);
 
-        ImageView bootstrapIcon = new ImageView();
-        setRightAnchor(bootstrapIcon, 60d);
-        setBottomAnchor(bootstrapIcon, 9d);
-        bootstrapIcon.idProperty().bind(model.bootstrapIconId);
+        ImageView p2PNetworkIcon = new ImageView();
+        setRightAnchor(p2PNetworkIcon, 10d);
+        setBottomAnchor(p2PNetworkIcon, 7d);
+        p2PNetworkIcon.idProperty().bind(model.p2PNetworkIconId);
 
-        Label numPeersLabel = new Label();
-        numPeersLabel.setId("footer-num-peers");
-        setRightAnchor(numPeersLabel, 10d);
-        setBottomAnchor(numPeersLabel, 7d);
-        numPeersLabel.textProperty().bind(model.numP2PNetworkPeers);
-        model.bootstrapErrorMsg.addListener((ov, oldValue, newValue) -> {
+        model.p2PNetworkErrorMsg.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                bootstrapLabel.setId("splash-error-state-msg");
-                bootstrapLabel.textProperty().unbind();
-                bootstrapLabel.setText("Not connected");
+                p2PNetworkLabel.setId("splash-error-state-msg");
+                p2PNetworkLabel.textProperty().unbind();
                 new Popup().error("Connecting to the P2P network failed. \n" + newValue
                         + "\nPlease check your internet connection.").show();
             } else {
-                bootstrapLabel.setId("footer-pane");
-                bootstrapLabel.textProperty().bind(model.p2pNetworkInfoFooter);
+                p2PNetworkLabel.setId("footer-pane");
+                p2PNetworkLabel.textProperty().bind(model.p2PNetworkInfo);
             }
         });
 
-        AnchorPane footerContainer = new AnchorPane(separator, blockchainSyncBox, versionLabel, bootstrapLabel, bootstrapIcon, numPeersLabel) {{
+        AnchorPane footerContainer = new AnchorPane(separator, blockchainSyncBox, versionLabel, p2PNetworkLabel, p2PNetworkIcon) {{
             setId("footer-pane");
             setMinHeight(30);
             setMaxHeight(30);

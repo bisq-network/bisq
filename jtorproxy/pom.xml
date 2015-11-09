@@ -15,13 +15,14 @@
         <dependency>
             <groupId>io.bitsquare</groupId>
             <artifactId>jsocks</artifactId>
-            <version>0.3.2-SNAPSHOT</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>io.bitsquare</groupId>
             <artifactId>jtorctl</artifactId>
-            <version>0.3.2-SNAPSHOT</version>
+            <version>${project.parent.version}</version>
         </dependency>
+
     </dependencies>
     <build>
         <plugins>

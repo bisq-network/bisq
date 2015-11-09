@@ -129,6 +129,10 @@
 }
 
 /* connection state*/
+#image-connection-tor {
+    -fx-image: url("../../../images/connection/tor.png");
+}
+
 #image-connection-direct {
     -fx-image: url("../../../images/connection/direct.png");
 }

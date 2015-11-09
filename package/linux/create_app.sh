@@ -1,6 +1,7 @@
 #!/bin/bash
 
 cd ../../
+mkdir gui/deploy
 
 set -e
 
@@ -22,7 +23,7 @@ $JAVA_HOME/bin/javapackager \
     -title Bitsquare \
     -vendor Bitsquare \
     -outdir gui/deploy \
-    -srcfiles gui/updatefx/builds/processed/1.jar \
+    -srcfiles gui/deploy/Bitsquare.jar \
     -srcfiles package/linux/LICENSE \
     -appclass io.bitsquare.app.BitsquareAppMain \
     -outfile Bitsquare

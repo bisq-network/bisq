@@ -35,6 +35,7 @@ public class ProtectedMailboxData extends ProtectedData {
             date = new Date();
 
         } catch (Throwable t) {
+            log.error("Exception at readObject: " + t.getMessage());
             t.printStackTrace();
         }
     }

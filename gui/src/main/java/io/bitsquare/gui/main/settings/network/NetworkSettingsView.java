@@ -21,50 +21,60 @@ import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.gui.common.model.Activatable;
+import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.common.view.InitializableView;
 import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.P2PService;
+import io.bitsquare.p2p.P2PServiceListener;
+import io.bitsquare.p2p.network.TorNetworkNode;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import io.bitsquare.user.Preferences;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
 
 import javax.inject.Inject;
+import java.util.Set;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 @FxmlView
-public class NetworkSettingsView extends InitializableView {
+public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activatable> {
 
     private final String bitcoinNetworkString;
     private final WalletService walletService;
-    private final SeedNodesRepository bootstrapNodes;
     private final Preferences preferences;
     private final P2PService p2PService;
 
     @FXML
-    TextField bitcoinNetwork, connectionType, nodeAddress, connectedPeersBTC, connectedPeersP2P;
-    @FXML
-    CheckBox useUPnP;
+    TextField bitcoinNetwork, onionAddress, connectedPeersBTC;
     @FXML
     ComboBox<BitcoinNetwork> netWorkComboBox;
     @FXML
-    TextArea seedNodeNodeAddress;
+    TextArea authenticatedPeersTextArea;
+    private P2PServiceListener p2PServiceListener;
+    private ChangeListener<Number> numAuthenticatedPeersChangeListener;
+    private Set<Address> seedNodeAddresses;
 
     @Inject
-    public NetworkSettingsView(WalletService walletService, P2PService p2PService, SeedNodesRepository bootstrapNodes, Preferences preferences, BSFormatter
+    public NetworkSettingsView(WalletService walletService, P2PService p2PService, SeedNodesRepository seedNodesRepository, Preferences preferences, BSFormatter
             formatter) {
         this.walletService = walletService;
-        this.bootstrapNodes = bootstrapNodes;
         this.preferences = preferences;
         this.bitcoinNetworkString = formatter.formatBitcoinNetwork(preferences.getBitcoinNetwork());
         this.p2PService = p2PService;
+
+        if (p2PService.getNetworkNode() instanceof TorNetworkNode)
+            this.seedNodeAddresses = seedNodesRepository.getTorSeedNodeAddresses();
+        else
+            this.seedNodeAddresses = seedNodesRepository.getLocalhostSeedNodeAddresses();
     }
 
     public void initialize() {
@@ -72,29 +82,64 @@ public class NetworkSettingsView extends InitializableView {
         connectedPeersBTC.textProperty().bind(createStringBinding(() -> String.valueOf(walletService.numPeersProperty().get()), walletService
                 .numPeersProperty()));
 
-       /* if (networkService.getNetworkInfo() instanceof TomP2PNetworkInfo) {
-            TomP2PNetworkInfo networkInfo = (TomP2PNetworkInfo) networkService.getNetworkInfo();
-            connectionType.setText(networkInfo.getConnectionType().toString());
-            connectedPeersP2P.textProperty().bind(createStringBinding(() -> String.valueOf(networkInfo.numPeersProperty().get()), networkInfo.numPeersProperty()));
-            nodeAddress.setText(networkInfo.getClientNodeInfo());
-        }*/
-
-        /*List<NodeSpec> bootstrapNodeSpecs = bootstrapNodes.getBootstrapNodes();
-        String bootstrapNodesText = bootstrapNodeSpecs.stream().map(e -> e.toString() + "\n").collect(Collectors.toList()).toString()
-                .replace(", ", "").replace("[", "").replace("\n]", "");
-        bootstrapNodeAddress.setPrefRowCount(bootstrapNodeSpecs.size());
-        bootstrapNodeAddress.setText(bootstrapNodesText);*/
-
-        useUPnP.setSelected(preferences.getUseUPnP());
-
         netWorkComboBox.setItems(FXCollections.observableArrayList(BitcoinNetwork.values()));
         netWorkComboBox.getSelectionModel().select(preferences.getBitcoinNetwork());
         netWorkComboBox.setOnAction(e -> onSelectNetwork());
     }
 
-    @FXML
-    void onSelectUPnP() {
-        preferences.setUseUPnP(useUPnP.isSelected());
+    @Override
+    public void activate() {
+        Address address = p2PService.getAddress();
+        if (address == null) {
+            p2PServiceListener = new P2PServiceListener() {
+                @Override
+                public void onRequestingDataCompleted() {
+                }
+
+                @Override
+                public void onFirstPeerAuthenticated() {
+                }
+
+                @Override
+                public void onTorNodeReady() {
+                }
+
+                @Override
+                public void onHiddenServicePublished() {
+                    onionAddress.setText(p2PService.getAddress().getFullAddress());
+                }
+
+                @Override
+                public void onSetupFailed(Throwable throwable) {
+                }
+            };
+            p2PService.addP2PServiceListener(p2PServiceListener);
+        } else {
+            onionAddress.setText(address.getFullAddress());
+        }
+
+        numAuthenticatedPeersChangeListener = (observable, oldValue, newValue) -> updateAuthenticatedPeersTextArea();
+        p2PService.numAuthenticatedPeers.addListener(numAuthenticatedPeersChangeListener);
+        updateAuthenticatedPeersTextArea();
+    }
+
+    @Override
+    public void deactivate() {
+        if (p2PServiceListener != null)
+            p2PService.removeP2PServiceListener(p2PServiceListener);
+        if (numAuthenticatedPeersChangeListener != null)
+            p2PService.numAuthenticatedPeers.removeListener(numAuthenticatedPeersChangeListener);
+    }
+
+    private void updateAuthenticatedPeersTextArea() {
+        authenticatedPeersTextArea.clear();
+        p2PService.getAuthenticatedPeerAddresses().stream().forEach(e -> {
+            if (authenticatedPeersTextArea.getText().length() > 0)
+                authenticatedPeersTextArea.appendText("\n");
+            authenticatedPeersTextArea.appendText(e.getFullAddress());
+            if (seedNodeAddresses.contains(e))
+                authenticatedPeersTextArea.appendText(" (Seed node)");
+        });
     }
 
     private void onSelectNetwork() {
