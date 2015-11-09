@@ -15,7 +15,10 @@ import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.peers.PeerGroup;
 import io.bitsquare.p2p.storage.data.*;
-import io.bitsquare.p2p.storage.messages.*;
+import io.bitsquare.p2p.storage.messages.AddDataMessage;
+import io.bitsquare.p2p.storage.messages.DataBroadcastMessage;
+import io.bitsquare.p2p.storage.messages.RemoveDataMessage;
+import io.bitsquare.p2p.storage.messages.RemoveMailboxDataMessage;
 import io.bitsquare.storage.Storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,7 +102,7 @@ public class ProtectedExpirableDataStorage implements MessageListener {
     @Override
     public void onMessage(Message message, Connection connection) {
         Log.traceCall("Message=" + message);
-        if (message instanceof DataMessage) {
+        if (message instanceof DataBroadcastMessage) {
             if (connection.isAuthenticated()) {
                 log.trace("ProtectedExpirableDataMessage received " + message + " on connection " + connection);
                 if (message instanceof AddDataMessage) {
@@ -350,7 +353,7 @@ public class ProtectedExpirableDataStorage implements MessageListener {
         }
     }
 
-    private void broadcast(BroadcastMessage message, @Nullable Address sender) {
+    private void broadcast(DataBroadcastMessage message, @Nullable Address sender) {
         Log.traceCall(message.toString());
         peerGroup.broadcast(message, sender);
     }

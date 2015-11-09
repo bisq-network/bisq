@@ -17,6 +17,11 @@ public final class GetDataResponse implements Message {
     }
 
     @Override
+    public int networkId() {
+        return Version.NETWORK_ID;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof GetDataResponse)) return false;

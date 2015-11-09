@@ -3,7 +3,7 @@ package io.bitsquare.p2p.storage.messages;
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.storage.data.ProtectedData;
 
-public final class AddDataMessage implements DataMessage {
+public final class AddDataMessage extends DataBroadcastMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 

@@ -48,4 +48,9 @@ public abstract class TradeMessage implements MailMessage {
     protected TradeMessage(String tradeId) {
         this.tradeId = tradeId;
     }
+
+    @Override
+    public int networkId() {
+        return Version.NETWORK_ID;
+    }
 }

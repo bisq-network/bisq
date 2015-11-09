@@ -18,6 +18,7 @@
 package io.bitsquare.crypto;
 
 
+import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.CryptoException;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.KeyStorage;
@@ -91,5 +92,10 @@ class TestMessage implements MailboxMessage {
     @Override
     public Address getSenderAddress() {
         return null;
+    }
+
+    @Override
+    public int networkId() {
+        return Version.NETWORK_ID;
     }
 }

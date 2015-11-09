@@ -32,4 +32,9 @@ public abstract class OfferMessage implements MailMessage {
     protected OfferMessage(String offerId) {
         this.offerId = offerId;
     }
+
+    @Override
+    public int networkId() {
+        return Version.NETWORK_ID;
+    }
 }

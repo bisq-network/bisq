@@ -19,4 +19,9 @@ public final class SealedAndSignedMessage implements MailboxMessage {
     public Address getSenderAddress() {
         return null;
     }
+
+    @Override
+    public int networkId() {
+        return Version.NETWORK_ID;
+    }
 }

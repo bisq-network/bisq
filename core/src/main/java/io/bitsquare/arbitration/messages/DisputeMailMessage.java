@@ -32,7 +32,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-public class DisputeMailMessage implements DisputeMessage {
+public class DisputeMailMessage extends DisputeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
     transient private static final Logger log = LoggerFactory.getLogger(DisputeMailMessage.class);

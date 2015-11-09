@@ -1,6 +1,7 @@
 package io.bitsquare.p2p.seed;
 
 import io.bitsquare.app.Log;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.crypto.EncryptionService;
@@ -38,10 +39,11 @@ public class SeedNode {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // args: myAddress (incl. port) maxConnections useLocalhost seedNodes (separated with |)
+    // args: myAddress (incl. port) BitcoinNetworkId maxConnections useLocalhost seedNodes (separated with |)
     // 2. and 3. args are optional
-    // eg. lmvdenjkyvx2ovga.onion:8001 20 false eo5ay2lyzrfvx2nr.onion:8002|si3uu56adkyqkldl.onion:8003
-    // or when using localhost:  localhost:8001 20 true localhost:8002|localhost:8003
+    // eg. lmvdenjkyvx2ovga.onion:8001 0 20 false eo5ay2lyzrfvx2nr.onion:8002|si3uu56adkyqkldl.onion:8003
+    // or when using localhost:  localhost:8001 2 20 true localhost:8002|localhost:8003
+    // BitcoinNetworkId: The id for the bitcoin network (Mainnet = 0, TestNet = 1, Regtest = 2)
     public void processArgs(String[] args) {
         Log.traceCall();
         if (args.length > 0) {
@@ -50,27 +52,36 @@ public class SeedNode {
             mySeedNodeAddress = new Address(arg0);
             if (args.length > 1) {
                 String arg1 = args[1];
-                int maxConnections = Integer.parseInt(arg1);
-                checkArgument(maxConnections < 1000, "maxConnections seems to be a bit too high...");
-                PeerGroup.setMaxConnections(maxConnections);
+                int networkId = Integer.parseInt(arg1);
+                checkArgument(networkId > -1 && networkId < 3, "networkId out of scope (Mainnet = 0, TestNet = 1, Regtest = 2)");
+                Version.NETWORK_ID = networkId;
                 if (args.length > 2) {
                     String arg2 = args[2];
-                    checkArgument(arg2.equals("true") || arg2.equals("false"));
-                    useLocalhost = ("true").equals(arg2);
+                    int maxConnections = Integer.parseInt(arg2);
+                    checkArgument(maxConnections < 1000, "maxConnections seems to be a bit too high...");
+                    PeerGroup.setMaxConnections(maxConnections);
+                } else {
+                    // we keep default a higher connection size for seed nodes
+                    PeerGroup.setMaxConnections(50);
                 }
                 if (args.length > 3) {
                     String arg3 = args[3];
-                    checkArgument(arg3.contains(":") && arg3.split(":").length > 1 && arg3.split(":")[1].length() > 3, "Wrong program argument");
-                    List<String> list = Arrays.asList(arg3.split("|"));
+                    checkArgument(arg3.equals("true") || arg3.equals("false"));
+                    useLocalhost = ("true").equals(arg3);
+                }
+                if (args.length > 4) {
+                    String arg4 = args[4];
+                    checkArgument(arg4.contains(":") && arg4.split(":").length > 1 && arg4.split(":")[1].length() > 3, "Wrong program argument");
+                    List<String> list = Arrays.asList(arg4.split("|"));
                     seedNodes = new HashSet<>();
                     list.forEach(e -> {
                         checkArgument(e.contains(":") && e.split(":").length == 2 && e.split(":")[1].length() == 4, "Wrong program argument");
                         seedNodes.add(new Address(e));
                     });
                     seedNodes.remove(mySeedNodeAddress);
-                } else if (args.length > 4) {
+                } else if (args.length > 5) {
                     log.error("Too many program arguments." +
-                            "\nProgram arguments: myAddress useLocalhost seedNodes");
+                            "\nProgram arguments: myAddress (incl. port) BitcoinNetworkId maxConnections useLocalhost seedNodes (separated with |)");
                 }
             }
         }

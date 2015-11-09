@@ -9,4 +9,9 @@ public final class GetDataRequest implements Message {
 
     public GetDataRequest() {
     }
+
+    @Override
+    public int networkId() {
+        return Version.NETWORK_ID;
+    }
 }

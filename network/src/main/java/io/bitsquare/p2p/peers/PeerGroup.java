@@ -15,7 +15,7 @@ import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.peers.messages.auth.AuthenticationRequest;
 import io.bitsquare.p2p.peers.messages.maintenance.*;
-import io.bitsquare.p2p.storage.messages.BroadcastMessage;
+import io.bitsquare.p2p.storage.messages.DataBroadcastMessage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -127,7 +127,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         seedNodeAddresses.remove(mySeedNodeAddress);
     }
 
-    public void broadcast(BroadcastMessage message, @Nullable Address sender) {
+    public void broadcast(DataBroadcastMessage message, @Nullable Address sender) {
         Log.traceCall("Sender " + sender + ". Message " + message.toString());
         if (authenticatedPeers.values().size() > 0) {
             log.info("Broadcast message to {} peers. Message:", authenticatedPeers.values().size(), message);
@@ -201,7 +201,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     // After connection is authenticated, we try to connect to any reported peer as long we have not 
     // reached our max connection size.
     private void authenticateToSeedNode(Set<Address> remainingAddresses, Address peerAddress, boolean continueOnSuccess) {
-        Log.traceCall();
+        Log.traceCall(peerAddress.getFullAddress());
         checkArgument(!authenticatedPeers.containsKey(peerAddress),
                 "We have that peer already authenticated. That must never happen.");
 
@@ -229,20 +229,27 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                log.error("AuthenticationHandshake failed. " + throwable.getMessage());
-                throwable.printStackTrace();
+                log.info("Send RequestAuthenticationMessage to " + peerAddress + " failed." +
+                        "\nThat is expected if seed nodes are offline." +
+                        "\nException:" + throwable.getMessage());
                 removePeer(peerAddress);
 
                 // If we fail we try again with the remaining set
                 remainingAddresses.remove(peerAddress);
 
+                log.trace("We try to authenticate to another random seed nodes of that list: " + remainingAddresses);
+
                 Optional<Tuple2<Address, Set<Address>>> tupleOptional = getRandomItemAndRemainingSet(remainingAddresses);
                 if (tupleOptional.isPresent()) {
                     log.info("We try to authenticate to a seed node. " + tupleOptional.get().first);
                     authenticateToSeedNode(tupleOptional.get().second, tupleOptional.get().first, true);
-                } else {
+                } else if (reportedPeerAddresses.size() > 0) {
                     log.info("We don't have any more seed nodes for connecting. Lets try the reported peers.");
                     authenticateToRemainingReportedPeers();
+                } else {
+                    log.info("We don't have any more seed nodes or reported nodes for connecting. " +
+                            "We stop bootstrapping now, but will repeat after an while.");
+                    UserThread.runAfter(() -> authenticateToRemainingReportedPeers(), 60);
                 }
             }
         });
@@ -263,7 +270,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     // We try to connect to a reported peer. If we fail we repeat after the failed peer has been removed.
     // If we succeed we repeat until we are ut of addresses.
     private void authenticateToReportedPeer(Set<Address> remainingAddresses, Address peerAddress) {
-        Log.traceCall();
+        Log.traceCall(peerAddress.getFullAddress());
         checkArgument(!authenticatedPeers.containsKey(peerAddress),
                 "We have that peer already authenticated. That must never happen.");
 
@@ -320,7 +327,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void authenticateToPeer(Address peerAddress, @Nullable Runnable authenticationCompleteHandler, @Nullable Runnable faultHandler) {
-        Log.traceCall();
+        Log.traceCall(peerAddress.getFullAddress());
         checkArgument(!authenticatedPeers.containsKey(peerAddress),
                 "We have that seed node already authenticated. That must never happen.");
 
@@ -348,7 +355,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     }
 
     private void setAuthenticated(Connection connection, Address peerAddress) {
-        Log.traceCall();
+        Log.traceCall(peerAddress.getFullAddress());
         log.info("\n\n############################################################\n" +
                 "We are authenticated to:" +
                 "\nconnection=" + connection.getUid()
@@ -364,7 +371,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     }
 
     private void addAuthenticatedPeer(Peer peer) {
-        Log.traceCall();
+        Log.traceCall(peer.toString());
         authenticatedPeers.put(peer.address, peer);
         reportedPeerAddresses.remove(peer.address);
         firstPeerAdded = !firstPeerAdded && authenticatedPeers.size() == 1;

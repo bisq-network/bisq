@@ -42,4 +42,7 @@ public class Version {
     // compatible.
     public static final long PROTOCOL_VERSION = 1;
 
+    // The version for the bitcoin network (Mainnet = 0, TestNet = 1, Regtest = 2)
+    public static int NETWORK_ID;
+
 }

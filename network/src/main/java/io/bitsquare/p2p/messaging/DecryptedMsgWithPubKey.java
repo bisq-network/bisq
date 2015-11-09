@@ -35,6 +35,11 @@ public final class DecryptedMsgWithPubKey implements MailMessage {
     }
 
     @Override
+    public int networkId() {
+        return Version.NETWORK_ID;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof DecryptedMsgWithPubKey)) return false;

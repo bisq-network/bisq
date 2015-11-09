@@ -120,7 +120,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         // peer group 
         peerGroup = new PeerGroup(networkNode, seedNodeAddresses);
-        if (useLocalhost) PeerGroup.setSimulateAuthTorNode(2 * 1000);
+        if (useLocalhost) PeerGroup.setSimulateAuthTorNode(2 * 100);
 
         // storage 
         dataStorage = new ProtectedExpirableDataStorage(peerGroup, storageDir);

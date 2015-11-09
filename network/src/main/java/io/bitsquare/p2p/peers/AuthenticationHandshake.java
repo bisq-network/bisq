@@ -1,11 +1,9 @@
 package io.bitsquare.p2p.peers;
 
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.app.Log;
-import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.network.Connection;
@@ -17,7 +15,9 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
 
 
 // authentication example: 
@@ -194,8 +194,6 @@ public class AuthenticationHandshake implements MessageListener {
                         "\nThat is expected if seed nodes are offline." +
                         "\nException:" + throwable.getMessage());
                 onFault(throwable);
-                // log.trace("We try to authenticate to another random seed nodes of that list: " + remainingAddresses);
-                // authenticateToNextRandomPeer(remainingAddresses);
             }
         });
 
@@ -267,30 +265,6 @@ public class AuthenticationHandshake implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-  /*  private void authenticateToNextRandomPeer(Set<Address> remainingAddresses) {
-        Log.traceCall();
-        Optional<Tuple2<Address, Set<Address>>> tupleOptional = getRandomAddressAndRemainingSet(remainingAddresses);
-        if (tupleOptional.isPresent()) {
-            Tuple2<Address, Set<Address>> tuple = tupleOptional.get();
-            requestAuthentication(tuple.second, tuple.first);
-        } else {
-            log.info("No other seed node found. That is expected for the first seed node.");
-            onSuccess(null);
-        }
-    }*/
-
-    private Optional<Tuple2<Address, Set<Address>>> getRandomAddressAndRemainingSet(Set<Address> addresses) {
-        Log.traceCall();
-        if (!addresses.isEmpty()) {
-            List<Address> list = new ArrayList<>(addresses);
-            Collections.shuffle(list);
-            Address address = list.remove(0);
-            return Optional.of(new Tuple2<>(address, Sets.newHashSet(list)));
-        } else {
-            return Optional.empty();
-        }
-    }
 
     private long getAndSetNonce() {
         Log.traceCall();

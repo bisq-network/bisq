@@ -3,6 +3,7 @@ package io.bitsquare.p2p.network;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.bitsquare.app.Log;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.ByteArrayUtils;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Address;
@@ -488,45 +489,52 @@ public class Connection implements MessageListener {
                                 + " rawInputObject " + rawInputObject);
 
                         int size = ByteArrayUtils.objectToByteArray(rawInputObject).length;
-                        if (size <= getMaxMsgSize()) {
-                            Serializable serializable = null;
-                            if (useCompression) {
-                                if (rawInputObject instanceof byte[]) {
-                                    byte[] compressedObjectAsBytes = (byte[]) rawInputObject;
-                                    size = compressedObjectAsBytes.length;
-                                    //log.trace("Read object compressed data size: " + size);
-                                    serializable = Utils.decompress(compressedObjectAsBytes);
-                                } else {
-                                    sharedSpace.reportIllegalRequest(IllegalRequest.InvalidDataType);
-                                }
-                            } else {
-                                if (rawInputObject instanceof Serializable) {
-                                    serializable = (Serializable) rawInputObject;
-                                } else {
-                                    sharedSpace.reportIllegalRequest(IllegalRequest.InvalidDataType);
-                                }
-                            }
-                            //log.trace("Read object decompressed data size: " + ByteArrayUtils.objectToByteArray(serializable).length);
+                        if (size > getMaxMsgSize()) {
+                            sharedSpace.reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
+                            return;
+                        }
 
-                            // compressed size might be bigger theoretically so we check again after decompression
-                            if (size <= getMaxMsgSize()) {
-                                if (serializable instanceof Message) {
-                                    sharedSpace.updateLastActivityDate();
-                                    Message message = (Message) serializable;
-                                    if (message instanceof CloseConnectionMessage) {
-                                        stopped = true;
-                                        sharedSpace.shutDown(false);
-                                    } else if (!stopped) {
-                                        messageListener.onMessage(message, null);
-                                    }
-                                } else {
-                                    sharedSpace.reportIllegalRequest(IllegalRequest.InvalidDataType);
-                                }
+                        Serializable serializable = null;
+                        if (useCompression) {
+                            if (rawInputObject instanceof byte[]) {
+                                byte[] compressedObjectAsBytes = (byte[]) rawInputObject;
+                                size = compressedObjectAsBytes.length;
+                                //log.trace("Read object compressed data size: " + size);
+                                serializable = Utils.decompress(compressedObjectAsBytes);
                             } else {
-                                sharedSpace.reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
+                                sharedSpace.reportIllegalRequest(IllegalRequest.InvalidDataType);
                             }
                         } else {
+                            if (rawInputObject instanceof Serializable) {
+                                serializable = (Serializable) rawInputObject;
+                            } else {
+                                sharedSpace.reportIllegalRequest(IllegalRequest.InvalidDataType);
+                            }
+                        }
+                        //log.trace("Read object decompressed data size: " + ByteArrayUtils.objectToByteArray(serializable).length);
+
+                        // compressed size might be bigger theoretically so we check again after decompression
+                        if (size > getMaxMsgSize()) {
                             sharedSpace.reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
+                            return;
+                        }
+                        if (!(serializable instanceof Message)) {
+                            sharedSpace.reportIllegalRequest(IllegalRequest.InvalidDataType);
+                            return;
+                        }
+
+                        Message message = (Message) serializable;
+                        if (message.networkId() != Version.NETWORK_ID) {
+                            sharedSpace.reportIllegalRequest(IllegalRequest.WrongNetworkId);
+                            return;
+                        }
+
+                        sharedSpace.updateLastActivityDate();
+                        if (message instanceof CloseConnectionMessage) {
+                            stopped = true;
+                            sharedSpace.shutDown(false);
+                        } else if (!stopped) {
+                            messageListener.onMessage(message, null);
                         }
                     } catch (IOException | ClassNotFoundException e) {
                         stopped = true;

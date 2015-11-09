@@ -17,7 +17,12 @@
 
 package io.bitsquare.arbitration.messages;
 
+import io.bitsquare.app.Version;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 
-public interface DisputeMessage extends MailboxMessage {
+public abstract class DisputeMessage implements MailboxMessage {
+    @Override
+    public int networkId() {
+        return Version.NETWORK_ID;
+    }
 }

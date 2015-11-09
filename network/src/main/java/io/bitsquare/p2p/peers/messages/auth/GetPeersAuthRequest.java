@@ -5,7 +5,7 @@ import io.bitsquare.p2p.Address;
 
 import java.util.HashSet;
 
-public final class GetPeersAuthRequest implements AuthenticationMessage {
+public final class GetPeersAuthRequest extends AuthenticationMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 

@@ -1,5 +1,6 @@
 package io.bitsquare.p2p.mocks;
 
+import io.bitsquare.app.Version;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.p2p.storage.data.ExpirablePayload;
@@ -12,6 +13,11 @@ public class MockMailboxMessage implements MailboxMessage, ExpirablePayload {
     public MockMailboxMessage(String msg, Address senderAddress) {
         this.msg = msg;
         this.senderAddress = senderAddress;
+    }
+
+    @Override
+    public int networkId() {
+        return Version.NETWORK_ID;
     }
 
     @Override
