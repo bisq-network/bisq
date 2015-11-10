@@ -7,10 +7,11 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.ProgramArguments;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.CryptoException;
+import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
-import io.bitsquare.common.crypto.SealedAndSigned;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.crypto.SealedAndSignedMessage;
 import io.bitsquare.p2p.messaging.*;
@@ -43,6 +44,7 @@ import java.math.BigInteger;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -52,6 +54,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class P2PService implements SetupListener, MessageListener, ConnectionListener, PeerListener {
     private static final Logger log = LoggerFactory.getLogger(P2PService.class);
+
+    private static final int RETRY_GET_DATA = 10 * 1000;
 
     private final SeedNodesRepository seedNodesRepository;
     private final int port;
@@ -79,6 +83,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final BooleanProperty authenticated = new SimpleBooleanProperty();
     private MonadicBinding<Boolean> readyForAuthentication;
     public final IntegerProperty numAuthenticatedPeers = new SimpleIntegerProperty(0);
+    @Nullable
+    private byte[] blurredAddressHash = null;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -181,17 +187,26 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             if (encryptionService != null) {
                 try {
                     SealedAndSignedMessage sealedAndSignedMessage = (SealedAndSignedMessage) message;
-                    DecryptedMsgWithPubKey decryptedMsgWithPubKey = encryptionService.decryptAndVerify(
-                            sealedAndSignedMessage.sealedAndSigned);
-                    log.info("Received SealedAndSignedMessage and decrypted it: " + decryptedMsgWithPubKey);
-                    decryptedMailListeners.stream().forEach(
-                            e -> e.onMailMessage(decryptedMsgWithPubKey, connection.getPeerAddress()));
+                    if (verifyBlurredAddressHash(sealedAndSignedMessage)) {
+                        DecryptedMsgWithPubKey decryptedMsgWithPubKey = encryptionService.decryptAndVerify(
+                                sealedAndSignedMessage.sealedAndSigned);
+                        log.info("Received SealedAndSignedMessage and decrypted it: " + decryptedMsgWithPubKey);
+                        decryptedMailListeners.stream().forEach(
+                                e -> e.onMailMessage(decryptedMsgWithPubKey, connection.getPeerAddress()));
+                    } else {
+                        log.info("Wrong receiverAddressMaskHash. The message is not intended for us.");
+                    }
                 } catch (CryptoException e) {
                     log.info("Decryption of SealedAndSignedMessage failed. " +
                             "That is expected if the message is not intended for us.");
                 }
             }
         }
+    }
+
+    private boolean verifyBlurredAddressHash(SealedAndSignedMessage sealedAndSignedMessage) {
+        return blurredAddressHash != null &&
+                Arrays.equals(blurredAddressHash, sealedAndSignedMessage.blurredAddressHash);
     }
 
 
@@ -277,6 +292,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         Log.traceCall();
         checkArgument(networkNode.getAddress() != null, "Address must be set when we have the hidden service ready");
 
+        blurredAddressHash = Hash.getHash(getAddress().getAddressMask());
+
         p2pServiceListeners.stream().forEach(e -> e.onHiddenServicePublished());
 
         // 3. (or 2.). Step: Hidden service is published
@@ -303,6 +320,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 public void onSuccess(@Nullable Connection connection) {
                     log.info("Send GetAllDataMessage to " + candidate + " succeeded.");
                     connectedSeedNode = candidate;
+
+                    // In case we get called by a retry we check if we need authenticate as well
+                    if (hiddenServicePublished.get() && !authenticated.get()) {
+                        peerGroup.authenticateSeedNode(connectedSeedNode);
+                    } else {
+                        log.debug("No connected seedNode available.");
+                    }
                 }
 
                 @Override
@@ -317,23 +341,26 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 }
             });
         } else {
-            log.info("There is no seed node available for requesting data. That is expected for the first seed node.");
+            log.info("There is no seed node available for requesting data. " +
+                    "That is expected if no seed node is available.\n" +
+                    "We will try again after {} ms", RETRY_GET_DATA);
             setRequestingDataCompleted();
+
+            UserThread.runAfter(() -> sendGetDataRequest(peerGroup.getSeedNodeAddresses()),
+                    RETRY_GET_DATA, TimeUnit.MILLISECONDS);
         }
     }
 
     private void setRequestingDataCompleted() {
         Log.traceCall();
-        // 2. (or 3.) Step: We got all data loaded
-        if (!requestingDataCompleted.get())
-            requestingDataCompleted.set(true);
+        // 2. (or 3.) Step: We got all data loaded (or no seed node available - should not happen in real operation)
+        requestingDataCompleted.set(true);
     }
 
     // 4. Step: hiddenServicePublished and allDataLoaded. We start authenticate to the connected seed node.
     private void tryAuthenticateSeedNode() {
         Log.traceCall();
         if (connectedSeedNode != null) {
-            log.trace("authenticateSeedNode");
             peerGroup.authenticateSeedNode(connectedSeedNode);
         } else {
             log.debug("No connected seedNode available.");
@@ -436,7 +463,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         if (encryptionService != null) {
             try {
                 SealedAndSignedMessage sealedAndSignedMessage = new SealedAndSignedMessage(
-                        encryptionService.encryptAndSign(pubKeyRing, message));
+                        encryptionService.encryptAndSign(pubKeyRing, message), Hash.getHash(peerAddress.getAddressMask()));
                 SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, sealedAndSignedMessage);
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
@@ -482,7 +509,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         if (encryptionService != null) {
             try {
                 SealedAndSignedMessage sealedAndSignedMessage = new SealedAndSignedMessage(
-                        encryptionService.encryptAndSign(peersPubKeyRing, message));
+                        encryptionService.encryptAndSign(peersPubKeyRing, message), Hash.getHash(peerAddress.getAddressMask()));
                 SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, sealedAndSignedMessage);
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
@@ -639,22 +666,18 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean isAuthenticated() {
-        Log.traceCall();
         return authenticated.get();
     }
 
     public NetworkNode getNetworkNode() {
-        Log.traceCall();
         return networkNode;
     }
 
     public PeerGroup getPeerGroup() {
-        Log.traceCall();
         return peerGroup;
     }
 
     public Address getAddress() {
-        Log.traceCall();
         return networkNode.getAddress();
     }
 
@@ -675,25 +698,34 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private void tryDecryptMailboxData(ProtectedMailboxData mailboxData) {
         Log.traceCall();
         if (encryptionService != null) {
-            ExpirablePayload data = mailboxData.expirablePayload;
-            if (data instanceof ExpirableMailboxPayload) {
-                ExpirableMailboxPayload mailboxEntry = (ExpirableMailboxPayload) data;
-                SealedAndSigned sealedAndSigned = mailboxEntry.sealedAndSignedMessage.sealedAndSigned;
-                try {
-                    DecryptedMsgWithPubKey decryptedMsgWithPubKey = encryptionService.decryptAndVerify(sealedAndSigned);
-                    if (decryptedMsgWithPubKey.message instanceof MailboxMessage) {
-                        MailboxMessage mailboxMessage = (MailboxMessage) decryptedMsgWithPubKey.message;
-                        Address senderAddress = mailboxMessage.getSenderAddress();
-                        checkNotNull(senderAddress, "senderAddress must not be null for mailbox messages");
+            ExpirablePayload expirablePayload = mailboxData.expirablePayload;
+            if (expirablePayload instanceof ExpirableMailboxPayload) {
+                ExpirableMailboxPayload expirableMailboxPayload = (ExpirableMailboxPayload) expirablePayload;
+                SealedAndSignedMessage sealedAndSignedMessage = expirableMailboxPayload.sealedAndSignedMessage;
+                if (verifyBlurredAddressHash(sealedAndSignedMessage)) {
+                    try {
+                        DecryptedMsgWithPubKey decryptedMsgWithPubKey = encryptionService.decryptAndVerify(
+                                sealedAndSignedMessage.sealedAndSigned);
+                        if (decryptedMsgWithPubKey.message instanceof MailboxMessage) {
+                            MailboxMessage mailboxMessage = (MailboxMessage) decryptedMsgWithPubKey.message;
+                            Address senderAddress = mailboxMessage.getSenderAddress();
+                            checkNotNull(senderAddress, "senderAddress must not be null for mailbox messages");
 
-                        mailboxMap.put(decryptedMsgWithPubKey, mailboxData);
-                        log.trace("Decryption of SealedAndSignedMessage succeeded. senderAddress="
-                                + senderAddress + " / my address=" + getAddress());
-                        decryptedMailboxListeners.stream().forEach(
-                                e -> e.onMailboxMessageAdded(decryptedMsgWithPubKey, senderAddress));
+                            mailboxMap.put(decryptedMsgWithPubKey, mailboxData);
+                            log.trace("Decryption of SealedAndSignedMessage succeeded. senderAddress="
+                                    + senderAddress + " / my address=" + getAddress());
+                            decryptedMailboxListeners.stream().forEach(
+                                    e -> e.onMailboxMessageAdded(decryptedMsgWithPubKey, senderAddress));
+                        } else {
+                            log.warn("tryDecryptMailboxData: Expected MailboxMessage but got other type. " +
+                                    "decryptedMsgWithPubKey.message=", decryptedMsgWithPubKey.message);
+                        }
+                    } catch (CryptoException e) {
+                        log.trace("Decryption of SealedAndSignedMessage failed. " +
+                                "That is expected if the message is not intended for us. " + e.getMessage());
                     }
-                } catch (CryptoException e) {
-                    log.trace("Decryption of SealedAndSignedMessage failed. That is expected if the message is not intended for us. " + e.getMessage());
+                } else {
+                    log.info("Wrong blurredAddressHash. The message is not intended for us.");
                 }
             }
         }

@@ -124,12 +124,12 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                 public void run() {
                     Thread.currentThread().setName("TimerTask-" + new Random().nextInt(10000));
                     future.cancel(true);
-                    String message = "Timeout occurred when trying to create Socket.";
-                    log.warn(message);
+                    String message = "Timeout occurred when tried to create Socket to peer: " + peerAddress;
+                    log.info(message);
                     resultFuture.setException(new TimeoutException(message));
                 }
             }, CREATE_SOCKET_TIMEOUT);
-            
+
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 public void onSuccess(Connection connection) {
                     UserThread.execute(() -> {

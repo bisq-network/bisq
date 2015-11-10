@@ -22,6 +22,10 @@ public class Address implements Serializable {
         return hostName + ":" + port;
     }
 
+    public String getAddressMask() {
+        return getFullAddress().substring(0, 2);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

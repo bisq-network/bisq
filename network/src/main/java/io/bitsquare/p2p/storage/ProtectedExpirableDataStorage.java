@@ -113,8 +113,9 @@ public class ProtectedExpirableDataStorage implements MessageListener {
                     removeMailboxData(((RemoveMailboxDataMessage) message).data, connection.getPeerAddress());
                 }
             } else {
-                log.warn("Connection is not authenticated yet. We don't accept storage operations form non-authenticated nodes.");
-                log.warn("Connection = " + connection);
+                log.warn("Connection is not authenticated yet. " +
+                        "We don't accept storage operations from non-authenticated nodes.");
+                log.trace("Connection = " + connection);
                 connection.reportIllegalRequest(IllegalRequest.NotAuthenticated);
             }
         }

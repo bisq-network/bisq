@@ -30,11 +30,7 @@ import java.util.concurrent.*;
 public class Connection implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
     private static final int MAX_MSG_SIZE = 5 * 1024 * 1024;         // 5 MB of compressed data
-    private static final int MAX_ILLEGAL_REQUESTS = 5;
-    private static final int SEND_MESSAGE_TIMEOUT = 10 * 1000;        // 10 sec.
     private static final int SOCKET_TIMEOUT = 30 * 60 * 1000;        // 30 min.
-    private InputHandler inputHandler;
-    private volatile boolean isAuthenticated;
 
     public static int getMaxMsgSize() {
         return MAX_MSG_SIZE;
@@ -43,21 +39,20 @@ public class Connection implements MessageListener {
     private final Socket socket;
     private final MessageListener messageListener;
     private final ConnectionListener connectionListener;
-
     private final String portInfo;
     private final String uid = UUID.randomUUID().toString();
-    ;
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+    // holder of state shared between InputHandler and Connection
+    private final SharedSpace sharedSpace;
 
     // set in init
+    private InputHandler inputHandler;
     private ObjectOutputStream objectOutputStream;
-    // holder of state shared between InputHandler and Connection
-    private SharedSpace sharedSpace;
 
     // mutable data, set from other threads but not changed internally.
     @Nullable
     private Address peerAddress;
-
+    private volatile boolean isAuthenticated;
     private volatile boolean stopped;
 
     //TODO got java.util.zip.DataFormatException: invalid distance too far back
@@ -75,6 +70,8 @@ public class Connection implements MessageListener {
         this.messageListener = messageListener;
         this.connectionListener = connectionListener;
 
+        sharedSpace = new SharedSpace(this, socket);
+        
         Log.traceCall();
         if (socket.getLocalPort() == 0)
             portInfo = "port=" + socket.getPort();
@@ -86,7 +83,7 @@ public class Connection implements MessageListener {
 
     private void init() {
         Log.traceCall();
-        sharedSpace = new SharedSpace(this, socket);
+
         try {
             socket.setSoTimeout(SOCKET_TIMEOUT);
             // Need to access first the ObjectOutputStream otherwise the ObjectInputStream would block

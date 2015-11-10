@@ -214,7 +214,7 @@ public class ProtectedDataStorageTest {
             KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
         // sender 
         MockMessage mockMessage = new MockMessage("MockMessage");
-        SealedAndSignedMessage sealedAndSignedMessage = new SealedAndSignedMessage(encryptionService1.encryptAndSign(keyRing1.getPubKeyRing(), mockMessage));
+        SealedAndSignedMessage sealedAndSignedMessage = new SealedAndSignedMessage(encryptionService1.encryptAndSign(keyRing1.getPubKeyRing(), mockMessage), Hash.getHash("aa"));
         ExpirableMailboxPayload expirableMailboxPayload = new ExpirableMailboxPayload(sealedAndSignedMessage,
                 keyRing1.getSignatureKeyPair().getPublic(),
                 keyRing2.getSignatureKeyPair().getPublic());

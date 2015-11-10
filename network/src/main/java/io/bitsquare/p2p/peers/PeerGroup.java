@@ -44,11 +44,11 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         MAX_CONNECTIONS = maxConnections;
     }
 
-    private static final int SEND_PING_INTERVAL = new Random().nextInt(2 * 60 * 1000) + 2 * 60 * 1000 * 1000; // 2-4 min.
-    private static final int GET_PEERS_INTERVAL = 10000 * 1000;//new Random().nextInt(1 * 60 * 1000) + 1 * 60 * 1000; // 1-2 min.
-    private static final int PING_AFTER_CONNECTION_INACTIVITY = 30 * 1000 * 1000;
-    private static final int MAX_REPORTED_PEERS = 1000 * 1000;
-    private static final int RETRY_FILL_AUTH_PEERS = 10000 * 1000;
+    private static final int SEND_PING_INTERVAL = new Random().nextInt(5 * 60 * 1000) + 5 * 60 * 1000;
+    private static final int PING_AFTER_CONNECTION_INACTIVITY = 30 * 1000;
+    private static final int GET_PEERS_INTERVAL = new Random().nextInt(1 * 60 * 1000) + 1 * 60 * 1000; // 1-2 min.
+    private static final int RETRY_FILL_AUTH_PEERS = GET_PEERS_INTERVAL + 5000;
+    private static final int MAX_REPORTED_PEERS = 1000;
 
     private final NetworkNode networkNode;
     private final Set<Address> seedNodeAddresses;
@@ -110,9 +110,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     @Override
     public void onDisconnect(Reason reason, Connection connection) {
         log.debug("onDisconnect connection=" + connection + " / reason=" + reason);
-        // only removes authenticated nodes
-        if (connection.isAuthenticated())
-            removePeer(connection.getPeerAddress());
+        removePeer(connection.getPeerAddress());
     }
 
     @Override
@@ -512,7 +510,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                         });
                     }, 5, 10));
         } else {
-            log.trace("No peers available for requesting data.");
+            log.info("No peers available for requesting data.");
         }
     }
 
@@ -592,12 +590,10 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private Map<Address, Peer> getAuthenticatedPeers() {
-        Log.traceCall();
         return authenticatedPeers;
     }
 
     public Set<Address> getAllPeerAddresses() {
-        Log.traceCall();
         Set<Address> allPeerAddresses = new HashSet<>(reportedPeerAddresses);
         allPeerAddresses.addAll(authenticatedPeers.values().stream()
                 .map(e -> e.address).collect(Collectors.toSet()));
@@ -605,7 +601,6 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     }
 
     public Set<Address> getSeedNodeAddresses() {
-        Log.traceCall();
         return seedNodeAddresses;
     }
 
@@ -705,13 +700,11 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     }
 
     public void printAllPeers() {
-        Log.traceCall();
         printAuthenticatedPeers();
         printReportedPeers();
     }
 
     public void printAuthenticatedPeers() {
-        Log.traceCall();
         StringBuilder result = new StringBuilder("\n\n------------------------------------------------------------\n" +
                 "Authenticated peers for node " + getMyAddress() + ":");
         authenticatedPeers.values().stream().forEach(e -> result.append("\n").append(e.address));
@@ -720,7 +713,6 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     }
 
     public void printReportedPeers() {
-        Log.traceCall();
         StringBuilder result = new StringBuilder("\n\n------------------------------------------------------------\n" +
                 "Reported peers for node " + getMyAddress() + ":");
         reportedPeerAddresses.stream().forEach(e -> result.append("\n").append(e));

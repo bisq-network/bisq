@@ -19,10 +19,7 @@ package io.bitsquare.crypto;
 
 
 import io.bitsquare.app.Version;
-import io.bitsquare.common.crypto.CryptoException;
-import io.bitsquare.common.crypto.KeyRing;
-import io.bitsquare.common.crypto.KeyStorage;
-import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.common.crypto.*;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
@@ -75,7 +72,7 @@ public class EncryptionServiceTests {
     public void testDecryptAndVerifyMessage() throws CryptoException {
         EncryptionService encryptionService = new EncryptionService(keyRing);
         TestMessage data = new TestMessage("test");
-        SealedAndSignedMessage encrypted = new SealedAndSignedMessage(encryptionService.encryptAndSign(pubKeyRing, data));
+        SealedAndSignedMessage encrypted = new SealedAndSignedMessage(encryptionService.encryptAndSign(pubKeyRing, data), Hash.getHash("aa"));
         DecryptedMsgWithPubKey decrypted = encryptionService.decryptAndVerify(encrypted.sealedAndSigned);
         assertEquals(data.data, ((TestMessage) decrypted.message).data);
     }
