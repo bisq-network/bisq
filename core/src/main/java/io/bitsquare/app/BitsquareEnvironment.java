@@ -192,11 +192,13 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 setProperty(Storage.DIR_KEY, Paths.get(btcNetworkDir, "db").toString());
                 setProperty(KeyStorage.DIR_KEY, Paths.get(btcNetworkDir, "keys").toString());
                 setProperty(ProgramArguments.TOR_DIR, Paths.get(btcNetworkDir, "tor").toString());
+
+                setProperty(ProgramArguments.NETWORK_ID, String.valueOf(bitcoinNetwork.ordinal()));
             }
         });
     }
 
-    private static String defaultUserDataDir() {
+    public static String defaultUserDataDir() {
         if (Utilities.isWindows())
             return System.getenv("APPDATA");
         else if (Utilities.isOSX())

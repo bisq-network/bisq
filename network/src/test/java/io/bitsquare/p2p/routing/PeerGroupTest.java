@@ -81,33 +81,34 @@ public class PeerGroupTest {
         seedNodes = new HashSet<>();
         Address address = new Address("localhost:8001");
         seedNodes.add(address);
-        seedNode1 = new SeedNode();
+        seedNode1 = new SeedNode("test_dummy_dir");
         latch = new CountDownLatch(2);
-        seedNode1.createAndStartP2PService(null, null, address, useLocalhost, seedNodes, new P2PServiceListener() {
-            @Override
-            public void onRequestingDataCompleted() {
-                latch.countDown();
-            }
+        seedNode1.createAndStartP2PService(null, null, address, useLocalhost, 2,
+                seedNodes, new P2PServiceListener() {
+                    @Override
+                    public void onRequestingDataCompleted() {
+                        latch.countDown();
+                    }
 
-            @Override
-            public void onTorNodeReady() {
+                    @Override
+                    public void onTorNodeReady() {
 
-            }
+                    }
 
-            @Override
-            public void onFirstPeerAuthenticated() {
-            }
+                    @Override
+                    public void onFirstPeerAuthenticated() {
+                    }
 
-            @Override
-            public void onHiddenServicePublished() {
-                latch.countDown();
-            }
+                    @Override
+                    public void onHiddenServicePublished() {
+                        latch.countDown();
+                    }
 
-            @Override
-            public void onSetupFailed(Throwable throwable) {
+                    @Override
+                    public void onSetupFailed(Throwable throwable) {
 
-            }
-        });
+                    }
+                });
         P2PService p2PService1 = seedNode1.getP2PService();
         latch.await();
         Thread.sleep(500);
@@ -126,8 +127,8 @@ public class PeerGroupTest {
 
         latch = new CountDownLatch(6);
 
-        seedNode1 = new SeedNode();
-        seedNode1.createAndStartP2PService(null, null, address1, useLocalhost, seedNodes, new P2PServiceListener() {
+        seedNode1 = new SeedNode("test_dummy_dir");
+        seedNode1.createAndStartP2PService(null, null, address1, useLocalhost, 2, seedNodes, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
                 latch.countDown();
@@ -157,8 +158,8 @@ public class PeerGroupTest {
 
         Thread.sleep(500);
 
-        seedNode2 = new SeedNode();
-        seedNode2.createAndStartP2PService(null, null, address2, useLocalhost, seedNodes, new P2PServiceListener() {
+        seedNode2 = new SeedNode("test_dummy_dir");
+        seedNode2.createAndStartP2PService(null, null, address2, useLocalhost, 2, seedNodes, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
                 latch.countDown();
@@ -382,10 +383,10 @@ public class PeerGroupTest {
     }
 
     private SeedNode getAndStartSeedNode(int port) throws InterruptedException {
-        SeedNode seedNode = new SeedNode();
+        SeedNode seedNode = new SeedNode("test_dummy_dir");
 
         latch = new CountDownLatch(1);
-        seedNode.createAndStartP2PService(null, null, new Address("localhost", port), useLocalhost, seedNodes, new P2PServiceListener() {
+        seedNode.createAndStartP2PService(null, null, new Address("localhost", port), useLocalhost, 2, seedNodes, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
                 latch.countDown();

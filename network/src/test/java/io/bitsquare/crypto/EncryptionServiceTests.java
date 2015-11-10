@@ -84,6 +84,7 @@ public class EncryptionServiceTests {
 
 class TestMessage implements MailboxMessage {
     public String data = "test";
+    private final int networkId = Version.NETWORK_ID;
 
     public TestMessage(String data) {
         this.data = data;
@@ -96,6 +97,6 @@ class TestMessage implements MailboxMessage {
 
     @Override
     public int networkId() {
-        return Version.NETWORK_ID;
+        return networkId;
     }
 }

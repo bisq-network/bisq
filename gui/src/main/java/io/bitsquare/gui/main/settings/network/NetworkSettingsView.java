@@ -29,7 +29,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
-import io.bitsquare.p2p.network.TorNetworkNode;
+import io.bitsquare.p2p.network.LocalhostNetworkNode;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
@@ -68,13 +68,12 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             formatter) {
         this.walletService = walletService;
         this.preferences = preferences;
-        this.bitcoinNetworkString = formatter.formatBitcoinNetwork(preferences.getBitcoinNetwork());
+        BitcoinNetwork bitcoinNetwork = preferences.getBitcoinNetwork();
+        this.bitcoinNetworkString = formatter.formatBitcoinNetwork(bitcoinNetwork);
         this.p2PService = p2PService;
 
-        if (p2PService.getNetworkNode() instanceof TorNetworkNode)
-            this.seedNodeAddresses = seedNodesRepository.getTorSeedNodeAddresses();
-        else
-            this.seedNodeAddresses = seedNodesRepository.getLocalhostSeedNodeAddresses();
+        boolean useLocalhost = p2PService.getNetworkNode() instanceof LocalhostNetworkNode;
+        this.seedNodeAddresses = seedNodesRepository.geSeedNodeAddresses(useLocalhost, bitcoinNetwork.ordinal());
     }
 
     public void initialize() {

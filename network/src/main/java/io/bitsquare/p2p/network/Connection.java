@@ -35,7 +35,6 @@ public class Connection implements MessageListener {
     private static final int SOCKET_TIMEOUT = 30 * 60 * 1000;        // 30 min.
     private InputHandler inputHandler;
     private volatile boolean isAuthenticated;
-    private String connectionId;
 
     public static int getMaxMsgSize() {
         return MAX_MSG_SIZE;
@@ -48,7 +47,7 @@ public class Connection implements MessageListener {
     private final String portInfo;
     private final String uid;
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
-    public final String objectId = super.toString().split("@")[1];
+    public final String objectId;
 
     // set in init
     private ObjectOutputStream objectOutputStream;
@@ -75,6 +74,8 @@ public class Connection implements MessageListener {
         this.socket = socket;
         this.messageListener = messageListener;
         this.connectionListener = connectionListener;
+
+        objectId = super.toString().split("@")[1];
 
         Log.traceCall();
         uid = UUID.randomUUID().toString();
@@ -335,10 +336,6 @@ public class Connection implements MessageListener {
                 '}';
     }
 
-    public String getConnectionId() {
-        return connectionId;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // SharedSpace
@@ -379,12 +376,23 @@ public class Connection implements MessageListener {
         public void reportIllegalRequest(IllegalRequest illegalRequest) {
             Log.traceCall();
             log.warn("We got reported an illegal request " + illegalRequest);
-            int prevCounter = illegalRequests.get(illegalRequest);
-            if (prevCounter > illegalRequest.maxTolerance) {
-                log.warn("We close connection as we received too many illegal requests.\n" + illegalRequests.toString());
-                connection.shutDown(false);
+            int violations;
+            if (illegalRequests.contains(illegalRequest))
+                violations = illegalRequests.get(illegalRequest);
+            else
+                violations = 0;
+
+            violations++;
+            illegalRequests.put(illegalRequest, violations);
+
+            if (violations >= illegalRequest.maxTolerance) {
+                log.warn("We close connection as we received too many invalid requests.\n" +
+                        "violations={}\n" +
+                        "illegalRequest={}\n" +
+                        "illegalRequests={}", violations, illegalRequest, illegalRequests.toString());
+                shutDown(false);
             } else {
-                illegalRequests.put(illegalRequest, ++prevCounter);
+                illegalRequests.put(illegalRequest, ++violations);
             }
         }
 
@@ -406,15 +414,15 @@ public class Connection implements MessageListener {
                 e.printStackTrace();
             }
 
-            if (!stopped) {
-                stopped = true;
-                connection.shutDown(false);
-            }
+            shutDown(false);
         }
 
         public void shutDown(boolean sendCloseConnectionMessage) {
             Log.traceCall();
-            connection.shutDown(sendCloseConnectionMessage);
+            if (!stopped) {
+                stopped = true;
+                connection.shutDown(sendCloseConnectionMessage);
+            }
         }
 
 
@@ -422,8 +430,8 @@ public class Connection implements MessageListener {
             return socket;
         }
 
-        public String getConnectionId() {
-            return connection.getConnectionId();
+        public String getConnectionInfo() {
+            return connection.toString();
         }
 
         public void stop() {
@@ -483,9 +491,9 @@ public class Connection implements MessageListener {
                 Thread.currentThread().setName("InputHandler-" + portInfo);
                 while (!stopped && !Thread.currentThread().isInterrupted()) {
                     try {
-                        log.trace("InputHandler waiting for incoming messages connection=" + sharedSpace.getConnectionId());
+                        log.trace("InputHandler waiting for incoming messages connection=" + sharedSpace.getConnectionInfo());
                         Object rawInputObject = objectInputStream.readObject();
-                        log.info("New data arrived at inputHandler of connection=" + sharedSpace.getConnectionId()
+                        log.info("New data arrived at inputHandler of connection=" + sharedSpace.getConnectionInfo()
                                 + " rawInputObject " + rawInputObject);
 
                         int size = ByteArrayUtils.objectToByteArray(rawInputObject).length;

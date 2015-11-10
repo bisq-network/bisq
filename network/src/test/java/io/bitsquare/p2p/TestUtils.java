@@ -70,44 +70,47 @@ public class TestUtils {
             seedNodes.add(new Address("localhost:8002"));
             seedNodes.add(new Address("localhost:8003"));
             sleepTime = 100;
-            seedNode = new SeedNode();
+            seedNode = new SeedNode("test_dummy_dir");
         } else {
             seedNodes.add(new Address("3omjuxn7z73pxoee.onion:8001"));
             seedNodes.add(new Address("j24fxqyghjetgpdx.onion:8002"));
             seedNodes.add(new Address("45367tl6unwec6kw.onion:8003"));
             sleepTime = 10000;
-            seedNode = new SeedNode();
+            seedNode = new SeedNode("test_dummy_dir");
         }
 
         CountDownLatch latch = new CountDownLatch(1);
-        seedNode.createAndStartP2PService(encryptionService, keyRing, new Address("localhost", port), useLocalhost, seedNodes, new P2PServiceListener() {
-            @Override
-            public void onRequestingDataCompleted() {
-            }
+        seedNode.createAndStartP2PService(encryptionService, keyRing, new Address("localhost", port), useLocalhost, 2,
+                seedNodes, new P2PServiceListener() {
+                    @Override
+                    public void onRequestingDataCompleted() {
+                    }
 
-            @Override
-            public void onFirstPeerAuthenticated() {
-            }
+                    @Override
+                    public void onFirstPeerAuthenticated() {
+                    }
 
-            @Override
-            public void onTorNodeReady() {
-            }
+                    @Override
+                    public void onTorNodeReady() {
+                    }
 
-            @Override
-            public void onHiddenServicePublished() {
-                latch.countDown();
-            }
+                    @Override
+                    public void onHiddenServicePublished() {
+                        latch.countDown();
+                    }
 
-            @Override
-            public void onSetupFailed(Throwable throwable) {
-            }
-        });
+                    @Override
+                    public void onSetupFailed(Throwable throwable) {
+                    }
+                });
         latch.await();
         Thread.sleep(sleepTime);
         return seedNode;
     }
 
-    public static P2PService getAndAuthenticateP2PService(int port, EncryptionService encryptionService, KeyRing keyRing, boolean useLocalhost, Set<Address> seedNodes) throws InterruptedException {
+    public static P2PService getAndAuthenticateP2PService(int port, EncryptionService encryptionService, KeyRing keyRing,
+                                                          boolean useLocalhost, Set<Address> seedNodes)
+            throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
         if (seedNodes != null && !seedNodes.isEmpty()) {
@@ -117,7 +120,8 @@ public class TestUtils {
                 seedNodesRepository.setTorSeedNodeAddresses(seedNodes);
         }
 
-        P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhost, encryptionService, keyRing, new File("dummy"));
+        P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhost, 2,
+                encryptionService, keyRing, new File("dummy"));
         p2PService.start(new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {

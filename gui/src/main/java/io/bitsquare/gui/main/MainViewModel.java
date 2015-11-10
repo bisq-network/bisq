@@ -29,7 +29,6 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.components.BalanceTextField;
 import io.bitsquare.gui.components.BalanceWithConfirmationTextField;
@@ -126,9 +125,8 @@ class MainViewModel implements ViewModel {
     public MainViewModel(WalletService walletService, TradeWalletService tradeWalletService,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
-                         KeyRing keyRing, User user,
-                         AlertManager alertManager,
-                         WalletPasswordPopup walletPasswordPopup, BSFormatter formatter) {
+                         User user, AlertManager alertManager, WalletPasswordPopup walletPasswordPopup,
+                         BSFormatter formatter) {
         this.user = user;
         log.debug("in");
         this.walletService = walletService;

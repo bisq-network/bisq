@@ -28,10 +28,10 @@ import java.io.File;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.PublicKey;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 // Run in UserThread
@@ -42,10 +42,10 @@ public class ProtectedExpirableDataStorage implements MessageListener {
     public static int CHECK_TTL_INTERVAL = 10 * 60 * 1000;
 
     private final PeerGroup peerGroup;
-    private final Map<BigInteger, ProtectedData> map = new ConcurrentHashMap<>();
+    private final Map<BigInteger, ProtectedData> map = new HashMap<>();
     private final CopyOnWriteArraySet<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArraySet<>();
-    private ConcurrentHashMap<BigInteger, Integer> sequenceNumberMap = new ConcurrentHashMap<>();
-    private final Storage<ConcurrentHashMap> storage;
+    private HashMap<BigInteger, Integer> sequenceNumberMap = new HashMap<>();
+    private final Storage<HashMap> storage;
     private final Timer timer = new Timer();
     private volatile boolean shutDownInProgress;
 
@@ -65,7 +65,7 @@ public class ProtectedExpirableDataStorage implements MessageListener {
 
     private void init() {
         Log.traceCall();
-        ConcurrentHashMap<BigInteger, Integer> persisted = storage.initAndGetPersisted(sequenceNumberMap, "sequenceNumberMap");
+        HashMap<BigInteger, Integer> persisted = storage.initAndGetPersisted(sequenceNumberMap, "sequenceNumberMap");
         if (persisted != null) {
             sequenceNumberMap = persisted;
         }

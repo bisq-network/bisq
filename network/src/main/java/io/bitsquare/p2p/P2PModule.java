@@ -52,5 +52,8 @@ public class P2PModule extends AppModule {
         // use a fixed port as arbitrator use that for his ID
         Integer port = env.getProperty(ProgramArguments.PORT_KEY, int.class, 9999);
         bind(int.class).annotatedWith(Names.named(ProgramArguments.PORT_KEY)).toInstance(port);
+
+        Integer networkId = env.getProperty(ProgramArguments.NETWORK_ID, int.class, 1);
+        bind(int.class).annotatedWith(Names.named(ProgramArguments.NETWORK_ID)).toInstance(networkId);
     }
 }

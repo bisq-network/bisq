@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -29,8 +31,10 @@ public class SeedNode {
     private Set<Address> seedNodes;
     private P2PService p2PService;
     private boolean stopped;
+    private final String defaultUserDataDir;
 
-    public SeedNode() {
+    public SeedNode(String defaultUserDataDir) {
+        this.defaultUserDataDir = defaultUserDataDir;
         Log.traceCall();
     }
 
@@ -39,59 +43,73 @@ public class SeedNode {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // args: myAddress (incl. port) BitcoinNetworkId maxConnections useLocalhost seedNodes (separated with |)
+    // args: myAddress (incl. port) bitcoinNetworkId maxConnections useLocalhost seedNodes (separated with |)
     // 2. and 3. args are optional
     // eg. lmvdenjkyvx2ovga.onion:8001 0 20 false eo5ay2lyzrfvx2nr.onion:8002|si3uu56adkyqkldl.onion:8003
     // or when using localhost:  localhost:8001 2 20 true localhost:8002|localhost:8003
     // BitcoinNetworkId: The id for the bitcoin network (Mainnet = 0, TestNet = 1, Regtest = 2)
     public void processArgs(String[] args) {
         Log.traceCall();
-        if (args.length > 0) {
-            String arg0 = args[0];
-            checkArgument(arg0.contains(":") && arg0.split(":").length == 2 && arg0.split(":")[1].length() == 4, "Wrong program argument");
-            mySeedNodeAddress = new Address(arg0);
-            if (args.length > 1) {
-                String arg1 = args[1];
-                int networkId = Integer.parseInt(arg1);
-                checkArgument(networkId > -1 && networkId < 3, "networkId out of scope (Mainnet = 0, TestNet = 1, Regtest = 2)");
-                Version.NETWORK_ID = networkId;
-                if (args.length > 2) {
-                    String arg2 = args[2];
-                    int maxConnections = Integer.parseInt(arg2);
-                    checkArgument(maxConnections < 1000, "maxConnections seems to be a bit too high...");
-                    PeerGroup.setMaxConnections(maxConnections);
-                } else {
-                    // we keep default a higher connection size for seed nodes
-                    PeerGroup.setMaxConnections(50);
-                }
-                if (args.length > 3) {
-                    String arg3 = args[3];
-                    checkArgument(arg3.equals("true") || arg3.equals("false"));
-                    useLocalhost = ("true").equals(arg3);
-                }
-                if (args.length > 4) {
-                    String arg4 = args[4];
-                    checkArgument(arg4.contains(":") && arg4.split(":").length > 1 && arg4.split(":")[1].length() > 3, "Wrong program argument");
-                    List<String> list = Arrays.asList(arg4.split("|"));
-                    seedNodes = new HashSet<>();
-                    list.forEach(e -> {
-                        checkArgument(e.contains(":") && e.split(":").length == 2 && e.split(":")[1].length() == 4, "Wrong program argument");
-                        seedNodes.add(new Address(e));
-                    });
-                    seedNodes.remove(mySeedNodeAddress);
-                } else if (args.length > 5) {
-                    log.error("Too many program arguments." +
-                            "\nProgram arguments: myAddress (incl. port) BitcoinNetworkId maxConnections useLocalhost seedNodes (separated with |)");
+        try {
+            if (args.length > 0) {
+                String arg0 = args[0];
+                checkArgument(arg0.contains(":") && arg0.split(":").length == 2 && arg0.split(":")[1].length() > 3, "Wrong program argument: " + arg0);
+                mySeedNodeAddress = new Address(arg0);
+                if (args.length > 1) {
+                    String arg1 = args[1];
+                    int networkId = Integer.parseInt(arg1);
+                    checkArgument(networkId > -1 && networkId < 3,
+                            "networkId out of scope (Mainnet = 0, TestNet = 1, Regtest = 2)");
+                    Version.NETWORK_ID = networkId;
+                    if (args.length > 2) {
+                        String arg2 = args[2];
+                        int maxConnections = Integer.parseInt(arg2);
+                        checkArgument(maxConnections < 1000, "maxConnections seems to be a bit too high...");
+                        PeerGroup.setMaxConnections(maxConnections);
+                    } else {
+                        // we keep default a higher connection size for seed nodes
+                        PeerGroup.setMaxConnections(50);
+                    }
+                    if (args.length > 3) {
+                        String arg3 = args[3];
+                        checkArgument(arg3.equals("true") || arg3.equals("false"));
+                        useLocalhost = ("true").equals(arg3);
+                    }
+                    if (args.length > 4) {
+                        String arg4 = args[4];
+                        checkArgument(arg4.contains(":") && arg4.split(":").length > 1 && arg4.split(":")[1].length() > 3,
+                                "Wrong program argument");
+                        List<String> list = Arrays.asList(arg4.split("|"));
+                        seedNodes = new HashSet<>();
+                        list.forEach(e -> {
+                            checkArgument(e.contains(":") && e.split(":").length == 2 && e.split(":")[1].length() == 4,
+                                    "Wrong program argument");
+                            seedNodes.add(new Address(e));
+                        });
+                        seedNodes.remove(mySeedNodeAddress);
+                    } else if (args.length > 5) {
+                        log.error("Too many program arguments." +
+                                "\nProgram arguments: myAddress (incl. port) bitcoinNetworkId " +
+                                "maxConnections useLocalhost seedNodes (separated with |)");
+                    }
                 }
             }
+        } catch (Throwable t) {
+            shutDown();
         }
     }
 
     public void createAndStartP2PService() {
-        createAndStartP2PService(null, null, mySeedNodeAddress, useLocalhost, seedNodes, null);
+        createAndStartP2PService(null, null, mySeedNodeAddress, useLocalhost, Version.NETWORK_ID, seedNodes, null);
     }
 
-    public void createAndStartP2PService(EncryptionService encryptionService, KeyRing keyRing, Address mySeedNodeAddress, boolean useLocalhost, @Nullable Set<Address> seedNodes, @Nullable P2PServiceListener listener) {
+    public void createAndStartP2PService(EncryptionService encryptionService,
+                                         KeyRing keyRing,
+                                         Address mySeedNodeAddress,
+                                         boolean useLocalhost,
+                                         int networkId,
+                                         @Nullable Set<Address> seedNodes,
+                                         @Nullable P2PServiceListener listener) {
         Log.traceCall();
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
         if (seedNodes != null && !seedNodes.isEmpty()) {
@@ -100,8 +118,18 @@ public class SeedNode {
             else
                 seedNodesRepository.setTorSeedNodeAddresses(seedNodes);
         }
+        Path seedNodePath = Paths.get(defaultUserDataDir,
+                "Bitsquare_seed_node_" + String.valueOf(mySeedNodeAddress.getFullAddress().replace(":", "_")));
+        File storageDir = Paths.get(seedNodePath.toString(), "db").toFile();
+        File torDir = Paths.get(seedNodePath.toString(), "tor").toFile();
 
-        p2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.port, new File("bitsquare_seed_node_" + mySeedNodeAddress.port), useLocalhost, encryptionService, keyRing, new File("dummy"));
+        if (storageDir.mkdirs())
+            log.info("Created storageDir at " + storageDir.getAbsolutePath());
+        if (torDir.mkdirs())
+            log.info("Created torDir at " + torDir.getAbsolutePath());
+
+        p2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.port, torDir,
+                useLocalhost, networkId, encryptionService, keyRing, storageDir);
         p2PService.removeMySeedNodeAddressFromList(mySeedNodeAddress);
         p2PService.start(listener);
     }

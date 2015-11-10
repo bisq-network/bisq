@@ -42,7 +42,6 @@ import java.io.File;
 import java.math.BigInteger;
 import java.security.PublicKey;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -69,7 +68,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final CopyOnWriteArraySet<DecryptedMailListener> decryptedMailListeners = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<DecryptedMailboxListener> decryptedMailboxListeners = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<P2PServiceListener> p2pServiceListeners = new CopyOnWriteArraySet<>();
-    private final Map<DecryptedMsgWithPubKey, ProtectedMailboxData> mailboxMap = new ConcurrentHashMap<>();
+    private final Map<DecryptedMsgWithPubKey, ProtectedMailboxData> mailboxMap = new HashMap<>();
     private volatile boolean shutDownInProgress;
     private Address connectedSeedNode;
     private final Set<Address> authenticatedPeerAddresses = new HashSet<>();
@@ -91,6 +90,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       @Named(ProgramArguments.PORT_KEY) int port,
                       @Named(ProgramArguments.TOR_DIR) File torDir,
                       @Named(ProgramArguments.USE_LOCALHOST) boolean useLocalhost,
+                      @Named(ProgramArguments.NETWORK_ID) int networkId,
                       @Nullable EncryptionService encryptionService,
                       KeyRing keyRing,
                       @Named("storage.dir") File storageDir) {
@@ -103,20 +103,14 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         this.keyRing = keyRing;
         this.storageDir = storageDir;
 
-        init();
+        init(networkId);
     }
 
-    private void init() {
+    private void init(int networkId) {
         Log.traceCall();
         // network 
-        Set<Address> seedNodeAddresses;
-        if (useLocalhost) {
-            networkNode = new LocalhostNetworkNode(port);
-            seedNodeAddresses = seedNodesRepository.getLocalhostSeedNodeAddresses();
-        } else {
-            networkNode = new TorNetworkNode(port, torDir);
-            seedNodeAddresses = seedNodesRepository.getTorSeedNodeAddresses();
-        }
+        networkNode = useLocalhost ? new LocalhostNetworkNode(port) : new TorNetworkNode(port, torDir);
+        Set<Address> seedNodeAddresses = seedNodesRepository.geSeedNodeAddresses(useLocalhost, networkId);
 
         // peer group 
         peerGroup = new PeerGroup(networkNode, seedNodeAddresses);
@@ -564,13 +558,19 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         Log.traceCall();
         checkAuthentication();
 
-        ProtectedMailboxData mailboxData = mailboxMap.get(decryptedMsgWithPubKey);
-        if (mailboxData != null && mailboxData.expirablePayload instanceof ExpirableMailboxPayload) {
-            checkArgument(mailboxData.receiversPubKey.equals(keyRing.getSignatureKeyPair().getPublic()),
-                    "mailboxData.receiversPubKey is not matching with our key. That must not happen.");
-            removeMailboxData((ExpirableMailboxPayload) mailboxData.expirablePayload, mailboxData.receiversPubKey);
-            mailboxMap.remove(decryptedMsgWithPubKey);
-            log.trace("Removed successfully protectedExpirableData.");
+        if (mailboxMap.containsKey(decryptedMsgWithPubKey)) {
+            ProtectedMailboxData mailboxData = mailboxMap.get(decryptedMsgWithPubKey);
+            if (mailboxData != null && mailboxData.expirablePayload instanceof ExpirableMailboxPayload) {
+                checkArgument(mailboxData.receiversPubKey.equals(keyRing.getSignatureKeyPair().getPublic()),
+                        "mailboxData.receiversPubKey is not matching with our key. That must not happen.");
+                removeMailboxData((ExpirableMailboxPayload) mailboxData.expirablePayload, mailboxData.receiversPubKey);
+                mailboxMap.remove(decryptedMsgWithPubKey);
+                log.trace("Removed successfully protectedExpirableData.");
+
+            }
+        } else {
+            log.warn("decryptedMsgWithPubKey not found in mailboxMap. That should never happen." +
+                    "\ndecryptedMsgWithPubKey={}\nmailboxMap={}", decryptedMsgWithPubKey, mailboxMap);
         }
     }
 

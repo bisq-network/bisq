@@ -21,8 +21,10 @@ import io.bitsquare.app.Version;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 
 public abstract class DisputeMessage implements MailboxMessage {
+    private final int networkId = Version.NETWORK_ID;
+
     @Override
     public int networkId() {
-        return Version.NETWORK_ID;
+        return networkId;
     }
 }

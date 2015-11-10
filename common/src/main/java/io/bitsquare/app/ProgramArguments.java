@@ -14,6 +14,7 @@ public class ProgramArguments {
     public static final String NAME_KEY = "node.name";
     public static final String PORT_KEY = "node.port";
 
+    public static final String NETWORK_ID = "network.id";
 
     private static final Logger log = LoggerFactory.getLogger(ProgramArguments.class);
 }

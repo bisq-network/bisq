@@ -1,6 +1,7 @@
 package io.bitsquare.p2p.seed;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import org.bitcoinj.crypto.DRMWorkaround;
@@ -47,7 +48,7 @@ public class SeedNodeMain {
         UserThread.setExecutor(Executors.newSingleThreadExecutor(threadFactory));
         UserThread.execute(() -> {
             try {
-                seedNode = new SeedNode();
+                seedNode = new SeedNode(BitsquareEnvironment.defaultUserDataDir());
                 seedNode.processArgs(args);
                 seedNode.createAndStartP2PService();
             } catch (Throwable t) {

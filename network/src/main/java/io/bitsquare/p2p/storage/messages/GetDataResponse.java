@@ -9,7 +9,8 @@ import java.util.HashSet;
 public final class GetDataResponse implements Message {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
-
+    private final int networkId = Version.NETWORK_ID;
+    
     public final HashSet<ProtectedData> set;
 
     public GetDataResponse(HashSet<ProtectedData> set) {
@@ -18,7 +19,7 @@ public final class GetDataResponse implements Message {
 
     @Override
     public int networkId() {
-        return Version.NETWORK_ID;
+        return networkId;
     }
 
     @Override
