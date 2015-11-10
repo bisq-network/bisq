@@ -86,7 +86,7 @@ public abstract class Connection implements Closeable {
     }
 
     protected void onMessage(Message msg) throws IOException {
-        log.debug("RXD: " + msg.toString());
+        log.debug("onMessage: " + msg.toString());
         if (msg instanceof ContainerMessage) {
             synchronized (connectionListeners) {
                 for (ConnectionListener l : connectionListeners)

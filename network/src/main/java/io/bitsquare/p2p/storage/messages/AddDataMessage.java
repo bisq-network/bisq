@@ -32,6 +32,6 @@ public final class AddDataMessage extends DataBroadcastMessage {
     public String toString() {
         return "AddDataMessage{" +
                 "data=" + data +
-                '}';
+                "} " + super.toString();
     }
 }

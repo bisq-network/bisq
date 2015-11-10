@@ -101,8 +101,8 @@ public class ProtectedExpirableDataStorage implements MessageListener {
 
     @Override
     public void onMessage(Message message, Connection connection) {
-        Log.traceCall("Message=" + message);
         if (message instanceof DataBroadcastMessage) {
+            Log.traceCall(message.toString());
             if (connection.isAuthenticated()) {
                 log.trace("ProtectedExpirableDataMessage received " + message + " on connection " + connection);
                 if (message instanceof AddDataMessage) {

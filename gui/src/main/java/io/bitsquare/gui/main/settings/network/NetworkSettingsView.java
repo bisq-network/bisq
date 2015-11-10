@@ -35,7 +35,9 @@ import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -53,12 +55,16 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private final Preferences preferences;
     private final P2PService p2PService;
 
+
     @FXML
     TextField bitcoinNetwork, onionAddress, connectedPeersBTC;
     @FXML
     ComboBox<BitcoinNetwork> netWorkComboBox;
     @FXML
     TextArea authenticatedPeersTextArea;
+    @FXML
+    Label authenticatedPeersLabel;
+
     private P2PServiceListener p2PServiceListener;
     private ChangeListener<Number> numAuthenticatedPeersChangeListener;
     private Set<Address> seedNodeAddresses;
@@ -77,6 +83,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     }
 
     public void initialize() {
+        GridPane.setMargin(authenticatedPeersLabel, new Insets(4, 0, 0, 0));
         bitcoinNetwork.setText(bitcoinNetworkString);
         connectedPeersBTC.textProperty().bind(createStringBinding(() -> String.valueOf(walletService.numPeersProperty().get()), walletService
                 .numPeersProperty()));

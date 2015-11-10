@@ -23,6 +23,6 @@ public final class AuthenticationResponse extends AuthenticationMessage {
                 "address=" + address +
                 ", requesterNonce=" + requesterNonce +
                 ", challengerNonce=" + challengerNonce +
-                '}';
+                "} " + super.toString();
     }
 }

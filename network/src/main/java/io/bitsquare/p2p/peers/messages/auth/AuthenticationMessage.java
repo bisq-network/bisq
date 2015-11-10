@@ -10,4 +10,11 @@ public abstract class AuthenticationMessage implements Message {
     public int networkId() {
         return networkId;
     }
+
+    @Override
+    public String toString() {
+        return "AuthenticationMessage{" +
+                "networkId=" + networkId +
+                '}';
+    }
 }

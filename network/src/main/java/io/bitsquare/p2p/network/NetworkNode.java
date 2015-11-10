@@ -138,7 +138,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         Log.traceCall();
         // connection.sendMessage might take a bit (compression, write to stream), so we use a thread to not block
         ListenableFuture<Connection> future = executorService.submit(() -> {
-            Thread.currentThread().setName("NetworkNode:SendMessage-to-" + connection.objectId);
+            Thread.currentThread().setName("NetworkNode:SendMessage-to-" + connection.getUid());
             try {
                 connection.sendMessage(message);
                 return connection;
@@ -239,7 +239,6 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     @Override
     public void onMessage(Message message, Connection connection) {
-        Log.traceCall();
         messageListeners.stream().forEach(e -> e.onMessage(message, connection));
     }
 

@@ -61,8 +61,8 @@ public final class DecryptedMsgWithPubKey implements MailMessage {
 
     @Override
     public String toString() {
-        return "DecryptedMessageWithPubKey{" +
-                "hashCode=" + hashCode() +
+        return "DecryptedMsgWithPubKey{" +
+                "networkId=" + networkId +
                 ", message=" + message +
                 ", signaturePubKey.hashCode()=" + signaturePubKey.hashCode() +
                 '}';

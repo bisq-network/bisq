@@ -159,11 +159,12 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     @Override
     public void onMessage(Message message, Connection connection) {
-        Log.traceCall();
         if (message instanceof GetDataRequest) {
+            Log.traceCall(message.toString());
             log.info("Received GetDataSetMessage: " + message);
             networkNode.sendMessage(connection, new GetDataResponse(getDataSet()));
         } else if (message instanceof GetDataResponse) {
+            Log.traceCall(message.toString());
             GetDataResponse getDataResponse = (GetDataResponse) message;
             log.info("Received GetDataResponse: " + message);
             HashSet<ProtectedData> set = getDataResponse.set;
@@ -176,6 +177,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             }
             setRequestingDataCompleted();
         } else if (message instanceof SealedAndSignedMessage) {
+            Log.traceCall(message.toString());
             if (encryptionService != null) {
                 try {
                     SealedAndSignedMessage sealedAndSignedMessage = (SealedAndSignedMessage) message;

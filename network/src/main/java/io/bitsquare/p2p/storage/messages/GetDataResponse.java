@@ -40,8 +40,9 @@ public final class GetDataResponse implements Message {
 
     @Override
     public String toString() {
-        return "AllDataMessage{" +
-                "set=" + set +
+        return "GetDataResponse{" +
+                "networkId=" + networkId +
+                ", set=" + set +
                 '}';
     }
 }

@@ -33,6 +33,6 @@ public final class RemoveMailboxDataMessage extends DataBroadcastMessage {
     public String toString() {
         return "RemoveMailboxDataMessage{" +
                 "data=" + data +
-                '}';
+                "} " + super.toString();
     }
 }

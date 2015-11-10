@@ -25,6 +25,6 @@ public final class GetPeersAuthRequest extends AuthenticationMessage {
                 "address=" + address +
                 ", challengerNonce=" + challengerNonce +
                 ", peerAddresses=" + peerAddresses +
-                '}';
+                "} " + super.toString();
     }
 }

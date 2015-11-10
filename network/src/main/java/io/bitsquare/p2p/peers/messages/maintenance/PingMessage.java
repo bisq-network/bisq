@@ -16,6 +16,6 @@ public final class PingMessage extends MaintenanceMessage {
     public String toString() {
         return "PingMessage{" +
                 "nonce=" + nonce +
-                '}';
+                "} " + super.toString();
     }
 }

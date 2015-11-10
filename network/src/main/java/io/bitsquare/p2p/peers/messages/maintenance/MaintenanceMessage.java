@@ -10,4 +10,11 @@ public abstract class MaintenanceMessage implements Message {
     public int networkId() {
         return networkId;
     }
+
+    @Override
+    public String toString() {
+        return "MaintenanceMessage{" +
+                "networkId=" + networkId +
+                '}';
+    }
 }

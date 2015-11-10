@@ -18,7 +18,7 @@ public final class GetPeersResponse extends MaintenanceMessage {
     @Override
     public String toString() {
         return "GetPeersResponse{" +
-                ", peerAddresses=" + peerAddresses +
-                '}';
+                "peerAddresses=" + peerAddresses +
+                "} " + super.toString();
     }
 }

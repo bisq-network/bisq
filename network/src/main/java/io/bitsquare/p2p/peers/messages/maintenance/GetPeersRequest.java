@@ -22,6 +22,6 @@ public final class GetPeersRequest extends MaintenanceMessage {
         return "GetPeersRequest{" +
                 "address=" + address +
                 ", peerAddresses=" + peerAddresses +
-                '}';
+                "} " + super.toString();
     }
 }

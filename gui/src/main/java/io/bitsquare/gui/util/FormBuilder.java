@@ -164,7 +164,7 @@ public class FormBuilder {
 
     public static Tuple2<Label, TextArea> addLabelTextArea(GridPane gridPane, int rowIndex, String title, String prompt, double top) {
         Label label = addLabel(gridPane, rowIndex, title, 0);
-        GridPane.setMargin(label, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(label, new Insets(top + 4, 0, 0, 0));
         GridPane.setValignment(label, VPos.TOP);
 
         TextArea textArea = new TextArea();

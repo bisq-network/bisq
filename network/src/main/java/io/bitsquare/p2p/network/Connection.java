@@ -47,7 +47,6 @@ public class Connection implements MessageListener {
     private final String portInfo;
     private final String uid;
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
-    public final String objectId;
 
     // set in init
     private ObjectOutputStream objectOutputStream;
@@ -74,8 +73,6 @@ public class Connection implements MessageListener {
         this.socket = socket;
         this.messageListener = messageListener;
         this.connectionListener = connectionListener;
-
-        objectId = super.toString().split("@")[1];
 
         Log.traceCall();
         uid = UUID.randomUUID().toString();
@@ -133,7 +130,10 @@ public class Connection implements MessageListener {
         Log.traceCall();
         if (!stopped) {
             try {
-                log.info("writeObject " + message + " on connection with port " + portInfo);
+                log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+                        "Write object to outputStream to peer: {} ({objectId=})\nmessage={}"
+                        + "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n", getPeerAddress(), uid, message);
+
                 Object objectToWrite;
                 if (useCompression) {
                     byte[] messageAsBytes = ByteArrayUtils.objectToByteArray(message);
@@ -189,27 +189,22 @@ public class Connection implements MessageListener {
 
     @Nullable
     public synchronized Address getPeerAddress() {
-        //Log.traceCall();
         return peerAddress;
     }
 
     public Date getLastActivityDate() {
-        //Log.traceCall();
         return sharedSpace.getLastActivityDate();
     }
 
     public boolean isAuthenticated() {
-        //Log.traceCall();
         return isAuthenticated;
     }
 
     public String getUid() {
-        Log.traceCall();
         return uid;
     }
 
     public boolean isStopped() {
-        Log.traceCall();
         return stopped;
     }
 
@@ -219,17 +214,14 @@ public class Connection implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void shutDown(Runnable completeHandler) {
-        // Log.traceCall();
         shutDown(true, completeHandler);
     }
 
     public void shutDown() {
-        //Log.traceCall();
         shutDown(true, null);
     }
 
     private void shutDown(boolean sendCloseConnectionMessage) {
-        //Log.traceCall();
         shutDown(sendCloseConnectionMessage, null);
     }
 
@@ -241,7 +233,7 @@ public class Connection implements MessageListener {
                     + "\npeerAddress=" + peerAddress
                     + "\nlocalPort/port=" + sharedSpace.getSocket().getLocalPort()
                     + "/" + sharedSpace.getSocket().getPort()
-                    + "\nobjectId=" + objectId + " / uid=" + uid
+                    + "\nuid=" + uid
                     + "\nisAuthenticated=" + isAuthenticated
                     + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 
@@ -249,10 +241,15 @@ public class Connection implements MessageListener {
 
             if (sendCloseConnectionMessage) {
                 new Thread(() -> {
-                    Thread.currentThread().setName("Connection:SendCloseConnectionMessage-" + this.objectId);
+                    Thread.currentThread().setName("Connection:SendCloseConnectionMessage-" + this.uid);
                     Log.traceCall("sendCloseConnectionMessage");
                     try {
                         sendMessage(new CloseConnectionMessage());
+                        stopped = true;
+                        sharedSpace.stop();
+                        if (inputHandler != null)
+                            inputHandler.stop();
+
                         // TODO increase delay
                         Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
                     } catch (Throwable t) {
@@ -263,6 +260,10 @@ public class Connection implements MessageListener {
                     }
                 }).start();
             } else {
+                stopped = true;
+                sharedSpace.stop();
+                if (inputHandler != null)
+                    inputHandler.stop();
                 continueShutDown(shutDownCompleteHandler);
             }
         }
@@ -270,11 +271,6 @@ public class Connection implements MessageListener {
 
     private void continueShutDown(@Nullable Runnable shutDownCompleteHandler) {
         Log.traceCall();
-
-        stopped = true;
-        sharedSpace.stop();
-        if (inputHandler != null)
-            inputHandler.stop();
         ConnectionListener.Reason shutDownReason = sharedSpace.getShutDownReason();
         if (shutDownReason == null)
             shutDownReason = ConnectionListener.Reason.SHUT_DOWN;
@@ -326,7 +322,6 @@ public class Connection implements MessageListener {
         return "Connection{" +
                 "portInfo=" + portInfo +
                 ", uid='" + uid + '\'' +
-                ", objectId='" + objectId + '\'' +
                 ", sharedSpace=" + sharedSpace.toString() +
                 ", peerAddress=" + peerAddress +
                 ", isAuthenticated=" + isAuthenticated +
@@ -398,7 +393,6 @@ public class Connection implements MessageListener {
 
         public void handleConnectionException(Exception e) {
             Log.traceCall(e.toString());
-            log.debug("Exception might be expected: " + e.toString());
             if (e instanceof SocketException) {
                 if (socket.isClosed())
                     shutDownReason = ConnectionListener.Reason.SOCKET_CLOSED;
@@ -493,8 +487,11 @@ public class Connection implements MessageListener {
                     try {
                         log.trace("InputHandler waiting for incoming messages connection=" + sharedSpace.getConnectionInfo());
                         Object rawInputObject = objectInputStream.readObject();
-                        log.info("New data arrived at inputHandler of connection=" + sharedSpace.getConnectionInfo()
-                                + " rawInputObject " + rawInputObject);
+                        log.trace("New data arrived at inputHandler.Connection=" + sharedSpace.getConnectionInfo());
+
+                        log.info("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
+                                "New data arrived at inputHandler.\nReceived object={}"
+                                + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n", rawInputObject);
 
                         int size = ByteArrayUtils.objectToByteArray(rawInputObject).length;
                         if (size > getMaxMsgSize()) {

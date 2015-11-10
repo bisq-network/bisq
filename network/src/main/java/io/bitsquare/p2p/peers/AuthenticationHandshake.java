@@ -62,8 +62,8 @@ public class AuthenticationHandshake implements MessageListener {
 
     @Override
     public void onMessage(Message message, Connection connection) {
-        Log.traceCall();
         if (message instanceof AuthenticationMessage) {
+            Log.traceCall(message.toString());
             if (message instanceof AuthenticationResponse) {
                 // Requesting peer
                 AuthenticationResponse authenticationResponse = (AuthenticationResponse) message;
@@ -120,7 +120,7 @@ public class AuthenticationHandshake implements MessageListener {
                     });
 
                     log.info("AuthenticationComplete: Peer with address " + peerAddress
-                            + " authenticated (" + connection.objectId + "). Took "
+                            + " authenticated (" + connection.getUid() + "). Took "
                             + (System.currentTimeMillis() - startAuthTs) + " ms.");
 
                     onSuccess(connection);
@@ -140,7 +140,7 @@ public class AuthenticationHandshake implements MessageListener {
                 // we wait until the handshake is completed before setting the authenticate flag
                 // authentication at both sides of the connection
                 log.info("AuthenticationComplete: Peer with address " + peerAddress
-                        + " authenticated (" + connection.objectId + "). Took "
+                        + " authenticated (" + connection.getUid() + "). Took "
                         + (System.currentTimeMillis() - startAuthTs) + " ms.");
 
                 onSuccess(connection);

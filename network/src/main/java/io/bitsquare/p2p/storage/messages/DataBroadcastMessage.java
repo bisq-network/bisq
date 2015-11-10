@@ -10,4 +10,11 @@ public abstract class DataBroadcastMessage implements Message {
     public int networkId() {
         return networkId;
     }
+
+    @Override
+    public String toString() {
+        return "DataBroadcastMessage{" +
+                "networkId=" + networkId +
+                '}';
+    }
 }

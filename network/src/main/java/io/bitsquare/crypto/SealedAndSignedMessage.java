@@ -25,4 +25,12 @@ public final class SealedAndSignedMessage implements MailboxMessage {
     public int networkId() {
         return networkId;
     }
+
+    @Override
+    public String toString() {
+        return "SealedAndSignedMessage{" +
+                "networkId=" + networkId +
+                ", sealedAndSigned=" + sealedAndSigned +
+                '}';
+    }
 }

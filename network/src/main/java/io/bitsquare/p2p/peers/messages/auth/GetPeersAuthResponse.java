@@ -19,7 +19,9 @@ public final class GetPeersAuthResponse extends AuthenticationMessage {
 
     @Override
     public String toString() {
-        return "GetPeersAuthResponse{" + "peerAddresses=" + peerAddresses + '}';
+        return "GetPeersAuthResponse{" +
+                "address=" + address +
+                ", peerAddresses=" + peerAddresses +
+                "} " + super.toString();
     }
-
 }

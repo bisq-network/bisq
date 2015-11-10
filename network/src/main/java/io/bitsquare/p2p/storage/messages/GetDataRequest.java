@@ -16,4 +16,11 @@ public final class GetDataRequest implements Message {
     public int networkId() {
         return networkId;
     }
+
+    @Override
+    public String toString() {
+        return "GetDataRequest{" +
+                "networkId=" + networkId +
+                '}';
+    }
 }
