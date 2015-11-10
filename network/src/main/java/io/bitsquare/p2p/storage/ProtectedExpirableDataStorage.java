@@ -2,6 +2,7 @@ package io.bitsquare.p2p.storage;
 
 import com.google.common.annotations.VisibleForTesting;
 import io.bitsquare.app.Log;
+import io.bitsquare.common.ByteArray;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.CryptoException;
 import io.bitsquare.common.crypto.Hash;
@@ -25,7 +26,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.HashMap;
@@ -42,9 +42,9 @@ public class ProtectedExpirableDataStorage implements MessageListener {
     public static int CHECK_TTL_INTERVAL = 10 * 60 * 1000;
 
     private final PeerGroup peerGroup;
-    private final Map<BigInteger, ProtectedData> map = new HashMap<>();
+    private final Map<ByteArray, ProtectedData> map = new HashMap<>();
     private final CopyOnWriteArraySet<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArraySet<>();
-    private HashMap<BigInteger, Integer> sequenceNumberMap = new HashMap<>();
+    private HashMap<ByteArray, Integer> sequenceNumberMap = new HashMap<>();
     private final Storage<HashMap> storage;
     private final Timer timer = new Timer();
     private volatile boolean shutDownInProgress;
@@ -65,7 +65,7 @@ public class ProtectedExpirableDataStorage implements MessageListener {
 
     private void init() {
         Log.traceCall();
-        HashMap<BigInteger, Integer> persisted = storage.initAndGetPersisted(sequenceNumberMap, "sequenceNumberMap");
+        HashMap<ByteArray, Integer> persisted = storage.initAndGetPersisted(sequenceNumberMap, "sequenceNumberMap");
         if (persisted != null) {
             sequenceNumberMap = persisted;
         }
@@ -137,7 +137,7 @@ public class ProtectedExpirableDataStorage implements MessageListener {
 
     public boolean add(ProtectedData protectedData, @Nullable Address sender) {
         Log.traceCall();
-        BigInteger hashOfPayload = getHashAsBigInteger(protectedData.expirablePayload);
+        ByteArray hashOfPayload = getHashAsByteArray(protectedData.expirablePayload);
         boolean containsKey = map.containsKey(hashOfPayload);
         boolean result = checkPublicKeys(protectedData, true)
                 && checkSignature(protectedData);
@@ -171,7 +171,7 @@ public class ProtectedExpirableDataStorage implements MessageListener {
 
     public boolean remove(ProtectedData protectedData, @Nullable Address sender) {
         Log.traceCall();
-        BigInteger hashOfPayload = getHashAsBigInteger(protectedData.expirablePayload);
+        ByteArray hashOfPayload = getHashAsByteArray(protectedData.expirablePayload);
         boolean containsKey = map.containsKey(hashOfPayload);
         if (!containsKey) log.debug("Remove data ignored as we don't have an entry for that data.");
         boolean result = containsKey
@@ -196,7 +196,7 @@ public class ProtectedExpirableDataStorage implements MessageListener {
 
     public boolean removeMailboxData(ProtectedMailboxData protectedMailboxData, @Nullable Address sender) {
         Log.traceCall();
-        BigInteger hashOfData = getHashAsBigInteger(protectedMailboxData.expirablePayload);
+        ByteArray hashOfData = getHashAsByteArray(protectedMailboxData.expirablePayload);
         boolean containsKey = map.containsKey(hashOfData);
         if (!containsKey) log.debug("Remove data ignored as we don't have an entry for that data.");
         boolean result = containsKey
@@ -219,14 +219,14 @@ public class ProtectedExpirableDataStorage implements MessageListener {
         return result;
     }
 
-    public Map<BigInteger, ProtectedData> getMap() {
+    public Map<ByteArray, ProtectedData> getMap() {
         return map;
     }
 
     public ProtectedData getDataWithSignedSeqNr(ExpirablePayload payload, KeyPair ownerStoragePubKey)
             throws CryptoException {
         Log.traceCall();
-        BigInteger hashOfData = getHashAsBigInteger(payload);
+        ByteArray hashOfData = getHashAsByteArray(payload);
         int sequenceNumber;
         if (sequenceNumberMap.containsKey(hashOfData))
             sequenceNumber = sequenceNumberMap.get(hashOfData) + 1;
@@ -242,7 +242,7 @@ public class ProtectedExpirableDataStorage implements MessageListener {
                                                               KeyPair storageSignaturePubKey, PublicKey receiversPublicKey)
             throws CryptoException {
         Log.traceCall();
-        BigInteger hashOfData = getHashAsBigInteger(expirableMailboxPayload);
+        ByteArray hashOfData = getHashAsByteArray(expirableMailboxPayload);
         int sequenceNumber;
         if (sequenceNumberMap.containsKey(hashOfData))
             sequenceNumber = sequenceNumberMap.get(hashOfData) + 1;
@@ -265,7 +265,7 @@ public class ProtectedExpirableDataStorage implements MessageListener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void doRemoveProtectedExpirableData(ProtectedData protectedData, BigInteger hashOfPayload) {
+    private void doRemoveProtectedExpirableData(ProtectedData protectedData, ByteArray hashOfPayload) {
         Log.traceCall();
         map.remove(hashOfPayload);
         log.trace("Data removed from our map. We broadcast the message to our peers.");
@@ -278,7 +278,7 @@ public class ProtectedExpirableDataStorage implements MessageListener {
         log.info(sb.toString());
     }
 
-    private boolean isSequenceNrValid(ProtectedData data, BigInteger hashOfData) {
+    private boolean isSequenceNrValid(ProtectedData data, ByteArray hashOfData) {
         Log.traceCall();
         int newSequenceNumber = data.sequenceNumber;
         Integer storedSequenceNumber = sequenceNumberMap.get(hashOfData);
@@ -325,10 +325,10 @@ public class ProtectedExpirableDataStorage implements MessageListener {
         return result;
     }
 
-    private boolean checkIfStoredDataMatchesNewData(ProtectedData data, BigInteger hashOfData) {
+    private boolean checkIfStoredDataMatchesNewData(ProtectedData data, ByteArray hashOfData) {
         Log.traceCall();
         ProtectedData storedData = map.get(hashOfData);
-        boolean result = getHashAsBigInteger(storedData.expirablePayload).equals(hashOfData)
+        boolean result = getHashAsByteArray(storedData.expirablePayload).equals(hashOfData)
                 && storedData.ownerStoragePubKey.equals(data.ownerStoragePubKey);
         if (!result)
             log.error("New data entry does not match our stored data. Consider it might be an attempt of fraud");
@@ -336,14 +336,14 @@ public class ProtectedExpirableDataStorage implements MessageListener {
         return result;
     }
 
-    private boolean checkIfStoredMailboxDataMatchesNewMailboxData(ProtectedMailboxData data, BigInteger hashOfData) {
+    private boolean checkIfStoredMailboxDataMatchesNewMailboxData(ProtectedMailboxData data, ByteArray hashOfData) {
         Log.traceCall();
         ProtectedData storedData = map.get(hashOfData);
         if (storedData instanceof ProtectedMailboxData) {
             ProtectedMailboxData storedMailboxData = (ProtectedMailboxData) storedData;
             // publicKey is not the same (stored: sender, new: receiver)
             boolean result = storedMailboxData.receiversPubKey.equals(data.receiversPubKey)
-                    && getHashAsBigInteger(storedMailboxData.expirablePayload).equals(hashOfData);
+                    && getHashAsByteArray(storedMailboxData.expirablePayload).equals(hashOfData);
             if (!result)
                 log.error("New data entry does not match our stored data. Consider it might be an attempt of fraud");
 
@@ -359,8 +359,8 @@ public class ProtectedExpirableDataStorage implements MessageListener {
         peerGroup.broadcast(message, sender);
     }
 
-    private BigInteger getHashAsBigInteger(ExpirablePayload payload) {
-        return new BigInteger(Hash.getHash(payload));
+    private ByteArray getHashAsByteArray(ExpirablePayload payload) {
+        return new ByteArray(Hash.getHash(payload));
     }
 
 }

@@ -52,7 +52,6 @@
     <TextField fx:id="connectedPeersBTC" GridPane.rowIndex="2" GridPane.columnIndex="1"
                mouseTransparent="true" focusTraversable="false"/>
 
-
     <TitledGroupBg text="P2P network" GridPane.rowIndex="3" GridPane.rowSpan="5">
         <padding>
             <Insets top="50.0"/>

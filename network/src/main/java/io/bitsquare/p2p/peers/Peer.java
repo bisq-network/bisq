@@ -55,6 +55,7 @@ public class Peer implements Serializable {
         return "Peer{" +
                 "address=" + address +
                 ", pingNonce=" + pingNonce +
+                ", connection=" + connection +
                 '}';
     }
 }

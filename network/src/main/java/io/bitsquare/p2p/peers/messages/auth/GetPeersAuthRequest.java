@@ -10,12 +10,12 @@ public final class GetPeersAuthRequest extends AuthenticationMessage {
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     public final Address address;
-    public final long challengerNonce;
+    public final long responderNonce;
     public final HashSet<Address> peerAddresses;
 
-    public GetPeersAuthRequest(Address address, long challengerNonce, HashSet<Address> peerAddresses) {
+    public GetPeersAuthRequest(Address address, long responderNonce, HashSet<Address> peerAddresses) {
         this.address = address;
-        this.challengerNonce = challengerNonce;
+        this.responderNonce = responderNonce;
         this.peerAddresses = peerAddresses;
     }
 
@@ -23,7 +23,7 @@ public final class GetPeersAuthRequest extends AuthenticationMessage {
     public String toString() {
         return "GetPeersAuthRequest{" +
                 "address=" + address +
-                ", challengerNonce=" + challengerNonce +
+                ", challengerNonce=" + responderNonce +
                 ", peerAddresses=" + peerAddresses +
                 "} " + super.toString();
     }

@@ -8,18 +8,18 @@ public final class AuthenticationRequest extends AuthenticationMessage {
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     public final Address address;
-    public final long nonce;
+    public final long requesterNonce;
 
-    public AuthenticationRequest(Address address, long nonce) {
+    public AuthenticationRequest(Address address, long requesterNonce) {
         this.address = address;
-        this.nonce = nonce;
+        this.requesterNonce = requesterNonce;
     }
 
     @Override
     public String toString() {
         return "AuthenticationRequest{" +
                 "address=" + address +
-                ", nonce=" + nonce +
+                ", nonce=" + requesterNonce +
                 "} " + super.toString();
     }
 }

@@ -7,9 +7,9 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.ProgramArguments;
+import io.bitsquare.common.ByteArray;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.CryptoException;
-import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.crypto.EncryptionService;
@@ -26,6 +26,7 @@ import io.bitsquare.p2p.storage.data.ExpirableMailboxPayload;
 import io.bitsquare.p2p.storage.data.ExpirablePayload;
 import io.bitsquare.p2p.storage.data.ProtectedData;
 import io.bitsquare.p2p.storage.data.ProtectedMailboxData;
+import io.bitsquare.p2p.storage.messages.DataExchangeMessage;
 import io.bitsquare.p2p.storage.messages.GetDataRequest;
 import io.bitsquare.p2p.storage.messages.GetDataResponse;
 import javafx.beans.property.BooleanProperty;
@@ -40,7 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.math.BigInteger;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -83,8 +83,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final BooleanProperty authenticated = new SimpleBooleanProperty();
     private MonadicBinding<Boolean> readyForAuthentication;
     public final IntegerProperty numAuthenticatedPeers = new SimpleIntegerProperty(0);
-    @Nullable
-    private byte[] blurredAddressHash = null;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -167,20 +165,20 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void onMessage(Message message, Connection connection) {
         if (message instanceof GetDataRequest) {
             Log.traceCall(message.toString());
-            log.info("Received GetDataSetMessage: " + message);
             networkNode.sendMessage(connection, new GetDataResponse(getDataSet()));
         } else if (message instanceof GetDataResponse) {
             Log.traceCall(message.toString());
             GetDataResponse getDataResponse = (GetDataResponse) message;
-            log.info("Received GetDataResponse: " + message);
             HashSet<ProtectedData> set = getDataResponse.set;
-            if (!set.isEmpty()) {
-                // we keep that connection open as the bootstrapping peer will use that for the authentication
-                // as we are not authenticated yet the data adding will not be broadcasted 
-                set.stream().forEach(e -> dataStorage.add(e, connection.getPeerAddress()));
-            } else {
-                log.trace("Received DataSetMessage: Empty data set");
-            }
+            // we keep that connection open as the bootstrapping peer will use that for the authentication
+            // as we are not authenticated yet the data adding will not be broadcasted 
+            set.stream().forEach(e -> dataStorage.add(e, connection.getPeerAddress()));
+            setRequestingDataCompleted();
+        } else if (message instanceof DataExchangeMessage) {
+            Log.traceCall(message.toString());
+            DataExchangeMessage dataExchangeMessage = (DataExchangeMessage) message;
+            HashSet<ProtectedData> set = dataExchangeMessage.set;
+            set.stream().forEach(e -> dataStorage.add(e, connection.getPeerAddress()));
             setRequestingDataCompleted();
         } else if (message instanceof SealedAndSignedMessage) {
             Log.traceCall(message.toString());
@@ -205,6 +203,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     private boolean verifyBlurredAddressHash(SealedAndSignedMessage sealedAndSignedMessage) {
+        byte[] blurredAddressHash = getAddress().getBlurredAddress();
         return blurredAddressHash != null &&
                 Arrays.equals(blurredAddressHash, sealedAndSignedMessage.blurredAddressHash);
     }
@@ -259,17 +258,14 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     @Override
     public void onPeerAdded(Peer peer) {
-        Log.traceCall();
     }
 
     @Override
     public void onPeerRemoved(Address address) {
-        Log.traceCall();
     }
 
     @Override
     public void onConnectionAuthenticated(Connection connection) {
-        Log.traceCall();
     }
 
 
@@ -291,8 +287,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void onHiddenServicePublished() {
         Log.traceCall();
         checkArgument(networkNode.getAddress() != null, "Address must be set when we have the hidden service ready");
-
-        blurredAddressHash = Hash.getHash(getAddress().getAddressMask());
 
         p2pServiceListeners.stream().forEach(e -> e.onHiddenServicePublished());
 
@@ -369,19 +363,20 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     // 5. Step: 
     private void sendGetAllDataMessageAfterAuthentication(final Peer peer) {
-        Log.traceCall();
-        log.trace("sendGetDataSetMessageAfterAuthentication");
-        // After authentication we request again data as we might have missed pushed data in the meantime
-        SettableFuture<Connection> future = networkNode.sendMessage(peer.connection, new GetDataRequest());
+        Log.traceCall(peer.toString());
+        // We have to exchange the data again as we might have missed pushed data in the meantime
+        // After authentication we send our data set to the other peer.
+        // As he will do the same we will get his actual data set.
+        SettableFuture<Connection> future = networkNode.sendMessage(peer.connection, new DataExchangeMessage(getDataSet()));
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
             public void onSuccess(@Nullable Connection connection) {
-                log.info("onPeerAddressAuthenticated Send GetAllDataMessage to " + peer.address + " succeeded.");
+                log.info("sendGetAllDataMessageAfterAuthentication Send DataExchangeMessage to " + peer.address + " succeeded.");
             }
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                log.warn("onPeerAddressAuthenticated Send GetAllDataMessage to " + peer.address + " failed. " +
+                log.warn("sendGetAllDataMessageAfterAuthentication Send DataExchangeMessage to " + peer.address + " failed. " +
                         "Exception:" + throwable.getMessage());
             }
         });
@@ -463,7 +458,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         if (encryptionService != null) {
             try {
                 SealedAndSignedMessage sealedAndSignedMessage = new SealedAndSignedMessage(
-                        encryptionService.encryptAndSign(pubKeyRing, message), Hash.getHash(peerAddress.getAddressMask()));
+                        encryptionService.encryptAndSign(pubKeyRing, message), peerAddress.getBlurredAddress());
                 SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, sealedAndSignedMessage);
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
@@ -509,7 +504,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         if (encryptionService != null) {
             try {
                 SealedAndSignedMessage sealedAndSignedMessage = new SealedAndSignedMessage(
-                        encryptionService.encryptAndSign(peersPubKeyRing, message), Hash.getHash(peerAddress.getAddressMask()));
+                        encryptionService.encryptAndSign(peersPubKeyRing, message), peerAddress.getBlurredAddress());
                 SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, sealedAndSignedMessage);
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
@@ -615,7 +610,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
     }
 
-    public Map<BigInteger, ProtectedData> getDataMap() {
+    public Map<ByteArray, ProtectedData> getDataMap() {
         Log.traceCall();
         return dataStorage.getMap();
     }

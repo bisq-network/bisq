@@ -67,17 +67,18 @@ public class AuthenticationHandshake implements MessageListener {
             if (message instanceof AuthenticationResponse) {
                 // Requesting peer
                 AuthenticationResponse authenticationResponse = (AuthenticationResponse) message;
+                connection.setPeerAddress(authenticationResponse.address);
                 Address peerAddress = authenticationResponse.address;
                 log.trace("ChallengeMessage from " + peerAddress + " at " + myAddress);
                 boolean verified = nonce != 0 && nonce == authenticationResponse.requesterNonce;
                 if (verified) {
-                    connection.setPeerAddress(peerAddress);
                     SettableFuture<Connection> future = networkNode.sendMessage(peerAddress,
-                            new GetPeersAuthRequest(myAddress, authenticationResponse.challengerNonce, new HashSet<>(peerGroup.getAllPeerAddresses())));
+                            new GetPeersAuthRequest(myAddress, authenticationResponse.responderNonce, new HashSet<>(peerGroup.getAllPeerAddresses())));
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
                         public void onSuccess(Connection connection) {
                             log.trace("GetPeersAuthRequest sent successfully from " + myAddress + " to " + peerAddress);
+                            connection.setPeerAddress(peerAddress);
                         }
 
                         @Override
@@ -95,21 +96,29 @@ public class AuthenticationHandshake implements MessageListener {
                 GetPeersAuthRequest getPeersAuthRequest = (GetPeersAuthRequest) message;
                 Address peerAddress = getPeersAuthRequest.address;
                 log.trace("GetPeersMessage from " + peerAddress + " at " + myAddress);
-                boolean verified = nonce != 0 && nonce == getPeersAuthRequest.challengerNonce;
+                boolean verified = nonce != 0 && nonce == getPeersAuthRequest.responderNonce;
                 if (verified) {
-                    // we add the reported peers to our own set
-                    HashSet<Address> peerAddresses = getPeersAuthRequest.peerAddresses;
-                    log.trace("Received peers: " + peerAddresses);
-                    peerGroup.addToReportedPeers(peerAddresses, connection);
-
+                    // we create the msg with our already collected peer addresses (before adding the new ones)
                     SettableFuture<Connection> future = networkNode.sendMessage(peerAddress,
                             new GetPeersAuthResponse(myAddress, new HashSet<>(peerGroup.getAllPeerAddresses())));
                     log.trace("sent GetPeersAuthResponse to " + peerAddress + " from " + myAddress
                             + " with allPeers=" + peerGroup.getAllPeerAddresses());
+
+                    // now we add the reported peers to our own set
+                    HashSet<Address> peerAddresses = getPeersAuthRequest.peerAddresses;
+                    log.trace("Received peers: " + peerAddresses);
+                    peerGroup.addToReportedPeers(peerAddresses, connection);
+                    
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
                         public void onSuccess(Connection connection) {
                             log.trace("GetPeersAuthResponse sent successfully from " + myAddress + " to " + peerAddress);
+                            connection.setPeerAddress(peerAddress);
+                            log.info("AuthenticationComplete: Peer with address " + peerAddress
+                                    + " authenticated (" + connection.getUid() + "). Took "
+                                    + (System.currentTimeMillis() - startAuthTs) + " ms.");
+
+                            AuthenticationHandshake.this.onSuccess(connection);
                         }
 
                         @Override
@@ -118,12 +127,6 @@ public class AuthenticationHandshake implements MessageListener {
                             onFault(throwable);
                         }
                     });
-
-                    log.info("AuthenticationComplete: Peer with address " + peerAddress
-                            + " authenticated (" + connection.getUid() + "). Took "
-                            + (System.currentTimeMillis() - startAuthTs) + " ms.");
-
-                    onSuccess(connection);
                 } else {
                     log.warn("verify nonce failed. getPeersMessage=" + getPeersAuthRequest + " / nonce=" + nonce);
                     onFault(new Exception("Verify nonce failed. getPeersMessage=" + getPeersAuthRequest + " / nonce=" + nonce));
@@ -219,7 +222,7 @@ public class AuthenticationHandshake implements MessageListener {
                 // inconsistent state (removal of connection from NetworkNode.authenticatedConnections)
                 log.trace("processAuthenticationMessage: connection.shutDown complete. RequestAuthenticationMessage from " + peerAddress + " at " + myAddress);
 
-                SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new AuthenticationResponse(myAddress, authenticationRequest.nonce, getAndSetNonce()));
+                SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new AuthenticationResponse(myAddress, authenticationRequest.requesterNonce, getAndSetNonce()));
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
                     public void onSuccess(Connection connection) {

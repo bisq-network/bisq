@@ -87,6 +87,8 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         if (connection != null) {
             return sendMessage(connection, message);
         } else {
+            log.debug("inBoundConnections " + inBoundConnections.toString());
+            log.debug("outBoundConnections " + outBoundConnections.toString());
             log.trace("We have not found any connection for that peerAddress. " +
                     "We will create a new outbound connection.");
 
@@ -220,7 +222,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     @Override
     public void onConnection(Connection connection) {
-        Log.traceCall();
+        Log.traceCall("NetworkNode connection=" + connection);
         connectionListeners.stream().forEach(e -> e.onConnection(connection));
     }
 
@@ -298,7 +300,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         startServerConnectionListener = new ConnectionListener() {
             @Override
             public void onConnection(Connection connection) {
-                Log.traceCall();
+                Log.traceCall("startServerConnectionListener connection=" + connection);
                 // we still have not authenticated so put it to the temp list
                 inBoundConnections.add(connection);
                 NetworkNode.this.onConnection(connection);
@@ -333,13 +335,15 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     }
 
     private Optional<Connection> lookupOutboundConnection(Address peerAddress) {
-        Log.traceCall();
+        Log.traceCall(peerAddress.toString());
+        log.debug("outBoundConnections " + outBoundConnections);
         return outBoundConnections.stream()
                 .filter(e -> peerAddress.equals(e.getPeerAddress())).findAny();
     }
 
     private Optional<Connection> lookupInboundConnection(Address peerAddress) {
-        Log.traceCall();
+        Log.traceCall(peerAddress.toString());
+        log.debug("inBoundConnections " + inBoundConnections);
         return inBoundConnections.stream()
                 .filter(e -> peerAddress.equals(e.getPeerAddress())).findAny();
     }

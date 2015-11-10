@@ -1,11 +1,14 @@
 package io.bitsquare.p2p;
 
+import io.bitsquare.common.crypto.Hash;
+
 import java.io.Serializable;
 import java.util.regex.Pattern;
 
 public class Address implements Serializable {
     public final String hostName;
     public final int port;
+    transient private byte[] blurredAddress;
 
     public Address(String hostName, int port) {
         this.hostName = hostName;
@@ -22,8 +25,11 @@ public class Address implements Serializable {
         return hostName + ":" + port;
     }
 
-    public String getAddressMask() {
-        return getFullAddress().substring(0, 2);
+    // We use just a few chars form or address to blur the potential receiver for sent messages
+    public byte[] getBlurredAddress() {
+        if (blurredAddress == null)
+            blurredAddress = Hash.getHash(getFullAddress().substring(0, 2));
+        return blurredAddress;
     }
 
     @Override

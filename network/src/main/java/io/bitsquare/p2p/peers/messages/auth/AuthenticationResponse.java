@@ -9,12 +9,12 @@ public final class AuthenticationResponse extends AuthenticationMessage {
 
     public final Address address;
     public final long requesterNonce;
-    public final long challengerNonce;
+    public final long responderNonce;
 
-    public AuthenticationResponse(Address address, long requesterNonce, long challengerNonce) {
+    public AuthenticationResponse(Address address, long requesterNonce, long responderNonce) {
         this.address = address;
         this.requesterNonce = requesterNonce;
-        this.challengerNonce = challengerNonce;
+        this.responderNonce = responderNonce;
     }
 
     @Override
@@ -22,7 +22,7 @@ public final class AuthenticationResponse extends AuthenticationMessage {
         return "AuthenticationResponse{" +
                 "address=" + address +
                 ", requesterNonce=" + requesterNonce +
-                ", challengerNonce=" + challengerNonce +
+                ", challengerNonce=" + responderNonce +
                 "} " + super.toString();
     }
 }
