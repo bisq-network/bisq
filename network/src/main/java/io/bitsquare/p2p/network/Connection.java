@@ -45,7 +45,8 @@ public class Connection implements MessageListener {
     private final ConnectionListener connectionListener;
 
     private final String portInfo;
-    private final String uid;
+    private final String uid = UUID.randomUUID().toString();
+    ;
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
 
     // set in init
@@ -75,7 +76,6 @@ public class Connection implements MessageListener {
         this.connectionListener = connectionListener;
 
         Log.traceCall();
-        uid = UUID.randomUUID().toString();
         if (socket.getLocalPort() == 0)
             portInfo = "port=" + socket.getPort();
         else
@@ -131,7 +131,7 @@ public class Connection implements MessageListener {
         if (!stopped) {
             try {
                 log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                        "Write object to outputStream to peer: {} ({objectId=})\nmessage={}"
+                        "Write object to outputStream to peer: {} (uid={})\nmessage={}"
                         + "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n", getPeerAddress(), uid, message);
 
                 Object objectToWrite;

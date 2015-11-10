@@ -15,10 +15,9 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeoutException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -26,7 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public abstract class NetworkNode implements MessageListener, ConnectionListener {
     private static final Logger log = LoggerFactory.getLogger(NetworkNode.class);
 
-    private static final int CREATE_SOCKET_TIMEOUT = 1 * 1000;        // 10 sec.
+    private static final int CREATE_SOCKET_TIMEOUT = 10 * 1000;        // 10 sec.
 
     protected final int servicePort;
 
@@ -92,6 +91,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                     "We will create a new outbound connection.");
 
             final SettableFuture<Connection> resultFuture = SettableFuture.create();
+
             ListenableFuture<Connection> future = executorService.submit(() -> {
                 Thread.currentThread().setName("NetworkNode:SendMessage-to-" + peerAddress);
                 try {
@@ -117,19 +117,35 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                     throw throwable;
                 }
             });
+
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    Thread.currentThread().setName("TimerTask-" + new Random().nextInt(10000));
+                    future.cancel(true);
+                    String message = "Timeout occurred when trying to create Socket.";
+                    log.warn(message);
+                    resultFuture.setException(new TimeoutException(message));
+                }
+            }, CREATE_SOCKET_TIMEOUT);
+            
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 public void onSuccess(Connection connection) {
                     UserThread.execute(() -> {
+                        timer.cancel();
                         resultFuture.set(connection);
                     });
                 }
 
                 public void onFailure(@NotNull Throwable throwable) {
                     UserThread.execute(() -> {
+                        timer.cancel();
                         resultFuture.setException(throwable);
                     });
                 }
             });
+
             return resultFuture;
         }
     }
