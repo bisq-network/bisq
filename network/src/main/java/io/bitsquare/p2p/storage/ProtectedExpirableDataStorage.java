@@ -90,6 +90,11 @@ public class ProtectedExpirableDataStorage implements MessageListener {
 
     private void removeExpiredEntries() {
         Log.traceCall();
+        // The moment when an object becomes expired will not be synchrone in the network and we could 
+        // get add messages after the object has expired. To avoid repeated additions of already expired 
+        // object when we get it sent from new peers, we don’t remove the sequence number from the map. 
+        // That way a add message for an already expired data will fail because the sequence number 
+        // is equal and not larger. 
         map.entrySet().stream()
                 .filter(entry -> entry.getValue().isExpired())
                 .forEach(entry -> map.remove(entry.getKey()));
@@ -138,19 +143,17 @@ public class ProtectedExpirableDataStorage implements MessageListener {
     public boolean add(ProtectedData protectedData, @Nullable Address sender) {
         Log.traceCall();
         ByteArray hashOfPayload = getHashAsByteArray(protectedData.expirablePayload);
-        boolean containsKey = map.containsKey(hashOfPayload);
         boolean result = checkPublicKeys(protectedData, true)
-                && checkSignature(protectedData);
+                && checkSignature(protectedData)
+                && isSequenceNrValid(protectedData, hashOfPayload);
 
-        if (containsKey) {
-            result &= checkIfStoredDataMatchesNewData(protectedData, hashOfPayload)
-                    && isSequenceNrValid(protectedData, hashOfPayload);
-        }
+        boolean containsKey = map.containsKey(hashOfPayload);
+        if (containsKey)
+            result &= checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedData, hashOfPayload);
 
         if (result) {
             map.put(hashOfPayload, protectedData);
-            log.trace("Data added to our map and it will be broadcasted to our peers.");
-            hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedData));
+            sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
 
             StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n");
             sb.append("Data set after addProtectedExpirableData:");
@@ -161,8 +164,8 @@ public class ProtectedExpirableDataStorage implements MessageListener {
             if (!containsKey)
                 broadcast(new AddDataMessage(protectedData), sender);
 
-            sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
             storage.queueUpForSave();
+            hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedData));
         } else {
             log.trace("add failed");
         }
@@ -178,7 +181,7 @@ public class ProtectedExpirableDataStorage implements MessageListener {
                 && checkPublicKeys(protectedData, false)
                 && isSequenceNrValid(protectedData, hashOfPayload)
                 && checkSignature(protectedData)
-                && checkIfStoredDataMatchesNewData(protectedData, hashOfPayload);
+                && checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedData, hashOfPayload);
 
 
         if (result) {
@@ -325,11 +328,10 @@ public class ProtectedExpirableDataStorage implements MessageListener {
         return result;
     }
 
-    private boolean checkIfStoredDataMatchesNewData(ProtectedData data, ByteArray hashOfData) {
+    private boolean checkIfStoredDataPubKeyMatchesNewDataPubKey(ProtectedData data, ByteArray hashOfData) {
         Log.traceCall();
         ProtectedData storedData = map.get(hashOfData);
-        boolean result = getHashAsByteArray(storedData.expirablePayload).equals(hashOfData)
-                && storedData.ownerStoragePubKey.equals(data.ownerStoragePubKey);
+        boolean result = storedData.ownerStoragePubKey.equals(data.ownerStoragePubKey);
         if (!result)
             log.error("New data entry does not match our stored data. Consider it might be an attempt of fraud");
 
