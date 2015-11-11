@@ -102,7 +102,7 @@ public class BitsquareApp extends Application {
 
         Log.setup(Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString());
         Log.PRINT_TRACE_METHOD = DEV_MODE;
-       
+
         UserThread.setExecutor(Platform::runLater);
 
         shutDownHandler = this::stop;
@@ -111,6 +111,9 @@ public class BitsquareApp extends Application {
         // setup UncaughtExceptionHandler
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
             // Might come from another thread 
+            log.error("Uncaught Exception from thread " + Thread.currentThread().getName());
+            log.error("Uncaught Exception throwableMessage= " + throwable.getMessage());
+            throwable.printStackTrace();
             UserThread.execute(() -> showErrorPopup(throwable, false));
         };
         Thread.setDefaultUncaughtExceptionHandler(handler);
@@ -121,19 +124,13 @@ public class BitsquareApp extends Application {
         Security.addProvider(new BouncyCastleProvider());
 
         try {
-            // Use CrashFX for report crash logs
-            /*CrashFX.setup("Bitsquare/" + Version.VERSION,
-                    Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "crashes"),
-                    URI.create("http://188.226.179.109/crashfx/upload"));*/
-            // Server not setup yet, so we use client side only support
-
             // Guice
             bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
             injector = Guice.createInjector(bitsquareAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 
             Version.NETWORK_ID = injector.getInstance(BitsquareEnvironment.class).getBitcoinNetwork().ordinal();
-                    
+
             // load the main view and create the main scene
             CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
             mainView = (MainView) viewLoader.load(MainView.class);

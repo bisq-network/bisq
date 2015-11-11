@@ -11,12 +11,4 @@
 
     <artifactId>jsocks</artifactId>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.5.11</version>
-        </dependency>
-    </dependencies>
-
 </project>
