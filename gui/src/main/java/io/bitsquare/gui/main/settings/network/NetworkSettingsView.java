@@ -127,7 +127,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         }
 
         numAuthenticatedPeersChangeListener = (observable, oldValue, newValue) -> updateAuthenticatedPeersTextArea();
-        p2PService.numAuthenticatedPeers.addListener(numAuthenticatedPeersChangeListener);
+        p2PService.getNumAuthenticatedPeers().addListener(numAuthenticatedPeersChangeListener);
         updateAuthenticatedPeersTextArea();
     }
 
@@ -136,7 +136,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         if (p2PServiceListener != null)
             p2PService.removeP2PServiceListener(p2PServiceListener);
         if (numAuthenticatedPeersChangeListener != null)
-            p2PService.numAuthenticatedPeers.removeListener(numAuthenticatedPeersChangeListener);
+            p2PService.getNumAuthenticatedPeers().removeListener(numAuthenticatedPeersChangeListener);
     }
 
     private void updateAuthenticatedPeersTextArea() {

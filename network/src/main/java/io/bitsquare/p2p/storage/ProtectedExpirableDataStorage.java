@@ -65,7 +65,7 @@ public class ProtectedExpirableDataStorage implements MessageListener {
 
     private void init() {
         Log.traceCall();
-        HashMap<ByteArray, Integer> persisted = storage.initAndGetPersisted(sequenceNumberMap, "sequenceNumberMap");
+        HashMap<ByteArray, Integer> persisted = storage.initAndGetPersisted(sequenceNumberMap, "SequenceNumberMap");
         if (persisted != null) {
             sequenceNumberMap = persisted;
         }

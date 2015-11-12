@@ -13,11 +13,11 @@ public final class SealedAndSignedMessage implements MailboxMessage {
 
     private final int networkId = Version.NETWORK_ID;
     public final SealedAndSigned sealedAndSigned;
-    public final byte[] blurredAddressHash;
+    public final byte[] addressPrefixHash;
 
-    public SealedAndSignedMessage(SealedAndSigned sealedAndSigned, byte[] blurredAddressHash) {
+    public SealedAndSignedMessage(SealedAndSigned sealedAndSigned, byte[] addressPrefixHash) {
         this.sealedAndSigned = sealedAndSigned;
-        this.blurredAddressHash = blurredAddressHash;
+        this.addressPrefixHash = addressPrefixHash;
     }
 
     @Override
@@ -35,7 +35,7 @@ public final class SealedAndSignedMessage implements MailboxMessage {
         return "SealedAndSignedMessage{" +
                 "networkId=" + networkId +
                 ", sealedAndSigned=" + sealedAndSigned +
-                ", receiverAddressMaskHash.hashCode()=" + Arrays.toString(blurredAddressHash).hashCode() +
+                ", receiverAddressMaskHash.hashCode()=" + Arrays.toString(addressPrefixHash).hashCode() +
                 '}';
     }
 }

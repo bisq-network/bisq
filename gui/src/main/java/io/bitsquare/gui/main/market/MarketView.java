@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.market;
 
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -134,7 +135,8 @@ public class MarketView extends ActivatableViewAndModel<TabPane, MarketViewModel
                 newValue -> {
                     String code = newValue.getCode();
                     areaChart.setTitle("Offer book for " + newValue.getName());
-                    xAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(xAxis, "", " " + code + "/BTC"));
+                    xAxis.setLabel(priceColumnLabel.get());
+                    xAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(xAxis, "", ""));
                     priceColumnLabel.set("Price (" + code + "/BTC)");
                     volumeColumnLabel.set("Volume (" + code + ")");
                 });
@@ -156,7 +158,7 @@ public class MarketView extends ActivatableViewAndModel<TabPane, MarketViewModel
         TableView<Offer> tableView = new TableView();
 
         // price
-        TableColumn<Offer, Offer> priceColumn = new TableColumn<>("Price (EUR/BTC)");
+        TableColumn<Offer, Offer> priceColumn = new TableColumn<>();
         priceColumn.textProperty().bind(priceColumnLabel);
         priceColumn.setMinWidth(120);
         priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -237,7 +239,7 @@ public class MarketView extends ActivatableViewAndModel<TabPane, MarketViewModel
 
         Label titleLabel = new Label(direction.equals(Offer.Direction.BUY) ? "Offers for buy bitcoin (bid)" : "Offers for sell bitcoin (ask)");
         titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16; -fx-alignment: center");
-        titleLabel.prefWidthProperty().bind(tableView.widthProperty());
+        UserThread.execute(() -> titleLabel.prefWidthProperty().bind(tableView.widthProperty()));
 
         VBox vBox = new VBox();
         vBox.setSpacing(10);
@@ -252,13 +254,13 @@ public class MarketView extends ActivatableViewAndModel<TabPane, MarketViewModel
         xAxis = new NumberAxis();
         xAxis.setForceZeroInRange(false);
         xAxis.setAutoRanging(true);
-        xAxis.setLabel("Price");
+        xAxis.setLabel(priceColumnLabel.get());
 
         yAxis = new NumberAxis();
         yAxis.setForceZeroInRange(false);
         yAxis.setAutoRanging(true);
-        yAxis.setLabel("Amount");
-        yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis, "", " BTC"));
+        yAxis.setLabel("Amount in BTC");
+        yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis, "", ""));
 
         seriesBuy = new XYChart.Series();
         seriesBuy.setName("Offers for  buy bitcoin  ");

@@ -44,6 +44,7 @@ import org.reactfx.util.FxTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.inject.Named;
 import java.io.File;
 import java.time.Duration;
@@ -176,7 +177,7 @@ public class OpenOfferManager {
         shutDown(null);
     }
 
-    public void shutDown(Runnable completeHandler) {
+    public void shutDown(@Nullable Runnable completeHandler) {
         if (timer != null)
             timer.cancel();
 
@@ -188,7 +189,8 @@ public class OpenOfferManager {
                 offerBookService.removeOfferAtShutDown(openOffer.getOffer());
             }
 
-            FxTimer.runLater(Duration.ofMillis(500), completeHandler::run);
+            if (completeHandler != null)
+                FxTimer.runLater(Duration.ofMillis(500), completeHandler::run);
         }
     }
 

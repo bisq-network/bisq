@@ -31,6 +31,7 @@ public class Connection implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
     private static final int MAX_MSG_SIZE = 5 * 1024 * 1024;         // 5 MB of compressed data
     private static final int SOCKET_TIMEOUT = 30 * 60 * 1000;        // 30 min.
+    private ConnectionsType connectionType;
 
     public static int getMaxMsgSize() {
         return MAX_MSG_SIZE;
@@ -71,7 +72,7 @@ public class Connection implements MessageListener {
         this.connectionListener = connectionListener;
 
         sharedSpace = new SharedSpace(this, socket);
-        
+
         Log.traceCall();
         if (socket.getLocalPort() == 0)
             portInfo = "port=" + socket.getPort();
@@ -120,6 +121,10 @@ public class Connection implements MessageListener {
         isAuthenticated = true;
         if (!stopped)
             connectionListener.onPeerAddressAuthenticated(peerAddress, connection);
+    }
+
+    public void setConnectionType(ConnectionsType connectionType) {
+        this.connectionType = connectionType;
     }
 
     // Called form various threads
@@ -205,6 +210,9 @@ public class Connection implements MessageListener {
         return stopped;
     }
 
+    public ConnectionsType getConnectionType() {
+        return connectionType;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ShutDown
@@ -324,6 +332,7 @@ public class Connection implements MessageListener {
                 ", isAuthenticated=" + isAuthenticated +
                 ", stopped=" + stopped +
                 ", stopped=" + stopped +
+                ", connectionType=" + connectionType +
                 ", useCompression=" + useCompression +
                 '}';
     }

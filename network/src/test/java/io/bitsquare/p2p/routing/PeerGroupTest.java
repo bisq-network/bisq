@@ -1,12 +1,9 @@
 package io.bitsquare.p2p.routing;
 
-import io.bitsquare.common.util.Profiler;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
-import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.LocalhostNetworkNode;
-import io.bitsquare.p2p.peers.AuthenticationListener;
 import io.bitsquare.p2p.peers.PeerGroup;
 import io.bitsquare.p2p.seed.SeedNode;
 import org.junit.*;
@@ -36,7 +33,7 @@ public class PeerGroupTest {
     public void setup() throws InterruptedException {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(50);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(8);
-        PeerGroup.setMaxConnections(100);
+        PeerGroup.setMaxConnectionsLowPrio(100);
 
         seedNodes = new HashSet<>();
         if (useLocalhost) {
@@ -213,7 +210,8 @@ public class PeerGroupTest {
         // node1 -> node2 PeersMessage
 
         // first authentication from seedNode2 to seedNode1, then from seedNode1 to seedNode2
-        CountDownLatch latch1 = new CountDownLatch(2);
+        //TODO
+       /* CountDownLatch latch1 = new CountDownLatch(2);
         AuthenticationListener routingListener1 = new AuthenticationListener() {
             @Override
             public void onConnectionAuthenticated(Connection connection) {
@@ -274,12 +272,13 @@ public class PeerGroupTest {
         seedNode1.shutDown(() -> shutDownLatch.countDown());
         seedNode2.shutDown(() -> shutDownLatch.countDown());
         seedNode3.shutDown(() -> shutDownLatch.countDown());
-        shutDownLatch.await();
+        shutDownLatch.await();*/
     }
 
     //@Test
     public void testAuthenticationWithDisconnect() throws InterruptedException {
-        LocalhostNetworkNode.setSimulateTorDelayTorNode(0);
+        //TODO
+       /* LocalhostNetworkNode.setSimulateTorDelayTorNode(0);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(0);
         SeedNode seedNode1 = getAndStartSeedNode(8001);
         SeedNode seedNode2 = getAndStartSeedNode(8002);
@@ -340,12 +339,13 @@ public class PeerGroupTest {
         CountDownLatch shutDownLatch = new CountDownLatch(2);
         seedNode1.shutDown(() -> shutDownLatch.countDown());
         seedNode2.shutDown(() -> shutDownLatch.countDown());
-        shutDownLatch.await();
+        shutDownLatch.await();*/
     }
 
     //@Test
     public void testAuthenticationWithManyNodes() throws InterruptedException {
-        int authentications = 0;
+        //TODO
+       /* int authentications = 0;
         int length = 3;
         SeedNode[] nodes = new SeedNode[length];
         for (int i = 0; i < length; i++) {
@@ -379,7 +379,7 @@ public class PeerGroupTest {
         for (int i = 0; i < length; i++) {
             nodes[i].shutDown(() -> shutDownLatch.countDown());
         }
-        shutDownLatch.await();
+        shutDownLatch.await();*/
     }
 
     private SeedNode getAndStartSeedNode(int port) throws InterruptedException {

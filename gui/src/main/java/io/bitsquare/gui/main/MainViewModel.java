@@ -183,21 +183,23 @@ class MainViewModel implements ViewModel {
     private BooleanProperty initP2PNetwork() {
         final BooleanProperty initialDataReady = new SimpleBooleanProperty();
         splashP2PNetworkInfo.set("Connecting to Tor network...");
+
         p2PService.start(new P2PServiceListener() {
             @Override
             public void onTorNodeReady() {
                 splashP2PNetworkInfo.set("Publishing Tor Hidden Service...");
+                p2PNetworkInfo.set(splashP2PNetworkInfo.get());
                 p2PNetworkIconId.set("image-connection-tor");
             }
 
             @Override
             public void onHiddenServicePublished() {
                 splashP2PNetworkInfo.set("Authenticating to a seed node...");
+                p2PNetworkInfo.set(splashP2PNetworkInfo.get());
             }
 
             @Override
             public void onRequestingDataCompleted() {
-                p2PNetworkInfo.set("Publishing Tor Hidden Service...");
                 initialDataReady.set(true);
             }
 
@@ -340,14 +342,14 @@ class MainViewModel implements ViewModel {
 
 
         // update nr of peers in footer
-        p2PService.numAuthenticatedPeers.addListener((observable, oldValue, newValue) -> updateP2pNetworkInfo());
+        p2PService.getNumAuthenticatedPeers().addListener((observable, oldValue, newValue) -> updateP2pNetworkInfo());
 
         // now show app
         showAppScreen.set(true);
     }
 
     private void updateP2pNetworkInfo() {
-        p2PNetworkInfo.set("Nr. of authenticated connections: " + p2PService.numAuthenticatedPeers.get());
+        p2PNetworkInfo.set("Nr. of authenticated connections: " + p2PService.getNumAuthenticatedPeers().get());
     }
 
     private void displayAlertIfPresent(Alert alert) {

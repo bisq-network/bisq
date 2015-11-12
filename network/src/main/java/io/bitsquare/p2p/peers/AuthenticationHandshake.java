@@ -4,20 +4,23 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.app.Log;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.network.Connection;
+import io.bitsquare.p2p.network.ConnectionsType;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.peers.messages.auth.*;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Random;
-import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 
 // authentication example: 
@@ -51,8 +54,6 @@ public class AuthenticationHandshake implements MessageListener {
         this.networkNode = networkNode;
         this.peerGroup = peerGroup;
         this.myAddress = myAddress;
-
-        networkNode.addMessageListener(this);
     }
 
 
@@ -62,74 +63,85 @@ public class AuthenticationHandshake implements MessageListener {
 
     @Override
     public void onMessage(Message message, Connection connection) {
+        checkArgument(!stopped);
+
         if (message instanceof AuthenticationMessage) {
             Log.traceCall(message.toString());
             if (message instanceof AuthenticationResponse) {
                 // Requesting peer
+
+                // We use the active connectionType if we started the authentication request to another peer
+                // That is used for protecting eclipse attacks
+                connection.setConnectionType(ConnectionsType.ACTIVE);
+
                 AuthenticationResponse authenticationResponse = (AuthenticationResponse) message;
-                connection.setPeerAddress(authenticationResponse.address);
                 Address peerAddress = authenticationResponse.address;
-                log.trace("ChallengeMessage from " + peerAddress + " at " + myAddress);
+                connection.setPeerAddress(peerAddress);
+                log.trace("Received authenticationResponse from " + peerAddress);
                 boolean verified = nonce != 0 && nonce == authenticationResponse.requesterNonce;
                 if (verified) {
-                    SettableFuture<Connection> future = networkNode.sendMessage(peerAddress,
-                            new GetPeersAuthRequest(myAddress, authenticationResponse.responderNonce, new HashSet<>(peerGroup.getAllPeerAddresses())));
+                    GetPeersAuthRequest getPeersAuthRequest = new GetPeersAuthRequest(myAddress,
+                            authenticationResponse.responderNonce,
+                            new HashSet<>(peerGroup.getAllPeerAddresses()));
+                    SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, getPeersAuthRequest);
+                    log.trace("Sent GetPeersAuthRequest {} to {}", getPeersAuthRequest, peerAddress);
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
                         public void onSuccess(Connection connection) {
-                            log.trace("GetPeersAuthRequest sent successfully from " + myAddress + " to " + peerAddress);
-                            connection.setPeerAddress(peerAddress);
+                            log.trace("Successfully sent GetPeersAuthRequest {} to {}", getPeersAuthRequest, peerAddress);
                         }
 
                         @Override
                         public void onFailure(@NotNull Throwable throwable) {
                             log.info("GetPeersAuthRequest sending failed " + throwable.getMessage());
-                            onFault(throwable);
+                            failed(throwable);
                         }
                     });
+
+                    // We could set already the authenticated flag here already, but as we need the reported peers we need
+                    // to wait for the GetPeersAuthResponse before we are completed.
                 } else {
-                    log.warn("verify nonce failed. challengeMessage=" + authenticationResponse + " / nonce=" + nonce);
-                    onFault(new Exception("Verify nonce failed. challengeMessage=" + authenticationResponse + " / nonceMap=" + nonce));
+                    log.warn("verify nonce failed. AuthenticationResponse=" + authenticationResponse + " / nonce=" + nonce);
+                    failed(new Exception("Verify nonce failed. AuthenticationResponse=" + authenticationResponse + " / nonceMap=" + nonce));
                 }
             } else if (message instanceof GetPeersAuthRequest) {
                 // Responding peer
                 GetPeersAuthRequest getPeersAuthRequest = (GetPeersAuthRequest) message;
                 Address peerAddress = getPeersAuthRequest.address;
-                log.trace("GetPeersMessage from " + peerAddress + " at " + myAddress);
+                log.trace("GetPeersAuthRequest from " + peerAddress + " at " + myAddress);
                 boolean verified = nonce != 0 && nonce == getPeersAuthRequest.responderNonce;
                 if (verified) {
                     // we create the msg with our already collected peer addresses (before adding the new ones)
-                    SettableFuture<Connection> future = networkNode.sendMessage(peerAddress,
-                            new GetPeersAuthResponse(myAddress, new HashSet<>(peerGroup.getAllPeerAddresses())));
-                    log.trace("sent GetPeersAuthResponse to " + peerAddress + " from " + myAddress
-                            + " with allPeers=" + peerGroup.getAllPeerAddresses());
+                    GetPeersAuthResponse getPeersAuthResponse = new GetPeersAuthResponse(myAddress,
+                            new HashSet<>(peerGroup.getAllPeerAddresses()));
+                    SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, getPeersAuthResponse);
+                    log.trace("Sent GetPeersAuthResponse {} to {}", getPeersAuthResponse, peerAddress);
 
                     // now we add the reported peers to our own set
                     HashSet<Address> peerAddresses = getPeersAuthRequest.peerAddresses;
-                    log.trace("Received peers: " + peerAddresses);
+                    log.trace("Received reported peers: " + peerAddresses);
                     peerGroup.addToReportedPeers(peerAddresses, connection);
-                    
+
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
                         public void onSuccess(Connection connection) {
-                            log.trace("GetPeersAuthResponse sent successfully from " + myAddress + " to " + peerAddress);
-                            connection.setPeerAddress(peerAddress);
+                            log.trace("Successfully sent GetPeersAuthResponse {} to {}", getPeersAuthResponse, peerAddress);
                             log.info("AuthenticationComplete: Peer with address " + peerAddress
                                     + " authenticated (" + connection.getUid() + "). Took "
                                     + (System.currentTimeMillis() - startAuthTs) + " ms.");
 
-                            AuthenticationHandshake.this.onSuccess(connection);
+                            completed(connection);
                         }
 
                         @Override
                         public void onFailure(@NotNull Throwable throwable) {
                             log.info("GetPeersAuthResponse sending failed " + throwable.getMessage());
-                            onFault(throwable);
+                            failed(throwable);
                         }
                     });
                 } else {
                     log.warn("verify nonce failed. getPeersMessage=" + getPeersAuthRequest + " / nonce=" + nonce);
-                    onFault(new Exception("Verify nonce failed. getPeersMessage=" + getPeersAuthRequest + " / nonce=" + nonce));
+                    failed(new Exception("Verify nonce failed. getPeersMessage=" + getPeersAuthRequest + " / nonce=" + nonce));
                 }
             } else if (message instanceof GetPeersAuthResponse) {
                 // Requesting peer
@@ -137,130 +149,97 @@ public class AuthenticationHandshake implements MessageListener {
                 Address peerAddress = getPeersAuthResponse.address;
                 log.trace("GetPeersAuthResponse from " + peerAddress + " at " + myAddress);
                 HashSet<Address> peerAddresses = getPeersAuthResponse.peerAddresses;
-                log.trace("Received peers: " + peerAddresses);
+                log.trace("Received reported peers: " + peerAddresses);
                 peerGroup.addToReportedPeers(peerAddresses, connection);
 
-                // we wait until the handshake is completed before setting the authenticate flag
-                // authentication at both sides of the connection
                 log.info("AuthenticationComplete: Peer with address " + peerAddress
                         + " authenticated (" + connection.getUid() + "). Took "
                         + (System.currentTimeMillis() - startAuthTs) + " ms.");
 
-                onSuccess(connection);
+                completed(connection);
             }
         }
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // Authentication initiated by requesting peer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SettableFuture<Connection> requestAuthenticationToPeer(Address peerAddress) {
+    public SettableFuture<Connection> requestAuthentication(Address peerAddress) {
         Log.traceCall();
         // Requesting peer
-        resultFuture = SettableFuture.create();
-        startAuthTs = System.currentTimeMillis();
-        SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new AuthenticationRequest(myAddress, getAndSetNonce()));
+
+        init();
+
+        AuthenticationRequest authenticationRequest = new AuthenticationRequest(myAddress, getAndSetNonce());
+        SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, authenticationRequest);
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
-            public void onSuccess(@Nullable Connection connection) {
-                log.trace("send RequestAuthenticationMessage to " + peerAddress + " succeeded.");
+            public void onSuccess(Connection connection) {
+                log.trace("send AuthenticationRequest to " + peerAddress + " succeeded.");
+                connection.setPeerAddress(peerAddress);
+                // We protect that connection from getting closed by maintenance cleanup...
+                connection.setConnectionType(ConnectionsType.AUTH_REQUEST);
             }
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                log.info("Send RequestAuthenticationMessage to " + peerAddress + " failed." +
+                log.info("Send AuthenticationRequest to " + peerAddress + " failed." +
                         "\nException:" + throwable.getMessage());
-                onFault(throwable);
+                failed(throwable);
             }
         });
 
         return resultFuture;
     }
 
-    public SettableFuture<Connection> requestAuthentication(Set<Address> remainingAddresses, Address peerAddress) {
-        Log.traceCall(peerAddress.getFullAddress());
-        // Requesting peer
-        resultFuture = SettableFuture.create();
-        startAuthTs = System.currentTimeMillis();
-        remainingAddresses.remove(peerAddress);
-        SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new AuthenticationRequest(myAddress, getAndSetNonce()));
-        Futures.addCallback(future, new FutureCallback<Connection>() {
-            @Override
-            public void onSuccess(@Nullable Connection connection) {
-                log.trace("send RequestAuthenticationMessage to " + peerAddress + " succeeded.");
-            }
 
-            @Override
-            public void onFailure(@NotNull Throwable throwable) {
-                log.info("Send RequestAuthenticationMessage to " + peerAddress + " failed." +
-                        "\nThat is expected if seed nodes are offline." +
-                        "\nException:" + throwable.getMessage());
-                onFault(throwable);
-            }
-        });
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Responding to authentication request
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-        return resultFuture;
-    }
-
-    public SettableFuture<Connection> processAuthenticationRequest(AuthenticationRequest authenticationRequest, Connection connection) {
+    public SettableFuture<Connection> respondToAuthenticationRequest(AuthenticationRequest authenticationRequest, Connection connection) {
         Log.traceCall();
         // Responding peer
-        resultFuture = SettableFuture.create();
-        startAuthTs = System.currentTimeMillis();
+
+        init();
 
         Address peerAddress = authenticationRequest.address;
-        log.trace("RequestAuthenticationMessage from " + peerAddress + " at " + myAddress);
+        log.trace("AuthenticationRequest from " + peerAddress + " at " + myAddress);
         log.info("We shut down inbound connection from peer {} to establish a new " +
                 "connection with his reported address.", peerAddress);
 
-        //TODO check if causes problems without delay
         connection.shutDown(() -> {
-            Log.traceCall();
-            if (!stopped) {
-                // we delay a bit as listeners for connection.onDisconnect are on other threads and might lead to 
-                // inconsistent state (removal of connection from NetworkNode.authenticatedConnections)
-                log.trace("processAuthenticationMessage: connection.shutDown complete. RequestAuthenticationMessage from " + peerAddress + " at " + myAddress);
+            UserThread.runAfter(() -> {
+                if (!stopped) {
+                    // we delay a bit as listeners for connection.onDisconnect are on other threads and might lead to 
+                    // inconsistent state (removal of connection from NetworkNode.authenticatedConnections)
+                    log.trace("processAuthenticationMessage: connection.shutDown complete. AuthenticationRequest from " + peerAddress + " at " + myAddress);
 
-                SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new AuthenticationResponse(myAddress, authenticationRequest.requesterNonce, getAndSetNonce()));
-                Futures.addCallback(future, new FutureCallback<Connection>() {
-                    @Override
-                    public void onSuccess(Connection connection) {
-                        log.trace("onSuccess sending ChallengeMessage");
-                    }
+                    AuthenticationResponse authenticationResponse = new AuthenticationResponse(myAddress,
+                            authenticationRequest.requesterNonce,
+                            getAndSetNonce());
+                    SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, authenticationResponse);
+                    Futures.addCallback(future, new FutureCallback<Connection>() {
+                        @Override
+                        public void onSuccess(Connection connection) {
+                            log.trace("onSuccess sending AuthenticationResponse");
+                            connection.setPeerAddress(peerAddress);
+                            // We use passive connectionType for connections created from received authentication requests from other peers 
+                            // That is used for protecting eclipse attacks
+                            connection.setConnectionType(ConnectionsType.PASSIVE);
+                        }
 
-                    @Override
-                    public void onFailure(@NotNull Throwable throwable) {
-                        log.warn("onFailure sending ChallengeMessage.");
-                        onFault(throwable);
-                    }
-                });
-            }
+                        @Override
+                        public void onFailure(@NotNull Throwable throwable) {
+                            log.warn("onFailure sending AuthenticationResponse.");
+                            failed(throwable);
+                        }
+                    });
+                }
+            }, 200, TimeUnit.MILLISECONDS);
         });
-       /* connection.shutDown(() -> UserThread.runAfter(() -> { Log.traceCall();
-                    if (!stopped) {
-                        // we delay a bit as listeners for connection.onDisconnect are on other threads and might lead to 
-                        // inconsistent state (removal of connection from NetworkNode.authenticatedConnections)
-                        log.trace("processAuthenticationMessage: connection.shutDown complete. RequestAuthenticationMessage from " + peerAddress + " at " + myAddress);
-
-                        SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, new AuthenticationResponse(myAddress, authenticationRequest.nonce, getAndSetNonce()));
-                        Futures.addCallback(future, new FutureCallback<Connection>() {
-                            @Override
-                            public void onSuccess(Connection connection) { Log.traceCall();
-                                log.trace("onSuccess sending ChallengeMessage");
-                            }
-
-                            @Override
-                            public void onFailure(@NotNull Throwable throwable) { Log.traceCall();
-                                log.warn("onFailure sending ChallengeMessage.");
-                                onFault(throwable);
-                            }
-                        });
-                    }
-                },
-                100 + PeerGroup.simulateAuthTorNode,
-                TimeUnit.MILLISECONDS));*/
-
         return resultFuture;
     }
 
@@ -268,6 +247,12 @@ public class AuthenticationHandshake implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void init() {
+        networkNode.addMessageListener(this);
+        resultFuture = SettableFuture.create();
+        startAuthTs = System.currentTimeMillis();
+    }
 
     private long getAndSetNonce() {
         Log.traceCall();
@@ -278,21 +263,21 @@ public class AuthenticationHandshake implements MessageListener {
         return nonce;
     }
 
-    private void onFault(@NotNull Throwable throwable) {
+    private void failed(@NotNull Throwable throwable) {
         Log.traceCall();
-        cleanup();
+        shutDown();
         resultFuture.setException(throwable);
     }
 
-    private void onSuccess(Connection connection) {
+    private void completed(Connection connection) {
         Log.traceCall();
-        cleanup();
+        shutDown();
         resultFuture.set(connection);
     }
 
-    private void cleanup() {
+    private void shutDown() {
         Log.traceCall();
-        stopped = true;
         networkNode.removeMessageListener(this);
+        stopped = true;
     }
 }

@@ -79,6 +79,15 @@ public class Storage<T extends Serializable> {
     }
 
     @Nullable
+    public T initAndGetPersisted(String fileName) {
+        this.fileName = fileName;
+        storageFile = new File(dir, fileName);
+        fileManager = new FileManager<>(dir, storageFile, 600, TimeUnit.MILLISECONDS);
+
+        return getPersisted();
+    }
+
+    @Nullable
     public T initAndGetPersisted(T serializable) {
         return initAndGetPersisted(serializable, serializable.getClass().getSimpleName());
     }
@@ -90,15 +99,23 @@ public class Storage<T extends Serializable> {
         storageFile = new File(dir, fileName);
         fileManager = new FileManager<>(dir, storageFile, 600, TimeUnit.MILLISECONDS);
 
-        return getPersisted(serializable);
+        return getPersisted();
+    }
+
+    public void queueUpForSave() {
+        queueUpForSave(serializable);
     }
 
     // Save delayed and on a background thread
-    public void queueUpForSave() {
-        log.trace("save " + fileName);
-        checkNotNull(storageFile, "storageFile = null. Call setupFileStorage before using read/write.");
+    public void queueUpForSave(T serializable) {
+        if (serializable != null) {
+            log.trace("save " + fileName);
+            checkNotNull(storageFile, "storageFile = null. Call setupFileStorage before using read/write.");
 
-        fileManager.saveLater(serializable);
+            fileManager.saveLater(serializable);
+        } else {
+            log.trace("queueUpForSave called but no serializable set");
+        }
     }
 
     public void remove(String fileName) {
@@ -113,17 +130,17 @@ public class Storage<T extends Serializable> {
     // We do the file read on the UI thread to avoid problems from multi threading. 
     // Data are small and read is done only at startup, so it is no performance issue.
     @Nullable
-    private T getPersisted(T serializable) {
+    private T getPersisted() {
         if (storageFile.exists()) {
             long now = System.currentTimeMillis();
             try {
                 T persistedObject = fileManager.read(storageFile);
-                log.trace("Read {} completed in {}msec", serializable.getClass().getSimpleName(), System.currentTimeMillis() - now);
+                log.trace("Read {} completed in {}msec", storageFile, System.currentTimeMillis() - now);
 
                 // If we did not get any exception we can be sure the data are consistent so we make a backup 
                 now = System.currentTimeMillis();
                 fileManager.backupFile(fileName);
-                log.trace("Backup {} completed in {}msec", serializable.getClass().getSimpleName(), System.currentTimeMillis() - now);
+                log.trace("Backup {} completed in {}msec", storageFile, System.currentTimeMillis() - now);
 
                 return persistedObject;
             } catch (ClassCastException | IOException e) {
