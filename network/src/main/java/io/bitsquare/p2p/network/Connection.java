@@ -31,7 +31,7 @@ public class Connection implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
     private static final int MAX_MSG_SIZE = 5 * 1024 * 1024;         // 5 MB of compressed data
     private static final int SOCKET_TIMEOUT = 30 * 60 * 1000;        // 30 min.
-    private ConnectionMode connectionType;
+    private ConnectionType connectionType;
 
     public static int getMaxMsgSize() {
         return MAX_MSG_SIZE;
@@ -123,7 +123,7 @@ public class Connection implements MessageListener {
             connectionListener.onPeerAddressAuthenticated(peerAddress, connection);
     }
 
-    public void setConnectionType(ConnectionMode connectionType) {
+    public void setConnectionType(ConnectionType connectionType) {
         this.connectionType = connectionType;
     }
 
@@ -210,7 +210,7 @@ public class Connection implements MessageListener {
         return stopped;
     }
 
-    public ConnectionMode getConnectionType() {
+    public ConnectionType getConnectionType() {
         return connectionType;
     }
 

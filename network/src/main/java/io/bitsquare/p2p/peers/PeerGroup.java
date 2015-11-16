@@ -168,7 +168,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         Address peerAddress = message.address;
         if (!authenticationHandshakes.containsKey(peerAddress)) {
             // We protect that connection from getting closed by maintenance cleanup...
-            connection.setConnectionType(ConnectionMode.AUTH_REQUEST);
+            connection.setConnectionType(ConnectionType.AUTH_REQUEST);
             AuthenticationHandshake authenticationHandshake = new AuthenticationHandshake(networkNode, PeerGroup.this, getMyAddress());
             authenticationHandshakes.put(peerAddress, authenticationHandshake);
             SettableFuture<Connection> future = authenticationHandshake.respondToAuthenticationRequest(message, connection);
@@ -467,7 +467,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
             List<Connection> authenticatedConnections = allConnections.stream()
                     .filter(e -> e.isAuthenticated())
-                    .filter(e -> e.getConnectionType() == ConnectionMode.PASSIVE)
+                    .filter(e -> e.getConnectionType() == ConnectionType.PASSIVE)
                     .collect(Collectors.toList());
 
             if (authenticatedConnections.size() == 0) {
@@ -476,7 +476,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                 if (size > MAX_CONNECTIONS_NORMAL_PRIO) {
                     authenticatedConnections = allConnections.stream()
                             .filter(e -> e.isAuthenticated())
-                            .filter(e -> e.getConnectionType() == ConnectionMode.PASSIVE || e.getConnectionType() == ConnectionMode.ACTIVE)
+                            .filter(e -> e.getConnectionType() == ConnectionType.PASSIVE || e.getConnectionType() == ConnectionType.ACTIVE)
                             .collect(Collectors.toList());
 
                     if (authenticatedConnections.size() == 0) {
