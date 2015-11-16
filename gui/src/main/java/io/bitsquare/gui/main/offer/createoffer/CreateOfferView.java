@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.offer.createoffer;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.Navigation;
@@ -36,6 +37,7 @@ import io.bitsquare.gui.main.account.settings.AccountSettingsView;
 import io.bitsquare.gui.main.offer.OfferView;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.openoffer.OpenOffersView;
+import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
 import io.bitsquare.gui.popups.OfferDetailsPopup;
 import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
@@ -59,6 +61,7 @@ import javafx.util.StringConverter;
 import org.controlsfx.control.PopOver;
 
 import javax.inject.Inject;
+import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
@@ -428,11 +431,17 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class);
             }
 
-            if (newValue)
-                new Popup().headLine(BSResources.get("createOffer.success.headline"))
-                        .message(BSResources.get("createOffer.success.info"))
-                        .onClose(() -> close())
-                        .show();
+            if (newValue) {
+                UserThread.runAfter(() -> {
+                    new Popup().headLine(BSResources.get("createOffer.success.headline"))
+                            .message(BSResources.get("createOffer.success.info"))
+                            .onClose(() -> {
+                                navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
+                                close();
+                            })
+                            .show();
+                }, 300, TimeUnit.MILLISECONDS);
+            }
         };
     }
 

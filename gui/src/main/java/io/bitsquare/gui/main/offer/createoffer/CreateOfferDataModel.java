@@ -354,4 +354,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
     public boolean getShowPlaceOfferConfirmation() {
         return preferences.getShowPlaceOfferConfirmation();
     }
+
+    public Preferences getPreferences() {
+        return preferences;
+    }
 }

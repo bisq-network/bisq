@@ -73,8 +73,8 @@ public class StartPaymentView extends TradeStepDetailsView {
         if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
             new Popup().information("You need to transfer now the agreed amount to your trading partner.\n" +
                     "Please take care that you use the exact data presented here, including the reference text\n" +
-                    "Please do not click the \"Payment started\" button if you have before you have completed the transfer.\n" +
-                    "Take care that you make the transfer soon to not miss the exceed trading period.")
+                    "Please do not click the \"Payment started\" button before you have completed the transfer.\n" +
+                    "Take care that you make the transfer soon to not exceed the trading period.")
                     .onClose(() -> preferences.dontShowAgain(key))
                     .show();
         }

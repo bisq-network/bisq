@@ -318,4 +318,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
     public List<Arbitrator> getArbitrators() {
         return user.getAcceptedArbitrators();
     }
+
+    public Preferences getPreferences() {
+        return preferences;
+    }
 }

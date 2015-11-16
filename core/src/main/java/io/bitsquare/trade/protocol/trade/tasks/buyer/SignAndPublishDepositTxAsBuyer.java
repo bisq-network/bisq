@@ -41,6 +41,11 @@ public class SignAndPublishDepositTxAsBuyer extends TradeTask {
         try {
             runInterceptHook();
 
+            log.debug("getContractAsJson");
+            log.debug("----------");
+            log.debug(trade.getContractAsJson());
+            log.debug("----------");
+            
             byte[] contractHash = Hash.getHash(trade.getContractAsJson());
             trade.setContractHash(contractHash);
             processModel.getTradeWalletService().takerSignsAndPublishesDepositTx(

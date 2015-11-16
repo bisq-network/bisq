@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.offer.takeoffer;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.Navigation;
@@ -63,6 +64,7 @@ import org.fxmisc.easybind.Subscription;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
@@ -220,13 +222,16 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
             }
 
-            if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null)
-                new Popup().information(BSResources.get("takeOffer.success.info"))
-                        .onClose(() -> {
-                            navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
-                            close();
-                        })
-                        .show();
+            if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {
+                UserThread.runAfter(() -> {
+                    new Popup().information(BSResources.get("takeOffer.success.info"))
+                            .onClose(() -> {
+                                navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
+                                close();
+                            })
+                            .show();
+                }, 300, TimeUnit.MILLISECONDS);
+            }
         });
 
         if (model.getPossiblePaymentAccounts().size() > 1) {
@@ -318,8 +323,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         Offer offer = model.getOffer();
         if (model.getShowTakeOfferConfirmation()) {
             offerDetailsPopup.onTakeOffer(() -> model.onTakeOffer()).show(offer);
-        }
-        else {
+        } else {
             if (model.hasAcceptedArbitrators()) {
                 model.onTakeOffer();
             } else {

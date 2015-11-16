@@ -348,7 +348,13 @@ public class Preferences implements Serializable {
     }
 
     public boolean showAgain(String key) {
-        return getShowAgainMap().containsKey(key) && getShowAgainMap().get(key);
+        // if we add new and those are not in our stored map we display by default the new popup
+        if (!getShowAgainMap().containsKey(key)) {
+            showAgainMap.put(key, true);
+            storage.queueUpForSave();
+        }
+
+        return showAgainMap.get(key);
     }
 
     public boolean getTacAccepted() {

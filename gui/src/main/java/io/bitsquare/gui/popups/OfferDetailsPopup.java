@@ -193,7 +193,7 @@ public class OfferDetailsPopup extends Popup {
             });
 
             CheckBox checkBox = addCheckBox(gridPane, ++rowIndex, "Don't show again", 5);
-            checkBox.setPadding(new Insets(10, 0, 15, 0));
+            checkBox.setPadding(new Insets(20, 0, 25, 0));
             checkBox.setSelected(!preferences.getShowTakeOfferConfirmation());
             checkBox.setOnAction(e -> preferences.setShowTakeOfferConfirmation(!checkBox.isSelected()));
         } else {

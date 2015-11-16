@@ -22,7 +22,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
-import javax.crypto.*;
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.Mac;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -51,7 +54,7 @@ public class Encryption {
             KeyPair keyPair = keyPairGenerator.genKeyPair();
             log.trace("Generate msgEncryptionKeyPair needed {} ms", System.currentTimeMillis() - ts);
             return keyPair;
-        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             throw new RuntimeException("Could not create key.");
         }
@@ -67,8 +70,7 @@ public class Encryption {
             Cipher cipher = Cipher.getInstance(SYM_CIPHER, "BC");
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
             return cipher.doFinal(payload);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
-                | BadPaddingException | IllegalBlockSizeException | NoSuchProviderException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             throw new CryptoException(e);
         }
@@ -79,8 +81,7 @@ public class Encryption {
             Cipher cipher = Cipher.getInstance(SYM_CIPHER, "BC");
             cipher.init(Cipher.DECRYPT_MODE, secretKey);
             return cipher.doFinal(encryptedPayload);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
-                | BadPaddingException | IllegalBlockSizeException | NoSuchProviderException e) {
+        } catch (Throwable e) {
             throw new CryptoException(e);
         }
     }
@@ -113,7 +114,7 @@ public class Encryption {
                     }
                 }
             }
-        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             throw new RuntimeException("Could not create hmac");
         }
@@ -125,7 +126,7 @@ public class Encryption {
         try {
             byte[] hmacTest = getHmac(message, secretKey);
             return Arrays.equals(hmacTest, hmac);
-        } catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchProviderException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             throw new RuntimeException("Could not create cipher");
         }
@@ -176,8 +177,7 @@ public class Encryption {
             Cipher cipher = Cipher.getInstance(ASYM_CIPHER, "BC");
             cipher.init(Cipher.ENCRYPT_MODE, publicKey);
             return cipher.doFinal(payload);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
-                | BadPaddingException | IllegalBlockSizeException | NoSuchProviderException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             throw new CryptoException("Couldn't encrypt payload");
         }
@@ -188,8 +188,7 @@ public class Encryption {
             Cipher cipher = Cipher.getInstance(ASYM_CIPHER, "BC");
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
             return cipher.doFinal(encryptedPayload);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
-                | BadPaddingException | IllegalBlockSizeException | NoSuchProviderException e) {
+        } catch (Throwable e) {
             // errors when trying to decrypt foreign messages are normal
             throw new CryptoException(e);
         }
@@ -259,7 +258,7 @@ public class Encryption {
             KeyGenerator keyPairGenerator = KeyGenerator.getInstance(SYM_CIPHER, "BC");
             keyPairGenerator.init(256);
             return keyPairGenerator.generateKey();
-        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             throw new RuntimeException("Couldn't generate key");
         }

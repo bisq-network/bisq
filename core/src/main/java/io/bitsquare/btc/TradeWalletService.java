@@ -472,9 +472,10 @@ public class TradeWalletService {
         // Check if OP_RETURN output with contract hash matches the one from the offerer
         TransactionOutput contractHashOutput = new TransactionOutput(params, offerersDepositTx, Coin.ZERO,
                 ScriptBuilder.createOpReturnScript(contractHash).getProgram());
-
+        log.debug("contractHashOutput " + contractHashOutput);
         TransactionOutput offerersContractHashOutput = offerersDepositTx.getOutputs().get(1);
-        if (!offerersContractHashOutput.equals(contractHashOutput))
+        log.debug("offerersContractHashOutput " + offerersContractHashOutput);
+        if (!offerersContractHashOutput.getScriptPubKey().equals(contractHashOutput.getScriptPubKey()))
             throw new TransactionVerificationException("Offerers transaction output for the contract hash is not matching takers version.");
 
         // Add all outputs from offerersDepositTx to depositTx
