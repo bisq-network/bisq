@@ -186,7 +186,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         // We set connectionType to that connection to avoid that is get closed when 
                         // we get too many connection attempts.
                         // That is used as protection against eclipse attacks.
-                        connection.setConnectionType(ConnectionType.DIRECT_MSG);
+                        connection.setConnectionPriority(ConnectionPriority.DIRECT_MSG);
 
                         log.info("Received SealedAndSignedMessage and decrypted it: " + decryptedMsgWithPubKey);
                         decryptedMailListeners.stream().forEach(

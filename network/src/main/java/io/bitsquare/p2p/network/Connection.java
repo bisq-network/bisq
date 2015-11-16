@@ -31,7 +31,7 @@ public class Connection implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
     private static final int MAX_MSG_SIZE = 5 * 1024 * 1024;         // 5 MB of compressed data
     private static final int SOCKET_TIMEOUT = 30 * 60 * 1000;        // 30 min.
-    private ConnectionType connectionType;
+    private ConnectionPriority connectionPriority;
 
     public static int getMaxMsgSize() {
         return MAX_MSG_SIZE;
@@ -123,8 +123,8 @@ public class Connection implements MessageListener {
             connectionListener.onPeerAddressAuthenticated(peerAddress, connection);
     }
 
-    public void setConnectionType(ConnectionType connectionType) {
-        this.connectionType = connectionType;
+    public void setConnectionPriority(ConnectionPriority connectionPriority) {
+        this.connectionPriority = connectionPriority;
     }
 
     // Called form various threads
@@ -210,8 +210,8 @@ public class Connection implements MessageListener {
         return stopped;
     }
 
-    public ConnectionType getConnectionType() {
-        return connectionType;
+    public ConnectionPriority getConnectionPriority() {
+        return connectionPriority;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -332,7 +332,7 @@ public class Connection implements MessageListener {
                 ", isAuthenticated=" + isAuthenticated +
                 ", stopped=" + stopped +
                 ", stopped=" + stopped +
-                ", connectionType=" + connectionType +
+                ", connectionType=" + connectionPriority +
                 ", useCompression=" + useCompression +
                 '}';
     }
