@@ -40,8 +40,10 @@ import java.util.stream.Collectors;
 @FxmlView
 public class TransactionsView extends ActivatableView<VBox, Void> {
 
-    @FXML TableView<TransactionsListItem> table;
-    @FXML TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, addressColumn, amountColumn, typeColumn,
+    @FXML
+    TableView<TransactionsListItem> table;
+    @FXML
+    TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, addressColumn, amountColumn, typeColumn,
             confidenceColumn;
 
     private ObservableList<TransactionsListItem> transactionsListItems;
@@ -85,12 +87,14 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         // TODO Open popup with details view
         log.debug("openTxDetails " + item);
 
-        try {
-            Utilities.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            new Popup().warning("Opening browser failed. Please check your internet " +
-                    "connection.").show();
+        if (!item.isNotAnAddress()) {
+            try {
+                Utilities.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                new Popup().warning("Opening browser failed. Please check your internet " +
+                        "connection.").show();
+            }
         }
     }
 
@@ -114,8 +118,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                     hyperlink = new Hyperlink(item.getAddressString());
                                     hyperlink.setOnAction(event -> openTxDetails(item));
                                     setGraphic(hyperlink);
-                                }
-                                else {
+                                } else {
                                     setGraphic(null);
                                     setId(null);
                                 }
@@ -143,8 +146,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     setGraphic(item.getProgressIndicator());
-                                }
-                                else {
+                                } else {
                                     setGraphic(null);
                                 }
                             }

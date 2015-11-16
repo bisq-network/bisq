@@ -8,7 +8,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.network.Connection;
-import io.bitsquare.p2p.network.ConnectionType;
+import io.bitsquare.p2p.network.ConnectionMode;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.peers.messages.auth.*;
@@ -72,7 +72,7 @@ public class AuthenticationHandshake implements MessageListener {
 
                 // We use the active connectionType if we started the authentication request to another peer
                 // That is used for protecting eclipse attacks
-                connection.setConnectionType(ConnectionType.ACTIVE);
+                connection.setConnectionType(ConnectionMode.ACTIVE);
 
                 AuthenticationResponse authenticationResponse = (AuthenticationResponse) message;
                 Address peerAddress = authenticationResponse.address;
@@ -180,7 +180,7 @@ public class AuthenticationHandshake implements MessageListener {
                 log.trace("send AuthenticationRequest to " + peerAddress + " succeeded.");
                 connection.setPeerAddress(peerAddress);
                 // We protect that connection from getting closed by maintenance cleanup...
-                connection.setConnectionType(ConnectionType.AUTH_REQUEST);
+                connection.setConnectionType(ConnectionMode.AUTH_REQUEST);
             }
 
             @Override
@@ -228,7 +228,7 @@ public class AuthenticationHandshake implements MessageListener {
                             connection.setPeerAddress(peerAddress);
                             // We use passive connectionType for connections created from received authentication requests from other peers 
                             // That is used for protecting eclipse attacks
-                            connection.setConnectionType(ConnectionType.PASSIVE);
+                            connection.setConnectionType(ConnectionMode.PASSIVE);
                         }
 
                         @Override

@@ -31,6 +31,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import org.slf4j.Logger;
@@ -94,6 +95,7 @@ public class OKPayForm extends PaymentMethodForm {
             checkBox.setSelected(okPayAccount.getTradeCurrencies().contains(e));
             checkBox.setMinWidth(60);
             checkBox.setMaxWidth(checkBox.getMinWidth());
+            checkBox.setTooltip(new Tooltip(e.getName()));
             checkBox.setOnAction(event -> {
                 if (checkBox.isSelected())
                     okPayAccount.addCurrency(e);

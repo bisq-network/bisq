@@ -143,8 +143,10 @@ public class Preferences implements Serializable {
             showTakeOfferConfirmation = true;
 
             showAgainMap = new HashMap<>();
-            showAgainMap.put(PopupId.SEC_DEPOSIT, true);
             showAgainMap.put(PopupId.TRADE_WALLET, true);
+            showAgainMap.put(PopupId.SEND_PAYMENT_INFO, true);
+            showAgainMap.put(PopupId.PAYMENT_SENT, true);
+            showAgainMap.put(PopupId.PAYMENT_RECEIVED, true);
 
             storage.queueUpForSave();
         }
@@ -343,6 +345,10 @@ public class Preferences implements Serializable {
 
     public Map<String, Boolean> getShowAgainMap() {
         return showAgainMap;
+    }
+
+    public boolean showAgain(String key) {
+        return getShowAgainMap().containsKey(key) && getShowAgainMap().get(key);
     }
 
     public boolean getTacAccepted() {

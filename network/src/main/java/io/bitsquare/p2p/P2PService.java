@@ -80,7 +80,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private MonadicBinding<Boolean> readyForAuthentication;
     private final Storage<Address> dbStorage;
     private Address myOnionAddress;
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -186,7 +186,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         // We set connectionType to that connection to avoid that is get closed when 
                         // we get too many connection attempts.
                         // That is used as protection against eclipse attacks.
-                        connection.setConnectionType(ConnectionType.DIRECT_MSG);
+                        connection.setConnectionType(ConnectionMode.DIRECT_MSG);
 
                         log.info("Received SealedAndSignedMessage and decrypted it: " + decryptedMsgWithPubKey);
                         decryptedMailListeners.stream().forEach(
@@ -305,7 +305,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         Log.traceCall();
         checkArgument(networkNode.getAddress() != null, "Address must be set when we have the hidden service ready");
         if (myOnionAddress != null)
-            checkArgument(networkNode.getAddress() == myOnionAddress, "networkNode.getAddress() must be same as myOnionAddress");
+            checkArgument(networkNode.getAddress().equals(myOnionAddress),
+                    "networkNode.getAddress() must be same as myOnionAddress.");
 
         myOnionAddress = networkNode.getAddress();
         dbStorage.queueUpForSave(myOnionAddress);
@@ -709,7 +710,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             return blurredAddressHash != null &&
                     Arrays.equals(blurredAddressHash, sealedAndSignedMessage.addressPrefixHash);
         } else {
-            log.warn("myOnionAddress must not be null at verifyAddressPrefixHash");
+            log.debug("myOnionAddress is null at verifyAddressPrefixHash. That is expected at startup.");
             return false;
         }
     }

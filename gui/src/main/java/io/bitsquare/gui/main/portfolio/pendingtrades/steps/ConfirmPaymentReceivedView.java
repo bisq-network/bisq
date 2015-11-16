@@ -17,10 +17,13 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps;
 
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.gui.components.TxIdTextField;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.user.PopupId;
+import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
@@ -105,13 +108,23 @@ public class ConfirmPaymentReceivedView extends TradeStepDetailsView {
     private void onPaymentReceived(ActionEvent actionEvent) {
         log.debug("onPaymentReceived");
         if (model.isAuthenticated()) {
-            confirmFiatReceivedButton.setDisable(true);
+            Preferences preferences = model.dataModel.getPreferences();
+            String key = PopupId.PAYMENT_RECEIVED;
+            if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
+                new Popup().information("Please note that as soon you have confirmed that you have received the " +
+                        "payment the locked Bitcoin will be released.\n" +
+                        "There is no way to reverse a Bitcoin payment. Confirm only if you are sure.")
+                        .onClose(() -> preferences.dontShowAgain(key))
+                        .show();
+            } else {
+                confirmFiatReceivedButton.setDisable(true);
 
-            statusProgressIndicator.setVisible(true);
-            statusProgressIndicator.setProgress(-1);
-            statusLabel.setText("Sending message to trading partner...");
+                statusProgressIndicator.setVisible(true);
+                statusProgressIndicator.setProgress(-1);
+                statusLabel.setText("Sending message to trading partner...");
 
-            model.fiatPaymentReceived();
+                model.fiatPaymentReceived();
+            }
         } else {
             new Popup().warning("You need to wait until your client is authenticated in the network.\n" +
                     "That might take up to about 2 minutes at startup.").show();

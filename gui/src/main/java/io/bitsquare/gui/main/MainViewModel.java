@@ -338,7 +338,7 @@ class MainViewModel implements ViewModel {
 
         // tac
         if (!preferences.getTacAccepted() && !BitsquareApp.DEV_MODE)
-            new TacPopup().url(WebViewPopup.getLocalUrl("tac.html")).onAgree(() -> preferences.setTacAccepted(true)).show();
+            new TacPopup().url(WebViewPopup.getLocalUrl("tac")).onAgree(() -> preferences.setTacAccepted(true)).show();
 
 
         // update nr of peers in footer

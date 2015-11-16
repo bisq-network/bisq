@@ -21,18 +21,13 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
-
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence;
-import org.bitcoinj.core.TransactionOutput;
-
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.scene.control.*;
+import javafx.scene.control.Tooltip;
+import org.bitcoinj.core.*;
 
 public class TransactionsListItem {
+
 
     private final StringProperty date = new SimpleStringProperty();
     private final StringProperty amount = new SimpleStringProperty();
@@ -44,6 +39,7 @@ public class TransactionsListItem {
 
     private final Tooltip tooltip;
     private String addressString;
+    private boolean notAnAddress;
     private AddressConfidenceListener confidenceListener;
 
     public TransactionsListItem(Transaction transaction, WalletService walletService, BSFormatter formatter) {
@@ -64,14 +60,13 @@ public class TransactionsListItem {
                         address =
                                 transactionOutput.getScriptPubKey().getToAddress(walletService.getWallet().getParams());
                         addressString = address.toString();
-                    }
-                    else {
+                    } else {
                         addressString = "No sent to address script used.";
+                        notAnAddress = true;
                     }
                 }
             }
-        }
-        else if (valueSentFromMe.isZero()) {
+        } else if (valueSentFromMe.isZero()) {
             amount.set(formatter.formatCoin(valueSentToMe));
             type.set("Received with");
 
@@ -82,14 +77,13 @@ public class TransactionsListItem {
                         address =
                                 transactionOutput.getScriptPubKey().getToAddress(walletService.getWallet().getParams());
                         addressString = address.toString();
-                    }
-                    else {
+                    } else {
                         addressString = "No sent to address script used.";
+                        notAnAddress = true;
                     }
                 }
             }
-        }
-        else {
+        } else {
             amount.set(formatter.formatCoin(valueSentToMe.subtract(valueSentFromMe)));
             boolean outgoing = false;
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
@@ -100,19 +94,19 @@ public class TransactionsListItem {
                         address = transactionOutput.getScriptPubKey().getToAddress(walletService.getWallet().getParams
                                 ());
                         addressString = address.toString();
-                    }
-                    else {
+                    } else {
                         addressString = "No sent to address script used.";
+                        notAnAddress = true;
                     }
                 }
             }
 
             if (outgoing) {
                 type.set("Sent to");
-            }
-            else {
+            } else {
                 type.set("Internal (TX Fee)");
                 addressString = "Internal swap between addresses.";
+                notAnAddress = true;
             }
         }
 
@@ -193,6 +187,10 @@ public class TransactionsListItem {
 
     public String getAddressString() {
         return addressString;
+    }
+
+    public boolean isNotAnAddress() {
+        return notAnAddress;
     }
 }
 

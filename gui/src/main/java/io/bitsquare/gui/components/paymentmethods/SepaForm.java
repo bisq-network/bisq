@@ -34,6 +34,7 @@ import javafx.geometry.VPos;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.text.TextAlignment;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,9 +99,9 @@ public class SepaForm extends PaymentMethodForm {
 
         });
 
-        Tuple2<Label, ComboBox> tuple2 = addLabelComboBox(gridPane, ++gridRow, "Country of Bank:");
+        Tuple2<Label, ComboBox> tuple2 = addLabelComboBox(gridPane, ++gridRow, "Country of your Bank:");
         ComboBox<Country> countryComboBox = tuple2.second;
-        countryComboBox.setPromptText("Select country of Bank");
+        countryComboBox.setPromptText("Select country of your Bank");
         countryComboBox.setConverter(new StringConverter<Country>() {
             @Override
             public String toString(Country country) {
@@ -141,15 +142,18 @@ public class SepaForm extends PaymentMethodForm {
     }
 
     private void addEuroCountriesGrid(boolean isEditable) {
-        addCountriesGrid(isEditable, "Accept taker countries (Euro):", euroCountryCheckBoxes, CountryUtil.getAllSepaEuroCountries());
+        addCountriesGrid(isEditable, "Accept trades from those Euro countries:", euroCountryCheckBoxes, CountryUtil.getAllSepaEuroCountries());
     }
 
     private void addNonEuroCountriesGrid(boolean isEditable) {
-        addCountriesGrid(isEditable, "Accepted taker countries (non-Euro):", nonEuroCountryCheckBoxes, CountryUtil.getAllSepaNonEuroCountries());
+        addCountriesGrid(isEditable, "Accept trades from those non-Euro countries:", nonEuroCountryCheckBoxes, CountryUtil.getAllSepaNonEuroCountries());
     }
 
     private void addCountriesGrid(boolean isEditable, String title, List<CheckBox> checkBoxList, List<Country> dataProvider) {
         Label label = addLabel(gridPane, ++gridRow, title, 0);
+        label.setWrapText(true);
+        label.setPrefWidth(200);
+        label.setTextAlignment(TextAlignment.RIGHT);
         GridPane.setValignment(label, VPos.TOP);
         FlowPane flowPane = new FlowPane();
         flowPane.setPadding(new Insets(10, 10, 10, 10));
@@ -169,7 +173,6 @@ public class SepaForm extends PaymentMethodForm {
             checkBoxList.add(checkBox);
             checkBox.setMouseTransparent(!isEditable);
             checkBox.setMinWidth(45);
-            checkBox.setMaxWidth(checkBox.getMinWidth());
             checkBox.setTooltip(new Tooltip(country.name));
             checkBox.setOnAction(event -> {
                 if (checkBox.isSelected())

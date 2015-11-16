@@ -110,7 +110,7 @@ public class OfferDetailsPopup extends Popup {
     }
 
     private void addContent() {
-        int rows = 9;
+        int rows = 11;
         if (offer.getPaymentMethodCountryCode() != null)
             rows++;
         if (offer.getOfferFeePaymentTxID() != null)
@@ -124,7 +124,8 @@ public class OfferDetailsPopup extends Popup {
         addLabelTextField(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_DISTANCE);
         addLabelTextField(gridPane, ++rowIndex, "Creation date:", formatter.formatDateTime(offer.getDate()));
         addLabelTextField(gridPane, ++rowIndex, "Offer direction:", Offer.Direction.BUY.name());
-        addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode());
+        addLabelTextField(gridPane, ++rowIndex, "Currency:", offer.getCurrencyCode());
+        addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode() + "/" + "BTC");
         addLabelTextField(gridPane, ++rowIndex, "Amount:", formatter.formatCoinWithCode(offer.getAmount()));
         addLabelTextField(gridPane, ++rowIndex, "Min. amount:", formatter.formatCoinWithCode(offer.getMinAmount()));
         addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(offer.getPaymentMethod().getId()));
@@ -192,6 +193,7 @@ public class OfferDetailsPopup extends Popup {
             });
 
             CheckBox checkBox = addCheckBox(gridPane, ++rowIndex, "Don't show again", 5);
+            checkBox.setPadding(new Insets(10, 0, 15, 0));
             checkBox.setSelected(!preferences.getShowTakeOfferConfirmation());
             checkBox.setOnAction(e -> preferences.setShowTakeOfferConfirmation(!checkBox.isSelected()));
         } else {

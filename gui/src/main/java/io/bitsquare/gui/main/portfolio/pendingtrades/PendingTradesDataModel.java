@@ -36,6 +36,7 @@ import io.bitsquare.gui.popups.WalletPasswordPopup;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.*;
 import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -69,6 +70,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     private final ObjectProperty<Trade> tradeProperty = new SimpleObjectProperty<>();
     private final StringProperty txId = new SimpleStringProperty();
     private Trade trade;
+    private Preferences preferences;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -77,7 +79,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     @Inject
     public PendingTradesDataModel(TradeManager tradeManager, WalletService walletService, TradeWalletService tradeWalletService,
-                                  User user, KeyRing keyRing, DisputeManager disputeManager,
+                                  User user, KeyRing keyRing, DisputeManager disputeManager, Preferences preferences,
                                   Navigation navigation, WalletPasswordPopup walletPasswordPopup) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
@@ -85,6 +87,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.user = user;
         this.keyRing = keyRing;
         this.disputeManager = disputeManager;
+        this.preferences = preferences;
         this.navigation = navigation;
         this.walletPasswordPopup = walletPasswordPopup;
 
@@ -321,6 +324,10 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     public DisputeManager getDisputeManager() {
         return disputeManager;
+    }
+
+    public Preferences getPreferences() {
+        return preferences;
     }
 
 

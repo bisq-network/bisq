@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps;
 
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.TxIdTextField;
@@ -26,6 +27,8 @@ import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.payment.PaymentMethod;
+import io.bitsquare.user.PopupId;
+import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
@@ -37,6 +40,7 @@ import javafx.scene.layout.GridPane;
 import static io.bitsquare.gui.util.FormBuilder.*;
 
 public class StartPaymentView extends TradeStepDetailsView {
+    private final Preferences preferences;
     private TxIdTextField txIdTextField;
 
     private Button paymentStartedButton;
@@ -55,6 +59,7 @@ public class StartPaymentView extends TradeStepDetailsView {
     public StartPaymentView(PendingTradesViewModel model) {
         super(model);
         txIdChangeListener = (ov, oldValue, newValue) -> txIdTextField.setup(newValue);
+        preferences = model.dataModel.getPreferences();
     }
 
     @Override
@@ -63,6 +68,16 @@ public class StartPaymentView extends TradeStepDetailsView {
 
         model.getTxId().addListener(txIdChangeListener);
         txIdTextField.setup(model.getTxId().get());
+
+        String key = PopupId.SEND_PAYMENT_INFO;
+        if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
+            new Popup().information("You need to transfer now the agreed amount to your trading partner.\n" +
+                    "Please take care that you use the exact data presented here, including the reference text\n" +
+                    "Please do not click the \"Payment started\" button if you have before you have completed the transfer.\n" +
+                    "Take care that you make the transfer soon to not miss the exceed trading period.")
+                    .onClose(() -> preferences.dontShowAgain(key))
+                    .show();
+        }
     }
 
     @Override
@@ -126,13 +141,21 @@ public class StartPaymentView extends TradeStepDetailsView {
     private void onPaymentStarted(ActionEvent actionEvent) {
         log.debug("onPaymentStarted");
         if (model.isAuthenticated()) {
-            paymentStartedButton.setDisable(true);
+            String key = PopupId.PAYMENT_SENT;
+            if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
+                new Popup().information("You are confirming that you have transferred the payment to your trading partner.\n" +
+                        "Please click the \"Payment started\" button only if you have completed the transfer.")
+                        .onClose(() -> preferences.dontShowAgain(key))
+                        .show();
+            } else {
+                paymentStartedButton.setDisable(true);
 
-            statusProgressIndicator.setVisible(true);
-            statusProgressIndicator.setProgress(-1);
-            statusLabel.setText("Sending message to trading partner...");
+                statusProgressIndicator.setVisible(true);
+                statusProgressIndicator.setProgress(-1);
+                statusLabel.setText("Sending message to trading partner...");
 
-            model.fiatPaymentStarted();
+                model.fiatPaymentStarted();
+            }
         } else {
             new Popup().warning("You need to wait until your client is authenticated in the network.\n" +
                     "That might take up to about 2 minutes at startup.").show();

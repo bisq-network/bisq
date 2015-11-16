@@ -29,8 +29,8 @@ import java.util.Optional;
 
 import static io.bitsquare.gui.util.FormBuilder.addCheckBox;
 
-public class FirstTimePopup extends WebViewPopup {
-    private static final Logger log = LoggerFactory.getLogger(FirstTimePopup.class);
+public class FirstTimeWebViewPopup extends WebViewPopup {
+    private static final Logger log = LoggerFactory.getLogger(FirstTimeWebViewPopup.class);
     private Preferences preferences;
     private String id;
 
@@ -39,22 +39,22 @@ public class FirstTimePopup extends WebViewPopup {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public FirstTimePopup(Preferences preferences) {
+    public FirstTimeWebViewPopup(Preferences preferences) {
         this.preferences = preferences;
     }
 
     @Override
-    public FirstTimePopup url(String url) {
+    public FirstTimeWebViewPopup url(String url) {
         super.url(url);
         return this;
     }
 
-    public FirstTimePopup onClose(Runnable closeHandler) {
+    public FirstTimeWebViewPopup onClose(Runnable closeHandler) {
         this.closeHandlerOptional = Optional.of(closeHandler);
         return this;
     }
 
-    public FirstTimePopup id(String id) {
+    public FirstTimeWebViewPopup id(String id) {
         this.id = id;
         return this;
     }

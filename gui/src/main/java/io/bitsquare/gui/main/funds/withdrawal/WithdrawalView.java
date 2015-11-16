@@ -203,7 +203,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                         formatter.formatCoinWithCode(FeePolicy.TX_FEE) + "\n" +
                         "Receivers amount: " +
                         formatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
-                        "Are you sure you withdraw that amount?")
+                        "Are you sure you want to withdraw that amount?")
                         .onAction(() -> {
                             doWithdraw(amount, callback);
                         })

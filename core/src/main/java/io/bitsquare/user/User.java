@@ -269,7 +269,11 @@ public class User implements Serializable {
     }*/
 
     public Arbitrator getAcceptedArbitratorByAddress(Address address) {
-        return acceptedArbitrators.stream().filter(e -> e.getArbitratorAddress().equals(address)).findFirst().get();
+        Optional<Arbitrator> arbitratorOptional = acceptedArbitrators.stream().filter(e -> e.getArbitratorAddress().equals(address)).findFirst();
+        if (arbitratorOptional.isPresent())
+            return arbitratorOptional.get();
+        else
+            return null;
     }
 
 

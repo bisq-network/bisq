@@ -308,12 +308,7 @@ public class BSFormatter {
 
 
     public String arbitratorAddressesToString(List<Address> addresses) {
-        //return addresses.stream().map(e -> e.getFullAddress().substring(0, 8)).collect(Collectors.joining(", "));
         return addresses.stream().map(e -> e.getFullAddress()).collect(Collectors.joining(", "));
-    }
-
-    public String arbitratorAddressToShortAddress(Address address) {
-        return address.getFullAddress().substring(0, 8);
     }
 
     public String languageCodesToString(List<String> languageLocales) {

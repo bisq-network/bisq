@@ -30,6 +30,7 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,15 +127,19 @@ public class TradeDetailsPopup extends Popup {
         addLabelTextField(gridPane, ++rowIndex, "Offer direction:", direction);
         addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode());
         addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(trade.getTradeAmount()));
-        addLabelTextField(gridPane, ++rowIndex, "Selected arbitrator:", formatter.arbitratorAddressToShortAddress(trade.getArbitratorAddress()));
+        addLabelTextField(gridPane, ++rowIndex, "Selected arbitrator:", trade.getArbitratorAddress().getFullAddress());
 
         if (contract != null) {
-            if (buyerPaymentAccountContractData != null)
-                addLabelTextField(gridPane, ++rowIndex, "Buyer payment details:", BSResources.get(buyerPaymentAccountContractData.getPaymentDetails()));
-
-            if (sellerPaymentAccountContractData != null)
-                addLabelTextField(gridPane, ++rowIndex, "Seller payment details:", BSResources.get(sellerPaymentAccountContractData.getPaymentDetails()));
-
+            if (buyerPaymentAccountContractData != null) {
+                TextField tf = addLabelTextField(gridPane, ++rowIndex, "Buyer payment details:", BSResources.get(buyerPaymentAccountContractData.getPaymentDetails())).second;
+                tf.setTooltip(new Tooltip(tf.getText()));
+                tf.setMouseTransparent(false);
+            }
+            if (sellerPaymentAccountContractData != null) {
+                TextField tf = addLabelTextField(gridPane, ++rowIndex, "Seller payment details:", BSResources.get(sellerPaymentAccountContractData.getPaymentDetails())).second;
+                tf.setTooltip(new Tooltip(tf.getText()));
+                tf.setMouseTransparent(false);
+            }
             if (buyerPaymentAccountContractData == null && sellerPaymentAccountContractData == null)
                 addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(contract.getPaymentMethodName()));
         }

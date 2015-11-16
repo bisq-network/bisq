@@ -196,8 +196,8 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         addTitledGroupBg(gridPane, ++gridRow, 2, "Information", Layout.GROUP_DISTANCE);
         Label infoLabel = addMultilineLabel(gridPane, gridRow);
         GridPane.setMargin(infoLabel, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
-        infoLabel.setText("Please not that you need to stay  available for 15 days after revoking as there might be trades which are using you as " +
-                "arbitrator. The max. allowed trader period is 8 days and the dispute process might take up to 7 days.");
+        infoLabel.setText("Please note that you need to stay  available for 15 days after revoking as there might be trades which are using you as " +
+                "arbitrator. The max. allowed trade period is 8 days and the dispute process might take up to 7 days.");
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

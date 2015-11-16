@@ -25,7 +25,7 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.funds.reserved.ReservedView;
 import io.bitsquare.gui.main.funds.transactions.TransactionsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
-import io.bitsquare.gui.popups.FirstTimePopup;
+import io.bitsquare.gui.popups.FirstTimeWebViewPopup;
 import io.bitsquare.gui.popups.WebViewPopup;
 import io.bitsquare.user.PopupId;
 import io.bitsquare.user.Preferences;
@@ -85,8 +85,9 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
         else if (root.getSelectionModel().getSelectedItem() == transactionsTab)
             navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class);
 
-        if (preferences.getShowAgainMap().get(PopupId.TRADE_WALLET) && !BitsquareApp.DEV_MODE)
-            new FirstTimePopup(preferences).url(WebViewPopup.getLocalUrl("tradeWallet.html")).show();
+        String key = PopupId.TRADE_WALLET;
+        if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE)
+            new FirstTimeWebViewPopup(preferences).id(key).url(WebViewPopup.getLocalUrl(key)).show();
     }
 
     @Override

@@ -168,7 +168,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         Address peerAddress = message.address;
         if (!authenticationHandshakes.containsKey(peerAddress)) {
             // We protect that connection from getting closed by maintenance cleanup...
-            connection.setConnectionType(ConnectionType.AUTH_REQUEST);
+            connection.setConnectionType(ConnectionMode.AUTH_REQUEST);
             AuthenticationHandshake authenticationHandshake = new AuthenticationHandshake(networkNode, PeerGroup.this, getMyAddress());
             authenticationHandshakes.put(peerAddress, authenticationHandshake);
             SettableFuture<Connection> future = authenticationHandshake.respondToAuthenticationRequest(message, connection);
@@ -186,8 +186,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
-                    log.error("AuthenticationHandshake failed. " + throwable.getMessage());
-                    throwable.printStackTrace();
+                    log.info("AuthenticationHandshake failed. That is expected if peer went offline. " + throwable.getMessage());
                     removePeer(connection.getPeerAddress());
                 }
             });
@@ -468,7 +467,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
             List<Connection> authenticatedConnections = allConnections.stream()
                     .filter(e -> e.isAuthenticated())
-                    .filter(e -> e.getConnectionType() == ConnectionType.PASSIVE)
+                    .filter(e -> e.getConnectionType() == ConnectionMode.PASSIVE)
                     .collect(Collectors.toList());
 
             if (authenticatedConnections.size() == 0) {
@@ -477,7 +476,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                 if (size > MAX_CONNECTIONS_NORMAL_PRIO) {
                     authenticatedConnections = allConnections.stream()
                             .filter(e -> e.isAuthenticated())
-                            .filter(e -> e.getConnectionType() == ConnectionType.PASSIVE || e.getConnectionType() == ConnectionType.ACTIVE)
+                            .filter(e -> e.getConnectionType() == ConnectionMode.PASSIVE || e.getConnectionType() == ConnectionMode.ACTIVE)
                             .collect(Collectors.toList());
 
                     if (authenticatedConnections.size() == 0) {

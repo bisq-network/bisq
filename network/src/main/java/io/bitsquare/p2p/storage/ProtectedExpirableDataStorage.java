@@ -285,7 +285,7 @@ public class ProtectedExpirableDataStorage implements MessageListener {
         Log.traceCall();
         int newSequenceNumber = data.sequenceNumber;
         Integer storedSequenceNumber = sequenceNumberMap.get(hashOfData);
-        if (sequenceNumberMap.containsKey(hashOfData) && newSequenceNumber <= storedSequenceNumber) {
+        if (sequenceNumberMap.containsKey(hashOfData) && newSequenceNumber < storedSequenceNumber) {
             log.trace("Sequence number is invalid. newSequenceNumber="
                     + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber);
             return false;

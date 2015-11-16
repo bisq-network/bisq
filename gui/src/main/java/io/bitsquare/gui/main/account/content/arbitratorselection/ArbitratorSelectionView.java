@@ -28,7 +28,6 @@ import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.LanguageUtil;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.*;
@@ -191,12 +190,6 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         GridPane.setColumnIndex(autoSelectAllMatchingCheckBox, 0);
         GridPane.setMargin(autoSelectAllMatchingCheckBox, new Insets(0, -10, 0, -10));
         autoSelectAllMatchingCheckBox.setOnAction(event -> model.setAutoSelectArbitrators(autoSelectAllMatchingCheckBox.isSelected()));
-
-        Button reloadButton = addButton(root, gridRow, "Reload");
-        GridPane.setColumnIndex(reloadButton, 1);
-        GridPane.setHalignment(reloadButton, HPos.RIGHT);
-        GridPane.setMargin(reloadButton, new Insets(0, -10, 0, -10));
-        reloadButton.setOnAction(event -> model.reload());
 
         TableColumn<ArbitratorListItem, String> dateColumn = new TableColumn("Registration date");
         dateColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper(param.getValue().getRegistrationDate()));

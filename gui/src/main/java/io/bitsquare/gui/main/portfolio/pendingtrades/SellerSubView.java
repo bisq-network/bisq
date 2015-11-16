@@ -56,8 +56,8 @@ public class SellerSubView extends TradeSubView {
     @Override
     protected void addWizards() {
         waitTxInBlockchain = new TradeWizardItem(WaitTxInBlockchainView.class, "Wait for blockchain confirmation");
-        waitPaymentStarted = new TradeWizardItem(WaitPaymentStartedView.class, "Wait until EUR payment has started");
-        confirmPaymentReceived = new TradeWizardItem(ConfirmPaymentReceivedView.class, "Confirm EUR payment received");
+        waitPaymentStarted = new TradeWizardItem(WaitPaymentStartedView.class, "Wait until payment has started");
+        confirmPaymentReceived = new TradeWizardItem(ConfirmPaymentReceivedView.class, "Confirm payment received");
         waitPayoutUnlock = new TradeWizardItem(WaitPayoutLockTimeView.class, "Wait for payout unlock");
         completed = new TradeWizardItem(CompletedView.class, "Completed");
 
@@ -110,11 +110,11 @@ public class SellerSubView extends TradeSubView {
                 showItem(confirmPaymentReceived);
 
                 if (model.isBlockChainMethod()) {
-                    ((ConfirmPaymentReceivedView) tradeStepDetailsView).setInfoLabelText(BSResources.get("The Bitcoin buyer has started the {0} payment." +
+                    ((ConfirmPaymentReceivedView) tradeStepDetailsView).setInfoLabelText(BSResources.get("The Bitcoin buyer has started the {0} payment. " +
                                     "Check your Altcoin wallet or Block explorer and confirm when you have received the payment.",
                             model.getCurrencyCode()));
                 } else {
-                    ((ConfirmPaymentReceivedView) tradeStepDetailsView).setInfoLabelText(BSResources.get("The Bitcoin buyer has started the {0} payment." +
+                    ((ConfirmPaymentReceivedView) tradeStepDetailsView).setInfoLabelText(BSResources.get("The Bitcoin buyer has started the {0} payment. " +
                                     "Check your payment account and confirm when you have received the payment.",
                             model.getCurrencyCode()));
                 }

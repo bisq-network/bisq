@@ -130,10 +130,6 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
         return user.isMyOwnRegisteredArbitrator(arbitrator);
     }
 
-    public void reload() {
-        arbitratorManager.applyArbitrators();
-    }
-
     private void updateAutoSelectArbitrators() {
         if (preferences.getAutoSelectArbitrators()) {
             arbitratorListItems.stream().forEach(item -> {

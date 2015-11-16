@@ -33,7 +33,7 @@ public class WebViewPopup extends Popup {
     protected String url;
 
     public static String getLocalUrl(String htmlFile) {
-        return WebViewPopup.class.getResource("/html/" + htmlFile).toExternalForm();
+        return WebViewPopup.class.getResource("/html/" + htmlFile + ".html").toExternalForm();
     }
 
     public WebViewPopup() {
