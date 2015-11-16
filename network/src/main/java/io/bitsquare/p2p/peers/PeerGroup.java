@@ -654,6 +654,8 @@ public class PeerGroup implements MessageListener, ConnectionListener {
             reportedPeerAddresses.addAll(peerAddresses);
             purgeReportedPeersIfExceeds();
         }
+
+        printReportedPeers();
     }
 
     private void purgeReportedPeersIfExceeds() {

@@ -115,7 +115,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                     newConnection.sendMessage(message);
                     return newConnection; // can take a while when using tor
                 } catch (Throwable throwable) {
-                    if (!(throwable instanceof ConnectException || throwable instanceof IOException)) {
+                    if (!(throwable instanceof ConnectException || throwable instanceof IOException || throwable instanceof TimeoutException)) {
                         throwable.printStackTrace();
                         log.error("Executing task failed. " + throwable.getMessage());
                     }
