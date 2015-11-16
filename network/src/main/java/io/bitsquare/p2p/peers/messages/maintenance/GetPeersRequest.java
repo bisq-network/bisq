@@ -2,6 +2,7 @@ package io.bitsquare.p2p.peers.messages.maintenance;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.peers.ReportedPeer;
 
 import java.util.HashSet;
 
@@ -10,18 +11,18 @@ public final class GetPeersRequest extends MaintenanceMessage {
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     public final Address address;
-    public final HashSet<Address> peerAddresses;
+    public final HashSet<ReportedPeer> reportedPeers;
 
-    public GetPeersRequest(Address address, HashSet<Address> peerAddresses) {
+    public GetPeersRequest(Address address, HashSet<ReportedPeer> reportedPeers) {
         this.address = address;
-        this.peerAddresses = peerAddresses;
+        this.reportedPeers = reportedPeers;
     }
 
     @Override
     public String toString() {
         return "GetPeersRequest{" +
                 "address=" + address +
-                ", peerAddresses=" + peerAddresses +
+                ", reportedPeers=" + reportedPeers +
                 "} " + super.toString();
     }
 }

@@ -6,10 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Random;
 
-public class Peer implements Serializable {
+public class Peer {
     private static final Logger log = LoggerFactory.getLogger(Peer.class);
 
     public final Connection connection;

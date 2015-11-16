@@ -82,7 +82,7 @@ public class AuthenticationHandshake implements MessageListener {
                 if (verified) {
                     GetPeersAuthRequest getPeersAuthRequest = new GetPeersAuthRequest(myAddress,
                             authenticationResponse.responderNonce,
-                            new HashSet<>(peerGroup.getAllPeerAddresses()));
+                            new HashSet<>(peerGroup.getReportedPeers()));
                     SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, getPeersAuthRequest);
                     log.trace("Sent GetPeersAuthRequest {} to {}", getPeersAuthRequest, peerAddress);
                     Futures.addCallback(future, new FutureCallback<Connection>() {
@@ -113,14 +113,14 @@ public class AuthenticationHandshake implements MessageListener {
                 if (verified) {
                     // we create the msg with our already collected peer addresses (before adding the new ones)
                     GetPeersAuthResponse getPeersAuthResponse = new GetPeersAuthResponse(myAddress,
-                            new HashSet<>(peerGroup.getAllPeerAddresses()));
+                            new HashSet<>(peerGroup.getReportedPeers()));
                     SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, getPeersAuthResponse);
                     log.trace("Sent GetPeersAuthResponse {} to {}", getPeersAuthResponse, peerAddress);
 
                     // now we add the reported peers to our own set
-                    HashSet<Address> peerAddresses = getPeersAuthRequest.peerAddresses;
-                    log.trace("Received reported peers: " + peerAddresses);
-                    peerGroup.addToReportedPeers(peerAddresses, connection);
+                    HashSet<ReportedPeer> reportedPeers = getPeersAuthRequest.reportedPeers;
+                    log.trace("Received reported peers: " + reportedPeers);
+                    peerGroup.addToReportedPeers(reportedPeers, connection);
 
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
@@ -148,9 +148,9 @@ public class AuthenticationHandshake implements MessageListener {
                 GetPeersAuthResponse getPeersAuthResponse = (GetPeersAuthResponse) message;
                 Address peerAddress = getPeersAuthResponse.address;
                 log.trace("GetPeersAuthResponse from " + peerAddress + " at " + myAddress);
-                HashSet<Address> peerAddresses = getPeersAuthResponse.peerAddresses;
-                log.trace("Received reported peers: " + peerAddresses);
-                peerGroup.addToReportedPeers(peerAddresses, connection);
+                HashSet<ReportedPeer> reportedPeers = getPeersAuthResponse.reportedPeers;
+                log.trace("Received reported peers: " + reportedPeers);
+                peerGroup.addToReportedPeers(reportedPeers, connection);
 
                 log.info("AuthenticationComplete: Peer with address " + peerAddress
                         + " authenticated (" + connection.getUid() + "). Took "
