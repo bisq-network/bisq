@@ -64,7 +64,7 @@ public class ProtectedDataStorageTest {
 
         storageSignatureKeyPair1 = keyRing1.getSignatureKeyPair();
         encryptionService1 = new EncryptionService(keyRing1);
-        networkNode1 = TestUtils.getAndStartSeedNode(8001, encryptionService1, keyRing1, useClearNet, seedNodes).getP2PService().getNetworkNode();
+        networkNode1 = TestUtils.getAndStartSeedNode(8001, useClearNet, seedNodes).getP2PService().getNetworkNode();
         peerGroup1 = new PeerGroup(networkNode1, seedNodes);
         dataStorage1 = new ProtectedExpirableDataStorage(peerGroup1, new File("dummy"));
 

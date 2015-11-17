@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-// Run in UserThread
 public class PeerGroup implements MessageListener, ConnectionListener {
     private static final Logger log = LoggerFactory.getLogger(PeerGroup.class);
 
@@ -656,28 +655,31 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         } else {
             newReportedPeers.remove(new ReportedPeer(getMyAddress(), new Date()));
 
-            //TODO if we have already peer, we mix date from old and new item
-            //
-           /* Map<Address, ReportedPeer> reportedPeersMap = new HashMap<>();
+            // In case we have a peers already we adjust the lastActivityDate by adjusting the date to the mid 
+            // of the lastActivityDate of our already stored peer and the reported one
+            Map<Address, ReportedPeer> reportedPeersMap = new HashMap<>();
             reportedPeers.stream().forEach(e -> reportedPeersMap.put(e.address, e));
-
-            HashSet<ReportedPeer> newAdjustedReportedPeers = new HashSet<>();
+            Set<ReportedPeer> newAdjustedReportedPeers = new HashSet<>();
             newReportedPeers.stream()
                     .forEach(e -> {
-                        if()
-                        long adjustedTime = (e.lastActivityDate.getTime() +
-                                reportedPeersMap.get(e.address).lastActivityDate.getTime()) / 2;
-                        newAdjustedReportedPeers.add(new ReportedPeer(e.address,
-                                new Date(adjustedTime)));
-                    });*/
+                        if (reportedPeersMap.containsKey(e.address)) {
+                            long adjustedTime = (e.lastActivityDate.getTime() +
+                                    reportedPeersMap.get(e.address).lastActivityDate.getTime()) / 2;
+                            newAdjustedReportedPeers.add(new ReportedPeer(e.address,
+                                    new Date(adjustedTime)));
+                        } else {
+                            newAdjustedReportedPeers.add(e);
+                        }
+                    });
 
-            this.reportedPeers.addAll(newReportedPeers);
+            this.reportedPeers.addAll(newAdjustedReportedPeers);
             purgeReportedPeersIfExceeds();
         }
 
         printReportedPeers();
     }
 
+    // TODO unit test
     private void purgeReportedPeersIfExceeds() {
         Log.traceCall();
         int size = reportedPeers.size();
@@ -685,9 +687,10 @@ public class PeerGroup implements MessageListener, ConnectionListener {
             log.trace("We have more then {} reported peers. size={}. " +
                     "We remove random peers from the reported peers list.", MAX_REPORTED_PEERS, size);
             int diff = size - MAX_REPORTED_PEERS;
-            List<ReportedPeer> list = new LinkedList<>(getReportedNotConnectedPeerAddresses());
-
-            //TODO sort and remove oldest
+            List<ReportedPeer> list = new ArrayList<>(getReportedNotConnectedPeerAddresses());
+            log.debug("Peers before sort " + list);
+            list.sort((a, b) -> a.lastActivityDate.compareTo(b.lastActivityDate));
+            log.debug("Peers after sort  " + list);
             for (int i = 0; i < diff; i++) {
                 ReportedPeer toRemove = getAndRemoveRandomReportedPeer(list);
                 reportedPeers.remove(toRemove);

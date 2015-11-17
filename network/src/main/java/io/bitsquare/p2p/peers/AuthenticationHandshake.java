@@ -22,8 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-
-// authentication example: 
+// authentication protocol: 
 // node2 -> node1 AuthenticationRequest
 // node1: close connection
 // node1 -> node2 AuthenticationResponse on new connection

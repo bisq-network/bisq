@@ -62,7 +62,7 @@ public class TestUtils {
         return result;
     }
 
-    public static SeedNode getAndStartSeedNode(int port, EncryptionService encryptionService, KeyRing keyRing, boolean useLocalhost, Set<Address> seedNodes) throws InterruptedException {
+    public static SeedNode getAndStartSeedNode(int port, boolean useLocalhost, Set<Address> seedNodes) throws InterruptedException {
         SeedNode seedNode;
 
         if (useLocalhost) {
@@ -80,7 +80,7 @@ public class TestUtils {
         }
 
         CountDownLatch latch = new CountDownLatch(1);
-        seedNode.createAndStartP2PService(encryptionService, keyRing, new Address("localhost", port), useLocalhost, 2,
+        seedNode.createAndStartP2PService(new Address("localhost", port), useLocalhost, 2,
                 seedNodes, new P2PServiceListener() {
                     @Override
                     public void onRequestingDataCompleted() {

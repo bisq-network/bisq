@@ -44,9 +44,6 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-/**
- * Represents our node in the P2P network
- */
 public class P2PService implements SetupListener, MessageListener, ConnectionListener {
     private static final Logger log = LoggerFactory.getLogger(P2PService.class);
 
@@ -92,9 +89,10 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       @Named(ProgramArguments.TOR_DIR) File torDir,
                       @Named(ProgramArguments.USE_LOCALHOST) boolean useLocalhost,
                       @Named(ProgramArguments.NETWORK_ID) int networkId,
+                      @Named("storage.dir") File storageDir,
                       @Nullable EncryptionService encryptionService,
-                      KeyRing keyRing,
-                      @Named("storage.dir") File storageDir) {
+                      @Nullable KeyRing keyRing
+    ) {
         Log.traceCall();
         this.seedNodesRepository = seedNodesRepository;
         this.port = port;
@@ -105,6 +103,16 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         dbStorage = new Storage<>(storageDir);
 
         init(networkId, storageDir);
+    }
+
+    // Used for seed node
+    public P2PService(SeedNodesRepository seedNodesRepository,
+                      int port,
+                      File torDir,
+                      boolean useLocalhost,
+                      int networkId,
+                      File storageDir) {
+        this(seedNodesRepository, port, torDir, useLocalhost, networkId, storageDir, null, null);
     }
 
     private void init(int networkId, File storageDir) {

@@ -3,8 +3,6 @@ package io.bitsquare.p2p.seed;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.common.crypto.KeyRing;
-import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
@@ -28,7 +26,7 @@ public class SeedNode {
 
     private Address mySeedNodeAddress = new Address("localhost:8001");
     private boolean useLocalhost = false;
-    private Set<Address> seedNodes;
+    private Set<Address> progArgSeedNodes;
     private P2PService p2PService;
     private boolean stopped;
     private final String defaultUserDataDir;
@@ -80,13 +78,13 @@ public class SeedNode {
                         checkArgument(arg4.contains(":") && arg4.split(":").length > 1 && arg4.split(":")[1].length() > 3,
                                 "Wrong program argument");
                         List<String> list = Arrays.asList(arg4.split("|"));
-                        seedNodes = new HashSet<>();
+                        progArgSeedNodes = new HashSet<>();
                         list.forEach(e -> {
                             checkArgument(e.contains(":") && e.split(":").length == 2 && e.split(":")[1].length() == 4,
                                     "Wrong program argument");
-                            seedNodes.add(new Address(e));
+                            progArgSeedNodes.add(new Address(e));
                         });
-                        seedNodes.remove(mySeedNodeAddress);
+                        progArgSeedNodes.remove(mySeedNodeAddress);
                     } else if (args.length > 5) {
                         log.error("Too many program arguments." +
                                 "\nProgram arguments: myAddress (incl. port) bitcoinNetworkId " +
@@ -100,23 +98,21 @@ public class SeedNode {
     }
 
     public void createAndStartP2PService() {
-        createAndStartP2PService(null, null, mySeedNodeAddress, useLocalhost, Version.NETWORK_ID, seedNodes, null);
+        createAndStartP2PService(mySeedNodeAddress, useLocalhost, Version.NETWORK_ID, progArgSeedNodes, null);
     }
 
-    public void createAndStartP2PService(EncryptionService encryptionService,
-                                         KeyRing keyRing,
-                                         Address mySeedNodeAddress,
+    public void createAndStartP2PService(Address mySeedNodeAddress,
                                          boolean useLocalhost,
                                          int networkId,
-                                         @Nullable Set<Address> seedNodes,
+                                         @Nullable Set<Address> progArgSeedNodes,
                                          @Nullable P2PServiceListener listener) {
         Log.traceCall();
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
-        if (seedNodes != null && !seedNodes.isEmpty()) {
+        if (progArgSeedNodes != null && !progArgSeedNodes.isEmpty()) {
             if (useLocalhost)
-                seedNodesRepository.setLocalhostSeedNodeAddresses(seedNodes);
+                seedNodesRepository.setLocalhostSeedNodeAddresses(progArgSeedNodes);
             else
-                seedNodesRepository.setTorSeedNodeAddresses(seedNodes);
+                seedNodesRepository.setTorSeedNodeAddresses(progArgSeedNodes);
         }
         Path seedNodePath = Paths.get(defaultUserDataDir,
                 "Bitsquare_seed_node_" + String.valueOf(mySeedNodeAddress.getFullAddress().replace(":", "_")));
@@ -128,8 +124,7 @@ public class SeedNode {
         if (torDir.mkdirs())
             log.info("Created torDir at " + torDir.getAbsolutePath());
 
-        p2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.port, torDir,
-                useLocalhost, networkId, encryptionService, keyRing, storageDir);
+        p2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.port, torDir, useLocalhost, networkId, storageDir);
         p2PService.removeMySeedNodeAddressFromList(mySeedNodeAddress);
         p2PService.start(listener);
     }
