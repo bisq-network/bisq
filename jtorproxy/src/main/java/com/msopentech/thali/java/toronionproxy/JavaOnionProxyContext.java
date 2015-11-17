@@ -13,7 +13,9 @@ See the Apache 2 License for the specific language governing permissions and lim
 
 package com.msopentech.thali.java.toronionproxy;
 
+import com.msopentech.thali.toronionproxy.FileUtilities;
 import com.msopentech.thali.toronionproxy.OnionProxyContext;
+import com.msopentech.thali.toronionproxy.OsData;
 import com.msopentech.thali.toronionproxy.WriteObserver;
 
 import java.io.File;
@@ -42,8 +44,61 @@ public class JavaOnionProxyContext extends OnionProxyContext {
 
     @Override
     public String getProcessId() {
-        // This is a horrible hack. It seems like more JVMs will return the process's PID this way, but not guarantees.
+        // This is a horrible hack. It seems like more JVMs will return the
+        // process's PID this way, but not guarantees.
         String processName = java.lang.management.ManagementFactory.getRuntimeMXBean().getName();
         return processName.split("@")[0];
+    }
+
+    @Override
+    public void installFiles() throws IOException, InterruptedException {
+        super.installFiles();
+        switch (OsData.getOsType()) {
+            case Windows:
+            case Linux32:
+            case Linux64:
+            case Mac:
+                FileUtilities.extractContentFromZip(getWorkingDirectory(),
+                        getAssetOrResourceByName(getPathToTorExecutable() + "tor.zip"));
+                break;
+            default:
+                throw new RuntimeException("We don't support Tor on this OS yet");
+        }
+    }
+
+    @Override
+    protected String getPathToTorExecutable() {
+        String path = "native/";
+        switch (OsData.getOsType()) {
+            case Windows:
+                return path + "windows/x86/"; // We currently only support the
+            // x86 build but that should work
+            // everywhere
+            case Mac:
+                return path + "osx/x64/"; // I don't think there even is a x32
+            // build of Tor for Mac, but could be
+            // wrong.
+            case Linux32:
+                return path + "linux/x86/";
+            case Linux64:
+                return path + "linux/x64/";
+            default:
+                throw new RuntimeException("We don't support Tor on this OS");
+        }
+    }
+
+    @Override
+    protected String getTorExecutableFileName() {
+        switch (OsData.getOsType()) {
+            case Linux32:
+            case Linux64:
+                return "tor";
+            case Windows:
+                return "tor.exe";
+            case Mac:
+                return "tor.real";
+            default:
+                throw new RuntimeException("We don't support Tor on this OS");
+        }
     }
 }

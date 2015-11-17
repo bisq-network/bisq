@@ -118,9 +118,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private void init(int networkId, File storageDir) {
         Log.traceCall();
 
-        Address persisted = dbStorage.initAndGetPersisted("myOnionAddress");
-        if (persisted != null)
-            this.myOnionAddress = persisted;
+        Address persistedOnionAddress = dbStorage.initAndGetPersisted("myOnionAddress");
+        if (persistedOnionAddress != null)
+            this.myOnionAddress = persistedOnionAddress;
 
         // network 
         networkNode = useLocalhost ? new LocalhostNetworkNode(port) : new TorNetworkNode(port, torDir);

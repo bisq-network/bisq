@@ -12,6 +12,7 @@ import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Utils;
 import io.nucleo.net.HiddenServiceDescriptor;
+import io.nucleo.net.JavaTorNode;
 import io.nucleo.net.TorNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -84,8 +85,6 @@ public class TorNetworkNode extends NetworkNode {
 
                         startServer(hiddenServiceDescriptor.getServerSocket());
                         setupListeners.stream().forEach(e -> e.onHiddenServicePublished());
-                       /* UserThread.runAfter(() -> setupListeners.stream().forEach(e -> e.onHiddenServicePublished()),
-                                500, TimeUnit.MILLISECONDS);*/
                     });
         });
     }
@@ -214,9 +213,7 @@ public class TorNetworkNode extends NetworkNode {
 
                 log.info("TorDir = " + torDir.getAbsolutePath());
                 log.trace("Create TorNode");
-                TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode =
-                        new TorNode<JavaOnionProxyManager, JavaOnionProxyContext>(torDir) {
-                        };
+                TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode = new JavaTorNode(torDir);
                 log.info("\n\n############################################################\n" +
                         "TorNode created:" +
                         "\nTook " + (System.currentTimeMillis() - ts) + " ms"
@@ -245,28 +242,31 @@ public class TorNetworkNode extends NetworkNode {
     private void createHiddenService(TorNode torNode, int localPort, int servicePort,
                                      Consumer<HiddenServiceDescriptor> resultHandler) {
         Log.traceCall();
-        ListenableFuture<HiddenServiceDescriptor> future = executorService.submit(() -> {
+        ListenableFuture<Object> future = executorService.submit(() -> {
             Utilities.setThreadName("TorNetworkNode:CreateHiddenService");
             try {
                 long ts = System.currentTimeMillis();
                 log.debug("Create hidden service");
                 HiddenServiceDescriptor hiddenServiceDescriptor = torNode.createHiddenService(localPort, servicePort);
-                log.info("\n\n############################################################\n" +
-                        "Hidden service created:" +
-                        "\nAddress=" + hiddenServiceDescriptor.getFullAddress() +
-                        "\nTook " + (System.currentTimeMillis() - ts) + " ms"
-                        + "\n############################################################\n");
 
-                return hiddenServiceDescriptor;
+                torNode.addHiddenServiceReadyListener(hiddenServiceDescriptor, descriptor -> {
+                    log.info("\n\n############################################################\n" +
+                            "Hidden service published:" +
+                            "\nAddress=" + descriptor.getFullAddress() +
+                            "\nTook " + (System.currentTimeMillis() - ts) + " ms"
+                            + "\n############################################################\n");
+
+                    UserThread.execute(() -> resultHandler.accept(hiddenServiceDescriptor));
+                });
+
+                return null;
             } catch (Throwable t) {
                 throw t;
             }
         });
-        Futures.addCallback(future, new FutureCallback<HiddenServiceDescriptor>() {
-            public void onSuccess(HiddenServiceDescriptor hiddenServiceDescriptor) {
-                UserThread.execute(() -> {
-                    resultHandler.accept(hiddenServiceDescriptor);
-                });
+        Futures.addCallback(future, new FutureCallback<Object>() {
+            public void onSuccess(Object hiddenServiceDescriptor) {
+                log.debug("HiddenServiceDescriptor created. Wait for publishing.");
             }
 
             public void onFailure(@NotNull Throwable throwable) {

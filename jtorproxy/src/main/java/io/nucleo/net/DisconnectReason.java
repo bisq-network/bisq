@@ -2,10 +2,10 @@ package io.nucleo.net;
 
 public interface DisconnectReason {
 
-    public abstract String toString();
+  public abstract String toString();
 
-    public boolean isGraceful();
+  public boolean isGraceful();
 
-    public boolean isRemote();
+  public boolean isRemote();
 
 }

@@ -61,11 +61,16 @@ public class NodeTest {
         if (args.length == 2) {
             File dir = new File(args[0]);
             dir.mkdirs();
-            TorNode<JavaOnionProxyManager, JavaOnionProxyContext> tor = new TorNode<JavaOnionProxyManager, JavaOnionProxyContext>(
-                    dir) {
-            };
+            TorNode<JavaOnionProxyManager, JavaOnionProxyContext> tor = new JavaTorNode(dir);
 
-            node = new Node(tor.createHiddenService(Integer.parseInt(args[1])), tor);
+            node = new Node(tor.createHiddenService(Integer.parseInt(args[1]), new HiddenServiceReadyListener() {
+
+                @Override
+                public void onConnect(HiddenServiceDescriptor descriptor) {
+                    System.out.println("Successfully published hidden service " + descriptor.getFullAddress() + " ");
+
+                }
+            }), tor);
         } else {
             node = new Node(new TCPServiceDescriptor("localhost", Integer.parseInt(args[0])));
         }
@@ -138,7 +143,7 @@ public class NodeTest {
                 default:
                     break;
             }
-            System.out.print("\n" + node.getLocalName() + ":" + (currentCon == null ? "" : currentCon.getPeer()) + " >");
+            System.out.print("\n" + node.getLocalName() + (currentCon == null ? "" : (":" + currentCon.getPeer())) + " >");
         }
 
     }

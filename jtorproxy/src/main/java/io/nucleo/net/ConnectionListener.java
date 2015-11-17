@@ -5,12 +5,12 @@ import io.nucleo.net.proto.exceptions.ConnectionException;
 
 public interface ConnectionListener {
 
-    public abstract void onMessage(Connection con, ContainerMessage msg);
+  public abstract void onMessage(Connection con, ContainerMessage msg);
 
-    public void onDisconnect(Connection con, DisconnectReason reason);
+  public void onDisconnect(Connection con, DisconnectReason reason);
 
-    public void onError(Connection con, ConnectionException e);
+  public void onError(Connection con, ConnectionException e);
 
-    public void onReady(Connection con);
+  public void onReady(Connection con);
 
 }

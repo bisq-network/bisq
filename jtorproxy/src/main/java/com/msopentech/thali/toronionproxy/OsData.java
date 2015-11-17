@@ -34,7 +34,6 @@ import java.util.Scanner;
 
 public class OsData {
     public enum OsType {Windows, Linux32, Linux64, Mac, Android}
-
     private static OsType detectedType = null;
 
     public static OsType getOsType() {
@@ -51,7 +50,7 @@ public class OsData {
     protected static OsType actualGetOsType() {
 
         //This also works for ART
-        if (System.getProperty("java.vm.name").contains("Dalvik")) {
+        if (System.getProperty("java.vm.name").contains("Dalvik")) { 
             return OsType.Android;
         }
 
@@ -87,7 +86,7 @@ public class OsData {
                 throw new RuntimeException("Uname returned error code " + exit);
             }
 
-            if (unameOutput.compareTo("i686") == 0) {
+            if (unameOutput.matches("i.86")) {
                 return OsType.Linux32;
             }
             if (unameOutput.compareTo("x86_64") == 0) {

@@ -13,18 +13,27 @@ import java.util.concurrent.ExecutionException;
 public class TorNodeTest {
 
     private static final int hsPort = 55555;
-    private static CountDownLatch serverLatch = new CountDownLatch(1);
+    private static CountDownLatch serverLatch = new CountDownLatch(2);
 
     private static TorNode<JavaOnionProxyManager, JavaOnionProxyContext> node;
 
-    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException, InstantiationException {
+    public static void main(String[] args)
+            throws IOException, InterruptedException, ExecutionException, InstantiationException {
         File dir = new File("tor-test");
         dir.mkdirs();
         for (String str : args)
             System.out.print(str + " ");
-        node = new TorNode<JavaOnionProxyManager, JavaOnionProxyContext>(dir) {
-        };
-        final ServiceDescriptor hiddenService = node.createHiddenService(hsPort);
+        node = new JavaTorNode(dir);
+        final ServiceDescriptor hiddenService = node.createHiddenService(hsPort, new HiddenServiceReadyListener() {
+
+            @Override
+            public void onConnect(HiddenServiceDescriptor descriptor) {
+
+                System.out.println("Successfully published hidden service " + descriptor.getFullAddress());
+                serverLatch.countDown();
+
+            }
+        });
         new Thread(new Server(hiddenService.getServerSocket())).start();
         serverLatch.await();
 
@@ -94,7 +103,8 @@ public class TorNodeTest {
                 while (true) {
 
                     Socket sock = socket.accept();
-                    System.out.println("Accepting Client " + sock.getRemoteSocketAddress() + " on port " + sock.getLocalPort());
+                    System.out.println(
+                            "Accepting Client " + sock.getRemoteSocketAddress() + " on port " + sock.getLocalPort());
                     BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
                     OutputStreamWriter out = new OutputStreamWriter(sock.getOutputStream());
                     String aLine = null;
