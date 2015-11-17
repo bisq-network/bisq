@@ -109,8 +109,7 @@ public class ContractPopup extends Popup {
                 Layout.FIRST_ROW_DISTANCE).second.setMouseTransparent(false);
         addLabelTextField(gridPane, ++rowIndex, "Offer date:", formatter.formatDateTime(offer.getDate()));
         addLabelTextField(gridPane, ++rowIndex, "Trade date:", formatter.formatDateTime(dispute.getTradeDate()));
-        String direction = offer.getDirection() == Offer.Direction.BUY ? "Offerer as buyer / Taker as seller" : "Offerer as seller / Taker as buyer";
-        addLabelTextField(gridPane, ++rowIndex, "Trade type:", direction);
+        addLabelTextField(gridPane, ++rowIndex, "Trade type:", formatter.getDirectionDescription(offer.getDirection()));
         addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode());
         addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(contract.getTradeAmount()));
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Buyer bitcoin address:",
@@ -144,8 +143,8 @@ public class ContractPopup extends Popup {
         }
         //addLabelTextField(gridPane, ++rowIndex, "Buyer Bitsquare account ID:", contract.getBuyerAccountId()).second.setMouseTransparent(false);
         //addLabelTextField(gridPane, ++rowIndex, "Seller Bitsquare account ID:", contract.getSellerAccountId()).second.setMouseTransparent(false);
-        addLabelTxIdTextField(gridPane, ++rowIndex, "Create offer fee transaction ID:", offer.getOfferFeePaymentTxID());
-        addLabelTxIdTextField(gridPane, ++rowIndex, "Take offer fee transaction ID:", contract.takeOfferFeeTxID);
+        addLabelTxIdTextField(gridPane, ++rowIndex, "Offer fee transaction ID:", offer.getOfferFeePaymentTxID());
+        addLabelTxIdTextField(gridPane, ++rowIndex, "Trading fee transaction ID:", contract.takeOfferFeeTxID);
         if (dispute.getDepositTxSerialized() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, "Deposit transaction ID:", dispute.getDepositTxId());
         if (dispute.getPayoutTxSerialized() != null)

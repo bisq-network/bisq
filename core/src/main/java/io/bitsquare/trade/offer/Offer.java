@@ -53,6 +53,10 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
     transient private static final Logger log = LoggerFactory.getLogger(Offer.class);
 
     public static final long TTL = 10 * 60 * 1000; // 10 min.
+    public final static String TAC_OFFERER = "When placing that offer I accept that anyone who fulfills my conditions can " +
+            "take that offer.";
+    public static final String TAC_TAKER = "With taking the offer I commit to the trade conditions as defined.";
+
 
     public enum Direction {BUY, SELL}
 
@@ -397,14 +401,21 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
                 ", fiatPrice=" + fiatPrice +
                 ", amount=" + amount +
                 ", minAmount=" + minAmount +
-                ", address=" + offererAddress +
-                ", pubKeyRing.hashCode()=" + pubKeyRing.hashCode() +
+                ", offererAddress=" + offererAddress +
+                ", pubKeyRing=" + pubKeyRing +
                 ", paymentMethodName='" + paymentMethodName + '\'' +
                 ", paymentMethodCountryCode='" + paymentMethodCountryCode + '\'' +
                 ", offererPaymentAccountId='" + offererPaymentAccountId + '\'' +
                 ", acceptedCountryCodes=" + acceptedCountryCodes +
                 ", arbitratorAddresses=" + arbitratorAddresses +
                 ", offerFeePaymentTxID='" + offerFeePaymentTxID + '\'' +
+                ", state=" + state +
+                ", stateProperty=" + stateProperty +
+                ", availabilityProtocol=" + availabilityProtocol +
+                ", errorMessageProperty=" + errorMessageProperty +
+                ", TAC_OFFERER=" + TAC_OFFERER +
+                ", TAC_TAKER=" + TAC_TAKER +
                 '}';
     }
+
 }

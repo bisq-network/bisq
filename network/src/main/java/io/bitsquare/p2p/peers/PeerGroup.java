@@ -646,16 +646,32 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     // Reported peers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void addToReportedPeers(HashSet<ReportedPeer> reportedPeers, Connection connection) {
+    void addToReportedPeers(HashSet<ReportedPeer> newReportedPeers, Connection connection) {
         Log.traceCall();
         // we disconnect misbehaving nodes trying to send too many peers
         // reported peers include the peers connected peers which is normally max. 8 but we give some headroom 
         // for safety
-        if (reportedPeers.size() > 1100) {
+        if (newReportedPeers.size() > 1100) {
             connection.shutDown();
         } else {
-            reportedPeers.remove(new ReportedPeer(getMyAddress(), new Date()));
-            this.reportedPeers.addAll(reportedPeers);
+            newReportedPeers.remove(new ReportedPeer(getMyAddress(), new Date()));
+
+            //TODO if we have already peer, we mix date from old and new item
+            //
+           /* Map<Address, ReportedPeer> reportedPeersMap = new HashMap<>();
+            reportedPeers.stream().forEach(e -> reportedPeersMap.put(e.address, e));
+
+            HashSet<ReportedPeer> newAdjustedReportedPeers = new HashSet<>();
+            newReportedPeers.stream()
+                    .forEach(e -> {
+                        if()
+                        long adjustedTime = (e.lastActivityDate.getTime() +
+                                reportedPeersMap.get(e.address).lastActivityDate.getTime()) / 2;
+                        newAdjustedReportedPeers.add(new ReportedPeer(e.address,
+                                new Date(adjustedTime)));
+                    });*/
+
+            this.reportedPeers.addAll(newReportedPeers);
             purgeReportedPeersIfExceeds();
         }
 
@@ -670,6 +686,8 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                     "We remove random peers from the reported peers list.", MAX_REPORTED_PEERS, size);
             int diff = size - MAX_REPORTED_PEERS;
             List<ReportedPeer> list = new LinkedList<>(getReportedNotConnectedPeerAddresses());
+
+            //TODO sort and remove oldest
             for (int i = 0; i < diff; i++) {
                 ReportedPeer toRemove = getAndRemoveRandomReportedPeer(list);
                 reportedPeers.remove(toRemove);

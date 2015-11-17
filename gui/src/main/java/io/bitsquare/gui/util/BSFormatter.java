@@ -125,8 +125,7 @@ public class BSFormatter {
                 log.warn("Exception at formatBtc: " + t.toString());
                 return "";
             }
-        }
-        else {
+        } else {
             return "";
         }
     }
@@ -141,8 +140,7 @@ public class BSFormatter {
                 log.warn("Exception at formatBtcWithCode: " + t.toString());
                 return "";
             }
-        }
-        else {
+        } else {
             return "";
         }
     }
@@ -155,8 +153,7 @@ public class BSFormatter {
                 log.warn("Exception at parseToBtc: " + t.toString());
                 return Coin.ZERO;
             }
-        }
-        else {
+        } else {
             return Coin.ZERO;
         }
     }
@@ -208,8 +205,7 @@ public class BSFormatter {
                 log.warn("Exception at formatFiat: " + t.toString());
                 return "";
             }
-        }
-        else {
+        } else {
             return "";
         }
     }
@@ -223,8 +219,7 @@ public class BSFormatter {
                 log.warn("Exception at formatFiatWithCode: " + t.toString());
                 return "";
             }
-        }
-        else {
+        } else {
             return "";
         }
     }
@@ -238,8 +233,7 @@ public class BSFormatter {
                 return Fiat.valueOf(currencyCode, 0);
             }
 
-        }
-        else {
+        } else {
             return Fiat.valueOf(currencyCode, 0);
         }
     }
@@ -373,5 +367,9 @@ public class BSFormatter {
             default:
                 return "";
         }
+    }
+
+    public String getDirectionDescription(Offer.Direction direction) {
+        return direction == Offer.Direction.BUY ? "Offerer as Bitcoin buyer / Taker as Bitcoin seller" : "Offerer as Bitcoin seller / Taker as Bitcoin buyer";
     }
 }

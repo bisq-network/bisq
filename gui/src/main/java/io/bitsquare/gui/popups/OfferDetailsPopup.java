@@ -35,6 +35,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import org.bitcoinj.core.Coin;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +54,7 @@ public class OfferDetailsPopup extends Popup {
     private User user;
     private final Navigation navigation;
     private Offer offer;
+    private Coin tradeAmount;
     private Optional<Consumer<Offer>> placeOfferHandlerOptional = Optional.empty();
     private Optional<Runnable> takeOfferHandlerOptional = Optional.empty();
 
@@ -66,6 +69,18 @@ public class OfferDetailsPopup extends Popup {
         this.preferences = preferences;
         this.user = user;
         this.navigation = navigation;
+    }
+
+    public OfferDetailsPopup show(Offer offer, Coin tradeAmount) {
+        this.offer = offer;
+        this.tradeAmount = tradeAmount;
+
+        rowIndex = -1;
+        width = 850;
+        createGridPane();
+        addContent();
+        createPopup();
+        return this;
     }
 
     public OfferDetailsPopup show(Offer offer) {
@@ -110,25 +125,36 @@ public class OfferDetailsPopup extends Popup {
     }
 
     private void addContent() {
-        int rows = 11;
+        int rows = 5;
+        if (!takeOfferHandlerOptional.isPresent())
+            rows++;
+
+        addTitledGroupBg(gridPane, ++rowIndex, rows, "Offer");
+        addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionDescription(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
+        addLabelTextField(gridPane, ++rowIndex, "Currency:", offer.getCurrencyCode());
+        addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode() + "/" + "BTC");
+        if (takeOfferHandlerOptional.isPresent()) {
+            addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(tradeAmount));
+        } else {
+            addLabelTextField(gridPane, ++rowIndex, "Amount:", formatter.formatCoinWithCode(offer.getAmount()));
+            addLabelTextField(gridPane, ++rowIndex, "Min. amount:", formatter.formatCoinWithCode(offer.getMinAmount()));
+        }
+        addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(offer.getPaymentMethod().getId()));
+
+        rows = 3;
         if (offer.getPaymentMethodCountryCode() != null)
             rows++;
         if (offer.getOfferFeePaymentTxID() != null)
             rows++;
         if (offer.getAcceptedCountryCodes() != null)
             rows++;
-        if (placeOfferHandlerOptional.isPresent())
-            rows -= 2;
+     /*   if (placeOfferHandlerOptional.isPresent())
+            rows -= 2;*/
 
-        addTitledGroupBg(gridPane, ++rowIndex, rows, "Offer details");
-        addLabelTextField(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_DISTANCE);
+        addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", Layout.GROUP_DISTANCE);
+        addLabelTextField(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++rowIndex, "Creation date:", formatter.formatDateTime(offer.getDate()));
-        addLabelTextField(gridPane, ++rowIndex, "Offer direction:", Offer.Direction.BUY.name());
-        addLabelTextField(gridPane, ++rowIndex, "Currency:", offer.getCurrencyCode());
-        addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode() + "/" + "BTC");
-        addLabelTextField(gridPane, ++rowIndex, "Amount:", formatter.formatCoinWithCode(offer.getAmount()));
-        addLabelTextField(gridPane, ++rowIndex, "Min. amount:", formatter.formatCoinWithCode(offer.getMinAmount()));
-        addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(offer.getPaymentMethod().getId()));
+
         if (offer.getPaymentMethodCountryCode() != null)
             addLabelTextField(gridPane, ++rowIndex, "Offerers country of bank:", offer.getPaymentMethodCountryCode());
         if (offer.getAcceptedCountryCodes() != null) {
@@ -141,67 +167,73 @@ public class OfferDetailsPopup extends Popup {
                 tooltip = new Tooltip(CountryUtil.getNamesByCodesString(offer.getAcceptedCountryCodes()));
             }
             TextField acceptedCountries = addLabelTextField(gridPane, ++rowIndex, "Accepted taker countries:", countries).second;
-            if (tooltip != null) acceptedCountries.setTooltip(new Tooltip());
+            if (tooltip != null) {
+                acceptedCountries.setMouseTransparent(false);
+                acceptedCountries.setTooltip(tooltip);
+            }
         }
         addLabelTextField(gridPane, ++rowIndex, "Accepted arbitrators:", formatter.arbitratorAddressesToString(offer.getArbitratorAddresses()));
         if (offer.getOfferFeePaymentTxID() != null)
-            addLabelTxIdTextField(gridPane, ++rowIndex, "Create offer fee transaction ID:", offer.getOfferFeePaymentTxID());
+            addLabelTxIdTextField(gridPane, ++rowIndex, "Offer fee transaction ID:", offer.getOfferFeePaymentTxID());
 
         if (placeOfferHandlerOptional.isPresent()) {
-            Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++rowIndex, "Confirm place offer", "Cancel");
-            Button placeButton = tuple.first;
-            placeButton.setOnAction(e -> {
-                if (user.getAcceptedArbitrators().size() > 0) {
-                    placeOfferHandlerOptional.get().accept(offer);
-                } else {
-                    new Popup().warning("You have no arbitrator selected.\n" +
-                            "Please select at least one arbitrator.").show();
+            addTitledGroupBg(gridPane, ++rowIndex, 1, "Commitment", Layout.GROUP_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Please note:", Offer.TAC_OFFERER, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
-                    navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
-                }
-                hide();
-            });
-
-            Button cancelButton = tuple.second;
-            cancelButton.setOnAction(e -> {
-                closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
-                hide();
-            });
-
-            CheckBox checkBox = addCheckBox(gridPane, ++rowIndex, "Don't show again", 5);
-            checkBox.setSelected(!preferences.getShowPlaceOfferConfirmation());
-            checkBox.setOnAction(e -> preferences.setShowPlaceOfferConfirmation(!checkBox.isSelected()));
+            Button cancelButton = addConfirmButton(true);
+            addCancelButton(cancelButton, true);
         } else if (takeOfferHandlerOptional.isPresent()) {
-            Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++rowIndex, "Confirm take offer", "Cancel");
-            Button placeButton = tuple.first;
-            placeButton.setOnAction(e -> {
-                if (user.getAcceptedArbitrators().size() > 0) {
-                    takeOfferHandlerOptional.get().run();
-                } else {
-                    new Popup().warning("You have no arbitrator selected.\n" +
-                            "Please select at least one arbitrator.").show();
+            addTitledGroupBg(gridPane, ++rowIndex, 1, "Contract", Layout.GROUP_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Terms and conditions:", Offer.TAC_TAKER, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
-                    navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
-                }
-                hide();
-            });
-
-            Button cancelButton = tuple.second;
-            cancelButton.setOnAction(e -> {
-                closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
-                hide();
-            });
-
-            CheckBox checkBox = addCheckBox(gridPane, ++rowIndex, "Don't show again", 5);
-            checkBox.setPadding(new Insets(20, 0, 25, 0));
-            checkBox.setSelected(!preferences.getShowTakeOfferConfirmation());
-            checkBox.setOnAction(e -> preferences.setShowTakeOfferConfirmation(!checkBox.isSelected()));
+            Button cancelButton = addConfirmButton(false);
+            addCancelButton(cancelButton, false);
         } else {
             Button cancelButton = addButtonAfterGroup(gridPane, ++rowIndex, "Close");
             cancelButton.setOnAction(e -> {
                 closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
                 hide();
             });
+        }
+    }
+
+    @NotNull
+    private Button addConfirmButton(boolean isPlaceOffer) {
+        Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane,
+                ++rowIndex,
+                isPlaceOffer ? "Confirm place offer" : "Confirm take offer",
+                "Cancel");
+        Button placeButton = tuple.first;
+        placeButton.setOnAction(e -> {
+            if (user.getAcceptedArbitrators().size() > 0) {
+                if (isPlaceOffer)
+                    placeOfferHandlerOptional.get().accept(offer);
+                else
+                    takeOfferHandlerOptional.get().run();
+            } else {
+                new Popup().warning("You have no arbitrator selected.\n" +
+                        "Please select at least one arbitrator.").show();
+
+                navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
+            }
+            hide();
+        });
+        return tuple.second;
+    }
+
+    private void addCancelButton(Button cancelButton, boolean isPlaceOffer) {
+        cancelButton.setOnAction(e -> {
+            closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
+            hide();
+        });
+
+        CheckBox checkBox = addCheckBox(gridPane, ++rowIndex, "Don't show again", 5);
+        if (isPlaceOffer) {
+            checkBox.setSelected(!preferences.getShowPlaceOfferConfirmation());
+            checkBox.setOnAction(e -> preferences.setShowPlaceOfferConfirmation(!checkBox.isSelected()));
+        } else {
+            checkBox.setSelected(!preferences.getShowTakeOfferConfirmation());
+            checkBox.setOnAction(e -> preferences.setShowTakeOfferConfirmation(!checkBox.isSelected()));
         }
     }
 }

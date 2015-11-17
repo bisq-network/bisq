@@ -48,11 +48,11 @@ public class CreateAndSignContract extends TradeTask {
             TradingPeer taker = processModel.tradingPeer;
             PaymentAccountContractData offererPaymentAccountContractData = processModel.getPaymentAccountContractData(trade);
             PaymentAccountContractData takerPaymentAccountContractData = taker.getPaymentAccountContractData();
-            boolean isBuyerOffererOrSellerTaker = trade instanceof BuyerAsOffererTrade;
+            boolean isBuyerOffererAndSellerTaker = trade instanceof BuyerAsOffererTrade;
 
-            Address buyerAddress = isBuyerOffererOrSellerTaker ? processModel.getMyAddress() : processModel.getTempTradingPeerAddress();
-            Address sellerAddress = isBuyerOffererOrSellerTaker ? processModel.getTempTradingPeerAddress() : processModel.getMyAddress();
-            log.debug("isBuyerOffererOrSellerTaker " + isBuyerOffererOrSellerTaker);
+            Address buyerAddress = isBuyerOffererAndSellerTaker ? processModel.getMyAddress() : processModel.getTempTradingPeerAddress();
+            Address sellerAddress = isBuyerOffererAndSellerTaker ? processModel.getTempTradingPeerAddress() : processModel.getMyAddress();
+            log.debug("isBuyerOffererAndSellerTaker " + isBuyerOffererAndSellerTaker);
             log.debug("buyerAddress " + buyerAddress);
             log.debug("sellerAddress " + sellerAddress);
             Contract contract = new Contract(
@@ -62,7 +62,7 @@ public class CreateAndSignContract extends TradeTask {
                     buyerAddress,
                     sellerAddress,
                     trade.getArbitratorAddress(),
-                    isBuyerOffererOrSellerTaker,
+                    isBuyerOffererAndSellerTaker,
                     processModel.getAccountId(),
                     taker.getAccountId(),
                     offererPaymentAccountContractData,

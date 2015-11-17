@@ -203,9 +203,15 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
                     new Popup()
                             .information("Wallet restored successfully with the new seed words.\n\n" +
+                                    "You need to shut down and restart the application.")
+                            .closeButtonText("Shut down")
+                            .onClose(() -> BitsquareApp.shutDownHandler.run()).show();
+                    //TODO
+                   /* new Popup()
+                            .information("Wallet restored successfully with the new seed words.\n\n" +
                                     "You need to restart now the application.")
                             .closeButtonText("Restart")
-                            .onClose(() -> BitsquareApp.restartDownHandler.run()).show();
+                            .onClose(() -> BitsquareApp.restartDownHandler.run()).show();*/
                 }),
                 throwable -> UserThread.execute(() -> {
                     log.error(throwable.getMessage());

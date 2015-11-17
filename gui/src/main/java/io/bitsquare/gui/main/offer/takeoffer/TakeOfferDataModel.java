@@ -127,6 +127,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
     void initWithData(Offer offer) {
         this.offer = offer;
 
+        addressEntry = walletService.getAddressEntryByOfferId(offer.getId());
+        checkNotNull(addressEntry, "addressEntry must not be null");
+        
         ObservableList<PaymentAccount> possiblePaymentAccounts = getPossiblePaymentAccounts();
         checkArgument(!possiblePaymentAccounts.isEmpty(), "possiblePaymentAccounts.isEmpty()");
         paymentAccount = possiblePaymentAccounts.get(0);
@@ -135,9 +138,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         calculateVolume();
         calculateTotalToPay();
-
-        addressEntry = walletService.getAddressEntryByOfferId(offer.getId());
-        checkNotNull(addressEntry, "addressEntry must not be null");
 
         balanceListener = new BalanceListener(addressEntry.getAddress()) {
             @Override
@@ -255,6 +255,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
                 amountAsCoin.get() != null &&
                 !amountAsCoin.get().isZero()) {
             volumeAsFiat.set(new ExchangeRate(offer.getPrice()).coinToFiat(amountAsCoin.get()));
+
+            updateBalance(walletService.getBalanceForAddress(addressEntry.getAddress()));
         }
     }
 

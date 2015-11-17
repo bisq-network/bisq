@@ -52,7 +52,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         btcDenominationComboBox = addLabelComboBox(root, gridRow, "Bitcoin denomination:", Layout.FIRST_ROW_DISTANCE).second;
         blockExplorerComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin block explorer:").second;
         useAnimationsCheckBox = addLabelCheckBox(root, ++gridRow, "Use animations:", "").second;
-        useEffectsCheckBox = addLabelCheckBox(root, ++gridRow, "Use efects:", "").second;
+        useEffectsCheckBox = addLabelCheckBox(root, ++gridRow, "Use effects:", "").second;
         showPlaceOfferConfirmationCheckBox = addLabelCheckBox(root, ++gridRow, "Show confirmation at place offer:", "").second;
         showTakeOfferConfirmationCheckBox = addLabelCheckBox(root, ++gridRow, "Show confirmation at take offer:", "").second;
         autoSelectArbitratorsCheckBox = addLabelCheckBox(root, ++gridRow, "Auto select arbitrators by language:", "").second;

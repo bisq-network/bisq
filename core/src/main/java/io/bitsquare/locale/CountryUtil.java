@@ -150,7 +150,7 @@ public class CountryUtil {
     }
 
     public static String getNamesByCodesString(List<String> countryCodes) {
-        return getNamesByCodes(countryCodes).stream().collect(Collectors.joining(", "));
+        return getNamesByCodes(countryCodes).stream().collect(Collectors.joining(",\n"));
     }
 
     private static final String[] countryCodes = new String[]{"AE", "AL", "AR", "AT", "AU", "BA", "BE", "BG", "BH",

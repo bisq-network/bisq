@@ -153,10 +153,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private void onSelectNetwork() {
         if (netWorkComboBox.getSelectionModel().getSelectedItem() != preferences.getBitcoinNetwork()) {
             if (netWorkComboBox.getSelectionModel().getSelectedItem() == BitcoinNetwork.MAINNET) {
-                new Popup().warning("The application is under heavy development. " +
-                        "Using the mainnet network with Bitcoin is not recommended at that stage.\n\n" +
-                        "Are you sure you want to switch to mainnet?")
-                        .onAction(() -> selectNetwork())
+                new Popup().warning("The application needs more tested before it can be used in mainnet.\n" +
+                        "Please follow our mailing list to get informed when Bitsquare will be ready for mainnet.")
                         .onClose(() -> UserThread.execute(() -> netWorkComboBox.getSelectionModel().select(preferences.getBitcoinNetwork())))
                         .show();
             } else {
@@ -166,10 +164,14 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     }
 
     private void selectNetwork() {
-        preferences.setBitcoinNetwork(netWorkComboBox.getSelectionModel().getSelectedItem());
-        new Popup().warning("You need to restart the application to apply the change of the Bitcoin network..\n\n" +
-                "Do you want to restart now?")
-                .onAction(() -> BitsquareApp.restartDownHandler.run())
+        //TODO restart
+        new Popup().warning("You need to shut down and restart the application to apply the change of the Bitcoin network.\n\n" +
+                "Do you want to shut down now?")
+                .onAction(() -> {
+                    preferences.setBitcoinNetwork(netWorkComboBox.getSelectionModel().getSelectedItem());
+                    UserThread.runAfter(() -> BitsquareApp.shutDownHandler.run(), 1);
+                })
+                .onClose(() -> netWorkComboBox.getSelectionModel().select(preferences.getBitcoinNetwork()))
                 .show();
     }
 }

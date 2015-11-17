@@ -21,15 +21,13 @@ import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.user.Preferences;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.Separator;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
@@ -42,6 +40,8 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Optional;
+
+import static io.bitsquare.gui.util.FormBuilder.addCheckBox;
 
 public class Popup {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -66,6 +66,8 @@ public class Popup {
     private boolean showProgressIndicator;
     private Button actionButton;
     protected Label headLineLabel;
+    private String dontShowAgainId;
+    private Preferences preferences;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -87,6 +89,7 @@ public class Popup {
             addReportErrorButtons();
 
         addCloseButton();
+        addDontShowAgainCheckBox();
         createPopup();
         return this;
     }
@@ -161,6 +164,12 @@ public class Popup {
 
     public Popup showProgressIndicator() {
         this.showProgressIndicator = true;
+        return this;
+    }
+
+    public Popup dontShowAgainId(String dontShowAgainId, Preferences preferences) {
+        this.dontShowAgainId = dontShowAgainId;
+        this.preferences = preferences;
         return this;
     }
 
@@ -297,6 +306,17 @@ public class Popup {
         gridPane.getChildren().add(progressIndicator);
     }
 
+    private void addDontShowAgainCheckBox() {
+        if (dontShowAgainId != null && preferences != null) {
+            CheckBox dontShowAgain = addCheckBox(gridPane, ++rowIndex, "Don't show again", 10);
+            GridPane.setHalignment(dontShowAgain, HPos.RIGHT);
+            dontShowAgain.setOnAction(e -> {
+                if (dontShowAgain.isSelected())
+                    preferences.dontShowAgain(dontShowAgainId);
+            });
+        }
+    }
+
     protected void addCloseButton() {
         closeButton = new Button(closeButtonText == null ? "Close" : closeButtonText);
         closeButton.setOnAction(event -> {
@@ -333,12 +353,11 @@ public class Popup {
             GridPane.setColumnIndex(closeButton, 1);
             gridPane.getChildren().add(closeButton);
         }
-
     }
 
     protected void setTruncatedMessage() {
-        if (message != null && message.length() > 500)
-            truncatedMessage = message.substring(0, 500) + "...";
+        if (message != null && message.length() > 600)
+            truncatedMessage = message.substring(0, 600) + "...";
         else
             truncatedMessage = message;
     }

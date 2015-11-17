@@ -60,9 +60,11 @@ public class CompletedView extends TradeStepDetailsView {
     @Override
     public void doActivate() {
         super.doActivate();
-        withdrawAddressTextField.focusedProperty().addListener(focusedPropertyListener);
-        withdrawAddressTextField.setValidator(model.getBtcAddressValidator());
-        withdrawButton.disableProperty().bind(model.getWithdrawalButtonDisable());
+
+        // TODO valid. handler need improvement
+        //withdrawAddressTextField.focusedProperty().addListener(focusedPropertyListener);
+        //withdrawAddressTextField.setValidator(model.getBtcAddressValidator());
+        // withdrawButton.disableProperty().bind(model.getWithdrawalButtonDisable());
 
         // We need to handle both cases: Address not set and address already set (when returning from other view)
         // We get address validation after focus out, so first make sure we loose focus and then set it again as hint for user to put address in
@@ -78,8 +80,8 @@ public class CompletedView extends TradeStepDetailsView {
     @Override
     public void doDeactivate() {
         super.doDeactivate();
-        withdrawAddressTextField.focusedProperty().removeListener(focusedPropertyListener);
-        withdrawButton.disableProperty().unbind();
+        //withdrawAddressTextField.focusedProperty().removeListener(focusedPropertyListener);
+        // withdrawButton.disableProperty().unbind();
     }
 
 

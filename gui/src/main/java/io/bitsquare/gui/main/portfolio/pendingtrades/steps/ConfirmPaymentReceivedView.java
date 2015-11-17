@@ -111,24 +111,32 @@ public class ConfirmPaymentReceivedView extends TradeStepDetailsView {
             Preferences preferences = model.dataModel.getPreferences();
             String key = PopupId.PAYMENT_RECEIVED;
             if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
-                new Popup().information("Please note that as soon you have confirmed that you have received the " +
-                        "payment the locked Bitcoin will be released.\n" +
-                        "There is no way to reverse a Bitcoin payment. Confirm only if you are sure.")
-                        .onClose(() -> preferences.dontShowAgain(key))
+                new Popup().headLine("Confirmation")
+                        .message("Do you have received the payment from your trading partner?\n\n" +
+                                "Please note that as soon you have confirmed the locked Bitcoin will be released.\n" +
+                                "There is no way to reverse a Bitcoin payment.")
+                        .dontShowAgainId(key, preferences)
+                        .actionButtonText("Yes I have received the payment")
+                        .closeButtonText("No")
+                        .onAction(() -> confirmPaymentReceived())
                         .show();
             } else {
-                confirmFiatReceivedButton.setDisable(true);
-
-                statusProgressIndicator.setVisible(true);
-                statusProgressIndicator.setProgress(-1);
-                statusLabel.setText("Sending message to trading partner...");
-
-                model.fiatPaymentReceived();
+                confirmPaymentReceived();
             }
         } else {
             new Popup().warning("You need to wait until your client is authenticated in the network.\n" +
                     "That might take up to about 2 minutes at startup.").show();
         }
+    }
+
+    private void confirmPaymentReceived() {
+        confirmFiatReceivedButton.setDisable(true);
+
+        statusProgressIndicator.setVisible(true);
+        statusProgressIndicator.setProgress(-1);
+        statusLabel.setText("Sending message to trading partner...");
+
+        model.fiatPaymentReceived();
     }
 
 

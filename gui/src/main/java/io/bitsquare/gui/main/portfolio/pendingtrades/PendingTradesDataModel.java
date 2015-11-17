@@ -136,8 +136,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         if (item == null) {
             trade = null;
             tradeProperty.set(null);
-        }
-        else {
+        } else {
             trade = item.getTrade();
             tradeProperty.set(trade);
 
@@ -169,17 +168,17 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     private void doWithdrawRequest(String toAddress, KeyParameter aesKey) {
-        tradeManager.onWithdrawRequest(
-                toAddress,
-                aesKey,
-                trade,
-                () -> {
-                    UserThread.execute(() -> navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class));
-                },
-                (errorMessage, throwable) -> {
-                    log.error(errorMessage);
-                    new Popup().error("An error occurred:\n" + throwable.getMessage()).show();
-                });
+        if (toAddress != null && toAddress.length() > 0) {
+            tradeManager.onWithdrawRequest(
+                    toAddress,
+                    aesKey,
+                    trade,
+                    () -> UserThread.execute(() -> navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class)),
+                    (errorMessage, throwable) -> {
+                        log.error(errorMessage);
+                        new Popup().error("An error occurred:\n" + throwable.getMessage()).show();
+                    });
+        }
     }
 
     public void onOpenDispute() {

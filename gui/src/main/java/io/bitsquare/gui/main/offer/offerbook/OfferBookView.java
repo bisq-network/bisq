@@ -239,21 +239,29 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onRemoveOpenOffer(Offer offer) {
         if (model.isAuthenticated()) {
-            model.onRemoveOpenOffer(offer,
-                    () -> {
-                        log.debug("Remove offer was successful");
-                        new Popup().information("You can withdraw the funds you paid in from the funds screens.").show();
-                        navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
-                    },
-                    (message) -> {
-                        log.error(message);
-                        new Popup().warning("Remove offer failed:\n" + message).show();
-                    });
-
+            new Popup().warning("Are you sure you want to remove that offer?\n" +
+                    "The offer fee you have paid will be lost if you remove that offer.")
+                    .actionButtonText("Remove offer")
+                    .onAction(() -> doRemoveOffer(offer))
+                    .closeButtonText("Don't remove the offer")
+                    .show();
         } else {
             new Popup().warning("You need to wait until your client is authenticated in the network.\n" +
                     "That might take up to about 2 minutes at startup.").show();
         }
+    }
+
+    private void doRemoveOffer(Offer offer) {
+        model.onRemoveOpenOffer(offer,
+                () -> {
+                    log.debug("Remove offer was successful");
+                    new Popup().information("You can withdraw the funds you paid in from the funds screens.").show();
+                    navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
+                },
+                (message) -> {
+                    log.error(message);
+                    new Popup().warning("Remove offer failed:\n" + message).show();
+                });
     }
 
     private void showWarning(String masthead, String message, Class target) {

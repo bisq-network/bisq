@@ -54,8 +54,8 @@ public class FirstTimeWebViewPopup extends WebViewPopup {
         return this;
     }
 
-    public FirstTimeWebViewPopup id(String id) {
-        this.id = id;
+    public FirstTimeWebViewPopup id(String dontShowAgainId) {
+        this.id = dontShowAgainId;
         return this;
     }
 

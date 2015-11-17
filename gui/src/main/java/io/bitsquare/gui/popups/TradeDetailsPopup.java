@@ -90,7 +90,15 @@ public class TradeDetailsPopup extends Popup {
         Offer offer = trade.getOffer();
         Contract contract = trade.getContract();
 
-        int rows = 7;
+        int rows = 5;
+        addTitledGroupBg(gridPane, ++rowIndex, rows, "Trade");
+        addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionDescription(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
+        addLabelTextField(gridPane, ++rowIndex, "Currency:", offer.getCurrencyCode());
+        addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode());
+        addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(trade.getTradeAmount()));
+        addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(offer.getPaymentMethod().getId()));
+
+        rows = 4;
         PaymentAccountContractData buyerPaymentAccountContractData = null;
         PaymentAccountContractData sellerPaymentAccountContractData = null;
 
@@ -98,6 +106,8 @@ public class TradeDetailsPopup extends Popup {
             rows++;
 
         if (contract != null) {
+            rows++;
+
             buyerPaymentAccountContractData = contract.getBuyerPaymentAccountContractData();
             sellerPaymentAccountContractData = contract.getSellerPaymentAccountContractData();
             if (buyerPaymentAccountContractData != null)
@@ -120,13 +130,9 @@ public class TradeDetailsPopup extends Popup {
         if (trade.errorMessageProperty().get() != null)
             rows += 2;
 
-        addTitledGroupBg(gridPane, ++rowIndex, rows, "Trade details");
-        addLabelTextField(gridPane, rowIndex, "Trade ID:", trade.getId(), Layout.FIRST_ROW_DISTANCE);
+        addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", Layout.GROUP_DISTANCE);
+        addLabelTextField(gridPane, rowIndex, "Trade ID:", trade.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++rowIndex, "Trade date:", formatter.formatDateTime(trade.getDate()));
-        String direction = offer.getDirection() == Offer.Direction.BUY ? "Offerer as buyer / Taker as seller" : "Offerer as seller / Taker as buyer";
-        addLabelTextField(gridPane, ++rowIndex, "Offer direction:", direction);
-        addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode());
-        addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(trade.getTradeAmount()));
         addLabelTextField(gridPane, ++rowIndex, "Selected arbitrator:", trade.getArbitratorAddress().getFullAddress());
 
         if (contract != null) {
@@ -144,14 +150,21 @@ public class TradeDetailsPopup extends Popup {
                 addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(contract.getPaymentMethodName()));
         }
 
-        addLabelTxIdTextField(gridPane, ++rowIndex, "Create offer fee transaction ID:", offer.getOfferFeePaymentTxID());
+        addLabelTxIdTextField(gridPane, ++rowIndex, "Offer fee transaction ID:", offer.getOfferFeePaymentTxID());
         if (contract != null && contract.takeOfferFeeTxID != null)
-            addLabelTxIdTextField(gridPane, ++rowIndex, "Take offer fee transaction ID:", contract.takeOfferFeeTxID);
+            addLabelTxIdTextField(gridPane, ++rowIndex, "Trading fee transaction ID:", contract.takeOfferFeeTxID);
 
         if (trade.getDepositTx() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, "Deposit transaction ID:", trade.getDepositTx().getHashAsString());
         if (trade.getPayoutTx() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, "Payout transaction ID:", trade.getPayoutTx().getHashAsString());
+
+        if (contract != null) {
+            TextArea textArea = addLabelTextArea(gridPane, ++rowIndex, "Contract in JSON format:", trade.getContractAsJson()).second;
+            textArea.setText(trade.getContractAsJson());
+            textArea.setPrefHeight(50);
+            textArea.setEditable(false);
+        }
 
         if (trade.errorMessageProperty().get() != null) {
             TextArea textArea = addLabelTextArea(gridPane, ++rowIndex, "Error message:", "").second;
@@ -169,26 +182,6 @@ public class TradeDetailsPopup extends Popup {
 
             TextField state = addLabelTextField(gridPane, ++rowIndex, "Trade state:").second;
             state.setText(trade.getState().getPhase().name());
-            //TODO better msg display
-     /*       switch (trade.getTradeState().getPhase()) {
-                case PREPARATION:
-                    state.setText("Take offer fee is already paid.");
-                    break;
-                case TAKER_FEE_PAID:
-                    state.setText("Take offer fee is already paid.");
-                    break;
-                case DEPOSIT_PAID:
-                case FIAT_SENT:
-                case FIAT_RECEIVED:
-                    state.setText("Deposit is already paid.");
-                    break;
-                case PAYOUT_PAID:
-                    break;
-                case WITHDRAWN:
-                    break;
-                case DISPUTE:
-                    break;
-            }*/
         }
 
         Button cancelButton = addButtonAfterGroup(gridPane, ++rowIndex, "Close");

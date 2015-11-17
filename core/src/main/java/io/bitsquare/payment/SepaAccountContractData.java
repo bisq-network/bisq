@@ -37,11 +37,14 @@ public class SepaAccountContractData extends PaymentAccountContractData implemen
     private String holderName;
     private String iban;
     private String bic;
-    private Set<String> acceptedCountryCodes;
+    // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
+    private ArrayList<String> acceptedCountryCodes;
 
     public SepaAccountContractData(String paymentMethod, String id, int maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
-        acceptedCountryCodes = CountryUtil.getAllSepaCountries().stream().map(e -> e.code).collect(Collectors.toSet());
+        Set<String> acceptedCountryCodesAsSet = CountryUtil.getAllSepaCountries().stream().map(e -> e.code).collect(Collectors.toSet());
+        acceptedCountryCodes = new ArrayList<>(acceptedCountryCodesAsSet);
+        acceptedCountryCodes.sort((a, b) -> a.compareTo(b));
     }
 
     public void setHolderName(String holderName) {
@@ -69,17 +72,17 @@ public class SepaAccountContractData extends PaymentAccountContractData implemen
     }
 
     public void addAcceptedCountry(String countryCode) {
-        acceptedCountryCodes.add(countryCode);
+        if (!acceptedCountryCodes.contains(countryCode))
+            acceptedCountryCodes.add(countryCode);
     }
 
     public void removeAcceptedCountry(String countryCode) {
-        acceptedCountryCodes.remove(countryCode);
+        if (acceptedCountryCodes.contains(countryCode))
+            acceptedCountryCodes.remove(countryCode);
     }
 
     public List<String> getAcceptedCountryCodes() {
-        List<String> sortedList = new ArrayList<>(acceptedCountryCodes);
-        sortedList.sort((a, b) -> a.compareTo(b));
-        return sortedList;
+        return acceptedCountryCodes;
     }
 
     @Override

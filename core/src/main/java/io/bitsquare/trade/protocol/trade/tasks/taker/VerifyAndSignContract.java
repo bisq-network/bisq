@@ -47,10 +47,10 @@ public class VerifyAndSignContract extends TradeTask {
                 PaymentAccountContractData offererPaymentAccountContractData = offerer.getPaymentAccountContractData();
                 PaymentAccountContractData takerPaymentAccountContractData = processModel.getPaymentAccountContractData(trade);
 
-                boolean isBuyerOffererOrSellerTaker = trade instanceof SellerAsTakerTrade;
-                Address buyerAddress = isBuyerOffererOrSellerTaker ? processModel.getTempTradingPeerAddress() : processModel.getMyAddress();
-                Address sellerAddress = isBuyerOffererOrSellerTaker ? processModel.getMyAddress() : processModel.getTempTradingPeerAddress();
-                log.debug("isBuyerOffererOrSellerTaker " + isBuyerOffererOrSellerTaker);
+                boolean isBuyerOffererAndSellerTaker = trade instanceof SellerAsTakerTrade;
+                Address buyerAddress = isBuyerOffererAndSellerTaker ? processModel.getTempTradingPeerAddress() : processModel.getMyAddress();
+                Address sellerAddress = isBuyerOffererAndSellerTaker ? processModel.getMyAddress() : processModel.getTempTradingPeerAddress();
+                log.debug("isBuyerOffererAndSellerTaker " + isBuyerOffererAndSellerTaker);
                 log.debug("buyerAddress " + buyerAddress);
                 log.debug("sellerAddress " + sellerAddress);
 
@@ -61,7 +61,7 @@ public class VerifyAndSignContract extends TradeTask {
                         buyerAddress,
                         sellerAddress,
                         trade.getArbitratorAddress(),
-                        isBuyerOffererOrSellerTaker,
+                        isBuyerOffererAndSellerTaker,
                         offerer.getAccountId(),
                         processModel.getAccountId(),
                         offererPaymentAccountContractData,

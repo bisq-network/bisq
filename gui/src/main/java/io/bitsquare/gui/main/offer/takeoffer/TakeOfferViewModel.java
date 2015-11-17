@@ -288,7 +288,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                             "Please try to restart you application and check your network connection to see if you can resolve the issue.";
                     break;
                 case TAKER_FEE_PAID:
-                    appendMsg = "\n\nThe take offer fee is already paid. In the worst case you have lost that fee. " +
+                    appendMsg = "\n\nThe trading fee is already paid. In the worst case you have lost that fee. " +
                             "We are sorry about that but keep in mind it is a very small amount.\n" +
                             "Please try to restart you application and check your network connection to see if you can resolve the issue.";
                     break;

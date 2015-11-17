@@ -143,23 +143,30 @@ public class StartPaymentView extends TradeStepDetailsView {
         if (model.isAuthenticated()) {
             String key = PopupId.PAYMENT_SENT;
             if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
-                new Popup().information("You are confirming that you have transferred the payment to your trading partner.\n" +
-                        "Please click the \"Payment started\" button only if you have completed the transfer.")
-                        .onClose(() -> preferences.dontShowAgain(key))
+                new Popup().headLine("Confirmation")
+                        .message("Do you have transferred the payment to your trading partner?")
+                        .dontShowAgainId(key, preferences)
+                        .actionButtonText("Yes I have started the payment")
+                        .closeButtonText("No")
+                        .onAction(() -> confirmPaymentStarted())
                         .show();
             } else {
-                paymentStartedButton.setDisable(true);
-
-                statusProgressIndicator.setVisible(true);
-                statusProgressIndicator.setProgress(-1);
-                statusLabel.setText("Sending message to trading partner...");
-
-                model.fiatPaymentStarted();
+                confirmPaymentStarted();
             }
         } else {
             new Popup().warning("You need to wait until your client is authenticated in the network.\n" +
                     "That might take up to about 2 minutes at startup.").show();
         }
+    }
+
+    private void confirmPaymentStarted() {
+        paymentStartedButton.setDisable(true);
+
+        statusProgressIndicator.setVisible(true);
+        statusProgressIndicator.setProgress(-1);
+        statusLabel.setText("Sending message to trading partner...");
+
+        model.fiatPaymentStarted();
     }
 
 

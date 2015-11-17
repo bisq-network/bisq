@@ -72,23 +72,32 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         table.setItems(model.getList());
     }
 
-    private void onCancelOpenOffer(OpenOffer openOffer) {
+    private void onRemoveOpenOffer(OpenOffer openOffer) {
         if (model.isAuthenticated()) {
-            model.onCancelOpenOffer(openOffer,
-                    () -> {
-                        log.debug("Remove offer was successful");
-                        new Popup().information("You can withdraw the funds you paid in from the funds screens.")
-                                .onClose(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
-                                .show();
-                    },
-                    (message) -> {
-                        log.error(message);
-                        new Popup().warning("Remove offer failed:\n" + message).show();
-                    });
+            new Popup().warning("Are you sure you want to remove that offer?\n" +
+                    "The offer fee you have paid will be lost if you remove that offer.")
+                    .actionButtonText("Remove offer")
+                    .onAction(() -> doRemoveOpenOffer(openOffer))
+                    .closeButtonText("Don't remove the offer")
+                    .show();
         } else {
             new Popup().warning("You need to wait until your client is authenticated in the network.\n" +
                     "That might take up to about 2 minutes at startup.").show();
         }
+    }
+
+    private void doRemoveOpenOffer(OpenOffer openOffer) {
+        model.onCancelOpenOffer(openOffer,
+                () -> {
+                    log.debug("Remove offer was successful");
+                    new Popup().information("You can withdraw the funds you paid in from the funds screens.")
+                            .onClose(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
+                            .show();
+                },
+                (message) -> {
+                    log.error(message);
+                    new Popup().warning("Remove offer failed:\n" + message).show();
+                });
     }
 
  /*   private void openOfferDetails(OpenOfferListItem item) {
@@ -284,7 +293,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 super.updateItem(item, empty);
 
                                 if (item != null) {
-                                    button.setOnAction(event -> onCancelOpenOffer(item.getOpenOffer()));
+                                    button.setOnAction(event -> onRemoveOpenOffer(item.getOpenOffer()));
                                     setGraphic(button);
                                 } else {
                                     setGraphic(null);

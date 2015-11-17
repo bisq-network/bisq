@@ -111,12 +111,16 @@ public abstract class PaymentMethodForm {
     protected void addAllowedPeriod() {
         long hours = paymentAccount.getPaymentMethod().getMaxTradePeriod() / 6;
         String displayText = hours + " hours";
-        if (hours == 24)
+        if (hours == 1)
+            displayText = "1 hour";
+        else if (hours == 24)
             displayText = "1 day";
-        if (hours > 24)
+        else if (hours > 24)
             displayText = hours / 24 + " days";
 
-        addLabelTextField(gridPane, ++gridRow, "Max. allowed trade period:", displayText);
+        displayText += " (Max. permitted period until the trade needs to be completed)";
+
+        addLabelTextField(gridPane, ++gridRow, "Max. permitted trade period:", displayText);
     }
 
     abstract protected void autoFillNameTextField();

@@ -167,7 +167,7 @@ public class BitsquareApp extends Application {
                     showFPSWindow();
                 else if (new KeyCodeCombination(KeyCode.E, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
                     showEmptyWalletPopup();
-                else if (new KeyCodeCombination(KeyCode.A, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
+                else if (new KeyCodeCombination(KeyCode.M, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
                     showSendAlertMessagePopup();
             });
 
@@ -326,6 +326,7 @@ public class BitsquareApp extends Application {
 
     private void restart() {
         //TODO
+        stop();
         //gracefulShutDown(UpdateFX::restartApp);
     }
 }

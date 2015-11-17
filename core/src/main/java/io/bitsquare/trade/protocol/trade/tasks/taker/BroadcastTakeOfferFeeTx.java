@@ -41,7 +41,7 @@ public class BroadcastTakeOfferFeeTx extends TradeTask {
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {
-                            log.debug("Take offer fee published successfully. Transaction ID = " + transaction.getHashAsString());
+                            log.debug("Trading fee published successfully. Transaction ID = " + transaction.getHashAsString());
 
                             trade.setState(Trade.State.TAKER_FEE_PAID);
                             complete();
@@ -49,7 +49,7 @@ public class BroadcastTakeOfferFeeTx extends TradeTask {
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
-                            appendToErrorMessage("Take offer fee payment failed. Maybe your network connection was lost. Please try again.");
+                            appendToErrorMessage("Trading fee payment failed. Maybe your network connection was lost. Please try again.");
                             failed(t);
                         }
                     });

@@ -44,6 +44,11 @@ public class CreateAndSignDepositTxAsSeller extends TradeTask {
             Coin sellerInputAmount = FeePolicy.SECURITY_DEPOSIT.add(FeePolicy.TX_FEE).add(trade.getTradeAmount());
             Coin msOutputAmount = sellerInputAmount.add(FeePolicy.SECURITY_DEPOSIT);
 
+            log.info("\n\n------------------------------------------------------------\n"
+                    + "Contract as json\n"
+                    + trade.getContractAsJson()
+                    + "\n------------------------------------------------------------\n");
+
             byte[] contractHash = Hash.getHash(trade.getContractAsJson());
             trade.setContractHash(contractHash);
             PreparedDepositTxAndOffererInputs result = processModel.getTradeWalletService().offererCreatesAndSignsDepositTx(

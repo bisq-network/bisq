@@ -67,7 +67,6 @@ public class User implements Serializable {
     private Alert displayedAlert;
 
 
-    @Nullable
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
     @Nullable
     private Arbitrator registeredArbitrator;
@@ -244,7 +243,6 @@ public class User implements Serializable {
         return registeredArbitrator;
     }
 
-    @Nullable
     public List<Arbitrator> getAcceptedArbitrators() {
         return acceptedArbitrators;
     }

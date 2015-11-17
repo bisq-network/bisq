@@ -32,6 +32,7 @@ import org.bitcoinj.core.Coin;
 public class BalanceTextField extends AnchorPane {
 
     private static WalletService walletService;
+    private BalanceListener balanceListener;
 
     public static void setWalletService(WalletService walletService) {
         BalanceTextField.walletService = walletService;
@@ -61,13 +62,18 @@ public class BalanceTextField extends AnchorPane {
     public void setup(Address address, BSFormatter formatter) {
         this.formatter = formatter;
 
-        walletService.addBalanceListener(new BalanceListener(address) {
+        balanceListener = new BalanceListener(address) {
             @Override
             public void onBalanceChanged(Coin balance) {
                 updateBalance(balance);
             }
-        });
+        };
+        walletService.addBalanceListener(balanceListener);
         updateBalance(walletService.getBalanceForAddress(address));
+    }
+
+    public void disarm() {
+        walletService.removeBalanceListener(balanceListener);
     }
 
 

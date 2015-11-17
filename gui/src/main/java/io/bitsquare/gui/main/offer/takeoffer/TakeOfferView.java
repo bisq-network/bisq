@@ -225,12 +225,16 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {
                 UserThread.runAfter(() -> {
                     new Popup().information(BSResources.get("takeOffer.success.info"))
-                            .onClose(() -> {
-                                navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
+                            .actionButtonText("Go to \"Open trades\"")
+                            .onAction(() -> {
                                 close();
+                                UserThread.runAfter(() ->
+                                                navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class),
+                                        100, TimeUnit.MILLISECONDS);
                             })
+                            .onClose(() -> close())
                             .show();
-                }, 300, TimeUnit.MILLISECONDS);
+                }, 100, TimeUnit.MILLISECONDS);
             }
         });
 
@@ -322,7 +326,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void onTakeOffer() {
         Offer offer = model.getOffer();
         if (model.getShowTakeOfferConfirmation()) {
-            offerDetailsPopup.onTakeOffer(() -> model.onTakeOffer()).show(offer);
+            offerDetailsPopup.onTakeOffer(() -> model.onTakeOffer()).show(offer, model.dataModel.amountAsCoin.get());
         } else {
             if (model.hasAcceptedArbitrators()) {
                 model.onTakeOffer();
@@ -351,9 +355,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         Dialog.Actions.CLOSE.handle(actionEvent);
                     }
                 });
-                new Popup().information("To ensure that both traders behave fair they need to pay a security deposit.\n\n" +
+                new Popup().information("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
                         "The deposit will stay in your local trading wallet until the offer gets accepted by another trader.\n" +
-                        "It will be refunded to you after the trade has successfully completed.").show();
+                        "It will be refunded to you after the trade has successfully completed.\n\n" +
+                        "You need to pay in the exact amount displayed to you from your external Bitcoin wallet into the " +
+                        "Bitsquare trade wallet. The amount is the sum of the trade amount, the security deposit, " +
+                        "the trading fee and the Bitcoin mining fee.\n" +
+                        "You can see the details when you move the mouse over the question mark.").show();
 
                 model.onSecurityDepositInfoDisplayed();
             }

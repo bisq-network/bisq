@@ -289,7 +289,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             if (newValue != null) {
                 if (offer.getState() == Offer.State.OFFER_FEE_PAID)
                     this.errorMessage.set(newValue +
-                            "\n\nThe create offer fee is already paid. In the worst case you have lost that fee. " +
+                            "\n\nThe offer fee is already paid. In the worst case you have lost that fee. " +
                             "We are sorry about that but keep in mind it is a very small amount.\n" +
                             "Please try to restart you application and check your network connection to see if you can resolve the issue.");
                 else
