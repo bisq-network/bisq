@@ -51,15 +51,22 @@ public class WebViewPopup extends Popup {
         Utilities.setupWebViewPopupHandler(webView.getEngine());
 
         webView.getEngine().documentProperty().addListener((observable, oldValue, newValue) -> {
+            // TODO At linux the heightInPx is screwed up.... need to find a better solution that that ugly html hack
             String heightInPx = webView.getEngine()
                     .executeScript("window.getComputedStyle(document.body, null).getPropertyValue('height')").toString();
-            double height = Math.min(Double.valueOf(heightInPx.replace("px", "")) * 1.2, BitsquareApp.getPrimaryStage().getHeight());
-            webView.setPrefHeight(height);
-            stage.setMinHeight(height + gridPane.getHeight());
+            double webViewHeight = Math.min(Double.valueOf(heightInPx.replace("px", "")) * 1.2,
+                    BitsquareApp.getPrimaryStage().getHeight() - 200);
+            double stageHeight = Math.min(webViewHeight + gridPane.getHeight(),
+                    BitsquareApp.getPrimaryStage().getHeight());
+            webView.setPrefHeight(webViewHeight);
+            stage.setMinHeight(stageHeight);
+            stage.setMaxHeight(stageHeight);
             centerPopup();
+            gridPane.setVisible(true);
         });
 
         createGridPane();
+        gridPane.setVisible(false);
         addHtmlContent();
         createPopup();
         return this;
