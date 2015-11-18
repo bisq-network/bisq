@@ -166,9 +166,6 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         Log.traceCall(message.toString());
         Address peerAddress = message.address;
 
-        checkArgument(!authenticatedPeers.containsKey(peerAddress),
-                "We have that peer already authenticated. That must never happen.");
-
         AuthenticationHandshake authenticationHandshake;
         if (!authenticationHandshakes.containsKey(peerAddress)) {
             // We protect that connection from getting closed by maintenance cleanup...
@@ -224,8 +221,6 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     // reached our max connection size.
     private void authenticateToSeedNode(Set<Address> remainingAddresses, Address peerAddress, boolean connectToReportedAfterSuccess) {
         Log.traceCall(peerAddress.getFullAddress());
-        checkArgument(!authenticatedPeers.containsKey(peerAddress),
-                "We have that peer already authenticated. That must never happen.");
         if (!authenticationHandshakes.containsKey(peerAddress)) {
             AuthenticationHandshake authenticationHandshake = new AuthenticationHandshake(networkNode, this, getMyAddress(), peerAddress);
             authenticationHandshakes.put(peerAddress, authenticationHandshake);
@@ -338,8 +333,6 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     private void authenticateToReportedPeer(ReportedPeer reportedPeer) {
         Log.traceCall(reportedPeer.toString());
         final Address reportedPeerAddress = reportedPeer.address;
-        checkArgument(!authenticatedPeers.containsKey(reportedPeerAddress),
-                "We have that peer already authenticated. That must never happen.");
         if (!authenticationHandshakes.containsKey(reportedPeerAddress)) {
             AuthenticationHandshake authenticationHandshake = new AuthenticationHandshake(networkNode, this, getMyAddress(), reportedPeerAddress);
             authenticationHandshakes.put(reportedPeerAddress, authenticationHandshake);

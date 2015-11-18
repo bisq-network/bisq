@@ -24,12 +24,7 @@ public class Version {
     private static final Logger log = LoggerFactory.getLogger(Version.class);
 
     // The application versions
-    private static final int MAJOR_VERSION = 0;
-    private static final int MINOR_VERSION = 3;
-    // used as updateFX index
-    public static final int PATCH_VERSION = 2;
-
-    public static final String VERSION = MAJOR_VERSION + "." + MINOR_VERSION + "." + PATCH_VERSION;
+    public static final String VERSION = "0.3.2.1";
 
     // The version nr. for the objects sent over the network. A change will break the serialization of old objects.
     // If objects are used for both network and database the network version is applied.

@@ -10,8 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
-import java.util.Scanner;
-import java.util.Timer;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
@@ -62,29 +60,11 @@ public class SeedNodeMain {
                 t.printStackTrace();
             }
         });
-        listenForExitCommand();
-    }
 
-    public void listenForExitCommand() {
-        Scanner scan = new Scanner(System.in);
-        String line;
-        while (!stopped && !Thread.currentThread().isInterrupted() && ((line = scan.nextLine()) != null)) {
-            if (line.equals("q")) {
-                if (!stopped) {
-                    stopped = true;
-                    Timer timeout = UserThread.runAfter(() -> {
-                        log.error("Timeout occurred at shutDown request");
-                        System.exit(1);
-                    }, 5);
-
-                    if (seedNode != null) {
-                        UserThread.execute(() -> seedNode.shutDown(() -> {
-                            timeout.cancel();
-                            log.debug("Shutdown seed node complete.");
-                            System.exit(0);
-                        }));
-                    }
-                }
+        while (true) {
+            try {
+                Thread.sleep(Long.MAX_VALUE);
+            } catch (InterruptedException e) {
             }
         }
     }

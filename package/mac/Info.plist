@@ -44,7 +44,7 @@
         <key>JVMAppClasspath</key>
         <string></string>
         <key>JVMMainJarName</key>
-        <string>2.jar</string>
+        <string>shaded.jar</string>
         <key>JVMPreferencesID</key>
         <string>bitsquare</string>
         <key>JVMOptions</key>

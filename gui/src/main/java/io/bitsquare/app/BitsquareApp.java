@@ -160,12 +160,13 @@ public class BitsquareApp extends Application {
                     stop();
             });
             scene.setOnKeyReleased(keyEvent -> {
-                if (new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN).match(keyEvent) ||
-                        new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                if (new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     if (BitsquareApp.IS_RELEASE_VERSION)
                         systemTray.hideStage();
                     else
                         stop();
+                } else if (new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                    stop();
                 } else if (new KeyCodeCombination(KeyCode.E, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     showEmptyWalletPopup();
                 } else if (new KeyCodeCombination(KeyCode.M, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {

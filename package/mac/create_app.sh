@@ -5,28 +5,7 @@ mkdir -p gui/deploy
 
 set -e
 
-# Extract the version numbers. 
-majorVersion=$( sed -n 's/^.*final int MAJOR_VERSION = //p' common/src/main/java/io/bitsquare/app/Version.java )
-minorVersion=$( sed -n 's/^.*final int MINOR_VERSION = //p' common/src/main/java/io/bitsquare/app/Version.java )
-patchVersion=$( sed -n 's/^.*final int PATCH_VERSION = //p' common/src/main/java/io/bitsquare/app/Version.java )
-
-# remove trailing;
-majorVersion="${majorVersion:0:${#majorVersion}-1}"
-minorVersion="${minorVersion:0:${#minorVersion}-1}"
-patchVersion="${patchVersion:0:${#patchVersion}-1}"
-
-fullVersion=$( sed -n 's/^.*final String VERSION = "//p' common/src/main/java/io/bitsquare/app/Version.java )
-# remove trailing ";
-fullVersion=$majorVersion.$minorVersion.$patchVersion
-
-echo majorVersion = $majorVersion
-echo minorVersion = $minorVersion
-echo patchVersion = $patchVersion
-echo fullVersion = $fullVersion
-
-# Generate the plist from the template
-sed "s|JAR_NAME_STRING_GOES_HERE|$patchVersion.jar|" package/mac/Info.template.plist >package/mac/Info.plist
-
+fullVersion="0.3.2.1"
 
 mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 cp gui/target/shaded.jar gui/deploy/Bitsquare.jar
@@ -43,9 +22,12 @@ $JAVA_HOME/bin/javapackager \
     -title Bitsquare \
     -vendor Bitsquare \
     -outdir gui/deploy \
-    -srcfiles gui/target/shaded.jar \
+    -srcfiles gui/deploy/Bitsquare.jar \
     -appclass io.bitsquare.app.BitsquareAppMain \
     -outfile Bitsquare \
     -BjvmProperties=-Djava.net.preferIPv4Stack=true
     
+cp gui/deploy/Bitsquare.jar /Users/mk/vm_shared_ubuntu/Bitsquare.jar
+cp gui/deploy/Bitsquare.jar /Users/mk/vm_shared_windows/Bitsquare.jar
+
 cd package/mac

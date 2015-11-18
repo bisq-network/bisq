@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.popups;
 
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.common.util.Utilities;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -52,7 +53,7 @@ public class WebViewPopup extends Popup {
         webView.getEngine().documentProperty().addListener((observable, oldValue, newValue) -> {
             String heightInPx = webView.getEngine()
                     .executeScript("window.getComputedStyle(document.body, null).getPropertyValue('height')").toString();
-            double height = Double.valueOf(heightInPx.replace("px", "")) * 1.2;
+            double height = Math.min(Double.valueOf(heightInPx.replace("px", "")) * 1.2, BitsquareApp.getPrimaryStage().getHeight());
             webView.setPrefHeight(height);
             stage.setMinHeight(height + gridPane.getHeight());
             centerPopup();

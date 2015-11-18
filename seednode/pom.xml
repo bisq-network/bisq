@@ -65,7 +65,7 @@
                         <configuration>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>bundled</shadedClassifierName>
-                            <finalName>SeedNodeMain</finalName>
+                            <finalName>SeedNode</finalName>
                         </configuration>
                     </execution>
                 </executions>
