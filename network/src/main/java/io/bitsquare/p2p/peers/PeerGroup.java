@@ -279,19 +279,21 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         } else {
             log.info("An authentication handshake is already created for that peerAddress ({})", peerAddress);
 
-            Optional<Tuple2<Address, Set<Address>>> tupleOptional = getRandomNotAuthPeerAndRemainingSet(remainingAddresses);
-            if (tupleOptional.isPresent()) {
-                log.info("We try to authenticate to a seed node. " + tupleOptional.get().first);
-                authenticateToSeedNode(tupleOptional.get().second, tupleOptional.get().first, true);
-            } else if (reportedPeers.size() > 0) {
-                log.info("We don't have any more seed nodes for connecting. Lets try the reported peers.");
-                authenticateToRemainingReportedPeers(true);
-            } else {
-                log.info("We don't have any more seed nodes nor reported nodes for connecting. " +
-                        "We stop authentication attempts now, but will repeat after a few minutes.");
-                UserThread.runAfterRandomDelay(() -> authenticateToRemainingReportedPeers(true),
-                        1, 2, TimeUnit.MINUTES);
-            }
+            UserThread.runAfterRandomDelay(() -> {
+                        Optional<Tuple2<Address, Set<Address>>> tupleOptional = getRandomNotAuthPeerAndRemainingSet(remainingAddresses);
+                        if (tupleOptional.isPresent()) {
+                            log.info("We try to authenticate to a seed node. " + tupleOptional.get().first);
+                            authenticateToSeedNode(tupleOptional.get().second, tupleOptional.get().first, true);
+                        } else if (reportedPeers.size() > 0) {
+                            log.info("We don't have any more seed nodes for connecting. Lets try the reported peers.");
+                            authenticateToRemainingReportedPeers(true);
+                        } else {
+                            log.info("We don't have any more seed nodes nor reported nodes for connecting. " +
+                                    "We stop authentication attempts now, but will repeat after a few minutes.");
+                            authenticateToRemainingReportedPeers(true);
+                        }
+                    },
+                    1, 2, TimeUnit.MINUTES);
         }
     }
 
@@ -382,16 +384,17 @@ public class PeerGroup implements MessageListener, ConnectionListener {
             });
         } else {
             log.info("An authentication handshake is already created for that peerAddress ({})", reportedPeer);
-
-            if (reportedPeers.size() > 0) {
-                log.info("Authentication failed. Lets try again with the remaining reported peer addresses.");
-                authenticateToRemainingReportedPeers(false);
-            } else {
-                log.info("Authentication failed. " +
-                        "Lets wait a bit and then try the remaining seed nodes.");
-                UserThread.runAfterRandomDelay(() -> authenticateToRemainingSeedNodes(),
-                        1, 2, TimeUnit.MINUTES);
-            }
+            UserThread.runAfterRandomDelay(() -> {
+                        if (reportedPeers.size() > 0) {
+                            log.info("Authentication failed. Lets try again with the remaining reported peer addresses.");
+                            authenticateToRemainingReportedPeers(false);
+                        } else {
+                            log.info("Authentication failed. " +
+                                    "Lets wait a bit and then try the remaining seed nodes.");
+                            authenticateToRemainingSeedNodes();
+                        }
+                    },
+                    1, 2, TimeUnit.MINUTES);
         }
     }
 
