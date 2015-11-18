@@ -73,7 +73,7 @@ import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
 public class BitsquareApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BitsquareApp.class);
 
-    public static final boolean DEV_MODE = true;
+    public static final boolean DEV_MODE = false;
     public static final boolean IS_RELEASE_VERSION = !DEV_MODE && true;
 
     private static Environment env;
@@ -101,6 +101,8 @@ public class BitsquareApp extends Application {
         String logPath = Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString();
         Log.setup(logPath, IS_RELEASE_VERSION);
         log.info("Log files under: " + logPath);
+
+        Version.printVersion();
 
         UserThread.setExecutor(Platform::runLater);
 

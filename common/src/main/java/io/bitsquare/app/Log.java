@@ -53,7 +53,7 @@ public class Log {
 
         PatternLayoutEncoder encoder = new PatternLayoutEncoder();
         encoder.setContext(loggerContext);
-        encoder.setPattern("%highlight(%d{MMM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{15} - %msg %xEx%n)");
+        encoder.setPattern("%d{MMM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{15}: %msg %xEx%n");
         encoder.start();
 
         appender.setEncoder(encoder);
@@ -62,7 +62,7 @@ public class Log {
         appender.start();
 
         logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-        logbackLogger.setLevel(releaseVersion ? Level.INFO : Level.TRACE);
+        logbackLogger.setLevel(releaseVersion ? Level.DEBUG : Level.TRACE);
         logbackLogger.addAppender(appender);
     }
 

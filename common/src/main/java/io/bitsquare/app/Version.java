@@ -45,4 +45,14 @@ public class Version {
     // The version for the bitcoin network (Mainnet = 0, TestNet = 1, Regtest = 2)
     public static int NETWORK_ID;
 
+    public static void printVersion() {
+        log.info("Version{" +
+                "VERSION=" + VERSION +
+                ", NETWORK_PROTOCOL_VERSION=" + NETWORK_PROTOCOL_VERSION +
+                ", LOCAL_DB_VERSION=" + LOCAL_DB_VERSION +
+                ", PROTOCOL_VERSION=" + PROTOCOL_VERSION +
+                ", NETWORK_ID=" + NETWORK_ID +
+                '}');
+    }
+
 }

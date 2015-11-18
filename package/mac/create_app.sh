@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd ../../
-mkdir gui/deploy
+mkdir -p gui/deploy
 
 set -e
 

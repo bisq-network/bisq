@@ -1,12 +1,12 @@
 #!/bin/bash
 
 cd ../../
-mkdir gui/deploy
+mkdir -p gui/deploy
 
 set -e
 
 # Edit versions
-fullVersion=0.3.1
+fullVersion=0.3.2
 
 # Copy jar file from mac build (1.jar from processed folder) to linux box 
 # Note: fakeroot needs to be installed on linux
