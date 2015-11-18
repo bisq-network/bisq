@@ -35,6 +35,7 @@
      <logger name="org.bitcoinj.core.HeadersMessage" level="WARN"/>
      <logger name="org.bitcoinj.core.AbstractBlockChain" level="ERROR"/>-->
 
+    <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="INFO"/>
     <logger name="org.bitcoinj" level="WARN"/>
 
 </configuration>

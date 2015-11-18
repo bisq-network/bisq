@@ -33,8 +33,6 @@
      <logger name="io.bitsquare.p2p.network.TorNetworkNode" level="TRACE"/>
      <logger name="io.bitsquare.p2p.network.NetworkNode" level="TRACE"/>-->
 
-
-    <logger name="io.bitsquare.storage.Storage" level="WARN"/>
-    <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="WARN"/>
+    <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="INFO"/>
 
 </configuration>

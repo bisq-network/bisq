@@ -61,25 +61,25 @@ public class OnionProxyManagerEventHandler implements EventHandler {
     @Override
     public void circuitStatus(String status, String id, String path) {
         String msg = "CircuitStatus: " + id + " " + status + ", " + path;
-        LOG.debug(msg);
+        LOG.trace(msg);
     }
 
     @Override
     public void streamStatus(String status, String id, String target) {
         final String msg = "streamStatus: status: " + status + ", id: " + id + ", target: " + target;
-        LOG.debug(msg);
+        LOG.trace(msg);
 
     }
 
     @Override
     public void orConnStatus(String status, String orName) {
         final String msg = "OR connection: status: " + status + ", orName: " + orName;
-        LOG.debug(msg);
+        LOG.trace(msg);
     }
 
     @Override
     public void bandwidthUsed(long read, long written) {
-        LOG.debug("bandwidthUsed: read: " + read + ", written: " + written);
+        LOG.trace("bandwidthUsed: read: " + read + ", written: " + written);
 
     }
 
@@ -91,14 +91,14 @@ public class OnionProxyManagerEventHandler implements EventHandler {
             stringBuilder.append(iterator.next());
         }
         final String msg = "newDescriptors: " + stringBuilder.toString();
-        LOG.debug(msg);
+        LOG.trace(msg);
 
     }
 
     @Override
     public void message(String severity, String msg) {
         final String msg2 = "message: severity: " + severity + ", msg: " + msg;
-        LOG.debug(msg2);
+        LOG.trace(msg2);
         if (severity.equalsIgnoreCase("INFO"))
             checkforHS(msg);
     }
@@ -106,7 +106,7 @@ public class OnionProxyManagerEventHandler implements EventHandler {
     @Override
     public void unrecognized(String type, String msg) {
         final String msg2 = "unrecognized: type: " + type + ", msg: " + msg;
-        LOG.debug(msg2);
+        LOG.trace(msg2);
     }
 
     private void checkforHS(String msg) {
