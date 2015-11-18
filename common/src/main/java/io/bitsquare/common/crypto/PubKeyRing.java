@@ -99,8 +99,8 @@ public class PubKeyRing implements Serializable {
     @Override
     public String toString() {
         return "PubKeyRing{" +
-                "\n\nsignaturePubKey.hashCode()=\n" + signaturePubKey.hashCode() +
-                "\n\nencryptionPubKey.hashCode()=\n" + encryptionPubKey.hashCode() +
+                "signaturePubKey.hashCode()=\n" + signaturePubKey.hashCode() +
+                "encryptionPubKey.hashCode()=\n" + encryptionPubKey.hashCode() +
                 '}';
     }
 

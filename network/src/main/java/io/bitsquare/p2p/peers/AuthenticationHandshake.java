@@ -37,6 +37,7 @@ public class AuthenticationHandshake implements MessageListener {
     private final NetworkNode networkNode;
     private final PeerGroup peerGroup;
     private final Address myAddress;
+    private final Address peerAddress;
 
     private SettableFuture<Connection> resultFuture;
     private long startAuthTs;
@@ -48,13 +49,17 @@ public class AuthenticationHandshake implements MessageListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AuthenticationHandshake(NetworkNode networkNode, PeerGroup peerGroup, Address myAddress) {
-        Log.traceCall();
+    public AuthenticationHandshake(NetworkNode networkNode, PeerGroup peerGroup, Address myAddress, Address peerAddress) {
+        Log.traceCall("peerAddress " + peerAddress);
         this.networkNode = networkNode;
         this.peerGroup = peerGroup;
         this.myAddress = myAddress;
-    }
+        this.peerAddress = peerAddress;
 
+        networkNode.addMessageListener(this);
+        resultFuture = SettableFuture.create();
+        startAuthTs = System.currentTimeMillis();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener implementation
@@ -62,100 +67,98 @@ public class AuthenticationHandshake implements MessageListener {
 
     @Override
     public void onMessage(Message message, Connection connection) {
-        checkArgument(!stopped);
-
         if (message instanceof AuthenticationMessage) {
-            Log.traceCall(message.toString());
-            if (message instanceof AuthenticationResponse) {
-                // Requesting peer
+            // We are listening on all connections, so we need to filter out only our peer address
+            if (((AuthenticationMessage) message).address.equals(peerAddress)) {
+                Log.traceCall(message.toString());
+                checkArgument(!stopped);
+                if (message instanceof AuthenticationResponse) {
+                    // Requesting peer
+                    // We use the active connectionType if we started the authentication request to another peer
+                    // That is used for protecting eclipse attacks
+                    connection.setConnectionPriority(ConnectionPriority.ACTIVE);
 
-                // We use the active connectionType if we started the authentication request to another peer
-                // That is used for protecting eclipse attacks
-                connection.setConnectionPriority(ConnectionPriority.ACTIVE);
+                    AuthenticationResponse authenticationResponse = (AuthenticationResponse) message;
+                    connection.setPeerAddress(peerAddress);
+                    log.trace("Received authenticationResponse from " + peerAddress);
+                    boolean verified = nonce != 0 && nonce == authenticationResponse.requesterNonce;
+                    if (verified) {
+                        GetPeersAuthRequest getPeersAuthRequest = new GetPeersAuthRequest(myAddress,
+                                authenticationResponse.responderNonce,
+                                new HashSet<>(peerGroup.getReportedPeers()));
+                        SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, getPeersAuthRequest);
+                        log.trace("Sent GetPeersAuthRequest {} to {}", getPeersAuthRequest, peerAddress);
+                        Futures.addCallback(future, new FutureCallback<Connection>() {
+                            @Override
+                            public void onSuccess(Connection connection) {
+                                log.trace("Successfully sent GetPeersAuthRequest {} to {}", getPeersAuthRequest, peerAddress);
+                            }
 
-                AuthenticationResponse authenticationResponse = (AuthenticationResponse) message;
-                Address peerAddress = authenticationResponse.address;
-                connection.setPeerAddress(peerAddress);
-                log.trace("Received authenticationResponse from " + peerAddress);
-                boolean verified = nonce != 0 && nonce == authenticationResponse.requesterNonce;
-                if (verified) {
-                    GetPeersAuthRequest getPeersAuthRequest = new GetPeersAuthRequest(myAddress,
-                            authenticationResponse.responderNonce,
-                            new HashSet<>(peerGroup.getReportedPeers()));
-                    SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, getPeersAuthRequest);
-                    log.trace("Sent GetPeersAuthRequest {} to {}", getPeersAuthRequest, peerAddress);
-                    Futures.addCallback(future, new FutureCallback<Connection>() {
-                        @Override
-                        public void onSuccess(Connection connection) {
-                            log.trace("Successfully sent GetPeersAuthRequest {} to {}", getPeersAuthRequest, peerAddress);
-                        }
+                            @Override
+                            public void onFailure(@NotNull Throwable throwable) {
+                                log.info("GetPeersAuthRequest sending failed " + throwable.getMessage());
+                                failed(throwable);
+                            }
+                        });
 
-                        @Override
-                        public void onFailure(@NotNull Throwable throwable) {
-                            log.info("GetPeersAuthRequest sending failed " + throwable.getMessage());
-                            failed(throwable);
-                        }
-                    });
+                        // We could set already the authenticated flag here already, but as we need the reported peers we need
+                        // to wait for the GetPeersAuthResponse before we are completed.
+                    } else {
+                        log.warn("verify nonce failed. AuthenticationResponse=" + authenticationResponse + " / nonce=" + nonce);
+                        failed(new Exception("Verify nonce failed. AuthenticationResponse=" + authenticationResponse + " / nonceMap=" + nonce));
+                    }
+                } else if (message instanceof GetPeersAuthRequest) {
+                    // Responding peer
+                    GetPeersAuthRequest getPeersAuthRequest = (GetPeersAuthRequest) message;
+                    log.trace("GetPeersAuthRequest from " + peerAddress + " at " + myAddress);
+                    boolean verified = nonce != 0 && nonce == getPeersAuthRequest.responderNonce;
+                    if (verified) {
+                        // we create the msg with our already collected peer addresses (before adding the new ones)
+                        GetPeersAuthResponse getPeersAuthResponse = new GetPeersAuthResponse(myAddress,
+                                new HashSet<>(peerGroup.getReportedPeers()));
+                        SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, getPeersAuthResponse);
+                        log.trace("Sent GetPeersAuthResponse {} to {}", getPeersAuthResponse, peerAddress);
 
-                    // We could set already the authenticated flag here already, but as we need the reported peers we need
-                    // to wait for the GetPeersAuthResponse before we are completed.
-                } else {
-                    log.warn("verify nonce failed. AuthenticationResponse=" + authenticationResponse + " / nonce=" + nonce);
-                    failed(new Exception("Verify nonce failed. AuthenticationResponse=" + authenticationResponse + " / nonceMap=" + nonce));
-                }
-            } else if (message instanceof GetPeersAuthRequest) {
-                // Responding peer
-                GetPeersAuthRequest getPeersAuthRequest = (GetPeersAuthRequest) message;
-                Address peerAddress = getPeersAuthRequest.address;
-                log.trace("GetPeersAuthRequest from " + peerAddress + " at " + myAddress);
-                boolean verified = nonce != 0 && nonce == getPeersAuthRequest.responderNonce;
-                if (verified) {
-                    // we create the msg with our already collected peer addresses (before adding the new ones)
-                    GetPeersAuthResponse getPeersAuthResponse = new GetPeersAuthResponse(myAddress,
-                            new HashSet<>(peerGroup.getReportedPeers()));
-                    SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, getPeersAuthResponse);
-                    log.trace("Sent GetPeersAuthResponse {} to {}", getPeersAuthResponse, peerAddress);
+                        // now we add the reported peers to our own set
+                        HashSet<ReportedPeer> reportedPeers = getPeersAuthRequest.reportedPeers;
+                        log.trace("Received reported peers: " + reportedPeers);
+                        peerGroup.addToReportedPeers(reportedPeers, connection);
 
-                    // now we add the reported peers to our own set
-                    HashSet<ReportedPeer> reportedPeers = getPeersAuthRequest.reportedPeers;
+                        Futures.addCallback(future, new FutureCallback<Connection>() {
+                            @Override
+                            public void onSuccess(Connection connection) {
+                                log.trace("Successfully sent GetPeersAuthResponse {} to {}", getPeersAuthResponse, peerAddress);
+                                log.info("AuthenticationComplete: Peer with address " + peerAddress
+                                        + " authenticated (" + connection.getUid() + "). Took "
+                                        + (System.currentTimeMillis() - startAuthTs) + " ms.");
+
+                                completed(connection);
+                            }
+
+                            @Override
+                            public void onFailure(@NotNull Throwable throwable) {
+                                log.info("GetPeersAuthResponse sending failed " + throwable.getMessage());
+                                failed(throwable);
+                            }
+                        });
+                    } else {
+                        log.warn("verify nonce failed. getPeersMessage=" + getPeersAuthRequest + " / nonce=" + nonce);
+                        failed(new Exception("Verify nonce failed. getPeersMessage=" + getPeersAuthRequest + " / nonce=" + nonce));
+                    }
+                } else if (message instanceof GetPeersAuthResponse) {
+                    // Requesting peer
+                    GetPeersAuthResponse getPeersAuthResponse = (GetPeersAuthResponse) message;
+                    log.trace("GetPeersAuthResponse from " + peerAddress + " at " + myAddress);
+                    HashSet<ReportedPeer> reportedPeers = getPeersAuthResponse.reportedPeers;
                     log.trace("Received reported peers: " + reportedPeers);
                     peerGroup.addToReportedPeers(reportedPeers, connection);
 
-                    Futures.addCallback(future, new FutureCallback<Connection>() {
-                        @Override
-                        public void onSuccess(Connection connection) {
-                            log.trace("Successfully sent GetPeersAuthResponse {} to {}", getPeersAuthResponse, peerAddress);
-                            log.info("AuthenticationComplete: Peer with address " + peerAddress
-                                    + " authenticated (" + connection.getUid() + "). Took "
-                                    + (System.currentTimeMillis() - startAuthTs) + " ms.");
+                    log.info("AuthenticationComplete: Peer with address " + peerAddress
+                            + " authenticated (" + connection.getUid() + "). Took "
+                            + (System.currentTimeMillis() - startAuthTs) + " ms.");
 
-                            completed(connection);
-                        }
-
-                        @Override
-                        public void onFailure(@NotNull Throwable throwable) {
-                            log.info("GetPeersAuthResponse sending failed " + throwable.getMessage());
-                            failed(throwable);
-                        }
-                    });
-                } else {
-                    log.warn("verify nonce failed. getPeersMessage=" + getPeersAuthRequest + " / nonce=" + nonce);
-                    failed(new Exception("Verify nonce failed. getPeersMessage=" + getPeersAuthRequest + " / nonce=" + nonce));
+                    completed(connection);
                 }
-            } else if (message instanceof GetPeersAuthResponse) {
-                // Requesting peer
-                GetPeersAuthResponse getPeersAuthResponse = (GetPeersAuthResponse) message;
-                Address peerAddress = getPeersAuthResponse.address;
-                log.trace("GetPeersAuthResponse from " + peerAddress + " at " + myAddress);
-                HashSet<ReportedPeer> reportedPeers = getPeersAuthResponse.reportedPeers;
-                log.trace("Received reported peers: " + reportedPeers);
-                peerGroup.addToReportedPeers(reportedPeers, connection);
-
-                log.info("AuthenticationComplete: Peer with address " + peerAddress
-                        + " authenticated (" + connection.getUid() + "). Took "
-                        + (System.currentTimeMillis() - startAuthTs) + " ms.");
-
-                completed(connection);
             }
         }
     }
@@ -165,11 +168,9 @@ public class AuthenticationHandshake implements MessageListener {
     // Authentication initiated by requesting peer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SettableFuture<Connection> requestAuthentication(Address peerAddress) {
-        Log.traceCall();
+    public SettableFuture<Connection> requestAuthentication() {
+        Log.traceCall("peerAddress " + peerAddress);
         // Requesting peer
-
-        init();
 
         AuthenticationRequest authenticationRequest = new AuthenticationRequest(myAddress, getAndSetNonce());
         SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, authenticationRequest);
@@ -177,6 +178,7 @@ public class AuthenticationHandshake implements MessageListener {
             @Override
             public void onSuccess(Connection connection) {
                 log.trace("send AuthenticationRequest to " + peerAddress + " succeeded.");
+
                 connection.setPeerAddress(peerAddress);
                 // We protect that connection from getting closed by maintenance cleanup...
                 connection.setConnectionPriority(ConnectionPriority.AUTH_REQUEST);
@@ -198,13 +200,11 @@ public class AuthenticationHandshake implements MessageListener {
     // Responding to authentication request
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SettableFuture<Connection> respondToAuthenticationRequest(AuthenticationRequest authenticationRequest, Connection connection) {
-        Log.traceCall();
+    public SettableFuture<Connection> respondToAuthenticationRequest(AuthenticationRequest
+                                                                             authenticationRequest, Connection connection) {
+        Log.traceCall("peerAddress " + peerAddress);
         // Responding peer
 
-        init();
-
-        Address peerAddress = authenticationRequest.address;
         log.trace("AuthenticationRequest from " + peerAddress + " at " + myAddress);
         log.info("We shut down inbound connection from peer {} to establish a new " +
                 "connection with his reported address.", peerAddress);
@@ -224,6 +224,7 @@ public class AuthenticationHandshake implements MessageListener {
                         @Override
                         public void onSuccess(Connection connection) {
                             log.trace("onSuccess sending AuthenticationResponse");
+
                             connection.setPeerAddress(peerAddress);
                             // We use passive connectionType for connections created from received authentication requests from other peers 
                             // That is used for protecting eclipse attacks
@@ -246,12 +247,6 @@ public class AuthenticationHandshake implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void init() {
-        networkNode.addMessageListener(this);
-        resultFuture = SettableFuture.create();
-        startAuthTs = System.currentTimeMillis();
-    }
 
     private long getAndSetNonce() {
         Log.traceCall();
@@ -278,5 +273,21 @@ public class AuthenticationHandshake implements MessageListener {
         Log.traceCall();
         networkNode.removeMessageListener(this);
         stopped = true;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AuthenticationHandshake)) return false;
+
+        AuthenticationHandshake that = (AuthenticationHandshake) o;
+
+        return !(peerAddress != null ? !peerAddress.equals(that.peerAddress) : that.peerAddress != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return peerAddress != null ? peerAddress.hashCode() : 0;
     }
 }

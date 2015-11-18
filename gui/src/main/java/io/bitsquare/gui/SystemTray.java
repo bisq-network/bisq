@@ -51,8 +51,9 @@ public class SystemTray {
     private final Runnable onExit;
     private final MenuItem toggleShowHideItem = new MenuItem(HIDE_WINDOW_LABEL);
 
-    public static void create(Stage stage, Runnable onExit) {
+    public static SystemTray create(Stage stage, Runnable onExit) {
         systemTray = new SystemTray(stage, onExit);
+        return systemTray;
     }
 
     private SystemTray(Stage stage, Runnable onExit) {
@@ -114,8 +115,7 @@ public class SystemTray {
             if (stage.isShowing()) {
                 toggleShowHideItem.setLabel(SHOW_WINDOW_LABEL);
                 UserThread.execute(stage::hide);
-            }
-            else {
+            } else {
                 toggleShowHideItem.setLabel(HIDE_WINDOW_LABEL);
                 UserThread.execute(stage::show);
             }

@@ -73,7 +73,8 @@ import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
 public class BitsquareApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BitsquareApp.class);
 
-    public static final boolean DEV_MODE = false;
+    public static final boolean DEV_MODE = true;
+    public static final boolean IS_RELEASE_VERSION = !DEV_MODE && true;
 
     private static Environment env;
 
@@ -90,7 +91,6 @@ public class BitsquareApp extends Application {
     private MainView mainView;
 
     public static Runnable shutDownHandler;
-    public static Runnable restartDownHandler;
 
     public static void setEnvironment(Environment env) {
         BitsquareApp.env = env;
@@ -98,15 +98,11 @@ public class BitsquareApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
-        BitsquareApp.primaryStage = primaryStage;
-
-        Log.setup(Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString());
-        Log.PRINT_TRACE_METHOD = DEV_MODE;
+        String logPath = Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString();
+        Log.setup(logPath, IS_RELEASE_VERSION);
+        log.info("Log files under: " + logPath);
 
         UserThread.setExecutor(Platform::runLater);
-
-        shutDownHandler = this::stop;
-        restartDownHandler = this::restart;
 
         // setup UncaughtExceptionHandler
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
@@ -122,6 +118,11 @@ public class BitsquareApp extends Application {
         DRMWorkaround.maybeDisableExportControls();
 
         Security.addProvider(new BouncyCastleProvider());
+
+
+        BitsquareApp.primaryStage = primaryStage;
+
+        shutDownHandler = this::stop;
 
         try {
             // Guice
@@ -148,29 +149,32 @@ public class BitsquareApp extends Application {
                     "/io/bitsquare/gui/images.css");
 
             // configure the system tray
-            SystemTray.create(primaryStage, this::stop);
+            SystemTray systemTray = SystemTray.create(primaryStage, shutDownHandler);
             primaryStage.setOnCloseRequest(e -> {
                 e.consume();
-                stop();
+                if (BitsquareApp.IS_RELEASE_VERSION)
+                    systemTray.hideStage();
+                else
+                    stop();
             });
             scene.setOnKeyReleased(keyEvent -> {
-                // For now we exit when closing/quit the app.
-                // Later we will only hide the window (systemTray.hideStage()) and use the exit item in the system tray for
-                // shut down.
                 if (new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN).match(keyEvent) ||
-                        new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
-                    stop();
-                else if (new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
-                    //if (BitsquareApp.DEV_MODE)
-                    showDebugWindow();
-                else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
-                    showFPSWindow();
-                else if (new KeyCodeCombination(KeyCode.E, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
+                        new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                    if (BitsquareApp.IS_RELEASE_VERSION)
+                        systemTray.hideStage();
+                    else
+                        stop();
+                } else if (new KeyCodeCombination(KeyCode.E, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     showEmptyWalletPopup();
-                else if (new KeyCodeCombination(KeyCode.M, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
+                } else if (new KeyCodeCombination(KeyCode.M, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     showSendAlertMessagePopup();
+                } else if (BitsquareApp.DEV_MODE) {
+                    if (new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
+                        showDebugWindow();
+                    else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
+                        showFPSWindow();
+                }
             });
-
 
             // configure the primary stage
             primaryStage.setTitle(env.getRequiredProperty(APP_NAME_KEY));
@@ -285,7 +289,6 @@ public class BitsquareApp extends Application {
         stage.setWidth(200);
         stage.setHeight(100);
         stage.show();
-
     }
 
     @Override
@@ -322,11 +325,5 @@ public class BitsquareApp extends Application {
             t.printStackTrace();
             System.exit(1);
         }
-    }
-
-    private void restart() {
-        //TODO
-        stop();
-        //gracefulShutDown(UpdateFX::restartApp);
     }
 }

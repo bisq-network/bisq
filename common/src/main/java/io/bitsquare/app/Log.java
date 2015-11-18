@@ -17,6 +17,8 @@
 
 package io.bitsquare.app;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.core.rolling.FixedWindowRollingPolicy;
@@ -26,8 +28,11 @@ import org.slf4j.LoggerFactory;
 
 public class Log {
     public static boolean PRINT_TRACE_METHOD = true;
+    private static SizeBasedTriggeringPolicy triggeringPolicy;
+    private static Logger logbackLogger;
 
-    public static void setup(String fileName) {
+    public static void setup(String fileName, boolean releaseVersion) {
+        Log.PRINT_TRACE_METHOD = !releaseVersion;
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
         RollingFileAppender appender = new RollingFileAppender();
@@ -42,13 +47,13 @@ public class Log {
         rollingPolicy.setMaxIndex(10);
         rollingPolicy.start();
 
-        SizeBasedTriggeringPolicy triggeringPolicy = new ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy();
-        triggeringPolicy.setMaxFileSize("1MB");
+        triggeringPolicy = new SizeBasedTriggeringPolicy();
+        triggeringPolicy.setMaxFileSize(releaseVersion ? "1MB" : "50MB");
         triggeringPolicy.start();
 
         PatternLayoutEncoder encoder = new PatternLayoutEncoder();
         encoder.setContext(loggerContext);
-        encoder.setPattern("%highlight(%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg %xEx%n)");
+        encoder.setPattern("%highlight(%d{MMM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{15} - %msg %xEx%n)");
         encoder.start();
 
         appender.setEncoder(encoder);
@@ -56,7 +61,8 @@ public class Log {
         appender.setTriggeringPolicy(triggeringPolicy);
         appender.start();
 
-        ch.qos.logback.classic.Logger logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        logbackLogger.setLevel(releaseVersion ? Level.INFO : Level.TRACE);
         logbackLogger.addAppender(appender);
     }
 
@@ -77,4 +83,6 @@ public class Log {
         String className = stackTraceElement.getClassName();
         LoggerFactory.getLogger(className).trace("Called: {} [{}]", methodName, message);
     }
+
+
 }

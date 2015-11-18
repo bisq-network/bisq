@@ -7,12 +7,11 @@ public final class AuthenticationResponse extends AuthenticationMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
-    public final Address address;
     public final long requesterNonce;
     public final long responderNonce;
 
     public AuthenticationResponse(Address address, long requesterNonce, long responderNonce) {
-        this.address = address;
+        super(address);
         this.requesterNonce = requesterNonce;
         this.responderNonce = responderNonce;
     }

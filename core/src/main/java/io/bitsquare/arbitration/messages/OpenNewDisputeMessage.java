@@ -21,7 +21,7 @@ import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.p2p.Address;
 
-public class OpenNewDisputeMessage extends DisputeMessage {
+public final class OpenNewDisputeMessage extends DisputeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 

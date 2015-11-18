@@ -10,11 +10,10 @@ public final class GetPeersAuthResponse extends AuthenticationMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
-    public final Address address;
     public final HashSet<ReportedPeer> reportedPeers;
 
     public GetPeersAuthResponse(Address address, HashSet<ReportedPeer> reportedPeers) {
-        this.address = address;
+        super(address);
         this.reportedPeers = reportedPeers;
     }
 

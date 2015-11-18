@@ -218,7 +218,7 @@ public class FileManager<T> {
     private void saveNowInternal(T serializable) {
         long now = System.currentTimeMillis();
         saveToFile(serializable, dir, storageFile);
-        UserThread.execute(() -> log.info("Save {} completed in {}msec", storageFile, System.currentTimeMillis() - now));
+        UserThread.execute(() -> log.trace("Save {} completed in {}msec", storageFile, System.currentTimeMillis() - now));
     }
 
     private synchronized void saveToFile(T serializable, File dir, File storageFile) {

@@ -79,7 +79,7 @@ public class EncryptionServiceTests {
 
 }
 
-class TestMessage implements MailboxMessage {
+final class TestMessage implements MailboxMessage {
     public String data = "test";
     private final int networkId = Version.NETWORK_ID;
 

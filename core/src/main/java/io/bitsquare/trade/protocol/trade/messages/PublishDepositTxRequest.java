@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Immutable
-public class PublishDepositTxRequest extends TradeMessage {
+public final class PublishDepositTxRequest extends TradeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 

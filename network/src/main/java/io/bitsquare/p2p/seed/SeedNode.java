@@ -97,16 +97,25 @@ public class SeedNode {
         }
     }
 
-    public void createAndStartP2PService() {
-        createAndStartP2PService(mySeedNodeAddress, useLocalhost, Version.NETWORK_ID, progArgSeedNodes, null);
+    public void createAndStartP2PService(boolean releaseVersion) {
+        createAndStartP2PService(mySeedNodeAddress, useLocalhost, Version.NETWORK_ID, releaseVersion, progArgSeedNodes, null);
     }
 
     public void createAndStartP2PService(Address mySeedNodeAddress,
                                          boolean useLocalhost,
                                          int networkId,
+                                         boolean releaseVersion,
                                          @Nullable Set<Address> progArgSeedNodes,
                                          @Nullable P2PServiceListener listener) {
         Log.traceCall();
+
+        Path appPath = Paths.get(defaultUserDataDir,
+                "Bitsquare_seed_node_" + String.valueOf(mySeedNodeAddress.getFullAddress().replace(":", "_")));
+
+        String logPath = Paths.get(appPath.toString(), "logs").toString();
+        Log.setup(logPath, releaseVersion);
+        log.info("Log files under: " + logPath);
+
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
         if (progArgSeedNodes != null && !progArgSeedNodes.isEmpty()) {
             if (useLocalhost)
@@ -114,13 +123,12 @@ public class SeedNode {
             else
                 seedNodesRepository.setTorSeedNodeAddresses(progArgSeedNodes);
         }
-        Path seedNodePath = Paths.get(defaultUserDataDir,
-                "Bitsquare_seed_node_" + String.valueOf(mySeedNodeAddress.getFullAddress().replace(":", "_")));
-        File storageDir = Paths.get(seedNodePath.toString(), "db").toFile();
-        File torDir = Paths.get(seedNodePath.toString(), "tor").toFile();
 
+        File storageDir = Paths.get(appPath.toString(), "db").toFile();
         if (storageDir.mkdirs())
             log.info("Created storageDir at " + storageDir.getAbsolutePath());
+
+        File torDir = Paths.get(appPath.toString(), "tor").toFile();
         if (torDir.mkdirs())
             log.info("Created torDir at " + torDir.getAbsolutePath());
 

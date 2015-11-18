@@ -29,7 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Immutable
-public class PayDepositRequest extends TradeMessage implements MailboxMessage {
+public final class PayDepositRequest extends TradeMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 

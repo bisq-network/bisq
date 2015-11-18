@@ -24,7 +24,7 @@ import io.bitsquare.p2p.messaging.MailboxMessage;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-public class FiatTransferStartedMessage extends TradeMessage implements MailboxMessage {
+public final class FiatTransferStartedMessage extends TradeMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 

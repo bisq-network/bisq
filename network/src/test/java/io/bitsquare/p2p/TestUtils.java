@@ -80,7 +80,7 @@ public class TestUtils {
         }
 
         CountDownLatch latch = new CountDownLatch(1);
-        seedNode.createAndStartP2PService(new Address("localhost", port), useLocalhost, 2,
+        seedNode.createAndStartP2PService(new Address("localhost", port), useLocalhost, 2, false,
                 seedNodes, new P2PServiceListener() {
                     @Override
                     public void onRequestingDataCompleted() {

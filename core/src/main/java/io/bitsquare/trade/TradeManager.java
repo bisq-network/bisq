@@ -22,6 +22,7 @@ import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
@@ -62,6 +63,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
@@ -151,7 +153,8 @@ public class TradeManager {
         p2PNetworkReadyListener = new P2PNetworkReadyListener() {
             @Override
             public void onFirstPeerAuthenticated() {
-                initPendingTrades();
+                // give a bit delay to be sure other listeners has dont its jobs
+                UserThread.runAfter(() -> initPendingTrades(), 100, TimeUnit.MILLISECONDS);
             }
         };
         p2PService.addP2PServiceListener(p2PNetworkReadyListener);

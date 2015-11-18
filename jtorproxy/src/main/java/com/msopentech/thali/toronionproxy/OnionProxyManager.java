@@ -129,6 +129,7 @@ public abstract class OnionProxyManager {
                     if (isBootstrapped() == false) {
                         Thread.sleep(1000, 0);
                     } else {
+                        LOG.info("Tor has bootstrapped");
                         return true;
                     }
                 }
@@ -377,7 +378,6 @@ public abstract class OnionProxyManager {
         }
 
         if (phase != null && phase.contains("PROGRESS=100")) {
-            LOG.info("Tor has already bootstrapped");
             return true;
         }
 

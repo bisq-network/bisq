@@ -25,7 +25,7 @@ import javax.annotation.concurrent.Immutable;
 import java.util.Arrays;
 
 @Immutable
-public class FinalizePayoutTxRequest extends TradeMessage implements MailboxMessage {
+public final class FinalizePayoutTxRequest extends TradeMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 

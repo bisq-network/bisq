@@ -271,7 +271,11 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     public void addConnectionListener(ConnectionListener connectionListener) {
         Log.traceCall();
-        connectionListeners.add(connectionListener);
+
+        boolean newEntry = connectionListeners.add(connectionListener);
+        if (!newEntry)
+            log.warn("Try to add a connectionListener which was already added.\nconnectionListener={}\nconnectionListeners={}"
+                    , connectionListener, connectionListeners);
     }
 
     public void removeConnectionListener(ConnectionListener connectionListener) {
@@ -281,12 +285,18 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     public void addMessageListener(MessageListener messageListener) {
         Log.traceCall();
-        messageListeners.add(messageListener);
+        boolean newEntry = messageListeners.add(messageListener);
+        if (!newEntry)
+            log.warn("Try to add a messageListener which was already added.\nmessageListener={}\nmessageListeners={}"
+                    , messageListener, messageListeners);
     }
 
     public void removeMessageListener(MessageListener messageListener) {
         Log.traceCall();
-        messageListeners.remove(messageListener);
+        boolean contained = messageListeners.remove(messageListener);
+        if (!contained)
+            log.warn("Try to remove a messageListener which was never added.\nmessageListener={}\nmessageListeners={}"
+                    , messageListener, messageListeners);
     }
 
 

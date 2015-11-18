@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.availability.messages;
 
 import io.bitsquare.app.Version;
 
-public class OfferAvailabilityResponse extends OfferMessage {
+public final class OfferAvailabilityResponse extends OfferMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
