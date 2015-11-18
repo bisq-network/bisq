@@ -30,7 +30,8 @@ import java.util.concurrent.*;
 public class Connection implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
     private static final int MAX_MSG_SIZE = 5 * 1024 * 1024;         // 5 MB of compressed data
-    private static final int SOCKET_TIMEOUT = 30 * 60 * 1000;        // 30 min.
+    //timeout on blocking Socket operations like ServerSocket.accept() or SocketInputStream.read()
+    private static final int SOCKET_TIMEOUT = 1 * 60 * 1000;        // 1 min.
     private ConnectionPriority connectionPriority;
 
     public static int getMaxMsgSize() {

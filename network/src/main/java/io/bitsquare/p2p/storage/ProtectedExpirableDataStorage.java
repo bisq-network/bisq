@@ -95,7 +95,8 @@ public class ProtectedExpirableDataStorage implements MessageListener {
         // object when we get it sent from new peers, we don’t remove the sequence number from the map. 
         // That way a add message for an already expired data will fail because the sequence number 
         // is equal and not larger. 
-        map.entrySet().stream()
+        Map<ByteArray, ProtectedData> temp = new HashMap<>(map);
+        temp.entrySet().stream()
                 .filter(entry -> entry.getValue().isExpired())
                 .forEach(entry -> map.remove(entry.getKey()));
     }

@@ -145,9 +145,14 @@ public final class Arbitrator implements PubKeyProtectedExpirablePayload {
     @Override
     public String toString() {
         return "Arbitrator{" +
-                "arbitratorAddress='" + arbitratorAddress + '\'' +
+                "arbitratorAddress=" + arbitratorAddress +
                 ", languageCodes=" + languageCodes +
                 ", btcAddress='" + btcAddress + '\'' +
+                ", registrationDate=" + registrationDate +
+                ", btcPubKey.hashCode()=" + Arrays.toString(btcPubKey).hashCode() +
+                ", pubKeyRing.hashCode()=" + pubKeyRing.hashCode() +
+                ", registrationSignature.hashCode()='" + registrationSignature.hashCode() + '\'' +
+                ", registrationPubKey.hashCode()=" + Arrays.toString(registrationPubKey).hashCode() +
                 '}';
     }
 }
