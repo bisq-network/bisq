@@ -22,8 +22,7 @@ When the build completes, you will find an executable jar: `gui/target/shaded.ja
 To run it use:
     $ java -jar gui/target/shaded.jar
 
-To build the binary needs a bit more preparation as we use [UpdateFX](https://github.com/vinumeris/updatefx) for automatic updates.
-You can find more information in the build scripts under package.
+To build the binary check out the build scripts under the package directory.
 
 Prerequisites
 -------------
@@ -66,10 +65,14 @@ When the build completes, you will find an executable jar: `gui/target/shaded.ja
 To run it use:
 
     $ java -jar gui/target/shaded.jar
+    
+Please not that testnet is the default bitcoin network. Mainnet is disabled at that stage of development and will be activated as soon there is more testing done.
+    
+### 4. Development mode
+  
+Please check out our wiki for more information about [testing](https://github.com/bitsquare/bitsquare/wiki/Guide-for-testing-Bitsquare)
+and how to use [regtest](https://github.com/bitsquare/bitsquare/wiki/How-to-use-Bitsquare-with-regtest-%28advanced%29)
 
-For developing the following program arguments are useful (regtest mode):
- 
-    $ java -jar gui/target/shaded.jar --bitcoin.network=regtest --useLocalhost=true --node.port=2222 --devTest=true --app.name=Bitsquare-Regtest-Alice
 
 Problems?
 ---------

@@ -656,6 +656,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     public Set<ReportedPeer> getReportedPeers() {
         Set<ReportedPeer> all = new HashSet<>(reportedPeers);
         Set<ReportedPeer> authenticated = authenticatedPeers.values().stream()
+                .filter(e -> e.address != null)
                 .map(e -> new ReportedPeer(e.address, new Date()))
                 .collect(Collectors.toSet());
         all.addAll(authenticated);
