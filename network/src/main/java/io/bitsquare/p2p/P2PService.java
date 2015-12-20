@@ -53,6 +53,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final boolean useLocalhost;
     @Nullable
     private final EncryptionService encryptionService;
+    @Nullable
     private final KeyRing keyRing;
 
     // set in init
@@ -91,15 +92,14 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       @Named(ProgramArguments.NETWORK_ID) int networkId,
                       @Named("storage.dir") File storageDir,
                       @Nullable EncryptionService encryptionService,
-                      @Nullable KeyRing keyRing
-    ) {
-        Log.traceCall();
+                      @Nullable KeyRing keyRing) {
         this.seedNodesRepository = seedNodesRepository;
         this.port = port;
         this.torDir = torDir;
         this.useLocalhost = useLocalhost;
         this.encryptionService = encryptionService;
         this.keyRing = keyRing;
+
         dbStorage = new Storage<>(storageDir);
 
         init(networkId, storageDir);
@@ -569,11 +569,24 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     public boolean addData(ExpirablePayload expirablePayload) {
         Log.traceCall();
+        return doAddData(expirablePayload, false);
+    }
+
+    public boolean republishData(ExpirablePayload expirablePayload) {
+        Log.traceCall();
+        return doAddData(expirablePayload, true);
+    }
+
+    private boolean doAddData(ExpirablePayload expirablePayload, boolean rePublish) {
+        Log.traceCall();
         checkAuthentication();
 
         try {
             ProtectedData protectedData = dataStorage.getDataWithSignedSeqNr(expirablePayload, keyRing.getSignatureKeyPair());
-            return dataStorage.add(protectedData, networkNode.getAddress());
+            if (rePublish)
+                return dataStorage.rePublish(protectedData, networkNode.getAddress());
+            else
+                return dataStorage.add(protectedData, networkNode.getAddress());
         } catch (CryptoException e) {
             log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
             return false;

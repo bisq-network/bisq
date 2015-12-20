@@ -42,7 +42,7 @@ class MarketViewModel extends ActivatableViewModel {
     private final OfferBook offerBook;
     private final Preferences preferences;
 
-    final ObjectProperty<TradeCurrency> tradeCurrency = new SimpleObjectProperty<>(CurrencyUtil.getDefaultFiatCurrency());
+    final ObjectProperty<TradeCurrency> tradeCurrency = new SimpleObjectProperty<>(CurrencyUtil.getDefaultTradeCurrency());
     private final List<XYChart.Data> buyData = new ArrayList();
     private final List<XYChart.Data> sellData = new ArrayList();
     private final ObservableList<OfferBookListItem> offerBookListItems;

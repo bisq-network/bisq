@@ -88,7 +88,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.filteredItems = new FilteredList<>(offerBookListItems);
         this.sortedItems = new SortedList<>(filteredItems);
 
-        tradeCurrency = CurrencyUtil.getDefaultFiatCurrency();
+        tradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
         tradeCurrencyCode.set(tradeCurrency.getCode());
     }
 

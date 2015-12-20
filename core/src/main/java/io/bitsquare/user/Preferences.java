@@ -20,6 +20,7 @@ package io.bitsquare.user;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.BitcoinNetwork;
+import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.storage.Storage;
@@ -67,9 +68,16 @@ public class Preferences implements Serializable {
         return BTC_DENOMINATIONS;
     }
 
+    private transient static Locale defaultLocale = Locale.getDefault();
+
     public static Locale getDefaultLocale() {
-        //return new Locale("EN", "US");
-        return Locale.getDefault();
+        return defaultLocale;
+    }
+
+    private transient static TradeCurrency defaultTradeCurrency = new TradeCurrency(CurrencyUtil.getCurrencyByCountryCode(CountryUtil.getDefaultCountryCode()).getCurrency().getCurrencyCode());
+
+    public static TradeCurrency getDefaultTradeCurrency() {
+        return defaultTradeCurrency;
     }
 
     transient private final Storage<Preferences> storage;
@@ -92,6 +100,8 @@ public class Preferences implements Serializable {
     private boolean autoSelectArbitrators = true;
     private Map<String, Boolean> showAgainMap;
     private boolean tacAccepted;
+    private Locale preferredLocale;
+    private TradeCurrency preferredTradeCurrency;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
@@ -134,6 +144,11 @@ public class Preferences implements Serializable {
             autoSelectArbitrators = persisted.getAutoSelectArbitrators();
             showAgainMap = persisted.getShowAgainMap();
             tacAccepted = persisted.getTacAccepted();
+
+            preferredLocale = persisted.getPreferredLocale();
+            defaultLocale = preferredLocale;
+            preferredTradeCurrency = persisted.getPreferredTradeCurrency();
+            defaultTradeCurrency = preferredTradeCurrency;
         } else {
             setTradeCurrencies(CurrencyUtil.getAllSortedCurrencies());
             tradeCurrencies = new ArrayList<>(tradeCurrenciesAsObservable);
@@ -148,6 +163,8 @@ public class Preferences implements Serializable {
             showAgainMap.put(PopupId.PAYMENT_SENT, true);
             showAgainMap.put(PopupId.PAYMENT_RECEIVED, true);
 
+            preferredLocale = getDefaultLocale();
+            preferredTradeCurrency = getDefaultTradeCurrency();
             storage.queueUpForSave();
         }
 
@@ -249,6 +266,19 @@ public class Preferences implements Serializable {
         this.tacAccepted = tacAccepted;
         storage.queueUpForSave();
     }
+
+    public void setPreferredLocale(Locale preferredLocale) {
+        this.preferredLocale = preferredLocale;
+        defaultLocale = preferredLocale;
+        storage.queueUpForSave();
+    }
+
+    public void setPreferredTradeCurrency(TradeCurrency preferredTradeCurrency) {
+        this.preferredTradeCurrency = preferredTradeCurrency;
+        defaultTradeCurrency = preferredTradeCurrency;
+        storage.queueUpForSave();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -359,5 +389,13 @@ public class Preferences implements Serializable {
 
     public boolean getTacAccepted() {
         return tacAccepted;
+    }
+
+    public Locale getPreferredLocale() {
+        return preferredLocale;
+    }
+
+    public TradeCurrency getPreferredTradeCurrency() {
+        return preferredTradeCurrency;
     }
 }

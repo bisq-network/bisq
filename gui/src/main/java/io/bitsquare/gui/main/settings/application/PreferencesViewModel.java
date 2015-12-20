@@ -19,17 +19,23 @@ package io.bitsquare.gui.main.settings.application;
 
 import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
+import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.user.BlockChainExplorer;
 import io.bitsquare.user.Preferences;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+
+import java.util.Locale;
 
 class PreferencesViewModel extends ActivatableViewModel {
 
     private final Preferences preferences;
     final ObservableList<String> btcDenominations = FXCollections.observableArrayList(Preferences.getBtcDenominations());
     final ObservableList<BlockChainExplorer> blockExplorers;
-
+    final ObservableList<TradeCurrency> tradeCurrencies;
+    final ObservableList<String> languageCodes;
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialisation
@@ -38,7 +44,10 @@ class PreferencesViewModel extends ActivatableViewModel {
     @Inject
     public PreferencesViewModel(Preferences preferences) {
         this.preferences = preferences;
+
         blockExplorers = FXCollections.observableArrayList(preferences.getBlockChainExplorers());
+        tradeCurrencies = preferences.getTradeCurrenciesAsObservable();
+        languageCodes = FXCollections.observableArrayList(LanguageUtil.getAllLanguageCodes());
     }
 
     @Override
@@ -78,6 +87,18 @@ class PreferencesViewModel extends ActivatableViewModel {
         preferences.setAutoSelectArbitrators(selected);
     }
 
+    public void onSelectBlockExplorer(BlockChainExplorer selectedItem) {
+        preferences.setBlockChainExplorer(selectedItem);
+    }
+
+    public void onSelectTradeCurrency(TradeCurrency selectedItem) {
+        preferences.setPreferredTradeCurrency(selectedItem);
+    }
+
+    public void onSelectLanguageCode(String code) {
+        preferences.setPreferredLocale(new Locale(code, preferences.getPreferredLocale().getCountry()));
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -111,7 +132,11 @@ class PreferencesViewModel extends ActivatableViewModel {
         return preferences.getBlockChainExplorer();
     }
 
-    public void onSelectBlockExplorer(BlockChainExplorer selectedItem) {
-        preferences.setBlockChainExplorer(selectedItem);
+    public String getLanguageCode() {
+        return preferences.getPreferredLocale().getLanguage();
+    }
+
+    public TradeCurrency getTradeCurrency() {
+        return preferences.getPreferredTradeCurrency();
     }
 }

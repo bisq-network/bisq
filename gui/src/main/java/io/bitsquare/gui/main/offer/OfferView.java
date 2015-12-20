@@ -89,7 +89,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             }
         });
 
-        tradeCurrency = CurrencyUtil.getDefaultFiatCurrency();
+        tradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
 
         navigation.addListener(listener);
         navigation.navigateTo(MainView.class, this.getClass(), OfferBookView.class);

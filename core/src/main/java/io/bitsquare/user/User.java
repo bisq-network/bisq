@@ -102,8 +102,11 @@ public class User implements Serializable {
         } else {
             accountID = String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode()));
 
-            acceptedLanguageLocaleCodes = new ArrayList<>(Arrays.asList(LanguageUtil.getDefaultLanguageLocaleAsCode(),
-                    LanguageUtil.getEnglishLanguageLocaleCode()));
+            acceptedLanguageLocaleCodes.add(LanguageUtil.getDefaultLanguageLocaleAsCode());
+            String english = LanguageUtil.getEnglishLanguageLocaleCode();
+            if (!acceptedLanguageLocaleCodes.contains(english))
+                acceptedLanguageLocaleCodes.add(english);
+            
             acceptedArbitrators = new ArrayList<>();
         }
         storage.queueUpForSave();

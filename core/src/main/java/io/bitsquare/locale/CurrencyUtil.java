@@ -205,8 +205,8 @@ public class CurrencyUtil {
         }
     }
 
-    public static FiatCurrency getDefaultFiatCurrency() {
-        return new FiatCurrency(getCurrencyByCountryCode(CountryUtil.getDefaultCountryCode()).getCurrency());
+    public static TradeCurrency getDefaultTradeCurrency() {
+        return Preferences.getDefaultTradeCurrency();
     }
 
 }

@@ -28,10 +28,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 // Run in UserThread
@@ -90,15 +87,25 @@ public class ProtectedExpirableDataStorage implements MessageListener {
 
     private void removeExpiredEntries() {
         Log.traceCall();
-        // The moment when an object becomes expired will not be synchrone in the network and we could 
+        // The moment when an object becomes expired will not be synchronous in the network and we could 
         // get add messages after the object has expired. To avoid repeated additions of already expired 
         // object when we get it sent from new peers, we don’t remove the sequence number from the map. 
-        // That way a add message for an already expired data will fail because the sequence number 
+        // That way an ADD message for an already expired data will fail because the sequence number 
         // is equal and not larger. 
         Map<ByteArray, ProtectedData> temp = new HashMap<>(map);
+        Set<ProtectedData> protectedDataToRemoveSet = new HashSet<>();
         temp.entrySet().stream()
                 .filter(entry -> entry.getValue().isExpired())
-                .forEach(entry -> map.remove(entry.getKey()));
+                .forEach(entry -> {
+                    ByteArray hashOfPayload = entry.getKey();
+                    ProtectedData protectedDataToRemove = map.get(hashOfPayload);
+                    protectedDataToRemoveSet.add(protectedDataToRemove);
+                    map.remove(hashOfPayload);
+                });
+
+        protectedDataToRemoveSet.stream().forEach(
+                protectedDataToRemove -> hashMapChangedListeners.stream().forEach(
+                        listener -> listener.onRemoved(protectedDataToRemove)));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -142,6 +149,14 @@ public class ProtectedExpirableDataStorage implements MessageListener {
     }
 
     public boolean add(ProtectedData protectedData, @Nullable Address sender) {
+        return doAdd(protectedData, sender, false);
+    }
+
+    public boolean rePublish(ProtectedData protectedData, @Nullable Address sender) {
+        return doAdd(protectedData, sender, true);
+    }
+
+    private boolean doAdd(ProtectedData protectedData, @Nullable Address sender, boolean rePublish) {
         Log.traceCall();
         ByteArray hashOfPayload = getHashAsByteArray(protectedData.expirablePayload);
         boolean result = checkPublicKeys(protectedData, true)
@@ -162,7 +177,7 @@ public class ProtectedExpirableDataStorage implements MessageListener {
             sb.append("\n------------------------------------------------------------\n");
             log.info(sb.toString());
 
-            if (!containsKey)
+            if (rePublish || !containsKey)
                 broadcast(new AddDataMessage(protectedData), sender);
 
             storage.queueUpForSave();
@@ -273,6 +288,7 @@ public class ProtectedExpirableDataStorage implements MessageListener {
         Log.traceCall();
         map.remove(hashOfPayload);
         log.trace("Data removed from our map. We broadcast the message to our peers.");
+        storage.queueUpForSave();
         hashMapChangedListeners.stream().forEach(e -> e.onRemoved(protectedData));
 
         StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n" +

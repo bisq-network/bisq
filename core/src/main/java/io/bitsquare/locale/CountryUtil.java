@@ -119,7 +119,7 @@ public class CountryUtil {
     }
 
     public static Country getDefaultCountry() {
-        final Locale locale = new Locale(LanguageUtil.getDefaultLanguage(), getDefaultCountryCode());
+        final Locale locale = Preferences.getDefaultLocale();
         String regionCode = getRegionCode(locale.getCountry());
         final Region region = new Region(regionCode, getRegionName(regionCode));
         return new Country(locale.getCountry(), locale.getDisplayCountry(), region);
@@ -204,7 +204,6 @@ public class CountryUtil {
             return "Undefined";
         }
     }
-
 
     public static String getDefaultCountryCode() {
         // might be set later in pref or config, so not use Preferences.getDefaultLocale() anywhere in the code

@@ -52,7 +52,20 @@ public class OfferBookService {
     }
 
     public void addOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        boolean result = p2PService.addData(offer);
+        doAddOffer(offer, resultHandler, errorMessageHandler, false);
+    }
+
+    public void republishOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        doAddOffer(offer, resultHandler, errorMessageHandler, true);
+    }
+
+    private void doAddOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler, boolean rePublish) {
+        boolean result;
+        if (rePublish)
+            result = p2PService.republishData(offer);
+        else
+            result = p2PService.addData(offer);
+
         if (result) {
             log.trace("Add offer to network was successful. Offer = " + offer);
             resultHandler.handleResult();

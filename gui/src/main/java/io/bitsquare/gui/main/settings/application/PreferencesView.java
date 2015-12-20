@@ -20,6 +20,8 @@ package io.bitsquare.gui.main.settings.application;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.user.BlockChainExplorer;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
@@ -33,8 +35,11 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 @FxmlView
 public class PreferencesView extends ActivatableViewAndModel<GridPane, PreferencesViewModel> {
 
-    private ComboBox<String> btcDenominationComboBox;
+    // not supported yet
+    //private ComboBox<String> btcDenominationComboBox; 
     private ComboBox<BlockChainExplorer> blockExplorerComboBox;
+    private ComboBox<String> languageComboBox;
+    private ComboBox<TradeCurrency> tradeCurrencyComboBox;
 
     private CheckBox useAnimationsCheckBox, useEffectsCheckBox, showPlaceOfferConfirmationCheckBox, showTakeOfferConfirmationCheckBox,
             autoSelectArbitratorsCheckBox;
@@ -47,9 +52,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 7, "Preferences");
+        addTitledGroupBg(root, gridRow, 9, "Preferences");
 
-        btcDenominationComboBox = addLabelComboBox(root, gridRow, "Bitcoin denomination:", Layout.FIRST_ROW_DISTANCE).second;
+        tradeCurrencyComboBox = addLabelComboBox(root, ++gridRow, "Preferred currency:", Layout.FIRST_ROW_DISTANCE).second;
+        languageComboBox = addLabelComboBox(root, ++gridRow, "Language:").second;
+        // btcDenominationComboBox = addLabelComboBox(root, gridRow, "Bitcoin denomination:", Layout.FIRST_ROW_DISTANCE).second;
         blockExplorerComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin block explorer:").second;
         useAnimationsCheckBox = addLabelCheckBox(root, ++gridRow, "Use animations:", "").second;
         useEffectsCheckBox = addLabelCheckBox(root, ++gridRow, "Use effects:", "").second;
@@ -60,11 +67,42 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     @Override
     protected void activate() {
-        btcDenominationComboBox.setDisable(true);
+       /* btcDenominationComboBox.setDisable(true);
         btcDenominationComboBox.setItems(model.btcDenominations);
         btcDenominationComboBox.getSelectionModel().select(model.getBtcDenomination());
-        btcDenominationComboBox.setOnAction(e -> model.onSelectBtcDenomination(btcDenominationComboBox.getSelectionModel().getSelectedItem()));
+        btcDenominationComboBox.setOnAction(e -> model.onSelectBtcDenomination(btcDenominationComboBox.getSelectionModel().getSelectedItem()));*/
 
+        tradeCurrencyComboBox.setItems(model.tradeCurrencies);
+        tradeCurrencyComboBox.getSelectionModel().select(model.getTradeCurrency());
+        tradeCurrencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
+            @Override
+            public String toString(TradeCurrency tradeCurrency) {
+                return tradeCurrency.getCodeAndName();
+            }
+
+            @Override
+            public TradeCurrency fromString(String string) {
+                return null;
+            }
+        });
+        tradeCurrencyComboBox.setOnAction(e -> model.onSelectTradeCurrency(tradeCurrencyComboBox.getSelectionModel().getSelectedItem()));
+
+        languageComboBox.setItems(model.languageCodes);
+        languageComboBox.getSelectionModel().select(model.getLanguageCode());
+        languageComboBox.setConverter(new StringConverter<String>() {
+            @Override
+            public String toString(String code) {
+                return LanguageUtil.getDisplayName(code);
+            }
+
+            @Override
+            public String fromString(String string) {
+                return null;
+            }
+        });
+        languageComboBox.setOnAction(e -> model.onSelectLanguageCode(languageComboBox.getSelectionModel().getSelectedItem()));
+
+        
         blockExplorerComboBox.setItems(model.blockExplorers);
         blockExplorerComboBox.getSelectionModel().select(model.getBlockExplorer());
         blockExplorerComboBox.setConverter(new StringConverter<BlockChainExplorer>() {
@@ -80,6 +118,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         });
         blockExplorerComboBox.setOnAction(e -> model.onSelectBlockExplorer(blockExplorerComboBox.getSelectionModel().getSelectedItem()));
 
+
         useAnimationsCheckBox.setSelected(model.getUseAnimations());
         useAnimationsCheckBox.setOnAction(e -> model.onSelectUseAnimations(useAnimationsCheckBox.isSelected()));
 
@@ -94,12 +133,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         autoSelectArbitratorsCheckBox.setSelected(model.getAutoSelectArbitrators());
         autoSelectArbitratorsCheckBox.setOnAction(e -> model.onSelectAutoSelectArbitratorsCheckBox(autoSelectArbitratorsCheckBox.isSelected()));
-
     }
 
     @Override
     protected void deactivate() {
-        btcDenominationComboBox.setOnAction(null);
+        //btcDenominationComboBox.setOnAction(null);
+        languageComboBox.setOnAction(null);
+        tradeCurrencyComboBox.setOnAction(null);
+        blockExplorerComboBox.setOnAction(null);
         useAnimationsCheckBox.setOnAction(null);
         useEffectsCheckBox.setOnAction(null);
         showPlaceOfferConfirmationCheckBox.setOnAction(null);

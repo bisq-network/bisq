@@ -146,7 +146,7 @@ public class OpenOfferManager {
         if (p2PNetworkReadyListener != null)
             p2PService.removeP2PServiceListener(p2PNetworkReadyListener);
 
-        long period = (long) (Offer.TTL * 0.8);
+        long period = (long) (Offer.TTL * 0.8); // republish sufficiently before offer would expires
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
@@ -165,7 +165,7 @@ public class OpenOfferManager {
     private void rePublishOffers() {
         if (!openOffers.isEmpty()) log.trace("rePublishOffers");
         for (OpenOffer openOffer : openOffers) {
-            offerBookService.addOffer(openOffer.getOffer(),
+            offerBookService.republishOffer(openOffer.getOffer(),
                     () -> log.debug("Successful added offer to P2P network"),
                     errorMessage -> log.error("Add offer to P2P network failed. " + errorMessage));
             //setupDepositPublishedListener(openOffer);
