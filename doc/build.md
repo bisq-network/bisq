@@ -66,13 +66,46 @@ To run it use:
 
     $ java -jar gui/target/shaded.jar
     
-Please not that testnet is the default bitcoin network. Mainnet is disabled at that stage of development and will be activated as soon there is more testing done.
+Please note that testnet is the default bitcoin network. Mainnet is disabled at that stage of development and will be activated as soon there is more testing done.
     
 ### 4. Development mode
   
 Please check out our wiki for more information about [testing](https://github.com/bitsquare/bitsquare/wiki/Guide-for-testing-Bitsquare)
 and how to use [regtest](https://github.com/bitsquare/bitsquare/wiki/How-to-use-Bitsquare-with-regtest-%28advanced%29)
 
+Here are example program arguments for using regtest with localhost environment (not via Tor):  
+    
+    $ java -jar seednode/target/SeedNode.jar localhost:2002 2 50 true   
+   
+    $ java -jar gui/target/shaded.jar --useLocalhost=true --node.port=2222 --devTest=true --app.name=Bitsquare-Local-Regtest-Arbitrator  
+    
+    $ java -jar gui/target/shaded.jar --bitcoin.network=regtest --node.port=3332 --useLocalhost=true --devTest=true --app.name=Bitsquare-Local-Regtest-Alice  
+   
+    $ java -jar gui/target/shaded.jar --bitcoin.network=regtest --node.port=4442 --useLocalhost=true --devTest=true --app.name=Bitsquare-Local-Regtest-Bob   
+  
+  
+### 5. Running local seed node with Tor
+
+If you want to run locally a seed node via Tor you need to add your seed node's hidden service address to the SeedNodesRepository.java class.
+You can find the hidden service address after you started once a seed node. Start it with a placeholder address like: 
+   
+    $ java -jar seednode/target/SeedNode.jar xxxxxxx.onion:8002 2 50 
+    
+Once the hidden service is published (check console output) quit the seed node and copy the hidden service address from the console output. 
+Alternatively you can navigate to the application directory and open Bitsquare_seed_node_xxxxxxx.onion_8002/tor/hiddenservice/hostname.
+use that hidden service address also to rename the xxxxxxx placeholder of your Bitsquare_seed_node_xxxxxxx.onion_8002 directory.
+Start again the SeedNode.jar now with the correct hidden service address.
+              
+Here are example program arguments for using regtest and using the Tor network:  
+    
+    $ java -jar seednode/target/SeedNode.jar rxdkppp3vicnbgqt.onion:8002 2 50  
+   
+    $ java -jar gui/target/shaded.jar --bitcoin.network=regtest node.port=2222 --devTest=true --app.name=Bitsquare-Tor-Regtest-Arbitrator  
+    
+    $ java -jar gui/target/shaded.jar --bitcoin.network=regtest node.port=3332 --devTest=true --app.name=Bitsquare-Tor-Regtest-Alice  
+   
+    $ java -jar gui/target/shaded.jar --bitcoin.network=regtest node.port=4442 --devTest=true --app.name=Bitsquare-Tor-Regtest-Bob   
+   
 
 Problems?
 ---------
