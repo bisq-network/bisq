@@ -5,7 +5,7 @@ mkdir -p gui/deploy
 
 set -e
 
-fullVersion="0.3.2.1"
+fullVersion="0.3.2.2"
 
 mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 cp gui/target/shaded.jar gui/deploy/Bitsquare.jar

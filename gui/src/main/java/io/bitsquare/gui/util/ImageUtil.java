@@ -55,6 +55,8 @@ public class ImageUtil {
     }
 
     public static boolean isRetina() {
+        // Latest JDK renamed getMaxPixelScale to getMaxRenderScale
+        // return ((QuantumToolkit) QuantumToolkit.getToolkit()).getMaxRenderScale() > 1.9f;
         return ((QuantumToolkit) QuantumToolkit.getToolkit()).getMaxPixelScale() > 1.9f;
     }
 
