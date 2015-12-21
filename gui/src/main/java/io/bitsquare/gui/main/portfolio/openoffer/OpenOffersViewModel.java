@@ -74,6 +74,6 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     boolean isAuthenticated() {
-        return p2PService.isAuthenticated();
+        return p2PService.getFirstPeerAuthenticated();
     }
 }

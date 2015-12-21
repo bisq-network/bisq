@@ -27,8 +27,8 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.FirstPeerAuthenticatedListener;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.P2PNetworkReadyListener;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.DecryptedMailListener;
 import io.bitsquare.p2p.messaging.DecryptedMailboxListener;
@@ -83,7 +83,7 @@ public class TradeManager {
     private final Storage<TradableList<Trade>> tradableListStorage;
     private final TradableList<Trade> trades;
     private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
-    private P2PNetworkReadyListener p2PNetworkReadyListener;
+    private FirstPeerAuthenticatedListener firstPeerAuthenticatedListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -150,14 +150,14 @@ public class TradeManager {
             }
         });
 
-        p2PNetworkReadyListener = new P2PNetworkReadyListener() {
+        firstPeerAuthenticatedListener = new FirstPeerAuthenticatedListener() {
             @Override
             public void onFirstPeerAuthenticated() {
                 // give a bit delay to be sure other listeners has dont its jobs
                 UserThread.runAfter(() -> initPendingTrades(), 100, TimeUnit.MILLISECONDS);
             }
         };
-        p2PService.addP2PServiceListener(p2PNetworkReadyListener);
+        p2PService.addP2PServiceListener(firstPeerAuthenticatedListener);
     }
 
 
@@ -172,7 +172,7 @@ public class TradeManager {
     }
 
     private void initPendingTrades() {
-        if (p2PNetworkReadyListener != null) p2PService.removeP2PServiceListener(p2PNetworkReadyListener);
+        if (firstPeerAuthenticatedListener != null) p2PService.removeP2PServiceListener(firstPeerAuthenticatedListener);
 
         List<Trade> failedTrades = new ArrayList<>();
         for (Trade trade : trades) {

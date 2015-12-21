@@ -1,6 +1,6 @@
 package io.bitsquare.p2p.storage.data;
 
-import io.bitsquare.p2p.storage.ProtectedExpirableDataStorage;
+import io.bitsquare.p2p.storage.P2PDataStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,7 +9,7 @@ import java.security.PublicKey;
 import java.util.Date;
 
 public class ProtectedMailboxData extends ProtectedData {
-    private static final Logger log = LoggerFactory.getLogger(ProtectedExpirableDataStorage.class);
+    private static final Logger log = LoggerFactory.getLogger(P2PDataStorage.class);
 
     public final PublicKey receiversPubKey;
 

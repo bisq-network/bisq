@@ -52,7 +52,8 @@ public class LocalhostNetworkNode extends NetworkNode {
     @Override
     public void start(@Nullable SetupListener setupListener) {
         Log.traceCall();
-        if (setupListener != null) addSetupListener(setupListener);
+        if (setupListener != null)
+            addSetupListener(setupListener);
 
         createExecutorService();
 

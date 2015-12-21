@@ -39,7 +39,7 @@ public class ProtectedDataStorageTest {
     private NetworkNode networkNode1;
     private PeerGroup peerGroup1;
     private EncryptionService encryptionService1, encryptionService2;
-    private ProtectedExpirableDataStorage dataStorage1;
+    private P2PDataStorage dataStorage1;
     private KeyPair storageSignatureKeyPair1, storageSignatureKeyPair2;
     private KeyRing keyRing1, keyRing2;
     private MockData mockData;
@@ -58,15 +58,16 @@ public class ProtectedDataStorageTest {
         dir2.mkdir();
 
         UserThread.setExecutor(Executors.newSingleThreadExecutor());
-        ProtectedExpirableDataStorage.CHECK_TTL_INTERVAL = 10 * 60 * 1000;
+        P2PDataStorage.CHECK_TTL_INTERVAL = 10 * 60 * 1000;
 
         keyRing1 = new KeyRing(new KeyStorage(dir1));
 
         storageSignatureKeyPair1 = keyRing1.getSignatureKeyPair();
         encryptionService1 = new EncryptionService(keyRing1);
         networkNode1 = TestUtils.getAndStartSeedNode(8001, useClearNet, seedNodes).getP2PService().getNetworkNode();
-        peerGroup1 = new PeerGroup(networkNode1, seedNodes);
-        dataStorage1 = new ProtectedExpirableDataStorage(peerGroup1, new File("dummy"));
+        peerGroup1 = new PeerGroup(networkNode1);
+        peerGroup1.setSeedNodeAddresses(seedNodes);
+        dataStorage1 = new P2PDataStorage(peerGroup1, new File("dummy"));
 
         // for mailbox
         keyRing2 = new KeyRing(new KeyStorage(dir2));
@@ -106,9 +107,9 @@ public class ProtectedDataStorageTest {
 
     @Test
     public void testExpirableData() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
-        ProtectedExpirableDataStorage.CHECK_TTL_INTERVAL = 10;
+        P2PDataStorage.CHECK_TTL_INTERVAL = 10;
         // CHECK_TTL_INTERVAL is used in constructor of ProtectedExpirableDataStorage so we recreate it here
-        dataStorage1 = new ProtectedExpirableDataStorage(peerGroup1, new File("dummy"));
+        dataStorage1 = new P2PDataStorage(peerGroup1, new File("dummy"));
         mockData.ttl = 50;
 
         ProtectedData data = dataStorage1.getDataWithSignedSeqNr(mockData, storageSignatureKeyPair1);

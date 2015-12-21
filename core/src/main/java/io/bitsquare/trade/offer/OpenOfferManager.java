@@ -26,8 +26,8 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.FirstPeerAuthenticatedListener;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.P2PNetworkReadyListener;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.SendMailMessageListener;
 import io.bitsquare.storage.Storage;
@@ -69,7 +69,7 @@ public class OpenOfferManager {
     private final TradableList<OpenOffer> openOffers;
     private final Storage<TradableList<OpenOffer>> openOffersStorage;
     private boolean shutDownRequested;
-    private P2PNetworkReadyListener p2PNetworkReadyListener;
+    private FirstPeerAuthenticatedListener firstPeerAuthenticatedListener;
     private final Timer timer = new Timer();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -128,14 +128,14 @@ public class OpenOfferManager {
         // Before the TTL is reached we re-publish our offers
         // If offer removal at shutdown fails we don't want to have long term dangling dead offers, so we set TTL quite short and use re-publish as 
         // strategy. Offerers need to be online anyway.
-        if (!p2PService.isAuthenticated()) {
-            p2PNetworkReadyListener = new P2PNetworkReadyListener() {
+        if (!p2PService.getFirstPeerAuthenticated()) {
+            firstPeerAuthenticatedListener = new FirstPeerAuthenticatedListener() {
                 @Override
                 public void onFirstPeerAuthenticated() {
                     startRePublishThread();
                 }
             };
-            p2PService.addP2PServiceListener(p2PNetworkReadyListener);
+            p2PService.addP2PServiceListener(firstPeerAuthenticatedListener);
 
         } else {
             startRePublishThread();
@@ -143,8 +143,8 @@ public class OpenOfferManager {
     }
 
     private void startRePublishThread() {
-        if (p2PNetworkReadyListener != null)
-            p2PService.removeP2PServiceListener(p2PNetworkReadyListener);
+        if (firstPeerAuthenticatedListener != null)
+            p2PService.removeP2PServiceListener(firstPeerAuthenticatedListener);
 
         long period = (long) (Offer.TTL * 0.8); // republish sufficiently before offer would expires
         TimerTask timerTask = new TimerTask() {

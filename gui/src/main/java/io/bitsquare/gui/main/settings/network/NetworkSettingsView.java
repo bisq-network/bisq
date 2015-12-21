@@ -105,6 +105,11 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 }
 
                 @Override
+                public void onNoSeedNodeAvailable() {
+
+                }
+
+                @Override
                 public void onFirstPeerAuthenticated() {
                 }
 

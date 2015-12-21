@@ -185,6 +185,6 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     }
 
     boolean isAuthenticated() {
-        return p2PService.isAuthenticated();
+        return p2PService.getFirstPeerAuthenticated();
     }
 }

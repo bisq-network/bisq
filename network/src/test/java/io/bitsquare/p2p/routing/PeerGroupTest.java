@@ -89,7 +89,10 @@ public class PeerGroupTest {
 
                     @Override
                     public void onTorNodeReady() {
+                    }
 
+                    @Override
+                    public void onNoSeedNodeAvailable() {
                     }
 
                     @Override
@@ -132,6 +135,10 @@ public class PeerGroupTest {
             }
 
             @Override
+            public void onNoSeedNodeAvailable() {
+            }
+
+            @Override
             public void onTorNodeReady() {
 
             }
@@ -163,8 +170,11 @@ public class PeerGroupTest {
             }
 
             @Override
-            public void onTorNodeReady() {
+            public void onNoSeedNodeAvailable() {
+            }
 
+            @Override
+            public void onTorNodeReady() {
             }
 
             @Override
@@ -393,8 +403,11 @@ public class PeerGroupTest {
             }
 
             @Override
-            public void onTorNodeReady() {
+            public void onNoSeedNodeAvailable() {
+            }
 
+            @Override
+            public void onTorNodeReady() {
             }
 
             @Override

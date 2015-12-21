@@ -133,8 +133,7 @@ public class SeedNode {
             log.info("Created torDir at " + torDir.getAbsolutePath());
 
         p2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.port, torDir, useLocalhost, networkId, storageDir);
-        p2PService.removeMySeedNodeAddressFromList(mySeedNodeAddress);
-        p2PService.start(listener);
+        p2PService.startAsSeedNode(mySeedNodeAddress, listener);
     }
 
     public P2PService getP2PService() {

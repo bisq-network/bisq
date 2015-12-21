@@ -1,13 +1,17 @@
 package io.bitsquare.p2p;
 
 
-public abstract class P2PNetworkReadyListener implements P2PServiceListener {
+public abstract class FirstPeerAuthenticatedListener implements P2PServiceListener {
     @Override
     public void onTorNodeReady() {
     }
 
     @Override
     public void onHiddenServicePublished() {
+    }
+
+    @Override
+    public void onNoSeedNodeAvailable() {
     }
 
     @Override

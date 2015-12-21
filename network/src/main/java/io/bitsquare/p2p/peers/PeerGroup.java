@@ -44,7 +44,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     private static final int MAX_REPORTED_PEERS = 1000;
 
     private final NetworkNode networkNode;
-    private final Set<Address> seedNodeAddresses;
+    private Set<Address> seedNodeAddresses;
 
     private final Map<Address, Peer> authenticatedPeers = new HashMap<>();
     private final Set<ReportedPeer> reportedPeers = new HashSet<>();
@@ -60,11 +60,10 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PeerGroup(NetworkNode networkNode, Set<Address> seeds) {
+    public PeerGroup(NetworkNode networkNode) {
         Log.traceCall();
 
         this.networkNode = networkNode;
-        this.seedNodeAddresses = seeds;
 
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
@@ -73,6 +72,9 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         startGetPeersTimer();
     }
 
+    public void setSeedNodeAddresses(Set<Address> seedNodeAddresses) {
+        this.seedNodeAddresses = seedNodeAddresses;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener implementation
@@ -113,11 +115,6 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void removeMySeedNodeAddressFromList(Address mySeedNodeAddress) {
-        Log.traceCall();
-        seedNodeAddresses.remove(mySeedNodeAddress);
-    }
 
     public void broadcast(DataBroadcastMessage message, @Nullable Address sender) {
         Log.traceCall("Sender " + sender + ". Message " + message.toString());
@@ -836,5 +833,4 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         result.append("\n------------------------------------------------------------\n");
         log.info(result.toString());
     }
-
 }

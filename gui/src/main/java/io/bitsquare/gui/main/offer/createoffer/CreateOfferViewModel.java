@@ -470,7 +470,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     boolean isAuthenticated() {
-        return p2PService.isAuthenticated();
+        return p2PService.getFirstPeerAuthenticated();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

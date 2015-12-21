@@ -7,5 +7,7 @@ public interface P2PServiceListener extends SetupListener {
 
     void onRequestingDataCompleted();
 
+    void onNoSeedNodeAvailable();
+
     void onFirstPeerAuthenticated();
 }

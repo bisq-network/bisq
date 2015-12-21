@@ -87,6 +87,10 @@ public class TestUtils {
                     }
 
                     @Override
+                    public void onNoSeedNodeAvailable() {
+                    }
+
+                    @Override
                     public void onFirstPeerAuthenticated() {
                     }
 
@@ -125,6 +129,10 @@ public class TestUtils {
         p2PService.start(new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
+            }
+
+            @Override
+            public void onNoSeedNodeAvailable() {
             }
 
             @Override

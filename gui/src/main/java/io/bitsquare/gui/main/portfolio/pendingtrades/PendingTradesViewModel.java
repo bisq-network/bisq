@@ -220,7 +220,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public boolean isAuthenticated() {
-        return p2PService.isAuthenticated();
+        return p2PService.getFirstPeerAuthenticated();
     }
 
     // columns

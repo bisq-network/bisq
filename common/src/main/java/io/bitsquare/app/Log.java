@@ -67,22 +67,24 @@ public class Log {
     }
 
     public static void traceCall() {
-        StackTraceElement stackTraceElement = new Throwable().getStackTrace()[1];
-        String methodName = stackTraceElement.getMethodName();
-        if (methodName.equals("<init>"))
-            methodName = "Constructor ";
-        String className = stackTraceElement.getClassName();
-        LoggerFactory.getLogger(className).trace("Called: {}", methodName);
+        if (LoggerFactory.getLogger(Log.class).isTraceEnabled()) {
+            StackTraceElement stackTraceElement = new Throwable().getStackTrace()[1];
+            String methodName = stackTraceElement.getMethodName();
+            if (methodName.equals("<init>"))
+                methodName = "Constructor ";
+            String className = stackTraceElement.getClassName();
+            LoggerFactory.getLogger(className).trace("Called: {}", methodName);
+        }
     }
 
     public static void traceCall(String message) {
-        StackTraceElement stackTraceElement = new Throwable().getStackTrace()[1];
-        String methodName = stackTraceElement.getMethodName();
-        if (methodName.equals("<init>"))
-            methodName = "Constructor ";
-        String className = stackTraceElement.getClassName();
-        LoggerFactory.getLogger(className).trace("Called: {} [{}]", methodName, message);
+        if (LoggerFactory.getLogger(Log.class).isTraceEnabled()) {
+            StackTraceElement stackTraceElement = new Throwable().getStackTrace()[1];
+            String methodName = stackTraceElement.getMethodName();
+            if (methodName.equals("<init>"))
+                methodName = "Constructor ";
+            String className = stackTraceElement.getClassName();
+            LoggerFactory.getLogger(className).trace("Called: {} [{}]", methodName, message);
+        }
     }
-
-
 }

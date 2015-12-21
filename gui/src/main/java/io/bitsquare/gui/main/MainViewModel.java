@@ -165,10 +165,10 @@ class MainViewModel implements ViewModel {
         log.trace("initializeAllServices");
 
         BooleanProperty walletInitialized = initBitcoinWallet();
-        BooleanProperty bootstrapDone = initP2PNetwork();
+        BooleanProperty p2pNetWorkReady = initP2PNetwork();
 
         // need to store it to not get garbage collected
-        allServicesDone = EasyBind.combine(walletInitialized, bootstrapDone, (a, b) -> a && b);
+        allServicesDone = EasyBind.combine(walletInitialized, p2pNetWorkReady, (a, b) -> a && b);
         allServicesDone.subscribe((observable, oldValue, newValue) -> {
             if (newValue)
                 onAllServicesInitialized();
@@ -181,26 +181,38 @@ class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private BooleanProperty initP2PNetwork() {
-        final BooleanProperty initialDataReady = new SimpleBooleanProperty();
+        final BooleanProperty p2pNetWorkReady = new SimpleBooleanProperty();
         splashP2PNetworkInfo.set("Connecting to Tor network...");
-
         p2PService.start(new P2PServiceListener() {
             @Override
             public void onTorNodeReady() {
-                splashP2PNetworkInfo.set("Publishing Tor Hidden Service...");
+                splashP2PNetworkInfo.set("Tor node created.");
                 p2PNetworkInfo.set(splashP2PNetworkInfo.get());
                 p2PNetworkIconId.set("image-connection-tor");
             }
 
             @Override
             public void onHiddenServicePublished() {
-                splashP2PNetworkInfo.set("Authenticating to a seed node...");
+                splashP2PNetworkInfo.set("Hidden Service published.");
                 p2PNetworkInfo.set(splashP2PNetworkInfo.get());
             }
 
             @Override
             public void onRequestingDataCompleted() {
-                initialDataReady.set(true);
+                if (p2PService.getNumAuthenticatedPeers().get() == 0) {
+                    splashP2PNetworkInfo.set("Initial data received.");
+                    p2PNetworkInfo.set(splashP2PNetworkInfo.get());
+                } else {
+                    updateP2pNetworkInfo();
+                }
+                p2pNetWorkReady.set(true);
+            }
+
+            @Override
+            public void onNoSeedNodeAvailable() {
+                splashP2PNetworkInfo.set("No seed node available.");
+                p2PNetworkInfo.set(splashP2PNetworkInfo.get());
+                p2pNetWorkReady.set(true);
             }
 
             @Override
@@ -217,7 +229,7 @@ class MainViewModel implements ViewModel {
             }
         });
 
-        return initialDataReady;
+        return p2pNetWorkReady;
     }
 
     private BooleanProperty initBitcoinWallet() {

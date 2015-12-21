@@ -32,8 +32,8 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 // Run in UserThread
-public class ProtectedExpirableDataStorage implements MessageListener {
-    private static final Logger log = LoggerFactory.getLogger(ProtectedExpirableDataStorage.class);
+public class P2PDataStorage implements MessageListener {
+    private static final Logger log = LoggerFactory.getLogger(P2PDataStorage.class);
 
     @VisibleForTesting
     public static int CHECK_TTL_INTERVAL = 10 * 60 * 1000;
@@ -51,7 +51,7 @@ public class ProtectedExpirableDataStorage implements MessageListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ProtectedExpirableDataStorage(PeerGroup peerGroup, File storageDir) {
+    public P2PDataStorage(PeerGroup peerGroup, File storageDir) {
         Log.traceCall();
         this.peerGroup = peerGroup;
 
