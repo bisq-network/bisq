@@ -16,6 +16,6 @@ public final class PongMessage extends MaintenanceMessage {
     public String toString() {
         return "PongMessage{" +
                 "nonce=" + nonce +
-                "} " + super.toString();
+                super.toString() + "} ";
     }
 }

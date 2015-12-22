@@ -18,6 +18,10 @@ public class ReportedPeer implements Serializable {
         this.lastActivityDate = lastActivityDate;
     }
 
+    public ReportedPeer(Address address) {
+        this(address, null);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

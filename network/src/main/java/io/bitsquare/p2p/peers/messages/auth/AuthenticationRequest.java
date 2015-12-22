@@ -19,6 +19,6 @@ public final class AuthenticationRequest extends AuthenticationMessage {
         return "AuthenticationRequest{" +
                 "address=" + address +
                 ", nonce=" + requesterNonce +
-                "} " + super.toString();
+                super.toString() + "} ";
     }
 }

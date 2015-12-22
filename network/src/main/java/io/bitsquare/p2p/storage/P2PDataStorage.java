@@ -51,9 +51,11 @@ public class P2PDataStorage implements MessageListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public P2PDataStorage(PeerGroup peerGroup, File storageDir) {
+    public P2PDataStorage(PeerGroup peerGroup, NetworkNode networkNode, File storageDir) {
         Log.traceCall();
         this.peerGroup = peerGroup;
+
+        networkNode.addMessageListener(this);
 
         storage = new Storage<>(storageDir);
 
@@ -62,13 +64,9 @@ public class P2PDataStorage implements MessageListener {
 
     private void init() {
         Log.traceCall();
-        HashMap<ByteArray, Integer> persisted = storage.initAndGetPersisted(sequenceNumberMap, "SequenceNumberMap");
-        if (persisted != null) {
+        HashMap<ByteArray, Integer> persisted = storage.initAndGetPersisted("SequenceNumberMap");
+        if (persisted != null) 
             sequenceNumberMap = persisted;
-        }
-
-        NetworkNode networkNode = peerGroup.getNetworkNode();
-        networkNode.addMessageListener(this);
 
         timer.scheduleAtFixedRate(new TimerTask() {
                                       @Override
@@ -149,10 +147,12 @@ public class P2PDataStorage implements MessageListener {
     }
 
     public boolean add(ProtectedData protectedData, @Nullable Address sender) {
+        Log.traceCall();
         return doAdd(protectedData, sender, false);
     }
 
     public boolean rePublish(ProtectedData protectedData, @Nullable Address sender) {
+        Log.traceCall();
         return doAdd(protectedData, sender, true);
     }
 
@@ -170,7 +170,8 @@ public class P2PDataStorage implements MessageListener {
         if (result) {
             map.put(hashOfPayload, protectedData);
             sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
-
+            storage.queueUpForSave(sequenceNumberMap);
+            
             StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n");
             sb.append("Data set after addProtectedExpirableData:");
             map.values().stream().forEach(e -> sb.append("\n").append(e.toString()).append("\n"));
@@ -180,7 +181,7 @@ public class P2PDataStorage implements MessageListener {
             if (rePublish || !containsKey)
                 broadcast(new AddDataMessage(protectedData), sender);
 
-            storage.queueUpForSave();
+
             hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedData));
         } else {
             log.trace("add failed");
@@ -206,7 +207,7 @@ public class P2PDataStorage implements MessageListener {
             broadcast(new RemoveDataMessage(protectedData), sender);
 
             sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
-            storage.queueUpForSave();
+            storage.queueUpForSave(sequenceNumberMap);
         } else {
             log.debug("remove failed");
         }
@@ -231,7 +232,7 @@ public class P2PDataStorage implements MessageListener {
             broadcast(new RemoveMailboxDataMessage(protectedMailboxData), sender);
 
             sequenceNumberMap.put(hashOfData, protectedMailboxData.sequenceNumber);
-            storage.queueUpForSave();
+            storage.queueUpForSave(sequenceNumberMap);
         } else {
             log.debug("removeMailboxData failed");
         }
@@ -288,7 +289,6 @@ public class P2PDataStorage implements MessageListener {
         Log.traceCall();
         map.remove(hashOfPayload);
         log.trace("Data removed from our map. We broadcast the message to our peers.");
-        storage.queueUpForSave();
         hashMapChangedListeners.stream().forEach(e -> e.onRemoved(protectedData));
 
         StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n" +

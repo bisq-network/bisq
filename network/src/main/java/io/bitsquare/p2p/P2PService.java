@@ -136,7 +136,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             PeerGroup.setSimulateAuthTorNode(200);
 
         // P2P network data storage 
-        dataStorage = new P2PDataStorage(peerGroup, storageDir);
+        dataStorage = new P2PDataStorage(peerGroup, networkNode, storageDir);
         dataStorage.addHashMapChangedListener(this);
 
         // Request initial data manager
@@ -270,7 +270,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private void authenticateSeedNode() {
         Log.traceCall();
         checkNotNull(connectedSeedNode != null, "connectedSeedNode must not be null");
-        peerGroup.authenticateSeedNode(connectedSeedNode, seedNodeAddresses);
+        peerGroup.authenticateToSeedNode(connectedSeedNode, seedNodeAddresses);
     }
 
 

@@ -22,6 +22,6 @@ public final class GetPeersAuthResponse extends AuthenticationMessage {
         return "GetPeersAuthResponse{" +
                 "address=" + address +
                 ", reportedPeers=" + reportedPeers +
-                "} " + super.toString();
+                super.toString() + "} ";
     }
 }

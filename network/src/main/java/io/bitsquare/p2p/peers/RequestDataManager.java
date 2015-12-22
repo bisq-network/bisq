@@ -38,11 +38,12 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
     }
 
 
-    private NetworkNode networkNode;
-    private Address connectedSeedNodeAddress;
-    private Collection<Address> seedNodeAddresses;
-    private P2PDataStorage dataStorage;
-    private Listener listener;
+    private final NetworkNode networkNode;
+    private final P2PDataStorage dataStorage;
+    private final Listener listener;
+
+    private Optional<Address> optionalConnectedSeedNodeAddress = Optional.empty();
+    private Optional<Collection<Address>> optionalSeedNodeAddresses = Optional.empty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -62,8 +63,8 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void requestData(Collection<Address> seedNodeAddresses) {
-        if (this.seedNodeAddresses == null)
-            this.seedNodeAddresses = seedNodeAddresses;
+        if (!optionalSeedNodeAddresses.isPresent())
+            optionalSeedNodeAddresses = Optional.of(seedNodeAddresses);
 
         Log.traceCall(seedNodeAddresses.toString());
         if (!seedNodeAddresses.isEmpty()) {
@@ -78,8 +79,8 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
                 @Override
                 public void onSuccess(@Nullable Connection connection) {
                     log.info("Send GetAllDataMessage to " + candidate + " succeeded.");
-                    checkArgument(connectedSeedNodeAddress == null, "We have already a connectedSeedNode. That must not happen.");
-                    connectedSeedNodeAddress = candidate;
+                    checkArgument(!optionalConnectedSeedNodeAddress.isPresent(), "We have already a connectedSeedNode. That must not happen.");
+                    optionalConnectedSeedNodeAddress = Optional.of(candidate);
                 }
 
                 @Override
@@ -100,7 +101,7 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
             listener.onNoSeedNodeAvailable();
 
             // We re try after 20-30 sec.
-            UserThread.runAfterRandomDelay(() -> requestData(this.seedNodeAddresses),
+            UserThread.runAfterRandomDelay(() -> requestData(optionalSeedNodeAddresses.get()),
                     20, 30, TimeUnit.SECONDS);
         }
     }
@@ -124,7 +125,7 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
             // we keep that connection open as the bootstrapping peer will use that for the authentication
             // as we are not authenticated yet the data adding will not be broadcasted 
             set.stream().forEach(e -> dataStorage.add(e, connection.getPeerAddress()));
-            listener.onDataReceived(connectedSeedNodeAddress);
+            optionalConnectedSeedNodeAddress.ifPresent(connectedSeedNodeAddress -> listener.onDataReceived(connectedSeedNodeAddress));
         }
     }
 
@@ -135,8 +136,10 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
 
     @Override
     public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
-        if (connectedSeedNodeAddress.equals(peerAddress))
-            requestDataFromAuthenticatedSeedNode(peerAddress, connection);
+        optionalConnectedSeedNodeAddress.ifPresent(connectedSeedNodeAddress -> {
+            if (connectedSeedNodeAddress.equals(peerAddress))
+                requestDataFromAuthenticatedSeedNode(peerAddress, connection);
+        });
     }
 
 
@@ -158,7 +161,8 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
                         + "\nWe will try again to request data from any of our seed nodes.");
 
                 // We will try again to request data from any of our seed nodes. 
-                requestData(seedNodeAddresses);
+                if (optionalSeedNodeAddresses.isPresent())
+                    requestData(optionalSeedNodeAddresses.get());
             }
         });
     }

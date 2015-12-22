@@ -112,7 +112,7 @@ public class PeerGroupTest {
         P2PService p2PService1 = seedNode1.getP2PService();
         latch.await();
         Thread.sleep(500);
-        Assert.assertEquals(0, p2PService1.getPeerGroup().getReportedPeers().size());
+        Assert.assertEquals(0, p2PService1.getPeerGroup().getAuthenticatedAndReportedPeers().size());
     }
 
     @Test
@@ -194,8 +194,8 @@ public class PeerGroupTest {
         });
         P2PService p2PService2 = seedNode2.getP2PService();
         latch.await();
-        Assert.assertEquals(1, p2PService1.getPeerGroup().getReportedPeers().size());
-        Assert.assertEquals(1, p2PService2.getPeerGroup().getReportedPeers().size());
+        Assert.assertEquals(1, p2PService1.getPeerGroup().getAuthenticatedAndReportedPeers().size());
+        Assert.assertEquals(1, p2PService2.getPeerGroup().getAuthenticatedAndReportedPeers().size());
     }
 
     // @Test

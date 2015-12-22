@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -85,7 +86,7 @@ public class AuthenticationHandshake implements MessageListener {
                     if (verified) {
                         GetPeersAuthRequest getPeersAuthRequest = new GetPeersAuthRequest(myAddress,
                                 authenticationResponse.responderNonce,
-                                new HashSet<>(peerGroup.getReportedPeers()));
+                                new HashSet<>(peerGroup.getAuthenticatedAndReportedPeers()));
                         SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, getPeersAuthRequest);
                         log.trace("Sent GetPeersAuthRequest {} to {}", getPeersAuthRequest, peerAddress);
                         Futures.addCallback(future, new FutureCallback<Connection>() {
@@ -115,7 +116,7 @@ public class AuthenticationHandshake implements MessageListener {
                     if (verified) {
                         // we create the msg with our already collected peer addresses (before adding the new ones)
                         GetPeersAuthResponse getPeersAuthResponse = new GetPeersAuthResponse(myAddress,
-                                new HashSet<>(peerGroup.getReportedPeers()));
+                                new HashSet<>(peerGroup.getAuthenticatedAndReportedPeers()));
                         SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, getPeersAuthResponse);
                         log.trace("Sent GetPeersAuthResponse {} to {}", getPeersAuthResponse, peerAddress);
 
@@ -200,8 +201,8 @@ public class AuthenticationHandshake implements MessageListener {
     // Responding to authentication request
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SettableFuture<Connection> respondToAuthenticationRequest(AuthenticationRequest
-                                                                             authenticationRequest, Connection connection) {
+    public SettableFuture<Connection> respondToAuthenticationRequest(AuthenticationRequest authenticationRequest,
+                                                                     Connection connection) {
         Log.traceCall("peerAddress " + peerAddress);
         // Responding peer
 
@@ -222,7 +223,7 @@ public class AuthenticationHandshake implements MessageListener {
                     SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, authenticationResponse);
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
-                        public void onSuccess(Connection connection) {
+                        public void onSuccess(@Nullable Connection connection) {
                             log.trace("onSuccess sending AuthenticationResponse");
 
                             connection.setPeerAddress(peerAddress);
@@ -241,6 +242,15 @@ public class AuthenticationHandshake implements MessageListener {
             }, 200, TimeUnit.MILLISECONDS);
         });
         return resultFuture;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Cancel if we send reject message
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void cancel() {
+        failed(new CancelAuthenticationException());
     }
 
 
@@ -290,4 +300,5 @@ public class AuthenticationHandshake implements MessageListener {
     public int hashCode() {
         return peerAddress != null ? peerAddress.hashCode() : 0;
     }
+
 }
