@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -40,19 +41,18 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         MAX_CONNECTIONS_LOW_PRIO = maxConnectionsLowPrio;
     }
 
-    private static final int PING_AFTER_CONNECTION_INACTIVITY = 30 * 1000;
+    private static final int INACTIVITY_PERIOD_BEFORE_PING = 30 * 1000;
     private static final int MAX_REPORTED_PEERS = 1000;
 
     private final NetworkNode networkNode;
-    private Set<Address> seedNodeAddresses;
-
+    private final CopyOnWriteArraySet<AuthenticationListener> authenticationListeners = new CopyOnWriteArraySet<>();
     private final Map<Address, Peer> authenticatedPeers = new HashMap<>();
     private final Set<ReportedPeer> reportedPeers = new HashSet<>();
     private final Map<Address, AuthenticationHandshake> authenticationHandshakes = new HashMap<>();
+    private Timer sendPingTimer;
+    private Timer getPeersTimer;
 
-    private Timer sendPingTimer = new Timer();
-    private Timer getPeersTimer = new Timer();
-
+    private Set<Address> seedNodeAddresses;
     private boolean shutDownInProgress;
 
 
@@ -72,9 +72,28 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         startGetPeersTimer();
     }
 
-    public void setSeedNodeAddresses(Set<Address> seedNodeAddresses) {
-        this.seedNodeAddresses = seedNodeAddresses;
+    public void addAuthenticationListener(AuthenticationListener listener) {
+        authenticationListeners.add(listener);
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // ConnectionListener implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onDisconnect(Reason reason, Connection connection) {
+        log.debug("onDisconnect connection=" + connection + " / reason=" + reason);
+        removePeer(connection.getPeerAddress());
+    }
+
+    @Override
+    public void onError(Throwable throwable) {
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener implementation
@@ -90,31 +109,12 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // ConnectionListener implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onConnection(Connection connection) {
-    }
-
-    @Override
-    public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
-    }
-
-    @Override
-    public void onDisconnect(Reason reason, Connection connection) {
-        log.debug("onDisconnect connection=" + connection + " / reason=" + reason);
-        removePeer(connection.getPeerAddress());
-    }
-
-    @Override
-    public void onError(Throwable throwable) {
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setSeedNodeAddresses(Set<Address> seedNodeAddresses) {
+        this.seedNodeAddresses = seedNodeAddresses;
+    }
 
     public void broadcast(DataBroadcastMessage message, @Nullable Address sender) {
         Log.traceCall("Sender " + sender + ". Message " + message.toString());
@@ -442,6 +442,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
         addAuthenticatedPeer(new Peer(connection));
         connection.setAuthenticated(peerAddress, connection);
+        authenticationListeners.stream().forEach(e -> e.onPeerAddressAuthenticated(peerAddress, connection));
     }
 
     private void addAuthenticatedPeer(Peer peer) {
@@ -454,6 +455,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         if (!checkIfConnectedPeersExceeds())
             printAuthenticatedPeers();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Maintenance
@@ -542,7 +544,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         if (!connectedPeersList.isEmpty()) {
             Log.traceCall();
             connectedPeersList.stream()
-                    .filter(e -> (new Date().getTime() - e.connection.getLastActivityDate().getTime()) > PING_AFTER_CONNECTION_INACTIVITY)
+                    .filter(e -> (new Date().getTime() - e.connection.getLastActivityDate().getTime()) > INACTIVITY_PERIOD_BEFORE_PING)
                     .forEach(e -> UserThread.runAfterRandomDelay(() -> {
                         SettableFuture<Connection> future = networkNode.sendMessage(e.connection, new PingMessage(e.getPingNonce()));
                         Futures.addCallback(future, new FutureCallback<Connection>() {

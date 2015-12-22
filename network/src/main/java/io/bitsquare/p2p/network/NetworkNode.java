@@ -231,14 +231,6 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     }
 
     @Override
-    public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
-        Log.traceCall();
-        log.trace("onAuthenticationComplete peerAddress/connection: " + peerAddress + " / " + connection);
-
-        connectionListeners.stream().forEach(e -> e.onPeerAddressAuthenticated(peerAddress, connection));
-    }
-
-    @Override
     public void onDisconnect(Reason reason, Connection connection) {
         Log.traceCall();
         Address peerAddress = connection.getPeerAddress();
@@ -318,12 +310,6 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                 // we still have not authenticated so put it to the temp list
                 inBoundConnections.add(connection);
                 NetworkNode.this.onConnection(connection);
-            }
-
-            @Override
-            public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
-                Log.traceCall();
-                NetworkNode.this.onPeerAddressAuthenticated(peerAddress, connection);
             }
 
             @Override

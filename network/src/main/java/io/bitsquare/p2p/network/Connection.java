@@ -120,8 +120,6 @@ public class Connection implements MessageListener {
         Log.traceCall();
         this.peerAddress = peerAddress;
         isAuthenticated = true;
-        if (!stopped)
-            connectionListener.onPeerAddressAuthenticated(peerAddress, connection);
     }
 
     public void setConnectionPriority(ConnectionPriority connectionPriority) {

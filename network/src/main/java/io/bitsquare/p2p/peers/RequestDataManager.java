@@ -8,7 +8,6 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.network.Connection;
-import io.bitsquare.p2p.network.ConnectionListener;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.storage.P2PDataStorage;
@@ -25,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class RequestDataManager implements MessageListener, ConnectionListener {
+public class RequestDataManager implements MessageListener, AuthenticationListener {
     private static final Logger log = LoggerFactory.getLogger(RequestDataManager.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -56,7 +55,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener {
         this.listener = listener;
 
         networkNode.addMessageListener(this);
-        networkNode.addConnectionListener(this);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -129,13 +127,11 @@ public class RequestDataManager implements MessageListener, ConnectionListener {
             listener.onDataReceived(connectedSeedNodeAddress);
         }
     }
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // ConnectionListener implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public void onConnection(Connection connection) {
-    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // AuthenticationListener implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
@@ -143,13 +139,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener {
             requestDataFromAuthenticatedSeedNode(peerAddress, connection);
     }
 
-    @Override
-    public void onDisconnect(Reason reason, Connection connection) {
-    }
-
-    @Override
-    public void onError(Throwable throwable) {
-    }
 
     // 5. Step after authentication to first seed node we request again the data
     private void requestDataFromAuthenticatedSeedNode(Address peerAddress, Connection connection) {

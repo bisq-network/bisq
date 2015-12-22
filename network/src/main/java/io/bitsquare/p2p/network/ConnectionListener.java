@@ -1,8 +1,6 @@
 package io.bitsquare.p2p.network;
 
 
-import io.bitsquare.p2p.Address;
-
 public interface ConnectionListener {
     enum Reason {
         SOCKET_CLOSED,
@@ -14,8 +12,6 @@ public interface ConnectionListener {
     }
 
     void onConnection(Connection connection);
-
-    void onPeerAddressAuthenticated(Address peerAddress, Connection connection);
 
     void onDisconnect(Reason reason, Connection connection);
 
