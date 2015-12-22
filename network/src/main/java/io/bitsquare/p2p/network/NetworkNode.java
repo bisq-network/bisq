@@ -96,7 +96,8 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
             ListenableFuture<Connection> future = executorService.submit(() -> {
                 Thread.currentThread().setName("NetworkNode:SendMessage-to-" + peerAddress);
                 try {
-                    Socket socket = createSocket(peerAddress); // can take a while when using tor
+                    // can take a while when using tor
+                    Socket socket = createSocket(peerAddress); 
                     if (timeoutOccurred[0])
                         throw new TimeoutException("Timeout occurred when tried to create Socket to peer: " + peerAddress);
 
@@ -112,8 +113,9 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                             + "\nmessage=" + message
                             + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 
+                    // can take a while when using tor
                     newConnection.sendMessage(message);
-                    return newConnection; // can take a while when using tor
+                    return newConnection; 
                 } catch (Throwable throwable) {
                     if (!(throwable instanceof ConnectException || throwable instanceof IOException || throwable instanceof TimeoutException)) {
                         throwable.printStackTrace();

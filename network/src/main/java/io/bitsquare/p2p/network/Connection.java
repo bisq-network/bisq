@@ -116,7 +116,7 @@ public class Connection implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Called form UserThread
-    public void setAuthenticated(Address peerAddress, Connection connection) {
+    public void setAuthenticated(Address peerAddress) {
         Log.traceCall();
         this.peerAddress = peerAddress;
         isAuthenticated = true;

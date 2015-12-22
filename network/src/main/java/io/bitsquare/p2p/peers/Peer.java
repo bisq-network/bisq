@@ -5,7 +5,6 @@ import io.bitsquare.p2p.network.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Random;
 
 public class Peer {
@@ -19,15 +18,6 @@ public class Peer {
         this.connection = connection;
         this.address = connection.getPeerAddress();
         pingNonce = new Random().nextLong();
-    }
-
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-            pingNonce = new Random().nextLong();
-        } catch (Throwable t) {
-            log.trace("Cannot be deserialized." + t.getMessage());
-        }
     }
 
     public long getPingNonce() {

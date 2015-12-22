@@ -186,7 +186,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         if (listener != null)
             addP2PServiceListener(listener);
 
-        peerGroup.setSeedNodeAddresses(seedNodeAddresses);
         networkNode.start(this);
     }
 
@@ -271,7 +270,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private void authenticateSeedNode() {
         Log.traceCall();
         checkNotNull(connectedSeedNode != null, "connectedSeedNode must not be null");
-        peerGroup.authenticateSeedNode(connectedSeedNode);
+        peerGroup.authenticateSeedNode(connectedSeedNode, seedNodeAddresses);
     }
 
 
