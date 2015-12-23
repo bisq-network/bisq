@@ -65,7 +65,7 @@ public class P2PDataStorage implements MessageListener {
     private void init() {
         Log.traceCall();
         HashMap<ByteArray, Integer> persisted = storage.initAndGetPersisted("SequenceNumberMap");
-        if (persisted != null) 
+        if (persisted != null)
             sequenceNumberMap = persisted;
 
         timer.scheduleAtFixedRate(new TimerTask() {
@@ -171,7 +171,7 @@ public class P2PDataStorage implements MessageListener {
             map.put(hashOfPayload, protectedData);
             sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
             storage.queueUpForSave(sequenceNumberMap);
-            
+
             StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n");
             sb.append("Data set after addProtectedExpirableData:");
             map.values().stream().forEach(e -> sb.append("\n").append(e.toString()).append("\n"));

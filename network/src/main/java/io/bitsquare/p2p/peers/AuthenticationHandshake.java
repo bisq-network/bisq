@@ -16,12 +16,10 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 // authentication protocol: 
 // node2 -> node1 AuthenticationRequest
@@ -40,9 +38,9 @@ public class AuthenticationHandshake implements MessageListener {
     private final Address myAddress;
     private final Address peerAddress;
 
-    private SettableFuture<Connection> resultFuture;
-    private long startAuthTs;
-    private long nonce = 0;
+    private final long startAuthTs;
+    private Optional<SettableFuture<Connection>> resultFutureOptional = Optional.empty();
+    private long nonce;
     private boolean stopped;
 
 
@@ -57,10 +55,13 @@ public class AuthenticationHandshake implements MessageListener {
         this.myAddress = myAddress;
         this.peerAddress = peerAddress;
 
-        networkNode.addMessageListener(this);
-        resultFuture = SettableFuture.create();
         startAuthTs = System.currentTimeMillis();
+        stopped = false;
+        nonce = 0;
+
+        networkNode.addMessageListener(this);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener implementation
@@ -68,11 +69,15 @@ public class AuthenticationHandshake implements MessageListener {
 
     @Override
     public void onMessage(Message message, Connection connection) {
+        if (stopped) {
+            log.warn("AuthenticationHandshake already shut down but still got onMessage called. That must not happen.");
+            return;
+        }
+
         if (message instanceof AuthenticationMessage) {
-            // We are listening on all connections, so we need to filter out only our peer address
+            // We are listening on all connections, so we need to filter out only our peer
             if (((AuthenticationMessage) message).address.equals(peerAddress)) {
                 Log.traceCall(message.toString());
-                checkArgument(!stopped);
                 if (message instanceof AuthenticationResponse) {
                     // Requesting peer
                     // We use the active connectionType if we started the authentication request to another peer
@@ -173,6 +178,11 @@ public class AuthenticationHandshake implements MessageListener {
         Log.traceCall("peerAddress " + peerAddress);
         // Requesting peer
 
+        if (stopped) {
+            log.warn("AuthenticationHandshake already shut down but still got requestAuthentication called. That must not happen.");
+        }
+
+        resultFutureOptional = Optional.of(SettableFuture.create());
         AuthenticationRequest authenticationRequest = new AuthenticationRequest(myAddress, getAndSetNonce());
         SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, authenticationRequest);
         Futures.addCallback(future, new FutureCallback<Connection>() {
@@ -193,7 +203,7 @@ public class AuthenticationHandshake implements MessageListener {
             }
         });
 
-        return resultFuture;
+        return resultFutureOptional.get();
     }
 
 
@@ -205,6 +215,12 @@ public class AuthenticationHandshake implements MessageListener {
                                                                      Connection connection) {
         Log.traceCall("peerAddress " + peerAddress);
         // Responding peer
+
+        if (stopped) {
+            log.warn("AuthenticationHandshake already shut down but still got respondToAuthenticationRequest called. That must not happen.");
+        }
+
+        resultFutureOptional = Optional.of(SettableFuture.create());
 
         log.trace("AuthenticationRequest from " + peerAddress + " at " + myAddress);
         log.info("We shut down inbound connection from peer {} to establish a new " +
@@ -223,7 +239,7 @@ public class AuthenticationHandshake implements MessageListener {
                     SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, authenticationResponse);
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
-                        public void onSuccess(@Nullable Connection connection) {
+                        public void onSuccess(Connection connection) {
                             log.trace("onSuccess sending AuthenticationResponse");
 
                             connection.setPeerAddress(peerAddress);
@@ -241,7 +257,7 @@ public class AuthenticationHandshake implements MessageListener {
                 }
             }, 200, TimeUnit.MILLISECONDS);
         });
-        return resultFuture;
+        return resultFutureOptional.get();
     }
 
 
@@ -262,7 +278,7 @@ public class AuthenticationHandshake implements MessageListener {
         Log.traceCall();
         nonce = new Random().nextLong();
         while (nonce == 0)
-            nonce = getAndSetNonce();
+            nonce = new Random().nextLong();
 
         return nonce;
     }
@@ -270,19 +286,25 @@ public class AuthenticationHandshake implements MessageListener {
     private void failed(@NotNull Throwable throwable) {
         Log.traceCall();
         shutDown();
-        resultFuture.setException(throwable);
+        if (resultFutureOptional.isPresent())
+            resultFutureOptional.get().setException(throwable);
+        else
+            log.warn("failed called but resultFuture = null. That must never happen.");
     }
 
     private void completed(Connection connection) {
         Log.traceCall();
         shutDown();
-        resultFuture.set(connection);
+        if (resultFutureOptional.isPresent())
+            resultFutureOptional.get().set(connection);
+        else
+            log.warn("completed called but resultFuture = null. That must never happen.");
     }
 
     private void shutDown() {
         Log.traceCall();
-        networkNode.removeMessageListener(this);
         stopped = true;
+        networkNode.removeMessageListener(this);
     }
 
     @Override

@@ -27,18 +27,24 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class PeerGroup implements MessageListener, ConnectionListener {
     private static final Logger log = LoggerFactory.getLogger(PeerGroup.class);
 
-    static int simulateAuthTorNode = 0;
+    private static int simulateAuthTorNode = 0;
 
     public static void setSimulateAuthTorNode(int simulateAuthTorNode) {
         PeerGroup.simulateAuthTorNode = simulateAuthTorNode;
     }
 
-    static int MAX_CONNECTIONS_LOW_PRIO = 8;
-    static int MAX_CONNECTIONS_NORMAL_PRIO = MAX_CONNECTIONS_LOW_PRIO + 4;
-    static int MAX_CONNECTIONS_HIGH_PRIO = MAX_CONNECTIONS_NORMAL_PRIO + 4;
+    private static int MAX_CONNECTIONS_LOW_PRIORITY;
+    private static int MAX_CONNECTIONS_NORMAL_PRIORITY;
+    private static int MAX_CONNECTIONS_HIGH_PRIORITY;
 
-    public static void setMaxConnectionsLowPrio(int maxConnectionsLowPrio) {
-        MAX_CONNECTIONS_LOW_PRIO = maxConnectionsLowPrio;
+    public static void setMaxConnectionsLowPriority(int maxConnectionsLowPriority) {
+        MAX_CONNECTIONS_LOW_PRIORITY = maxConnectionsLowPriority;
+        MAX_CONNECTIONS_NORMAL_PRIORITY = MAX_CONNECTIONS_LOW_PRIORITY + 4;
+        MAX_CONNECTIONS_HIGH_PRIORITY = MAX_CONNECTIONS_NORMAL_PRIORITY + 4;
+    }
+
+    static {
+        setMaxConnectionsLowPriority(8);
     }
 
     static final int INACTIVITY_PERIOD_BEFORE_PING = 30 * 1000;
@@ -106,7 +112,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         if (message instanceof AuthenticationRequest)
             processAuthenticationRequest((AuthenticationRequest) message, connection);
         else if (message instanceof AuthenticationRejection)
-            processAuthenticationRejection((AuthenticationRejection) message, connection);
+            processAuthenticationRejection((AuthenticationRejection) message);
     }
 
 
@@ -120,26 +126,24 @@ public class PeerGroup implements MessageListener, ConnectionListener {
             log.info("Broadcast message to {} peers. Message: {}", authenticatedPeers.values().size(), message);
             authenticatedPeers.values().stream()
                     .filter(e -> !e.address.equals(sender))
-                    .forEach(peer -> {
-                        UserThread.runAfterRandomDelay(() -> {
-                                    final Address address = peer.address;
-                                    log.trace("Broadcast message from " + getMyAddress() + " to " + address + ".");
-                                    SettableFuture<Connection> future = networkNode.sendMessage(address, message);
-                                    Futures.addCallback(future, new FutureCallback<Connection>() {
-                                        @Override
-                                        public void onSuccess(Connection connection) {
-                                            log.trace("Broadcast from " + getMyAddress() + " to " + address + " succeeded.");
-                                        }
+                    .forEach(peer -> UserThread.runAfterRandomDelay(() -> {
+                                final Address address = peer.address;
+                                log.trace("Broadcast message from " + getMyAddress() + " to " + address + ".");
+                                SettableFuture<Connection> future = networkNode.sendMessage(address, message);
+                                Futures.addCallback(future, new FutureCallback<Connection>() {
+                                    @Override
+                                    public void onSuccess(Connection connection) {
+                                        log.trace("Broadcast from " + getMyAddress() + " to " + address + " succeeded.");
+                                    }
 
-                                        @Override
-                                        public void onFailure(@NotNull Throwable throwable) {
-                                            log.info("Broadcast failed. " + throwable.getMessage());
-                                            UserThread.execute(() -> removePeer(address));
-                                        }
-                                    });
-                                },
-                                10, 200, TimeUnit.MILLISECONDS);
-                    });
+                                    @Override
+                                    public void onFailure(@NotNull Throwable throwable) {
+                                        log.info("Broadcast failed. " + throwable.getMessage());
+                                        UserThread.execute(() -> removePeer(address));
+                                    }
+                                });
+                            },
+                            10, 200, TimeUnit.MILLISECONDS));
         } else {
             log.info("Message not broadcasted because we have no authenticated peers yet. " +
                     "message = {}", message);
@@ -158,7 +162,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Process incoming authentication request
+    // Process incoming authentication messages
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void processAuthenticationRequest(AuthenticationRequest message, final Connection connection) {
@@ -201,7 +205,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         }
     }
 
-    private void processAuthenticationRejection(AuthenticationRejection message, final Connection connection) {
+    private void processAuthenticationRejection(AuthenticationRejection message) {
         Log.traceCall(message.toString());
         Address peerAddress = message.address;
         cancelOwnAuthenticationRequest(peerAddress, authenticationHandshakes.get(peerAddress));
@@ -212,15 +216,10 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         SettableFuture<Connection> future = authenticationHandshake.respondToAuthenticationRequest(message, connection);
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
-            public void onSuccess(@Nullable Connection connection) {
-                if (connection != null) {
-                    checkArgument(peerAddress.equals(connection.getPeerAddress()), "peerAddress does not match connection.getPeerAddress()");
-                    log.info("We got the peer who did an authentication request authenticated.");
-                    addAuthenticatedPeer(connection, peerAddress);
-                } else {
-                    log.error("Connection is null. That must not happen.");
-                    removePeer(peerAddress);
-                }
+            public void onSuccess(Connection connection) {
+                checkArgument(peerAddress.equals(connection.getPeerAddress()), "peerAddress does not match connection.getPeerAddress()");
+                log.info("We got the peer who did an authentication request authenticated.");
+                addAuthenticatedPeer(connection, peerAddress);
             }
 
             @Override
@@ -229,7 +228,9 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                         "That can happen if the peer went offline. " + throwable.getMessage());
                 removePeer(peerAddress);
             }
-        });
+                }
+
+        );
     }
 
     private void cancelOwnAuthenticationRequest(Address peerAddress, AuthenticationHandshake authenticationHandshake) {
@@ -264,24 +265,16 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                 log.info("We try to authenticate to seed node {}.", peerAddress);
                 authenticate(peerAddress, new FutureCallback<Connection>() {
                     @Override
-                    public void onSuccess(@Nullable Connection connection) {
-                        if (connection != null) {
-                            log.info("We got our first seed node authenticated. " +
-                                    "We try if there are reported peers available to authenticate.");
+                    public void onSuccess(Connection connection) {
+                        log.info("We got our first seed node authenticated. " +
+                                "We try if there are reported peers available to authenticate.");
 
-                            addAuthenticatedPeer(connection, peerAddress);
-                            authenticateToRemainingReportedPeer();
-                        } else {
-                            log.warn("Connection is null. That should never happen. " + peerAddress);
-                            removePeer(peerAddress);
-
-                            log.info("We try another random seed node for first authentication attempt.");
-                            authenticateToFirstSeedNode(getAndRemoveRandomAddress(remainingSeedNodes));
-                        }
+                        addAuthenticatedPeer(connection, peerAddress);
+                        authenticateToRemainingReportedPeer();
                     }
 
                     @Override
-                    public void onFailure(Throwable throwable) {
+                    public void onFailure(@NotNull Throwable throwable) {
                         log.info("Authentication to " + peerAddress + " failed." +
                                 "\nThat is expected if seed nodes are offline." +
                                 "\nException:" + throwable.getMessage());
@@ -310,24 +303,16 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                 log.info("We try to authenticate to seed node {}.", peerAddress);
                 authenticate(peerAddress, new FutureCallback<Connection>() {
                             @Override
-                            public void onSuccess(@Nullable Connection connection) {
-                                if (connection != null) {
-                                    log.info("We got a seed node authenticated. " +
-                                            "We try if there are more seed nodes available to authenticate.");
+                            public void onSuccess(Connection connection) {
+                                log.info("We got a seed node authenticated. " +
+                                        "We try if there are more seed nodes available to authenticate.");
 
-                                    addAuthenticatedPeer(connection, peerAddress);
-                                    authenticateToRemainingSeedNode();
-                                } else {
-                                    log.warn("Connection is null. That should never happen. " + peerAddress);
-                                    removePeer(peerAddress);
-
-                                    log.info("We try another random seed node for authentication.");
-                                    authenticateToRemainingSeedNode();
-                                }
+                                addAuthenticatedPeer(connection, peerAddress);
+                                authenticateToRemainingSeedNode();
                             }
 
                             @Override
-                            public void onFailure(Throwable throwable) {
+                            public void onFailure(@NotNull Throwable throwable) {
                                 log.info("Authentication to " + peerAddress + " failed." +
                                         "\nThat is expected if the seed node is offline." +
                                         "\nException:" + throwable.getMessage());
@@ -367,24 +352,16 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                 log.info("We try to authenticate to peer {}.", peerAddress);
                 authenticate(peerAddress, new FutureCallback<Connection>() {
                     @Override
-                    public void onSuccess(@Nullable Connection connection) {
-                        if (connection != null) {
-                            log.info("We got a peer authenticated. " +
-                                    "We try if there are more reported peers available to authenticate.");
+                    public void onSuccess(Connection connection) {
+                        log.info("We got a peer authenticated. " +
+                                "We try if there are more reported peers available to authenticate.");
 
-                            addAuthenticatedPeer(connection, peerAddress);
-                            authenticateToRemainingReportedPeer();
-                        } else {
-                            log.warn("Connection is null. That should never happen. " + peerAddress);
-                            removePeer(peerAddress);
-
-                            log.info("We try another random seed node for authentication.");
-                            authenticateToRemainingReportedPeer();
-                        }
+                        addAuthenticatedPeer(connection, peerAddress);
+                        authenticateToRemainingReportedPeer();
                     }
 
                     @Override
-                    public void onFailure(Throwable throwable) {
+                    public void onFailure(@NotNull Throwable throwable) {
                         log.info("Authentication to " + peerAddress + " failed." +
                                 "\nThat is expected if the peer is offline." +
                                 "\nException:" + throwable.getMessage());
@@ -425,23 +402,16 @@ public class PeerGroup implements MessageListener, ConnectionListener {
             log.info("We try to authenticate to peer {} for sending a private message.", peerAddress);
             authenticate(peerAddress, new FutureCallback<Connection>() {
                 @Override
-                public void onSuccess(@Nullable Connection connection) {
-                    if (connection != null) {
-                        log.info("We got a new peer for sending a private message authenticated.");
+                public void onSuccess(Connection connection) {
+                    log.info("We got a new peer for sending a private message authenticated.");
 
-                        addAuthenticatedPeer(connection, peerAddress);
-                        if (completeHandler != null)
-                            completeHandler.run();
-                    } else {
-                        log.error("Connection is null. That should never happen. " + peerAddress);
-                        removePeer(peerAddress);
-                        if (faultHandler != null)
-                            faultHandler.run();
-                    }
+                    addAuthenticatedPeer(connection, peerAddress);
+                    if (completeHandler != null)
+                        completeHandler.run();
                 }
 
                 @Override
-                public void onFailure(Throwable throwable) {
+                public void onFailure(@NotNull Throwable throwable) {
                     log.error("Authentication to " + peerAddress + " for sending a private message failed." +
                             "\nSeems that the peer is offline." +
                             "\nException:" + throwable.getMessage());
@@ -512,7 +482,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     }
 
     private boolean maxConnectionsForAuthReached() {
-        return authenticatedPeers.size() >= MAX_CONNECTIONS_LOW_PRIO;
+        return authenticatedPeers.size() >= MAX_CONNECTIONS_LOW_PRIORITY;
     }
 
     private boolean remainingSeedNodesAvailable() {
@@ -526,7 +496,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     private boolean checkIfConnectedPeersExceeds() {
         Log.traceCall();
         int size = authenticatedPeers.size();
-        if (size > PeerGroup.MAX_CONNECTIONS_LOW_PRIO) {
+        if (size > PeerGroup.MAX_CONNECTIONS_LOW_PRIORITY) {
             Set<Connection> allConnections = networkNode.getAllConnections();
             int allConnectionsSize = allConnections.size();
             log.info("We have {} connections open. Lets remove the passive connections" +
@@ -541,8 +511,8 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
             if (authenticatedConnections.size() == 0) {
                 log.debug("There are no passive connections for closing. We check if we are exceeding " +
-                        "MAX_CONNECTIONS_NORMAL ({}) ", PeerGroup.MAX_CONNECTIONS_NORMAL_PRIO);
-                if (size > PeerGroup.MAX_CONNECTIONS_NORMAL_PRIO) {
+                        "MAX_CONNECTIONS_NORMAL ({}) ", PeerGroup.MAX_CONNECTIONS_NORMAL_PRIORITY);
+                if (size > PeerGroup.MAX_CONNECTIONS_NORMAL_PRIORITY) {
                     authenticatedConnections = allConnections.stream()
                             .filter(e -> e.isAuthenticated())
                             .filter(e -> e.getConnectionPriority() == ConnectionPriority.PASSIVE || e.getConnectionPriority() == ConnectionPriority.ACTIVE)
@@ -550,8 +520,8 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
                     if (authenticatedConnections.size() == 0) {
                         log.debug("There are no passive or active connections for closing. We check if we are exceeding " +
-                                "MAX_CONNECTIONS_HIGH ({}) ", PeerGroup.MAX_CONNECTIONS_HIGH_PRIO);
-                        if (size > PeerGroup.MAX_CONNECTIONS_HIGH_PRIO) {
+                                "MAX_CONNECTIONS_HIGH ({}) ", PeerGroup.MAX_CONNECTIONS_HIGH_PRIORITY);
+                        if (size > PeerGroup.MAX_CONNECTIONS_HIGH_PRIORITY) {
                             authenticatedConnections = allConnections.stream()
                                     .filter(e -> e.isAuthenticated())
                                     .collect(Collectors.toList());
@@ -604,7 +574,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         // we disconnect misbehaving nodes trying to send too many peers
         // reported peers include the authenticated peers which is normally max. 8 but we give some headroom 
         // for safety
-        if (reportedPeersToAdd.size() > (MAX_REPORTED_PEERS + MAX_CONNECTIONS_LOW_PRIO * 3)) {
+        if (reportedPeersToAdd.size() > (MAX_REPORTED_PEERS + MAX_CONNECTIONS_LOW_PRIORITY * 3)) {
             connection.shutDown();
         } else {
             // In case we have one of the peers already we adjust the lastActivityDate by adjusting the date to the mid 
@@ -681,7 +651,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         printReportedPeers();
     }
 
-    public void printAuthenticatedPeers() {
+    private void printAuthenticatedPeers() {
         StringBuilder result = new StringBuilder("\n\n------------------------------------------------------------\n" +
                 "Authenticated peers for node " + getMyAddress() + ":");
         authenticatedPeers.values().stream().forEach(e -> result.append("\n").append(e.address));
@@ -689,7 +659,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         log.info(result.toString());
     }
 
-    public void printReportedPeers() {
+    private void printReportedPeers() {
         StringBuilder result = new StringBuilder("\n\n------------------------------------------------------------\n" +
                 "Reported peers for node " + getMyAddress() + ":");
         reportedPeers.stream().forEach(e -> result.append("\n").append(e));

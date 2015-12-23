@@ -35,7 +35,6 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     protected final CopyOnWriteArraySet<SetupListener> setupListeners = new CopyOnWriteArraySet<>();
     protected ListeningExecutorService executorService;
     private Server server;
-    private ConnectionListener startServerConnectionListener;
 
     private volatile boolean shutDownInProgress;
     // accessed from different threads
@@ -173,15 +172,11 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         final SettableFuture<Connection> resultFuture = SettableFuture.create();
         Futures.addCallback(future, new FutureCallback<Connection>() {
             public void onSuccess(Connection connection) {
-                UserThread.execute(() -> {
-                    resultFuture.set(connection);
-                });
+                UserThread.execute(() -> resultFuture.set(connection));
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                UserThread.execute(() -> {
-                    resultFuture.setException(throwable);
-                });
+                UserThread.execute(() -> resultFuture.setException(throwable));
             }
         });
         return resultFuture;
@@ -305,7 +300,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     protected void startServer(ServerSocket serverSocket) {
         Log.traceCall();
-        startServerConnectionListener = new ConnectionListener() {
+        ConnectionListener startServerConnectionListener = new ConnectionListener() {
             @Override
             public void onConnection(Connection connection) {
                 Log.traceCall("startServerConnectionListener connection=" + connection);

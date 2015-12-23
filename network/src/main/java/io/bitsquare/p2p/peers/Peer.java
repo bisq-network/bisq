@@ -12,7 +12,7 @@ public class Peer {
 
     public final Connection connection;
     public final Address address;
-    private long pingNonce;
+    private final long pingNonce;
 
     public Peer(Connection connection) {
         this.connection = connection;

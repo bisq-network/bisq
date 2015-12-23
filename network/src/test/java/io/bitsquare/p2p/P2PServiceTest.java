@@ -59,7 +59,7 @@ public class P2PServiceTest {
 
         LocalhostNetworkNode.setSimulateTorDelayTorNode(10);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(100);
-        PeerGroup.setMaxConnectionsLowPrio(8);
+        PeerGroup.setMaxConnectionsLowPriority(8);
 
         keyRing1 = new KeyRing(new KeyStorage(dir1));
         keyRing2 = new KeyRing(new KeyStorage(dir2));

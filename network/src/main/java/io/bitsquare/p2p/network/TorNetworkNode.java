@@ -225,9 +225,7 @@ public class TorNetworkNode extends NetworkNode {
         });
         Futures.addCallback(future, new FutureCallback<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>>() {
             public void onSuccess(TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode) {
-                UserThread.execute(() -> {
-                    resultHandler.accept(torNode);
-                });
+                UserThread.execute(() -> resultHandler.accept(torNode));
             }
 
             public void onFailure(@NotNull Throwable throwable) {

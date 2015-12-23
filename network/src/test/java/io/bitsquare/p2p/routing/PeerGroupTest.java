@@ -33,7 +33,7 @@ public class PeerGroupTest {
     public void setup() throws InterruptedException {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(50);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(8);
-        PeerGroup.setMaxConnectionsLowPrio(100);
+        PeerGroup.setMaxConnectionsLowPriority(100);
 
         seedNodes = new HashSet<>();
         if (useLocalhost) {

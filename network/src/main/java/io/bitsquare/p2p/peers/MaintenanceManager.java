@@ -26,8 +26,8 @@ public class MaintenanceManager implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(MaintenanceManager.class);
 
     private Timer sendPingTimer;
-    private PeerGroup peerGroup;
-    private NetworkNode networkNode;
+    private final PeerGroup peerGroup;
+    private final NetworkNode networkNode;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

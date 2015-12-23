@@ -63,10 +63,10 @@ public class SeedNode {
                         String arg2 = args[2];
                         int maxConnections = Integer.parseInt(arg2);
                         checkArgument(maxConnections < 1000, "maxConnections seems to be a bit too high...");
-                        PeerGroup.setMaxConnectionsLowPrio(maxConnections);
+                        PeerGroup.setMaxConnectionsLowPriority(maxConnections);
                     } else {
                         // we keep default a higher connection size for seed nodes
-                        PeerGroup.setMaxConnectionsLowPrio(50);
+                        PeerGroup.setMaxConnectionsLowPriority(50);
                     }
                     if (args.length > 3) {
                         String arg3 = args[3];

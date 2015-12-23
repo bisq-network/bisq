@@ -71,6 +71,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private Address connectedSeedNode;
     private volatile boolean shutDownInProgress;
     private boolean shutDownComplete;
+    @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> readyForAuthentication;
     private final Storage<Address> dbStorage;
     private Address myOnionAddress;
