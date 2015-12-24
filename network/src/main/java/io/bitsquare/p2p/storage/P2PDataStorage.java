@@ -116,17 +116,18 @@ public class P2PDataStorage implements MessageListener {
             Log.traceCall(message.toString());
             if (connection.isAuthenticated()) {
                 log.trace("ProtectedExpirableDataMessage received " + message + " on connection " + connection);
-                if (message instanceof AddDataMessage) {
-                    add(((AddDataMessage) message).data, connection.getPeerAddress());
-                } else if (message instanceof RemoveDataMessage) {
-                    remove(((RemoveDataMessage) message).data, connection.getPeerAddress());
-                } else if (message instanceof RemoveMailboxDataMessage) {
-                    removeMailboxData(((RemoveMailboxDataMessage) message).data, connection.getPeerAddress());
-                }
+                connection.getPeerAddress().ifPresent(peerAddress -> {
+                    if (message instanceof AddDataMessage) {
+                        add(((AddDataMessage) message).data, peerAddress);
+                    } else if (message instanceof RemoveDataMessage) {
+                        remove(((RemoveDataMessage) message).data, peerAddress);
+                    } else if (message instanceof RemoveMailboxDataMessage) {
+                        removeMailboxData(((RemoveMailboxDataMessage) message).data, peerAddress);
+                    }
+                });
             } else {
                 log.warn("Connection is not authenticated yet. " +
-                        "We don't accept storage operations from non-authenticated nodes.");
-                log.trace("Connection = " + connection);
+                        "We don't accept storage operations from non-authenticated nodes. connection=", connection);
                 connection.reportIllegalRequest(IllegalRequest.NotAuthenticated);
             }
         }

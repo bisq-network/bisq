@@ -134,14 +134,14 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         peerGroup = new PeerGroup(networkNode);
         peerGroup.addAuthenticationListener(this);
         if (useLocalhost)
-            PeerGroup.setSimulateAuthTorNode(200);
+            PeerGroup.setSimulateAuthTorNode(100);
 
         // P2P network data storage 
         dataStorage = new P2PDataStorage(peerGroup, networkNode, storageDir);
         dataStorage.addHashMapChangedListener(this);
 
         // Request initial data manager
-        requestDataManager = new RequestDataManager(networkNode, dataStorage, new RequestDataManager.Listener() {
+        requestDataManager = new RequestDataManager(networkNode, dataStorage, peerGroup, new RequestDataManager.Listener() {
             @Override
             public void onNoSeedNodeAvailable() {
                 p2pServiceListeners.stream().forEach(e -> e.onNoSeedNodeAvailable());
@@ -286,9 +286,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     @Override
     public void onDisconnect(Reason reason, Connection connection) {
         Log.traceCall();
-        if (connection.isAuthenticated())
-            authenticatedPeerAddresses.remove(connection.getPeerAddress());
-
+        connection.getPeerAddress().ifPresent(peerAddresses -> authenticatedPeerAddresses.remove(peerAddresses));
         numAuthenticatedPeers.set(authenticatedPeerAddresses.size());
     }
 
@@ -302,10 +300,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onPeerAddressAuthenticated(Address peerAddress, Connection connection) {
+    public void onPeerAuthenticated(Address peerAddress, Connection connection) {
         Log.traceCall();
-        checkArgument(peerAddress.equals(connection.getPeerAddress()),
-                "peerAddress must match connection.getPeerAddress()");
         authenticatedPeerAddresses.add(peerAddress);
 
         if (!firstPeerAuthenticated.get()) {
@@ -315,8 +311,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         numAuthenticatedPeers.set(authenticatedPeerAddresses.size());
     }
-    
-    
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -339,8 +335,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         connection.setConnectionPriority(ConnectionPriority.DIRECT_MSG);
 
                         log.info("Received SealedAndSignedMessage and decrypted it: " + decryptedMsgWithPubKey);
-                        decryptedMailListeners.stream().forEach(
-                                e -> e.onMailMessage(decryptedMsgWithPubKey, connection.getPeerAddress()));
+                        connection.getPeerAddress().ifPresent(peerAddresses ->
+                                decryptedMailListeners.stream().forEach(
+                                        e -> e.onMailMessage(decryptedMsgWithPubKey, peerAddresses)));
                     } else {
                         log.info("Wrong receiverAddressMaskHash. The message is not intended for us.");
                     }

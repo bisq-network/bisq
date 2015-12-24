@@ -14,9 +14,9 @@ public class Peer {
     public final Address address;
     private final long pingNonce;
 
-    public Peer(Connection connection) {
+    public Peer(Connection connection, Address address) {
         this.connection = connection;
-        this.address = connection.getPeerAddress();
+        this.address = address;
         pingNonce = new Random().nextLong();
     }
 

@@ -19,8 +19,11 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.Date;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.*;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Connection is created by the server thread or by sendMessage from NetworkNode.
@@ -31,7 +34,7 @@ public class Connection implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
     private static final int MAX_MSG_SIZE = 5 * 1024 * 1024;         // 5 MB of compressed data
     //timeout on blocking Socket operations like ServerSocket.accept() or SocketInputStream.read()
-    private static final int SOCKET_TIMEOUT = 1 * 60 * 1000;        // 1 min.
+    private static final int SOCKET_TIMEOUT = 10 * 60 * 1000;        // 10 min.
     private ConnectionPriority connectionPriority;
 
     public static int getMaxMsgSize() {
@@ -41,6 +44,7 @@ public class Connection implements MessageListener {
     private final Socket socket;
     private final MessageListener messageListener;
     private final ConnectionListener connectionListener;
+
     private final String portInfo;
     private final String uid = UUID.randomUUID().toString();
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
@@ -52,8 +56,7 @@ public class Connection implements MessageListener {
     private ObjectOutputStream objectOutputStream;
 
     // mutable data, set from other threads but not changed internally.
-    @Nullable
-    private Address peerAddress;
+    private Optional<Address> peerAddressOptional = Optional.empty();
     private volatile boolean isAuthenticated;
     private volatile boolean stopped;
 
@@ -116,9 +119,8 @@ public class Connection implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Called form UserThread
-    public void setAuthenticated(Address peerAddress) {
+    public void setAuthenticated() {
         Log.traceCall();
-        this.peerAddress = peerAddress;
         isAuthenticated = true;
     }
 
@@ -131,9 +133,10 @@ public class Connection implements MessageListener {
         Log.traceCall();
         if (!stopped) {
             try {
+                String peerAddress = peerAddressOptional.isPresent() ? peerAddressOptional.get().toString() : "null";
                 log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                         "Write object to outputStream to peer: {} (uid={})\nmessage={}"
-                        + "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n", getPeerAddress(), uid, message);
+                        + "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n", peerAddress, uid, message);
 
                 Object objectToWrite;
                 if (useCompression) {
@@ -167,9 +170,10 @@ public class Connection implements MessageListener {
         sharedSpace.reportIllegalRequest(illegalRequest);
     }
 
-    public synchronized void setPeerAddress(@Nullable Address peerAddress) {
+    public synchronized void setPeerAddress(Address peerAddress) {
         Log.traceCall();
-        this.peerAddress = peerAddress;
+        checkNotNull(peerAddress, "peerAddress must not be null");
+        peerAddressOptional = Optional.of(peerAddress);
     }
 
 
@@ -189,8 +193,12 @@ public class Connection implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Nullable
-    public synchronized Address getPeerAddress() {
-        return peerAddress;
+    public synchronized Address getPeerAddress1() {
+        return peerAddressOptional.isPresent() ? peerAddressOptional.get() : null;
+    }
+
+    public synchronized Optional<Address> getPeerAddress() {
+        return peerAddressOptional;
     }
 
     public Date getLastActivityDate() {
@@ -213,6 +221,7 @@ public class Connection implements MessageListener {
         return connectionPriority;
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ShutDown
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -232,6 +241,7 @@ public class Connection implements MessageListener {
     private void shutDown(boolean sendCloseConnectionMessage, @Nullable Runnable shutDownCompleteHandler) {
         Log.traceCall(this.toString());
         if (!stopped) {
+            String peerAddress = peerAddressOptional.isPresent() ? peerAddressOptional.get().toString() : "null";
             log.info("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                     "ShutDown connection:"
                     + "\npeerAddress=" + peerAddress
@@ -249,31 +259,32 @@ public class Connection implements MessageListener {
                     Log.traceCall("sendCloseConnectionMessage");
                     try {
                         sendMessage(new CloseConnectionMessage());
-                        stopped = true;
-                        sharedSpace.stop();
-                        if (inputHandler != null)
-                            inputHandler.stop();
+                        setStopFlags();
 
-                        // TODO increase delay
-                        Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
+                        Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
                     } catch (Throwable t) {
                         log.error(t.getMessage());
                         t.printStackTrace();
                     } finally {
-                        UserThread.execute(() -> continueShutDown(shutDownCompleteHandler));
+                        UserThread.execute(() -> doShutDown(shutDownCompleteHandler));
                     }
                 }).start();
             } else {
-                stopped = true;
-                sharedSpace.stop();
-                if (inputHandler != null)
-                    inputHandler.stop();
-                continueShutDown(shutDownCompleteHandler);
+                setStopFlags();
+                doShutDown(shutDownCompleteHandler);
             }
         }
     }
 
-    private void continueShutDown(@Nullable Runnable shutDownCompleteHandler) {
+    private void setStopFlags() {
+        stopped = true;
+        sharedSpace.stop();
+        if (inputHandler != null)
+            inputHandler.stop();
+        isAuthenticated = false;
+    }
+
+    private void doShutDown(@Nullable Runnable shutDownCompleteHandler) {
         Log.traceCall();
         ConnectionListener.Reason shutDownReason = sharedSpace.getShutDownReason();
         if (shutDownReason == null)
@@ -309,7 +320,7 @@ public class Connection implements MessageListener {
 
         if (portInfo != null ? !portInfo.equals(that.portInfo) : that.portInfo != null) return false;
         if (uid != null ? !uid.equals(that.uid) : that.uid != null) return false;
-        return !(peerAddress != null ? !peerAddress.equals(that.peerAddress) : that.peerAddress != null);
+        return peerAddressOptional != null ? peerAddressOptional.equals(that.peerAddressOptional) : that.peerAddressOptional == null;
 
     }
 
@@ -317,7 +328,7 @@ public class Connection implements MessageListener {
     public int hashCode() {
         int result = portInfo != null ? portInfo.hashCode() : 0;
         result = 31 * result + (uid != null ? uid.hashCode() : 0);
-        result = 31 * result + (peerAddress != null ? peerAddress.hashCode() : 0);
+        result = 31 * result + (peerAddressOptional != null ? peerAddressOptional.hashCode() : 0);
         return result;
     }
 
@@ -327,7 +338,7 @@ public class Connection implements MessageListener {
                 "portInfo=" + portInfo +
                 ", uid='" + uid + '\'' +
                 ", sharedSpace=" + sharedSpace.toString() +
-                ", peerAddress=" + peerAddress +
+                ", peerAddress=" + peerAddressOptional +
                 ", isAuthenticated=" + isAuthenticated +
                 ", stopped=" + stopped +
                 ", stopped=" + stopped +
@@ -398,6 +409,7 @@ public class Connection implements MessageListener {
 
         public void handleConnectionException(Exception e) {
             Log.traceCall(e.toString());
+            log.debug("connection=" + this);
             if (e instanceof SocketException) {
                 if (socket.isClosed())
                     shutDownReason = ConnectionListener.Reason.SOCKET_CLOSED;
@@ -405,11 +417,12 @@ public class Connection implements MessageListener {
                     shutDownReason = ConnectionListener.Reason.RESET;
             } else if (e instanceof SocketTimeoutException || e instanceof TimeoutException) {
                 shutDownReason = ConnectionListener.Reason.TIMEOUT;
+                log.warn("TimeoutException at connection with port " + socket.getLocalPort());
             } else if (e instanceof EOFException) {
                 shutDownReason = ConnectionListener.Reason.PEER_DISCONNECTED;
             } else {
                 shutDownReason = ConnectionListener.Reason.UNKNOWN;
-                log.info("Exception at connection with port " + socket.getLocalPort());
+                log.warn("Exception at connection with port " + socket.getLocalPort());
                 e.printStackTrace();
             }
 

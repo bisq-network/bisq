@@ -7,10 +7,10 @@ import io.bitsquare.p2p.Message;
 public abstract class AuthenticationMessage implements Message {
     private final int networkId = Version.NETWORK_ID;
 
-    public final Address address;
+    public final Address senderAddress;
 
-    public AuthenticationMessage(Address address) {
-        this.address = address;
+    public AuthenticationMessage(Address senderAddress) {
+        this.senderAddress = senderAddress;
     }
 
     @Override
@@ -20,7 +20,7 @@ public abstract class AuthenticationMessage implements Message {
 
     @Override
     public String toString() {
-        return ", address=" + address.toString() +
+        return ", address=" + senderAddress.toString() +
                 ", networkId=" + networkId +
                 '}';
     }

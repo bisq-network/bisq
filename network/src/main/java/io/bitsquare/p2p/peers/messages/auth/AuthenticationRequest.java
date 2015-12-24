@@ -9,16 +9,16 @@ public final class AuthenticationRequest extends AuthenticationMessage {
 
     public final long requesterNonce;
 
-    public AuthenticationRequest(Address address, long requesterNonce) {
-        super(address);
+    public AuthenticationRequest(Address senderAddress, long requesterNonce) {
+        super(senderAddress);
         this.requesterNonce = requesterNonce;
     }
 
     @Override
     public String toString() {
         return "AuthenticationRequest{" +
-                "address=" + address +
-                ", nonce=" + requesterNonce +
+                "senderAddress=" + senderAddress +
+                ", requesterNonce=" + requesterNonce +
                 super.toString() + "} ";
     }
 }

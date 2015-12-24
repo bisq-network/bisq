@@ -15,7 +15,9 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeoutException;
 
@@ -62,7 +64,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     abstract public void start(@Nullable SetupListener setupListener);
 
     public SettableFuture<Connection> sendMessage(@NotNull Address peerAddress, Message message) {
-        Log.traceCall("message: " + message + " to peerAddress: " + peerAddress);
+        Log.traceCall("peerAddress: " + peerAddress + " / message: " + message);
         checkNotNull(peerAddress, "peerAddress must not be null");
 
         Optional<Connection> outboundConnectionOptional = lookupOutboundConnection(peerAddress);
@@ -86,8 +88,8 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         if (connection != null) {
             return sendMessage(connection, message);
         } else {
-            log.trace("We have not found any connection for that peerAddress. " +
-                    "We will create a new outbound connection.");
+            log.trace("We have not found any connection for peerAddress {}. " +
+                    "We will create a new outbound connection.", peerAddress);
 
             final SettableFuture<Connection> resultFuture = SettableFuture.create();
             final boolean[] timeoutOccurred = new boolean[1];
@@ -96,7 +98,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                 Thread.currentThread().setName("NetworkNode:SendMessage-to-" + peerAddress);
                 try {
                     // can take a while when using tor
-                    Socket socket = createSocket(peerAddress); 
+                    Socket socket = createSocket(peerAddress);
                     if (timeoutOccurred[0])
                         throw new TimeoutException("Timeout occurred when tried to create Socket to peer: " + peerAddress);
 
@@ -114,7 +116,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
                     // can take a while when using tor
                     newConnection.sendMessage(message);
-                    return newConnection; 
+                    return newConnection;
                 } catch (Throwable throwable) {
                     if (!(throwable instanceof ConnectException || throwable instanceof IOException || throwable instanceof TimeoutException)) {
                         throwable.printStackTrace();
@@ -124,7 +126,8 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                 }
             });
 
-            Timer timer = new Timer();
+            //TODO does not close the connection yet. not clear if socket timeout is enough.
+            /*Timer timer = new Timer();
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
@@ -135,19 +138,19 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                     log.info(message);
                     UserThread.execute(() -> resultFuture.setException(new TimeoutException(message)));
                 }
-            }, CREATE_SOCKET_TIMEOUT);
+            }, CREATE_SOCKET_TIMEOUT);*/
 
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 public void onSuccess(Connection connection) {
                     UserThread.execute(() -> {
-                        timer.cancel();
+                        //timer.cancel();
                         resultFuture.set(connection);
                     });
                 }
 
                 public void onFailure(@NotNull Throwable throwable) {
                     UserThread.execute(() -> {
-                        timer.cancel();
+                        //timer.cancel();
                         resultFuture.setException(throwable);
                     });
                 }
@@ -158,7 +161,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     }
 
     public SettableFuture<Connection> sendMessage(Connection connection, Message message) {
-        Log.traceCall();
+        Log.traceCall("message: " + message + " to connection: " + connection);
         // connection.sendMessage might take a bit (compression, write to stream), so we use a thread to not block
         ListenableFuture<Connection> future = executorService.submit(() -> {
             Thread.currentThread().setName("NetworkNode:SendMessage-to-" + connection.getUid());
@@ -223,15 +226,13 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     @Override
     public void onConnection(Connection connection) {
-        Log.traceCall("NetworkNode connection=" + connection);
+        Log.traceCall("connection=" + connection);
         connectionListeners.stream().forEach(e -> e.onConnection(connection));
     }
 
     @Override
     public void onDisconnect(Reason reason, Connection connection) {
-        Log.traceCall();
-        Address peerAddress = connection.getPeerAddress();
-        log.trace("onDisconnect connection " + connection + ", peerAddress= " + peerAddress);
+        Log.traceCall("connection = " + connection);
         outBoundConnections.remove(connection);
         inBoundConnections.remove(connection);
         connectionListeners.stream().forEach(e -> e.onDisconnect(reason, connection));
@@ -311,10 +312,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
             @Override
             public void onDisconnect(Reason reason, Connection connection) {
-                Log.traceCall();
-                Address peerAddress = connection.getPeerAddress();
-                log.trace("onDisconnect at incoming connection to peerAddress (or connection) "
-                        + ((peerAddress == null) ? connection : peerAddress));
+                Log.traceCall("onDisconnect at incoming connection = " + connection);
                 inBoundConnections.remove(connection);
                 NetworkNode.this.onDisconnect(reason, connection);
             }
@@ -334,13 +332,13 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     private Optional<Connection> lookupOutboundConnection(Address peerAddress) {
         Log.traceCall("search for " + peerAddress.toString() + " / outBoundConnections " + outBoundConnections);
         return outBoundConnections.stream()
-                .filter(e -> peerAddress.equals(e.getPeerAddress())).findAny();
+                .filter(e -> e.getPeerAddress().isPresent() && peerAddress.equals(e.getPeerAddress().get())).findAny();
     }
 
     private Optional<Connection> lookupInboundConnection(Address peerAddress) {
         Log.traceCall("search for " + peerAddress.toString() + " / inBoundConnections " + inBoundConnections);
         return inBoundConnections.stream()
-                .filter(e -> peerAddress.equals(e.getPeerAddress())).findAny();
+                .filter(e -> e.getPeerAddress().isPresent() && peerAddress.equals(e.getPeerAddress().get())).findAny();
     }
 
     abstract protected Socket createSocket(Address peerAddress) throws IOException;

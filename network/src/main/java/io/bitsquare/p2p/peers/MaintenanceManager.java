@@ -56,7 +56,6 @@ public class MaintenanceManager implements MessageListener {
     public void onMessage(Message message, Connection connection) {
         if (message instanceof MaintenanceMessage) {
             Log.traceCall(message.toString());
-            log.debug("Received message " + message + " at " + peerGroup.getMyAddress() + " from " + connection.getPeerAddress());
             if (message instanceof PingMessage) {
                 SettableFuture<Connection> future = networkNode.sendMessage(connection, new PongMessage(((PingMessage) message).nonce));
                 Futures.addCallback(future, new FutureCallback<Connection>() {
@@ -68,19 +67,19 @@ public class MaintenanceManager implements MessageListener {
                     @Override
                     public void onFailure(@NotNull Throwable throwable) {
                         log.info("PongMessage sending failed " + throwable.getMessage());
-                        peerGroup.removePeer(connection.getPeerAddress());
+                        connection.getPeerAddress().ifPresent(peerAddress -> peerGroup.removePeer(peerAddress));
                     }
                 });
             } else if (message instanceof PongMessage) {
-                if (connection.getPeerAddress() != null) {
-                    Peer peer = peerGroup.getAuthenticatedPeers().get(connection.getPeerAddress());
+                connection.getPeerAddress().ifPresent(peerAddress -> {
+                    Peer peer = peerGroup.getAuthenticatedPeers().get(peerAddress);
                     if (peer != null) {
                         if (((PongMessage) message).nonce != peer.getPingNonce()) {
-                            log.warn("PongMessage invalid: self/peer " + peerGroup.getMyAddress() + "/" + connection.getPeerAddress());
+                            log.warn("PongMessage invalid: self/peer " + peerGroup.getMyAddress() + "/" + peerAddress);
                             peerGroup.removePeer(peer.address);
                         }
                     }
-                }
+                });
             }
         }
     }
@@ -93,7 +92,7 @@ public class MaintenanceManager implements MessageListener {
         sendPingTimer = UserThread.runAfterRandomDelay(() -> {
             pingPeers();
             startMaintenanceTimer();
-        }, 5, 10, TimeUnit.MINUTES);
+        }, 5, 7, TimeUnit.MINUTES);
     }
 
 
@@ -117,7 +116,7 @@ public class MaintenanceManager implements MessageListener {
                                 peerGroup.removePeer(e.address);
                             }
                         });
-                    }, 1, 10));
+                    }, 2, 4, TimeUnit.SECONDS));
         }
     }
 }

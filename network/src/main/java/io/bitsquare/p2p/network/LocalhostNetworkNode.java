@@ -27,8 +27,8 @@ import java.util.function.Consumer;
 public class LocalhostNetworkNode extends NetworkNode {
     private static final Logger log = LoggerFactory.getLogger(LocalhostNetworkNode.class);
 
-    private static volatile int simulateTorDelayTorNode = 600;
-    private static volatile int simulateTorDelayHiddenService = 3000;
+    private static volatile int simulateTorDelayTorNode = 100;
+    private static volatile int simulateTorDelayHiddenService = 500;
     private Address address;
 
     public static void setSimulateTorDelayTorNode(int simulateTorDelayTorNode) {

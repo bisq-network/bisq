@@ -9,9 +9,9 @@ import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
-import io.bitsquare.p2p.peers.messages.peerexchange.GetPeersRequest;
-import io.bitsquare.p2p.peers.messages.peerexchange.GetPeersResponse;
-import io.bitsquare.p2p.peers.messages.peerexchange.PeerExchangeMessage;
+import io.bitsquare.p2p.peers.messages.peers.GetPeersRequest;
+import io.bitsquare.p2p.peers.messages.peers.GetPeersResponse;
+import io.bitsquare.p2p.peers.messages.peers.PeerExchangeMessage;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,6 @@ public class PeerExchangeManager implements MessageListener {
     public void onMessage(Message message, Connection connection) {
         if (message instanceof PeerExchangeMessage) {
             Log.traceCall(message.toString());
-            log.debug("Received message " + message + " at " + peerGroup.getMyAddress() + " from " + connection.getPeerAddress());
             if (message instanceof GetPeersRequest) {
                 GetPeersRequest getPeersRequestMessage = (GetPeersRequest) message;
                 HashSet<ReportedPeer> reportedPeers = getPeersRequestMessage.reportedPeers;
@@ -68,7 +67,7 @@ public class PeerExchangeManager implements MessageListener {
                     @Override
                     public void onFailure(@NotNull Throwable throwable) {
                         log.info("GetPeersResponse sending failed " + throwable.getMessage());
-                        peerGroup.removePeer(getPeersRequestMessage.address);
+                        peerGroup.removePeer(getPeersRequestMessage.senderAddress);
                     }
                 });
 
@@ -90,7 +89,7 @@ public class PeerExchangeManager implements MessageListener {
         getPeersTimer = UserThread.runAfterRandomDelay(() -> {
             trySendGetPeersRequest();
             startGetPeersTimer();
-        }, 1, 2, TimeUnit.MINUTES);
+        }, 2, 4, TimeUnit.MINUTES);
     }
 
     private void trySendGetPeersRequest() {
@@ -113,7 +112,7 @@ public class PeerExchangeManager implements MessageListener {
                                 peerGroup.removePeer(e.address);
                             }
                         });
-                    }, 5, 10));
+                    }, 3, 5, TimeUnit.SECONDS));
         }
     }
 
