@@ -277,16 +277,14 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         Log.traceCall();
         boolean newEntry = messageListeners.add(messageListener);
         if (!newEntry)
-            log.warn("Try to add a messageListener which was already added.\nmessageListener={}\nmessageListeners={}"
-                    , messageListener, messageListeners);
+            log.warn("Try to add a messageListener which was already added.");
     }
 
     public void removeMessageListener(MessageListener messageListener) {
         Log.traceCall();
         boolean contained = messageListeners.remove(messageListener);
         if (!contained)
-            log.warn("Try to remove a messageListener which was never added.\nmessageListener={}\nmessageListeners={}"
-                    , messageListener, messageListeners);
+            log.warn("Try to remove a messageListener which was never added.");
     }
 
 
@@ -330,13 +328,13 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     }
 
     private Optional<Connection> lookupOutboundConnection(Address peerAddress) {
-        Log.traceCall("search for " + peerAddress.toString() + " / outBoundConnections " + outBoundConnections);
+        // Log.traceCall("search for " + peerAddress.toString() + " / outBoundConnections " + outBoundConnections);
         return outBoundConnections.stream()
                 .filter(e -> e.getPeerAddress().isPresent() && peerAddress.equals(e.getPeerAddress().get())).findAny();
     }
 
     private Optional<Connection> lookupInboundConnection(Address peerAddress) {
-        Log.traceCall("search for " + peerAddress.toString() + " / inBoundConnections " + inBoundConnections);
+        // Log.traceCall("search for " + peerAddress.toString() + " / inBoundConnections " + inBoundConnections);
         return inBoundConnections.stream()
                 .filter(e -> e.getPeerAddress().isPresent() && peerAddress.equals(e.getPeerAddress().get())).findAny();
     }

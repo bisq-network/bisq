@@ -22,7 +22,10 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 // Authentication protocol: 
 // client: send AuthenticationRequest to seedNode
@@ -36,30 +39,37 @@ public class AuthenticationHandshake implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(AuthenticationHandshake.class);
 
     private final NetworkNode networkNode;
-    private final PeerGroup peerGroup;
     private final Address myAddress;
     private final Address peerAddress;
+    private final Supplier<Set<ReportedPeer>> authenticatedAndReportedPeersSupplier;
+    private final BiConsumer<HashSet<ReportedPeer>, Connection> addReportedPeersConsumer;
 
     private final long startAuthTs;
-    private Optional<SettableFuture<Connection>> resultFutureOptional = Optional.empty();
     private long nonce;
     private boolean stopped;
+    private Optional<SettableFuture<Connection>> resultFutureOptional;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AuthenticationHandshake(NetworkNode networkNode, PeerGroup peerGroup, Address myAddress, Address peerAddress) {
+    public AuthenticationHandshake(NetworkNode networkNode,
+                                   Address myAddress,
+                                   Address peerAddress,
+                                   Supplier<Set<ReportedPeer>> authenticatedAndReportedPeersSupplier,
+                                   BiConsumer<HashSet<ReportedPeer>, Connection> addReportedPeersConsumer) {
+        this.authenticatedAndReportedPeersSupplier = authenticatedAndReportedPeersSupplier;
+        this.addReportedPeersConsumer = addReportedPeersConsumer;
         Log.traceCall("peerAddress " + peerAddress);
         this.networkNode = networkNode;
-        this.peerGroup = peerGroup;
         this.myAddress = myAddress;
         this.peerAddress = peerAddress;
 
         startAuthTs = System.currentTimeMillis();
         stopped = false;
         nonce = 0;
+        resultFutureOptional = Optional.empty();
 
         networkNode.addMessageListener(this);
     }
@@ -72,7 +82,9 @@ public class AuthenticationHandshake implements MessageListener {
     @Override
     public void onMessage(Message message, Connection connection) {
         if (stopped) {
-            log.warn("AuthenticationHandshake already shut down but still got onMessage called. That must not happen.");
+            log.warn("AuthenticationHandshake (peerAddress={}) already shut down but still got onMessage called. That must not happen.", peerAddress);
+            log.warn("message={}", message);
+            log.warn("connection={}", connection);
             return;
         }
 
@@ -93,7 +105,7 @@ public class AuthenticationHandshake implements MessageListener {
                     if (verified) {
                         AuthenticationResponse authenticationResponse = new AuthenticationResponse(myAddress,
                                 authenticationChallenge.responderNonce,
-                                new HashSet<>(peerGroup.getAuthenticatedAndReportedPeers()));
+                                new HashSet<>(authenticatedAndReportedPeersSupplier.get()));
                         SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, authenticationResponse);
                         log.trace("Sent GetPeersAuthRequest {} to {}", authenticationResponse, peerAddress);
                         Futures.addCallback(future, new FutureCallback<Connection>() {
@@ -115,7 +127,7 @@ public class AuthenticationHandshake implements MessageListener {
                         });
 
                         // now we add the reported peers to our list 
-                        peerGroup.addToReportedPeers(authenticationChallenge.reportedPeers, connection);
+                        addReportedPeersConsumer.accept(authenticationChallenge.reportedPeers, connection);
                     } else {
                         log.warn("Verification of nonce failed. AuthenticationResponse=" + authenticationChallenge + " / nonce=" + nonce);
                         failed(new Exception("Verification of nonce failed. AuthenticationResponse=" + authenticationChallenge + " / nonceMap=" + nonce));
@@ -126,13 +138,13 @@ public class AuthenticationHandshake implements MessageListener {
                     log.trace("Received GetPeersAuthRequest from " + peerAddress + " at " + myAddress);
                     boolean verified = nonce != 0 && nonce == authenticationResponse.responderNonce;
                     if (verified) {
-                        peerGroup.addToReportedPeers(authenticationResponse.reportedPeers, connection);
+                        addReportedPeersConsumer.accept(authenticationResponse.reportedPeers, connection);
                         log.info("AuthenticationComplete: Peer with address " + peerAddress
                                 + " authenticated (" + connection.getUid() + "). Took "
                                 + (System.currentTimeMillis() - startAuthTs) + " ms.");
                         completed(connection);
                     } else {
-                        log.warn("Verification of nonce failed. getPeersMessage=" + authenticationResponse + " / nonce=" + nonce);
+                        log.warn("Verification of nonce failed. authenticationResponse=" + authenticationResponse + " / nonce=" + nonce);
                         failed(new Exception("Verification of nonce failed. getPeersMessage=" + authenticationResponse + " / nonce=" + nonce));
                     }
                 }
@@ -150,7 +162,7 @@ public class AuthenticationHandshake implements MessageListener {
         // Requesting peer
 
         if (stopped) {
-            log.warn("AuthenticationHandshake already shut down but still got requestAuthentication called. That must not happen.");
+            log.warn("AuthenticationHandshake (peerAddress={}) already shut down but still got requestAuthentication called. That must not happen.", peerAddress);
         }
 
         resultFutureOptional = Optional.of(SettableFuture.create());
@@ -167,8 +179,8 @@ public class AuthenticationHandshake implements MessageListener {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                log.info("Send AuthenticationRequest to " + peerAddress + " failed." +
-                        "\nException:" + throwable.getMessage());
+                log.info("Send AuthenticationRequest to " + peerAddress + " failed. " +
+                        "It might be that the peer went offline.\nException:" + throwable.getMessage());
                 failed(throwable);
             }
         });
@@ -187,7 +199,9 @@ public class AuthenticationHandshake implements MessageListener {
         // Responding peer
 
         if (stopped) {
-            log.warn("AuthenticationHandshake already shut down but still got respondToAuthenticationRequest called. That must not happen.");
+            log.warn("AuthenticationHandshake (peerAddress={}) already shut down but still got respondToAuthenticationRequest called. That must not happen.", peerAddress);
+            log.warn("authenticationRequest={}", authenticationRequest);
+            log.warn("connection={}", connection);
         }
 
         resultFutureOptional = Optional.of(SettableFuture.create());
@@ -206,7 +220,7 @@ public class AuthenticationHandshake implements MessageListener {
                     AuthenticationChallenge authenticationChallenge = new AuthenticationChallenge(myAddress,
                             authenticationRequest.requesterNonce,
                             getAndSetNonce(),
-                            new HashSet<>(peerGroup.getAuthenticatedAndReportedPeers()));
+                            new HashSet<>(authenticatedAndReportedPeersSupplier.get()));
                     SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, authenticationChallenge);
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
@@ -220,12 +234,12 @@ public class AuthenticationHandshake implements MessageListener {
 
                         @Override
                         public void onFailure(@NotNull Throwable throwable) {
-                            log.warn("onFailure sending AuthenticationResponse. " + throwable.getMessage());
+                            log.warn("Failure at sending AuthenticationResponse. It might be that the peer went offline." + throwable.getMessage());
                             failed(throwable);
                         }
                     });
                 } else {
-                    log.warn("AuthenticationHandshake already shut down before we could sent AuthenticationResponse. That might happen in rare cases.");
+                    log.info("AuthenticationHandshake (peerAddress={}) already shut down before we could sent AuthenticationResponse. That might happen in rare cases.", peerAddress);
                 }
             }, 1000, TimeUnit.MILLISECONDS); // Don't set the delay too short as the CloseConnectionMessage might arrive too late at the peer
         });
@@ -238,9 +252,19 @@ public class AuthenticationHandshake implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void cancel() {
+        Log.traceCall();
         failed(new CancelAuthenticationException());
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getter
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Optional<SettableFuture<Connection>> getResultFutureOptional() {
+        return resultFutureOptional;
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -274,25 +298,8 @@ public class AuthenticationHandshake implements MessageListener {
     }
 
     private void shutDown() {
-        Log.traceCall();
-        stopped = true;
+        Log.traceCall("peerAddress = " + peerAddress);
         networkNode.removeMessageListener(this);
+        stopped = true;
     }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof AuthenticationHandshake)) return false;
-
-        AuthenticationHandshake that = (AuthenticationHandshake) o;
-
-        return !(peerAddress != null ? !peerAddress.equals(that.peerAddress) : that.peerAddress != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        return peerAddress != null ? peerAddress.hashCode() : 0;
-    }
-
 }

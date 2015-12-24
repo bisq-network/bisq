@@ -31,8 +31,8 @@ public class Log {
     private static SizeBasedTriggeringPolicy triggeringPolicy;
     private static Logger logbackLogger;
 
-    public static void setup(String fileName, boolean releaseVersion) {
-        Log.PRINT_TRACE_METHOD = !releaseVersion;
+    public static void setup(String fileName, boolean useDetailedLogging) {
+        Log.PRINT_TRACE_METHOD = useDetailedLogging;
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
         RollingFileAppender appender = new RollingFileAppender();
@@ -48,7 +48,7 @@ public class Log {
         rollingPolicy.start();
 
         triggeringPolicy = new SizeBasedTriggeringPolicy();
-        triggeringPolicy.setMaxFileSize(releaseVersion ? "1MB" : "50MB");
+        triggeringPolicy.setMaxFileSize(useDetailedLogging ? "50MB" : "1MB");
         triggeringPolicy.start();
 
         PatternLayoutEncoder encoder = new PatternLayoutEncoder();
@@ -62,7 +62,7 @@ public class Log {
         appender.start();
 
         logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-        logbackLogger.setLevel(releaseVersion ? Level.DEBUG : Level.TRACE);
+        logbackLogger.setLevel(useDetailedLogging ? Level.TRACE : Level.DEBUG);
         logbackLogger.addAppender(appender);
     }
 

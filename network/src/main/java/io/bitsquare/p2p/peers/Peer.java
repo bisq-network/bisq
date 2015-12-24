@@ -12,16 +12,13 @@ public class Peer {
 
     public final Connection connection;
     public final Address address;
-    private final long pingNonce;
+    public final long pingNonce;
 
     public Peer(Connection connection, Address address) {
         this.connection = connection;
         this.address = address;
-        pingNonce = new Random().nextLong();
-    }
 
-    public long getPingNonce() {
-        return pingNonce;
+        pingNonce = new Random().nextLong();
     }
 
     @Override

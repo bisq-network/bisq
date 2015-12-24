@@ -27,11 +27,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class PeerGroup implements MessageListener, ConnectionListener {
     private static final Logger log = LoggerFactory.getLogger(PeerGroup.class);
 
-    private static int simulateAuthTorNode = 0;
-
-    public static void setSimulateAuthTorNode(int simulateAuthTorNode) {
-        PeerGroup.simulateAuthTorNode = simulateAuthTorNode;
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Static
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private static int MAX_CONNECTIONS_LOW_PRIORITY;
     private static int MAX_CONNECTIONS_NORMAL_PRIORITY;
@@ -44,27 +42,26 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     }
 
     static {
-        setMaxConnectionsLowPriority(8);
+        setMaxConnectionsLowPriority(18);
     }
 
-    static final int INACTIVITY_PERIOD_BEFORE_PING = 5 * 60 * 1000;
     private static final int MAX_REPORTED_PEERS = 1000;
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Class fields
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private final NetworkNode networkNode;
-    private final CopyOnWriteArraySet<AuthenticationListener> authenticationListeners = new CopyOnWriteArraySet<>();
-
-    public Map<Address, Peer> getAuthenticatedPeers() {
-        return authenticatedPeers;
-    }
-
-    private final Map<Address, Peer> authenticatedPeers = new HashMap<>();
-    private final Set<ReportedPeer> reportedPeers = new HashSet<>();
     private final MaintenanceManager maintenanceManager;
     private final PeerExchangeManager peerExchangeManager;
 
-    private Optional<Set<Address>> seedNodeAddressesOptional = Optional.empty();
+    private final CopyOnWriteArraySet<AuthenticationListener> authenticationListeners = new CopyOnWriteArraySet<>();
+    private final Map<Address, Peer> authenticatedPeers = new HashMap<>();
+    private final Set<ReportedPeer> reportedPeers = new HashSet<>();
     private final List<Address> remainingSeedNodes = new ArrayList<>();
     private final Map<Address, AuthenticationHandshake> authenticationHandshakes = new HashMap<>();
+    private Optional<Set<Address>> seedNodeAddressesOptional = Optional.empty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -79,8 +76,14 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
 
-        maintenanceManager = new MaintenanceManager(this, networkNode);
-        peerExchangeManager = new PeerExchangeManager(this, networkNode);
+        maintenanceManager = new MaintenanceManager(networkNode,
+                () -> getAuthenticatedPeers(),
+                address -> removePeer(address));
+        peerExchangeManager = new PeerExchangeManager(networkNode,
+                () -> getAuthenticatedAndReportedPeers(),
+                () -> getAuthenticatedPeers(),
+                address -> removePeer(address),
+                (newReportedPeers, connection) -> addToReportedPeers(newReportedPeers, connection));
     }
 
 
@@ -161,6 +164,9 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         Log.traceCall();
         maintenanceManager.shutDown();
         peerExchangeManager.shutDown();
+
+        networkNode.removeMessageListener(this);
+        networkNode.removeConnectionListener(this);
     }
 
     public void addAuthenticationListener(AuthenticationListener listener) {
@@ -183,10 +189,18 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         if (!authenticatedPeers.containsKey(peerAddress)) {
             AuthenticationHandshake authenticationHandshake;
             if (!authenticationHandshakes.containsKey(peerAddress)) {
-                log.info("We got an incoming AuthenticationRequest for the peerAddress ({})", peerAddress);
+                log.info("We got an incoming AuthenticationRequest for the peerAddress {}. " +
+                        "We create an AuthenticationHandshake.", peerAddress);
+                log.trace("message={}", message);
+                log.trace("connection={}", connection);
                 // We protect that connection from getting closed by maintenance cleanup...
                 connection.setConnectionPriority(ConnectionPriority.AUTH_REQUEST);
-                authenticationHandshake = new AuthenticationHandshake(networkNode, this, getMyAddress(), peerAddress);
+                authenticationHandshake = new AuthenticationHandshake(networkNode,
+                        getMyAddress(),
+                        peerAddress,
+                        () -> getAuthenticatedAndReportedPeers(),
+                        (newReportedPeers, connection1) -> addToReportedPeers(newReportedPeers, connection1)
+                );
                 authenticationHandshakes.put(peerAddress, authenticationHandshake);
                 doRespondToAuthenticationRequest(message, connection, peerAddress, authenticationHandshake);
             } else {
@@ -203,13 +217,13 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                     rejectAuthenticationRequest(peerAddress);
                 } else {
                     log.info("We accept the authentication request but cancel our own request.");
-                    cancelOwnAuthenticationRequest(peerAddress, authenticationHandshake);
+                    cancelOwnAuthenticationRequest(peerAddress);
 
                     doRespondToAuthenticationRequest(message, connection, peerAddress, authenticationHandshake);
                 }
             }
         } else {
-            log.warn("We got an incoming AuthenticationRequest but we are already authenticated to that peer " +
+            log.info("We got an incoming AuthenticationRequest but we are already authenticated to that peer " +
                     "with peerAddress {}.\n" +
                     "That might happen in some race conditions. We reject the request.", peerAddress);
             rejectAuthenticationRequest(peerAddress);
@@ -219,7 +233,8 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     private void processAuthenticationRejection(AuthenticationRejection message) {
         Log.traceCall(message.toString());
         Address peerAddress = message.senderAddress;
-        cancelOwnAuthenticationRequest(peerAddress, authenticationHandshakes.get(peerAddress));
+
+        cancelOwnAuthenticationRequest(peerAddress);
     }
 
     private void doRespondToAuthenticationRequest(AuthenticationRequest message, Connection connection,
@@ -243,10 +258,12 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         );
     }
 
-    private void cancelOwnAuthenticationRequest(Address peerAddress, AuthenticationHandshake authenticationHandshake) {
+    private void cancelOwnAuthenticationRequest(Address peerAddress) {
         Log.traceCall();
-        authenticationHandshake.cancel();
-        authenticationHandshakes.remove(peerAddress);
+        if (authenticationHandshakes.containsKey(peerAddress)) {
+            authenticationHandshakes.get(peerAddress).cancel();
+            authenticationHandshakes.remove(peerAddress);
+        }
     }
 
     private void rejectAuthenticationRequest(Address peerAddress) {
@@ -347,6 +364,11 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         }
     }
 
+    private Address getAndRemoveRandomAddress(List<Address> list) {
+        checkArgument(!list.isEmpty(), "List must not be empty");
+        return list.remove(new Random().nextInt(list.size()));
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Authentication to reported peers
@@ -399,6 +421,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         }
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Authentication to peer used for direct messaging
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -410,9 +433,32 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         Log.traceCall(peerAddress.getFullAddress());
 
         if (authenticatedPeers.containsKey(peerAddress)) {
-            log.warn("We have that peer already authenticated. That should never happen.");
+            log.warn("We have that peer already authenticated. That should never happen. peerAddress={}", peerAddress);
             if (completeHandler != null)
                 completeHandler.run();
+        } else if (authenticationHandshakes.containsKey(peerAddress)) {
+            log.info("We are in the process to authenticate to that peer. peerAddress={}", peerAddress);
+            Optional<SettableFuture<Connection>> resultFutureOptional = authenticationHandshakes.get(peerAddress).getResultFutureOptional();
+            if (resultFutureOptional.isPresent()) {
+                Futures.addCallback(resultFutureOptional.get(), new FutureCallback<Connection>() {
+                    @Override
+                    public void onSuccess(Connection connection) {
+                        if (completeHandler != null)
+                            completeHandler.run();
+                    }
+
+                    @Override
+                    public void onFailure(@NotNull Throwable throwable) {
+                        if (faultHandler != null)
+                            faultHandler.run();
+                    }
+                });
+            } else {
+                log.warn("We are in the process to authenticate to that peer but the future object is not set. " +
+                        "That should not happen. peerAddress={}", peerAddress);
+                if (faultHandler != null)
+                    faultHandler.run();
+            }
         } else {
             log.info("We try to authenticate to peer {} for sending a private message.", peerAddress);
             authenticate(peerAddress, new FutureCallback<Connection>() {
@@ -446,7 +492,13 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     private void authenticate(Address peerAddress, FutureCallback<Connection> futureCallback) {
         Log.traceCall(peerAddress.getFullAddress());
         if (!authenticationHandshakes.containsKey(peerAddress)) {
-            AuthenticationHandshake authenticationHandshake = new AuthenticationHandshake(networkNode, this, getMyAddress(), peerAddress);
+            log.info("We create an AuthenticationHandshake to authenticate to peer {}.", peerAddress);
+            AuthenticationHandshake authenticationHandshake = new AuthenticationHandshake(networkNode,
+                    getMyAddress(),
+                    peerAddress,
+                    () -> getAuthenticatedAndReportedPeers(),
+                    (newReportedPeers, connection) -> addToReportedPeers(newReportedPeers, connection)
+            );
             authenticationHandshakes.put(peerAddress, authenticationHandshake);
             SettableFuture<Connection> authenticationFuture = authenticationHandshake.requestAuthentication();
             Futures.addCallback(authenticationFuture, futureCallback);
@@ -519,9 +571,11 @@ public class PeerGroup implements MessageListener, ConnectionListener {
             int allConnectionsSize = allConnections.size();
             log.info("We have {} connections open. Lets remove the passive connections" +
                     " which have not been active recently.", allConnectionsSize);
-            if (size != allConnectionsSize)
+            if (size != allConnectionsSize) {
                 log.warn("authenticatedPeers.size()!=allConnections.size(). There is some inconsistency.");
-
+                log.debug("authenticatedPeers={}", authenticatedPeers);
+                log.debug("networkNode.getAllConnections()={}", networkNode.getAllConnections());
+            }
             List<Connection> authenticatedConnections = allConnections.stream()
                     .filter(e -> e.isAuthenticated())
                     .filter(e -> e.getConnectionPriority() == ConnectionPriority.PASSIVE)
@@ -583,6 +637,10 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         return all;
     }
 
+    public Map<Address, Peer> getAuthenticatedPeers() {
+        return authenticatedPeers;
+    }
+
     public boolean isInAuthenticationProcess(Address address) {
         return authenticationHandshakes.containsKey(address);
     }
@@ -620,14 +678,13 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                         }
                     });
 
-            this.reportedPeers.addAll(adjustedReportedPeers);
+            reportedPeers.addAll(adjustedReportedPeers);
             purgeReportedPeersIfExceeds();
         }
 
         printReportedPeers();
     }
 
-    // TODO unit test
     private void purgeReportedPeersIfExceeds() {
         Log.traceCall();
         int size = reportedPeers.size();
@@ -653,11 +710,6 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         return networkNode.getAddress();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Utils
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     private ReportedPeer getAndRemoveRandomReportedPeer(List<ReportedPeer> list) {
         checkArgument(!list.isEmpty(), "List must not be empty");
         return list.remove(new Random().nextInt(list.size()));
@@ -675,11 +727,10 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         return reportedPeer;
     }
 
-    private Address getAndRemoveRandomAddress(List<Address> list) {
-        checkArgument(!list.isEmpty(), "List must not be empty");
-        return list.remove(new Random().nextInt(list.size()));
-    }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void printAllPeers() {
         printAuthenticatedPeers();

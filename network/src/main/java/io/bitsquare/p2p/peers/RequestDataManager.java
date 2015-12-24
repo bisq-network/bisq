@@ -61,6 +61,13 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
         networkNode.addMessageListener(this);
     }
 
+    public void shutDown() {
+        Log.traceCall();
+
+        networkNode.removeMessageListener(this);
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////

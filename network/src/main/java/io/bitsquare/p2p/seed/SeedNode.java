@@ -1,5 +1,6 @@
 package io.bitsquare.p2p.seed;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.UserThread;
@@ -97,14 +98,15 @@ public class SeedNode {
         }
     }
 
-    public void createAndStartP2PService(boolean releaseVersion) {
-        createAndStartP2PService(mySeedNodeAddress, useLocalhost, Version.NETWORK_ID, releaseVersion, progArgSeedNodes, null);
+    public void createAndStartP2PService(boolean useDetailedLogging) {
+        createAndStartP2PService(mySeedNodeAddress, useLocalhost, Version.NETWORK_ID, useDetailedLogging, progArgSeedNodes, null);
     }
 
+    @VisibleForTesting
     public void createAndStartP2PService(Address mySeedNodeAddress,
                                          boolean useLocalhost,
                                          int networkId,
-                                         boolean releaseVersion,
+                                         boolean useDetailedLogging,
                                          @Nullable Set<Address> progArgSeedNodes,
                                          @Nullable P2PServiceListener listener) {
         Log.traceCall();
@@ -113,7 +115,7 @@ public class SeedNode {
                 "Bitsquare_seed_node_" + String.valueOf(mySeedNodeAddress.getFullAddress().replace(":", "_")));
 
         String logPath = Paths.get(appPath.toString(), "logs").toString();
-        Log.setup(logPath, releaseVersion);
+        Log.setup(logPath, useDetailedLogging);
         log.info("Log files under: " + logPath);
 
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();

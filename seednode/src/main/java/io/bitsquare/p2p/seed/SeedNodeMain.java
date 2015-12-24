@@ -8,7 +8,6 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -16,20 +15,18 @@ import java.util.concurrent.ThreadFactory;
 public class SeedNodeMain {
     private static final Logger log = LoggerFactory.getLogger(SeedNodeMain.class);
 
-    public static final boolean IS_RELEASE_VERSION = false;
+    public static final boolean USE_DETAILED_LOGGING = true;
 
     private SeedNode seedNode;
-
-    private boolean stopped;
 
     // args: myAddress (incl. port) useLocalhost seedNodes (separated with |)
     // eg. lmvdenjkyvx2ovga.onion:8001 false eo5ay2lyzrfvx2nr.onion:8002|si3uu56adkyqkldl.onion:8003
     // To stop enter: q
-    public static void main(String[] args) throws NoSuchAlgorithmException {
+    public static void main(String[] args) throws InterruptedException {
         new SeedNodeMain(args);
     }
 
-    public SeedNodeMain(String[] args) {
+    public SeedNodeMain(String[] args) throws InterruptedException {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat("SeedNodeMain")
                 .setDaemon(true)
@@ -54,7 +51,7 @@ public class SeedNodeMain {
             try {
                 seedNode = new SeedNode(BitsquareEnvironment.defaultUserDataDir());
                 seedNode.processArgs(args);
-                seedNode.createAndStartP2PService(IS_RELEASE_VERSION);
+                seedNode.createAndStartP2PService(USE_DETAILED_LOGGING);
             } catch (Throwable t) {
                 log.error("Executing task failed. " + t.getMessage());
                 t.printStackTrace();
@@ -62,10 +59,7 @@ public class SeedNodeMain {
         });
 
         while (true) {
-            try {
-                Thread.sleep(Long.MAX_VALUE);
-            } catch (InterruptedException e) {
-            }
+            Thread.sleep(Long.MAX_VALUE);
         }
     }
 }

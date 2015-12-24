@@ -387,6 +387,7 @@ public class Connection implements MessageListener {
         public void reportIllegalRequest(IllegalRequest illegalRequest) {
             Log.traceCall();
             log.warn("We got reported an illegal request " + illegalRequest);
+            log.debug("connection={}" + this);
             int violations;
             if (illegalRequests.contains(illegalRequest))
                 violations = illegalRequests.get(illegalRequest);
@@ -401,6 +402,7 @@ public class Connection implements MessageListener {
                         "violations={}\n" +
                         "illegalRequest={}\n" +
                         "illegalRequests={}", violations, illegalRequest, illegalRequests.toString());
+                log.debug("connection={}" + this);
                 shutDown(false);
             } else {
                 illegalRequests.put(illegalRequest, ++violations);
@@ -418,11 +420,13 @@ public class Connection implements MessageListener {
             } else if (e instanceof SocketTimeoutException || e instanceof TimeoutException) {
                 shutDownReason = ConnectionListener.Reason.TIMEOUT;
                 log.warn("TimeoutException at connection with port " + socket.getLocalPort());
+                log.debug("connection={}" + this);
             } else if (e instanceof EOFException) {
                 shutDownReason = ConnectionListener.Reason.PEER_DISCONNECTED;
             } else {
                 shutDownReason = ConnectionListener.Reason.UNKNOWN;
                 log.warn("Exception at connection with port " + socket.getLocalPort());
+                log.debug("connection={}" + this);
                 e.printStackTrace();
             }
 

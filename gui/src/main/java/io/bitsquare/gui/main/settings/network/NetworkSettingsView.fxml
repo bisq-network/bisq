@@ -67,7 +67,7 @@
         </GridPane.margin>
     </Label>
     <TextField fx:id="onionAddress" GridPane.rowIndex="3" GridPane.columnIndex="1"
-               mouseTransparent="true" focusTraversable="false">
+               editable="false" focusTraversable="false">
         <GridPane.margin>
             <Insets top="50.0"/>
         </GridPane.margin>
@@ -75,7 +75,7 @@
 
     <Label fx:id="authenticatedPeersLabel" text="Authenticated peers:" GridPane.rowIndex="4"/>
     <TextArea fx:id="authenticatedPeersTextArea" GridPane.rowIndex="4" GridPane.columnIndex="1"
-              mouseTransparent="true" focusTraversable="false"/>
+              editable="false" focusTraversable="false"/>
 
     <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="200.0"/>

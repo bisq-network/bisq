@@ -133,8 +133,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         // peer group 
         peerGroup = new PeerGroup(networkNode);
         peerGroup.addAuthenticationListener(this);
-        if (useLocalhost)
-            PeerGroup.setSimulateAuthTorNode(100);
 
         // P2P network data storage 
         dataStorage = new P2PDataStorage(peerGroup, networkNode, storageDir);
@@ -203,24 +201,27 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             if (peerGroup != null)
                 peerGroup.shutDown();
 
+            if (requestDataManager != null)
+                requestDataManager.shutDown();
+
             if (networkNode != null)
                 networkNode.shutDown(() -> {
                     shutDownResultHandlers.stream().forEach(e -> e.run());
                     shutDownComplete = true;
                 });
         } else {
-            if (shutDownComplete)
-                shutDownCompleteHandler.run();
-            else
-                shutDownResultHandlers.add(shutDownCompleteHandler);
-
             log.debug("shutDown already in progress");
+            if (shutDownComplete) {
+                shutDownCompleteHandler.run();
+            } else {
+                shutDownResultHandlers.add(shutDownCompleteHandler);
+            }
         }
     }
 
 
     /**
-     * Bootstrap sequence:
+     * Startup sequence:
      * <p>
      * Variant 1 (normal expected mode):
      * onTorNodeReady -> requestDataManager.requestData()

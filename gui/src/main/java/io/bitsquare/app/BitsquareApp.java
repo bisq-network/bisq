@@ -99,7 +99,7 @@ public class BitsquareApp extends Application {
     @Override
     public void start(Stage primaryStage) throws IOException {
         String logPath = Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString();
-        Log.setup(logPath, IS_RELEASE_VERSION);
+        Log.setup(logPath, !IS_RELEASE_VERSION);
         log.info("Log files under: " + logPath);
 
         Version.printVersion();
