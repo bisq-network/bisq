@@ -92,7 +92,6 @@ public class TorNetworkNode extends NetworkNode {
     @Override
     @Nullable
     public Address getAddress() {
-        Log.traceCall();
         if (hiddenServiceDescriptor != null)
             return new Address(hiddenServiceDescriptor.getFullAddress());
         else

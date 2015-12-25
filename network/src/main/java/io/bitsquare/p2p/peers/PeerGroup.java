@@ -98,7 +98,13 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     @Override
     public void onDisconnect(Reason reason, Connection connection) {
         log.debug("onDisconnect connection=" + connection + " / reason=" + reason);
-        connection.getPeerAddress().ifPresent(peerAddress -> removePeer(peerAddress));
+
+        connection.getPeerAddress().ifPresent(peerAddress -> {
+            // We only remove it if we are nto in the authentication process
+            // Connection shut down is a step in the authentication process.
+            if (!authenticationHandshakes.containsKey(peerAddress))
+                removePeer(peerAddress);
+        });
     }
 
     @Override
@@ -207,8 +213,8 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                 log.info("We got an incoming AuthenticationRequest but we have started ourselves already " +
                         "an authentication handshake for that peerAddress ({})", peerAddress);
                 log.debug("We avoid such race conditions by rejecting the request if the hashCode of our address ({}) is " +
-                                "smaller then the hashCode of the peers address ({}).", getMyAddress().hashCode(),
-                        message.senderAddress.hashCode());
+                                "smaller then the hashCode of the peers address ({}). Result = {}", getMyAddress().hashCode(),
+                        message.senderAddress.hashCode(), (getMyAddress().hashCode() < peerAddress.hashCode()));
 
                 authenticationHandshake = authenticationHandshakes.get(peerAddress);
 
@@ -233,7 +239,6 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     private void processAuthenticationRejection(AuthenticationRejection message) {
         Log.traceCall(message.toString());
         Address peerAddress = message.senderAddress;
-
         cancelOwnAuthenticationRequest(peerAddress);
     }
 
@@ -261,8 +266,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     private void cancelOwnAuthenticationRequest(Address peerAddress) {
         Log.traceCall();
         if (authenticationHandshakes.containsKey(peerAddress)) {
-            authenticationHandshakes.get(peerAddress).cancel();
-            authenticationHandshakes.remove(peerAddress);
+            authenticationHandshakes.get(peerAddress).setOwnRequestCanceled();
         }
     }
 
@@ -301,9 +305,9 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
-                    log.info("Authentication to " + peerAddress + " failed." +
+                    log.info("Authentication to " + peerAddress + " failed at authenticateToFirstSeedNode." +
                             "\nThat is expected if seed nodes are offline." +
-                            "\nException:" + throwable.getMessage());
+                            "\nException:" + throwable.toString());
 
                     removePeer(peerAddress);
 
@@ -340,9 +344,9 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
                             @Override
                             public void onFailure(@NotNull Throwable throwable) {
-                                log.info("Authentication to " + peerAddress + " failed." +
+                                log.info("Authentication to " + peerAddress + " failed at authenticateToRemainingSeedNode." +
                                         "\nThat is expected if the seed node is offline." +
-                                        "\nException:" + throwable.getMessage());
+                                        "\nException:" + throwable.toString());
 
                                 removePeer(peerAddress);
 
@@ -394,9 +398,9 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
                         @Override
                         public void onFailure(@NotNull Throwable throwable) {
-                            log.info("Authentication to " + peerAddress + " failed." +
+                            log.info("Authentication to " + peerAddress + " failed at authenticateToRemainingReportedPeer." +
                                     "\nThat is expected if the peer is offline." +
-                                    "\nException:" + throwable.getMessage());
+                                    "\nException:" + throwable.toString());
 
                             removePeer(peerAddress);
 
@@ -473,9 +477,9 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
-                    log.error("Authentication to " + peerAddress + " for sending a private message failed." +
+                    log.error("Authentication to " + peerAddress + " for sending a private message failed at authenticateToDirectMessagePeer." +
                             "\nSeems that the peer is offline." +
-                            "\nException:" + throwable.getMessage());
+                            "\nException:" + throwable.toString());
                     removePeer(peerAddress);
                     if (faultHandler != null)
                         faultHandler.run();

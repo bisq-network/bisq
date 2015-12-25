@@ -12,9 +12,9 @@ import io.bitsquare.p2p.network.ConnectionPriority;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.peers.messages.auth.AuthenticationChallenge;
+import io.bitsquare.p2p.peers.messages.auth.AuthenticationFinalResponse;
 import io.bitsquare.p2p.peers.messages.auth.AuthenticationMessage;
 import io.bitsquare.p2p.peers.messages.auth.AuthenticationRequest;
-import io.bitsquare.p2p.peers.messages.auth.AuthenticationResponse;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,9 +45,10 @@ public class AuthenticationHandshake implements MessageListener {
     private final BiConsumer<HashSet<ReportedPeer>, Connection> addReportedPeersConsumer;
 
     private final long startAuthTs;
-    private long nonce;
+    private long nonce = 0;
     private boolean stopped;
-    private Optional<SettableFuture<Connection>> resultFutureOptional;
+    private Optional<SettableFuture<Connection>> resultFutureOptional = Optional.empty();
+    private boolean ownRequestCanceled;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -67,10 +68,6 @@ public class AuthenticationHandshake implements MessageListener {
         this.peerAddress = peerAddress;
 
         startAuthTs = System.currentTimeMillis();
-        stopped = false;
-        nonce = 0;
-        resultFutureOptional = Optional.empty();
-
         networkNode.addMessageListener(this);
     }
 
@@ -94,58 +91,64 @@ public class AuthenticationHandshake implements MessageListener {
                 Log.traceCall(message.toString());
                 if (message instanceof AuthenticationChallenge) {
                     // Requesting peer
-                    AuthenticationChallenge authenticationChallenge = (AuthenticationChallenge) message;
-                    // We need to set the address to the connection, otherwise we will not find the connection when sending
-                    // the next message and we would create a new outbound connection instead using the inbound.
-                    connection.setPeerAddress(authenticationChallenge.senderAddress);
-                    // We use the active connectionType if we started the authentication request to another peer
-                    connection.setConnectionPriority(ConnectionPriority.ACTIVE);
-                    log.trace("Received authenticationResponse from " + peerAddress);
-                    boolean verified = nonce != 0 && nonce == authenticationChallenge.requesterNonce;
-                    if (verified) {
-                        AuthenticationResponse authenticationResponse = new AuthenticationResponse(myAddress,
-                                authenticationChallenge.responderNonce,
-                                new HashSet<>(authenticatedAndReportedPeersSupplier.get()));
-                        SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, authenticationResponse);
-                        log.trace("Sent GetPeersAuthRequest {} to {}", authenticationResponse, peerAddress);
-                        Futures.addCallback(future, new FutureCallback<Connection>() {
-                            @Override
-                            public void onSuccess(Connection connection) {
-                                log.trace("Successfully sent GetPeersAuthRequest to {}", peerAddress);
-
-                                log.info("AuthenticationComplete: Peer with address " + peerAddress
-                                        + " authenticated (" + connection.getUid() + "). Took "
-                                        + (System.currentTimeMillis() - startAuthTs) + " ms.");
-                                completed(connection);
-                            }
-
-                            @Override
-                            public void onFailure(@NotNull Throwable throwable) {
-                                log.info("GetPeersAuthRequest sending failed " + throwable.getMessage());
-                                failed(throwable);
-                            }
-                        });
-
-                        // now we add the reported peers to our list 
-                        addReportedPeersConsumer.accept(authenticationChallenge.reportedPeers, connection);
+                    if (ownRequestCanceled) {
+                        log.info("Our own request has been canceled because of a race condition. " +
+                                "\nWe ignore that message and go on with the protocol from the other peers request. " +
+                                "\nThat might happen in rare cases.");
                     } else {
-                        log.warn("Verification of nonce failed. AuthenticationResponse=" + authenticationChallenge + " / nonce=" + nonce);
-                        failed(new Exception("Verification of nonce failed. AuthenticationResponse=" + authenticationChallenge + " / nonceMap=" + nonce));
+                        AuthenticationChallenge authenticationChallenge = (AuthenticationChallenge) message;
+                        // We need to set the address to the connection, otherwise we will not find the connection when sending
+                        // the next message and we would create a new outbound connection instead using the inbound.
+                        connection.setPeerAddress(authenticationChallenge.senderAddress);
+                        // We use the active connectionType if we started the authentication request to another peer
+                        connection.setConnectionPriority(ConnectionPriority.ACTIVE);
+                        log.trace("Received authenticationResponse from " + peerAddress);
+                        boolean verified = nonce != 0 && nonce == authenticationChallenge.requesterNonce;
+                        if (verified) {
+                            AuthenticationFinalResponse authenticationFinalResponse = new AuthenticationFinalResponse(myAddress,
+                                    authenticationChallenge.responderNonce,
+                                    new HashSet<>(authenticatedAndReportedPeersSupplier.get()));
+                            SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, authenticationFinalResponse);
+                            log.trace("Sent GetPeersAuthRequest {} to {}", authenticationFinalResponse, peerAddress);
+                            Futures.addCallback(future, new FutureCallback<Connection>() {
+                                @Override
+                                public void onSuccess(Connection connection) {
+                                    log.trace("Successfully sent GetPeersAuthRequest to {}", peerAddress);
+
+                                    log.info("AuthenticationComplete: Peer with address " + peerAddress
+                                            + " authenticated (" + connection.getUid() + "). Took "
+                                            + (System.currentTimeMillis() - startAuthTs) + " ms.");
+                                    completed(connection);
+                                }
+
+                                @Override
+                                public void onFailure(@NotNull Throwable throwable) {
+                                    log.info("GetPeersAuthRequest sending failed " + throwable.getMessage());
+                                    failed(throwable);
+                                }
+                            });
+
+                            // now we add the reported peers to our list 
+                            addReportedPeersConsumer.accept(authenticationChallenge.reportedPeers, connection);
+                        } else {
+                            log.warn("Verification of nonce failed. AuthenticationChallenge=" + authenticationChallenge + " / nonce=" + nonce);
+                            failed(new Exception("Verification of nonce failed. AuthenticationChallenge=" + authenticationChallenge + " / nonceMap=" + nonce));
+                        }
                     }
-                } else if (message instanceof AuthenticationResponse) {
+                } else if (message instanceof AuthenticationFinalResponse) {
                     // Responding peer
-                    AuthenticationResponse authenticationResponse = (AuthenticationResponse) message;
+                    AuthenticationFinalResponse authenticationFinalResponse = (AuthenticationFinalResponse) message;
                     log.trace("Received GetPeersAuthRequest from " + peerAddress + " at " + myAddress);
-                    boolean verified = nonce != 0 && nonce == authenticationResponse.responderNonce;
+                    boolean verified = nonce != 0 && nonce == authenticationFinalResponse.responderNonce;
                     if (verified) {
-                        addReportedPeersConsumer.accept(authenticationResponse.reportedPeers, connection);
+                        addReportedPeersConsumer.accept(authenticationFinalResponse.reportedPeers, connection);
                         log.info("AuthenticationComplete: Peer with address " + peerAddress
                                 + " authenticated (" + connection.getUid() + "). Took "
                                 + (System.currentTimeMillis() - startAuthTs) + " ms.");
                         completed(connection);
                     } else {
-                        log.warn("Verification of nonce failed. authenticationResponse=" + authenticationResponse + " / nonce=" + nonce);
-                        failed(new Exception("Verification of nonce failed. getPeersMessage=" + authenticationResponse + " / nonce=" + nonce));
+                        log.warn("Verification of nonce failed. authenticationResponse=" + authenticationFinalResponse + " / nonce=" + nonce);
+                        failed(new Exception("Verification of nonce failed. getPeersMessage=" + authenticationFinalResponse + " / nonce=" + nonce));
                     }
                 }
             }
@@ -251,9 +254,11 @@ public class AuthenticationHandshake implements MessageListener {
     // Cancel if we send reject message
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void cancel() {
+    public void setOwnRequestCanceled() {
         Log.traceCall();
-        failed(new CancelAuthenticationException());
+        nonce = 0;
+        stopped = false;
+        ownRequestCanceled = true;
     }
 
 
@@ -264,7 +269,7 @@ public class AuthenticationHandshake implements MessageListener {
     public Optional<SettableFuture<Connection>> getResultFutureOptional() {
         return resultFutureOptional;
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

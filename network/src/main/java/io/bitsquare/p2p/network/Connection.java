@@ -258,7 +258,7 @@ public class Connection implements MessageListener {
                     Thread.currentThread().setName("Connection:SendCloseConnectionMessage-" + this.uid);
                     Log.traceCall("sendCloseConnectionMessage");
                     try {
-                        sendMessage(new CloseConnectionMessage());
+                        sendMessage(new CloseConnectionMessage(peerAddressOptional));
                         setStopFlags();
 
                         Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
@@ -558,6 +558,8 @@ public class Connection implements MessageListener {
 
                         sharedSpace.updateLastActivityDate();
                         if (message instanceof CloseConnectionMessage) {
+                            log.info("Close connection message received from peer {}",
+                                    ((CloseConnectionMessage) message).peerAddressOptional);
                             stopped = true;
                             sharedSpace.shutDown(false);
                         } else if (!stopped) {
