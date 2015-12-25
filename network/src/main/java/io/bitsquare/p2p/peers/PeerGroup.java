@@ -59,8 +59,8 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     private final CopyOnWriteArraySet<AuthenticationListener> authenticationListeners = new CopyOnWriteArraySet<>();
     private final Map<Address, Peer> authenticatedPeers = new HashMap<>();
     private final Set<ReportedPeer> reportedPeers = new HashSet<>();
-    private final List<Address> remainingSeedNodes = new ArrayList<>();
     private final Map<Address, AuthenticationHandshake> authenticationHandshakes = new HashMap<>();
+    private final List<Address> remainingSeedNodes = new ArrayList<>();
     private Optional<Set<Address>> seedNodeAddressesOptional = Optional.empty();
 
 
@@ -286,9 +286,10 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
                     handleAuthenticationFailure(peerAddress, throwable);
 
-                    if (remainingSeedNodesAvailable()) {
+                    Optional<Address> seedNodeOptional = getAndRemoveNotAuthenticatingSeedNode();
+                    if (seedNodeOptional.isPresent()) {
                         log.info("We try another random seed node for first authentication attempt.");
-                        authenticateToFirstSeedNode(getAndRemoveRandomAddress(remainingSeedNodes));
+                        authenticateToFirstSeedNode(seedNodeOptional.get());
                     } else {
                         log.info("There are no seed nodes available for authentication. " +
                                 "We try if there are reported peers available to authenticate.");
@@ -304,8 +305,9 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     private void authenticateToRemainingSeedNode() {
         Log.traceCall();
         if (!maxConnectionsForAuthReached()) {
-            if (remainingSeedNodesAvailable()) {
-                Address peerAddress = getAndRemoveRandomAddress(remainingSeedNodes);
+            Optional<Address> seedNodeOptional = getAndRemoveNotAuthenticatingSeedNode();
+            if (seedNodeOptional.isPresent()) {
+                Address peerAddress = seedNodeOptional.get();
                 log.info("We try to authenticate to seed node {}.", peerAddress);
                 authenticate(peerAddress, new FutureCallback<Connection>() {
                             @Override
@@ -334,20 +336,29 @@ public class PeerGroup implements MessageListener, ConnectionListener {
             } else if (reportedPeersAvailable()) {
                 authenticateToRemainingReportedPeer();
             } else {
-                log.info("We don't have seed nodes or reported peers available. We will try again after a random pause.");
-                UserThread.runAfterRandomDelay(() -> authenticateToRemainingReportedPeer(),
-                        10, 20, TimeUnit.SECONDS);
+                log.info("We don't have seed nodes or reported peers available. " +
+                        "We try again after a random pause with the seed nodes which failed or if " +
+                        "none available with the reported peers.");
+                if (seedNodeAddressesOptional.isPresent()) {
+                    remainingSeedNodes.clear();
+                    seedNodeAddressesOptional.get().stream()
+                            .filter(e -> !authenticatedPeers.containsKey(e) && !authenticationHandshakes.containsKey(e))
+                            .forEach(e -> remainingSeedNodes.add(e));
+                    if (!remainingSeedNodes.isEmpty())
+                        UserThread.runAfterRandomDelay(() -> authenticateToRemainingSeedNode(),
+                                30, 60, TimeUnit.SECONDS);
+                    else
+                        UserThread.runAfterRandomDelay(() -> authenticateToRemainingReportedPeer(),
+                                10, 20, TimeUnit.SECONDS);
+                } else {
+                    UserThread.runAfterRandomDelay(() -> authenticateToRemainingReportedPeer(),
+                            10, 20, TimeUnit.SECONDS);
+                }
             }
         } else {
             log.info("We have already enough connections.");
         }
     }
-
-    private Address getAndRemoveRandomAddress(List<Address> list) {
-        checkArgument(!list.isEmpty(), "List must not be empty");
-        return list.remove(new Random().nextInt(list.size()));
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Authentication to reported peers
@@ -357,45 +368,51 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         Log.traceCall();
         if (!maxConnectionsForAuthReached()) {
             if (reportedPeersAvailable()) {
-                if (getAndRemoveNotAuthenticatingReportedPeer().isPresent()) {
-                    Address peerAddress = getAndRemoveNotAuthenticatingReportedPeer().get().address;
-                    if (authenticationHandshakes.containsKey(peerAddress))
-                        log.warn("getAndRemoveNotAuthenticatingReportedPeer delivered peer which is already in authenticationHandshakes");
+                Optional<ReportedPeer> andRemoveNotAuthenticatingReportedPeer = getAndRemoveNotAuthenticatingReportedPeer();
+                if (andRemoveNotAuthenticatingReportedPeer.isPresent()) {
+                    Address peerAddress = andRemoveNotAuthenticatingReportedPeer.get().address;
                     removeFromReportedPeers(peerAddress);
-                    log.info("We try to authenticate to peer {}.", peerAddress);
-                    if (authenticationHandshakes.containsKey(peerAddress))
-                        log.warn("peer already in authenticationHandshakes");
-                    authenticate(peerAddress, new FutureCallback<Connection>() {
-                        @Override
-                        public void onSuccess(Connection connection) {
-                            log.info("We got a peer authenticated. " +
-                                    "We try if there are more reported peers available to authenticate.");
+                    if (!authenticationHandshakes.containsKey(peerAddress)) {
+                        log.info("We try to authenticate to peer {}.", peerAddress);
+                        authenticate(peerAddress, new FutureCallback<Connection>() {
+                            @Override
+                            public void onSuccess(Connection connection) {
+                                log.info("We got a peer authenticated. " +
+                                        "We try if there are more reported peers available to authenticate.");
 
-                            addAuthenticatedPeer(connection, peerAddress);
-                            authenticateToRemainingReportedPeer();
-                        }
+                                addAuthenticatedPeer(connection, peerAddress);
+                                authenticateToRemainingReportedPeer();
+                            }
 
-                        @Override
-                        public void onFailure(@NotNull Throwable throwable) {
-                            log.info("Authentication to " + peerAddress + " failed at authenticateToRemainingReportedPeer." +
-                                    "\nThat is expected if the peer is offline." +
-                                    "\nException:" + throwable.toString());
+                            @Override
+                            public void onFailure(@NotNull Throwable throwable) {
+                                log.info("Authentication to " + peerAddress + " failed at authenticateToRemainingReportedPeer." +
+                                        "\nThat is expected if the peer is offline." +
+                                        "\nException:" + throwable.toString());
 
-                            handleAuthenticationFailure(peerAddress, throwable);
+                                handleAuthenticationFailure(peerAddress, throwable);
 
-                            log.info("We try another random seed node for authentication.");
-                            authenticateToRemainingReportedPeer();
-                        }
-                    });
+                                log.info("We try another random seed node for authentication.");
+                                authenticateToRemainingReportedPeer();
+                            }
+                        });
+                    } else {
+                        log.warn("We got the selected peer in the authenticationHandshakes. That should not happen. " +
+                                "We will try again after a short random pause.");
+                        UserThread.runAfterRandomDelay(() -> authenticateToRemainingReportedPeer(),
+                                1, 2, TimeUnit.SECONDS);
+                    }
                 } else {
-                    log.info("We don't have a reported peers available (maybe one is authenticating already). We will try again after a random pause.");
+                    log.info("We don't have a reported peers available (maybe one is authenticating already). " +
+                            "We will try again after a random pause.");
                     UserThread.runAfterRandomDelay(() -> authenticateToRemainingReportedPeer(),
                             10, 20, TimeUnit.SECONDS);
                 }
-            } else if (remainingSeedNodesAvailable()) {
+            } else if (!remainingSeedNodes.isEmpty()) {
                 authenticateToRemainingSeedNode();
             } else {
-                log.info("We don't have seed nodes or reported peers available. We will try again after a random pause.");
+                log.info("We don't have seed nodes or reported peers available. " +
+                        "We will try again after a random pause.");
                 UserThread.runAfterRandomDelay(() -> authenticateToRemainingReportedPeer(),
                         30, 40, TimeUnit.SECONDS);
             }
@@ -548,10 +565,6 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
     private boolean maxConnectionsForAuthReached() {
         return authenticatedPeers.size() >= MAX_CONNECTIONS_LOW_PRIORITY;
-    }
-
-    private boolean remainingSeedNodesAvailable() {
-        return !remainingSeedNodes.isEmpty();
     }
 
     private boolean reportedPeersAvailable() {
@@ -711,17 +724,32 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     }
 
     private Optional<ReportedPeer> getAndRemoveNotAuthenticatingReportedPeer() {
+        Log.traceCall();
         Optional<ReportedPeer> reportedPeer = Optional.empty();
         List<ReportedPeer> list = new ArrayList<>(reportedPeers);
-        if (!list.isEmpty()) {
-            do {
-                reportedPeer = Optional.of(getAndRemoveRandomReportedPeer(list));
-            }
-            while (!list.isEmpty() && authenticationHandshakes.containsKey(reportedPeer.get().address));
-        }
+        authenticationHandshakes.keySet().stream().forEach(e -> list.remove(new ReportedPeer(e)));
+        if (!list.isEmpty())
+            reportedPeer = Optional.of(getAndRemoveRandomReportedPeer(list));
+
         return reportedPeer;
     }
 
+    private Address getAndRemoveRandomAddress(List<Address> list) {
+        checkArgument(!list.isEmpty(), "List must not be empty");
+        return list.remove(new Random().nextInt(list.size()));
+    }
+
+
+    private Optional<Address> getAndRemoveNotAuthenticatingSeedNode() {
+        Log.traceCall();
+        Optional<Address> seedNode = Optional.empty();
+        List<Address> list = new ArrayList<>(remainingSeedNodes);
+        authenticationHandshakes.keySet().stream().forEach(e -> list.remove(e));
+        if (!list.isEmpty())
+            seedNode = Optional.of(getAndRemoveRandomAddress(list));
+
+        return seedNode;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils

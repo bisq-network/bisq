@@ -16,10 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -29,7 +26,7 @@ import java.util.function.Supplier;
 // seedNode: close connection
 // seedNode: send AuthenticationChallenge to client on a new connection to test if address is correct
 // client: authentication to seedNode done if nonce verification is ok
-// client: AuthenticationResponse to seedNode
+// client: AuthenticationFinalResponse to seedNode
 // seedNode: authentication to client done if nonce verification is ok
 
 public class AuthenticationHandshake implements MessageListener {
@@ -45,6 +42,7 @@ public class AuthenticationHandshake implements MessageListener {
     private long nonce = 0;
     private boolean stopped;
     private Optional<SettableFuture<Connection>> resultFutureOptional = Optional.empty();
+    private Timer timeoutTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -83,6 +81,10 @@ public class AuthenticationHandshake implements MessageListener {
                 // We are listening on all connections, so we need to filter out only our peer
                 if (((AuthenticationMessage) message).senderAddress.equals(peerAddress)) {
                     Log.traceCall(message.toString());
+
+                    if (timeoutTimer != null)
+                        timeoutTimer.cancel();
+
                     if (message instanceof AuthenticationChallenge) {
                         // Requesting peer
                         AuthenticationChallenge authenticationChallenge = (AuthenticationChallenge) message;
@@ -91,18 +93,18 @@ public class AuthenticationHandshake implements MessageListener {
                         connection.setPeerAddress(authenticationChallenge.senderAddress);
                         // We use the active connectionType if we started the authentication request to another peer
                         connection.setConnectionPriority(ConnectionPriority.ACTIVE);
-                        log.trace("Received authenticationResponse from " + peerAddress);
+                        log.trace("Received authenticationChallenge from " + peerAddress);
                         boolean verified = nonce != 0 && nonce == authenticationChallenge.requesterNonce;
                         if (verified) {
                             AuthenticationFinalResponse authenticationFinalResponse = new AuthenticationFinalResponse(myAddress,
                                     authenticationChallenge.responderNonce,
                                     new HashSet<>(authenticatedAndReportedPeersSupplier.get()));
                             SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, authenticationFinalResponse);
-                            log.trace("Sent GetPeersAuthRequest {} to {}", authenticationFinalResponse, peerAddress);
+                            log.trace("Sent AuthenticationFinalResponse {} to {}", authenticationFinalResponse, peerAddress);
                             Futures.addCallback(future, new FutureCallback<Connection>() {
                                 @Override
                                 public void onSuccess(Connection connection) {
-                                    log.trace("Successfully sent GetPeersAuthRequest to {}", peerAddress);
+                                    log.trace("Successfully sent AuthenticationFinalResponse to {}", peerAddress);
 
                                     log.info("AuthenticationComplete: Peer with address " + peerAddress
                                             + " authenticated (" + connection.getUid() + "). Took "
@@ -112,7 +114,7 @@ public class AuthenticationHandshake implements MessageListener {
 
                                 @Override
                                 public void onFailure(@NotNull Throwable throwable) {
-                                    log.info("GetPeersAuthRequest sending failed " + throwable.getMessage());
+                                    log.info("AuthenticationFinalResponse sending failed " + throwable.getMessage());
                                     failed(throwable);
                                 }
                             });
@@ -120,13 +122,13 @@ public class AuthenticationHandshake implements MessageListener {
                             // now we add the reported peers to our list 
                             addReportedPeersConsumer.accept(authenticationChallenge.reportedPeers, connection);
                         } else {
-                            log.warn("Verification of nonce failed. AuthenticationChallenge=" + authenticationChallenge + " / nonce=" + nonce);
+                            log.warn("Verification of nonce failed. nonce={} / peerAddress={} / authenticationFinalResponse={}", authenticationChallenge, nonce, peerAddress);
                             failed(new Exception("Verification of nonce failed. AuthenticationChallenge=" + authenticationChallenge + " / nonceMap=" + nonce));
                         }
                     } else if (message instanceof AuthenticationFinalResponse) {
                         // Responding peer
                         AuthenticationFinalResponse authenticationFinalResponse = (AuthenticationFinalResponse) message;
-                        log.trace("Received GetPeersAuthRequest from " + peerAddress + " at " + myAddress);
+                        log.trace("Received AuthenticationFinalResponse from " + peerAddress + " at " + myAddress);
                         boolean verified = nonce != 0 && nonce == authenticationFinalResponse.responderNonce;
                         if (verified) {
                             addReportedPeersConsumer.accept(authenticationFinalResponse.reportedPeers, connection);
@@ -135,10 +137,11 @@ public class AuthenticationHandshake implements MessageListener {
                                     + (System.currentTimeMillis() - startAuthTs) + " ms.");
                             completed(connection);
                         } else {
-                            log.warn("Verification of nonce failed. authenticationResponse=" + authenticationFinalResponse + " / nonce=" + nonce);
+                            log.warn("Verification of nonce failed. nonce={} / peerAddress={} / authenticationFinalResponse={}", authenticationFinalResponse, nonce, peerAddress);
                             failed(new Exception("Verification of nonce failed. getPeersMessage=" + authenticationFinalResponse + " / nonce=" + nonce));
                         }
                     } else if (message instanceof AuthenticationRejection) {
+                        // Any peer
                         failed(new AuthenticationException("Authentication to peer "
                                 + ((AuthenticationRejection) message).senderAddress
                                 + " rejected because of a race conditions."));
@@ -147,10 +150,10 @@ public class AuthenticationHandshake implements MessageListener {
             }
         } else {
             // TODO leave that for debugging for now, but remove it once the network is tested sufficiently
-            log.warn("AuthenticationHandshake (peerAddress={}) already shut down but still got onMessage called. " +
+            log.info("AuthenticationHandshake (peerAddress={}) already shut down but still got onMessage called. " +
                     "That can happen because of Thread mapping.", peerAddress);
-            log.warn("message={}", message);
-            log.warn("connection={}", connection);
+            log.debug("message={}", message);
+            log.debug("connection={}", connection);
             return;
         }
     }
@@ -188,6 +191,13 @@ public class AuthenticationHandshake implements MessageListener {
                 failed(throwable);
             }
         });
+
+        timeoutTimer = UserThread.runAfter(() -> {
+            failed(new AuthenticationException("Authentication to peer "
+                    + peerAddress
+                    + " failed because of a timeout. " +
+                    "We did not get an AuthenticationChallenge message responded after 30 sec."));
+        }, 30, TimeUnit.SECONDS);
 
         return resultFutureOptional.get();
     }
@@ -230,7 +240,7 @@ public class AuthenticationHandshake implements MessageListener {
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
                         public void onSuccess(Connection connection) {
-                            log.trace("AuthenticationResponse successfully sent");
+                            log.trace("AuthenticationChallenge successfully sent");
 
                             // We use passive connectionType for connections created from received authentication 
                             // requests from other peers 
@@ -239,14 +249,24 @@ public class AuthenticationHandshake implements MessageListener {
 
                         @Override
                         public void onFailure(@NotNull Throwable throwable) {
-                            log.warn("Failure at sending AuthenticationResponse. It might be that the peer went offline." + throwable.getMessage());
+                            log.warn("Failure at sending AuthenticationChallenge to {}. It might be that the peer went offline. Exception={}", peerAddress, throwable.getMessage());
                             failed(throwable);
                         }
                     });
+
+                    timeoutTimer = UserThread.runAfter(() -> {
+                        failed(new AuthenticationException("Authentication of peer "
+                                + peerAddress
+                                + " failed because of a timeout. " +
+                                "We did not get an AuthenticationFinalResponse message responded after 30 sec.\n" +
+                                ""));
+                    }, 30, TimeUnit.SECONDS);
+
                 } else {
-                    log.info("AuthenticationHandshake (peerAddress={}) already shut down before we could sent AuthenticationResponse. That might happen in rare cases.", peerAddress);
+                    log.info("AuthenticationHandshake (peerAddress={}) already shut down before we could sent " +
+                            "AuthenticationChallenge. That might happen in rare cases.", peerAddress);
                 }
-            }, 1000, TimeUnit.MILLISECONDS); // Don't set the delay too short as the CloseConnectionMessage might arrive too late at the peer
+            }, 2000, TimeUnit.MILLISECONDS); // Don't set the delay too short as the CloseConnectionMessage might arrive too late at the peer
         });
         return resultFutureOptional.get();
     }
@@ -308,5 +328,8 @@ public class AuthenticationHandshake implements MessageListener {
         Log.traceCall("peerAddress = " + peerAddress);
         networkNode.removeMessageListener(this);
         stopped = true;
+
+        if (timeoutTimer != null)
+            timeoutTimer.cancel();
     }
 }
