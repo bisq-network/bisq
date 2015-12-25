@@ -11,10 +11,7 @@ import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.ConnectionPriority;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
-import io.bitsquare.p2p.peers.messages.auth.AuthenticationChallenge;
-import io.bitsquare.p2p.peers.messages.auth.AuthenticationFinalResponse;
-import io.bitsquare.p2p.peers.messages.auth.AuthenticationMessage;
-import io.bitsquare.p2p.peers.messages.auth.AuthenticationRequest;
+import io.bitsquare.p2p.peers.messages.auth.*;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +45,6 @@ public class AuthenticationHandshake implements MessageListener {
     private long nonce = 0;
     private boolean stopped;
     private Optional<SettableFuture<Connection>> resultFutureOptional = Optional.empty();
-    private boolean ownRequestCanceled;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -78,24 +74,17 @@ public class AuthenticationHandshake implements MessageListener {
 
     @Override
     public void onMessage(Message message, Connection connection) {
-        if (stopped) {
-            log.warn("AuthenticationHandshake (peerAddress={}) already shut down but still got onMessage called. That must not happen.", peerAddress);
-            log.warn("message={}", message);
-            log.warn("connection={}", connection);
-            return;
-        }
-
-        if (message instanceof AuthenticationMessage) {
-            // We are listening on all connections, so we need to filter out only our peer
-            if (((AuthenticationMessage) message).senderAddress.equals(peerAddress)) {
-                Log.traceCall(message.toString());
-                if (message instanceof AuthenticationChallenge) {
-                    // Requesting peer
-                    if (ownRequestCanceled) {
-                        log.info("Our own request has been canceled because of a race condition. " +
-                                "\nWe ignore that message and go on with the protocol from the other peers request. " +
-                                "\nThat might happen in rare cases.");
-                    } else {
+        // called from other thread but mapped to user thread. That can cause async behaviour.
+        // Example: We got the AuthenticationHandshake shut down and the message listener 
+        // has been already removed but we still get the onMessage called as the Platform.runLater get called at the next
+        // cycle. So we need to protect a late call with the stopped flag.
+        if (!stopped) {
+            if (message instanceof AuthenticationMessage) {
+                // We are listening on all connections, so we need to filter out only our peer
+                if (((AuthenticationMessage) message).senderAddress.equals(peerAddress)) {
+                    Log.traceCall(message.toString());
+                    if (message instanceof AuthenticationChallenge) {
+                        // Requesting peer
                         AuthenticationChallenge authenticationChallenge = (AuthenticationChallenge) message;
                         // We need to set the address to the connection, otherwise we will not find the connection when sending
                         // the next message and we would create a new outbound connection instead using the inbound.
@@ -134,24 +123,35 @@ public class AuthenticationHandshake implements MessageListener {
                             log.warn("Verification of nonce failed. AuthenticationChallenge=" + authenticationChallenge + " / nonce=" + nonce);
                             failed(new Exception("Verification of nonce failed. AuthenticationChallenge=" + authenticationChallenge + " / nonceMap=" + nonce));
                         }
-                    }
-                } else if (message instanceof AuthenticationFinalResponse) {
-                    // Responding peer
-                    AuthenticationFinalResponse authenticationFinalResponse = (AuthenticationFinalResponse) message;
-                    log.trace("Received GetPeersAuthRequest from " + peerAddress + " at " + myAddress);
-                    boolean verified = nonce != 0 && nonce == authenticationFinalResponse.responderNonce;
-                    if (verified) {
-                        addReportedPeersConsumer.accept(authenticationFinalResponse.reportedPeers, connection);
-                        log.info("AuthenticationComplete: Peer with address " + peerAddress
-                                + " authenticated (" + connection.getUid() + "). Took "
-                                + (System.currentTimeMillis() - startAuthTs) + " ms.");
-                        completed(connection);
-                    } else {
-                        log.warn("Verification of nonce failed. authenticationResponse=" + authenticationFinalResponse + " / nonce=" + nonce);
-                        failed(new Exception("Verification of nonce failed. getPeersMessage=" + authenticationFinalResponse + " / nonce=" + nonce));
+                    } else if (message instanceof AuthenticationFinalResponse) {
+                        // Responding peer
+                        AuthenticationFinalResponse authenticationFinalResponse = (AuthenticationFinalResponse) message;
+                        log.trace("Received GetPeersAuthRequest from " + peerAddress + " at " + myAddress);
+                        boolean verified = nonce != 0 && nonce == authenticationFinalResponse.responderNonce;
+                        if (verified) {
+                            addReportedPeersConsumer.accept(authenticationFinalResponse.reportedPeers, connection);
+                            log.info("AuthenticationComplete: Peer with address " + peerAddress
+                                    + " authenticated (" + connection.getUid() + "). Took "
+                                    + (System.currentTimeMillis() - startAuthTs) + " ms.");
+                            completed(connection);
+                        } else {
+                            log.warn("Verification of nonce failed. authenticationResponse=" + authenticationFinalResponse + " / nonce=" + nonce);
+                            failed(new Exception("Verification of nonce failed. getPeersMessage=" + authenticationFinalResponse + " / nonce=" + nonce));
+                        }
+                    } else if (message instanceof AuthenticationRejection) {
+                        failed(new AuthenticationException("Authentication to peer "
+                                + ((AuthenticationRejection) message).senderAddress
+                                + " rejected because of a race conditions."));
                     }
                 }
             }
+        } else {
+            // TODO leave that for debugging for now, but remove it once the network is tested sufficiently
+            log.warn("AuthenticationHandshake (peerAddress={}) already shut down but still got onMessage called. " +
+                    "That can happen because of Thread mapping.", peerAddress);
+            log.warn("message={}", message);
+            log.warn("connection={}", connection);
+            return;
         }
     }
 
@@ -165,6 +165,7 @@ public class AuthenticationHandshake implements MessageListener {
         // Requesting peer
 
         if (stopped) {
+            // TODO leave that for debugging for now, but remove it once the network is tested sufficiently
             log.warn("AuthenticationHandshake (peerAddress={}) already shut down but still got requestAuthentication called. That must not happen.", peerAddress);
         }
 
@@ -202,6 +203,7 @@ public class AuthenticationHandshake implements MessageListener {
         // Responding peer
 
         if (stopped) {
+            // TODO leave that for debugging for now, but remove it once the network is tested sufficiently
             log.warn("AuthenticationHandshake (peerAddress={}) already shut down but still got respondToAuthenticationRequest called. That must not happen.", peerAddress);
             log.warn("authenticationRequest={}", authenticationRequest);
             log.warn("connection={}", connection);
@@ -251,14 +253,14 @@ public class AuthenticationHandshake implements MessageListener {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Cancel if we send reject message
+    // Cancel 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setOwnRequestCanceled() {
+    public void cancel(Address peerAddress) {
         Log.traceCall();
-        nonce = 0;
-        stopped = false;
-        ownRequestCanceled = true;
+        failed(new AuthenticationException("Authentication to peer "
+                + peerAddress
+                + " canceled because of a race conditions."));
     }
 
 

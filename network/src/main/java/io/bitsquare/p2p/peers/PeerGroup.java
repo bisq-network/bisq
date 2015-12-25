@@ -100,8 +100,9 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         log.debug("onDisconnect connection=" + connection + " / reason=" + reason);
 
         connection.getPeerAddress().ifPresent(peerAddress -> {
-            // We only remove it if we are nto in the authentication process
-            // Connection shut down is a step in the authentication process.
+            // We only remove the peer from the authenticationHandshakes and the reportedPeers 
+            // if we are not in the authentication process
+            // Connection shut down is an expected step in the authentication process.
             if (!authenticationHandshakes.containsKey(peerAddress))
                 removePeer(peerAddress);
         });
@@ -120,8 +121,6 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     public void onMessage(Message message, Connection connection) {
         if (message instanceof AuthenticationRequest)
             processAuthenticationRequest((AuthenticationRequest) message, connection);
-        else if (message instanceof AuthenticationRejection)
-            processAuthenticationRejection((AuthenticationRejection) message);
     }
 
 
@@ -208,65 +207,41 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                         (newReportedPeers, connection1) -> addToReportedPeers(newReportedPeers, connection1)
                 );
                 authenticationHandshakes.put(peerAddress, authenticationHandshake);
-                doRespondToAuthenticationRequest(message, connection, peerAddress, authenticationHandshake);
+                SettableFuture<Connection> future = authenticationHandshake.respondToAuthenticationRequest(message, connection);
+                Futures.addCallback(future, new FutureCallback<Connection>() {
+                            @Override
+                            public void onSuccess(Connection connection) {
+                                log.info("We got the peer ({}) who requested authentication authenticated.", peerAddress);
+                                addAuthenticatedPeer(connection, peerAddress);
+                            }
+
+                            @Override
+                            public void onFailure(@NotNull Throwable throwable) {
+                                log.info("Authentication with peer who requested authentication failed.\n" +
+                                        "That can happen if the peer went offline. " + throwable.getMessage());
+                                handleAuthenticationFailure(peerAddress, throwable);
+                            }
+                        }
+                );
             } else {
                 log.info("We got an incoming AuthenticationRequest but we have started ourselves already " +
-                        "an authentication handshake for that peerAddress ({})", peerAddress);
-                log.debug("We avoid such race conditions by rejecting the request if the hashCode of our address ({}) is " +
-                                "smaller then the hashCode of the peers address ({}). Result = {}", getMyAddress().hashCode(),
-                        message.senderAddress.hashCode(), (getMyAddress().hashCode() < peerAddress.hashCode()));
+                        "an authentication handshake for that peerAddress ({}).\n" +
+                        "We terminate such race conditions by rejecting and cancelling the authentication on both " +
+                        "peers.", peerAddress);
 
-                authenticationHandshake = authenticationHandshakes.get(peerAddress);
-
-                if (getMyAddress().hashCode() < peerAddress.hashCode()) {
-                    log.info("We reject the authentication request and keep our own request alive.");
-                    rejectAuthenticationRequest(peerAddress);
-                } else {
-                    log.info("We accept the authentication request but cancel our own request.");
-                    cancelOwnAuthenticationRequest(peerAddress);
-
-                    doRespondToAuthenticationRequest(message, connection, peerAddress, authenticationHandshake);
-                }
+                rejectAuthenticationRequest(peerAddress);
+                authenticationHandshakes.get(peerAddress).cancel(peerAddress);
+                authenticationHandshakes.remove(peerAddress);
             }
         } else {
-            log.info("We got an incoming AuthenticationRequest but we are already authenticated to that peer " +
-                    "with peerAddress {}.\n" +
-                    "That might happen in some race conditions. We reject the request.", peerAddress);
+            log.info("We got an incoming AuthenticationRequest but we are already authenticated to peer {}.\n" +
+                    "That should not happen. We reject the request.", peerAddress);
             rejectAuthenticationRequest(peerAddress);
-        }
-    }
 
-    private void processAuthenticationRejection(AuthenticationRejection message) {
-        Log.traceCall(message.toString());
-        Address peerAddress = message.senderAddress;
-        cancelOwnAuthenticationRequest(peerAddress);
-    }
-
-    private void doRespondToAuthenticationRequest(AuthenticationRequest message, Connection connection,
-                                                  Address peerAddress, AuthenticationHandshake authenticationHandshake) {
-        Log.traceCall(message.toString());
-        SettableFuture<Connection> future = authenticationHandshake.respondToAuthenticationRequest(message, connection);
-        Futures.addCallback(future, new FutureCallback<Connection>() {
-                    @Override
-                    public void onSuccess(Connection connection) {
-                        log.info("We got the peer ({}) who requested authentication authenticated.", peerAddress);
-                        addAuthenticatedPeer(connection, peerAddress);
-                    }
-
-                    @Override
-                    public void onFailure(@NotNull Throwable throwable) {
-                        log.info("Authentication with peer who requested authentication failed.\n" +
-                                "That can happen if the peer went offline. " + throwable.getMessage());
-                        removePeer(peerAddress);
-                    }
-                }
-        );
-    }
-
-    private void cancelOwnAuthenticationRequest(Address peerAddress) {
-        Log.traceCall();
-        if (authenticationHandshakes.containsKey(peerAddress)) {
-            authenticationHandshakes.get(peerAddress).setOwnRequestCanceled();
+            if (authenticationHandshakes.containsKey(peerAddress)) {
+                authenticationHandshakes.get(peerAddress).cancel(peerAddress);
+                authenticationHandshakes.remove(peerAddress);
+            }
         }
     }
 
@@ -309,7 +284,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                             "\nThat is expected if seed nodes are offline." +
                             "\nException:" + throwable.toString());
 
-                    removePeer(peerAddress);
+                    handleAuthenticationFailure(peerAddress, throwable);
 
                     if (remainingSeedNodesAvailable()) {
                         log.info("We try another random seed node for first authentication attempt.");
@@ -348,7 +323,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                                         "\nThat is expected if the seed node is offline." +
                                         "\nException:" + throwable.toString());
 
-                                removePeer(peerAddress);
+                                handleAuthenticationFailure(peerAddress, throwable);
 
                                 log.info("We try another random seed node for authentication.");
                                 authenticateToRemainingSeedNode();
@@ -384,8 +359,12 @@ public class PeerGroup implements MessageListener, ConnectionListener {
             if (reportedPeersAvailable()) {
                 if (getAndRemoveNotAuthenticatingReportedPeer().isPresent()) {
                     Address peerAddress = getAndRemoveNotAuthenticatingReportedPeer().get().address;
+                    if (authenticationHandshakes.containsKey(peerAddress))
+                        log.warn("getAndRemoveNotAuthenticatingReportedPeer delivered peer which is already in authenticationHandshakes");
                     removeFromReportedPeers(peerAddress);
                     log.info("We try to authenticate to peer {}.", peerAddress);
+                    if (authenticationHandshakes.containsKey(peerAddress))
+                        log.warn("peer already in authenticationHandshakes");
                     authenticate(peerAddress, new FutureCallback<Connection>() {
                         @Override
                         public void onSuccess(Connection connection) {
@@ -402,7 +381,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                                     "\nThat is expected if the peer is offline." +
                                     "\nException:" + throwable.toString());
 
-                            removePeer(peerAddress);
+                            handleAuthenticationFailure(peerAddress, throwable);
 
                             log.info("We try another random seed node for authentication.");
                             authenticateToRemainingReportedPeer();
@@ -480,7 +459,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                     log.error("Authentication to " + peerAddress + " for sending a private message failed at authenticateToDirectMessagePeer." +
                             "\nSeems that the peer is offline." +
                             "\nException:" + throwable.toString());
-                    removePeer(peerAddress);
+                    handleAuthenticationFailure(peerAddress, throwable);
                     if (faultHandler != null)
                         faultHandler.run();
                 }
@@ -517,8 +496,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         connection.setPeerAddress(peerAddress);
         connection.setAuthenticated();
 
-        if (authenticationHandshakes.containsKey(peerAddress))
-            authenticationHandshakes.remove(peerAddress);
+        removeFromAuthenticationHandshakes(peerAddress);
 
         log.info("\n\n############################################################\n" +
                 "We are authenticated to:" +
@@ -537,22 +515,35 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         authenticationListeners.stream().forEach(e -> e.onPeerAuthenticated(peerAddress, connection));
     }
 
+    void handleAuthenticationFailure(@Nullable Address peerAddress, Throwable throwable) {
+        if (throwable instanceof AuthenticationException)
+            removeFromAuthenticationHandshakes(peerAddress);
+        else
+            removePeer(peerAddress);
+    }
+
     void removePeer(@Nullable Address peerAddress) {
         Log.traceCall("peerAddress=" + peerAddress);
         if (peerAddress != null) {
-            if (authenticationHandshakes.containsKey(peerAddress))
-                authenticationHandshakes.remove(peerAddress);
-
+            removeFromAuthenticationHandshakes(peerAddress);
             removeFromReportedPeers(peerAddress);
-
-            Peer disconnectedPeer = authenticatedPeers.remove(peerAddress);
-            if (disconnectedPeer != null)
-                printAuthenticatedPeers();
+            removeFromAuthenticatedPeers(peerAddress);
         }
     }
 
     private void removeFromReportedPeers(Address peerAddress) {
         reportedPeers.remove(new ReportedPeer(peerAddress));
+    }
+
+    private void removeFromAuthenticationHandshakes(@Nullable Address peerAddress) {
+        if (authenticationHandshakes.containsKey(peerAddress))
+            authenticationHandshakes.remove(peerAddress);
+    }
+
+    private void removeFromAuthenticatedPeers(@Nullable Address peerAddress) {
+        if (authenticatedPeers.containsKey(peerAddress))
+            authenticatedPeers.remove(peerAddress);
+        printAuthenticatedPeers();
     }
 
     private boolean maxConnectionsForAuthReached() {

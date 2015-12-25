@@ -258,7 +258,7 @@ public class Connection implements MessageListener {
                     Thread.currentThread().setName("Connection:SendCloseConnectionMessage-" + this.uid);
                     Log.traceCall("sendCloseConnectionMessage");
                     try {
-                        sendMessage(new CloseConnectionMessage(peerAddressOptional));
+                        sendMessage(new CloseConnectionMessage(peerAddressOptional.isPresent() ? peerAddressOptional.get() : null));
                         setStopFlags();
 
                         Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
@@ -411,7 +411,6 @@ public class Connection implements MessageListener {
 
         public void handleConnectionException(Exception e) {
             Log.traceCall(e.toString());
-            log.debug("connection=" + this);
             if (e instanceof SocketException) {
                 if (socket.isClosed())
                     shutDownReason = ConnectionListener.Reason.SOCKET_CLOSED;
@@ -419,13 +418,13 @@ public class Connection implements MessageListener {
                     shutDownReason = ConnectionListener.Reason.RESET;
             } else if (e instanceof SocketTimeoutException || e instanceof TimeoutException) {
                 shutDownReason = ConnectionListener.Reason.TIMEOUT;
-                log.warn("TimeoutException at connection with port " + socket.getLocalPort());
+                log.warn("TimeoutException at socket " + socket.toString());
                 log.debug("connection={}" + this);
             } else if (e instanceof EOFException) {
                 shutDownReason = ConnectionListener.Reason.PEER_DISCONNECTED;
             } else {
                 shutDownReason = ConnectionListener.Reason.UNKNOWN;
-                log.warn("Exception at connection with port " + socket.getLocalPort());
+                log.warn("Exception at socket " + socket.toString());
                 log.debug("connection={}" + this);
                 e.printStackTrace();
             }
@@ -559,7 +558,7 @@ public class Connection implements MessageListener {
                         sharedSpace.updateLastActivityDate();
                         if (message instanceof CloseConnectionMessage) {
                             log.info("Close connection message received from peer {}",
-                                    ((CloseConnectionMessage) message).peerAddressOptional);
+                                    ((CloseConnectionMessage) message).peerAddress);
                             stopped = true;
                             sharedSpace.shutDown(false);
                         } else if (!stopped) {
