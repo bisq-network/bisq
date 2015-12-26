@@ -193,11 +193,11 @@ public class Connection implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Nullable
-    public synchronized Address getPeerAddress1() {
+    public synchronized Address getPeerAddress() {
         return peerAddressOptional.isPresent() ? peerAddressOptional.get() : null;
     }
 
-    public synchronized Optional<Address> getPeerAddress() {
+    public synchronized Optional<Address> getPeerAddressOptional() {
         return peerAddressOptional;
     }
 
@@ -258,7 +258,7 @@ public class Connection implements MessageListener {
                     Thread.currentThread().setName("Connection:SendCloseConnectionMessage-" + this.uid);
                     Log.traceCall("sendCloseConnectionMessage");
                     try {
-                        sendMessage(new CloseConnectionMessage(peerAddressOptional.isPresent() ? peerAddressOptional.get() : null));
+                        sendMessage(new CloseConnectionMessage());
                         setStopFlags();
 
                         Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
@@ -557,8 +557,7 @@ public class Connection implements MessageListener {
 
                         sharedSpace.updateLastActivityDate();
                         if (message instanceof CloseConnectionMessage) {
-                            log.info("Close connection message received from peer {}",
-                                    ((CloseConnectionMessage) message).peerAddress);
+                            log.info("CloseConnectionMessage received on connection {}", sharedSpace.connection);
                             stopped = true;
                             sharedSpace.shutDown(false);
                         } else if (!stopped) {

@@ -216,7 +216,9 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     public void addSetupListener(SetupListener setupListener) {
         Log.traceCall();
-        setupListeners.add(setupListener);
+        boolean isNewEntry = setupListeners.add(setupListener);
+        if (!isNewEntry)
+            log.warn("Try to add a setupListener which was already added.");
     }
 
 
@@ -262,21 +264,24 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     public void addConnectionListener(ConnectionListener connectionListener) {
         Log.traceCall();
 
-        boolean newEntry = connectionListeners.add(connectionListener);
-        if (!newEntry)
+        boolean isNewEntry = connectionListeners.add(connectionListener);
+        if (!isNewEntry)
             log.warn("Try to add a connectionListener which was already added.\nconnectionListener={}\nconnectionListeners={}"
                     , connectionListener, connectionListeners);
     }
 
     public void removeConnectionListener(ConnectionListener connectionListener) {
         Log.traceCall();
-        connectionListeners.remove(connectionListener);
+        boolean contained = connectionListeners.remove(connectionListener);
+        if (!contained)
+            log.debug("Try to remove a connectionListener which was never added. " +
+                    "That might happen because of async behaviour of CopyOnWriteArraySet");
     }
 
     public void addMessageListener(MessageListener messageListener) {
         Log.traceCall();
-        boolean newEntry = messageListeners.add(messageListener);
-        if (!newEntry)
+        boolean isNewEntry = messageListeners.add(messageListener);
+        if (!isNewEntry)
             log.warn("Try to add a messageListener which was already added.");
     }
 
@@ -284,7 +289,8 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         Log.traceCall();
         boolean contained = messageListeners.remove(messageListener);
         if (!contained)
-            log.warn("Try to remove a messageListener which was never added.");
+            log.debug("Try to remove a messageListener which was never added. " +
+                    "That might happen because of async behaviour of CopyOnWriteArraySet");
     }
 
 
@@ -330,13 +336,13 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     private Optional<Connection> lookupOutboundConnection(Address peerAddress) {
         // Log.traceCall("search for " + peerAddress.toString() + " / outBoundConnections " + outBoundConnections);
         return outBoundConnections.stream()
-                .filter(e -> e.getPeerAddress().isPresent() && peerAddress.equals(e.getPeerAddress().get())).findAny();
+                .filter(e -> e.getPeerAddressOptional().isPresent() && peerAddress.equals(e.getPeerAddressOptional().get())).findAny();
     }
 
     private Optional<Connection> lookupInboundConnection(Address peerAddress) {
         // Log.traceCall("search for " + peerAddress.toString() + " / inBoundConnections " + inBoundConnections);
         return inBoundConnections.stream()
-                .filter(e -> e.getPeerAddress().isPresent() && peerAddress.equals(e.getPeerAddress().get())).findAny();
+                .filter(e -> e.getPeerAddressOptional().isPresent() && peerAddress.equals(e.getPeerAddressOptional().get())).findAny();
     }
 
     abstract protected Socket createSocket(Address peerAddress) throws IOException;

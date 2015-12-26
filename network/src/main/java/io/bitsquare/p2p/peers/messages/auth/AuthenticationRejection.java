@@ -14,7 +14,6 @@ public final class AuthenticationRejection extends AuthenticationMessage {
     @Override
     public String toString() {
         return "AuthenticationReject{" +
-                "address=" + senderAddress +
                 super.toString() + "} ";
     }
 }

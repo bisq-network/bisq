@@ -54,9 +54,9 @@ public class AuthenticationHandshake implements MessageListener {
                                    Address peerAddress,
                                    Supplier<Set<ReportedPeer>> authenticatedAndReportedPeersSupplier,
                                    BiConsumer<HashSet<ReportedPeer>, Connection> addReportedPeersConsumer) {
+        Log.traceCall("peerAddress " + peerAddress);
         this.authenticatedAndReportedPeersSupplier = authenticatedAndReportedPeersSupplier;
         this.addReportedPeersConsumer = addReportedPeersConsumer;
-        Log.traceCall("peerAddress " + peerAddress);
         this.networkNode = networkNode;
         this.myAddress = myAddress;
         this.peerAddress = peerAddress;
@@ -122,7 +122,7 @@ public class AuthenticationHandshake implements MessageListener {
                             // now we add the reported peers to our list 
                             addReportedPeersConsumer.accept(authenticationChallenge.reportedPeers, connection);
                         } else {
-                            log.warn("Verification of nonce failed. nonce={} / peerAddress={} / authenticationFinalResponse={}", authenticationChallenge, nonce, peerAddress);
+                            log.warn("Verification of nonce failed. nonce={} / peerAddress={} / authenticationChallenge={}", nonce, peerAddress, authenticationChallenge);
                             failed(new Exception("Verification of nonce failed. AuthenticationChallenge=" + authenticationChallenge + " / nonceMap=" + nonce));
                         }
                     } else if (message instanceof AuthenticationFinalResponse) {
@@ -137,7 +137,7 @@ public class AuthenticationHandshake implements MessageListener {
                                     + (System.currentTimeMillis() - startAuthTs) + " ms.");
                             completed(connection);
                         } else {
-                            log.warn("Verification of nonce failed. nonce={} / peerAddress={} / authenticationFinalResponse={}", authenticationFinalResponse, nonce, peerAddress);
+                            log.warn("Verification of nonce failed. nonce={} / peerAddress={} / authenticationFinalResponse={}", nonce, peerAddress, authenticationFinalResponse);
                             failed(new Exception("Verification of nonce failed. getPeersMessage=" + authenticationFinalResponse + " / nonce=" + nonce));
                         }
                     } else if (message instanceof AuthenticationRejection) {
@@ -326,10 +326,11 @@ public class AuthenticationHandshake implements MessageListener {
 
     private void shutDown() {
         Log.traceCall("peerAddress = " + peerAddress);
-        networkNode.removeMessageListener(this);
         stopped = true;
 
         if (timeoutTimer != null)
             timeoutTimer.cancel();
+
+        networkNode.removeMessageListener(this);
     }
 }

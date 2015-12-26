@@ -176,7 +176,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         // we remove ourselves from the list of seed nodes
         seedNodeAddresses.remove(mySeedNodeAddress);
-
+        peerGroup.setIsSeedNode(true);
+        requestDataManager.setIsSeedNode(true);
+        
         start(listener);
     }
 
@@ -287,7 +289,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     @Override
     public void onDisconnect(Reason reason, Connection connection) {
         Log.traceCall();
-        connection.getPeerAddress().ifPresent(peerAddresses -> authenticatedPeerAddresses.remove(peerAddresses));
+        connection.getPeerAddressOptional().ifPresent(peerAddresses -> authenticatedPeerAddresses.remove(peerAddresses));
         numAuthenticatedPeers.set(authenticatedPeerAddresses.size());
     }
 
@@ -336,7 +338,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         connection.setConnectionPriority(ConnectionPriority.DIRECT_MSG);
 
                         log.info("Received SealedAndSignedMessage and decrypted it: " + decryptedMsgWithPubKey);
-                        connection.getPeerAddress().ifPresent(peerAddresses ->
+                        connection.getPeerAddressOptional().ifPresent(peerAddresses ->
                                 decryptedMailListeners.stream().forEach(
                                         e -> e.onMailMessage(decryptedMsgWithPubKey, peerAddresses)));
                     } else {
@@ -374,14 +376,18 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                                          SendMailMessageListener sendMailMessageListener) {
         Log.traceCall();
         checkNotNull(peerAddress, "PeerAddress must not be null (sendEncryptedMailMessage)");
-        checkAuthentication();
-
-        if (!authenticatedPeerAddresses.contains(peerAddress))
-            peerGroup.authenticateToDirectMessagePeer(peerAddress,
-                    () -> doSendEncryptedMailMessage(peerAddress, pubKeyRing, message, sendMailMessageListener),
-                    () -> sendMailMessageListener.onFault());
-        else
-            doSendEncryptedMailMessage(peerAddress, pubKeyRing, message, sendMailMessageListener);
+        try {
+            checkAuthentication();
+            if (!authenticatedPeerAddresses.contains(peerAddress))
+                peerGroup.authenticateToDirectMessagePeer(peerAddress,
+                        () -> doSendEncryptedMailMessage(peerAddress, pubKeyRing, message, sendMailMessageListener),
+                        () -> sendMailMessageListener.onFault());
+            else
+                doSendEncryptedMailMessage(peerAddress, pubKeyRing, message, sendMailMessageListener);
+        } catch (AuthenticationException e) {
+            log.error(e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 
     private void doSendEncryptedMailMessage(Address peerAddress, PubKeyRing pubKeyRing, MailMessage message,
@@ -458,17 +464,22 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         checkNotNull(peerAddress, "PeerAddress must not be null (sendEncryptedMailboxMessage)");
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         checkArgument(!optionalKeyRing.get().getPubKeyRing().equals(peersPubKeyRing), "We got own keyring instead of that from peer");
-        checkAuthentication();
-
-        if (authenticatedPeerAddresses.contains(peerAddress)) {
-            trySendEncryptedMailboxMessage(peerAddress, peersPubKeyRing, message, sendMailboxMessageListener);
-        } else {
-            peerGroup.authenticateToDirectMessagePeer(peerAddress,
-                    () -> trySendEncryptedMailboxMessage(peerAddress, peersPubKeyRing, message, sendMailboxMessageListener),
-                    () -> {
-                        log.info("We cannot authenticate to peer. Peer might be offline. We will store message in mailbox.");
-                        trySendEncryptedMailboxMessage(peerAddress, peersPubKeyRing, message, sendMailboxMessageListener);
-                    });
+        try {
+            checkAuthentication();
+            if (authenticatedPeerAddresses.contains(peerAddress)) {
+                trySendEncryptedMailboxMessage(peerAddress, peersPubKeyRing, message, sendMailboxMessageListener);
+            } else {
+                peerGroup.authenticateToDirectMessagePeer(peerAddress,
+                        () -> trySendEncryptedMailboxMessage(peerAddress, peersPubKeyRing, message, sendMailboxMessageListener),
+                        () -> {
+                            log.info("We cannot authenticate to peer. Peer might be offline. We will store message in mailbox.");
+                            trySendEncryptedMailboxMessage(peerAddress, peersPubKeyRing, message, sendMailboxMessageListener);
+                        });
+            }
+        } catch (AuthenticationException e) {
+            log.error(e.getMessage());
+            //TODO check if boolean return type can avoid throwing an exception
+            throw new RuntimeException(e);
         }
     }
 
@@ -513,13 +524,17 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private void addMailboxData(ExpirableMailboxPayload expirableMailboxPayload, PublicKey receiversPublicKey) {
         Log.traceCall();
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
-        checkAuthentication();
         try {
+            checkAuthentication();
             ProtectedMailboxData protectedMailboxData = dataStorage.getMailboxDataWithSignedSeqNr(
                     expirableMailboxPayload,
                     optionalKeyRing.get().getSignatureKeyPair(),
                     receiversPublicKey);
             dataStorage.add(protectedMailboxData, networkNode.getAddress());
+        } catch (AuthenticationException e) {
+            log.error(e.getMessage());
+            //TODO check if boolean return type can avoid throwing an exception
+            throw new RuntimeException(e);
         } catch (CryptoException e) {
             log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
         }
@@ -528,30 +543,36 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void removeEntryFromMailbox(DecryptedMsgWithPubKey decryptedMsgWithPubKey) {
         Log.traceCall();
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
-        checkAuthentication();
-        if (mailboxMap.containsKey(decryptedMsgWithPubKey)) {
-            ProtectedMailboxData mailboxData = mailboxMap.get(decryptedMsgWithPubKey);
-            if (mailboxData != null && mailboxData.expirablePayload instanceof ExpirableMailboxPayload) {
-                ExpirableMailboxPayload expirableMailboxPayload = (ExpirableMailboxPayload) mailboxData.expirablePayload;
-                PublicKey receiversPubKey = mailboxData.receiversPubKey;
-                checkArgument(receiversPubKey.equals(optionalKeyRing.get().getSignatureKeyPair().getPublic()),
-                        "receiversPubKey is not matching with our key. That must not happen.");
-                try {
-                    ProtectedMailboxData protectedMailboxData = dataStorage.getMailboxDataWithSignedSeqNr(
-                            expirableMailboxPayload,
-                            optionalKeyRing.get().getSignatureKeyPair(),
-                            receiversPubKey);
-                    dataStorage.removeMailboxData(protectedMailboxData, networkNode.getAddress());
-                } catch (CryptoException e) {
-                    log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
-                }
+        try {
+            checkAuthentication();
+            if (mailboxMap.containsKey(decryptedMsgWithPubKey)) {
+                ProtectedMailboxData mailboxData = mailboxMap.get(decryptedMsgWithPubKey);
+                if (mailboxData != null && mailboxData.expirablePayload instanceof ExpirableMailboxPayload) {
+                    ExpirableMailboxPayload expirableMailboxPayload = (ExpirableMailboxPayload) mailboxData.expirablePayload;
+                    PublicKey receiversPubKey = mailboxData.receiversPubKey;
+                    checkArgument(receiversPubKey.equals(optionalKeyRing.get().getSignatureKeyPair().getPublic()),
+                            "receiversPubKey is not matching with our key. That must not happen.");
+                    try {
+                        ProtectedMailboxData protectedMailboxData = dataStorage.getMailboxDataWithSignedSeqNr(
+                                expirableMailboxPayload,
+                                optionalKeyRing.get().getSignatureKeyPair(),
+                                receiversPubKey);
+                        dataStorage.removeMailboxData(protectedMailboxData, networkNode.getAddress());
+                    } catch (CryptoException e) {
+                        log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
+                    }
 
-                mailboxMap.remove(decryptedMsgWithPubKey);
-                log.trace("Removed successfully decryptedMsgWithPubKey.");
+                    mailboxMap.remove(decryptedMsgWithPubKey);
+                    log.trace("Removed successfully decryptedMsgWithPubKey.");
+                }
+            } else {
+                log.warn("decryptedMsgWithPubKey not found in mailboxMap. That should never happen." +
+                        "\ndecryptedMsgWithPubKey={}\nmailboxMap={}", decryptedMsgWithPubKey, mailboxMap);
             }
-        } else {
-            log.warn("decryptedMsgWithPubKey not found in mailboxMap. That should never happen." +
-                    "\ndecryptedMsgWithPubKey={}\nmailboxMap={}", decryptedMsgWithPubKey, mailboxMap);
+        } catch (AuthenticationException e) {
+            log.error(e.getMessage());
+            //TODO check if boolean return type can avoid throwing an exception
+            throw new RuntimeException(e);
         }
     }
 
@@ -573,13 +594,16 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private boolean doAddData(ExpirablePayload expirablePayload, boolean rePublish) {
         Log.traceCall();
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
-        checkAuthentication();
         try {
+            checkAuthentication();
             ProtectedData protectedData = dataStorage.getDataWithSignedSeqNr(expirablePayload, optionalKeyRing.get().getSignatureKeyPair());
             if (rePublish)
                 return dataStorage.rePublish(protectedData, networkNode.getAddress());
             else
                 return dataStorage.add(protectedData, networkNode.getAddress());
+        } catch (AuthenticationException e) {
+            log.error(e.getMessage());
+            return false;
         } catch (CryptoException e) {
             log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
             return false;
@@ -589,10 +613,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public boolean removeData(ExpirablePayload expirablePayload) {
         Log.traceCall();
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
-        checkAuthentication();
         try {
+            checkAuthentication();
             ProtectedData protectedData = dataStorage.getDataWithSignedSeqNr(expirablePayload, optionalKeyRing.get().getSignatureKeyPair());
             return dataStorage.remove(protectedData, networkNode.getAddress());
+        } catch (AuthenticationException e) {
+            log.error(e.getMessage());
+            return false;
         } catch (CryptoException e) {
             log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
             return false;
@@ -681,7 +708,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
     }
 
-    private void checkAuthentication() {
+    private void checkAuthentication() throws AuthenticationException {
         Log.traceCall();
         if (authenticatedPeerAddresses.isEmpty())
             throw new AuthenticationException("You must be authenticated before adding data to the P2P network.");

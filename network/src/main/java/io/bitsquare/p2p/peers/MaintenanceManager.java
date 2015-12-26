@@ -51,7 +51,7 @@ public class MaintenanceManager implements MessageListener {
 
     public void shutDown() {
         Log.traceCall();
-        if (sendPingTimer != null)
+        if (sendPingTimer != null) 
             sendPingTimer.cancel();
 
         networkNode.removeMessageListener(this);
@@ -77,11 +77,11 @@ public class MaintenanceManager implements MessageListener {
                     @Override
                     public void onFailure(@NotNull Throwable throwable) {
                         log.info("PongMessage sending failed " + throwable.getMessage());
-                        connection.getPeerAddress().ifPresent(peerAddress -> removePeerConsumer.accept(peerAddress));
+                        connection.getPeerAddressOptional().ifPresent(peerAddress -> removePeerConsumer.accept(peerAddress));
                     }
                 });
             } else if (message instanceof PongMessage) {
-                connection.getPeerAddress().ifPresent(peerAddress -> {
+                connection.getPeerAddressOptional().ifPresent(peerAddress -> {
                     Peer peer = authenticatedPeersSupplier.get().get(peerAddress);
                     if (peer != null) {
                         if (((PongMessage) message).nonce != peer.pingNonce) {

@@ -44,7 +44,6 @@ public class P2PDataStorage implements MessageListener {
     private HashMap<ByteArray, Integer> sequenceNumberMap = new HashMap<>();
     private final Storage<HashMap> storage;
     private final Timer timer = new Timer();
-    private volatile boolean shutDownInProgress;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +115,7 @@ public class P2PDataStorage implements MessageListener {
             Log.traceCall(message.toString());
             if (connection.isAuthenticated()) {
                 log.trace("ProtectedExpirableDataMessage received " + message + " on connection " + connection);
-                connection.getPeerAddress().ifPresent(peerAddress -> {
+                connection.getPeerAddressOptional().ifPresent(peerAddress -> {
                     if (message instanceof AddDataMessage) {
                         add(((AddDataMessage) message).data, peerAddress);
                     } else if (message instanceof RemoveDataMessage) {
@@ -140,11 +139,7 @@ public class P2PDataStorage implements MessageListener {
 
     public void shutDown() {
         Log.traceCall();
-        if (!shutDownInProgress) {
-            shutDownInProgress = true;
-            timer.cancel();
-            peerGroup.shutDown();
-        }
+        timer.cancel();
     }
 
     public boolean add(ProtectedData protectedData, @Nullable Address sender) {

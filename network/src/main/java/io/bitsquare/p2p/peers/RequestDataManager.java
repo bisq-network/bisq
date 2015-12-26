@@ -28,6 +28,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class RequestDataManager implements MessageListener, AuthenticationListener {
     private static final Logger log = LoggerFactory.getLogger(RequestDataManager.class);
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -46,6 +47,7 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
 
     private Optional<Address> optionalConnectedSeedNodeAddress = Optional.empty();
     private Optional<Collection<Address>> optionalSeedNodeAddresses = Optional.empty();
+    private boolean isSeedNode;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -71,6 +73,10 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setIsSeedNode(boolean isSeedNode) {
+        this.isSeedNode = isSeedNode;
+    }
 
     public void requestData(Collection<Address> seedNodeAddresses) {
         if (!optionalSeedNodeAddresses.isPresent())
@@ -141,7 +147,7 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
             HashSet<ProtectedData> set = dataResponse.set;
             // we keep that connection open as the bootstrapping peer will use that for the authentication
             // as we are not authenticated yet the data adding will not be broadcasted 
-            connection.getPeerAddress().ifPresent(peerAddress -> set.stream().forEach(e -> dataStorage.add(e, peerAddress)));
+            connection.getPeerAddressOptional().ifPresent(peerAddress -> set.stream().forEach(e -> dataStorage.add(e, peerAddress)));
             optionalConnectedSeedNodeAddress.ifPresent(connectedSeedNodeAddress -> listener.onDataReceived(connectedSeedNodeAddress));
         }
     }
@@ -153,15 +159,22 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
 
     @Override
     public void onPeerAuthenticated(Address peerAddress, Connection connection) {
+        if (isSeedNode && dataStorage.getMap().isEmpty()) {
+            // We are the seed node and entering the network we request the data from the peer
+            UserThread.runAfterRandomDelay(()
+                    -> requestDataFromAuthenticatedSeedNode(peerAddress, connection), 2, 5, TimeUnit.SECONDS);
+        }
+
         optionalConnectedSeedNodeAddress.ifPresent(connectedSeedNodeAddress -> {
             // We only request the data again if we have initiated the authentication (ConnectionPriority.ACTIVE)
             // We delay a bit to be sure that the authentication state is applied to all threads
-            if (connection.getConnectionPriority() == ConnectionPriority.ACTIVE && connectedSeedNodeAddress.equals(peerAddress))
+            if (connectedSeedNodeAddress.equals(peerAddress) && connection.getConnectionPriority() == ConnectionPriority.ACTIVE) {
+                // We are the node (can be a seed node as well) which requested the authentication
                 UserThread.runAfter(()
                         -> requestDataFromAuthenticatedSeedNode(peerAddress, connection), 100, TimeUnit.MILLISECONDS);
+            }
         });
     }
-
 
     // 5. Step after authentication to first seed node we request again the data
     private void requestDataFromAuthenticatedSeedNode(Address peerAddress, Connection connection) {
