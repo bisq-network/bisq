@@ -122,8 +122,14 @@ public class AuthenticationHandshake implements MessageListener {
                             // now we add the reported peers to our list 
                             addReportedPeersConsumer.accept(authenticationChallenge.reportedPeers, connection);
                         } else {
-                            log.warn("Verification of nonce failed. nonce={} / peerAddress={} / authenticationChallenge={}", nonce, peerAddress, authenticationChallenge);
-                            failed(new Exception("Verification of nonce failed. AuthenticationChallenge=" + authenticationChallenge + " / nonceMap=" + nonce));
+                            // We don't call failed as it might be that we get an old authenticationChallenge from a 
+                            // previously timed out request
+                            // We simply ignore the authenticationChallenge if the nonce is not matching to avoid that 
+                            // the current authentication turn gets terminated as well
+                            log.warn("Verification of nonce failed. Maybe we got an old authenticationChallenge " +
+                                    "from a timed out request" +
+                                    "\nnonce={} / peerAddress={} / authenticationChallenge={}", nonce, peerAddress, authenticationChallenge);
+                            //failed(new AuthenticationException("Verification of nonce failed. AuthenticationChallenge=" + authenticationChallenge + " / nonceMap=" + nonce));
                         }
                     } else if (message instanceof AuthenticationFinalResponse) {
                         // Responding peer
@@ -137,8 +143,15 @@ public class AuthenticationHandshake implements MessageListener {
                                     + (System.currentTimeMillis() - startAuthTs) + " ms.");
                             completed(connection);
                         } else {
+                            // We don't call failed as it might be that we get an old authenticationFinalResponse from a 
+                            // previously timed out request
+                            // We simply ignore the authenticationFinalResponse if the nonce is not matching to avoid that 
+                            // the current authentication turn gets terminated as well
+                            log.warn("Verification of nonce failed. Maybe we got an old authenticationFinalResponse " +
+                                    "from a timed out request" +
+                                    "\nnonce={} / peerAddress={} / authenticationChallenge={}", nonce, peerAddress, authenticationFinalResponse);
                             log.warn("Verification of nonce failed. nonce={} / peerAddress={} / authenticationFinalResponse={}", nonce, peerAddress, authenticationFinalResponse);
-                            failed(new Exception("Verification of nonce failed. getPeersMessage=" + authenticationFinalResponse + " / nonce=" + nonce));
+                            //failed(new AuthenticationException("Verification of nonce failed. getPeersMessage=" + authenticationFinalResponse + " / nonce=" + nonce));
                         }
                     } else if (message instanceof AuthenticationRejection) {
                         // Any peer
