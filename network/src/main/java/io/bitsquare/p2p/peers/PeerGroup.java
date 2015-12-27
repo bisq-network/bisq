@@ -407,16 +407,18 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         connectToSeedNodeTimer = UserThread.runAfterRandomDelay(() -> {
             connectToSeedNode();
             startConnectToSeedNodeTimer();
-        }, 1, 2, TimeUnit.MINUTES);
+        }, 10, 12, TimeUnit.MINUTES);
     }
 
     private void connectToSeedNode() {
         // remove enough connections first
-        checkIfConnectedPeersExceeds(MAX_CONNECTIONS_NORMAL_PRIORITY - 3);
-        UserThread.runAfter(() -> {
-            resetRemainingSeedNodes();
-            authenticateToRemainingSeedNode();
-        }, 500, TimeUnit.MILLISECONDS);
+        if (getMyAddress() != null) {
+            checkIfConnectedPeersExceeds(MAX_CONNECTIONS_NORMAL_PRIORITY - 3);
+            UserThread.runAfter(() -> {
+                resetRemainingSeedNodes();
+                authenticateToRemainingSeedNode();
+            }, 500, TimeUnit.MILLISECONDS);
+        }
     }
 
 
@@ -792,6 +794,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
         }
     }
 
+    @Nullable
     Address getMyAddress() {
         return networkNode.getAddress();
     }
