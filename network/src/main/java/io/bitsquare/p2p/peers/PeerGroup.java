@@ -37,8 +37,8 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
     public static void setMaxConnectionsLowPriority(int maxConnectionsLowPriority) {
         MAX_CONNECTIONS_LOW_PRIORITY = maxConnectionsLowPriority;
-        MAX_CONNECTIONS_NORMAL_PRIORITY = MAX_CONNECTIONS_LOW_PRIORITY + 4;
-        MAX_CONNECTIONS_HIGH_PRIORITY = MAX_CONNECTIONS_NORMAL_PRIORITY + 4;
+        MAX_CONNECTIONS_NORMAL_PRIORITY = MAX_CONNECTIONS_LOW_PRIORITY + 6;
+        MAX_CONNECTIONS_HIGH_PRIORITY = MAX_CONNECTIONS_NORMAL_PRIORITY + 6;
     }
 
     static {
@@ -273,11 +273,16 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     // Authentication to seed node
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void authenticateToSeedNode(Address peerAddress, Set<Address> seedNodeAddresses) {
-        Log.traceCall();
+    public void setSeedNodeAddresses(Set<Address> seedNodeAddresses) {
         seedNodeAddressesOptional = Optional.of(seedNodeAddresses);
+    }
+
+    public void authenticateToSeedNode(Address peerAddress) {
+        Log.traceCall();
+        checkArgument(seedNodeAddressesOptional.isPresent(),
+                "seedNodeAddresses must be set before calling authenticateToSeedNode");
         remainingSeedNodes.remove(peerAddress);
-        remainingSeedNodes.addAll(seedNodeAddresses);
+        remainingSeedNodes.addAll(seedNodeAddressesOptional.get());
         authenticateToFirstSeedNode(peerAddress);
     }
 
@@ -797,7 +802,6 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     }
 
     private Optional<ReportedPeer> getAndRemoveNotAuthenticatingReportedPeer() {
-        Log.traceCall();
         Optional<ReportedPeer> reportedPeer = Optional.empty();
         List<ReportedPeer> list = new ArrayList<>(reportedPeers);
         authenticationHandshakes.keySet().stream().forEach(e -> list.remove(new ReportedPeer(e)));
@@ -815,7 +819,6 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
 
     private Optional<Address> getAndRemoveNotAuthenticatingSeedNode() {
-        Log.traceCall();
         Optional<Address> seedNode = Optional.empty();
         authenticationHandshakes.keySet().stream().forEach(e -> remainingSeedNodes.remove(e));
         authenticatedPeers.keySet().stream().forEach(e -> remainingSeedNodes.remove(e));

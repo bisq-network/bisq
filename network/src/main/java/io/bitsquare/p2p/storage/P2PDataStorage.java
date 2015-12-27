@@ -165,6 +165,13 @@ public class P2PDataStorage implements MessageListener {
 
         if (result) {
             map.put(hashOfPayload, protectedData);
+
+            // Republished data have a larger sequence number. We set the rePublish flag to enable broadcasting 
+            // even we had the data with the old seq nr. already
+            if (sequenceNumberMap.containsKey(hashOfPayload) &&
+                    protectedData.sequenceNumber > sequenceNumberMap.get(hashOfPayload))
+                rePublish = true;
+
             sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
             storage.queueUpForSave(sequenceNumberMap);
 
