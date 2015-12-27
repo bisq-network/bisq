@@ -370,9 +370,6 @@ public class PeerGroup implements MessageListener, ConnectionListener {
                     if (remainingSeedNodes.isEmpty() && !isSeedNode) {
                         UserThread.runAfterRandomDelay(() -> authenticateToRemainingReportedPeer(),
                                 10, 20, TimeUnit.SECONDS);
-                    } else {
-                        UserThread.runAfterRandomDelay(() -> authenticateToRemainingSeedNode(),
-                                30, 60, TimeUnit.SECONDS);
                     }
                 } else if (!isSeedNode) {
                     UserThread.runAfterRandomDelay(() -> authenticateToRemainingReportedPeer(),
