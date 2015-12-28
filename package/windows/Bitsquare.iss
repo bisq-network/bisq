@@ -7,7 +7,7 @@ AppVersion=0.3.2.2
 AppVerName=Bitsquare
 AppPublisher=Bitsquare
 AppComments=Bitsquare
-AppCopyright=Copyright (C) 2014
+AppCopyright=Copyright (C) 2016
 AppPublisherURL=https://bitsquare.io
 AppSupportURL=https://bitsquare.io
 ;AppUpdatesURL=http://java.com/
@@ -40,7 +40,6 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "Bitsquare\Bitsquare.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Bitsquare\runtime\jre\bin\plugin2\msvcr100.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Bitsquare\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
