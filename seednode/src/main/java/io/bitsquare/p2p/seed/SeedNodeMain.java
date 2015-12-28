@@ -3,7 +3,6 @@ package io.bitsquare.p2p.seed;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.common.UserThread;
-import org.bitcoinj.crypto.DRMWorkaround;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,8 +41,6 @@ public class SeedNodeMain {
         };
         Thread.setDefaultUncaughtExceptionHandler(handler);
         Thread.currentThread().setUncaughtExceptionHandler(handler);
-
-        DRMWorkaround.maybeDisableExportControls();
 
         Security.addProvider(new BouncyCastleProvider());
 

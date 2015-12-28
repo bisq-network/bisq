@@ -25,8 +25,7 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.funds.reserved.ReservedView;
 import io.bitsquare.gui.main.funds.transactions.TransactionsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
-import io.bitsquare.gui.popups.FirstTimeWebViewPopup;
-import io.bitsquare.gui.popups.WebViewPopup;
+import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.user.PopupId;
 import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
@@ -86,8 +85,14 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
             navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class);
 
         String key = PopupId.TRADE_WALLET;
+        String text = "Bitsquare does not use a single application wallet, but dedicated wallets for every trade.\n" +
+                "Funding of the wallet will be done when needed, for instance when you create or take an offer.\n" +
+                "Withdrawing funds can be done after a trade is completed.\n" +
+                "Dedicated wallets help protect user privacy and prevent leaking information of previous trades to other\n" +
+                "traders.\n\n" +
+                "For more background information please see the Bitsquare FAQ on our web page.";
         if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE)
-            new FirstTimeWebViewPopup(preferences).id(key).url(WebViewPopup.getLocalUrl(key)).show();
+            new Popup().information(text).dontShowAgainId(key, preferences).show();
     }
 
     @Override

@@ -33,7 +33,9 @@ import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.components.BalanceTextField;
 import io.bitsquare.gui.components.BalanceWithConfirmationTextField;
 import io.bitsquare.gui.components.TxIdTextField;
-import io.bitsquare.gui.popups.*;
+import io.bitsquare.gui.popups.DisplayAlertMessagePopup;
+import io.bitsquare.gui.popups.Popup;
+import io.bitsquare.gui.popups.WalletPasswordPopup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
@@ -349,9 +351,23 @@ class MainViewModel implements ViewModel {
 
 
         // tac
+        String text = "1. This software is experimental and provided \"as is\", without warranty of any kind, " +
+                "express or implied, including but not limited to the warranties of " +
+                "merchantability, fitness for a particular purpose and non-infringement.\n" +
+                "In no event shall the authors or copyright holders be liable for any claim, damages or other " +
+                "liability, whether in an action of contract, tort or otherwise, " +
+                "arising from, out of or in connection with the software or the use or other dealings in the software.\n\n" +
+                "2. The user is responsible to use the software in compliance with local laws.\n\n" +
+                "3. The user confirms that he has read and agreed to the rules defined in our " +
+                "Wiki regrading the dispute process.";
         if (!preferences.getTacAccepted() && !BitsquareApp.DEV_MODE)
-            new TacPopup().url(WebViewPopup.getLocalUrl("tac")).onAgree(() -> preferences.setTacAccepted(true)).show();
-
+            new Popup().headLine("USER AGREEMENT")
+                    .message(text)
+                    .actionButtonText("I agree")
+                    .closeButtonText("Quit")
+                    .onAction(() -> preferences.setTacAccepted(true))
+                    .onClose(() -> BitsquareApp.shutDownHandler.run())
+                    .show();
 
         // update nr of peers in footer
         p2PService.getNumAuthenticatedPeers().addListener((observable, oldValue, newValue) -> updateP2pNetworkInfo());

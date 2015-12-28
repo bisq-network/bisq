@@ -260,6 +260,7 @@ public class Encryption {
             return keyPairGenerator.generateKey();
         } catch (Throwable e) {
             e.printStackTrace();
+            log.error(e.getMessage());
             throw new RuntimeException("Couldn't generate key");
         }
     }

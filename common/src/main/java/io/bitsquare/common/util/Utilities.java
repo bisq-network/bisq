@@ -25,7 +25,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.*;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
-import javafx.scene.web.WebEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -133,29 +132,6 @@ public class Utilities {
         long total = runtime.totalMemory() / 1024 / 1024;
         long used = total - free;
         log.info("System load (nr. threads/used memory (MB)): " + Thread.activeCount() + "/" + used);
-    }
-
-    // Opens links with http and _blank in default web browser instead of webView
-    // WebView has not feature to open link in default browser, so we use the hack recommended here:
-    // https://stackoverflow.com/questions/15555510/javafx-stop-opening-url-in-webview-open-in-browser-instead
-    public static void setupWebViewPopupHandler(WebEngine webEngine) {
-        webEngine.setCreatePopupHandler(
-                config -> {
-                    // grab the last hyperlink that has :hover pseudoclass
-                    Object result = webEngine
-                            .executeScript(
-                                    "var list = document.querySelectorAll( ':hover' );"
-                                            + "for (i=list.length-1; i>-1; i--) "
-                                            + "{ if ( list.item(i).getAttribute('href') ) "
-                                            + "{ list.item(i).getAttribute('href'); break; } }");
-
-                    if (result instanceof String && ((String) result).contains("http")) {
-                        openWebPage((String) result);
-                        return null;
-                    } else {
-                        return webEngine;
-                    }
-                });
     }
 
     public static void openMail(String to, String subject, String body) {

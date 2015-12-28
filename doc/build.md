@@ -107,6 +107,12 @@ Here are example program arguments for using regtest and using the Tor network:
     $ java -jar gui/target/shaded.jar --bitcoin.network=regtest node.port=4442 --devTest=true --app.name=Bitsquare-Tor-Regtest-Bob   
    
 
+### 6. Enable unlimited Strength for cryptographic keys
+
+Bitsquare uses 256 bit length keys which are still not permitted by default.  
+Get around that ridiculous fact by adding the missing [jars from Oracle](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html).
+
+
 Problems?
 ---------
 

@@ -53,7 +53,6 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import org.bitcoinj.crypto.DRMWorkaround;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.controlsfx.dialog.Dialogs;
 import org.reactfx.EventStreams;
@@ -118,10 +117,7 @@ public class BitsquareApp extends Application {
         Thread.setDefaultUncaughtExceptionHandler(handler);
         Thread.currentThread().setUncaughtExceptionHandler(handler);
 
-        DRMWorkaround.maybeDisableExportControls();
-
         Security.addProvider(new BouncyCastleProvider());
-
 
         BitsquareApp.primaryStage = primaryStage;
 
