@@ -356,8 +356,8 @@ public class Popup {
     }
 
     protected void setTruncatedMessage() {
-        if (message != null && message.length() > 650)
-            truncatedMessage = message.substring(0, 650) + "...";
+        if (message != null && message.length() > 700)
+            truncatedMessage = message.substring(0, 700) + "...";
         else
             truncatedMessage = message;
     }
