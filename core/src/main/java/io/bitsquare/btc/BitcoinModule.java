@@ -45,7 +45,6 @@ public class BitcoinModule extends AppModule {
 
         File walletDir = new File(env.getRequiredProperty(WalletService.DIR_KEY));
         bind(File.class).annotatedWith(named(WalletService.DIR_KEY)).toInstance(walletDir);
-        bindConstant().annotatedWith(named(WalletService.PREFIX_KEY)).to(env.getRequiredProperty(WalletService.PREFIX_KEY));
 
         bind(AddressEntryList.class).in(Singleton.class);
         bind(TradeWalletService.class).in(Singleton.class);

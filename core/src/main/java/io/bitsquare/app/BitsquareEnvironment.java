@@ -187,7 +187,6 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 setProperty(UserAgent.VERSION_KEY, Version.VERSION);
 
                 setProperty(WalletService.DIR_KEY, btcNetworkDir);
-                setProperty(WalletService.PREFIX_KEY, appName);
 
                 setProperty(Storage.DIR_KEY, Paths.get(btcNetworkDir, "db").toString());
                 setProperty(KeyStorage.DIR_KEY, Paths.get(btcNetworkDir, "keys").toString());

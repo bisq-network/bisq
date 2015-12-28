@@ -32,6 +32,7 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
@@ -128,8 +129,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         }
 
         // we add hidden emergency shortcut to open support ticket
-        root.getScene().setOnKeyReleased(keyEvent -> {
-            if (new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
+        root.getScene().addEventHandler(KeyEvent.KEY_RELEASED, event -> {
+            if (new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN).match(event))
                 new OpenEmergencyTicketPopup().onOpenTicket(() -> model.dataModel.onOpenSupportTicket()).show();
         });
     }

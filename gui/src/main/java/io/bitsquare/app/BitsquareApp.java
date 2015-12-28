@@ -48,6 +48,7 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
@@ -156,7 +157,7 @@ public class BitsquareApp extends Application {
                 else
                     stop();
             });
-            scene.setOnKeyReleased(keyEvent -> {
+            scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
                 if (new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     if (BitsquareApp.IS_RELEASE_VERSION)
                         stop(); //systemTray.hideStage(); TODO issues with some linux systems (https://github.com/bitsquare/bitsquare/issues/350) 

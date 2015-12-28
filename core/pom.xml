@@ -6,7 +6,7 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>io.bitsquare</groupId>
-        <version>0.3.2.2</version>
+        <version>0.3.2.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>core</artifactId>

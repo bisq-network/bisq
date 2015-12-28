@@ -83,7 +83,6 @@ public class WalletService {
     private final AddressEntryList addressEntryList;
     private final NetworkParameters params;
     private final File walletDir;
-    private final String walletPrefix;
     private final UserAgent userAgent;
 
     private WalletAppKit walletAppKit;
@@ -99,7 +98,7 @@ public class WalletService {
 
     @Inject
     public WalletService(RegTestHost regTestHost, TradeWalletService tradeWalletService, AddressEntryList addressEntryList, UserAgent userAgent,
-                         @Named(DIR_KEY) File walletDir, @Named(PREFIX_KEY) String walletPrefix, Preferences preferences) {
+                         @Named(DIR_KEY) File walletDir, Preferences preferences) {
         this.regTestHost = regTestHost;
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
@@ -110,7 +109,6 @@ public class WalletService {
                 "Mainnet is not allowed to be used at that stage of development");
         
         this.walletDir = new File(walletDir, "bitcoin");
-        this.walletPrefix = walletPrefix;
         this.userAgent = userAgent;
     }
 
@@ -136,7 +134,7 @@ public class WalletService {
         );
 
         // If seed is non-null it means we are restoring from backup.
-        walletAppKit = new WalletAppKit(params, walletDir, walletPrefix) {
+        walletAppKit = new WalletAppKit(params, walletDir, "Bitsquare") {
             @Override
             protected void onSetupCompleted() {
                 // Don't make the user wait for confirmations for now, as the intention is they're sending it
