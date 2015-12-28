@@ -91,7 +91,7 @@ class MainViewModel implements ViewModel {
     final StringProperty blockchainSyncIconId = new SimpleStringProperty();
     final StringProperty availableBalance = new SimpleStringProperty();
     final StringProperty lockedBalance = new SimpleStringProperty();
-    private final StringProperty numBTCPeers = new SimpleStringProperty();
+    private final StringProperty numBTCPeersAsString = new SimpleStringProperty();
 
     // P2P network
     final StringProperty splashP2PNetworkInfo = new SimpleStringProperty();
@@ -116,6 +116,7 @@ class MainViewModel implements ViewModel {
     private Timer lostP2PConnectionTimeoutTimer;
     private MonadicBinding<Boolean> allServicesDone;
     private User user;
+    private int numBTCPeers = 0;
     //private Timer lostBTCConnectionTimeoutTimer;
 
 
@@ -249,7 +250,11 @@ class MainViewModel implements ViewModel {
 
         walletService.numPeersProperty().addListener((observable, oldValue, newValue) -> {
             log.debug("Bitcoin peers " + newValue);
-            numBTCPeers.set(String.valueOf(newValue) + " peers");
+            numBTCPeers = (int) newValue;
+            numBTCPeersAsString.set(String.valueOf(newValue) + " peers");
+            if (blockchainSyncProgress.get() >= 1 && numBTCPeers > 1)
+                blockchainSyncInfoFooter.set("Bitcoin network: Peers: " + numBTCPeers);
+
          /*   if ((int) newValue < 1) {
                 if (lostBTCConnectionTimeoutTimer != null)
                     lostBTCConnectionTimeoutTimer.cancel();
@@ -364,7 +369,7 @@ class MainViewModel implements ViewModel {
             new Popup().headLine("USER AGREEMENT")
                     .message(text)
                     .actionButtonText("I agree")
-                    .closeButtonText("Quit")
+                    .closeButtonText("I disagree and quit")
                     .onAction(() -> preferences.setTacAccepted(true))
                     .onClose(() -> BitsquareApp.shutDownHandler.run())
                     .show();
@@ -577,20 +582,25 @@ class MainViewModel implements ViewModel {
 
     private void setBitcoinNetworkSyncProgress(double value) {
         blockchainSyncProgress.set(value);
+        String nrOfPeers = "";
+        if (numBTCPeers > 1)
+            nrOfPeers = ", Peers: " + numBTCPeers;
+
         if (value >= 1) {
             stopBlockchainSyncTimeout();
 
-            blockchainSyncInfo.set("Blockchain synchronization complete.");
+            blockchainSyncInfo.set("Blockchain synchronization complete." + nrOfPeers);
             blockchainSyncIconId.set("image-connection-synced");
         } else if (value > 0.0) {
             // We stop as soon the download started the timeout
             stopBlockchainSyncTimeout();
 
-            blockchainSyncInfo.set("Synchronizing blockchain: " + formatter.formatToPercent(value));
-            blockchainSyncInfoFooter.set("Synchronizing: " + formatter.formatToPercent(value));
+            blockchainSyncInfo.set("Synchronizing blockchain: " + formatter.formatToPercent(value) + nrOfPeers);
+            blockchainSyncInfoFooter.set("Synchronizing: " + formatter.formatToPercent(value) + nrOfPeers);
+
         } else {
-            blockchainSyncInfo.set("Connecting to the bitcoin network...");
-            blockchainSyncInfoFooter.set("Connecting...");
+            blockchainSyncInfo.set("Connecting to the bitcoin network..." + nrOfPeers);
+            blockchainSyncInfoFooter.set("Connecting..." + nrOfPeers);
         }
     }
 

@@ -35,7 +35,6 @@ import java.nio.file.Paths;
 import static io.bitsquare.app.BitsquareEnvironment.*;
 import static java.util.Arrays.asList;
 
-//TODO clean up 
 public class BitsquareAppMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(BitsquareAppMain.class);
 

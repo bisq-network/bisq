@@ -12,7 +12,7 @@ For the impatient
 What follows is explained in detail in the sections below, but for those who know their way around Java, git and Maven, here are the instructions in a nutshell:
 
     $ javac -version
-    javac 1.8.0_20       # must be 1.8.0_20 or better
+    javac 1.8.0_40       # must be 1.8.0_40 or better
 
     $ git clone https://github.com/bitsquare/bitsquare.git
     $ cd bitsquare
@@ -27,14 +27,14 @@ To build the binary check out the build scripts under the package directory.
 Prerequisites
 -------------
 
-The only prerequisite for building Bitsquare is installing the Java Development Kit (JDK), version 8u20 or better (as well as maven and git).
+The only prerequisite for building Bitsquare is installing the Java Development Kit (JDK), version 8u40 or better (as well as maven and git).
 
 To check the version of Java you currently have installed:
 
     $ javac -version
-    javac 1.8.0_20
+    javac 1.8.0_40
 
-If `javac` is not found, or your version is anything less than `1.8.0_20`, then you'll need to [download and install the latest JDK]( http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) for your platform.
+If `javac` is not found, or your version is anything less than `1.8.0_40`, then you'll need to [download and install the latest JDK]( http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) for your platform.
 
 > _**TIP:** Here are [instructions](http://www.webupd8.org/2014/03/how-to-install-oracle-java-8-in-debian.html) for installing the JDK via `apt` on Debian/Ubuntu systems._
 
@@ -111,6 +111,8 @@ Here are example program arguments for using regtest and using the Tor network:
 
 Bitsquare uses 256 bit length keys which are still not permitted by default.  
 Get around that ridiculous fact by adding the missing [jars from Oracle](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html).
+Copy the BountyCastle provider jar file (bcprov-jdk15on-1.53.jar) from you local maven repository (/home/.m2) to $JavaHome/jre/lib/ext (to avoid getting 
+a "JCE cannot authenticate the provider BC" exception).
 
 
 Problems?
