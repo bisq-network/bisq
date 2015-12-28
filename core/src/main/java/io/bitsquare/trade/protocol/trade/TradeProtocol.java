@@ -17,7 +17,6 @@
 
 package io.bitsquare.trade.protocol.trade;
 
-import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
@@ -36,7 +35,6 @@ import org.slf4j.LoggerFactory;
 
 import java.security.PublicKey;
 import java.time.Duration;
-import java.util.Optional;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
@@ -69,15 +67,16 @@ public abstract class TradeProtocol {
                     }
                 }
             } else {
+                //TODO not clear anymore what case is handled here
                 // it might be that we received a msg from the arbitrator, we don't handle that here but we don't want to log an error
-                Optional<Arbitrator> arbitratorOptional = processModel.getArbitratorManager().getArbitratorsObservableMap().values().stream()
+                /*Optional<Arbitrator> arbitratorOptional = processModel.getArbitratorManager().getArbitratorsObservableMap().values().stream()
                         .filter(e -> e.getArbitratorAddress().equals(trade.getArbitratorAddress())).findFirst();
                 PubKeyRing arbitratorPubKeyRing = null;
                 if (arbitratorOptional.isPresent())
                     arbitratorPubKeyRing = arbitratorOptional.get().getPubKeyRing();
 
                 if ((arbitratorPubKeyRing != null && !signaturePubKey.equals(arbitratorPubKeyRing.getSignaturePubKey())))
-                    log.error("Signature used in seal message does not match the one stored with that trade for the trading peer or arbitrator.");
+                    log.error("Signature used in seal message does not match the one stored with that trade for the trading peer or arbitrator.");*/
             }
         };
         processModel.getP2PService().addDecryptedMailListener(decryptedMailListener);

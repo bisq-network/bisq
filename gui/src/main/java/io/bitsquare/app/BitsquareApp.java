@@ -73,7 +73,7 @@ import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
 public class BitsquareApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BitsquareApp.class);
 
-    public static final boolean DEV_MODE = true;
+    public static final boolean DEV_MODE = false;
     public static final boolean IS_RELEASE_VERSION = !DEV_MODE && true;
 
     private static Environment env;
@@ -155,14 +155,14 @@ public class BitsquareApp extends Application {
             primaryStage.setOnCloseRequest(e -> {
                 e.consume();
                 if (BitsquareApp.IS_RELEASE_VERSION)
-                    systemTray.hideStage();
+                    stop(); // systemTray.hideStage(); TODO issues with some linux systems (https://github.com/bitsquare/bitsquare/issues/350) 
                 else
                     stop();
             });
             scene.setOnKeyReleased(keyEvent -> {
                 if (new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     if (BitsquareApp.IS_RELEASE_VERSION)
-                        systemTray.hideStage();
+                        stop(); //systemTray.hideStage(); TODO issues with some linux systems (https://github.com/bitsquare/bitsquare/issues/350) 
                     else
                         stop();
                 } else if (new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {

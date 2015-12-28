@@ -8,12 +8,15 @@ set -e
 # Edit versions
 fullVersion=0.3.2.2
 
+mvn clean package -DskipTests -Dmaven.javadoc.skip=true
+cp gui/target/shaded.jar gui/deploy/Bitsquare.jar
+
 # Copy jar file from mac build (1.jar from processed folder) to linux box 
 # Note: fakeroot needs to be installed on linux
 $JAVA_HOME/bin/javapackager \
     -deploy \
     -BappVersion=$fullVersion \
-    -Bcategory=Finance \
+    -Bcategory=Office,Finance \
     -Bemail=team@bitsquare.io \
     -BlicenseType=GPLv3 \
     -BlicenseFile=LICENSE \
