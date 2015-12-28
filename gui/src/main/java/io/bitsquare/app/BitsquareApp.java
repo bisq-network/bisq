@@ -80,6 +80,7 @@ public class BitsquareApp extends Application {
 
     private BitsquareAppModule bitsquareAppModule;
     private Injector injector;
+    private boolean popupOpened;
 
     public static Stage getPrimaryStage() {
         return primaryStage;
@@ -227,11 +228,14 @@ public class BitsquareApp extends Application {
         try {
             throwable.printStackTrace();
             try {
-                String message = throwable.getMessage();
-                if (message != null)
-                    new Popup().error(message).show();
-                else
-                    new Popup().error(throwable.toString()).show();
+                if (!popupOpened) {
+                    String message = throwable.getMessage();
+                    popupOpened = true;
+                    if (message != null)
+                        new Popup().error(message).onClose(() -> popupOpened = false).show();
+                    else
+                        new Popup().error(throwable.toString()).onClose(() -> popupOpened = false).show();
+                }
             } catch (Throwable throwable3) {
                 log.error("Error at displaying Throwable.");
                 throwable3.printStackTrace();
