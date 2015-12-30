@@ -944,9 +944,12 @@ public class TradeWalletService {
         transaction.addInput(p2SHMultiSigOutput);
         transaction.addOutput(buyerPayoutAmount, new Address(params, buyerAddressString));
         transaction.addOutput(sellerPayoutAmount, new Address(params, sellerAddressString));
-        // When using lockTime we need to set sequenceNumber to 0 
-        transaction.getInputs().stream().forEach(i -> i.setSequenceNumber(0));
-        transaction.setLockTime(lockTime);
+        if (lockTime != 0) {
+            log.info("We use a locktime of " + lockTime);
+            // When using lockTime we need to set sequenceNumber to 0 
+            transaction.getInputs().stream().forEach(i -> i.setSequenceNumber(0));
+            transaction.setLockTime(lockTime);
+        }
         return transaction;
     }
 

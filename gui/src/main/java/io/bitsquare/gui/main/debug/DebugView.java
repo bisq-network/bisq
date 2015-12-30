@@ -39,7 +39,6 @@ import io.bitsquare.trade.protocol.trade.tasks.seller.*;
 import io.bitsquare.trade.protocol.trade.tasks.shared.CommitPayoutTx;
 import io.bitsquare.trade.protocol.trade.tasks.shared.InitWaitPeriodForOpenDispute;
 import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
-import io.bitsquare.trade.protocol.trade.tasks.shared.SignPayoutTx;
 import io.bitsquare.trade.protocol.trade.tasks.taker.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

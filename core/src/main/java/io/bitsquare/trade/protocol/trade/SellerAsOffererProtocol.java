@@ -25,14 +25,10 @@ import io.bitsquare.trade.SellerAsOffererTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.*;
 import io.bitsquare.trade.protocol.trade.tasks.offerer.*;
-import io.bitsquare.trade.protocol.trade.tasks.seller.CreateAndSignDepositTxAsSeller;
-import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessFiatTransferStartedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.ProcessPayoutTxFinalizedMessage;
-import io.bitsquare.trade.protocol.trade.tasks.seller.SendFinalizePayoutTxRequest;
+import io.bitsquare.trade.protocol.trade.tasks.seller.*;
 import io.bitsquare.trade.protocol.trade.tasks.shared.CommitPayoutTx;
 import io.bitsquare.trade.protocol.trade.tasks.shared.InitWaitPeriodForOpenDispute;
 import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
-import io.bitsquare.trade.protocol.trade.tasks.shared.SignPayoutTx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

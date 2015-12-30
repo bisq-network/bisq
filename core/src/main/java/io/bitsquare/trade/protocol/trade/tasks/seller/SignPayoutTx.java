@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.tasks.shared;
+package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.taskrunner.TaskRunner;
@@ -42,7 +42,13 @@ public class SignPayoutTx extends TradeTask {
             Coin sellerPayoutAmount = FeePolicy.SECURITY_DEPOSIT;
             Coin buyerPayoutAmount = sellerPayoutAmount.add(trade.getTradeAmount());
 
-            long lockTimeAsBlockHeight = processModel.getTradeWalletService().getLastBlockSeenHeight() + trade.getOffer().getPaymentMethod().getLockTime();
+            // We use the sellers LastBlockSeenHeight, which might be different to the buyers one.
+            // If lock time is 0 we set lockTimeAsBlockHeight to -1 to mark it as "not set". 
+            // In the tradewallet we apply the locktime only if it is set, otherwise we use the default sequence number
+            long lockTime = trade.getOffer().getPaymentMethod().getLockTime();
+            long lockTimeAsBlockHeight = 0;
+            if (lockTime > 0)
+                lockTimeAsBlockHeight = processModel.getTradeWalletService().getLastBlockSeenHeight() + lockTime;
             trade.setLockTimeAsBlockHeight(lockTimeAsBlockHeight);
 
             byte[] payoutTxSignature = processModel.getTradeWalletService().sellerSignsPayoutTx(

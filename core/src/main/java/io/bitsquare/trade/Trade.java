@@ -165,7 +165,6 @@ abstract public class Trade implements Tradable, Model, Serializable {
     private long lockTimeAsBlockHeight;
     private int openDisputeTimeAsBlockHeight;
     private int checkPaymentTimeAsBlockHeight;
-    private String arbitratorId;
     private Address arbitratorAddress;
     private String takerPaymentAccountId;
     private boolean halfTradePeriodReachedWarningDisplayed;

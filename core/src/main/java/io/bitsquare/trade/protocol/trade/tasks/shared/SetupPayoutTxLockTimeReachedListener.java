@@ -43,7 +43,7 @@ public class SetupPayoutTxLockTimeReachedListener extends TradeTask {
         try {
             runInterceptHook();
             log.debug("ChainHeight/LockTime: {} / {}", processModel.getTradeWalletService().getBestChainHeight(), trade.getLockTimeAsBlockHeight());
-            if (processModel.getTradeWalletService().getBestChainHeight() >= trade.getLockTimeAsBlockHeight()) {
+            if (trade.getLockTimeAsBlockHeight() == 0 || processModel.getTradeWalletService().getBestChainHeight() >= trade.getLockTimeAsBlockHeight()) {
                 broadcastTx();
             } else {
                 ListenableFuture<StoredBlock> blockHeightFuture = processModel.getTradeWalletService().getBlockHeightFuture(trade.getPayoutTx());
