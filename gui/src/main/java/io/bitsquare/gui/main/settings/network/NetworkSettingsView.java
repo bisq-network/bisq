@@ -176,6 +176,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                     preferences.setBitcoinNetwork(netWorkComboBox.getSelectionModel().getSelectedItem());
                     UserThread.runAfter(() -> BitsquareApp.shutDownHandler.run(), 1);
                 })
+                .actionButtonText("Shut down")
+                .closeButtonText("Cancel")
                 .onClose(() -> netWorkComboBox.getSelectionModel().select(preferences.getBitcoinNetwork()))
                 .show();
     }

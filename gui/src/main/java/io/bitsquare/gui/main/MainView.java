@@ -350,17 +350,16 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         blockchainSyncIndicator.progressProperty().bind(model.blockchainSyncProgress);
 
         Label bitcoinNetworkLabel = new Label();
-        bitcoinNetworkLabel.setId("footer-bitcoin-network-label");
-        bitcoinNetworkLabel.setText(model.bitcoinNetworkAsString);
+        bitcoinNetworkLabel.setText("/ Bitcoin network: " + model.bitcoinNetworkAsString);
 
         model.walletServiceErrorMsg.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 bitcoinNetworkLabel.setId("splash-error-state-msg");
-                bitcoinNetworkLabel.setText("Not connected");
+                bitcoinNetworkLabel.setText("/ Bitcoin network: Not connected");
                 openBTCConnectionErrorPopup(newValue);
             } else {
                 bitcoinNetworkLabel.setId("footer-bitcoin-network-label");
-                bitcoinNetworkLabel.setText(model.bitcoinNetworkAsString);
+                bitcoinNetworkLabel.setText("/ Bitcoin network: " + model.bitcoinNetworkAsString);
             }
         });
 
@@ -368,8 +367,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             if ((double) newValue >= 1) {
                 blockchainSyncIndicator.setVisible(false);
                 blockchainSyncIndicator.setManaged(false);
-                blockchainSyncLabel.setVisible(false);
-                blockchainSyncLabel.setManaged(false);
             }
         });
 

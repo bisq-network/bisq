@@ -51,8 +51,10 @@ public class AccountSettingsView extends ActivatableViewAndModel {
     private MenuItem password, seedWords, backup, paymentAccount, arbitratorSelection;
     private Navigation.Listener listener;
 
-    @FXML private VBox leftVBox;
-    @FXML private AnchorPane content;
+    @FXML
+    private VBox leftVBox;
+    @FXML
+    private AnchorPane content;
 
     @Inject
     private AccountSettingsView(CachingViewLoader viewLoader, Navigation navigation) {
@@ -77,7 +79,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         arbitratorSelection = new MenuItem(navigation, toggleGroup, "Arbitrator selection", ArbitratorSelectionView.class, AwesomeIcon.USER_MD);
         // registration = new MenuItem(navigation, toggleGroup, "Renew your account", RegistrationView.class, AwesomeIcon.BRIEFCASE);
 
-        leftVBox.getChildren().addAll(password, seedWords, backup, paymentAccount, arbitratorSelection);
+        leftVBox.getChildren().addAll(arbitratorSelection, paymentAccount, password, seedWords, backup);
     }
 
     @Override
@@ -85,9 +87,8 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         navigation.addListener(listener);
         ViewPath viewPath = navigation.getCurrentPath();
         if (viewPath.size() == 3 && viewPath.indexOf(AccountSettingsView.class) == 2) {
-            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, PasswordView.class);
-        }
-        else if (viewPath.size() == 4 && viewPath.indexOf(AccountSettingsView.class) == 2) {
+            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
+        } else if (viewPath.size() == 4 && viewPath.indexOf(AccountSettingsView.class) == 2) {
             loadView(viewPath.get(3));
         }
     }
@@ -148,8 +149,7 @@ class MenuItem extends ToggleButton {
             if (newValue) {
                 setId("account-settings-item-background-selected");
                 icon.setTextFill(Colors.BLUE);
-            }
-            else {
+            } else {
                 setId("account-settings-item-background-active");
                 icon.setTextFill(Paint.valueOf("#333"));
             }
@@ -159,8 +159,7 @@ class MenuItem extends ToggleButton {
             if (newValue) {
                 setId("account-settings-item-background-disabled");
                 icon.setTextFill(Paint.valueOf("#ccc"));
-            }
-            else {
+            } else {
                 setId("account-settings-item-background-active");
                 icon.setTextFill(Paint.valueOf("#333"));
             }

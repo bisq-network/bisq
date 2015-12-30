@@ -358,11 +358,17 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Label, CheckBox> addLabelCheckBox(GridPane gridPane, int rowIndex, String title, String checkBoxTitle) {
-        Label label = addLabel(gridPane, rowIndex, title, -3);
+        return addLabelCheckBox(gridPane, rowIndex, title, checkBoxTitle, 0);
+    }
 
+    public static Tuple2<Label, CheckBox> addLabelCheckBox(GridPane gridPane, int rowIndex, String title, String checkBoxTitle, double top) {
+        Label label = addLabel(gridPane, rowIndex, title, -3);
+        GridPane.setMargin(label, new Insets(top, 0, 0, 0));
+        
         CheckBox checkBox = new CheckBox(checkBoxTitle);
         GridPane.setRowIndex(checkBox, rowIndex);
         GridPane.setColumnIndex(checkBox, 1);
+        GridPane.setMargin(checkBox, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(checkBox);
 
         return new Tuple2<>(label, checkBox);

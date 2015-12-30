@@ -52,13 +52,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 9, "Preferences");
-
-        tradeCurrencyComboBox = addLabelComboBox(root, ++gridRow, "Preferred currency:", Layout.FIRST_ROW_DISTANCE).second;
+        addTitledGroupBg(root, gridRow, 3, "Preferences");
+        tradeCurrencyComboBox = addLabelComboBox(root, gridRow, "Preferred currency:", Layout.FIRST_ROW_DISTANCE).second;
         languageComboBox = addLabelComboBox(root, ++gridRow, "Language:").second;
-        // btcDenominationComboBox = addLabelComboBox(root, gridRow, "Bitcoin denomination:", Layout.FIRST_ROW_DISTANCE).second;
+        // btcDenominationComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin denomination:").second;
         blockExplorerComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin block explorer:").second;
-        useAnimationsCheckBox = addLabelCheckBox(root, ++gridRow, "Use animations:", "").second;
+
+        addTitledGroupBg(root, ++gridRow, 5, "Display options", Layout.GROUP_DISTANCE);
+        useAnimationsCheckBox = addLabelCheckBox(root, gridRow, "Use animations:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         useEffectsCheckBox = addLabelCheckBox(root, ++gridRow, "Use effects:", "").second;
         showPlaceOfferConfirmationCheckBox = addLabelCheckBox(root, ++gridRow, "Show confirmation at place offer:", "").second;
         showTakeOfferConfirmationCheckBox = addLabelCheckBox(root, ++gridRow, "Show confirmation at take offer:", "").second;
@@ -102,7 +103,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         });
         languageComboBox.setOnAction(e -> model.onSelectLanguageCode(languageComboBox.getSelectionModel().getSelectedItem()));
 
-        
+
         blockExplorerComboBox.setItems(model.blockExplorers);
         blockExplorerComboBox.getSelectionModel().select(model.getBlockExplorer());
         blockExplorerComboBox.setConverter(new StringConverter<BlockChainExplorer>() {

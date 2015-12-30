@@ -74,11 +74,6 @@ bg color of non edit textFields: fafafa
     -fx-background: #bbb;
 }
 
-#footer-bitcoin-network-label {
-    -fx-text-fill: -fx-accent;
-    -fx-font-size: 12;
-}
-
 #headline-label {
     -fx-font-weight: bold;
     -fx-font-size: 18;

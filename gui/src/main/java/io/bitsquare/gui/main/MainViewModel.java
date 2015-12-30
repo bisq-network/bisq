@@ -252,7 +252,7 @@ class MainViewModel implements ViewModel {
             log.debug("Bitcoin peers " + newValue);
             numBTCPeers = (int) newValue;
             numBTCPeersAsString.set(String.valueOf(newValue) + " peers");
-            if (blockchainSyncProgress.get() >= 1 && numBTCPeers > 1)
+            if (blockchainSyncProgress.get() >= 1 && numBTCPeers > 0)
                 blockchainSyncInfoFooter.set("Bitcoin network: Peers: " + numBTCPeers);
 
          /*   if ((int) newValue < 1) {
@@ -591,6 +591,7 @@ class MainViewModel implements ViewModel {
 
             blockchainSyncInfo.set("Blockchain synchronization complete." + nrOfPeers);
             blockchainSyncIconId.set("image-connection-synced");
+            blockchainSyncInfoFooter.set("Bitcoin network: Peers: " + numBTCPeers);
         } else if (value > 0.0) {
             // We stop as soon the download started the timeout
             stopBlockchainSyncTimeout();
