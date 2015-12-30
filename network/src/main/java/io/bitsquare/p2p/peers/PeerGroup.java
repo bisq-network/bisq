@@ -42,7 +42,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     }
 
     static {
-        setMaxConnectionsLowPriority(10);
+        setMaxConnectionsLowPriority(6);
     }
 
     private static final int MAX_REPORTED_PEERS = 1000;

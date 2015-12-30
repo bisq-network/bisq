@@ -7,8 +7,8 @@ set -e
 
 # Edit versions
 fullVersion=0.3.2.3
+jarFile="/home/mk/Desktop/sf_vm_shared_ubuntu/Bitsquare-$fullVersion.jar"
 
-# Copy jar file from mac build (1.jar from processed folder) to linux box 
 # Note: fakeroot needs to be installed on linux
 $JAVA_HOME/bin/javapackager \
     -deploy \
@@ -23,9 +23,10 @@ $JAVA_HOME/bin/javapackager \
     -title Bitsquare \
     -vendor Bitsquare \
     -outdir gui/deploy \
-    -srcfiles gui/deploy/Bitsquare.jar \
+    -srcfiles $jarFile \
     -srcfiles package/linux/LICENSE \
     -appclass io.bitsquare.app.BitsquareAppMain \
     -outfile Bitsquare
+    -BjvmProperties=-Djava.net.preferIPv4Stack=true
 
 cd package/linux

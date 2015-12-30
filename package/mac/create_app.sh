@@ -8,7 +8,10 @@ set -e
 fullVersion="0.3.2.3"
 
 mvn clean package -DskipTests -Dmaven.javadoc.skip=true
-cp gui/target/shaded.jar gui/deploy/Bitsquare.jar
+
+cp gui/target/shaded.jar "gui/deploy/Bitsquare-$fullVersion.jar"
+cp gui/target/shaded.jar "/Users/mk/vm_shared_ubuntu/Bitsquare-$fullVersion.jar"
+cp gui/target/shaded.jar "/Users/mk/vm_shared_windows/Bitsquare-$fullVersion.jar"
 
 $JAVA_HOME/bin/javapackager \
     -deploy \
@@ -22,12 +25,15 @@ $JAVA_HOME/bin/javapackager \
     -title Bitsquare \
     -vendor Bitsquare \
     -outdir gui/deploy \
-    -srcfiles gui/deploy/Bitsquare.jar \
+    -srcfiles "gui/deploy/Bitsquare-$fullVersion.jar" \
     -appclass io.bitsquare.app.BitsquareAppMain \
     -outfile Bitsquare \
     -BjvmProperties=-Djava.net.preferIPv4Stack=true
-    
-cp gui/deploy/Bitsquare.jar /Users/mk/vm_shared_ubuntu/Bitsquare.jar
-cp gui/deploy/Bitsquare.jar /Users/mk/vm_shared_windows/Bitsquare.jar
+
+rm "gui/deploy/Bitsquare.html"
+rm "gui/deploy/Bitsquare.jnlp"
+
+mv "gui/deploy/bundles/Bitsquare.dmg" "gui/deploy/Bitsquare-$fullVersion.dmg"
+rm gui/deploy/bundles
 
 cd package/mac

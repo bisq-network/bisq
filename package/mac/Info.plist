@@ -54,9 +54,5 @@
         <dict>
         </dict>
         
-        <!-- /Applications/Utilities/defaults write io.bitsquare.Bitsquare NSAppSleepDisabled -bool YES -->
-        <!--<key>NSAppSleepDisabled</key>-->
-        <!--<bool>YES</bool>-->
-        
     </dict>
 </plist>
