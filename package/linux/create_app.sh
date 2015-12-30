@@ -29,4 +29,7 @@ $JAVA_HOME/bin/javapackager \
     -outfile Bitsquare
     -BjvmProperties=-Djava.net.preferIPv4Stack=true
 
+rm "gui/deploy/Bitsquare.html"
+rm "gui/deploy/Bitsquare.jnlp"
+
 cd package/linux
