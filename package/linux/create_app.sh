@@ -27,10 +27,12 @@ $JAVA_HOME/bin/javapackager \
     -srcfiles package/linux/LICENSE \
     -appclass io.bitsquare.app.BitsquareAppMain \
     -outfile Bitsquare
-    -BjvmProperties=-Djava.net.preferIPv4Stack=true
 
-rm "gui/deploy/Bitsquare.html"
-rm "gui/deploy/Bitsquare.jnlp"
-mv "gui/deploy/bundles/Bitsquare-$fullVersion.deb" "gui/deploy/Bitsquare-$fullVersion.deb"
+rm gui/deploy/Bitsquare.html
+rm gui/deploy/Bitsquare.jnl
+rm gui/deploy/LICENSE
+mv "gui/deploy/bundles/bitsquare-$fullVersion.deb" "gui/deploy/Bitsquare-$fullVersion.deb"
+rmdir gui/deploy
+cp "gui/deploy/Bitsquare-$fullVersion.deb" "/home/mk/Desktop/sf_vm_shared_ubuntu/Bitsquare-$fullVersion.deb"
 
 cd package/linux
