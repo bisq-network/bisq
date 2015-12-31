@@ -121,20 +121,18 @@ public class SellerSubView extends TradeSubView {
 
                 break;
             case WAIT_FOR_PAYOUT_TX:
-                if (model.getLockTime() > 0) {
-                    waitTxInBlockchain.setCompleted();
-                    waitPaymentStarted.setCompleted();
-                    confirmPaymentReceived.setCompleted();
-                    showItem(waitPayoutUnlock);
+                waitTxInBlockchain.setCompleted();
+                waitPaymentStarted.setCompleted();
+                confirmPaymentReceived.setCompleted();
+                showItem(waitPayoutUnlock);
 
-                    // We don't use a wizard for that step as it only gets displayed in case the other peer is offline
-                    tradeStepDetailsView = new WaitPayoutFinalizedView(model);
-                    contentPane.getChildren().setAll(tradeStepDetailsView);
+                // We don't use a wizard for that step as it only gets displayed in case the other peer is offline
+                tradeStepDetailsView = new WaitPayoutFinalizedView(model);
+                contentPane.getChildren().setAll(tradeStepDetailsView);
 
-                    ((WaitPayoutFinalizedView) tradeStepDetailsView).setInfoLabelText("We requested the trading peer to sign and finalize the payout " +
-                            "transaction.\n" +
-                            "It might be that the other peer is offline, so we need to wait until he finalize the transaction when he goes online again.");
-                }
+                ((WaitPayoutFinalizedView) tradeStepDetailsView).setInfoLabelText("We requested the trading peer to sign and finalize the payout " +
+                        "transaction.\n" +
+                        "It might be that the other peer is offline, so we need to wait until he finalize the transaction when he goes online again.");
                 break;
             case WAIT_FOR_UNLOCK_PAYOUT:
                 waitTxInBlockchain.setCompleted();

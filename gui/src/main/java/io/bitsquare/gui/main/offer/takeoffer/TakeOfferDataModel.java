@@ -18,11 +18,9 @@
 package io.bitsquare.gui.main.offer.takeoffer;
 
 import com.google.inject.Inject;
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.*;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
@@ -135,6 +133,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
         paymentAccount = possiblePaymentAccounts.get(0);
 
         amountAsCoin.set(offer.getAmount());
+
+        if (BitsquareApp.DEV_MODE)
+            amountAsCoin.set(Restrictions.MIN_TRADE_AMOUNT);
 
         calculateVolume();
         calculateTotalToPay();

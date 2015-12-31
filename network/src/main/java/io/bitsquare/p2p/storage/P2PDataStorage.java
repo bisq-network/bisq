@@ -14,7 +14,7 @@ import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.IllegalRequest;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
-import io.bitsquare.p2p.peers.PeerGroup;
+import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.storage.data.*;
 import io.bitsquare.p2p.storage.messages.AddDataMessage;
 import io.bitsquare.p2p.storage.messages.DataBroadcastMessage;
@@ -38,7 +38,7 @@ public class P2PDataStorage implements MessageListener {
     @VisibleForTesting
     public static int CHECK_TTL_INTERVAL = 10 * 60 * 1000;
 
-    private final PeerGroup peerGroup;
+    private final PeerManager peerManager;
     private final Map<ByteArray, ProtectedData> map = new HashMap<>();
     private final CopyOnWriteArraySet<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArraySet<>();
     private HashMap<ByteArray, Integer> sequenceNumberMap = new HashMap<>();
@@ -50,9 +50,9 @@ public class P2PDataStorage implements MessageListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public P2PDataStorage(PeerGroup peerGroup, NetworkNode networkNode, File storageDir) {
+    public P2PDataStorage(PeerManager peerManager, NetworkNode networkNode, File storageDir) {
         Log.traceCall();
-        this.peerGroup = peerGroup;
+        this.peerManager = peerManager;
 
         networkNode.addMessageListener(this);
 
@@ -378,7 +378,7 @@ public class P2PDataStorage implements MessageListener {
 
     private void broadcast(DataBroadcastMessage message, @Nullable Address sender) {
         Log.traceCall(message.toString());
-        peerGroup.broadcast(message, sender);
+        peerManager.broadcast(message, sender);
     }
 
     private ByteArray getHashAsByteArray(ExpirablePayload payload) {

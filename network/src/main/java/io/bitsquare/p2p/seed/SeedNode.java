@@ -7,7 +7,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
-import io.bitsquare.p2p.peers.PeerGroup;
+import io.bitsquare.p2p.peers.PeerManager;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,10 +64,10 @@ public class SeedNode {
                         String arg2 = args[2];
                         int maxConnections = Integer.parseInt(arg2);
                         checkArgument(maxConnections < 1000, "maxConnections seems to be a bit too high...");
-                        PeerGroup.setMaxConnectionsLowPriority(maxConnections);
+                        PeerManager.setMaxConnectionsLowPriority(maxConnections);
                     } else {
                         // we keep default a higher connection size for seed nodes
-                        PeerGroup.setMaxConnectionsLowPriority(50);
+                        PeerManager.setMaxConnectionsLowPriority(50);
                     }
                     if (args.length > 3) {
                         String arg3 = args[3];

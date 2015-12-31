@@ -9,7 +9,7 @@ import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.TestUtils;
 import io.bitsquare.p2p.mocks.MockMessage;
 import io.bitsquare.p2p.network.NetworkNode;
-import io.bitsquare.p2p.peers.PeerGroup;
+import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.storage.data.DataAndSeqNr;
 import io.bitsquare.p2p.storage.data.ExpirableMailboxPayload;
 import io.bitsquare.p2p.storage.data.ProtectedData;
@@ -37,7 +37,7 @@ public class ProtectedDataStorageTest {
     boolean useClearNet = true;
     private Set<Address> seedNodes = new HashSet<>();
     private NetworkNode networkNode1;
-    private PeerGroup peerGroup1;
+    private PeerManager peerManager1;
     private EncryptionService encryptionService1, encryptionService2;
     private P2PDataStorage dataStorage1;
     private KeyPair storageSignatureKeyPair1, storageSignatureKeyPair2;
@@ -65,8 +65,8 @@ public class ProtectedDataStorageTest {
         storageSignatureKeyPair1 = keyRing1.getSignatureKeyPair();
         encryptionService1 = new EncryptionService(keyRing1);
         networkNode1 = TestUtils.getAndStartSeedNode(8001, useClearNet, seedNodes).getP2PService().getNetworkNode();
-        peerGroup1 = new PeerGroup(networkNode1);
-        dataStorage1 = new P2PDataStorage(peerGroup1, networkNode1, new File("dummy"));
+        peerManager1 = new PeerManager(networkNode1);
+        dataStorage1 = new P2PDataStorage(peerManager1, networkNode1, new File("dummy"));
 
         // for mailbox
         keyRing2 = new KeyRing(new KeyStorage(dir2));
@@ -81,7 +81,7 @@ public class ProtectedDataStorageTest {
     public void tearDown() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
         Thread.sleep(sleepTime);
         if (dataStorage1 != null) dataStorage1.shutDown();
-        if (peerGroup1 != null) peerGroup1.shutDown();
+        if (peerManager1 != null) peerManager1.shutDown();
 
         if (networkNode1 != null) {
             CountDownLatch shutDownLatch = new CountDownLatch(1);
@@ -108,7 +108,7 @@ public class ProtectedDataStorageTest {
     public void testExpirableData() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
         P2PDataStorage.CHECK_TTL_INTERVAL = 10;
         // CHECK_TTL_INTERVAL is used in constructor of ProtectedExpirableDataStorage so we recreate it here
-        dataStorage1 = new P2PDataStorage(peerGroup1, networkNode1, new File("dummy"));
+        dataStorage1 = new P2PDataStorage(peerManager1, networkNode1, new File("dummy"));
         mockData.ttl = 50;
 
         ProtectedData data = dataStorage1.getDataWithSignedSeqNr(mockData, storageSignatureKeyPair1);

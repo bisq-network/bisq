@@ -24,8 +24,8 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class PeerGroup implements MessageListener, ConnectionListener {
-    private static final Logger log = LoggerFactory.getLogger(PeerGroup.class);
+public class PeerManager implements MessageListener, ConnectionListener {
+    private static final Logger log = LoggerFactory.getLogger(PeerManager.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
@@ -42,7 +42,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     }
 
     static {
-        setMaxConnectionsLowPriority(6);
+        setMaxConnectionsLowPriority(10);
     }
 
     private static final int MAX_REPORTED_PEERS = 1000;
@@ -70,7 +70,7 @@ public class PeerGroup implements MessageListener, ConnectionListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PeerGroup(NetworkNode networkNode) {
+    public PeerManager(NetworkNode networkNode) {
         Log.traceCall();
 
         this.networkNode = networkNode;
@@ -665,8 +665,8 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
             if (authenticatedConnections.size() == 0) {
                 log.debug("There are no passive connections for closing. We check if we are exceeding " +
-                        "MAX_CONNECTIONS_NORMAL ({}) ", PeerGroup.MAX_CONNECTIONS_NORMAL_PRIORITY);
-                if (size > PeerGroup.MAX_CONNECTIONS_NORMAL_PRIORITY) {
+                        "MAX_CONNECTIONS_NORMAL ({}) ", PeerManager.MAX_CONNECTIONS_NORMAL_PRIORITY);
+                if (size > PeerManager.MAX_CONNECTIONS_NORMAL_PRIORITY) {
                     authenticatedConnections = allConnections.stream()
                             .filter(e -> e.isAuthenticated())
                             .filter(e -> e.getConnectionPriority() == ConnectionPriority.PASSIVE || e.getConnectionPriority() == ConnectionPriority.ACTIVE)
@@ -675,8 +675,8 @@ public class PeerGroup implements MessageListener, ConnectionListener {
 
                     if (authenticatedConnections.size() == 0) {
                         log.debug("There are no passive or active connections for closing. We check if we are exceeding " +
-                                "MAX_CONNECTIONS_HIGH ({}) ", PeerGroup.MAX_CONNECTIONS_HIGH_PRIORITY);
-                        if (size > PeerGroup.MAX_CONNECTIONS_HIGH_PRIORITY) {
+                                "MAX_CONNECTIONS_HIGH ({}) ", PeerManager.MAX_CONNECTIONS_HIGH_PRIORITY);
+                        if (size > PeerManager.MAX_CONNECTIONS_HIGH_PRIORITY) {
                             authenticatedConnections = allConnections.stream()
                                     .filter(e -> e.isAuthenticated())
                                     .filter(e -> e.getConnectionPriority() != ConnectionPriority.AUTH_REQUEST)

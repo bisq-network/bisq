@@ -36,7 +36,7 @@ public class PaymentMethod implements Serializable, Comparable {
 
     // time in blocks (average 10 min for one block confirmation
     private static final int HOUR = 6;
-    private static final int DAY = HOUR * 24;
+    private static final int DAY = HOUR * 24; // 144
 
     public static final String OK_PAY_ID = "OK_PAY";
     public static final String PERFECT_MONEY_ID = "PERFECT_MONEY";

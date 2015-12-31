@@ -16,7 +16,7 @@ import io.bitsquare.crypto.SealedAndSignedMessage;
 import io.bitsquare.p2p.messaging.*;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.AuthenticationListener;
-import io.bitsquare.p2p.peers.PeerGroup;
+import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.peers.RequestDataManager;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
@@ -54,7 +54,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     // set in init
     private NetworkNode networkNode;
-    private PeerGroup peerGroup;
+    private PeerManager peerManager;
     private P2PDataStorage dataStorage;
 
     private final CopyOnWriteArraySet<DecryptedMailListener> decryptedMailListeners = new CopyOnWriteArraySet<>();
@@ -131,16 +131,16 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         networkNode.addMessageListener(this);
 
         // peer group 
-        peerGroup = new PeerGroup(networkNode);
-        peerGroup.setSeedNodeAddresses(seedNodeAddresses);
-        peerGroup.addAuthenticationListener(this);
+        peerManager = new PeerManager(networkNode);
+        peerManager.setSeedNodeAddresses(seedNodeAddresses);
+        peerManager.addAuthenticationListener(this);
 
         // P2P network data storage 
-        dataStorage = new P2PDataStorage(peerGroup, networkNode, storageDir);
+        dataStorage = new P2PDataStorage(peerManager, networkNode, storageDir);
         dataStorage.addHashMapChangedListener(this);
 
         // Request initial data manager
-        requestDataManager = new RequestDataManager(networkNode, dataStorage, peerGroup, new RequestDataManager.Listener() {
+        requestDataManager = new RequestDataManager(networkNode, dataStorage, peerManager, new RequestDataManager.Listener() {
             @Override
             public void onNoSeedNodeAvailable() {
                 p2pServiceListeners.stream().forEach(e -> e.onNoSeedNodeAvailable());
@@ -153,7 +153,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 p2pServiceListeners.stream().forEach(e -> e.onRequestingDataCompleted());
             }
         });
-        peerGroup.addAuthenticationListener(requestDataManager);
+        peerManager.addAuthenticationListener(requestDataManager);
 
         // Test multiple states to check when we are ready for authenticateSeedNode
         readyForAuthentication = EasyBind.combine(hiddenServicePublished, requestingDataCompleted, firstPeerAuthenticated,
@@ -177,7 +177,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         // we remove ourselves from the list of seed nodes
         seedNodeAddresses.remove(mySeedNodeAddress);
-        peerGroup.setIsSeedNode(true);
+        peerManager.setIsSeedNode(true);
         requestDataManager.setIsSeedNode(true);
         
         start(listener);
@@ -201,8 +201,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             if (dataStorage != null)
                 dataStorage.shutDown();
 
-            if (peerGroup != null)
-                peerGroup.shutDown();
+            if (peerManager != null)
+                peerManager.shutDown();
 
             if (requestDataManager != null)
                 requestDataManager.shutDown();
@@ -275,7 +275,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private void authenticateSeedNode() {
         Log.traceCall();
         checkNotNull(connectedSeedNode != null, "connectedSeedNode must not be null");
-        peerGroup.authenticateToSeedNode(connectedSeedNode);
+        peerManager.authenticateToSeedNode(connectedSeedNode);
     }
 
 
@@ -380,7 +380,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         try {
             checkAuthentication();
             if (!authenticatedPeerAddresses.contains(peerAddress))
-                peerGroup.authenticateToDirectMessagePeer(peerAddress,
+                peerManager.authenticateToDirectMessagePeer(peerAddress,
                         () -> doSendEncryptedMailMessage(peerAddress, pubKeyRing, message, sendMailMessageListener),
                         () -> sendMailMessageListener.onFault());
             else
@@ -470,7 +470,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             if (authenticatedPeerAddresses.contains(peerAddress)) {
                 trySendEncryptedMailboxMessage(peerAddress, peersPubKeyRing, message, sendMailboxMessageListener);
             } else {
-                peerGroup.authenticateToDirectMessagePeer(peerAddress,
+                peerManager.authenticateToDirectMessagePeer(peerAddress,
                         () -> trySendEncryptedMailboxMessage(peerAddress, peersPubKeyRing, message, sendMailboxMessageListener),
                         () -> {
                             log.info("We cannot authenticate to peer. Peer might be offline. We will store message in mailbox.");
@@ -673,8 +673,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         return networkNode;
     }
 
-    public PeerGroup getPeerGroup() {
-        return peerGroup;
+    public PeerManager getPeerManager() {
+        return peerManager;
     }
 
     public Address getAddress() {

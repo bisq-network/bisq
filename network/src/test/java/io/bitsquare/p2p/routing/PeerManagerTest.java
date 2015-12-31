@@ -4,7 +4,7 @@ import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.network.LocalhostNetworkNode;
-import io.bitsquare.p2p.peers.PeerGroup;
+import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.seed.SeedNode;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -20,8 +20,8 @@ import java.util.concurrent.CountDownLatch;
 
 // need to define seed node addresses first before using tor version
 @Ignore
-public class PeerGroupTest {
-    private static final Logger log = LoggerFactory.getLogger(PeerGroupTest.class);
+public class PeerManagerTest {
+    private static final Logger log = LoggerFactory.getLogger(PeerManagerTest.class);
 
     boolean useLocalhost = true;
     private CountDownLatch latch;
@@ -33,7 +33,7 @@ public class PeerGroupTest {
     public void setup() throws InterruptedException {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(50);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(8);
-        PeerGroup.setMaxConnectionsLowPriority(100);
+        PeerManager.setMaxConnectionsLowPriority(100);
 
         seedNodes = new HashSet<>();
         if (useLocalhost) {
@@ -112,7 +112,7 @@ public class PeerGroupTest {
         P2PService p2PService1 = seedNode1.getP2PService();
         latch.await();
         Thread.sleep(500);
-        Assert.assertEquals(0, p2PService1.getPeerGroup().getAuthenticatedAndReportedPeers().size());
+        Assert.assertEquals(0, p2PService1.getPeerManager().getAuthenticatedAndReportedPeers().size());
     }
 
     @Test
@@ -194,8 +194,8 @@ public class PeerGroupTest {
         });
         P2PService p2PService2 = seedNode2.getP2PService();
         latch.await();
-        Assert.assertEquals(1, p2PService1.getPeerGroup().getAuthenticatedAndReportedPeers().size());
-        Assert.assertEquals(1, p2PService2.getPeerGroup().getAuthenticatedAndReportedPeers().size());
+        Assert.assertEquals(1, p2PService1.getPeerManager().getAuthenticatedAndReportedPeers().size());
+        Assert.assertEquals(1, p2PService2.getPeerManager().getAuthenticatedAndReportedPeers().size());
     }
 
     // @Test

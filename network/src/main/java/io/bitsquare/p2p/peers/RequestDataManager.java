@@ -42,7 +42,7 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
 
     private final NetworkNode networkNode;
     private final P2PDataStorage dataStorage;
-    private final PeerGroup peerGroup;
+    private final PeerManager peerManager;
     private final Listener listener;
 
     private Optional<Address> optionalConnectedSeedNodeAddress = Optional.empty();
@@ -54,10 +54,10 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public RequestDataManager(NetworkNode networkNode, P2PDataStorage dataStorage, PeerGroup peerGroup, Listener listener) {
+    public RequestDataManager(NetworkNode networkNode, P2PDataStorage dataStorage, PeerManager peerManager, Listener listener) {
         this.networkNode = networkNode;
         this.dataStorage = dataStorage;
-        this.peerGroup = peerGroup;
+        this.peerManager = peerManager;
         this.listener = listener;
 
         networkNode.addMessageListener(this);
@@ -87,7 +87,7 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
             List<Address> remainingSeedNodeAddresses = new ArrayList<>(seedNodeAddresses);
             Collections.shuffle(remainingSeedNodeAddresses);
             Address candidate = remainingSeedNodeAddresses.get(0);
-            if (!peerGroup.isInAuthenticationProcess(candidate)) {
+            if (!peerManager.isInAuthenticationProcess(candidate)) {
                 // We only remove it if it is not in the process of authentication
                 remainingSeedNodeAddresses.remove(0);
                 log.info("We try to send a GetAllDataMessage request to a random seed node. " + candidate);

@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.offer.createoffer;
 
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -122,6 +123,20 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     @Override
     protected void activate() {
+        if (BitsquareApp.DEV_MODE) {
+            amount.set("0.0001");
+            minAmount.set(amount.get());
+            price.set("400");
+            volume.set("0.04");
+
+            setAmountToModel();
+            setMinAmountToModel();
+            setPriceToModel();
+            calculateVolume();
+            dataModel.calculateTotalToPay();
+            updateButtonDisableState();
+        }
+
         addBindings();
         addListeners();
 

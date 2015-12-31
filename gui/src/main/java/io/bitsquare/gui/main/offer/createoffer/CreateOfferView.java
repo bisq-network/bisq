@@ -39,7 +39,6 @@ import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.openoffer.OpenOffersView;
 import io.bitsquare.gui.popups.OfferDetailsPopup;
 import io.bitsquare.gui.popups.Popup;
-import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
@@ -69,7 +68,6 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateOfferViewModel> {
 
     private final Navigation navigation;
-    private final BSFormatter formatter;
     private final OfferDetailsPopup offerDetailsPopup;
 
     private ScrollPane scrollPane;
@@ -113,11 +111,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferView(CreateOfferViewModel model, Navigation navigation, BSFormatter formatter, OfferDetailsPopup offerDetailsPopup) {
+    private CreateOfferView(CreateOfferViewModel model, Navigation navigation, OfferDetailsPopup offerDetailsPopup) {
         super(model);
 
         this.navigation = navigation;
-        this.formatter = formatter;
         this.offerDetailsPopup = offerDetailsPopup;
     }
 
