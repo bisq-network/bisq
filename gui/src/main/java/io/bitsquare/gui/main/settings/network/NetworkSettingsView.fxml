@@ -33,24 +33,13 @@
 
     <TitledGroupBg text="Bitcoin network" GridPane.rowSpan="3"/>
 
-    <Label text="Bitcoin network type:" GridPane.rowIndex="0">
-        <GridPane.margin>
-            <Insets top="10"/>
-        </GridPane.margin>
-    </Label>
-    <TextField fx:id="bitcoinNetwork" GridPane.rowIndex="0" GridPane.columnIndex="1"
-               mouseTransparent="true" focusTraversable="false">
-        <GridPane.margin>
-            <Insets top="10"/>
-        </GridPane.margin>
-    </TextField>
+    <Label text="Select Network:" GridPane.rowIndex="0"/>
+    <ComboBox fx:id="netWorkComboBox" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
-    <Label text="Select Network:" GridPane.rowIndex="1"/>
-    <ComboBox fx:id="netWorkComboBox" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+    <Label fx:id="bitcoinPeersLabel" text="Connected peers:" GridPane.rowIndex="1"/>
+    <TextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="1" GridPane.columnIndex="1"
+              editable="false" focusTraversable="false"/>
 
-    <Label text="Bitcoin network connected peers:" GridPane.rowIndex="2"/>
-    <TextField fx:id="connectedPeersBTC" GridPane.rowIndex="2" GridPane.columnIndex="1"
-               mouseTransparent="true" focusTraversable="false"/>
 
     <TitledGroupBg text="P2P network" GridPane.rowIndex="3" GridPane.rowSpan="5">
         <padding>

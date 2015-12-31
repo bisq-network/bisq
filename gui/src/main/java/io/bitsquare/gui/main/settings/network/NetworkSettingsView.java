@@ -42,57 +42,69 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.util.StringConverter;
+import org.bitcoinj.core.Peer;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Set;
-
-import static javafx.beans.binding.Bindings.createStringBinding;
 
 @FxmlView
 public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activatable> {
 
-    private final String bitcoinNetworkString;
     private final WalletService walletService;
     private final Preferences preferences;
+    private BSFormatter formatter;
     private final P2PService p2PService;
 
 
     @FXML
-    TextField bitcoinNetwork, onionAddress, connectedPeersBTC;
+    TextField onionAddress;
     @FXML
     ComboBox<BitcoinNetwork> netWorkComboBox;
     @FXML
-    TextArea authenticatedPeersTextArea;
+    TextArea bitcoinPeersTextArea, authenticatedPeersTextArea;
     @FXML
-    Label authenticatedPeersLabel;
+    Label bitcoinPeersLabel, authenticatedPeersLabel;
 
     private P2PServiceListener p2PServiceListener;
     private ChangeListener<Number> numAuthenticatedPeersChangeListener;
+    private ChangeListener<List<Peer>> bitcoinPeersChangeListener;
     private Set<Address> seedNodeAddresses;
 
     @Inject
-    public NetworkSettingsView(WalletService walletService, P2PService p2PService, SeedNodesRepository seedNodesRepository, Preferences preferences, BSFormatter
-            formatter) {
+    public NetworkSettingsView(WalletService walletService, P2PService p2PService, Preferences preferences,
+                               SeedNodesRepository seedNodesRepository, BSFormatter formatter) {
         this.walletService = walletService;
-        this.preferences = preferences;
-        BitcoinNetwork bitcoinNetwork = preferences.getBitcoinNetwork();
-        this.bitcoinNetworkString = formatter.formatBitcoinNetwork(bitcoinNetwork);
         this.p2PService = p2PService;
+        this.preferences = preferences;
+        this.formatter = formatter;
+        BitcoinNetwork bitcoinNetwork = preferences.getBitcoinNetwork();
 
         boolean useLocalhost = p2PService.getNetworkNode() instanceof LocalhostNetworkNode;
         this.seedNodeAddresses = seedNodesRepository.geSeedNodeAddresses(useLocalhost, bitcoinNetwork.ordinal());
     }
 
     public void initialize() {
+        GridPane.setMargin(bitcoinPeersLabel, new Insets(4, 0, 0, 0));
+        GridPane.setValignment(bitcoinPeersLabel, VPos.TOP);
         GridPane.setMargin(authenticatedPeersLabel, new Insets(4, 0, 0, 0));
         GridPane.setValignment(authenticatedPeersLabel, VPos.TOP);
-        bitcoinNetwork.setText(bitcoinNetworkString);
-        connectedPeersBTC.textProperty().bind(createStringBinding(() -> String.valueOf(walletService.numPeersProperty().get()), walletService
-                .numPeersProperty()));
-
+        bitcoinPeersTextArea.setPrefRowCount(12);
         netWorkComboBox.setItems(FXCollections.observableArrayList(BitcoinNetwork.values()));
         netWorkComboBox.getSelectionModel().select(preferences.getBitcoinNetwork());
         netWorkComboBox.setOnAction(e -> onSelectNetwork());
+        netWorkComboBox.setConverter(new StringConverter<BitcoinNetwork>() {
+            @Override
+            public String toString(BitcoinNetwork bitcoinNetwork) {
+                return formatter.formatBitcoinNetwork(bitcoinNetwork);
+            }
+
+            @Override
+            public BitcoinNetwork fromString(String string) {
+                return null;
+            }
+        });
     }
 
     @Override
@@ -131,6 +143,10 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             onionAddress.setText(address.getFullAddress());
         }
 
+        bitcoinPeersChangeListener = (observable, oldValue, newValue) -> updateBitcoinPeersTextArea();
+        walletService.connectedPeersProperty().addListener(bitcoinPeersChangeListener);
+        updateBitcoinPeersTextArea();
+
         numAuthenticatedPeersChangeListener = (observable, oldValue, newValue) -> updateAuthenticatedPeersTextArea();
         p2PService.getNumAuthenticatedPeers().addListener(numAuthenticatedPeersChangeListener);
         updateAuthenticatedPeersTextArea();
@@ -140,6 +156,10 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     public void deactivate() {
         if (p2PServiceListener != null)
             p2PService.removeP2PServiceListener(p2PServiceListener);
+
+        if (bitcoinPeersChangeListener != null)
+            walletService.connectedPeersProperty().removeListener(bitcoinPeersChangeListener);
+
         if (numAuthenticatedPeersChangeListener != null)
             p2PService.getNumAuthenticatedPeers().removeListener(numAuthenticatedPeersChangeListener);
     }
@@ -153,6 +173,18 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             if (seedNodeAddresses.contains(e))
                 authenticatedPeersTextArea.appendText(" (Seed node)");
         });
+    }
+
+    private void updateBitcoinPeersTextArea() {
+        bitcoinPeersTextArea.clear();
+        List<Peer> peerList = walletService.connectedPeersProperty().get();
+        if (peerList != null) {
+            peerList.stream().forEach(e -> {
+                if (bitcoinPeersTextArea.getText().length() > 0)
+                    bitcoinPeersTextArea.appendText("\n");
+                bitcoinPeersTextArea.appendText(e.getAddress().getSocketAddress().toString());
+            });
+        }
     }
 
     private void onSelectNetwork() {

@@ -28,6 +28,7 @@ import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.LanguageUtil;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.*;
@@ -187,6 +188,8 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         root.getChildren().add(table);
 
         autoSelectAllMatchingCheckBox = addCheckBox(root, ++gridRow, "Auto select all with matching language");
+        GridPane.setColumnSpan(autoSelectAllMatchingCheckBox, 2);
+        GridPane.setHalignment(autoSelectAllMatchingCheckBox, HPos.LEFT);
         GridPane.setColumnIndex(autoSelectAllMatchingCheckBox, 0);
         GridPane.setMargin(autoSelectAllMatchingCheckBox, new Insets(0, -10, 0, -10));
         autoSelectAllMatchingCheckBox.setOnAction(event -> model.setAutoSelectArbitrators(autoSelectAllMatchingCheckBox.isSelected()));

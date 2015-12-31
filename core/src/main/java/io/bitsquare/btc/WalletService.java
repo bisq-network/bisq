@@ -89,6 +89,7 @@ public class WalletService {
     private Wallet wallet;
     private AddressEntry arbitratorAddressEntry;
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
+    private final ObjectProperty<List<Peer>> connectedPeers = new SimpleObjectProperty<>();
     public final BooleanProperty shutDownDone = new SimpleBooleanProperty();
 
 
@@ -107,7 +108,7 @@ public class WalletService {
         // TODO remove after sufficient testing with testnet 
         checkArgument(!params.getId().equals(NetworkParameters.ID_MAINNET),
                 "Mainnet is not allowed to be used at that stage of development");
-        
+
         this.walletDir = new File(walletDir, "bitcoin");
         this.userAgent = userAgent;
     }
@@ -165,11 +166,13 @@ public class WalletService {
                     @Override
                     public void onPeerConnected(Peer peer, int peerCount) {
                         numPeers.set(peerCount);
+                        connectedPeers.set(walletAppKit.peerGroup().getConnectedPeers());
                     }
 
                     @Override
                     public void onPeerDisconnected(Peer peer, int peerCount) {
                         numPeers.set(peerCount);
+                        connectedPeers.set(walletAppKit.peerGroup().getConnectedPeers());
                     }
 
                     @Override
@@ -504,6 +507,10 @@ public class WalletService {
 
     public ReadOnlyIntegerProperty numPeersProperty() {
         return numPeers;
+    }
+
+    public ReadOnlyObjectProperty<List<Peer>> connectedPeersProperty() {
+        return connectedPeers;
     }
 
 

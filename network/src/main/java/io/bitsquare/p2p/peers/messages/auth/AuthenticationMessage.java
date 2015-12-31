@@ -20,7 +20,7 @@ public abstract class AuthenticationMessage implements Message {
 
     @Override
     public String toString() {
-        return ", address=" + senderAddress.toString() +
+        return ", address=" + (senderAddress != null ? senderAddress.toString() : "") +
                 ", networkId=" + networkId +
                 '}';
     }
