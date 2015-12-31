@@ -76,11 +76,11 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @Override
     public void initialize() {
         setTradeIdColumnCellFactory();
-        setDirectionColumnCellFactory();
+        setDateColumnCellFactory();
         setAmountColumnCellFactory();
         setPriceColumnCellFactory();
         setVolumeColumnCellFactory();
-        setDateColumnCellFactory();
+        setDirectionColumnCellFactory();
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPlaceholder(new Label("No pending trades available"));

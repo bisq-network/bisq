@@ -43,8 +43,9 @@ public class SignPayoutTx extends TradeTask {
             Coin buyerPayoutAmount = sellerPayoutAmount.add(trade.getTradeAmount());
 
             // We use the sellers LastBlockSeenHeight, which might be different to the buyers one.
-            // If lock time is 0 we set lockTimeAsBlockHeight to -1 to mark it as "not set". 
-            // In the tradewallet we apply the locktime only if it is set, otherwise we use the default sequence number
+            // If lock time is 0 we set lockTimeAsBlockHeight to 0 to mark it as "not set". 
+            // In the tradewallet we apply the locktime only if it is set, otherwise we use the default values for 
+            // transaction locktime and sequence number
             long lockTime = trade.getOffer().getPaymentMethod().getLockTime();
             long lockTimeAsBlockHeight = 0;
             if (lockTime > 0)

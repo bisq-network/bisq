@@ -59,7 +59,7 @@ public class PaymentMethod implements Serializable, Comparable {
     public static PaymentMethod BLOCK_CHAINS;
 
     public static final List<PaymentMethod> ALL_VALUES = new ArrayList<>(Arrays.asList(
-            OK_PAY = new PaymentMethod(OK_PAY_ID, HOUR, DAY), // tx instant so min. wait time 
+            OK_PAY = new PaymentMethod(OK_PAY_ID, 0, DAY), // tx instant so min. wait time 
             PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, 0, DAY),
             SEPA = new PaymentMethod(SEPA_ID, 0, 8 * DAY), // sepa takes 1-3 business days. We use 8 days to include safety for holidays
             SWISH = new PaymentMethod(SWISH_ID, 0, DAY),

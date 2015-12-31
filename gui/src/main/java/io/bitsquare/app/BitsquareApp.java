@@ -82,10 +82,6 @@ public class BitsquareApp extends Application {
     private Injector injector;
     private boolean popupOpened;
 
-    public static Stage getPrimaryStage() {
-        return primaryStage;
-    }
-
     private static Stage primaryStage;
     private Scene scene;
     private final List<String> corruptedDatabaseFiles = new ArrayList<>();

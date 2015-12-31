@@ -262,6 +262,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     public Offer.Direction getDirection(Offer offer) {
+        // gets called earlier than onSelectTrade event handler
+        isOfferer = tradeManager.isMyOffer(offer);
         return isOfferer ? offer.getDirection() : offer.getMirroredDirection();
     }
 
