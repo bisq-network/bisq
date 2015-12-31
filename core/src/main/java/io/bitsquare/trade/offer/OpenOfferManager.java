@@ -220,21 +220,35 @@ public class OpenOfferManager {
 
     public void onRemoveOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         Optional<OpenOffer> openOfferOptional = findOpenOffer(offer.getId());
-        if (openOfferOptional.isPresent())
+        if (openOfferOptional.isPresent()) {
             onRemoveOpenOffer(openOfferOptional.get(), resultHandler, errorMessageHandler);
+        } else {
+            log.warn("Offer was not found in our list of open offers. We still try to remove it from the offerbook.");
+            errorMessageHandler.handleErrorMessage("Offer was not found in our list of open offers. " +
+                    "We still try to remove it from the offerbook.");
+            onRemoveOffer(offer);
+        }
     }
 
     public void onRemoveOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        offerBookService.removeOffer(openOffer.getOffer(),
+        Offer offer = openOffer.getOffer();
+        offerBookService.removeOffer(offer,
                 () -> {
-                    openOffer.getOffer().setState(Offer.State.REMOVED);
+                    offer.setState(Offer.State.REMOVED);
                     openOffer.setState(OpenOffer.State.CANCELED);
                     openOffers.remove(openOffer);
                     closedTradableManager.add(openOffer);
-                    //disposeCheckOfferAvailabilityRequest(offer);
                     resultHandler.handleResult();
                 },
                 errorMessageHandler);
+    }
+
+    // That should not be needed, but there are cases where the openOffer is removed but the offer still in the 
+    // offerbook
+    public void onRemoveOffer(Offer offer) {
+        offerBookService.removeOffer(offer,
+                () -> offer.setState(Offer.State.REMOVED),
+                null);
     }
 
     public void reserveOpenOffer(OpenOffer openOffer) {

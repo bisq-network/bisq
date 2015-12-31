@@ -95,6 +95,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private ChangeListener<Boolean> requestPlaceOfferSuccessListener;
     private ChangeListener<String> requestPlaceOfferErrorMessageListener;
     private ChangeListener<String> errorMessageListener;
+    private Offer offer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -276,7 +277,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         requestPlaceOfferSuccess.removeListener(requestPlaceOfferSuccessListener);
         errorMessage.removeListener(requestPlaceOfferErrorMessageListener);
 
-        Offer offer = dataModel.getOffer();
         if (offer != null && errorMessageListener != null)
             offer.errorMessageProperty().removeListener(errorMessageListener);
     }
@@ -476,8 +476,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         return paymentLabel;
     }
 
-    public Offer getOffer() {
-        return dataModel.getOffer();
+    public Offer createAndGetOffer() {
+        offer = dataModel.createAndGetOffer();
+        return offer;
     }
 
     boolean hasAcceptedArbitrators() {

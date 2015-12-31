@@ -188,7 +188,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    Offer getOffer() {
+    Offer createAndGetOffer() {
         long fiatPrice = priceAsFiat.get() != null ? priceAsFiat.get().getValue() : 0L;
         long amount = amountAsCoin.get() != null ? amountAsCoin.get().getValue() : 0L;
         long minAmount = minAmountAsCoin.get() != null ? minAmountAsCoin.get().getValue() : 0L;

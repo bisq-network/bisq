@@ -249,7 +249,6 @@ class MainViewModel implements ViewModel {
         FxTimer.runLater(Duration.ofMillis(2000), () -> setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get()));*/
 
         walletService.numPeersProperty().addListener((observable, oldValue, newValue) -> {
-            log.debug("Bitcoin peers " + newValue);
             numBTCPeers = (int) newValue;
             numBTCPeersAsString.set(String.valueOf(newValue) + " peers");
             if (blockchainSyncProgress.get() >= 1 && numBTCPeers > 0)

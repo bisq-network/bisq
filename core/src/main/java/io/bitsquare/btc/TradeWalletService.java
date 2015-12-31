@@ -141,6 +141,7 @@ public class TradeWalletService {
     public Transaction createTradingFeeTx(AddressEntry addressEntry, Coin tradingFee, String feeReceiverAddresses)
             throws InsufficientMoneyException, AddressFormatException {
         Transaction tradingFeeTx = new Transaction(params);
+        Preconditions.checkArgument(tradingFee.compareTo(FeePolicy.TX_FEE) > 0);
         Coin outPutAmount = tradingFee.subtract(FeePolicy.TX_FEE);
         tradingFeeTx.addOutput(outPutAmount, new Address(params, feeReceiverAddresses));
 

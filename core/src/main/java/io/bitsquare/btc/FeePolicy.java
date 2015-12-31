@@ -50,7 +50,7 @@ public class FeePolicy {
     public static final Coin DUST = Coin.valueOf(546);
 
     //TODO for testing
-    public static final Coin CREATE_OFFER_FEE = Coin.valueOf(10000); // 0.0001 BTC  0.1% of 1 BTC about 0.2 EUR @ 200 EUR/BTC
+    public static final Coin CREATE_OFFER_FEE = Coin.valueOf(40000); // 0.0001 BTC  0.1% of 1 BTC about 0.2 EUR @ 200 EUR/BTC
     //public static final Coin CREATE_OFFER_FEE = Coin.valueOf(100000); // 0.001 BTC  0.1% of 1 BTC about 0.2 EUR @ 200 EUR/BTC
     public static final Coin TAKE_OFFER_FEE = CREATE_OFFER_FEE;
     //TODO for testing
