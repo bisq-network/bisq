@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -82,13 +83,19 @@ public class ArbitratorService {
     }
 
     public Map<Address, Arbitrator> getArbitrators() {
-        // TODO  java.lang.IllegalStateException: Duplicate key
-        Set<Arbitrator> set = p2PService.getDataMap().values().stream()
+        Set<Arbitrator> arbitratorSet = p2PService.getDataMap().values().stream()
                 .filter(e -> e.expirablePayload instanceof Arbitrator)
                 .map(e -> (Arbitrator) e.expirablePayload)
                 .collect(Collectors.toSet());
 
-        return set.stream()
-                .collect(Collectors.toMap(e -> e.getArbitratorAddress(), e -> e));
+        Map<Address, Arbitrator> map = new HashMap<>();
+        for (Arbitrator arbitrator : arbitratorSet) {
+            Address arbitratorAddress = arbitrator.getArbitratorAddress();
+            if (!map.containsKey(arbitratorAddress))
+                map.put(arbitratorAddress, arbitrator);
+            else
+                log.warn("arbitratorAddress already exist in arbitrator map. Seems an arbitrator object is already registered with the same address.");
+        }
+        return map;
     }
 }

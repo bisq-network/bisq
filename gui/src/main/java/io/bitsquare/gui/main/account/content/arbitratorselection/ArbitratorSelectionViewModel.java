@@ -38,6 +38,7 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
     private final ArbitratorManager arbitratorManager;
     private final Preferences preferences;
     private final KeyRing keyRing;
+    private BSFormatter formatter;
     final ObservableList<String> languageCodes = FXCollections.observableArrayList();
     final ObservableList<ArbitratorListItem> arbitratorListItems = FXCollections.observableArrayList();
     final ObservableList<String> allLanguageCodes = FXCollections.observableArrayList(LanguageUtil.getAllLanguageCodes());
@@ -50,15 +51,15 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
         this.arbitratorManager = arbitratorManager;
         this.preferences = preferences;
         this.keyRing = keyRing;
+        this.formatter = formatter;
 
-        arbitratorMapChangeListener = change -> {
-            log.debug("getValueAdded " + change.getValueAdded());
-            log.debug("getValueRemoved " + change.getValueRemoved());
-            log.debug("values() " + arbitratorManager.getArbitratorsObservableMap().values());
-            arbitratorListItems.clear();
-            arbitratorListItems.addAll(arbitratorManager.getArbitratorsObservableMap().values().stream()
-                    .map(e -> new ArbitratorListItem(e, formatter)).collect(Collectors.toList()));
-        };
+        arbitratorMapChangeListener = change -> applyArbitratorMap();
+    }
+
+    private void applyArbitratorMap() {
+        arbitratorListItems.clear();
+        arbitratorListItems.addAll(arbitratorManager.getArbitratorsObservableMap().values().stream()
+                .map(e -> new ArbitratorListItem(e, formatter)).collect(Collectors.toList()));
     }
 
     @Override
@@ -66,6 +67,7 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
         languageCodes.setAll(user.getAcceptedLanguageLocaleCodes());
         arbitratorManager.getArbitratorsObservableMap().addListener(arbitratorMapChangeListener);
         arbitratorManager.applyArbitrators();
+        applyArbitratorMap();
 
         updateAutoSelectArbitrators();
     }
