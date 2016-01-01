@@ -109,7 +109,7 @@ public class PeerManagerTest {
 
                     }
                 });
-        P2PService p2PService1 = seedNode1.getP2PService();
+        P2PService p2PService1 = seedNode1.getSeedNodeP2PService();
         latch.await();
         Thread.sleep(500);
         Assert.assertEquals(0, p2PService1.getPeerManager().getAuthenticatedAndReportedPeers().size());
@@ -158,7 +158,7 @@ public class PeerManagerTest {
 
             }
         });
-        P2PService p2PService1 = seedNode1.getP2PService();
+        P2PService p2PService1 = seedNode1.getSeedNodeP2PService();
 
         Thread.sleep(500);
 
@@ -192,7 +192,7 @@ public class PeerManagerTest {
 
             }
         });
-        P2PService p2PService2 = seedNode2.getP2PService();
+        P2PService p2PService2 = seedNode2.getSeedNodeP2PService();
         latch.await();
         Assert.assertEquals(1, p2PService1.getPeerManager().getAuthenticatedAndReportedPeers().size());
         Assert.assertEquals(1, p2PService2.getPeerManager().getAuthenticatedAndReportedPeers().size());

@@ -41,13 +41,12 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
 
 
     private final NetworkNode networkNode;
-    private final P2PDataStorage dataStorage;
+    protected final P2PDataStorage dataStorage;
     private final PeerManager peerManager;
     private final Listener listener;
 
     private Optional<Address> optionalConnectedSeedNodeAddress = Optional.empty();
     private Optional<Collection<Address>> optionalSeedNodeAddresses = Optional.empty();
-    private boolean isSeedNode;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,10 +72,6 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setIsSeedNode(boolean isSeedNode) {
-        this.isSeedNode = isSeedNode;
-    }
 
     public void requestData(Collection<Address> seedNodeAddresses) {
         if (!optionalSeedNodeAddresses.isPresent())
@@ -159,15 +154,9 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
 
     @Override
     public void onPeerAuthenticated(Address peerAddress, Connection connection) {
-        if (isSeedNode && dataStorage.getMap().isEmpty()) {
-            // We are the seed node and entering the network we request the data from the peer
-            UserThread.runAfterRandomDelay(()
-                    -> requestDataFromAuthenticatedSeedNode(peerAddress, connection), 2, 5, TimeUnit.SECONDS);
-        }
-
         optionalConnectedSeedNodeAddress.ifPresent(connectedSeedNodeAddress -> {
             // We only request the data again if we have initiated the authentication (ConnectionPriority.ACTIVE)
-            // We delay a bit to be sure that the authentication state is applied to all threads
+            // We delay a bit to be sure that the authentication state is applied to all listeners
             if (connectedSeedNodeAddress.equals(peerAddress) && connection.getConnectionPriority() == ConnectionPriority.ACTIVE) {
                 // We are the node (can be a seed node as well) which requested the authentication
                 UserThread.runAfter(()
@@ -177,7 +166,7 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
     }
 
     // 5. Step after authentication to first seed node we request again the data
-    private void requestDataFromAuthenticatedSeedNode(Address peerAddress, Connection connection) {
+    protected void requestDataFromAuthenticatedSeedNode(Address peerAddress, Connection connection) {
         Log.traceCall(peerAddress.toString());
         // We have to request the data again as we might have missed pushed data in the meantime
         SettableFuture<Connection> future = networkNode.sendMessage(connection, new DataRequest());

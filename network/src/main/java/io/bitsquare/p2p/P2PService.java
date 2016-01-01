@@ -53,36 +53,37 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final Optional<KeyRing> optionalKeyRing;
 
     // set in init
-    private NetworkNode networkNode;
-    private PeerManager peerManager;
-    private P2PDataStorage dataStorage;
+    protected NetworkNode networkNode;
+    protected PeerManager peerManager;
+    protected P2PDataStorage dataStorage;
 
     private final CopyOnWriteArraySet<DecryptedMailListener> decryptedMailListeners = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<DecryptedMailboxListener> decryptedMailboxListeners = new CopyOnWriteArraySet<>();
-    private final CopyOnWriteArraySet<P2PServiceListener> p2pServiceListeners = new CopyOnWriteArraySet<>();
+    protected final CopyOnWriteArraySet<P2PServiceListener> p2pServiceListeners = new CopyOnWriteArraySet<>();
     private final Map<DecryptedMsgWithPubKey, ProtectedMailboxData> mailboxMap = new HashMap<>();
     private final Set<Address> authenticatedPeerAddresses = new HashSet<>();
     private final CopyOnWriteArraySet<Runnable> shutDownResultHandlers = new CopyOnWriteArraySet<>();
     private final BooleanProperty hiddenServicePublished = new SimpleBooleanProperty();
-    private final BooleanProperty requestingDataCompleted = new SimpleBooleanProperty();
+    protected final BooleanProperty requestingDataCompleted = new SimpleBooleanProperty();
     private final BooleanProperty firstPeerAuthenticated = new SimpleBooleanProperty();
     private final IntegerProperty numAuthenticatedPeers = new SimpleIntegerProperty(0);
 
-    private Address connectedSeedNode;
+    protected Address connectedSeedNode;
     private volatile boolean shutDownInProgress;
     private boolean shutDownComplete;
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> readyForAuthentication;
     private final Storage<Address> dbStorage;
     private Address myOnionAddress;
-    private RequestDataManager requestDataManager;
-    private Set<Address> seedNodeAddresses;
+    protected RequestDataManager requestDataManager;
+    protected Set<Address> seedNodeAddresses;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // Called also from SeedNodeP2PService
     @Inject
     public P2PService(SeedNodesRepository seedNodesRepository,
                       @Named(ProgramArguments.PORT_KEY) int port,
@@ -105,16 +106,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         init(networkId, storageDir);
     }
 
-    // Used for seed node
-    public P2PService(SeedNodesRepository seedNodesRepository,
-                      int port,
-                      File torDir,
-                      boolean useLocalhost,
-                      int networkId,
-                      File storageDir) {
-        this(seedNodesRepository, port, torDir, useLocalhost, networkId, storageDir, null, null);
-    }
-
     private void init(int networkId, File storageDir) {
         Log.traceCall();
 
@@ -131,7 +122,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         networkNode.addMessageListener(this);
 
         // peer group 
-        peerManager = new PeerManager(networkNode);
+        peerManager = createPeerManager();
         peerManager.setSeedNodeAddresses(seedNodeAddresses);
         peerManager.addAuthenticationListener(this);
 
@@ -140,19 +131,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         dataStorage.addHashMapChangedListener(this);
 
         // Request initial data manager
-        requestDataManager = new RequestDataManager(networkNode, dataStorage, peerManager, new RequestDataManager.Listener() {
-            @Override
-            public void onNoSeedNodeAvailable() {
-                p2pServiceListeners.stream().forEach(e -> e.onNoSeedNodeAvailable());
-            }
-
-            @Override
-            public void onDataReceived(Address seedNode) {
-                connectedSeedNode = seedNode;
-                requestingDataCompleted.set(true);
-                p2pServiceListeners.stream().forEach(e -> e.onRequestingDataCompleted());
-            }
-        });
+        requestDataManager = createRequestDataManager();
         peerManager.addAuthenticationListener(requestDataManager);
 
         // Test multiple states to check when we are ready for authenticateSeedNode
@@ -167,21 +146,35 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         });
     }
 
+    protected PeerManager createPeerManager() {
+        return new PeerManager(networkNode);
+    }
+
+    protected RequestDataManager createRequestDataManager() {
+        return new RequestDataManager(networkNode, dataStorage, peerManager, getRequestDataManager());
+    }
+
+    protected RequestDataManager.Listener getRequestDataManager() {
+        return new RequestDataManager.Listener() {
+            @Override
+            public void onNoSeedNodeAvailable() {
+                p2pServiceListeners.stream().forEach(e -> e.onNoSeedNodeAvailable());
+            }
+
+            @Override
+            public void onDataReceived(Address seedNode) {
+                connectedSeedNode = seedNode;
+                requestingDataCompleted.set(true);
+                p2pServiceListeners.stream().forEach(e -> e.onRequestingDataCompleted());
+            }
+        };
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void startAsSeedNode(Address mySeedNodeAddress, @Nullable P2PServiceListener listener) {
-        Log.traceCall();
-
-        // we remove ourselves from the list of seed nodes
-        seedNodeAddresses.remove(mySeedNodeAddress);
-        peerManager.setIsSeedNode(true);
-        requestDataManager.setIsSeedNode(true);
-        
-        start(listener);
-    }
 
     public void start(@Nullable P2PServiceListener listener) {
         Log.traceCall();

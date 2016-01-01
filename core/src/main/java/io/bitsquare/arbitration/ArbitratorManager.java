@@ -113,7 +113,8 @@ public class ArbitratorManager {
     }
 
     public void shutDown() {
-        MoreExecutors.shutdownAndAwaitTermination(republishArbitratorExecutor, 500, TimeUnit.MILLISECONDS);
+        if (republishArbitratorExecutor != null)
+            MoreExecutors.shutdownAndAwaitTermination(republishArbitratorExecutor, 500, TimeUnit.MILLISECONDS);
     }
 
     public void onAllServicesInitialized() {
@@ -189,7 +190,7 @@ public class ArbitratorManager {
                     resultHandler.handleResult();
 
                     if (arbitratorsObservableMap.size() > 0)
-                        UserThread.runAfter(() -> applyArbitrators(), 1);
+                        UserThread.runAfter(() -> applyArbitrators(), 100, TimeUnit.MILLISECONDS);
                 },
                 errorMessageHandler::handleErrorMessage);
     }

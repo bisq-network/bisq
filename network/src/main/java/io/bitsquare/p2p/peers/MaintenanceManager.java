@@ -55,7 +55,6 @@ public class MaintenanceManager implements MessageListener {
         executor = Utilities.getScheduledThreadPoolExecutor("MaintenanceManager", 1, 10, 5);
         executor.schedule(() -> {
             UserThread.execute(() -> pingPeers());
-            return null;
         }, 5, TimeUnit.MINUTES);
     }
 

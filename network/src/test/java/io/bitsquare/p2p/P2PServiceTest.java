@@ -83,7 +83,7 @@ public class P2PServiceTest {
         }
 
         seedNode1 = TestUtils.getAndStartSeedNode(8001, useLocalhost, seedNodes);
-        p2PService1 = seedNode1.getP2PService();
+        p2PService1 = seedNode1.getSeedNodeP2PService();
         p2PService2 = TestUtils.getAndAuthenticateP2PService(8002, encryptionService2, keyRing2, useLocalhost, seedNodes);
     }
 

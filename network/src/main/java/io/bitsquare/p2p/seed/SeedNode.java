@@ -7,6 +7,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
+import io.bitsquare.p2p.SeedNodeP2PService;
 import io.bitsquare.p2p.peers.PeerManager;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -28,7 +29,7 @@ public class SeedNode {
     private Address mySeedNodeAddress = new Address("localhost:8001");
     private boolean useLocalhost = false;
     private Set<Address> progArgSeedNodes;
-    private P2PService p2PService;
+    private SeedNodeP2PService seedNodeP2PService;
     private boolean stopped;
     private final String defaultUserDataDir;
 
@@ -134,13 +135,14 @@ public class SeedNode {
         if (torDir.mkdirs())
             log.info("Created torDir at " + torDir.getAbsolutePath());
 
-        p2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.port, torDir, useLocalhost, networkId, storageDir);
-        p2PService.startAsSeedNode(mySeedNodeAddress, listener);
+        seedNodeP2PService = new SeedNodeP2PService(seedNodesRepository, mySeedNodeAddress, torDir, useLocalhost, networkId, storageDir);
+        seedNodeP2PService.start(listener);
     }
 
-    public P2PService getP2PService() {
+    @VisibleForTesting
+    public P2PService getSeedNodeP2PService() {
         Log.traceCall();
-        return p2PService;
+        return seedNodeP2PService;
     }
 
     public void shutDown() {
@@ -154,7 +156,7 @@ public class SeedNode {
         if (!stopped) {
             stopped = true;
 
-            p2PService.shutDown(() -> {
+            seedNodeP2PService.shutDown(() -> {
                 if (shutDownCompleteHandler != null) UserThread.execute(shutDownCompleteHandler);
             });
         }

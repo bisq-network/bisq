@@ -2,9 +2,11 @@ package io.bitsquare.p2p.peers;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.network.Connection;
@@ -21,6 +23,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -34,6 +37,7 @@ public class PeerExchangeManager implements MessageListener {
     private final Supplier<Map<Address, Peer>> authenticatedPeersSupplier;
     private final Consumer<Address> removePeerConsumer;
     private final BiConsumer<HashSet<ReportedPeer>, Connection> addReportedPeersConsumer;
+    private final ScheduledThreadPoolExecutor executor;
 
     private Timer getPeersTimer;
 
@@ -54,7 +58,9 @@ public class PeerExchangeManager implements MessageListener {
         this.addReportedPeersConsumer = addReportedPeersConsumer;
 
         networkNode.addMessageListener(this);
-        startGetPeersTimer();
+
+        executor = Utilities.getScheduledThreadPoolExecutor("PeerExchangeManager", 1, 10, 5);
+        executor.schedule(() -> UserThread.execute(() -> trySendGetPeersRequest()), 4, TimeUnit.MINUTES);
     }
 
     public void shutDown() {
@@ -63,6 +69,7 @@ public class PeerExchangeManager implements MessageListener {
             getPeersTimer.cancel();
 
         networkNode.removeMessageListener(this);
+        MoreExecutors.shutdownAndAwaitTermination(executor, 500, TimeUnit.MILLISECONDS);
     }
 
 
@@ -103,16 +110,6 @@ public class PeerExchangeManager implements MessageListener {
         }
     }
 
-    private void startGetPeersTimer() {
-        Log.traceCall();
-        if (getPeersTimer != null)
-            getPeersTimer.cancel();
-
-        getPeersTimer = UserThread.runAfterRandomDelay(() -> {
-            trySendGetPeersRequest();
-            startGetPeersTimer();
-        }, 2, 4, TimeUnit.MINUTES);
-    }
 
     private void trySendGetPeersRequest() {
         Set<Peer> connectedPeersList = new HashSet<>(authenticatedPeersSupplier.get().values());

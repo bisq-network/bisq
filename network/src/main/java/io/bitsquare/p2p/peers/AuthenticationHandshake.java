@@ -205,12 +205,13 @@ public class AuthenticationHandshake implements MessageListener {
             }
         });
 
-        timeoutTimer = UserThread.runAfter(() -> {
-            failed(new AuthenticationException("Authentication to peer "
-                    + peerAddress
-                    + " failed because of a timeout. " +
-                    "We did not get an AuthenticationChallenge message responded after 30 sec."));
-        }, 30, TimeUnit.SECONDS);
+        if (timeoutTimer != null)
+            timeoutTimer.cancel();
+
+        timeoutTimer = UserThread.runAfter(() -> failed(new AuthenticationException("Authentication to peer "
+                + peerAddress
+                + " failed because of a timeout. " +
+                "We did not get an AuthenticationChallenge message responded after 30 sec.")), 30);
 
         return resultFutureOptional.get();
     }
@@ -267,13 +268,11 @@ public class AuthenticationHandshake implements MessageListener {
                         }
                     });
 
-                    timeoutTimer = UserThread.runAfter(() -> {
-                        failed(new AuthenticationException("Authentication of peer "
-                                + peerAddress
-                                + " failed because of a timeout. " +
-                                "We did not get an AuthenticationFinalResponse message responded after 30 sec.\n" +
-                                ""));
-                    }, 30, TimeUnit.SECONDS);
+                    timeoutTimer = UserThread.runAfter(() -> failed(new AuthenticationException("Authentication of peer "
+                            + peerAddress
+                            + " failed because of a timeout. " +
+                            "We did not get an AuthenticationFinalResponse message responded after 30 sec.\n" +
+                            "")), 30, TimeUnit.SECONDS);
 
                 } else {
                     log.info("AuthenticationHandshake (peerAddress={}) already shut down before we could sent " +

@@ -63,7 +63,6 @@ public class PeerManager implements MessageListener, ConnectionListener {
     private final List<Address> remainingSeedNodes = new ArrayList<>();
     private Optional<Set<Address>> seedNodeAddressesOptional = Optional.empty();
     private Timer connectToSeedNodeTimer;
-    private boolean isSeedNode;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -88,10 +87,6 @@ public class PeerManager implements MessageListener, ConnectionListener {
                 (newReportedPeers, connection) -> addToReportedPeers(newReportedPeers, connection));
 
         startConnectToSeedNodeTimer();
-    }
-
-    public void setIsSeedNode(boolean isSeedNode) {
-        this.isSeedNode = isSeedNode;
     }
 
 
@@ -364,7 +359,7 @@ public class PeerManager implements MessageListener, ConnectionListener {
                         }
 
                 );
-            } else if (reportedPeersAvailable() && !isSeedNode) {
+            } else if (reportedPeersAvailable() && !(this instanceof SeedNodePeerManager)) {
                 authenticateToRemainingReportedPeer();
             } else {
                 log.info("We don't have seed nodes or reported peers available. " +
@@ -372,11 +367,11 @@ public class PeerManager implements MessageListener, ConnectionListener {
                         "none available with the reported peers.");
                 if (seedNodeAddressesOptional.isPresent()) {
                     resetRemainingSeedNodes();
-                    if (remainingSeedNodes.isEmpty() && !isSeedNode) {
+                    if (remainingSeedNodes.isEmpty() && !(this instanceof SeedNodePeerManager)) {
                         UserThread.runAfterRandomDelay(() -> authenticateToRemainingReportedPeer(),
                                 10, 20, TimeUnit.SECONDS);
                     }
-                } else if (!isSeedNode) {
+                } else if (!(this instanceof SeedNodePeerManager)) {
                     UserThread.runAfterRandomDelay(() -> authenticateToRemainingReportedPeer(),
                             10, 20, TimeUnit.SECONDS);
                 } else {
@@ -660,7 +655,7 @@ public class PeerManager implements MessageListener, ConnectionListener {
             List<Connection> authenticatedConnections = allConnections.stream()
                     .filter(e -> e.isAuthenticated())
                     .filter(e -> e.getConnectionPriority() == ConnectionPriority.PASSIVE)
-                    .filter(e -> !isSeedNode || !isAuthConnectionSeedNode(e))
+                    .filter(e -> !(this instanceof SeedNodePeerManager) || !isAuthConnectionSeedNode(e))
                     .collect(Collectors.toList());
 
             if (authenticatedConnections.size() == 0) {
@@ -670,7 +665,7 @@ public class PeerManager implements MessageListener, ConnectionListener {
                     authenticatedConnections = allConnections.stream()
                             .filter(e -> e.isAuthenticated())
                             .filter(e -> e.getConnectionPriority() == ConnectionPriority.PASSIVE || e.getConnectionPriority() == ConnectionPriority.ACTIVE)
-                            .filter(e -> !isSeedNode || !isAuthConnectionSeedNode(e))
+                            .filter(e -> !(this instanceof SeedNodePeerManager) || !isAuthConnectionSeedNode(e))
                             .collect(Collectors.toList());
 
                     if (authenticatedConnections.size() == 0) {
@@ -680,7 +675,7 @@ public class PeerManager implements MessageListener, ConnectionListener {
                             authenticatedConnections = allConnections.stream()
                                     .filter(e -> e.isAuthenticated())
                                     .filter(e -> e.getConnectionPriority() != ConnectionPriority.AUTH_REQUEST)
-                                    .filter(e -> !isSeedNode || !isAuthConnectionSeedNode(e))
+                                    .filter(e -> !(this instanceof SeedNodePeerManager) || !isAuthConnectionSeedNode(e))
                                     .collect(Collectors.toList());
                         }
                     }

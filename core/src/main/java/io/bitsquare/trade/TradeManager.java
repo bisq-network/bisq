@@ -153,7 +153,7 @@ public class TradeManager {
         firstPeerAuthenticatedListener = new FirstPeerAuthenticatedListener() {
             @Override
             public void onFirstPeerAuthenticated() {
-                // give a bit delay to be sure other listeners has dont its jobs
+                // give a bit delay to be sure other listeners have executed its work
                 UserThread.runAfter(() -> initPendingTrades(), 100, TimeUnit.MILLISECONDS);
             }
         };
