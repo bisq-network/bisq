@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import io.bitsquare.alert.Alert;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.arbitration.Dispute;
@@ -241,7 +242,7 @@ class MainViewModel implements ViewModel {
                 walletServiceErrorMsg.set("You lost the connection to all bitcoin peers.");
             else if ((int) oldValue == 0 && (int) newValue > 0)
                 walletServiceErrorMsg.set(null);
-            
+
             numBTCPeers = (int) newValue;
             setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get());
         });
@@ -561,9 +562,10 @@ class MainViewModel implements ViewModel {
     }
 
     private void setBitcoinNetworkSyncProgress(double value) {
+        Log.traceCall("btcSyncProgress=" + value);
         btcSyncProgress.set(value);
         String numPeers = "Nr. of peers: " + numBTCPeers;
-        if (value >= 1) {
+        if (value == 1) {
             stopBlockchainSyncTimeout();
             btcSplashInfo.set(numPeers + " / synchronized with " + btcNetworkAsString);
             btcFooterInfo.set(numPeers + " / synchronized with " + btcNetworkAsString);
@@ -576,7 +578,8 @@ class MainViewModel implements ViewModel {
             btcSplashInfo.set(numPeers + " / synchronizing with " + btcNetworkAsString + ": " + percentage);
             btcFooterInfo.set(numPeers + " / synchronizing " + btcNetworkAsString + ": " + percentage);
 
-        } else {
+        } else if (value == -1) {
+            // not ready yet
             btcSplashInfo.set(numPeers + " / connecting to " + btcNetworkAsString);
             btcFooterInfo.set(numPeers + " / connecting to " + btcNetworkAsString);
         }
