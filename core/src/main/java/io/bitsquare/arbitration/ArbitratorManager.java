@@ -17,12 +17,15 @@
 
 package io.bitsquare.arbitration;
 
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bitsquare.app.ProgramArguments;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.FirstPeerAuthenticatedListener;
 import io.bitsquare.p2p.P2PService;
@@ -33,7 +36,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Utils;
-import org.reactfx.util.FxTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,11 +43,12 @@ import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.security.PublicKey;
 import java.security.SignatureException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -87,6 +90,7 @@ public class ArbitratorManager {
     private static final String publicKeyForTesting = "027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee";
     private final boolean isDevTest;
     private FirstPeerAuthenticatedListener firstPeerAuthenticatedListener;
+    private ScheduledThreadPoolExecutor republishArbitratorExecutor;
 
     @Inject
     public ArbitratorManager(@Named(ProgramArguments.DEV_TEST) boolean isDevTest, KeyRing keyRing, ArbitratorService arbitratorService, User user) {
@@ -108,6 +112,10 @@ public class ArbitratorManager {
         });
     }
 
+    public void shutDown() {
+        MoreExecutors.shutdownAndAwaitTermination(republishArbitratorExecutor, 500, TimeUnit.MILLISECONDS);
+    }
+
     public void onAllServicesInitialized() {
         if (user.getRegisteredArbitrator() != null) {
 
@@ -126,10 +134,8 @@ public class ArbitratorManager {
             }
 
             // re-publish periodically
-            FxTimer.runPeriodically(
-                    Duration.ofMillis(Arbitrator.TTL / 2),
-                    () -> republishArbitrator()
-            );
+            republishArbitratorExecutor = Utilities.getScheduledThreadPoolExecutor("", 1, 5, 5);
+            republishArbitratorExecutor.schedule(() -> republishArbitrator(), Arbitrator.TTL / 2, TimeUnit.MILLISECONDS);
         }
 
         applyArbitrators();
@@ -183,7 +189,7 @@ public class ArbitratorManager {
                     resultHandler.handleResult();
 
                     if (arbitratorsObservableMap.size() > 0)
-                        FxTimer.runLater(Duration.ofMillis(1000), this::applyArbitrators);
+                        UserThread.runAfter(() -> applyArbitrators(), 1);
                 },
                 errorMessageHandler::handleErrorMessage);
     }

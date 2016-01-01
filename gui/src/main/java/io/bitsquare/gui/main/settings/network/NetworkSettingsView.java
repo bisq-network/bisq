@@ -44,8 +44,10 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 import org.bitcoinj.core.Peer;
+import org.reactfx.util.FxTimer;
 
 import javax.inject.Inject;
+import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 
@@ -206,7 +208,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 "Do you want to shut down now?")
                 .onAction(() -> {
                     preferences.setBitcoinNetwork(netWorkComboBox.getSelectionModel().getSelectedItem());
-                    UserThread.runAfter(() -> BitsquareApp.shutDownHandler.run(), 1);
+                    FxTimer.runLater(Duration.ofMillis(500), () -> BitsquareApp.shutDownHandler.run());
                 })
                 .actionButtonText("Shut down")
                 .closeButtonText("Cancel")

@@ -68,10 +68,6 @@ import java.util.stream.Stream;
 class MainViewModel implements ViewModel {
     private static final Logger log = LoggerFactory.getLogger(MainViewModel.class);
 
-    private static final long BLOCKCHAIN_SYNC_TIMEOUT = 60000;
-    private static final long LOST_P2P_CONNECTION_TIMEOUT = 5000;
-    // private static final long LOST_BTC_CONNECTION_TIMEOUT = 5000;
-
     private final WalletService walletService;
     private final TradeWalletService tradeWalletService;
     private final ArbitratorManager arbitratorManager;
@@ -111,12 +107,10 @@ class MainViewModel implements ViewModel {
     private final String btcNetworkAsString;
 
 
-    private Timer blockchainSyncTimeoutTimer;
-    private Timer lostP2PConnectionTimeoutTimer;
     private MonadicBinding<Boolean> allServicesDone;
     private User user;
     private int numBTCPeers = 0;
-    //private Timer lostBTCConnectionTimeoutTimer;
+    private Timer checkForBtcSyncStateTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +124,6 @@ class MainViewModel implements ViewModel {
                          User user, AlertManager alertManager, WalletPasswordPopup walletPasswordPopup,
                          BSFormatter formatter) {
         this.user = user;
-        log.debug("in");
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
         this.arbitratorManager = arbitratorManager;
@@ -164,7 +157,7 @@ class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initializeAllServices() {
-        log.trace("initializeAllServices");
+        Log.traceCall();
 
         BooleanProperty walletInitialized = initBitcoinWallet();
         BooleanProperty p2pNetWorkReady = initP2PNetwork();
@@ -232,9 +225,6 @@ class MainViewModel implements ViewModel {
     }
 
     private BooleanProperty initBitcoinWallet() {
-        if (walletService.downloadPercentageProperty().get() > -1)
-            startBlockchainSyncTimeout();
-
         EasyBind.subscribe(walletService.downloadPercentageProperty(), newValue -> setBitcoinNetworkSyncProgress((double) newValue));
 
         walletService.numPeersProperty().addListener((observable, oldValue, newValue) -> {
@@ -258,8 +248,7 @@ class MainViewModel implements ViewModel {
     }
 
     private void onAllServicesInitialized() {
-        log.trace("onAllServicesInitialized");
-
+        Log.traceCall();
 
         // disputeManager
         disputeManager.getDisputesAsObservableList().addListener((ListChangeListener<Dispute>) change -> {
@@ -318,8 +307,9 @@ class MainViewModel implements ViewModel {
             }
         });
         updateBalance();
-        setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get());
 
+        setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get());
+        checkPeriodicallyForBtcSyncState();
 
         // openOfferManager
         openOfferManager.getOpenOffers().addListener((ListChangeListener<OpenOffer>) c -> updateBalance());
@@ -362,6 +352,19 @@ class MainViewModel implements ViewModel {
 
         // now show app
         showAppScreen.set(true);
+    }
+
+    private void checkPeriodicallyForBtcSyncState() {
+        if (walletService.downloadPercentageProperty().get() == -1) {
+            checkForBtcSyncStateTimer = FxTimer.runPeriodically(Duration.ofSeconds(10),
+                    () -> {
+                        log.info("Bitcoin blockchain sync still not started.");
+                        setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get());
+                    }
+            );
+        } else {
+            stopCheckForBtcSyncStateTimer();
+        }
     }
 
     private void updateP2pNetworkInfoWithPeersChanged(int numAuthenticatedPeers) {
@@ -566,40 +569,27 @@ class MainViewModel implements ViewModel {
         btcSyncProgress.set(value);
         String numPeers = "Nr. of peers: " + numBTCPeers;
         if (value == 1) {
-            stopBlockchainSyncTimeout();
             btcSplashInfo.set(numPeers + " / synchronized with " + btcNetworkAsString);
             btcFooterInfo.set(numPeers + " / synchronized with " + btcNetworkAsString);
             btcSplashSyncIconId.set("image-connection-synced");
+            stopCheckForBtcSyncStateTimer();
         } else if (value > 0.0) {
-            // We stop as soon the download started the timeout
-            stopBlockchainSyncTimeout();
-
             String percentage = formatter.formatToPercent(value);
             btcSplashInfo.set(numPeers + " / synchronizing with " + btcNetworkAsString + ": " + percentage);
             btcFooterInfo.set(numPeers + " / synchronizing " + btcNetworkAsString + ": " + percentage);
-
+            stopCheckForBtcSyncStateTimer();
         } else if (value == -1) {
-            // not ready yet
             btcSplashInfo.set(numPeers + " / connecting to " + btcNetworkAsString);
             btcFooterInfo.set(numPeers + " / connecting to " + btcNetworkAsString);
+        } else {
+            log.error("Not allowed value at setBitcoinNetworkSyncProgress: " + value);
         }
     }
 
-    private void startBlockchainSyncTimeout() {
-        log.trace("startBlockchainSyncTimeout");
-        stopBlockchainSyncTimeout();
-
-        blockchainSyncTimeoutTimer = FxTimer.runLater(Duration.ofMillis(BLOCKCHAIN_SYNC_TIMEOUT), () -> {
-            log.trace("Timeout reached");
-            setWalletServiceException(new TimeoutException());
-        });
-    }
-
-    private void stopBlockchainSyncTimeout() {
-        if (blockchainSyncTimeoutTimer != null) {
-            log.trace("stopBlockchainSyncTimeout");
-            blockchainSyncTimeoutTimer.stop();
-            blockchainSyncTimeoutTimer = null;
+    private void stopCheckForBtcSyncStateTimer() {
+        if (checkForBtcSyncStateTimer != null) {
+            checkForBtcSyncStateTimer.stop();
+            checkForBtcSyncStateTimer = null;
         }
     }
 }

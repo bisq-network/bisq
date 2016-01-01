@@ -40,7 +40,10 @@ public class FeePolicy {
 
     // Other good source is: https://tradeblock.com/blockchain 15-100 satoshis/byte
 
-    public static final Coin TX_FEE = Coin.valueOf(30000); // 0.0003 BTC about 0.06 EUR @ 200 EUR/BTC: about 90 satoshi /byte
+    // On testnet currently fees are 0.002 BTC, so increase fee to 0.005 BTC to get for sure into blocks for testing
+    public static final Coin TX_FEE = Coin.valueOf(500000); // 0.005 BTC about 0.06 EUR @ 200 EUR/BTC: about 90 satoshi /byte
+    // TODO use original value again for mainnet
+    // public static final Coin TX_FEE = Coin.valueOf(30000); // 0.0003 BTC about 0.06 EUR @ 200 EUR/BTC: about 90 satoshi /byte
 
     static {
         // we use our fee as default fee
@@ -49,11 +52,11 @@ public class FeePolicy {
 
     public static final Coin DUST = Coin.valueOf(546);
 
-    //TODO for testing
+    // TODO use original value again for mainnet
     public static final Coin CREATE_OFFER_FEE = Coin.valueOf(40000); // 0.0001 BTC  0.1% of 1 BTC about 0.2 EUR @ 200 EUR/BTC
     //public static final Coin CREATE_OFFER_FEE = Coin.valueOf(100000); // 0.001 BTC  0.1% of 1 BTC about 0.2 EUR @ 200 EUR/BTC
     public static final Coin TAKE_OFFER_FEE = CREATE_OFFER_FEE;
-    //TODO for testing
+    // TODO use original value again for mainnet
     public static final Coin SECURITY_DEPOSIT = Coin.valueOf(10000); // 0.0001 BTC; about 20 EUR @ 200 EUR/BTC
     //public static final Coin SECURITY_DEPOSIT = Coin.valueOf(10000000); // 0.1 BTC; about 20 EUR @ 200 EUR/BTC
 }

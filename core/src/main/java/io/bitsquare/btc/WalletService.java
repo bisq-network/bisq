@@ -40,8 +40,6 @@ import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.utils.Threading;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.jetbrains.annotations.NotNull;
-import org.reactfx.util.FxTimer;
-import org.reactfx.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
@@ -52,7 +50,6 @@ import javax.inject.Named;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
@@ -70,7 +67,7 @@ public class WalletService {
 
     public static final String DIR_KEY = "wallet.dir";
     public static final String PREFIX_KEY = "wallet.prefix";
-    private static final long STARTUP_TIMEOUT = 60 * 1000;
+    private static final long STARTUP_TIMEOUT_SEC = 60;
 
     private final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
@@ -127,13 +124,10 @@ public class WalletService {
 
         Threading.USER_THREAD = UserThread.getExecutor();
 
-        Timer timeoutTimer = FxTimer.runLater(
-                Duration.ofMillis(STARTUP_TIMEOUT),
-                () -> {
-                    Utilities.setThreadName("WalletService:StartupTimeout");
-                    exceptionHandler.handleException(new TimeoutException("Wallet did not initialize in " + STARTUP_TIMEOUT / 1000 + " seconds."));
-                }
-        );
+        Timer timeoutTimer = UserThread.runAfter(() -> {
+            Utilities.setThreadName("WalletService:StartupTimeout");
+            exceptionHandler.handleException(new TimeoutException("Wallet did not initialize in " + STARTUP_TIMEOUT_SEC / 1000 + " seconds."));
+        }, STARTUP_TIMEOUT_SEC);
 
         // If seed is non-null it means we are restoring from backup.
         walletAppKit = new WalletAppKit(params, walletDir, "Bitsquare") {
@@ -194,8 +188,10 @@ public class WalletService {
 
                 // set after wallet is ready
                 tradeWalletService.setWalletAppKit(walletAppKit);
-                timeoutTimer.stop();
-                UserThread.execute(resultHandler::handleResult);
+                timeoutTimer.cancel();
+
+                // onSetupCompleted in walletAppKit is not the called on the last invocations, so we add a bit of delay
+                UserThread.runAfter(() -> resultHandler.handleResult(), 100, TimeUnit.MILLISECONDS);
             }
         };
 
@@ -240,7 +236,7 @@ public class WalletService {
             public void failed(@NotNull Service.State from, @NotNull Throwable failure) {
                 walletAppKit = null;
                 log.error("walletAppKit failed");
-                timeoutTimer.stop();
+                timeoutTimer.cancel();
                 UserThread.execute(() -> exceptionHandler.handleException(failure));
             }
         }, Threading.USER_THREAD);
@@ -451,6 +447,8 @@ public class WalletService {
                             KeyParameter aesKey,
                             FutureCallback<Transaction> callback) throws AddressFormatException, IllegalArgumentException, InsufficientMoneyException {
         Transaction tx = new Transaction(params);
+        checkArgument(amount.compareTo(FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT)) > 0,
+                "You cannot send an amount which are smaller than the fee + dust output.");
         tx.addOutput(amount.subtract(FeePolicy.TX_FEE), new Address(params, toAddress));
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);

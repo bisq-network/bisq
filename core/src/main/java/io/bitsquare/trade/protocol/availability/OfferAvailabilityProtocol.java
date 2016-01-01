@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.availability;
 
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.taskrunner.TaskRunner;
@@ -29,27 +30,23 @@ import io.bitsquare.trade.protocol.availability.messages.OfferMessage;
 import io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress;
 import io.bitsquare.trade.protocol.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bitsquare.trade.protocol.availability.tasks.SendOfferAvailabilityRequest;
-import org.reactfx.util.FxTimer;
-import org.reactfx.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.time.Duration;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
 public class OfferAvailabilityProtocol {
     private static final Logger log = LoggerFactory.getLogger(OfferAvailabilityProtocol.class);
 
-    private static final long TIMEOUT = 30 * 1000;
+    private static final long TIMEOUT_SEC = 30;
 
     private final OfferAvailabilityModel model;
     private final ResultHandler resultHandler;
     private final ErrorMessageHandler errorMessageHandler;
     private final DecryptedMailListener decryptedMailListener;
-    private Timer timeoutTimer;
 
     private TaskRunner<OfferAvailabilityModel> taskRunner;
+    private java.util.Timer timeoutTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -144,16 +141,16 @@ public class OfferAvailabilityProtocol {
     private void startTimeout() {
         stopTimeout();
 
-        timeoutTimer = FxTimer.runLater(Duration.ofMillis(TIMEOUT), () -> {
+        timeoutTimer = UserThread.runAfter(() -> {
             Utilities.setThreadName("OfferAvailabilityProtocol:Timeout");
             log.warn("Timeout reached");
             errorMessageHandler.handleErrorMessage("Timeout reached: Peer has not responded.");
-        });
+        }, TIMEOUT_SEC);
     }
 
     private void stopTimeout() {
         if (timeoutTimer != null) {
-            timeoutTimer.stop();
+            timeoutTimer.cancel();
             timeoutTimer = null;
         }
     }

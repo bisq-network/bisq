@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade;
 
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
@@ -28,24 +29,21 @@ import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
-import org.reactfx.util.FxTimer;
-import org.reactfx.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.PublicKey;
-import java.time.Duration;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
 public abstract class TradeProtocol {
     private static final Logger log = LoggerFactory.getLogger(TradeProtocol.class);
-    private static final long TIMEOUT = 30 * 1000;
+    private static final long TIMEOUT_SEC = 30;
 
     protected final ProcessModel processModel;
     private final DecryptedMailListener decryptedMailListener;
-    private Timer timeoutTimer;
     protected Trade trade;
+    private java.util.Timer timeoutTimer;
 
     public TradeProtocol(Trade trade) {
         this.trade = trade;
@@ -125,18 +123,18 @@ public abstract class TradeProtocol {
     protected void startTimeout() {
         stopTimeout();
 
-        timeoutTimer = FxTimer.runLater(Duration.ofMillis(TIMEOUT), () -> {
+        timeoutTimer = UserThread.runAfter(() -> {
             Utilities.setThreadName("TradeProtocol:Timeout");
             log.error("Timeout reached");
             trade.setErrorMessage("A timeout occurred.");
             cleanupTradable();
             cleanup();
-        });
+        }, TIMEOUT_SEC);
     }
 
     protected void stopTimeout() {
         if (timeoutTimer != null) {
-            timeoutTimer.stop();
+            timeoutTimer.cancel();
             timeoutTimer = null;
         }
     }

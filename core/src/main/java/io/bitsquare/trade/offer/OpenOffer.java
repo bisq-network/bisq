@@ -18,17 +18,15 @@
 package io.bitsquare.trade.offer;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.TradableList;
-import org.reactfx.util.FxTimer;
-import org.reactfx.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.time.Duration;
 import java.util.Date;
 
 public class OpenOffer implements Tradable, Serializable {
@@ -38,7 +36,8 @@ public class OpenOffer implements Tradable, Serializable {
     private static final Logger log = LoggerFactory.getLogger(OpenOffer.class);
 
     // Timeout for offer reservation during takeoffer process. If deposit tx is not completed in that time we reset the offer to AVAILABLE state. 
-    transient private static final long TIMEOUT = 30 * 1000;
+    transient private static final long TIMEOUT_SEC = 30;
+    private java.util.Timer timeoutTimer;
 
     public enum State {
         AVAILABLE,
@@ -50,7 +49,6 @@ public class OpenOffer implements Tradable, Serializable {
     private final Offer offer;
     private State state = State.AVAILABLE;
 
-    transient private Timer timeoutTimer;
     transient private Storage<TradableList<OpenOffer>> storage;
 
     public OpenOffer(Offer offer, Storage<TradableList<OpenOffer>> storage) {
@@ -100,19 +98,17 @@ public class OpenOffer implements Tradable, Serializable {
     private void startTimeout() {
         stopTimeout();
 
-        timeoutTimer = FxTimer.runLater(
-                Duration.ofMillis(TIMEOUT),
-                () -> {
-                    Utilities.setThreadName("OpenOffer:Timeout");
-                    log.info("Timeout reached");
-                    if (state == State.RESERVED)
-                        setState(State.AVAILABLE);
-                });
+        timeoutTimer = UserThread.runAfter(() -> {
+            Utilities.setThreadName("OpenOffer:Timeout");
+            log.info("Timeout reached");
+            if (state == State.RESERVED)
+                setState(State.AVAILABLE);
+        }, TIMEOUT_SEC);
     }
 
     private void stopTimeout() {
         if (timeoutTimer != null) {
-            timeoutTimer.stop();
+            timeoutTimer.cancel();
             timeoutTimer = null;
         }
     }

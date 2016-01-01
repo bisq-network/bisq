@@ -36,8 +36,8 @@ package io.bitsquare.storage;
 
 
 import com.google.common.io.Files;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.Utilities;
 import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,17 +80,7 @@ public class FileManager<T> {
         this.dir = dir;
         this.storageFile = storageFile;
 
-        ThreadFactoryBuilder builder = new ThreadFactoryBuilder()
-                .setDaemon(true)
-                .setNameFormat("FileManager-%d")
-                .setPriority(Thread.MIN_PRIORITY);  // Avoid competing with the GUI thread.
-
-        // An executor that starts up threads when needed and shuts them down later.
-        executor = new ScheduledThreadPoolExecutor(1, builder.build());
-        executor.setKeepAliveTime(5, TimeUnit.SECONDS);
-        executor.allowCoreThreadTimeOut(true);
-        executor.setMaximumPoolSize(10);
-        executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+        executor = Utilities.getScheduledThreadPoolExecutor("FileManager", 1, 10, 5);
 
         // File must only be accessed from the auto-save executor from now on, to avoid simultaneous access.
         savePending = new AtomicBoolean();
@@ -177,14 +167,8 @@ public class FileManager<T> {
      * Shut down auto-saving.
      */
     public void shutDown() {
-      /*  if (serializable != null)
-            log.debug("shutDown " + serializable.getClass().getSimpleName());
-        else
-            log.debug("shutDown");*/
-
         executor.shutdown();
         try {
-            //executor.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS); // forever
             executor.awaitTermination(5, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

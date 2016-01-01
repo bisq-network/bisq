@@ -21,6 +21,7 @@ import ch.qos.logback.classic.Logger;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.bitsquare.alert.AlertManager;
+import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
@@ -303,6 +304,8 @@ public class BitsquareApp extends Application {
         log.debug("gracefulShutDown");
         try {
             if (injector != null) {
+                ArbitratorManager arbitratorManager = injector.getInstance(ArbitratorManager.class);
+                arbitratorManager.shutDown();
                 OpenOfferManager openOfferManager = injector.getInstance(OpenOfferManager.class);
                 openOfferManager.shutDown(() -> {
                     P2PService p2PService = injector.getInstance(P2PService.class);

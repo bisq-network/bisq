@@ -20,7 +20,6 @@ package io.bitsquare.gui.main.offer.createoffer;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.Navigation;
@@ -57,9 +56,10 @@ import javafx.scene.text.Font;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
 import org.controlsfx.control.PopOver;
+import org.reactfx.util.FxTimer;
 
 import javax.inject.Inject;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
@@ -432,19 +432,21 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             }
 
             if (newValue) {
-                UserThread.runAfter(() -> {
-                    new Popup().headLine(BSResources.get("createOffer.success.headline"))
-                            .message(BSResources.get("createOffer.success.info"))
-                            .actionButtonText("Go to \"Open offers\"")
-                            .onAction(() -> {
-                                close();
-                                UserThread.runAfter(() ->
-                                                navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class),
-                                        100, TimeUnit.MILLISECONDS);
-                            })
-                            .onClose(() -> close())
-                            .show();
-                }, 100, TimeUnit.MILLISECONDS);
+                FxTimer.runLater(Duration.ofMillis(100),
+                        () -> {
+                            new Popup().headLine(BSResources.get("createOffer.success.headline"))
+                                    .message(BSResources.get("createOffer.success.info"))
+                                    .actionButtonText("Go to \"Open offers\"")
+                                    .onAction(() -> {
+                                        close();
+                                        FxTimer.runLater(Duration.ofMillis(100),
+                                                () -> navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class)
+                                        );
+                                    })
+                                    .onClose(() -> close())
+                                    .show();
+                        }
+                );
             }
         };
     }

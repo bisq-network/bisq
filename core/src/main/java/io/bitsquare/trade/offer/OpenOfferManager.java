@@ -40,17 +40,16 @@ import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
 import io.bitsquare.user.User;
 import javafx.collections.ObservableList;
-import org.reactfx.util.FxTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
 import java.io.File;
-import java.time.Duration;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.inject.internal.util.$Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
@@ -189,8 +188,9 @@ public class OpenOfferManager {
                 offerBookService.removeOfferAtShutDown(openOffer.getOffer());
             }
 
+            // delay a bit before we signal that we are done to give time for network
             if (completeHandler != null)
-                FxTimer.runLater(Duration.ofMillis(500), completeHandler::run);
+                UserThread.runAfter(() -> completeHandler.run(), 500, TimeUnit.MILLISECONDS);
         }
     }
 

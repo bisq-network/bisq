@@ -35,10 +35,7 @@ import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.Random;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 
 /**
@@ -68,16 +65,35 @@ public class Utilities {
     public static ThreadPoolExecutor getThreadPoolExecutor(String name,
                                                            int corePoolSize,
                                                            int maximumPoolSize,
-                                                           long keepAliveTime) {
+                                                           long keepAliveTimeInSec) {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat(name)
                 .setDaemon(true)
                 .build();
-        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime,
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
                 TimeUnit.SECONDS, new ArrayBlockingQueue<>(maximumPoolSize), threadFactory);
-        threadPoolExecutor.allowCoreThreadTimeOut(true);
-        threadPoolExecutor.setRejectedExecutionHandler((r, executor) -> log.warn("RejectedExecutionHandler called"));
-        return threadPoolExecutor;
+        executor.allowCoreThreadTimeOut(true);
+        executor.setRejectedExecutionHandler((r, e) -> log.warn("RejectedExecutionHandler called"));
+        return executor;
+    }
+
+
+    public static ScheduledThreadPoolExecutor getScheduledThreadPoolExecutor(String name,
+                                                                             int corePoolSize,
+                                                                             int maximumPoolSize,
+                                                                             long keepAliveTimeInSec) {
+        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat(name)
+                .setDaemon(true)
+                .setPriority(Thread.MIN_PRIORITY)
+                .build();
+        ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(corePoolSize, threadFactory);
+        executor.setKeepAliveTime(keepAliveTimeInSec, TimeUnit.SECONDS);
+        executor.allowCoreThreadTimeOut(true);
+        executor.setMaximumPoolSize(maximumPoolSize);
+        executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+        executor.setRejectedExecutionHandler((r, e) -> log.warn("RejectedExecutionHandler called"));
+        return executor;
     }
 
     public static boolean isUnix() {
