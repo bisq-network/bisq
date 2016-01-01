@@ -77,14 +77,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private static Transitions transitions;
     private final String title;
     private ChangeListener<String> walletServiceErrorMsgListener;
-    private ChangeListener<String> blockchainSyncIconIdListener;
+    private ChangeListener<String> btcSyncIconIdListener;
     private ChangeListener<String> splashP2PNetworkErrorMsgListener;
     private ChangeListener<String> splashP2PNetworkIconIdListener;
     private ChangeListener<Number> splashP2PNetworkProgressListener;
     private ProgressIndicator splashP2PNetworkIndicator;
     private Label splashP2PNetworkLabel;
-    private ProgressBar blockchainSyncIndicator;
-    private Label blockchainSyncLabel;
+    private ProgressBar btcSyncIndicator;
+    private Label btcSplashInfo;
     private List<String> persistedFilesCorrupted;
     private static BorderPane baseApplicationContainer;
 
@@ -225,42 +225,38 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
 
         // createBitcoinInfoBox
-        blockchainSyncLabel = new Label();
-        blockchainSyncLabel.textProperty().bind(model.blockchainSyncInfo);
+        btcSplashInfo = new Label();
+        btcSplashInfo.textProperty().bind(model.btcSplashInfo);
         walletServiceErrorMsgListener = (ov, oldValue, newValue) -> {
-            blockchainSyncLabel.setId("splash-error-state-msg");
+            btcSplashInfo.setId("splash-error-state-msg");
         };
         model.walletServiceErrorMsg.addListener(walletServiceErrorMsgListener);
 
-        blockchainSyncIndicator = new ProgressBar(-1);
-        blockchainSyncIndicator.setPrefWidth(120);
-        blockchainSyncIndicator.progressProperty().bind(model.blockchainSyncProgress);
+        btcSyncIndicator = new ProgressBar(-1);
+        btcSyncIndicator.setPrefWidth(120);
+        btcSyncIndicator.progressProperty().bind(model.btcSyncProgress);
 
-        ImageView blockchainSyncIcon = new ImageView();
-        blockchainSyncIcon.setVisible(false);
-        blockchainSyncIcon.setManaged(false);
+        ImageView btcSyncIcon = new ImageView();
+        btcSyncIcon.setVisible(false);
+        btcSyncIcon.setManaged(false);
 
-        blockchainSyncIconIdListener = (ov, oldValue, newValue) -> {
-            blockchainSyncIcon.setId(newValue);
-            blockchainSyncIcon.setVisible(true);
-            blockchainSyncIcon.setManaged(true);
+        btcSyncIconIdListener = (ov, oldValue, newValue) -> {
+            btcSyncIcon.setId(newValue);
+            btcSyncIcon.setVisible(true);
+            btcSyncIcon.setManaged(true);
 
-            blockchainSyncIndicator.setVisible(false);
-            blockchainSyncIndicator.setManaged(false);
+            btcSyncIndicator.setVisible(false);
+            btcSyncIndicator.setManaged(false);
         };
-        model.blockchainSyncIconId.addListener(blockchainSyncIconIdListener);
+        model.btcSplashSyncIconId.addListener(btcSyncIconIdListener);
 
-        Label bitcoinNetworkLabel = new Label();
-        bitcoinNetworkLabel.setText(model.bitcoinNetworkAsString);
-        bitcoinNetworkLabel.setId("splash-bitcoin-network-label");
 
         HBox blockchainSyncBox = new HBox();
         blockchainSyncBox.setSpacing(10);
         blockchainSyncBox.setAlignment(Pos.CENTER);
         blockchainSyncBox.setPadding(new Insets(40, 0, 0, 0));
         blockchainSyncBox.setPrefHeight(50);
-        blockchainSyncBox.getChildren().addAll(blockchainSyncLabel, blockchainSyncIndicator,
-                blockchainSyncIcon, bitcoinNetworkLabel);
+        blockchainSyncBox.getChildren().addAll(btcSplashInfo, btcSyncIndicator, btcSyncIcon);
 
 
         // create P2PNetworkBox
@@ -268,7 +264,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkLabel.setWrapText(true);
         splashP2PNetworkLabel.setMaxWidth(500);
         splashP2PNetworkLabel.setTextAlignment(TextAlignment.CENTER);
-        splashP2PNetworkLabel.textProperty().bind(model.splashP2PNetworkInfo);
+        splashP2PNetworkLabel.textProperty().bind(model.p2PNetworkInfo);
 
         splashP2PNetworkIndicator = new ProgressIndicator();
         splashP2PNetworkIndicator.setMaxSize(24, 24);
@@ -278,7 +274,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             splashP2PNetworkLabel.setId("splash-error-state-msg");
             splashP2PNetworkIndicator.setVisible(false);
         };
-        model.p2PNetworkErrorMsg.addListener(splashP2PNetworkErrorMsgListener);
+        model.p2PNetworkWarnMsg.addListener(splashP2PNetworkErrorMsgListener);
 
 
         ImageView splashP2PNetworkIcon = new ImageView();
@@ -314,14 +310,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     private void disposeSplashScreen() {
         model.walletServiceErrorMsg.removeListener(walletServiceErrorMsgListener);
-        model.blockchainSyncIconId.removeListener(blockchainSyncIconIdListener);
+        model.btcSplashSyncIconId.removeListener(btcSyncIconIdListener);
 
-        model.p2PNetworkErrorMsg.removeListener(splashP2PNetworkErrorMsgListener);
+        model.p2PNetworkWarnMsg.removeListener(splashP2PNetworkErrorMsgListener);
         model.p2PNetworkIconId.removeListener(splashP2PNetworkIconIdListener);
         model.splashP2PNetworkProgress.removeListener(splashP2PNetworkProgressListener);
 
-        blockchainSyncLabel.textProperty().unbind();
-        blockchainSyncIndicator.progressProperty().unbind();
+        btcSplashInfo.textProperty().unbind();
+        btcSyncIndicator.progressProperty().unbind();
 
         splashP2PNetworkLabel.textProperty().unbind();
         splashP2PNetworkIndicator.progressProperty().unbind();
@@ -340,30 +336,26 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         setTopAnchor(separator, 0d);
 
         // BTC
-        Label blockchainSyncLabel = new Label();
-        blockchainSyncLabel.setId("footer-pane");
-        blockchainSyncLabel.textProperty().bind(model.blockchainSyncInfoFooter);
+        Label btcInfoLabel = new Label();
+        btcInfoLabel.setId("footer-pane");
+        btcInfoLabel.textProperty().bind(model.btcFooterInfo);
 
         ProgressBar blockchainSyncIndicator = new ProgressBar(-1);
         blockchainSyncIndicator.setPrefWidth(120);
         blockchainSyncIndicator.setMaxHeight(10);
-        blockchainSyncIndicator.progressProperty().bind(model.blockchainSyncProgress);
-
-        Label bitcoinNetworkLabel = new Label();
-        bitcoinNetworkLabel.setText("/ Bitcoin network: " + model.bitcoinNetworkAsString);
+        blockchainSyncIndicator.progressProperty().bind(model.btcSyncProgress);
 
         model.walletServiceErrorMsg.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                bitcoinNetworkLabel.setId("splash-error-state-msg");
-                bitcoinNetworkLabel.setText("/ Bitcoin network: Not connected");
-                openBTCConnectionErrorPopup(newValue);
+                btcInfoLabel.setId("splash-error-state-msg");
+                new Popup().warning(newValue + "\nPlease check your internet connection or try to restart the application.")
+                        .show();
             } else {
-                bitcoinNetworkLabel.setId("footer-bitcoin-network-label");
-                bitcoinNetworkLabel.setText("/ Bitcoin network: " + model.bitcoinNetworkAsString);
+                btcInfoLabel.setId("footer-pane");
             }
         });
 
-        model.blockchainSyncProgress.addListener((ov, oldValue, newValue) -> {
+        model.btcSyncProgress.addListener((ov, oldValue, newValue) -> {
             if ((double) newValue >= 1) {
                 blockchainSyncIndicator.setVisible(false);
                 blockchainSyncIndicator.setManaged(false);
@@ -373,7 +365,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         HBox blockchainSyncBox = new HBox();
         blockchainSyncBox.setSpacing(10);
         blockchainSyncBox.setAlignment(Pos.CENTER);
-        blockchainSyncBox.getChildren().addAll(blockchainSyncLabel, blockchainSyncIndicator, bitcoinNetworkLabel);
+        blockchainSyncBox.getChildren().addAll(btcInfoLabel, blockchainSyncIndicator);
         setLeftAnchor(blockchainSyncBox, 10d);
         setBottomAnchor(blockchainSyncBox, 7d);
 
@@ -401,15 +393,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         setBottomAnchor(p2PNetworkIcon, 7d);
         p2PNetworkIcon.idProperty().bind(model.p2PNetworkIconId);
 
-        model.p2PNetworkErrorMsg.addListener((ov, oldValue, newValue) -> {
+        model.p2PNetworkWarnMsg.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 p2PNetworkLabel.setId("splash-error-state-msg");
-                p2PNetworkLabel.textProperty().unbind();
-                new Popup().error("Connecting to the P2P network failed. \n" + newValue
-                        + "\nPlease check your internet connection.").show();
+                new Popup().warning(newValue + "\nPlease check your internet connection or try to restart the application.")
+                        .show();
             } else {
                 p2PNetworkLabel.setId("footer-pane");
-                p2PNetworkLabel.textProperty().bind(model.p2PNetworkInfo);
             }
         });
 
@@ -513,9 +503,5 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         if (suffixIdx != viewName.length() - suffix.length())
             throw new IllegalArgumentException("Cannot get ID for " + viewClass + ": class must end in " + suffix);
         return viewName.substring(0, suffixIdx).toLowerCase();
-    }
-
-    private void openBTCConnectionErrorPopup(String errorMsg) {
-        new Popup().error("Connecting to the bitcoin network failed. \n" + errorMsg).show();
     }
 }

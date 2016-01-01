@@ -141,6 +141,11 @@ public class Popup {
         return this;
     }
 
+    public Popup hideReportErrorButtons() {
+        this.showReportErrorButtons = false;
+        return this;
+    }
+
     public Popup message(String message) {
         this.message = message;
         setTruncatedMessage();
