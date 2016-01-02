@@ -32,6 +32,7 @@ import io.bitsquare.gui.common.view.View;
 import io.bitsquare.gui.common.view.ViewLoader;
 import io.bitsquare.gui.common.view.guice.InjectorViewFactory;
 import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.MainViewModel;
 import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.popups.EmptyWalletPopup;
 import io.bitsquare.gui.popups.Popup;
@@ -304,15 +305,13 @@ public class BitsquareApp extends Application {
         log.debug("gracefulShutDown");
         try {
             if (injector != null) {
-                ArbitratorManager arbitratorManager = injector.getInstance(ArbitratorManager.class);
-                arbitratorManager.shutDown();
-                OpenOfferManager openOfferManager = injector.getInstance(OpenOfferManager.class);
-                openOfferManager.shutDown(() -> {
-                    P2PService p2PService = injector.getInstance(P2PService.class);
-                    p2PService.shutDown(() -> {
-                        WalletService walletService = injector.getInstance(WalletService.class);
-                        walletService.shutDownDone.addListener((observable, oldValue, newValue) -> {
+                injector.getInstance(ArbitratorManager.class).shutDown();
+                injector.getInstance(MainViewModel.class).shutDown();
+                injector.getInstance(OpenOfferManager.class).shutDown(() -> {
+                    injector.getInstance(P2PService.class).shutDown(() -> {
+                        injector.getInstance(WalletService.class).shutDownDone.addListener((ov, o, n) -> {
                             bitsquareAppModule.close(injector);
+                            log.info("Graceful shutdown completed");
                             resultHandler.handleResult();
                         });
                         injector.getInstance(WalletService.class).shutDown();

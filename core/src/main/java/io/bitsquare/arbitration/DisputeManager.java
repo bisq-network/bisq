@@ -106,12 +106,12 @@ public class DisputeManager {
 
         p2PService.addDecryptedMailListener((decryptedMessageWithPubKey, senderAddress) -> {
             decryptedMailMessageWithPubKeys.add(decryptedMessageWithPubKey);
-            if (p2PService.getFirstPeerAuthenticated())
+            if (p2PService.isAuthenticated())
                 applyMessages();
         });
         p2PService.addDecryptedMailboxListener((decryptedMessageWithPubKey, senderAddress) -> {
             decryptedMailboxMessageWithPubKeys.add(decryptedMessageWithPubKey);
-            if (p2PService.getFirstPeerAuthenticated())
+            if (p2PService.isAuthenticated())
                 applyMessages();
         });
 

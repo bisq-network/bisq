@@ -87,6 +87,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Label btcSplashInfo;
     private List<String> persistedFilesCorrupted;
     private static BorderPane baseApplicationContainer;
+    private Popup p2PNetworkWarnMsgPopup;
 
     @Inject
     public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, Transitions transitions,
@@ -271,8 +272,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkIndicator.progressProperty().bind(model.splashP2PNetworkProgress);
 
         splashP2PNetworkErrorMsgListener = (ov, oldValue, newValue) -> {
-            splashP2PNetworkLabel.setId("splash-error-state-msg");
-            splashP2PNetworkIndicator.setVisible(false);
+            if (newValue != null) {
+                splashP2PNetworkLabel.setId("splash-error-state-msg");
+                splashP2PNetworkIndicator.setVisible(false);
+            }
         };
         model.p2PNetworkWarnMsg.addListener(splashP2PNetworkErrorMsgListener);
 
@@ -392,14 +395,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         setRightAnchor(p2PNetworkIcon, 10d);
         setBottomAnchor(p2PNetworkIcon, 7d);
         p2PNetworkIcon.idProperty().bind(model.p2PNetworkIconId);
-
+        p2PNetworkLabel.idProperty().bind(model.p2PNetworkLabelId);
         model.p2PNetworkWarnMsg.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                p2PNetworkLabel.setId("splash-error-state-msg");
-                new Popup().warning(newValue + "\nPlease check your internet connection or try to restart the application.")
-                        .show();
-            } else {
-                p2PNetworkLabel.setId("footer-pane");
+                p2PNetworkWarnMsgPopup = new Popup().warning(newValue).show();
+            } else if (p2PNetworkWarnMsgPopup != null) {
+                p2PNetworkWarnMsgPopup.hide();
             }
         });
 

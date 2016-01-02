@@ -158,7 +158,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean isAuthenticated() {
-        return p2PService.getFirstPeerAuthenticated();
+        return p2PService.isAuthenticated();
     }
 
     public TradeCurrency getTradeCurrency() {

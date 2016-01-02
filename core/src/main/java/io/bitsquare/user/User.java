@@ -318,7 +318,7 @@ public class User implements Serializable {
 
     public void setDevelopersAlert(Alert developersAlert) {
         this.developersAlert = developersAlert;
-        storage.queueUpForSave();
+        storage.queueUpForSave(2000);
     }
 
     public Alert getDevelopersAlert() {
@@ -327,7 +327,7 @@ public class User implements Serializable {
 
     public void setDisplayedAlert(Alert displayedAlert) {
         this.displayedAlert = displayedAlert;
-        storage.queueUpForSave();
+        storage.queueUpForSave(2000);
     }
 
     public Alert getDisplayedAlert() {

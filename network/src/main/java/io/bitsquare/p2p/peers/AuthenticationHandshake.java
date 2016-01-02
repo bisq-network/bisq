@@ -42,7 +42,7 @@ public class AuthenticationHandshake implements MessageListener {
     private long nonce = 0;
     private boolean stopped;
     private Optional<SettableFuture<Connection>> resultFutureOptional = Optional.empty();
-    private Timer timeoutTimer;
+    private Timer timeoutTimer, shutDownTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -239,7 +239,10 @@ public class AuthenticationHandshake implements MessageListener {
                 "connection with his reported address to verify if his address is correct.", peerAddress);
 
         connection.shutDown(() -> {
-            UserThread.runAfter(() -> {
+            if (shutDownTimer != null)
+                shutDownTimer.cancel();
+
+            shutDownTimer = UserThread.runAfter(() -> {
                 if (!stopped) {
                     // we delay a bit as listeners for connection.onDisconnect are on other threads and might lead to 
                     // inconsistent state
@@ -267,6 +270,9 @@ public class AuthenticationHandshake implements MessageListener {
                             failed(throwable);
                         }
                     });
+
+                    if (timeoutTimer != null)
+                        timeoutTimer.cancel();
 
                     timeoutTimer = UserThread.runAfter(() -> failed(new AuthenticationException("Authentication of peer "
                             + peerAddress
@@ -342,6 +348,9 @@ public class AuthenticationHandshake implements MessageListener {
 
         if (timeoutTimer != null)
             timeoutTimer.cancel();
+
+        if (shutDownTimer != null)
+            shutDownTimer.cancel();
 
         networkNode.removeMessageListener(this);
     }

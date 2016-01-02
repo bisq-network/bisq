@@ -13,15 +13,16 @@ import java.util.concurrent.TimeUnit;
 public class SeedNodeRequestDataManager extends RequestDataManager {
     private static final Logger log = LoggerFactory.getLogger(SeedNodeRequestDataManager.class);
 
-    public SeedNodeRequestDataManager(NetworkNode networkNode, P2PDataStorage dataStorage, PeerManager peerManager, Listener listener) {
-        super(networkNode, dataStorage, peerManager, listener);
+    public SeedNodeRequestDataManager(NetworkNode networkNode, P2PDataStorage dataStorage, PeerManager peerManager) {
+        super(networkNode, dataStorage, peerManager);
     }
 
     @Override
     public void onPeerAuthenticated(Address peerAddress, Connection connection) {
         //TODO not clear which use case is handles here...
         if (dataStorage.getMap().isEmpty()) {
-            UserThread.runAfterRandomDelay(()
+            if (requestDataFromAuthenticatedSeedNodeTimer == null)
+                requestDataFromAuthenticatedSeedNodeTimer = UserThread.runAfterRandomDelay(()
                     -> requestDataFromAuthenticatedSeedNode(peerAddress, connection), 2, 5, TimeUnit.SECONDS);
         }
         super.onPeerAuthenticated(peerAddress, connection);

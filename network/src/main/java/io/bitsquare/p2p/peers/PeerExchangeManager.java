@@ -116,7 +116,7 @@ public class PeerExchangeManager implements MessageListener {
         if (!connectedPeersList.isEmpty()) {
             Log.traceCall();
             connectedPeersList.stream()
-                    .forEach(e -> UserThread.runAfterRandomDelay(() -> {
+                    .forEach(e -> {
                         SettableFuture<Connection> future = networkNode.sendMessage(e.connection,
                                 new GetPeersRequest(networkNode.getAddress(), new HashSet<>(authenticatedAndReportedPeersSupplier.get())));
                         Futures.addCallback(future, new FutureCallback<Connection>() {
@@ -131,7 +131,7 @@ public class PeerExchangeManager implements MessageListener {
                                 removePeerConsumer.accept(e.address);
                             }
                         });
-                    }, 3, 5, TimeUnit.SECONDS));
+                    });
         }
     }
 }

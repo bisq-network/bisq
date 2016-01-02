@@ -88,7 +88,6 @@ public class Preferences implements Serializable {
     private boolean useAnimations = true;
     private boolean useEffects = true;
     private boolean displaySecurityDepositInfo = true;
-    private boolean useUPnP = true;
     private ArrayList<TradeCurrency> tradeCurrencies;
     private BlockChainExplorer blockChainExplorerMainNet;
     private BlockChainExplorer blockChainExplorerTestNet;
@@ -123,7 +122,6 @@ public class Preferences implements Serializable {
             setBtcDenomination(persisted.btcDenomination);
             setUseAnimations(persisted.useAnimations);
             setUseEffects(persisted.useEffects);
-            setUseUPnP(persisted.useUPnP);
             setTradeCurrencies(persisted.tradeCurrencies);
             tradeCurrencies = new ArrayList<>(tradeCurrenciesAsObservable);
             displaySecurityDepositInfo = persisted.getDisplaySecurityDepositInfo();
@@ -172,15 +170,15 @@ public class Preferences implements Serializable {
         // Use that to guarantee update of the serializable field and to make a storage update in case of a change
         btcDenominationProperty.addListener((ov) -> {
             btcDenomination = btcDenominationProperty.get();
-            storage.queueUpForSave();
+            storage.queueUpForSave(2000);
         });
         useAnimationsProperty.addListener((ov) -> {
             useAnimations = useAnimationsProperty.get();
-            storage.queueUpForSave();
+            storage.queueUpForSave(2000);
         });
         useEffectsProperty.addListener((ov) -> {
             useEffects = useEffectsProperty.get();
-            storage.queueUpForSave();
+            storage.queueUpForSave(2000);
         });
         tradeCurrenciesAsObservable.addListener((Observable ov) -> {
             tradeCurrencies.clear();
@@ -191,7 +189,7 @@ public class Preferences implements Serializable {
 
     public void dontShowAgain(String id) {
         showAgainMap.put(id, false);
-        storage.queueUpForSave();
+        storage.queueUpForSave(2000);
     }
 
 
@@ -213,12 +211,7 @@ public class Preferences implements Serializable {
 
     public void setDisplaySecurityDepositInfo(boolean displaySecurityDepositInfo) {
         this.displaySecurityDepositInfo = displaySecurityDepositInfo;
-        storage.queueUpForSave();
-    }
-
-    public void setUseUPnP(boolean useUPnP) {
-        this.useUPnP = useUPnP;
-        storage.queueUpForSave();
+        storage.queueUpForSave(2000);
     }
 
     public void setBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {
@@ -235,12 +228,12 @@ public class Preferences implements Serializable {
 
     private void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet) {
         this.blockChainExplorerTestNet = blockChainExplorerTestNet;
-        storage.queueUpForSave();
+        storage.queueUpForSave(2000);
     }
 
     private void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet) {
         this.blockChainExplorerMainNet = blockChainExplorerMainNet;
-        storage.queueUpForSave();
+        storage.queueUpForSave(2000);
     }
 
     public void setBlockChainExplorer(BlockChainExplorer blockChainExplorer) {
@@ -252,12 +245,12 @@ public class Preferences implements Serializable {
 
     public void setShowPlaceOfferConfirmation(boolean showPlaceOfferConfirmation) {
         this.showPlaceOfferConfirmation = showPlaceOfferConfirmation;
-        storage.queueUpForSave();
+        storage.queueUpForSave(2000);
     }
 
     public void setShowTakeOfferConfirmation(boolean showTakeOfferConfirmation) {
         this.showTakeOfferConfirmation = showTakeOfferConfirmation;
-        storage.queueUpForSave();
+        storage.queueUpForSave(2000);
     }
 
     public void setTacAccepted(boolean tacAccepted) {
@@ -308,10 +301,6 @@ public class Preferences implements Serializable {
 
     public BooleanProperty useEffectsPropertyProperty() {
         return useEffectsProperty;
-    }
-
-    public boolean getUseUPnP() {
-        return useUPnP;
     }
 
     public BitcoinNetwork getBitcoinNetwork() {
@@ -379,7 +368,7 @@ public class Preferences implements Serializable {
         // if we add new and those are not in our stored map we display by default the new popup
         if (!getShowAgainMap().containsKey(key)) {
             showAgainMap.put(key, true);
-            storage.queueUpForSave();
+            storage.queueUpForSave(2000);
         }
 
         return showAgainMap.get(key);

@@ -46,7 +46,7 @@ public class Navigation implements Serializable {
     // New listeners can be added during iteration so we use CopyOnWriteArrayList to
     // prevent invalid array modification
     transient private final CopyOnWriteArraySet<Listener> listeners = new CopyOnWriteArraySet<>();
-    transient private final Storage<Navigation> remoteStorage;
+    transient private final Storage<Navigation> storage;
     transient private ViewPath currentPath;
     // Used for returning to the last important view. After setup is done we want to
     // return to the last opened view (e.g. sell/buy)
@@ -57,14 +57,13 @@ public class Navigation implements Serializable {
 
 
     @Inject
-    public Navigation(Storage<Navigation> remoteStorage) {
-        this.remoteStorage = remoteStorage;
+    public Navigation(Storage<Navigation> storage) {
+        this.storage = storage;
 
-        Navigation persisted = remoteStorage.initAndGetPersisted(this);
+        Navigation persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
             previousPath = persisted.getPreviousPath();
-        }
-        else
+        } else
             previousPath = DEFAULT_VIEW_PATH;
 
         // need to be null initially and not DEFAULT_VIEW_PATH to navigate through all items
@@ -102,7 +101,7 @@ public class Navigation implements Serializable {
 
         currentPath = newPath;
         previousPath = currentPath;
-        remoteStorage.queueUpForSave();
+        storage.queueUpForSave(2000);
         listeners.stream().forEach((e) -> e.onNavigationRequested(currentPath));
     }
 

@@ -49,6 +49,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final int port;
     private final File torDir;
     private final boolean useLocalhost;
+    protected final File storageDir;
     private final Optional<EncryptionService> optionalEncryptionService;
     private final Optional<KeyRing> optionalKeyRing;
 
@@ -63,16 +64,16 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final Map<DecryptedMsgWithPubKey, ProtectedMailboxData> mailboxMap = new HashMap<>();
     private final Set<Address> authenticatedPeerAddresses = new HashSet<>();
     private final CopyOnWriteArraySet<Runnable> shutDownResultHandlers = new CopyOnWriteArraySet<>();
-    private final BooleanProperty hiddenServicePublished = new SimpleBooleanProperty();
-    protected final BooleanProperty requestingDataCompleted = new SimpleBooleanProperty();
-    private final BooleanProperty firstPeerAuthenticated = new SimpleBooleanProperty();
+    protected final BooleanProperty hiddenServicePublished = new SimpleBooleanProperty();
+    private final BooleanProperty requestingDataCompleted = new SimpleBooleanProperty();
+    protected final BooleanProperty notAuthenticated = new SimpleBooleanProperty(true);
     private final IntegerProperty numAuthenticatedPeers = new SimpleIntegerProperty(0);
 
-    protected Address connectedSeedNode;
+    private Address seedNodeOfInitialDataRequest;
     private volatile boolean shutDownInProgress;
     private boolean shutDownComplete;
     @SuppressWarnings("FieldCanBeLocal")
-    private MonadicBinding<Boolean> readyForAuthentication;
+    private MonadicBinding<Boolean> readyForAuthenticationBinding;
     private final Storage<Address> dbStorage;
     private Address myOnionAddress;
     protected RequestDataManager requestDataManager;
@@ -97,6 +98,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         this.port = port;
         this.torDir = torDir;
         this.useLocalhost = useLocalhost;
+        this.storageDir = storageDir;
 
         optionalEncryptionService = encryptionService == null ? Optional.empty() : Optional.of(encryptionService);
         optionalKeyRing = keyRing == null ? Optional.empty() : Optional.of(keyRing);
@@ -122,7 +124,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         networkNode.addMessageListener(this);
 
         // peer group 
-        peerManager = createPeerManager();
+        peerManager = getNewPeerManager();
         peerManager.setSeedNodeAddresses(seedNodeAddresses);
         peerManager.addAuthenticationListener(this);
 
@@ -130,51 +132,58 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         dataStorage = new P2PDataStorage(peerManager, networkNode, storageDir);
         dataStorage.addHashMapChangedListener(this);
 
-        // Request initial data manager
-        requestDataManager = createRequestDataManager();
-        peerManager.addAuthenticationListener(requestDataManager);
-
-        // Test multiple states to check when we are ready for authenticateSeedNode
-        readyForAuthentication = EasyBind.combine(hiddenServicePublished, requestingDataCompleted, firstPeerAuthenticated,
-                (hiddenServicePublished, requestingDataCompleted, firstPeerAuthenticated)
-                        -> hiddenServicePublished && requestingDataCompleted && !firstPeerAuthenticated);
-        readyForAuthentication.subscribe((observable, oldValue, newValue) -> {
-            // we need to have both the initial data delivered and the hidden service published before we 
-            // authenticate to a seed node. 
-            if (newValue)
-                authenticateSeedNode();
-        });
-    }
-
-    protected PeerManager createPeerManager() {
-        return new PeerManager(networkNode);
-    }
-
-    protected RequestDataManager createRequestDataManager() {
-        return new RequestDataManager(networkNode, dataStorage, peerManager, getRequestDataManager());
-    }
-
-    protected RequestDataManager.Listener getRequestDataManager() {
-        return new RequestDataManager.Listener() {
+        // Request data manager
+        requestDataManager = getNewRequestDataManager();
+        requestDataManager.setRequestDataManagerListener(new RequestDataManager.Listener() {
             @Override
             public void onNoSeedNodeAvailable() {
                 p2pServiceListeners.stream().forEach(e -> e.onNoSeedNodeAvailable());
             }
 
             @Override
-            public void onDataReceived(Address seedNode) {
-                connectedSeedNode = seedNode;
-                requestingDataCompleted.set(true);
+            public void onNoPeersAvailable() {
+                p2pServiceListeners.stream().forEach(e -> e.onNoPeersAvailable());
+            }
+
+            @Override
+            public void onDataReceived(Address address) {
+                if (!requestingDataCompleted.get()) {
+                    seedNodeOfInitialDataRequest = address;
+                    requestingDataCompleted.set(true);
+                }
                 p2pServiceListeners.stream().forEach(e -> e.onRequestingDataCompleted());
             }
-        };
+        });
+        peerManager.addAuthenticationListener(requestDataManager);
+
+        // Test multiple states to check when we are ready for authenticateSeedNode
+        // We need to have both the initial data delivered and the hidden service published before we 
+        // authenticate to a seed node. 
+        readyForAuthenticationBinding = getNewReadyForAuthenticationBinding();
+        readyForAuthenticationBinding.subscribe((observable, oldValue, newValue) -> {
+            if (newValue)
+                authenticateToSeedNode();
+        });
+    }
+
+    protected MonadicBinding<Boolean> getNewReadyForAuthenticationBinding() {
+        return EasyBind.combine(hiddenServicePublished, requestingDataCompleted, notAuthenticated,
+                (hiddenServicePublished, requestingDataCompleted, notAuthenticated)
+                        -> hiddenServicePublished && requestingDataCompleted && notAuthenticated);
+    }
+
+    protected PeerManager getNewPeerManager() {
+        return new PeerManager(networkNode, storageDir);
+    }
+
+    protected RequestDataManager getNewRequestDataManager() {
+        return new RequestDataManager(networkNode, dataStorage, peerManager);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     public void start(@Nullable P2PServiceListener listener) {
         Log.traceCall();
@@ -238,7 +247,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     @Override
     public void onTorNodeReady() {
         Log.traceCall();
-        requestDataManager.requestData(seedNodeAddresses);
+        requestDataManager.requestDataFromSeedNodes(seedNodeAddresses);
         p2pServiceListeners.stream().forEach(e -> e.onTorNodeReady());
     }
 
@@ -265,10 +274,10 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         p2pServiceListeners.stream().forEach(e -> e.onSetupFailed(throwable));
     }
 
-    private void authenticateSeedNode() {
+    protected void authenticateToSeedNode() {
         Log.traceCall();
-        checkNotNull(connectedSeedNode != null, "connectedSeedNode must not be null");
-        peerManager.authenticateToSeedNode(connectedSeedNode);
+        checkNotNull(seedNodeOfInitialDataRequest != null, "seedNodeOfInitialDataRequest must not be null");
+        peerManager.authenticateToSeedNode(seedNodeOfInitialDataRequest);
     }
 
 
@@ -301,8 +310,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         Log.traceCall();
         authenticatedPeerAddresses.add(peerAddress);
 
-        if (!firstPeerAuthenticated.get()) {
-            firstPeerAuthenticated.set(true);
+        if (notAuthenticated.get()) {
+            notAuthenticated.set(false);
             p2pServiceListeners.stream().forEach(e -> e.onFirstPeerAuthenticated());
         }
 
@@ -658,8 +667,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean getFirstPeerAuthenticated() {
-        return firstPeerAuthenticated.get();
+    public boolean isAuthenticated() {
+        return !notAuthenticated.get();
     }
 
     public NetworkNode getNetworkNode() {
@@ -678,6 +687,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         return authenticatedPeerAddresses;
     }
 
+    @NotNull
     public ReadOnlyIntegerProperty getNumAuthenticatedPeers() {
         return numAuthenticatedPeers;
     }

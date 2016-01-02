@@ -47,6 +47,7 @@ import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.beans.property.*;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import org.bitcoinj.core.*;
 import org.bitcoinj.store.BlockStoreException;
@@ -65,7 +66,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-class MainViewModel implements ViewModel {
+public class MainViewModel implements ViewModel {
     private static final Logger log = LoggerFactory.getLogger(MainViewModel.class);
 
     private final WalletService walletService;
@@ -105,12 +106,13 @@ class MainViewModel implements ViewModel {
     final BooleanProperty showOpenDisputesNotification = new SimpleBooleanProperty();
     private final BooleanProperty isSplashScreenRemoved = new SimpleBooleanProperty();
     private final String btcNetworkAsString;
-
+    final StringProperty p2PNetworkLabelId = new SimpleStringProperty("footer-pane");
 
     private MonadicBinding<Boolean> allServicesDone;
     private User user;
     private int numBTCPeers = 0;
     private Timer checkForBtcSyncStateTimer;
+    private ChangeListener<Number> numAuthenticatedPeersListener, btcNumPeersListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -170,13 +172,24 @@ class MainViewModel implements ViewModel {
         });
     }
 
+    public void shutDown() {
+        if (numAuthenticatedPeersListener != null)
+            p2PService.getNumAuthenticatedPeers().removeListener(numAuthenticatedPeersListener);
+
+        if (btcNumPeersListener != null)
+            walletService.numPeersProperty().removeListener(btcNumPeersListener);
+
+        if (checkForBtcSyncStateTimer != null)
+            checkForBtcSyncStateTimer.stop();
+
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Initialisation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private BooleanProperty initP2PNetwork() {
-        final BooleanProperty p2pNetWorkReady = new SimpleBooleanProperty();
+        final BooleanProperty p2pNetworkInitialized = new SimpleBooleanProperty();
         p2PNetworkInfo.set("Connecting to Tor network...");
         p2PService.start(new P2PServiceListener() {
             @Override
@@ -197,14 +210,26 @@ class MainViewModel implements ViewModel {
                 } else {
                     updateP2pNetworkInfoWithPeersChanged(p2PService.getNumAuthenticatedPeers().get());
                 }
-                p2pNetWorkReady.set(true);
+                p2pNetworkInitialized.set(true);
             }
 
             @Override
             public void onNoSeedNodeAvailable() {
-                p2PNetworkWarnMsg.set("There are no seed nodes available.");
-                p2PNetworkInfo.set("No seed node available");
-                p2pNetWorkReady.set(true);
+                if (p2PService.getNumAuthenticatedPeers().get() == 0) {
+                    p2PNetworkInfo.set("No seed nodes available");
+                }
+                p2pNetworkInitialized.set(true);
+            }
+
+            @Override
+            public void onNoPeersAvailable() {
+                if (p2PService.getNumAuthenticatedPeers().get() == 0) {
+                    p2PNetworkWarnMsg.set("There are no seed nodes or persisted peers available for requesting data.\n" +
+                            "Please check your internet connection or try to restart the application.");
+                    p2PNetworkInfo.set("No seed nodes and peers available");
+                    p2PNetworkLabelId.set("splash-error-state-msg");
+                }
+                p2pNetworkInitialized.set(true);
             }
 
             @Override
@@ -216,18 +241,22 @@ class MainViewModel implements ViewModel {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
-                p2PNetworkWarnMsg.set("Connecting to the P2P network failed (reported error: " + throwable.getMessage() + ").");
+                p2PNetworkWarnMsg.set("Connecting to the P2P network failed (reported error: "
+                        + throwable.getMessage() + ").\n" +
+                        "Please check your internet connection or try to restart the application.");
                 splashP2PNetworkProgress.set(0);
+                if (p2PService.getNumAuthenticatedPeers().get() == 0)
+                    p2PNetworkLabelId.set("splash-error-state-msg");
             }
         });
 
-        return p2pNetWorkReady;
+        return p2pNetworkInitialized;
     }
 
     private BooleanProperty initBitcoinWallet() {
         EasyBind.subscribe(walletService.downloadPercentageProperty(), newValue -> setBitcoinNetworkSyncProgress((double) newValue));
 
-        walletService.numPeersProperty().addListener((observable, oldValue, newValue) -> {
+        btcNumPeersListener = (observable, oldValue, newValue) -> {
             if ((int) oldValue > 0 && (int) newValue == 0)
                 walletServiceErrorMsg.set("You lost the connection to all bitcoin peers.");
             else if ((int) oldValue == 0 && (int) newValue > 0)
@@ -235,7 +264,8 @@ class MainViewModel implements ViewModel {
 
             numBTCPeers = (int) newValue;
             setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get());
-        });
+        };
+        walletService.numPeersProperty().addListener(btcNumPeersListener);
 
         final BooleanProperty walletInitialized = new SimpleBooleanProperty();
         walletService.initialize(null,
@@ -341,14 +371,19 @@ class MainViewModel implements ViewModel {
                     .show();
 
         // update nr of peers in footer
-        p2PService.getNumAuthenticatedPeers().addListener((observable, oldValue, newValue) -> {
-            if ((int) oldValue > 0 && (int) newValue == 0)
-                p2PNetworkWarnMsg.set("You lost the connection to all P2P network peers.");
-            else if ((int) oldValue == 0 && (int) newValue > 0)
+        numAuthenticatedPeersListener = (observable, oldValue, newValue) -> {
+            if ((int) oldValue > 0 && (int) newValue == 0) {
+                p2PNetworkWarnMsg.set("You lost the connection to all P2P network peers.\n" +
+                        "Please check your internet connection or try to restart the application.");
+                p2PNetworkLabelId.set("splash-error-state-msg");
+            } else if ((int) oldValue == 0 && (int) newValue > 0) {
                 p2PNetworkWarnMsg.set(null);
+                p2PNetworkLabelId.set("footer-pane");
+            }
 
             updateP2pNetworkInfoWithPeersChanged((int) newValue);
-        });
+        };
+        p2PService.getNumAuthenticatedPeers().addListener(numAuthenticatedPeersListener);
 
         // now show app
         showAppScreen.set(true);
@@ -565,7 +600,6 @@ class MainViewModel implements ViewModel {
     }
 
     private void setBitcoinNetworkSyncProgress(double value) {
-        Log.traceCall("btcSyncProgress=" + value);
         btcSyncProgress.set(value);
         String numPeers = "Nr. of peers: " + numBTCPeers;
         if (value == 1) {

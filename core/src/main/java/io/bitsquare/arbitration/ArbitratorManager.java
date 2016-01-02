@@ -121,7 +121,7 @@ public class ArbitratorManager {
         if (user.getRegisteredArbitrator() != null) {
 
             P2PService p2PService = arbitratorService.getP2PService();
-            if (!p2PService.getFirstPeerAuthenticated()) {
+            if (!p2PService.isAuthenticated()) {
                 firstPeerAuthenticatedListener = new FirstPeerAuthenticatedListener() {
                     @Override
                     public void onFirstPeerAuthenticated() {

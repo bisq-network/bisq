@@ -22,6 +22,7 @@ public class ReportedPeer implements Serializable {
         this(address, null);
     }
 
+    // We don't use the lastActivityDate for identity
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -33,6 +34,7 @@ public class ReportedPeer implements Serializable {
 
     }
 
+    // We don't use the lastActivityDate for identity
     @Override
     public int hashCode() {
         return address != null ? address.hashCode() : 0;

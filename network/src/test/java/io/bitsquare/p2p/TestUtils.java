@@ -91,6 +91,10 @@ public class TestUtils {
                     }
 
                     @Override
+                    public void onNoPeersAvailable() {
+                    }
+
+                    @Override
                     public void onFirstPeerAuthenticated() {
                     }
 
@@ -136,8 +140,11 @@ public class TestUtils {
             }
 
             @Override
-            public void onTorNodeReady() {
+            public void onNoPeersAvailable() {
+            }
 
+            @Override
+            public void onTorNodeReady() {
             }
 
             @Override
@@ -147,7 +154,6 @@ public class TestUtils {
 
             @Override
             public void onHiddenServicePublished() {
-
             }
 
             @Override

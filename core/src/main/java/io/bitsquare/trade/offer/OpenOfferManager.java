@@ -125,9 +125,9 @@ public class OpenOfferManager {
         // setupAnStartRePublishThread will re-publish at method call
 
         // Before the TTL is reached we re-publish our offers
-        // If offer removal at shutdown fails we don't want to have long term dangling dead offers, so we set TTL quite short and use re-publish as 
-        // strategy. Offerers need to be online anyway.
-        if (!p2PService.getFirstPeerAuthenticated()) {
+        // If offer removal at shutdown fails we don't want to have long term dangling dead offers, so we set 
+        // TTL quite short and use re-publish as strategy. Offerers need to be online anyway.
+        if (!p2PService.isAuthenticated()) {
             firstPeerAuthenticatedListener = new FirstPeerAuthenticatedListener() {
                 @Override
                 public void onFirstPeerAuthenticated() {

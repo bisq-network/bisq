@@ -50,8 +50,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 /**
  * Borrowed from BitcoinJ WalletFiles
  * A class that handles atomic and optionally delayed writing of a file to disk.
@@ -67,7 +65,6 @@ public class FileManager<T> {
     private final ScheduledThreadPoolExecutor executor;
     private final AtomicBoolean savePending;
     private final long delay;
-    private final TimeUnit delayTimeUnit;
     private final Callable<Void> saveFileTask;
     private T serializable;
 
@@ -76,7 +73,7 @@ public class FileManager<T> {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public FileManager(File dir, File storageFile, long delay, TimeUnit delayTimeUnit) {
+    public FileManager(File dir, File storageFile, long delay) {
         this.dir = dir;
         this.storageFile = storageFile;
 
@@ -85,7 +82,6 @@ public class FileManager<T> {
         // File must only be accessed from the auto-save executor from now on, to avoid simultaneous access.
         savePending = new AtomicBoolean();
         this.delay = delay;
-        this.delayTimeUnit = checkNotNull(delayTimeUnit);
 
         saveFileTask = () -> {
             Thread.currentThread().setName("Save-file-task-" + new Random().nextInt(10000));
@@ -126,11 +122,15 @@ public class FileManager<T> {
      * Queues up a save in the background. Useful for not very important wallet changes.
      */
     public void saveLater(T serializable) {
+        saveLater(serializable, delay);
+    }
+
+    public void saveLater(T serializable, long delayInMilli) {
         this.serializable = serializable;
 
         if (savePending.getAndSet(true))
             return;   // Already pending.
-        executor.schedule(saveFileTask, delay, delayTimeUnit);
+        executor.schedule(saveFileTask, delayInMilli, TimeUnit.MILLISECONDS);
     }
 
     public synchronized T read(File file) {

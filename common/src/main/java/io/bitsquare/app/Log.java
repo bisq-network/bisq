@@ -48,7 +48,7 @@ public class Log {
         rollingPolicy.start();
 
         triggeringPolicy = new SizeBasedTriggeringPolicy();
-        triggeringPolicy.setMaxFileSize(useDetailedLogging ? "50MB" : "1MB");
+        triggeringPolicy.setMaxFileSize(useDetailedLogging ? "10MB" : "1MB");
         triggeringPolicy.start();
 
         PatternLayoutEncoder encoder = new PatternLayoutEncoder();

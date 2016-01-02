@@ -65,7 +65,7 @@ public class ProtectedDataStorageTest {
         storageSignatureKeyPair1 = keyRing1.getSignatureKeyPair();
         encryptionService1 = new EncryptionService(keyRing1);
         networkNode1 = TestUtils.getAndStartSeedNode(8001, useClearNet, seedNodes).getSeedNodeP2PService().getNetworkNode();
-        peerManager1 = new PeerManager(networkNode1);
+        peerManager1 = new PeerManager(networkNode1, new File("dummy"));
         dataStorage1 = new P2PDataStorage(peerManager1, networkNode1, new File("dummy"));
 
         // for mailbox

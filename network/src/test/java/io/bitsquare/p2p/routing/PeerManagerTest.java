@@ -96,6 +96,10 @@ public class PeerManagerTest {
                     }
 
                     @Override
+                    public void onNoPeersAvailable() {
+                    }
+
+                    @Override
                     public void onFirstPeerAuthenticated() {
                     }
 
@@ -140,7 +144,10 @@ public class PeerManagerTest {
 
             @Override
             public void onTorNodeReady() {
+            }
 
+            @Override
+            public void onNoPeersAvailable() {
             }
 
             @Override
@@ -175,6 +182,10 @@ public class PeerManagerTest {
 
             @Override
             public void onTorNodeReady() {
+            }
+
+            @Override
+            public void onNoPeersAvailable() {
             }
 
             @Override
@@ -408,6 +419,10 @@ public class PeerManagerTest {
 
             @Override
             public void onTorNodeReady() {
+            }
+
+            @Override
+            public void onNoPeersAvailable() {
             }
 
             @Override

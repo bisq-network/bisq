@@ -83,7 +83,6 @@ public class LocalhostNetworkNode extends NetworkNode {
     @Override
     @Nullable
     public Address getAddress() {
-        Log.traceCall();
         return address;
     }
 

@@ -15,6 +15,10 @@ public abstract class FirstPeerAuthenticatedListener implements P2PServiceListen
     }
 
     @Override
+    public void onNoPeersAvailable() {
+    }
+
+    @Override
     public void onSetupFailed(Throwable throwable) {
     }
 

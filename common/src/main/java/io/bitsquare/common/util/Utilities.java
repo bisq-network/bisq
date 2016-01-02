@@ -92,7 +92,7 @@ public class Utilities {
         executor.allowCoreThreadTimeOut(true);
         executor.setMaximumPoolSize(maximumPoolSize);
         executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-        executor.setRejectedExecutionHandler((r, e) -> log.warn("RejectedExecutionHandler called"));
+        executor.setRejectedExecutionHandler((r, e) -> log.debug("RejectedExecutionHandler called"));
         return executor;
     }
 

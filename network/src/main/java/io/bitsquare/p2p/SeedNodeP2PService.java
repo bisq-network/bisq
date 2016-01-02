@@ -1,10 +1,13 @@
 package io.bitsquare.p2p;
 
+import io.bitsquare.app.Log;
 import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.peers.RequestDataManager;
 import io.bitsquare.p2p.peers.SeedNodePeerManager;
 import io.bitsquare.p2p.peers.SeedNodeRequestDataManager;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.monadic.MonadicBinding;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,12 +29,31 @@ public class SeedNodeP2PService extends P2PService {
     }
 
     @Override
-    protected PeerManager createPeerManager() {
-        return new SeedNodePeerManager(networkNode);
+    protected PeerManager getNewPeerManager() {
+        return new SeedNodePeerManager(networkNode, storageDir);
     }
 
     @Override
-    protected RequestDataManager createRequestDataManager() {
-        return new SeedNodeRequestDataManager(networkNode, dataStorage, peerManager, getRequestDataManager());
+    protected RequestDataManager getNewRequestDataManager() {
+        return new SeedNodeRequestDataManager(networkNode, dataStorage, peerManager);
     }
+
+    @Override
+    protected MonadicBinding<Boolean> getNewReadyForAuthenticationBinding() {
+        return EasyBind.combine(hiddenServicePublished, notAuthenticated,
+                (hiddenServicePublished, notAuthenticated) -> hiddenServicePublished && notAuthenticated);
+    }
+
+    @Override
+    public void onTorNodeReady() {
+        Log.traceCall();
+        p2pServiceListeners.stream().forEach(e -> e.onTorNodeReady());
+    }
+
+    @Override
+    protected void authenticateToSeedNode() {
+        Log.traceCall();
+        ((SeedNodePeerManager) peerManager).authenticateToSeedNode();
+    }
+
 }

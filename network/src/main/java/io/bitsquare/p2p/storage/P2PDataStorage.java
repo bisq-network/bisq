@@ -173,7 +173,7 @@ public class P2PDataStorage implements MessageListener {
                 rePublish = true;
 
             sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
-            storage.queueUpForSave(sequenceNumberMap);
+            storage.queueUpForSave(sequenceNumberMap, 5000);
 
             StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n");
             sb.append("Data set after addProtectedExpirableData:");
@@ -210,7 +210,7 @@ public class P2PDataStorage implements MessageListener {
             broadcast(new RemoveDataMessage(protectedData), sender);
 
             sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
-            storage.queueUpForSave(sequenceNumberMap);
+            storage.queueUpForSave(sequenceNumberMap, 5000);
         } else {
             log.debug("remove failed");
         }
@@ -235,7 +235,7 @@ public class P2PDataStorage implements MessageListener {
             broadcast(new RemoveMailboxDataMessage(protectedMailboxData), sender);
 
             sequenceNumberMap.put(hashOfData, protectedMailboxData.sequenceNumber);
-            storage.queueUpForSave(sequenceNumberMap);
+            storage.queueUpForSave(sequenceNumberMap, 5000);
         } else {
             log.debug("removeMailboxData failed");
         }

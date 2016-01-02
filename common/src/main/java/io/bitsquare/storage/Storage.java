@@ -27,7 +27,6 @@ import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -82,7 +81,7 @@ public class Storage<T extends Serializable> {
     public T initAndGetPersisted(String fileName) {
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
-        fileManager = new FileManager<>(dir, storageFile, 600, TimeUnit.MILLISECONDS);
+        fileManager = new FileManager<>(dir, storageFile, 600);
 
         return getPersisted();
     }
@@ -97,13 +96,17 @@ public class Storage<T extends Serializable> {
         this.serializable = serializable;
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
-        fileManager = new FileManager<>(dir, storageFile, 600, TimeUnit.MILLISECONDS);
+        fileManager = new FileManager<>(dir, storageFile, 600);
 
         return getPersisted();
     }
 
     public void queueUpForSave() {
         queueUpForSave(serializable);
+    }
+
+    public void queueUpForSave(long delayInMilli) {
+        queueUpForSave(serializable, delayInMilli);
     }
 
     // Save delayed and on a background thread
@@ -117,6 +120,18 @@ public class Storage<T extends Serializable> {
             log.trace("queueUpForSave called but no serializable set");
         }
     }
+
+    public void queueUpForSave(T serializable, long delayInMilli) {
+        if (serializable != null) {
+            log.trace("save " + fileName);
+            checkNotNull(storageFile, "storageFile = null. Call setupFileStorage before using read/write.");
+
+            fileManager.saveLater(serializable, delayInMilli);
+        } else {
+            log.trace("queueUpForSave called but no serializable set");
+        }
+    }
+
 
     public void remove(String fileName) {
         fileManager.removeFile(fileName);

@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.Service;
-import io.bitsquare.app.Log;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
@@ -537,14 +536,12 @@ public class WalletService {
 
         @Override
         protected void progress(double percentage, int blocksLeft, Date date) {
-            Log.traceCall("percentage=" + percentage);
             super.progress(percentage, blocksLeft, date);
             UserThread.execute(() -> this.percentage.set(percentage / 100d));
         }
 
         @Override
         protected void doneDownload() {
-            Log.traceCall();
             super.doneDownload();
             UserThread.execute(() -> this.percentage.set(1d));
         }
