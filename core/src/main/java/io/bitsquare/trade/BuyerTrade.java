@@ -36,11 +36,11 @@ public abstract class BuyerTrade extends Trade implements Serializable {
 
     transient private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererTrade.class);
 
-    public BuyerTrade(Offer offer, Coin tradeAmount, Address tradingPeerAddress, Storage<? extends TradableList> storage) {
+    BuyerTrade(Offer offer, Coin tradeAmount, Address tradingPeerAddress, Storage<? extends TradableList> storage) {
         super(offer, tradeAmount, tradingPeerAddress, storage);
     }
 
-    public BuyerTrade(Offer offer, Storage<? extends TradableList> storage) {
+    BuyerTrade(Offer offer, Storage<? extends TradableList> storage) {
         super(offer, storage);
     }
 
