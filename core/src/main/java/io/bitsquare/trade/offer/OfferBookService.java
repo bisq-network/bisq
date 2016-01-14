@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 public class OfferBookService {
     private static final Logger log = LoggerFactory.getLogger(OfferBookService.class);
 
-    private P2PService p2PService;
+    private final P2PService p2PService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

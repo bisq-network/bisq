@@ -56,7 +56,7 @@ public class AddressEntry implements Serializable {
 
     // Only set if its a TRADE Context
     @Nullable
-    private String offerId;
+    private final String offerId;
 
     private final Context context;
     private final byte[] pubKey;

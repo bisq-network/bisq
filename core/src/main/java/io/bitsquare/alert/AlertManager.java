@@ -40,8 +40,8 @@ public class AlertManager {
     transient private static final Logger log = LoggerFactory.getLogger(AlertManager.class);
 
     private final AlertService alertService;
-    private KeyRing keyRing;
-    private User user;
+    private final KeyRing keyRing;
+    private final User user;
     private final ObjectProperty<Alert> alertMessageProperty = new SimpleObjectProperty<>();
 
     // Pub key for developer global alert message

@@ -33,7 +33,7 @@ import javax.inject.Inject;
  */
 public class AlertService {
     private static final Logger log = LoggerFactory.getLogger(AlertService.class);
-    private P2PService p2PService;
+    private final P2PService p2PService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

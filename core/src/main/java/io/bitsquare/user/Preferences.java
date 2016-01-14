@@ -88,14 +88,14 @@ public class Preferences implements Serializable {
     private boolean useAnimations = true;
     private boolean useEffects = true;
     private boolean displaySecurityDepositInfo = true;
-    private ArrayList<TradeCurrency> tradeCurrencies;
+    private final ArrayList<TradeCurrency> tradeCurrencies;
     private BlockChainExplorer blockChainExplorerMainNet;
     private BlockChainExplorer blockChainExplorerTestNet;
     private boolean showPlaceOfferConfirmation;
     private boolean showTakeOfferConfirmation;
     private String backupDirectory;
     private boolean autoSelectArbitrators = true;
-    private Map<String, Boolean> showAgainMap;
+    private final Map<String, Boolean> showAgainMap;
     private boolean tacAccepted;
     private Locale preferredLocale;
     private TradeCurrency preferredTradeCurrency;
