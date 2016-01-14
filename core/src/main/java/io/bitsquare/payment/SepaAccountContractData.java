@@ -38,7 +38,7 @@ public class SepaAccountContractData extends PaymentAccountContractData implemen
     private String iban;
     private String bic;
     // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
-    private ArrayList<String> acceptedCountryCodes;
+    private final ArrayList<String> acceptedCountryCodes;
 
     public SepaAccountContractData(String paymentMethod, String id, int maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);

@@ -83,7 +83,7 @@ public class TradeManager {
     private final Storage<TradableList<Trade>> tradableListStorage;
     private final TradableList<Trade> trades;
     private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
-    private FirstPeerAuthenticatedListener firstPeerAuthenticatedListener;
+    private final FirstPeerAuthenticatedListener firstPeerAuthenticatedListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -58,8 +58,8 @@ public class OpenOfferManager {
     private static final Logger log = LoggerFactory.getLogger(OpenOfferManager.class);
 
     private final KeyRing keyRing;
-    private User user;
-    private P2PService p2PService;
+    private final User user;
+    private final P2PService p2PService;
     private final WalletService walletService;
     private final TradeWalletService tradeWalletService;
     private final OfferBookService offerBookService;

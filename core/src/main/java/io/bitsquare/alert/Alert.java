@@ -26,7 +26,7 @@ public final class Alert implements PubKeyProtectedExpirablePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
-    public static final long TTL = 10 * 24 * 60 * 60 * 1000; // 10 days
+    private static final long TTL = 10 * 24 * 60 * 60 * 1000; // 10 days
 
     public final String message;
     private String signatureAsBase64;
@@ -59,12 +59,9 @@ public final class Alert implements PubKeyProtectedExpirablePayload {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Alert)) return false;
-
         Alert that = (Alert) o;
-
         if (message != null ? !message.equals(that.message) : that.message != null) return false;
         return !(getSignatureAsBase64() != null ? !getSignatureAsBase64().equals(that.getSignatureAsBase64()) : that.getSignatureAsBase64() != null);
-
     }
 
     @Override

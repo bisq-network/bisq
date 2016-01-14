@@ -151,17 +151,16 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
                     registrationKey.getPubKey(),
                     registrationSignature
             );
-            if (arbitrator != null) {
-                arbitratorManager.addArbitrator(arbitrator,
-                        () -> {
-                            updateDisableStates();
-                            resultHandler.handleResult();
-                        },
-                        (errorMessage) -> {
-                            updateDisableStates();
-                            errorMessageHandler.handleErrorMessage(errorMessage);
-                        });
-            }
+
+            arbitratorManager.addArbitrator(arbitrator,
+                    () -> {
+                        updateDisableStates();
+                        resultHandler.handleResult();
+                    },
+                    (errorMessage) -> {
+                        updateDisableStates();
+                        errorMessageHandler.handleErrorMessage(errorMessage);
+                    });
         }
     }
 

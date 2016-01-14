@@ -21,9 +21,9 @@ public class PopupId {
 
     // We don't use an enum because it would break updates if we add a new item in a new version
 
-    public static String TRADE_WALLET = "tradeWallet";
-    public static String SEND_PAYMENT_INFO = "sendPaymentInfo";
-    public static String PAYMENT_SENT = "paymentSent";
-    public static String PAYMENT_RECEIVED = "paymentReceived";
+    public static final String TRADE_WALLET = "tradeWallet";
+    public static final String SEND_PAYMENT_INFO = "sendPaymentInfo";
+    public static final String PAYMENT_SENT = "paymentSent";
+    public static final String PAYMENT_RECEIVED = "paymentReceived";
 
 }

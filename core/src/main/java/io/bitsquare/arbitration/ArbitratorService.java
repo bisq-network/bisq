@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 public class ArbitratorService {
     private static final Logger log = LoggerFactory.getLogger(ArbitratorService.class);
 
-    private P2PService p2PService;
+    private final P2PService p2PService;
 
     interface ArbitratorMapResultHandler {
         void handleResult(Map<String, Arbitrator> arbitratorsMap);

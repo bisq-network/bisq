@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 public class CurrencyUtil {
     transient private static final Logger log = LoggerFactory.getLogger(CurrencyUtil.class);
 
-    private static List<TradeCurrency> allSortedCurrencies = createAllSortedCurrenciesList();
+    private static final List<TradeCurrency> allSortedCurrencies = createAllSortedCurrenciesList();
 
     public static List<TradeCurrency> getAllSortedCurrencies() {
         return allSortedCurrencies;
@@ -38,7 +38,7 @@ public class CurrencyUtil {
         Set<TradeCurrency> set = new HashSet<>();
 
         // Sepa: EUR at first place
-        set.addAll(getSortedSepaCurrencyCodes());
+        set.addAll(getSortedSEPACurrencyCodes());
 
         // PerfectMoney: 
         set.add(new TradeCurrency("USD"));
@@ -47,9 +47,9 @@ public class CurrencyUtil {
         set.add(new TradeCurrency("CNY"));
 
         // OKPay: We want to maintain the order so we don't use a Set but add items if nto already in list
-        getAllOKPayCurrencies().stream().forEach(e -> set.add(e));
+        getAllOKPayCurrencies().stream().forEach(set::add);
 
-        // Swish: it is already added by Sepa
+        // Swish: it is already added by SEPA
 
         // for printing out all codes
          /* String res;
@@ -64,9 +64,9 @@ public class CurrencyUtil {
         // check if the list derived form the payment methods is containing exactly the same as our manually sorted one
 
         List<String> list1 = set.stream().map(e -> e.code).collect(Collectors.toList());
-        list1.sort((a, b) -> a.compareTo(b));
+        list1.sort(String::compareTo);
         List<String> list2 = list.stream().map(e -> e.code).collect(Collectors.toList());
-        list2.sort((a, b) -> a.compareTo(b));
+        list2.sort(String::compareTo);
 
         if (list1.size() != list2.size()) {
             log.error("manually defined currencies are not matching currencies derived form our payment methods");
@@ -81,7 +81,7 @@ public class CurrencyUtil {
         }
 
         // Blockchain
-        getSortedCryptoCurrencies().stream().forEach(e -> list.add(e));
+        getSortedCryptoCurrencies().stream().forEach(list::add);
 
         return list;
     }
@@ -119,9 +119,9 @@ public class CurrencyUtil {
     }
 
     /**
-     * @return Sorted list of sepa currencies with EUR as first item
+     * @return Sorted list of SEPA currencies with EUR as first item
      */
-    public static Set<TradeCurrency> getSortedSepaCurrencyCodes() {
+    private static Set<TradeCurrency> getSortedSEPACurrencyCodes() {
         return CountryUtil.getAllSepaCountries().stream()
                 .map(country -> getCurrencyByCountryCode(country.code))
                 .collect(Collectors.toSet());
@@ -162,7 +162,7 @@ public class CurrencyUtil {
         // Unfortunately we cannot support CryptoNote coins yet as there is no way to proof the transaction. Payment ID helps only locate the tx but the 
         // arbitrator cannot see if the receiving key matches the receivers address. They might add support for exposing the tx key, but that is not 
         // implemented yet. To use the view key (also not available in GUI wallets) would reveal the complete wallet history for incoming payments, which is
-        // not acceptable from pricavy point of view.
+        // not acceptable from privacy point of view.
         // result.add(new CryptoCurrency("XMR", "Monero")); 
         // result.add(new CryptoCurrency("BCN", "Bytecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
