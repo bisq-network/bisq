@@ -43,7 +43,7 @@ public class FeePolicy {
     public static final Coin TX_FEE = Coin.valueOf(20000); // 0.0002 BTC about 0.8 EUR @ 400 EUR/BTC: about 70 satoshi /byte
 
     static {
-        Wallet.SendRequest.DEFAULT_FEE_PER_KB = Coin.valueOf(5000); // 0.0005 BTC we use a higher value. original is Coin.valueOf(1000)
+        Wallet.SendRequest.DEFAULT_FEE_PER_KB = TX_FEE;
     }
 
     public static final Coin DUST = Coin.valueOf(546);

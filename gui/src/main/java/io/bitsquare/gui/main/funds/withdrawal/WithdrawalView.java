@@ -211,7 +211,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             }
         }
         else {
-            new Popup().error("The amount to transfer is lower the the transaction fee and the min. possible tx value.").show();
+            new Popup().warning("The amount to transfer is lower than the transaction fee and the min. possible tx value.").show();
         }
     }
 
