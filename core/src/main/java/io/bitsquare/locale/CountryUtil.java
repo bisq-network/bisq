@@ -17,48 +17,24 @@
 
 package io.bitsquare.locale;
 
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Lists;
 import io.bitsquare.user.Preferences;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class CountryUtil {
-    public static List<Region> getAllRegions() {
-        final List<Region> allRegions = new ArrayList<>();
-
-        String regionCode = "NA";
-        Region region = new Region(regionCode, getRegionName(regionCode));
-        allRegions.add(region);
-
-        regionCode = "SA";
-        region = new Region(regionCode, getRegionName(regionCode));
-        allRegions.add(region);
-
-        regionCode = "AF";
-        region = new Region(regionCode, getRegionName(regionCode));
-        allRegions.add(region);
-
-        regionCode = "EU";
-        region = new Region(regionCode, getRegionName(regionCode));
-        allRegions.add(region);
-
-        regionCode = "AS";
-        region = new Region(regionCode, getRegionName(regionCode));
-        allRegions.add(region);
-
-        regionCode = "OC";
-        region = new Region(regionCode, getRegionName(regionCode));
-        allRegions.add(region);
-
-        return allRegions;
-    }
 
     public static List<Country> getAllSepaEuroCountries() {
         List<Country> list = new ArrayList<>();
         String[] codes = {"AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",
                 "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES"};
+        populateCountryListByCodes(list, codes);
+        list.sort((a, b) -> a.code.compareTo(b.code));
+
+        return list;
+    }
+
+    private static void populateCountryListByCodes(List<Country> list, String[] codes) {
         for (String code : codes) {
             Locale locale = new Locale(LanguageUtil.getDefaultLanguage(), code, "");
             String regionCode = getRegionCode(locale.getCountry());
@@ -66,42 +42,19 @@ public class CountryUtil {
             final Country country = new Country(locale.getCountry(), locale.getDisplayCountry(), region);
             list.add(country);
         }
-        list.sort((a, b) -> a.code.compareTo(b.code));
-
-        return list;
     }
 
     public static boolean containsAllSepaEuroCountries(List<String> countryCodesToCompare) {
-        countryCodesToCompare.sort((a, b) -> a.compareTo(b));
+        countryCodesToCompare.sort(String::compareTo);
         List<String> countryCodesBase = getAllSepaEuroCountries().stream().map(c -> c.code).collect(Collectors.toList());
         return countryCodesToCompare.toString().equals(countryCodesBase.toString());
-        /*
-        List<Country> countriesBase = getAllSepaEuroCountries();
-        List<Country> remainingBase = new ArrayList<>(countriesBase);
-        List<String> remainingToCompare = new ArrayList<>(countryCodesToCompare);
-        for (int i = 0; i < countriesBase.size(); i++) {
-            String countryCodeBase = countriesBase.get(i).code;
-            for (int n = 0; n < countryCodesToCompare.size(); n++) {
-                if (countryCodeBase.equals(countryCodesToCompare.get(n))) {
-                    if (remainingBase.size() > 0) remainingBase.remove(i);
-                    if (remainingToCompare.size() > 0) remainingToCompare.remove(n);
-                }
-            }
-        }
-        return remainingBase.size() == 0 && remainingBase.size() == remainingToCompare.size();*/
     }
 
     public static List<Country> getAllSepaNonEuroCountries() {
         List<Country> list = new ArrayList<>();
         String[] codes = {"BG", "HR", "CZ", "DK", "GB", "HU", "PL", "RO",
                 "SE", "IS", "NO", "LI", "CH"};
-        for (String code : codes) {
-            Locale locale = new Locale(LanguageUtil.getDefaultLanguage(), code, "");
-            String regionCode = getRegionCode(locale.getCountry());
-            final Region region = new Region(regionCode, getRegionName(regionCode));
-            final Country country = new Country(locale.getCountry(), locale.getDisplayCountry(), region);
-            list.add(country);
-        }
+        populateCountryListByCodes(list, codes);
         list.sort((a, b) -> a.code.compareTo(b.code));
         return list;
     }
@@ -113,11 +66,6 @@ public class CountryUtil {
         return list;
     }
 
-    public static List<Country> getAllCountriesFor(Region selectedRegion) {
-        return Lists.newArrayList(Collections2.filter(getAllCountries(), country ->
-                selectedRegion != null && country != null && selectedRegion.equals(country.region)));
-    }
-
     public static Country getDefaultCountry() {
         final Locale locale = Preferences.getDefaultLocale();
         String regionCode = getRegionCode(locale.getCountry());
@@ -125,24 +73,8 @@ public class CountryUtil {
         return new Country(locale.getCountry(), locale.getDisplayCountry(), region);
     }
 
-
-    private static List<Country> getAllCountries() {
-        final List<Country> allCountries = new ArrayList<>();
-        for (final Locale locale : getAllCountryLocales()) {
-            String regionCode = getRegionCode(locale.getCountry());
-            final Region region = new Region(regionCode, getRegionName(regionCode));
-            final Country country = new Country(locale.getCountry(), locale.getDisplayCountry(), region);
-            allCountries.add(country);
-        }
-        return allCountries;
-    }
-
     public static String getNameByCode(String countryCode) {
         return new Locale(LanguageUtil.getDefaultLanguage(), countryCode).getDisplayCountry();
-    }
-
-    public static List<String> getNamesByCodes(List<String> countryCodes) {
-        return countryCodes.stream().map(c -> getNameByCode(c)).collect(Collectors.toList());
     }
 
     public static String getCodesString(List<String> countryCodes) {
@@ -151,6 +83,10 @@ public class CountryUtil {
 
     public static String getNamesByCodesString(List<String> countryCodes) {
         return getNamesByCodes(countryCodes).stream().collect(Collectors.joining(",\n"));
+    }
+
+    private static List<String> getNamesByCodes(List<String> countryCodes) {
+        return countryCodes.stream().map(CountryUtil::getNameByCode).collect(Collectors.toList());
     }
 
     private static final String[] countryCodes = new String[]{"AE", "AL", "AR", "AT", "AU", "BA", "BE", "BG", "BH",
@@ -181,20 +117,6 @@ public class CountryUtil {
             }
         }
         return regionCode;
-    }
-
-    // We use getAvailableLocales as we depend on display names (would be a bit painful with translations if handled
-    // from a static list -or we find something ready made?).
-    private static List<Locale> getAllCountryLocales() {
-        List<Locale> allLocales = Arrays.asList(Locale.getAvailableLocales());
-        Set<Locale> allLocalesAsSet = allLocales.stream().filter(locale -> !"".equals(locale.getCountry()))
-                .map(locale -> new Locale(LanguageUtil.getDefaultLanguage(), locale.getCountry(), ""))
-                .collect(Collectors.toSet());
-
-        allLocales = new ArrayList<>();
-        allLocales.addAll(allLocalesAsSet);
-        allLocales.sort((locale1, locale2) -> locale1.getDisplayCountry().compareTo(locale2.getDisplayCountry()));
-        return allLocales;
     }
 
     private static String getRegionCode(String countryCode) {
