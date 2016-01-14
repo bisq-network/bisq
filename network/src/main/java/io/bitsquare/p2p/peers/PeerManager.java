@@ -118,7 +118,7 @@ public class PeerManager implements MessageListener, ConnectionListener {
 
     @Override
     public void onDisconnect(Reason reason, Connection connection) {
-        log.debug("onDisconnect connection=" + connection + " / reason=" + reason);
+        log.debug("onDisconnect reason=" + reason + " / connection=" + connection);
 
         connection.getPeerAddressOptional().ifPresent(peerAddress -> {
             // We only remove the peer from the authenticationHandshakes and the reportedPeers 
@@ -445,8 +445,8 @@ public class PeerManager implements MessageListener, ConnectionListener {
     }
 
     protected void startCheckSeedNodeConnectionTask() {
-        checkSeedNodeConnectionExecutor.schedule(() -> UserThread.execute(()
-                -> checkSeedNodeConnections()), 2, TimeUnit.MINUTES);
+        checkSeedNodeConnectionExecutor.scheduleAtFixedRate(() -> UserThread.execute(()
+                -> checkSeedNodeConnections()), 2, 2, TimeUnit.MINUTES);
     }
 
     // We want to stay connected to at least one seed node to avoid to get isolated with a group of peers
@@ -530,8 +530,8 @@ public class PeerManager implements MessageListener, ConnectionListener {
                 authenticateToRemainingSeedNode();
             } else if (!persistedPeers.isEmpty()) {
                 log.info("We don't have seed nodes or reported peers available. " +
-                        "We will add 5 peers from our persistedReportedPeers to our reportedPeers list and " +
-                        "try authenticateToRemainingReportedPeer again.");
+                        "We will try to add 5 peers from our persistedPeers to our reportedPeers list and " +
+                        "try authenticateToRemainingReportedPeer again. All persistedPeers=" + persistedPeers);
 
                 List<ReportedPeer> list = new ArrayList<>(persistedPeers);
                 authenticationHandshakes.keySet().stream().forEach(e -> list.remove(new ReportedPeer(e)));
@@ -543,7 +543,10 @@ public class PeerManager implements MessageListener, ConnectionListener {
                         persistedPeers.remove(reportedPeer);
                         reportedPeers.add(reportedPeer);
                     }
+                    log.info("We have added some of our persistedPeers to our reportedPeers. reportedPeers=" + reportedPeers);
                     authenticateToRemainingReportedPeer();
+                } else {
+                    log.info("We don't have any persistedPeers available which are not authenticating or authenticated.");
                 }
             } else {
                 log.info("We don't have seed nodes, reported peers nor persistedReportedPeers available. " +

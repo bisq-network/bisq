@@ -135,8 +135,9 @@ public class ArbitratorManager {
             }
 
             // re-publish periodically
-            republishArbitratorExecutor = Utilities.getScheduledThreadPoolExecutor("", 1, 5, 5);
-            republishArbitratorExecutor.schedule(() -> republishArbitrator(), Arbitrator.TTL / 2, TimeUnit.MILLISECONDS);
+            republishArbitratorExecutor = Utilities.getScheduledThreadPoolExecutor("republishArbitrator", 1, 5, 5);
+            long delay = Arbitrator.TTL / 2;
+            republishArbitratorExecutor.scheduleAtFixedRate(() -> republishArbitrator(), delay, delay, TimeUnit.MILLISECONDS);
         }
 
         applyArbitrators();

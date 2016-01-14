@@ -53,9 +53,9 @@ public class MaintenanceManager implements MessageListener {
         networkNode.addMessageListener(this);
 
         executor = Utilities.getScheduledThreadPoolExecutor("MaintenanceManager", 1, 10, 5);
-        executor.schedule(() -> {
+        executor.scheduleAtFixedRate(() -> {
             UserThread.execute(() -> pingPeers());
-        }, 5, TimeUnit.MINUTES);
+        }, 5, 5, TimeUnit.MINUTES);
     }
 
     public void shutDown() {

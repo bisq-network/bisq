@@ -60,7 +60,7 @@ public class PeerExchangeManager implements MessageListener {
         networkNode.addMessageListener(this);
 
         executor = Utilities.getScheduledThreadPoolExecutor("PeerExchangeManager", 1, 10, 5);
-        executor.schedule(() -> UserThread.execute(() -> trySendGetPeersRequest()), 4, TimeUnit.MINUTES);
+        executor.scheduleAtFixedRate(() -> UserThread.execute(() -> trySendGetPeersRequest()), 4, 4, TimeUnit.MINUTES);
     }
 
     public void shutDown() {
