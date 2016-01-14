@@ -21,7 +21,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
 public class Restrictions {
-    public static final Coin MIN_TRADE_AMOUNT = Coin.parseCoin("0.0001");
+    public static final Coin MIN_TRADE_AMOUNT = Coin.parseCoin("0.001"); // 40 cent @ 400 EUR/BTC 
     public static final Coin MAX_TRADE_AMOUNT = Coin.parseCoin("1");
 
     public static boolean isMinSpendableAmount(Coin amount) {

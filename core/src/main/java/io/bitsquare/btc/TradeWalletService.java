@@ -141,7 +141,7 @@ public class TradeWalletService {
     public Transaction createTradingFeeTx(AddressEntry addressEntry, Coin tradingFee, String feeReceiverAddresses)
             throws InsufficientMoneyException, AddressFormatException {
         Transaction tradingFeeTx = new Transaction(params);
-        Preconditions.checkArgument(tradingFee.compareTo(FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT)) > 0,
+        Preconditions.checkArgument(Restrictions.isMinSpendableAmount(tradingFee),
                 "You cannot send an amount which are smaller than the fee + dust output.");
         Coin outPutAmount = tradingFee.subtract(FeePolicy.TX_FEE);
         tradingFeeTx.addOutput(outPutAmount, new Address(params, feeReceiverAddresses));

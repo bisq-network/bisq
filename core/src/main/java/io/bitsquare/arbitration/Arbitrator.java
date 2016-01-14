@@ -31,7 +31,7 @@ public final class Arbitrator implements PubKeyProtectedExpirablePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
-    public static final long TTL = 1 * 24 * 60 * 60 * 1000; // 1 day
+    public static final long TTL = 6 * 24 * 60 * 60 * 1000; // 6 days
 
     // Persisted fields
     private final byte[] btcPubKey;

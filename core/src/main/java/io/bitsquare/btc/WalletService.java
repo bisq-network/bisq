@@ -17,6 +17,7 @@
 
 package io.bitsquare.btc;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -446,7 +447,7 @@ public class WalletService {
                             KeyParameter aesKey,
                             FutureCallback<Transaction> callback) throws AddressFormatException, IllegalArgumentException, InsufficientMoneyException {
         Transaction tx = new Transaction(params);
-        checkArgument(amount.compareTo(FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT)) > 0,
+        Preconditions.checkArgument(Restrictions.isMinSpendableAmount(amount),
                 "You cannot send an amount which are smaller than the fee + dust output.");
         tx.addOutput(amount.subtract(FeePolicy.TX_FEE), new Address(params, toAddress));
 

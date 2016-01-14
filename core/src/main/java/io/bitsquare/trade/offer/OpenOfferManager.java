@@ -145,7 +145,7 @@ public class OpenOfferManager {
         if (firstPeerAuthenticatedListener != null)
             p2PService.removeP2PServiceListener(firstPeerAuthenticatedListener);
 
-        long period = (long) (Offer.TTL * 0.8); // republish sufficiently before offer would expires
+        long period = (long) (Offer.TTL * 0.8); // republish sufficiently before offer would expire
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {

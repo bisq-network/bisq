@@ -17,7 +17,8 @@
 
 package io.bitsquare.gui.popups;
 
-import io.bitsquare.btc.FeePolicy;
+import com.google.common.base.Preconditions;
+import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
@@ -32,7 +33,6 @@ import javafx.scene.layout.HBox;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.Transaction;
 import org.reactfx.util.FxTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +42,6 @@ import javax.inject.Inject;
 import java.time.Duration;
 import java.util.Optional;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static io.bitsquare.gui.util.FormBuilder.*;
 
 public class EmptyWalletPopup extends Popup {
@@ -96,9 +95,9 @@ public class EmptyWalletPopup extends Popup {
                 10);
 
         Coin totalBalance = walletService.getAvailableBalance();
-        checkArgument(totalBalance.compareTo(FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT)) > 0,
+        boolean isBalanceSufficient = Restrictions.isMinSpendableAmount(totalBalance);
+        Preconditions.checkArgument(isBalanceSufficient,
                 "You cannot send an amount which are smaller than the fee + dust output.");
-        boolean isBalanceSufficient = totalBalance.compareTo(FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT)) > 0;
         addressTextField = addLabelTextField(gridPane, ++rowIndex, "Your available wallet balance:",
                 formatter.formatCoinWithCode(totalBalance), 10).second;
         Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++rowIndex, "Your destination address:");

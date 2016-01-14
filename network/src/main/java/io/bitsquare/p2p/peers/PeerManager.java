@@ -58,7 +58,6 @@ public class PeerManager implements MessageListener, ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final NetworkNode networkNode;
-    private final MaintenanceManager maintenanceManager;
     private final PeerExchangeManager peerExchangeManager;
     protected final ScheduledThreadPoolExecutor checkSeedNodeConnectionExecutor;
     private final Storage<HashSet<ReportedPeer>> dbStorage;
@@ -83,9 +82,6 @@ public class PeerManager implements MessageListener, ConnectionListener {
         this.networkNode = networkNode;
         dbStorage = new Storage<>(storageDir);
 
-        maintenanceManager = new MaintenanceManager(networkNode,
-                () -> getAuthenticatedPeers(),
-                address -> removePeer(address));
         peerExchangeManager = new PeerExchangeManager(networkNode,
                 () -> getAuthenticatedAndReportedPeers(),
                 () -> getAuthenticatedPeers(),
@@ -195,7 +191,6 @@ public class PeerManager implements MessageListener, ConnectionListener {
 
     public void shutDown() {
         Log.traceCall();
-        maintenanceManager.shutDown();
         peerExchangeManager.shutDown();
 
         networkNode.removeMessageListener(this);
@@ -456,15 +451,26 @@ public class PeerManager implements MessageListener, ConnectionListener {
         Log.traceCall();
         resetRemainingSeedNodes();
         if (!remainingSeedNodes.isEmpty()) {
-            log.info("We have remaining not connected seed node(s) available. " +
-                    "We will call authenticateToRemainingSeedNode.");
-            // remove enough connections to be sure the authentication will succeed. I t might be that in the meantime 
-            // we get other connection attempts, so remove 2 more than needed to have a bit of headroom.
-            checkIfConnectedPeersExceeds(MAX_CONNECTIONS_LOW_PRIORITY - remainingSeedNodes.size() - 2);
+            if (seedNodeAddressesOptional.isPresent()) {
+                Optional<Address> authSeedNodeOptional = authenticatedPeers.keySet().stream()
+                        .filter(e -> seedNodeAddressesOptional.get().contains(e)).findAny();
+                if (authSeedNodeOptional.isPresent()) {
+                    log.info("We are at least to one seed node connected.");
+                } else {
+                    log.info("We are not to at least one seed node connected and we have remaining not connected " +
+                            "seed node(s) available. " +
+                            "We will call authenticateToRemainingSeedNode after 2 sec.");
+                    // remove enough connections to be sure the authentication will succeed. I t might be that in the meantime 
+                    // we get other connection attempts, so remove 2 more than needed to have a bit of headroom.
+                    checkIfConnectedPeersExceeds(MAX_CONNECTIONS_LOW_PRIORITY - remainingSeedNodes.size() - 2);
 
-            if (authenticateToRemainingSeedNodeTimer == null)
-                authenticateToRemainingSeedNodeTimer = UserThread.runAfter(() -> authenticateToRemainingSeedNode(),
-                        500, TimeUnit.MILLISECONDS);
+                    if (authenticateToRemainingSeedNodeTimer == null)
+                        authenticateToRemainingSeedNodeTimer = UserThread.runAfter(() -> authenticateToRemainingSeedNode(),
+                                2, TimeUnit.SECONDS);
+                }
+            } else {
+                log.error("seedNodeAddressesOptional must be present");
+            }
         } else {
             log.debug("There are no remainingSeedNodes available.");
         }

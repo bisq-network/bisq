@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
@@ -38,8 +37,6 @@ public class PeerExchangeManager implements MessageListener {
     private final Consumer<Address> removePeerConsumer;
     private final BiConsumer<HashSet<ReportedPeer>, Connection> addReportedPeersConsumer;
     private final ScheduledThreadPoolExecutor executor;
-
-    private Timer getPeersTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -60,13 +57,11 @@ public class PeerExchangeManager implements MessageListener {
         networkNode.addMessageListener(this);
 
         executor = Utilities.getScheduledThreadPoolExecutor("PeerExchangeManager", 1, 10, 5);
-        executor.scheduleAtFixedRate(() -> UserThread.execute(() -> trySendGetPeersRequest()), 4, 4, TimeUnit.MINUTES);
+        executor.scheduleAtFixedRate(() -> UserThread.execute(() -> trySendGetPeersRequest()), 7, 7, TimeUnit.MINUTES);
     }
 
     public void shutDown() {
         Log.traceCall();
-        if (getPeersTimer != null)
-            getPeersTimer.cancel();
 
         networkNode.removeMessageListener(this);
         MoreExecutors.shutdownAndAwaitTermination(executor, 500, TimeUnit.MILLISECONDS);
