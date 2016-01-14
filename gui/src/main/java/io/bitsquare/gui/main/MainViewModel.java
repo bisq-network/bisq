@@ -30,6 +30,7 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.components.BalanceTextField;
 import io.bitsquare.gui.components.BalanceWithConfirmationTextField;
@@ -113,6 +114,8 @@ public class MainViewModel implements ViewModel {
     private int numBTCPeers = 0;
     private Timer checkForBtcSyncStateTimer;
     private ChangeListener<Number> numAuthenticatedPeersListener, btcNumPeersListener;
+    private java.util.Timer numberofBtcPeersTimer;
+    private java.util.Timer numberofP2PNetworkPeersTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -257,10 +260,19 @@ public class MainViewModel implements ViewModel {
         EasyBind.subscribe(walletService.downloadPercentageProperty(), newValue -> setBitcoinNetworkSyncProgress((double) newValue));
 
         btcNumPeersListener = (observable, oldValue, newValue) -> {
-            if ((int) oldValue > 0 && (int) newValue == 0)
-                walletServiceErrorMsg.set("You lost the connection to all bitcoin peers.");
-            else if ((int) oldValue == 0 && (int) newValue > 0)
+            if ((int) oldValue > 0 && (int) newValue == 0) {
+                // give a bit of tolerance
+                if (numberofBtcPeersTimer != null)
+                    numberofBtcPeersTimer.cancel();
+                numberofBtcPeersTimer = UserThread.runAfter(() -> {
+                    if (walletService.numPeersProperty().get() == 0)
+                        walletServiceErrorMsg.set("You lost the connection to all bitcoin peers.");
+                    else
+                        walletServiceErrorMsg.set(null);
+                }, 2);
+            } else if ((int) oldValue == 0 && (int) newValue > 0) {
                 walletServiceErrorMsg.set(null);
+            }
 
             numBTCPeers = (int) newValue;
             setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get());
@@ -352,6 +364,7 @@ public class MainViewModel implements ViewModel {
 
 
         // tac
+        // TODO add link: https://bitsquare.io/arbitration_system.pdf
         String text = "1. This software is experimental and provided \"as is\", without warranty of any kind, " +
                 "express or implied, including but not limited to the warranties of " +
                 "merchantability, fitness for a particular purpose and non-infringement.\n" +
@@ -360,7 +373,8 @@ public class MainViewModel implements ViewModel {
                 "arising from, out of or in connection with the software or the use or other dealings in the software.\n\n" +
                 "2. The user is responsible to use the software in compliance with local laws.\n\n" +
                 "3. The user confirms that he has read and agreed to the rules defined in our " +
-                "Wiki regrading the dispute process.";
+                "Wiki regrading the dispute process\n" +
+                "(https://github.com/bitsquare/bitsquare/wiki/Arbitration-system).";
         if (!preferences.getTacAccepted() && !BitsquareApp.DEV_MODE)
             new Popup().headLine("USER AGREEMENT")
                     .message(text)
@@ -372,6 +386,27 @@ public class MainViewModel implements ViewModel {
 
         // update nr of peers in footer
         numAuthenticatedPeersListener = (observable, oldValue, newValue) -> {
+
+            if ((int) oldValue > 0 && (int) newValue == 0) {
+                // give a bit of tolerance
+                if (numberofP2PNetworkPeersTimer != null)
+                    numberofP2PNetworkPeersTimer.cancel();
+                numberofP2PNetworkPeersTimer = UserThread.runAfter(() -> {
+                    if (p2PService.getNumAuthenticatedPeers().get() == 0) {
+                        p2PNetworkWarnMsg.set("You lost the connection to all P2P network peers.\n" +
+                                "Please check your internet connection or try to restart the application.");
+                        p2PNetworkLabelId.set("splash-error-state-msg");
+                    } else {
+                        p2PNetworkWarnMsg.set(null);
+                        p2PNetworkLabelId.set("footer-pane");
+                    }
+                }, 2);
+            } else if ((int) oldValue == 0 && (int) newValue > 0) {
+                p2PNetworkWarnMsg.set(null);
+                p2PNetworkLabelId.set("footer-pane");
+            }
+
+
             if ((int) oldValue > 0 && (int) newValue == 0) {
                 p2PNetworkWarnMsg.set("You lost the connection to all P2P network peers.\n" +
                         "Please check your internet connection or try to restart the application.");

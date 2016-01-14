@@ -8,6 +8,7 @@ public interface ConnectionListener {
         TIMEOUT,
         SHUT_DOWN,
         PEER_DISCONNECTED,
+        INCOMPATIBLE_DATA,
         UNKNOWN
     }
 

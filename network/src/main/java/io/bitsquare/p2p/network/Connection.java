@@ -409,7 +409,7 @@ public class Connection implements MessageListener {
             }
         }
 
-        public void handleConnectionException(Exception e) {
+        public void handleConnectionException(Throwable e) {
             Log.traceCall(e.toString());
             if (e instanceof SocketException) {
                 if (socket.isClosed())
@@ -422,6 +422,8 @@ public class Connection implements MessageListener {
                 log.debug("connection={}" + this);
             } else if (e instanceof EOFException) {
                 shutDownReason = ConnectionListener.Reason.PEER_DISCONNECTED;
+            } else if (e instanceof NoClassDefFoundError || e instanceof ClassNotFoundException) {
+                shutDownReason = ConnectionListener.Reason.INCOMPATIBLE_DATA;
             } else {
                 shutDownReason = ConnectionListener.Reason.UNKNOWN;
                 log.warn("Exception at socket " + socket.toString());
@@ -563,7 +565,7 @@ public class Connection implements MessageListener {
                         } else if (!stopped) {
                             messageListener.onMessage(message, null);
                         }
-                    } catch (IOException | ClassNotFoundException e) {
+                    } catch (IOException | ClassNotFoundException | NoClassDefFoundError e) {
                         stopped = true;
                         sharedSpace.handleConnectionException(e);
                     }
