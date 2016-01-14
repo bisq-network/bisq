@@ -107,6 +107,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             log.debug("currentTradeChangeListener {} ", newValue);
             setNewSubView(newValue);
         };
+
+        // we add hidden emergency shortcut to open support ticket
+        root.getScene().addEventHandler(KeyEvent.KEY_RELEASED, event -> {
+            if (new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN).match(event))
+                new OpenEmergencyTicketPopup().onOpenTicket(() -> model.dataModel.onOpenSupportTicket()).show();
+        });
     }
 
     @Override
@@ -127,12 +133,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 UserThread.execute(() -> table.getFocusModel().focus(index));
             });
         }
-
-        // we add hidden emergency shortcut to open support ticket
-        root.getScene().addEventHandler(KeyEvent.KEY_RELEASED, event -> {
-            if (new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN).match(event))
-                new OpenEmergencyTicketPopup().onOpenTicket(() -> model.dataModel.onOpenSupportTicket()).show();
-        });
     }
 
     @Override

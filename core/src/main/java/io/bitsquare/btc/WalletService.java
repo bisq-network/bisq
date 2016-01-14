@@ -56,8 +56,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 /**
  * WalletService handles all non trade specific wallet and bitcoin related services.
  * It startup the wallet app kit and initialized the wallet.
@@ -102,11 +100,6 @@ public class WalletService {
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
         this.params = preferences.getBitcoinNetwork().getParameters();
-
-        // TODO remove after sufficient testing with testnet 
-        checkArgument(!params.getId().equals(NetworkParameters.ID_MAINNET),
-                "Mainnet is not allowed to be used at that stage of development");
-
         this.walletDir = new File(walletDir, "bitcoin");
         this.userAgent = userAgent;
     }

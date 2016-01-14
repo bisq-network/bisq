@@ -20,7 +20,6 @@ public class SeedNodeMain {
 
     // args: myAddress (incl. port) useLocalhost seedNodes (separated with |)
     // eg. lmvdenjkyvx2ovga.onion:8001 false eo5ay2lyzrfvx2nr.onion:8002|si3uu56adkyqkldl.onion:8003
-    // To stop enter: q
     public static void main(String[] args) throws InterruptedException {
         new SeedNodeMain(args);
     }

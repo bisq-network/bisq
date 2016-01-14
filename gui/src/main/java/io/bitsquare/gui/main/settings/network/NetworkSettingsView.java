@@ -195,9 +195,15 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private void onSelectNetwork() {
         if (netWorkComboBox.getSelectionModel().getSelectedItem() != preferences.getBitcoinNetwork()) {
             if (netWorkComboBox.getSelectionModel().getSelectedItem() == BitcoinNetwork.MAINNET) {
-                new Popup().warning("The application needs more tested before it can be used in mainnet.\n" +
-                        "Please follow our mailing list to get informed when Bitsquare will be ready for mainnet.")
-                        .onClose(() -> UserThread.execute(() -> netWorkComboBox.getSelectionModel().select(preferences.getBitcoinNetwork())))
+                new Popup().warning("The application is not sufficiently tested yet and it so it is not recommended " +
+                        "to use mainnet yet.\n" +
+                        "If you want to take the risk to use Mainnet please use low trading amounts like 0.1 BTC " +
+                        "to limit possible losses.")
+                        .actionButtonText("I will wait and stick with Testnet")
+                        .onAction(() -> UserThread.execute(() -> netWorkComboBox.getSelectionModel().select(preferences.getBitcoinNetwork())))
+                        .closeButtonText("I understand the risk and want to use Mainnet")
+                        .onClose(() -> selectNetwork())
+                        .width(800)
                         .show();
             } else {
                 selectNetwork();

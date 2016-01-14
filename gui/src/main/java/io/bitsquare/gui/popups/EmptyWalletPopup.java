@@ -96,8 +96,9 @@ public class EmptyWalletPopup extends Popup {
 
         Coin totalBalance = walletService.getAvailableBalance();
         boolean isBalanceSufficient = Restrictions.isMinSpendableAmount(totalBalance);
-        Preconditions.checkArgument(isBalanceSufficient,
-                "You cannot send an amount which are smaller than the fee + dust output.");
+        if (totalBalance.compareTo(Coin.ZERO) > 0)
+            Preconditions.checkArgument(isBalanceSufficient,
+                    "You cannot send an amount which are smaller than the fee + dust output.");
         addressTextField = addLabelTextField(gridPane, ++rowIndex, "Your available wallet balance:",
                 formatter.formatCoinWithCode(totalBalance), 10).second;
         Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++rowIndex, "Your destination address:");

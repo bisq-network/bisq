@@ -31,7 +31,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
-import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.*;
+import org.bitcoinj.script.Script;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -46,11 +47,12 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, addressColumn, amountColumn, typeColumn,
             confidenceColumn;
 
-    private ObservableList<TransactionsListItem> transactionsListItems;
+    private final ObservableList<TransactionsListItem> transactionsListItems = FXCollections.observableArrayList();
 
     private final WalletService walletService;
     private final BSFormatter formatter;
     private final Preferences preferences;
+    private WalletEventListener walletEventListener;
 
     @Inject
     private TransactionsView(WalletService walletService, BSFormatter formatter, Preferences preferences) {
@@ -66,12 +68,47 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
         setAddressColumnCellFactory();
         setConfidenceColumnCellFactory();
+
+        walletEventListener = new WalletEventListener() {
+            @Override
+            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                updateList();
+            }
+
+            @Override
+            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                updateList();
+            }
+
+            @Override
+            public void onReorganize(Wallet wallet) {
+                updateList();
+            }
+
+            @Override
+            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
+            }
+
+            @Override
+            public void onWalletChanged(Wallet wallet) {
+                updateList();
+            }
+
+            @Override
+            public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
+                updateList();
+            }
+
+            @Override
+            public void onKeysAdded(List<ECKey> keys) {
+                updateList();
+            }
+        };
     }
 
-    @Override
-    protected void activate() {
+    private void updateList() {
         List<Transaction> transactions = walletService.getWallet().getRecentTransactions(10000, true);
-        transactionsListItems = FXCollections.observableArrayList();
+        transactionsListItems.clear();
         transactionsListItems.addAll(transactions.stream().map(transaction ->
                 new TransactionsListItem(transaction, walletService, formatter)).collect(Collectors.toList()));
 
@@ -79,8 +116,15 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     }
 
     @Override
+    protected void activate() {
+        updateList();
+        walletService.getWallet().addEventListener(walletEventListener);
+    }
+
+    @Override
     protected void deactivate() {
         transactionsListItems.forEach(TransactionsListItem::cleanup);
+        walletService.getWallet().removeEventListener(walletEventListener);
     }
 
     private void openTxDetails(TransactionsListItem item) {

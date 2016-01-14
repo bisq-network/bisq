@@ -37,7 +37,7 @@ public class OpenOffer implements Tradable, Serializable {
 
     // Timeout for offer reservation during takeoffer process. If deposit tx is not completed in that time we reset the offer to AVAILABLE state. 
     transient private static final long TIMEOUT_SEC = 30;
-    private java.util.Timer timeoutTimer;
+    transient private java.util.Timer timeoutTimer;
 
     public enum State {
         AVAILABLE,

@@ -463,7 +463,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     public void sendEncryptedMailboxMessage(Address peerAddress, PubKeyRing peersPubKeyRing,
                                             MailboxMessage message, SendMailboxMessageListener sendMailboxMessageListener) {
-        Log.traceCall();
+        Log.traceCall("message " + message);
         checkNotNull(peerAddress, "PeerAddress must not be null (sendEncryptedMailboxMessage)");
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         checkArgument(!optionalKeyRing.get().getPubKeyRing().equals(peersPubKeyRing), "We got own keyring instead of that from peer");

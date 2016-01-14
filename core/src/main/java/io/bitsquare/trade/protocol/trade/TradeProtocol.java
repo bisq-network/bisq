@@ -19,7 +19,6 @@ package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.PubKeyRing;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.messaging.DecryptedMailListener;
@@ -124,7 +123,6 @@ public abstract class TradeProtocol {
         stopTimeout();
 
         timeoutTimer = UserThread.runAfter(() -> {
-            Utilities.setThreadName("TradeProtocol:Timeout");
             log.error("Timeout reached");
             trade.setErrorMessage("A timeout occurred.");
             cleanupTradable();
