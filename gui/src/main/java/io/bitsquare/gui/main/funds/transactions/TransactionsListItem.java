@@ -39,7 +39,6 @@ public class TransactionsListItem {
 
     private final Tooltip tooltip;
     private String addressString;
-    private boolean notAnAddress;
     private AddressConfidenceListener confidenceListener;
 
     public TransactionsListItem(Transaction transaction, WalletService walletService, BSFormatter formatter) {
@@ -55,14 +54,10 @@ public class TransactionsListItem {
                 if (!transactionOutput.isMine(walletService.getWallet())) {
                     type.set("Sent to");
 
-                    if (transactionOutput.getScriptPubKey().isSentToAddress() ||
-                            transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-                        address =
-                                transactionOutput.getScriptPubKey().getToAddress(walletService.getWallet().getParams());
+                    if (transactionOutput.getScriptPubKey().isSentToAddress()
+                            || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
+                        address = transactionOutput.getScriptPubKey().getToAddress(walletService.getWallet().getParams());
                         addressString = address.toString();
-                    } else {
-                        addressString = "No sent to address script used.";
-                        notAnAddress = true;
                     }
                 }
             }
@@ -74,12 +69,8 @@ public class TransactionsListItem {
                 if (transactionOutput.isMine(walletService.getWallet())) {
                     if (transactionOutput.getScriptPubKey().isSentToAddress() ||
                             transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-                        address =
-                                transactionOutput.getScriptPubKey().getToAddress(walletService.getWallet().getParams());
+                        address = transactionOutput.getScriptPubKey().getToAddress(walletService.getWallet().getParams());
                         addressString = address.toString();
-                    } else {
-                        addressString = "No sent to address script used.";
-                        notAnAddress = true;
                     }
                 }
             }
@@ -91,12 +82,8 @@ public class TransactionsListItem {
                     outgoing = true;
                     if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey()
                             .isPayToScriptHash()) {
-                        address = transactionOutput.getScriptPubKey().getToAddress(walletService.getWallet().getParams
-                                ());
+                        address = transactionOutput.getScriptPubKey().getToAddress(walletService.getWallet().getParams());
                         addressString = address.toString();
-                    } else {
-                        addressString = "No sent to address script used.";
-                        notAnAddress = true;
                     }
                 }
             }
@@ -105,8 +92,7 @@ public class TransactionsListItem {
                 type.set("Sent to");
             } else {
                 type.set("Internal (TX Fee)");
-                addressString = "Internal swap between addresses.";
-                notAnAddress = true;
+                //addressString = "Internal swap between addresses.";
             }
         }
 
@@ -190,7 +176,7 @@ public class TransactionsListItem {
     }
 
     public boolean isNotAnAddress() {
-        return notAnAddress;
+        return addressString == null;
     }
 }
 
