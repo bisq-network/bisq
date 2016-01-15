@@ -21,8 +21,20 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
 public class Restrictions {
-    public static final Coin MIN_TRADE_AMOUNT = Coin.parseCoin("0.001"); // 40 cent @ 400 EUR/BTC 
-    public static final Coin MAX_TRADE_AMOUNT = Coin.parseCoin("1");
+
+    // TODO revert later 
+    public static final Coin MIN_TRADE_AMOUNT = Coin.parseCoin("0.0001"); // 4 cent @ 400 EUR/BTC 
+    //public static final Coin MIN_TRADE_AMOUNT = Coin.parseCoin("0.001"); // 40 cent @ 400 EUR/BTC 
+
+    public static Coin MAX_TRADE_AMOUNT = Coin.parseCoin("1");
+
+    // WalletService reduce MAX_TRADE_AMOUNT for mainnet to 0.01 btc
+    // TODO revert later when tested enough
+    public static void setMaxTradeAmount(Coin maxTradeAmount) {
+        MAX_TRADE_AMOUNT = maxTradeAmount;
+    }
+
+    //public static final Coin MAX_TRADE_AMOUNT = Coin.parseCoin("1");
 
     public static boolean isMinSpendableAmount(Coin amount) {
         return amount != null && amount.compareTo(FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT)) > 0;
