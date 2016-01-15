@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.funds.reserved;
 
 import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
@@ -106,11 +107,16 @@ public class ReservedListItem {
                     case TAKER_FEE_PAID:
                         balanceLabel.setText(formatter.formatCoinWithCode(balance) + " locked in deposit");
                         break;
+                    case DEPOSIT_REQUESTED:
                     case DEPOSIT_PAID:
                     case FIAT_SENT:
                     case FIAT_RECEIVED:
-                        // TODO show amount locked
-                        balanceLabel.setText("Locked in deposit");
+                        // We ignore the tx fee as it will be paid by both (once deposit, once payout)
+                        Coin balanceInDeposit = FeePolicy.SECURITY_DEPOSIT;
+                        // For the seller we add the trade amount
+                        if (trade.getContract().getSellerAddress().equals(getAddress()))
+                            balanceInDeposit.add(trade.getTradeAmount());
+                        balanceLabel.setText(formatter.formatCoinWithCode(balanceInDeposit) + " locked in deposit");
                         break;
                     case PAYOUT_PAID:
                         balanceLabel.setText(formatter.formatCoinWithCode(balance) + " in wallet");
@@ -122,6 +128,8 @@ public class ReservedListItem {
                     case DISPUTE:
                         balanceLabel.setText(formatter.formatCoinWithCode(balance) + " locked because of open ticket");
                         break;
+                    default:
+                        log.warn("Not supported tradePhase: " + phase);
                 }
 
             } else
