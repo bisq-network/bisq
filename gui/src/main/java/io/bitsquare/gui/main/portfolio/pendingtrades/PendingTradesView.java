@@ -26,7 +26,9 @@ import io.bitsquare.trade.Trade;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
@@ -47,20 +49,28 @@ import java.util.Date;
 public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTradesViewModel> {
 
     private final TradeDetailsPopup tradeDetailsPopup;
-    @FXML TableView<PendingTradesListItem> table;
-    @FXML TableColumn<PendingTradesListItem, Fiat> priceColumn;
-    @FXML TableColumn<PendingTradesListItem, Fiat> tradeVolumeColumn;
-    @FXML TableColumn<PendingTradesListItem, PendingTradesListItem> directionColumn;
+    @FXML
+    TableView<PendingTradesListItem> table;
+    @FXML
+    TableColumn<PendingTradesListItem, Fiat> priceColumn;
+    @FXML
+    TableColumn<PendingTradesListItem, Fiat> tradeVolumeColumn;
+    @FXML
+    TableColumn<PendingTradesListItem, PendingTradesListItem> directionColumn;
     @FXML
     TableColumn<PendingTradesListItem, PendingTradesListItem> idColumn;
-    @FXML TableColumn<PendingTradesListItem, Date> dateColumn;
-    @FXML TableColumn<PendingTradesListItem, Coin> tradeAmountColumn;
+    @FXML
+    TableColumn<PendingTradesListItem, Date> dateColumn;
+    @FXML
+    TableColumn<PendingTradesListItem, Coin> tradeAmountColumn;
 
     private ChangeListener<PendingTradesListItem> selectedItemChangeListener;
     private TradeSubView currentSubView;
     private ChangeListener<Boolean> appFocusChangeListener;
     private ReadOnlyBooleanProperty appFocusProperty;
     private ChangeListener<Trade> currentTradeChangeListener;
+    private EventHandler<KeyEvent> keyEventEventHandler;
+    private Scene scene;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -108,16 +118,17 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             setNewSubView(newValue);
         };
 
-        // we add hidden emergency shortcut to open support ticket
-        root.getScene().addEventHandler(KeyEvent.KEY_RELEASED, event -> {
+        // we use a hidden emergency shortcut to open support ticket
+        keyEventEventHandler = event -> {
             if (new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN).match(event))
                 new OpenEmergencyTicketPopup().onOpenTicket(() -> model.dataModel.onOpenSupportTicket()).show();
-        });
+        };
     }
 
     @Override
     protected void activate() {
-        appFocusProperty = root.getScene().getWindow().focusedProperty();
+        scene = root.getScene();
+        appFocusProperty = scene.getWindow().focusedProperty();
         appFocusProperty.addListener(appFocusChangeListener);
         model.currentTrade().addListener(currentTradeChangeListener);
         setNewSubView(model.currentTrade().get());
@@ -133,6 +144,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 UserThread.execute(() -> table.getFocusModel().focus(index));
             });
         }
+
+        scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
     @Override
@@ -148,6 +161,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         if (currentSubView != null)
             currentSubView.deactivate();
+
+        if (scene != null)
+            scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
 
@@ -167,8 +183,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                     currentSubView = new BuyerSubView(model);
                 else
                     currentSubView = new SellerSubView(model);
-            }
-            else {
+            } else {
                 if (model.isBuyOffer())
                     currentSubView = new SellerSubView(model);
                 else
@@ -207,8 +222,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     Tooltip.install(hyperlink, new Tooltip(model.formatTradeId(item.getId())));
                                     hyperlink.setOnAction(event -> tradeDetailsPopup.show(item.getTrade()));
                                     setGraphic(hyperlink);
-                                }
-                                else {
+                                } else {
                                     setGraphic(null);
                                     setId(null);
                                 }
