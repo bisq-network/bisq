@@ -381,7 +381,7 @@ public class DisputeSummaryPopup extends Popup {
                     e2.printStackTrace();
                 }
             } else {
-                log.warn("dispute.getDepositTxOptional is empty");
+                log.warn("dispute.getDepositTxSerialized is null");
             }
         });
 

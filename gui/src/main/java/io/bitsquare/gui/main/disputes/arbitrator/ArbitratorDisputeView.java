@@ -19,10 +19,7 @@ package io.bitsquare.gui.main.disputes.arbitrator;
 
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
-import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.crypto.KeyRing;
-import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.main.disputes.trader.DisputeSummaryPopup;
 import io.bitsquare.gui.main.disputes.trader.TraderDisputeView;
@@ -40,10 +37,10 @@ import javax.inject.Inject;
 public class ArbitratorDisputeView extends TraderDisputeView {
 
     @Inject
-    public ArbitratorDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeWalletService tradeWalletService, WalletService walletService,
-                                 TradeManager tradeManager, Stage stage, BSFormatter formatter, Navigation navigation,
-                                 DisputeSummaryPopup disputeSummaryPopup, ContractPopup contractPopup, TradeDetailsPopup tradeDetailsPopup) {
-        super(disputeManager, keyRing, tradeWalletService, walletService, tradeManager, stage, formatter, navigation,
+    public ArbitratorDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager, Stage stage,
+                                 BSFormatter formatter, DisputeSummaryPopup disputeSummaryPopup,
+                                 ContractPopup contractPopup, TradeDetailsPopup tradeDetailsPopup) {
+        super(disputeManager, keyRing, tradeManager, stage, formatter,
                 disputeSummaryPopup, contractPopup, tradeDetailsPopup);
     }
 

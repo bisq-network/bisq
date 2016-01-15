@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
 import com.google.inject.Inject;
+import io.bitsquare.app.Log;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.btc.FeePolicy;
@@ -32,6 +33,7 @@ import io.bitsquare.gui.main.disputes.DisputesView;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.closedtrades.ClosedTradesView;
 import io.bitsquare.gui.popups.Popup;
+import io.bitsquare.gui.popups.SelectDepositTxPopup;
 import io.bitsquare.gui.popups.WalletPasswordPopup;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.*;
@@ -45,8 +47,11 @@ import javafx.collections.ObservableList;
 import org.bitcoinj.core.BlockChainListener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
 import org.spongycastle.crypto.params.KeyParameter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -182,55 +187,92 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     public void onOpenDispute() {
-        doOpenDispute(false);
+        tryOpenDispute(false);
     }
 
     public void onOpenSupportTicket() {
-        doOpenDispute(true);
+        tryOpenDispute(true);
     }
 
-    private void doOpenDispute(boolean isSupportTicket) {
+    private void tryOpenDispute(boolean isSupportTicket) {
         if (trade != null) {
             Transaction depositTx = trade.getDepositTx();
-            log.debug("trade.getDepositTx() " + depositTx);
-            byte[] depositTxSerialized = null;
-            byte[] payoutTxSerialized = null;
-            String depositTxHashAsString = null;
-            String payoutTxHashAsString = null;
             if (depositTx != null) {
-                depositTxSerialized = depositTx.bitcoinSerialize();
-                depositTxHashAsString = depositTx.getHashAsString();
-            }
-            Transaction payoutTx = trade.getPayoutTx();
-            if (payoutTx != null) {
-                payoutTxSerialized = payoutTx.bitcoinSerialize();
-                payoutTxHashAsString = payoutTx.getHashAsString();
-            }
+                doOpenDispute(isSupportTicket, trade.getDepositTx());
+            } else {
+                log.warn("Trade.depositTx is null. We try to find the tx in our wallet.");
+                List<Transaction> candidates = new ArrayList<>();
+                List<Transaction> transactions = walletService.getWallet().getRecentTransactions(100, true);
+                transactions.stream().forEach(transaction -> {
+                    Coin valueSentFromMe = transaction.getValueSentFromMe(walletService.getWallet());
+                    if (!valueSentFromMe.isZero()) {
+                        // spending tx
+                        for (TransactionOutput transactionOutput : transaction.getOutputs()) {
+                            if (!transactionOutput.isMine(walletService.getWallet())) {
+                                if (transactionOutput.getScriptPubKey().isPayToScriptHash()) {
+                                    // MS tx
+                                    candidates.add(transaction);
+                                }
+                            }
+                        }
+                    }
+                });
 
-            Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
-                    trade.getId(),
-                    keyRing.getPubKeyRing().hashCode(), // traderId
-                    trade.getOffer().getDirection() == Offer.Direction.BUY ? isOfferer : !isOfferer,
-                    isOfferer,
-                    keyRing.getPubKeyRing(),
-                    trade.getDate(),
-                    trade.getContract(),
-                    trade.getContractHash(),
-                    depositTxSerialized,
-                    payoutTxSerialized,
-                    depositTxHashAsString,
-                    payoutTxHashAsString,
-                    trade.getContractAsJson(),
-                    trade.getOffererContractSignature(),
-                    trade.getTakerContractSignature(),
-                    user.getAcceptedArbitratorByAddress(trade.getArbitratorAddress()).getPubKeyRing(),
-                    isSupportTicket
-            );
-
-            trade.setDisputeState(Trade.DisputeState.DISPUTE_REQUESTED);
-            disputeManager.sendOpenNewDisputeMessage(dispute);
-            navigation.navigateTo(MainView.class, DisputesView.class);
+                if (candidates.size() == 1)
+                    doOpenDispute(isSupportTicket, candidates.get(0));
+                else if (candidates.size() > 1)
+                    new SelectDepositTxPopup().transactions(candidates).onSelect(transaction -> {
+                        doOpenDispute(isSupportTicket, transaction);
+                    }).show();
+                else
+                    log.error("Trade.depositTx is null and we did not find any MultiSig transaction.");
+            }
+        } else {
+            log.error("Trade is null");
         }
+    }
+
+    private void doOpenDispute(boolean isSupportTicket, Transaction depositTx) {
+        Log.traceCall("depositTx=" + depositTx);
+        byte[] depositTxSerialized = null;
+        byte[] payoutTxSerialized = null;
+        String depositTxHashAsString = null;
+        String payoutTxHashAsString = null;
+        if (depositTx != null) {
+            depositTxSerialized = depositTx.bitcoinSerialize();
+            depositTxHashAsString = depositTx.getHashAsString();
+        } else {
+            log.warn("depositTx is null");
+        }
+        Transaction payoutTx = trade.getPayoutTx();
+        if (payoutTx != null) {
+            payoutTxSerialized = payoutTx.bitcoinSerialize();
+            payoutTxHashAsString = payoutTx.getHashAsString();
+        }
+
+        Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
+                trade.getId(),
+                keyRing.getPubKeyRing().hashCode(), // traderId
+                trade.getOffer().getDirection() == Offer.Direction.BUY ? isOfferer : !isOfferer,
+                isOfferer,
+                keyRing.getPubKeyRing(),
+                trade.getDate(),
+                trade.getContract(),
+                trade.getContractHash(),
+                depositTxSerialized,
+                payoutTxSerialized,
+                depositTxHashAsString,
+                payoutTxHashAsString,
+                trade.getContractAsJson(),
+                trade.getOffererContractSignature(),
+                trade.getTakerContractSignature(),
+                user.getAcceptedArbitratorByAddress(trade.getArbitratorAddress()).getPubKeyRing(),
+                isSupportTicket
+        );
+
+        trade.setDisputeState(Trade.DisputeState.DISPUTE_REQUESTED);
+        disputeManager.sendOpenNewDisputeMessage(dispute);
+        navigation.navigateTo(MainView.class, DisputesView.class);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
