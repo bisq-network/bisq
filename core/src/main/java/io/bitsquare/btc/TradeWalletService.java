@@ -848,13 +848,12 @@ public class TradeWalletService {
     }
 
     /**
-     * @param tx The transaction we want to lookup
+     * @param txId The transaction ID of the transaction we want to lookup
      * @return Returns local existing wallet transaction
      * @throws VerificationException
      */
-    public Transaction getWalletTx(Transaction tx) throws VerificationException {
-        // log.trace("getWalleTx tx " + tx.toString());
-        return wallet.getTransaction(tx.getHash());
+    public Transaction getWalletTx(Sha256Hash txId) throws VerificationException {
+        return wallet.getTransaction(txId);
     }
 
     /**

@@ -264,7 +264,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     // The deserialized tx has not actual confidence data, so we need to get the fresh one from the wallet.
     public void updateDepositTxFromWallet(TradeWalletService tradeWalletService) {
         if (depositTx != null)
-            setDepositTx(tradeWalletService.getWalletTx(depositTx));
+            setDepositTx(tradeWalletService.getWalletTx(depositTx.getHash()));
     }
 
     public void setDepositTx(Transaction tx) {
