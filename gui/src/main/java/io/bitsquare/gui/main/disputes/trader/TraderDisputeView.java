@@ -23,11 +23,8 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.arbitration.messages.DisputeMailMessage;
-import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
-import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.TableGroupHeadline;
@@ -75,19 +72,15 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     private final DisputeManager disputeManager;
     protected final KeyRing keyRing;
-    private final TradeWalletService tradeWalletService;
-    private final WalletService walletService;
-    private TradeManager tradeManager;
+    private final TradeManager tradeManager;
     private final Stage stage;
     private final BSFormatter formatter;
-    private final Navigation navigation;
     private final DisputeSummaryPopup disputeSummaryPopup;
-    private ContractPopup contractPopup;
-    private TradeDetailsPopup tradeDetailsPopup;
+    private final ContractPopup contractPopup;
+    private final TradeDetailsPopup tradeDetailsPopup;
 
     private final List<DisputeMailMessage.Attachment> tempAttachments = new ArrayList<>();
 
-    private TableColumn<Dispute, Dispute> tradeIdColumn, roleColumn, dateColumn, contractColumn, stateColumn;
     private TableView<Dispute> disputesTable;
     private Dispute selectedDispute;
     private ChangeListener<Dispute> disputeChangeListener;
@@ -104,17 +97,14 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TraderDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeWalletService tradeWalletService, WalletService walletService,
-                             TradeManager tradeManager, Stage stage, BSFormatter formatter, Navigation navigation, DisputeSummaryPopup disputeSummaryPopup,
+    public TraderDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager, Stage stage,
+                             BSFormatter formatter, DisputeSummaryPopup disputeSummaryPopup,
                              ContractPopup contractPopup, TradeDetailsPopup tradeDetailsPopup) {
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
-        this.tradeWalletService = tradeWalletService;
-        this.walletService = walletService;
         this.tradeManager = tradeManager;
         this.stage = stage;
         this.formatter = formatter;
-        this.navigation = navigation;
         this.disputeSummaryPopup = disputeSummaryPopup;
         this.contractPopup = contractPopup;
         this.tradeDetailsPopup = tradeDetailsPopup;
@@ -127,15 +117,15 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         disputesTable.setMinHeight(150);
         root.getChildren().add(disputesTable);
 
-        tradeIdColumn = getTradeIdColumn();
+        TableColumn<Dispute, Dispute> tradeIdColumn = getTradeIdColumn();
         disputesTable.getColumns().add(tradeIdColumn);
-        roleColumn = getRoleColumn();
+        TableColumn<Dispute, Dispute> roleColumn = getRoleColumn();
         disputesTable.getColumns().add(roleColumn);
-        dateColumn = getDateColumn();
+        TableColumn<Dispute, Dispute> dateColumn = getDateColumn();
         disputesTable.getColumns().add(dateColumn);
-        contractColumn = getContractColumn();
+        TableColumn<Dispute, Dispute> contractColumn = getContractColumn();
         disputesTable.getColumns().add(contractColumn);
-        stateColumn = getStateColumn();
+        TableColumn<Dispute, Dispute> stateColumn = getStateColumn();
         disputesTable.getColumns().add(stateColumn);
 
         disputesTable.getSortOrder().add(dateColumn);
@@ -152,8 +142,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     protected void activate() {
         FilteredList<Dispute> filteredList = new FilteredList<>(disputeManager.getDisputesAsObservableList());
         setFilteredListPredicate(filteredList);
-        SortedList<Dispute> sortedList = new SortedList(filteredList);
-        sortedList.setComparator((o1, o2) -> o1.getOpeningDate().compareTo(o2.getOpeningDate()));
+        SortedList<Dispute> sortedList = new SortedList<>(filteredList);
+        sortedList.setComparator((o1, o2) -> o2.getOpeningDate().compareTo(o1.getOpeningDate()));
         disputesTable.setItems(sortedList);
         disputesTable.getSelectionModel().selectedItemProperty().addListener(disputeChangeListener);
 
@@ -286,7 +276,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             if (root.getChildren().size() > 1)
                 root.getChildren().remove(1);
 
-            this.selectedDispute = dispute;
+            selectedDispute = null;
         } else if (selectedDispute != dispute) {
             this.selectedDispute = dispute;
 
@@ -301,7 +291,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             AnchorPane.setLeftAnchor(tableGroupHeadline, 0d);
 
             ObservableList<DisputeMailMessage> list = dispute.getDisputeMailMessagesAsObservableList();
-            SortedList<DisputeMailMessage> sortedList = new SortedList(list);
+            SortedList<DisputeMailMessage> sortedList = new SortedList<>(list);
             sortedList.setComparator((o1, o2) -> o1.getDate().compareTo(o2.getDate()));
             list.addListener((ListChangeListener<DisputeMailMessage>) c -> scrollToBottom());
             messageListView = new ListView<>(sortedList);
@@ -547,12 +537,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             }
                         }
 
-                        private void showNotArrivedIcon() {
+                      /*  private void showNotArrivedIcon() {
                             statusIcon.setVisible(true);
                             AwesomeDude.setIcon(statusIcon, AwesomeIcon.WARNING_SIGN, "14");
                             Tooltip.install(statusIcon, new Tooltip("Message did not arrive. Please try to send again."));
                             statusIcon.setTextFill(Paint.valueOf("#dd0000"));
-                        }
+                        }*/
 
                         private void showMailboxIcon() {
                             statusIcon.setVisible(true);
