@@ -195,11 +195,11 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private void onSelectNetwork() {
         if (netWorkComboBox.getSelectionModel().getSelectedItem() != preferences.getBitcoinNetwork()) {
             if (netWorkComboBox.getSelectionModel().getSelectedItem() == BitcoinNetwork.MAINNET) {
-                new Popup().warning("The application is not sufficiently tested yet and it so it is not recommended " +
-                        "to use mainnet yet.\n" +
-                        "If you want to take the risk to use Mainnet please use low trading amounts like 0.1 BTC " +
-                        "to limit possible losses.")
-                        .actionButtonText("I will wait and stick with Testnet")
+                new Popup().warning("The application is not sufficiently tested yet. " +
+                        "Please be aware that using Mainnet comes with the risk to lose funds in case of software bugs.\n" +
+                        "To limit the possible losses the maximum allowed trading amount and the security deposit are " +
+                        "reduced to 0.01 BTC on Mainnet.")
+                        .actionButtonText("I will stick with Testnet for now")
                         .onAction(() -> UserThread.execute(() -> netWorkComboBox.getSelectionModel().select(preferences.getBitcoinNetwork())))
                         .closeButtonText("I understand the risk and want to use Mainnet")
                         .onClose(() -> selectNetwork())

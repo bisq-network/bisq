@@ -46,13 +46,15 @@ public class FeePolicy {
         Wallet.SendRequest.DEFAULT_FEE_PER_KB = TX_FEE;
     }
 
-    public static final Coin DUST = Coin.valueOf(546);
-
     public static final Coin CREATE_OFFER_FEE = Coin.valueOf(100000); // 0.001 BTC  0.1% of 1 BTC about 0.4 EUR @ 400 EUR/BTC
     public static final Coin TAKE_OFFER_FEE = CREATE_OFFER_FEE;
 
-    // reduce for mainnet testing
-    // TODO revert later when tested enough
-    public static final Coin SECURITY_DEPOSIT = Coin.valueOf(1000000); // 0.01 BTC; about 4 EUR @ 400 EUR/BTC
-    //public static final Coin SECURITY_DEPOSIT = Coin.valueOf(10000000); // 0.1 BTC; about 40 EUR @ 400 EUR/BTC
+    // TODO make final again later 
+    public static Coin SECURITY_DEPOSIT = Coin.valueOf(10000000); // 0.1 BTC; about 4 EUR @ 400 EUR/BTC
+
+    // Called from WalletService to reduce SECURITY_DEPOSIT for mainnet to 0.01 btc
+    // TODO remove later when tested enough
+    public static void setSecurityDeposit(Coin securityDeposit) {
+        SECURITY_DEPOSIT = securityDeposit;
+    }
 }
