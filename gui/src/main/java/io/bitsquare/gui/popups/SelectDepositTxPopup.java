@@ -19,7 +19,6 @@ package io.bitsquare.gui.popups;
 
 import io.bitsquare.common.util.Tuple2;
 import javafx.collections.FXCollections;
-import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.util.StringConverter;
@@ -37,7 +36,6 @@ import static io.bitsquare.gui.util.FormBuilder.addMultilineLabel;
 
 public class SelectDepositTxPopup extends Popup {
     private static final Logger log = LoggerFactory.getLogger(SelectDepositTxPopup.class);
-    private Button emptyWalletButton;
     private ComboBox<Transaction> transactionsComboBox;
     private List<Transaction> transaction;
     private Optional<Consumer<Transaction>> selectHandlerOptional;
@@ -59,6 +57,7 @@ public class SelectDepositTxPopup extends Popup {
         createGridPane();
         addHeadLine();
         addContent();
+        addCloseButton();
         createPopup();
         return this;
     }
@@ -86,6 +85,7 @@ public class SelectDepositTxPopup extends Popup {
 
         Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, ++rowIndex);
         transactionsComboBox = tuple.second;
+        transactionsComboBox.setPromptText("Select deposit transaction");
         transactionsComboBox.setConverter(new StringConverter<Transaction>() {
             @Override
             public String toString(Transaction transaction) {
@@ -100,6 +100,7 @@ public class SelectDepositTxPopup extends Popup {
         transactionsComboBox.setItems(FXCollections.observableArrayList(transaction));
         transactionsComboBox.setOnAction(event -> {
             selectHandlerOptional.get().accept(transactionsComboBox.getSelectionModel().getSelectedItem());
+            hide();
         });
     }
 

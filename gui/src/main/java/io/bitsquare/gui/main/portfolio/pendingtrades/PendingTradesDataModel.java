@@ -221,9 +221,12 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 if (candidates.size() == 1)
                     doOpenDispute(isSupportTicket, candidates.get(0));
                 else if (candidates.size() > 1)
-                    new SelectDepositTxPopup().transactions(candidates).onSelect(transaction -> {
-                        doOpenDispute(isSupportTicket, transaction);
-                    }).show();
+                    new SelectDepositTxPopup().transactions(candidates)
+                            .onSelect(transaction -> {
+                                doOpenDispute(isSupportTicket, transaction);
+                            })
+                            .closeButtonText("Cancel")
+                            .show();
                 else
                     log.error("Trade.depositTx is null and we did not find any MultiSig transaction.");
             }
