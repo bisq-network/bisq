@@ -141,6 +141,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     transient private ObjectProperty<DisputeState> disputeStateProperty;
     transient private ObjectProperty<TradePeriodState> tradePeriodStateProperty;
     // Trades are saved in the TradeList
+    @Nullable
     transient private Storage<? extends TradableList> storage;
     transient protected TradeProtocol tradeProtocol;
 
@@ -271,7 +272,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
         log.debug("setDepositTx " + tx);
         this.depositTx = tx;
         setupConfidenceListener();
-        storage.queueUpForSave();
+        persist();
     }
 
     @Nullable
@@ -300,13 +301,14 @@ abstract public class Trade implements Tradable, Model, Serializable {
     public void setState(State state) {
         this.state = state;
         processStateProperty.set(state);
-        storage.queueUpForSave();
+        persist();
+        persist();
     }
 
     public void setDisputeState(DisputeState disputeState) {
         this.disputeState = disputeState;
         disputeStateProperty.set(disputeState);
-        storage.queueUpForSave();
+        persist();
     }
 
     public DisputeState getDisputeState() {
@@ -316,7 +318,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     public void setTradePeriodState(TradePeriodState tradePeriodState) {
         this.tradePeriodState = tradePeriodState;
         tradePeriodStateProperty.set(tradePeriodState);
-        storage.queueUpForSave();
+        persist();
     }
 
     public TradePeriodState getTradePeriodState() {
@@ -339,12 +341,13 @@ abstract public class Trade implements Tradable, Model, Serializable {
     // Get called from taskRunner after each completed task
     @Override
     public void persist() {
-        storage.queueUpForSave();
+        if (storage != null)
+            storage.queueUpForSave();
     }
 
     @Override
     public void onComplete() {
-        storage.queueUpForSave();
+        persist();
     }
 
 
@@ -534,7 +537,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
 
     public void setHalfTradePeriodReachedWarningDisplayed(boolean halfTradePeriodReachedWarningDisplayed) {
         this.halfTradePeriodReachedWarningDisplayed = halfTradePeriodReachedWarningDisplayed;
-        storage.queueUpForSave();
+        persist();
     }
 
     public boolean isHalfTradePeriodReachedWarningDisplayed() {
@@ -543,7 +546,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
 
     public void setTradePeriodOverWarningDisplayed(boolean tradePeriodOverWarningDisplayed) {
         this.tradePeriodOverWarningDisplayed = tradePeriodOverWarningDisplayed;
-        storage.queueUpForSave();
+        persist();
     }
 
     public boolean isTradePeriodOverWarningDisplayed() {
