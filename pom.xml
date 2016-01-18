@@ -109,23 +109,16 @@
         </dependency>
 
         <!--bitcoin-->
-        <!--Version later than 0.13.1 remove support for Java serialisation 
-            In version 0.13.1 is a missing support for Java serialisation in MainNetParams (HttpDiscovery.Details)
-            We remove Cartographer/HttpDiscovery support
+        <!--Version later than 0.13.1 has removed support for Java serialisation 
+            In version 0.13.1 is missing support for Java serialisation in MainNetParams (HttpDiscovery.Details)
+            We remove Cartographer/HttpDiscovery support from in our version 0.13.1.1 fork.
             See discussion: http://bitcoin-development.narkive.com/hczWIAby/bitcoin-development-cartographer#post3
         -->
-
         <dependency>
             <groupId>org.bitcoinj</groupId>
             <artifactId>bitcoinj-core</artifactId>
             <version>0.13.1.1</version>
         </dependency>
-
-        <!--   <dependency>
-               <groupId>org.bitcoinj</groupId>
-               <artifactId>bitcoinj-core</artifactId>
-               <version>0.13.1.1</version>
-           </dependency>-->
 
         <!--crypto-->
         <dependency>
