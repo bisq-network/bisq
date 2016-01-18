@@ -92,6 +92,12 @@
             <id>partnerdemo.artifactoryonline.com</id>
             <url>http://partnerdemo.artifactoryonline.com/partnerdemo/libs-snapshots-local</url>
         </repository>
+
+
+        <repository>
+            <id>project-repo</id>
+            <url>file://${project.basedir}/local-repo</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -103,11 +109,23 @@
         </dependency>
 
         <!--bitcoin-->
+        <!--Version later than 0.13.1 remove support for Java serialisation 
+            In version 0.13.1 is a missing support for Java serialisation in MainNetParams (HttpDiscovery.Details)
+            We remove Cartographer/HttpDiscovery support
+            See discussion: http://bitcoin-development.narkive.com/hczWIAby/bitcoin-development-cartographer#post3
+        -->
+
         <dependency>
             <groupId>org.bitcoinj</groupId>
             <artifactId>bitcoinj-core</artifactId>
-            <version>0.13.2</version>
+            <version>0.13.1.1</version>
         </dependency>
+
+        <!--   <dependency>
+               <groupId>org.bitcoinj</groupId>
+               <artifactId>bitcoinj-core</artifactId>
+               <version>0.13.1.1</version>
+           </dependency>-->
 
         <!--crypto-->
         <dependency>
