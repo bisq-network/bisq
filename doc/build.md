@@ -14,6 +14,10 @@ What follows is explained in detail in the sections below, but for those who kno
     $ javac -version
     javac 1.8.0_40       # must be 1.8.0_40 or better
 
+    $ git clone https://github.com/bitsquare/bitcoinj.git                
+    $ cd bitcoinj  
+    $ mvn install -DskipTests -Dmaven.javadoc.skip=true
+    
     $ git clone https://github.com/bitsquare/bitsquare.git
     $ cd bitsquare
     $ mvn package    
@@ -50,25 +54,34 @@ The preferred approach is to clone the Bitsquare repository using [git](http://w
 
 However, if you're not familiar with git or it is otherwise inconvenient to use, you can also download and extract a zip file of the latest sources at https://github.com/bitsquare/bitsquare/archive/master.zip.
 
+ 
+### 2. Install bitcoinj fork 
+Versions later than 0.13.1 has removed support for Java serialisation 
+In version 0.13.1 is also missing support for Java serialisation in MainNetParams (HttpDiscovery.Details)
+We remove Cartographer/HttpDiscovery support from in our [fork version 0.13.1.1](https://github.com/bitsquare/bitcoinj/tree/RemovedHttpDiscovery).
+Beside the Java serialisation issues here are [privacy concerns](http://bitcoin-development.narkive.com/hczWIAby/bitcoin-development-cartographer#post3) regarding Cartographer. 
+                
+    $ git clone https://github.com/bitsquare/bitcoinj.git                
+    $ cd bitcoinj  
+    $ mvn install -DskipTests -Dmaven.javadoc.skip=true
 
-### 2. Build jar
+### 3. Build jar
 
 Bitsquare uses maven as a build system. 
 
     $ cd bitsquare
     $ mvn package
-    
 
-### 3. Run
+### 4. Run
 
 When the build completes, you will find an executable jar: `gui/target/shaded.jar`. 
 To run it use:
 
     $ java -jar gui/target/shaded.jar
     
-Please note that testnet is the default bitcoin network. Mainnet is disabled at that stage of development and will be activated as soon there is more testing done.
+Please note that testnet is the default bitcoin network. 
     
-### 4. Development mode
+### 5. Development mode
   
 Please check out our wiki for more information about [testing](https://github.com/bitsquare/bitsquare/wiki/Guide-for-testing-Bitsquare)
 and how to use [regtest](https://github.com/bitsquare/bitsquare/wiki/How-to-use-Bitsquare-with-regtest-%28advanced%29)
@@ -84,7 +97,7 @@ Here are example program arguments for using regtest with localhost environment 
     $ java -jar gui/target/shaded.jar --bitcoin.network=regtest --node.port=4442 --useLocalhost=true --devTest=true --app.name=Bitsquare-Local-Regtest-Bob   
   
   
-### 5. Running local seed node with Tor
+### 6. Running local seed node with Tor
 
 If you want to run locally a seed node via Tor you need to add your seed node's hidden service address to the SeedNodesRepository.java class.
 You can find the hidden service address after you started once a seed node. Start it with a placeholder address like: 
@@ -107,7 +120,7 @@ Here are example program arguments for using regtest and using the Tor network:
     $ java -jar gui/target/shaded.jar --bitcoin.network=regtest node.port=4442 --devTest=true --app.name=Bitsquare-Tor-Regtest-Bob   
    
 
-### 6. Enable unlimited Strength for cryptographic keys
+### 7. Enable unlimited Strength for cryptographic keys
 
 Bitsquare uses 256 bit length keys which are still not permitted by default.  
 Get around that ridiculous fact by adding the missing [jars from Oracle](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html).
