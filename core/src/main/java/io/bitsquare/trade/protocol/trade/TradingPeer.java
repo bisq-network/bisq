@@ -34,7 +34,7 @@ public class TradingPeer implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    transient private static final Logger log = LoggerFactory.getLogger(TradingPeer.class);
+    private static final Logger log = LoggerFactory.getLogger(TradingPeer.class);
 
     // Mutable
     private String accountId;

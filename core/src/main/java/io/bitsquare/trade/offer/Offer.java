@@ -50,7 +50,7 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
     @JsonExclude
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
     @JsonExclude
-    transient private static final Logger log = LoggerFactory.getLogger(Offer.class);
+    private static final Logger log = LoggerFactory.getLogger(Offer.class);
 
     public static final long TTL = 10 * 60 * 1000; // 10 min.
     public final static String TAC_OFFERER = "When placing that offer I accept that anyone who fulfills my conditions can " +

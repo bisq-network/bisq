@@ -39,7 +39,7 @@ public class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade, Seriali
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    transient private static final Logger log = LoggerFactory.getLogger(BuyerAsTakerTrade.class);
+    private static final Logger log = LoggerFactory.getLogger(BuyerAsTakerTrade.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

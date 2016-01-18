@@ -43,10 +43,10 @@ public class Preferences implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    transient private static final Logger log = LoggerFactory.getLogger(Preferences.class);
+    private static final Logger log = LoggerFactory.getLogger(Preferences.class);
 
     // Deactivate mBit for now as most screens are not supporting it yet
-    transient private static final List<String> BTC_DENOMINATIONS = Arrays.asList(MonetaryFormat.CODE_BTC/*, MonetaryFormat.CODE_MBTC*/);
+    private static final List<String> BTC_DENOMINATIONS = Arrays.asList(MonetaryFormat.CODE_BTC/*, MonetaryFormat.CODE_MBTC*/);
     transient static final private ArrayList<BlockChainExplorer> blockChainExplorersTestNet = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/tBTC/tx/", "https://www.blocktrail.com/tBTC/address/"),
             new BlockChainExplorer("Blockexplorer", "https://blockexplorer.com/testnet/tx/", "https://blockexplorer.com/testnet/address/"),
@@ -66,13 +66,13 @@ public class Preferences implements Serializable {
         return BTC_DENOMINATIONS;
     }
 
-    private transient static Locale defaultLocale = Locale.getDefault();
+    private static Locale defaultLocale = Locale.getDefault();
 
     public static Locale getDefaultLocale() {
         return defaultLocale;
     }
 
-    private transient static TradeCurrency defaultTradeCurrency = new TradeCurrency(CurrencyUtil.getCurrencyByCountryCode(CountryUtil.getDefaultCountryCode()).getCurrency().getCurrencyCode());
+    private static TradeCurrency defaultTradeCurrency = new TradeCurrency(CurrencyUtil.getCurrencyByCountryCode(CountryUtil.getDefaultCountryCode()).getCurrency().getCurrencyCode());
 
     public static TradeCurrency getDefaultTradeCurrency() {
         return defaultTradeCurrency;
@@ -219,7 +219,8 @@ public class Preferences implements Serializable {
             bitsquareEnvironment.saveBitcoinNetwork(bitcoinNetwork);
 
         this.bitcoinNetwork = bitcoinNetwork;
-        storage.queueUpForSave();
+
+        // We don't store the bitcoinNetwork locally as BitcoinNetwork is not serializable!
     }
 
     private void setTradeCurrencies(List<TradeCurrency> tradeCurrencies) {

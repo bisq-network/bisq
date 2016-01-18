@@ -60,7 +60,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    private transient static final Logger log = LoggerFactory.getLogger(Trade.class);
+    private static final Logger log = LoggerFactory.getLogger(Trade.class);
 
     public enum State {
         PREPARATION(Phase.PREPARATION),
@@ -128,8 +128,8 @@ abstract public class Trade implements Tradable, Model, Serializable {
     // Mutable
     private Coin tradeAmount;
     private Address tradingPeerAddress;
-    private transient ObjectProperty<Coin> tradeAmountProperty;
-    private transient ObjectProperty<Fiat> tradeVolumeProperty;
+    transient private ObjectProperty<Coin> tradeAmountProperty;
+    transient private ObjectProperty<Fiat> tradeVolumeProperty;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -137,9 +137,9 @@ abstract public class Trade implements Tradable, Model, Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Transient/Immutable
-    private transient ObjectProperty<State> processStateProperty;
-    private transient ObjectProperty<DisputeState> disputeStateProperty;
-    private transient ObjectProperty<TradePeriodState> tradePeriodStateProperty;
+    transient private ObjectProperty<State> processStateProperty;
+    transient private ObjectProperty<DisputeState> disputeStateProperty;
+    transient private ObjectProperty<TradePeriodState> tradePeriodStateProperty;
     // Trades are saved in the TradeList
     transient private Storage<? extends TradableList> storage;
     transient protected TradeProtocol tradeProtocol;

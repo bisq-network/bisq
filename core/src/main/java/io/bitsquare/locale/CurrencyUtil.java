@@ -25,7 +25,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class CurrencyUtil {
-    transient private static final Logger log = LoggerFactory.getLogger(CurrencyUtil.class);
+    private static final Logger log = LoggerFactory.getLogger(CurrencyUtil.class);
 
     private static final List<TradeCurrency> allSortedCurrencies = createAllSortedCurrenciesList();
 

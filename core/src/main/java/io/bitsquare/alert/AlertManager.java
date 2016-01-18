@@ -37,7 +37,7 @@ import java.security.SignatureException;
 import static org.bitcoinj.core.Utils.HEX;
 
 public class AlertManager {
-    transient private static final Logger log = LoggerFactory.getLogger(AlertManager.class);
+    private static final Logger log = LoggerFactory.getLogger(AlertManager.class);
 
     private final AlertService alertService;
     private final KeyRing keyRing;

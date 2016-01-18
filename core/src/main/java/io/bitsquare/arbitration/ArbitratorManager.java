@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
 import static org.bitcoinj.core.Utils.HEX;
 
 public class ArbitratorManager {
-    transient private static final Logger log = LoggerFactory.getLogger(ArbitratorManager.class);
+    private static final Logger log = LoggerFactory.getLogger(ArbitratorManager.class);
 
     private final KeyRing keyRing;
     private final ArbitratorService arbitratorService;

@@ -33,7 +33,7 @@ import java.util.Date;
 public class DisputeResult implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
-    transient private static final Logger log = LoggerFactory.getLogger(DisputeResult.class);
+    private static final Logger log = LoggerFactory.getLogger(DisputeResult.class);
 
     public enum FeePaymentPolicy {
         LOSER,

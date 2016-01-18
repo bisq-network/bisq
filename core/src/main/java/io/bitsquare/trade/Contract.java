@@ -38,8 +38,6 @@ public class Contract implements Serializable {
     @JsonExclude
     public static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
-    public static final String TAC = "I commit to the trade conditions as defined above.";
-
     public final Offer offer;
     private final long tradeAmount;
     public final String takeOfferFeeTxID;

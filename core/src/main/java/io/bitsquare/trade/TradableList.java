@@ -33,7 +33,7 @@ public class TradableList<T extends Tradable> extends ArrayList<T> implements Se
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    transient private static final Logger log = LoggerFactory.getLogger(TradableList.class);
+    private static final Logger log = LoggerFactory.getLogger(TradableList.class);
 
     transient final private Storage<TradableList<T>> storage;
     // Use getObservableList() also class locally, to be sure that object exists in case we use the object as deserialized form

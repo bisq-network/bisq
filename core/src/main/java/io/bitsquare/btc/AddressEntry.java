@@ -41,7 +41,7 @@ public class AddressEntry implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    private transient static final Logger log = LoggerFactory.getLogger(AddressEntry.class);
+    private static final Logger log = LoggerFactory.getLogger(AddressEntry.class);
 
     public enum Context {
         TRADE,
@@ -52,7 +52,7 @@ public class AddressEntry implements Serializable {
     // It will be restored when the wallet is ready at setDeterministicKey
     // So after startup it never must be null
     @Nullable
-    private transient DeterministicKey keyPair;
+    transient private DeterministicKey keyPair;
 
     // Only set if its a TRADE Context
     @Nullable

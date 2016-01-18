@@ -36,7 +36,7 @@ public class OpenOffer implements Tradable, Serializable {
     private static final Logger log = LoggerFactory.getLogger(OpenOffer.class);
 
     // Timeout for offer reservation during takeoffer process. If deposit tx is not completed in that time we reset the offer to AVAILABLE state. 
-    transient private static final long TIMEOUT_SEC = 30;
+    private static final long TIMEOUT_SEC = 30;
     transient private java.util.Timer timeoutTimer;
 
     public enum State {

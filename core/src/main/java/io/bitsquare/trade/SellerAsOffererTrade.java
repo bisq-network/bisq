@@ -35,7 +35,7 @@ public class SellerAsOffererTrade extends SellerTrade implements OffererTrade, S
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    transient private static final Logger log = LoggerFactory.getLogger(SellerAsOffererTrade.class);
+    private static final Logger log = LoggerFactory.getLogger(SellerAsOffererTrade.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

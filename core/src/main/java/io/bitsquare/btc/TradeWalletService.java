@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import io.bitsquare.app.Log;
 import io.bitsquare.btc.data.InputsAndChangeOutput;
 import io.bitsquare.btc.data.PreparedDepositTxAndOffererInputs;
 import io.bitsquare.btc.data.RawInput;
@@ -816,13 +817,11 @@ public class TradeWalletService {
      * @throws VerificationException
      */
     public Transaction addTransactionToWallet(Transaction transaction) throws VerificationException {
-        log.trace("addTxToWallet called");
-        log.trace("transaction " + transaction.toString());
+        Log.traceCall("transaction " + transaction.toString());
 
         // We need to recreate the transaction otherwise we get a null pointer... 
         Transaction result = new Transaction(params, transaction.bitcoinSerialize());
         result.getConfidence(Context.get()).setSource(TransactionConfidence.Source.SELF);
-        log.trace("transaction " + result.toString());
 
         if (wallet != null)
             wallet.receivePending(result, null, true);
@@ -835,12 +834,12 @@ public class TradeWalletService {
      * @throws VerificationException
      */
     public Transaction addTransactionToWallet(byte[] serializedTransaction) throws VerificationException {
-        log.trace("addTxToWallet called");
+        Log.traceCall();
 
         // We need to recreate the tx otherwise we get a null pointer... 
         Transaction transaction = new Transaction(params, serializedTransaction);
         transaction.getConfidence(Context.get()).setSource(TransactionConfidence.Source.NETWORK);
-        log.trace("transaction " + transaction.toString());
+        log.trace("transaction from serializedTransaction: " + transaction.toString());
 
         if (wallet != null)
             wallet.receivePending(transaction, null, true);

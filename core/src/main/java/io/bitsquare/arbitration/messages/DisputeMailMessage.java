@@ -35,7 +35,7 @@ import java.util.List;
 public final class DisputeMailMessage extends DisputeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
-    transient private static final Logger log = LoggerFactory.getLogger(DisputeMailMessage.class);
+    private static final Logger log = LoggerFactory.getLogger(DisputeMailMessage.class);
 
     private final long date;
     private final String tradeId;
@@ -189,7 +189,7 @@ public final class DisputeMailMessage extends DisputeMessage {
     public static class Attachment implements Serializable {
         // That object is sent over the wire, so we need to take care of version compatibility.
         private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
-        transient private static final Logger log = LoggerFactory.getLogger(Attachment.class);
+        private static final Logger log = LoggerFactory.getLogger(Attachment.class);
 
         private final byte[] bytes;
         private final String fileName;

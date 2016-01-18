@@ -34,7 +34,7 @@ import java.util.ArrayList;
 public class AddressEntryList extends ArrayList<AddressEntry> implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-    transient private static final Logger log = LoggerFactory.getLogger(AddressEntryList.class);
+    private static final Logger log = LoggerFactory.getLogger(AddressEntryList.class);
 
     final transient private Storage<AddressEntryList> storage;
     transient private Wallet wallet;

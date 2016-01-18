@@ -34,7 +34,7 @@ public abstract class BuyerTrade extends Trade implements Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    transient private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererTrade.class);
+    private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererTrade.class);
 
     BuyerTrade(Offer offer, Coin tradeAmount, Address tradingPeerAddress, Storage<? extends TradableList> storage) {
         super(offer, tradeAmount, tradingPeerAddress, storage);
