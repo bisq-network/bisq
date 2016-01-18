@@ -72,14 +72,14 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         };
 
         ToggleGroup toggleGroup = new ToggleGroup();
+        paymentAccount = new MenuItem(navigation, toggleGroup, "Payments account(s)", PaymentAccountView.class, AwesomeIcon.MONEY);
+        arbitratorSelection = new MenuItem(navigation, toggleGroup, "Arbitrator selection", ArbitratorSelectionView.class, AwesomeIcon.USER_MD);
         password = new MenuItem(navigation, toggleGroup, "Wallet password", PasswordView.class, AwesomeIcon.UNLOCK_ALT);
         seedWords = new MenuItem(navigation, toggleGroup, "Wallet seed", SeedWordsView.class, AwesomeIcon.KEY);
         backup = new MenuItem(navigation, toggleGroup, "Backup", BackupView.class, AwesomeIcon.CLOUD_DOWNLOAD);
-        paymentAccount = new MenuItem(navigation, toggleGroup, "Payments account(s)", PaymentAccountView.class, AwesomeIcon.MONEY);
-        arbitratorSelection = new MenuItem(navigation, toggleGroup, "Arbitrator selection", ArbitratorSelectionView.class, AwesomeIcon.USER_MD);
         // registration = new MenuItem(navigation, toggleGroup, "Renew your account", RegistrationView.class, AwesomeIcon.BRIEFCASE);
 
-        leftVBox.getChildren().addAll(arbitratorSelection, paymentAccount, password, seedWords, backup);
+        leftVBox.getChildren().addAll(paymentAccount, arbitratorSelection, password, seedWords, backup);
     }
 
     @Override
@@ -87,7 +87,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         navigation.addListener(listener);
         ViewPath viewPath = navigation.getCurrentPath();
         if (viewPath.size() == 3 && viewPath.indexOf(AccountSettingsView.class) == 2) {
-            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
+            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, PaymentAccountView.class);
         } else if (viewPath.size() == 4 && viewPath.indexOf(AccountSettingsView.class) == 2) {
             loadView(viewPath.get(3));
         }
