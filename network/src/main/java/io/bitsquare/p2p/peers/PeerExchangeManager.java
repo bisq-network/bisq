@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -57,7 +58,8 @@ public class PeerExchangeManager implements MessageListener {
         networkNode.addMessageListener(this);
 
         executor = Utilities.getScheduledThreadPoolExecutor("PeerExchangeManager", 1, 10, 5);
-        executor.scheduleAtFixedRate(() -> UserThread.execute(() -> trySendGetPeersRequest()), 7, 7, TimeUnit.MINUTES);
+        long delay = new Random().nextInt(60) + 60 * 6; // 6-7 min.
+        executor.scheduleAtFixedRate(() -> UserThread.execute(() -> trySendGetPeersRequest()), delay, delay, TimeUnit.SECONDS);
     }
 
     public void shutDown() {

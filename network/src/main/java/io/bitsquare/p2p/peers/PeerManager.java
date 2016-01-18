@@ -449,8 +449,9 @@ public class PeerManager implements MessageListener, ConnectionListener {
     }
 
     protected void startCheckSeedNodeConnectionTask() {
+        long delay = new Random().nextInt(60) + 60 * 2; // 2-3 min.
         checkSeedNodeConnectionExecutor.scheduleAtFixedRate(() -> UserThread.execute(()
-                -> checkSeedNodeConnections()), 2, 2, TimeUnit.MINUTES);
+                -> checkSeedNodeConnections()), delay, delay, TimeUnit.SECONDS);
     }
 
     // We want to stay connected to at least one seed node to avoid to get isolated with a group of peers

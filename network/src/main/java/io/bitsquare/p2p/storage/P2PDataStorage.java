@@ -1,6 +1,7 @@
 package io.bitsquare.p2p.storage;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.MoreExecutors;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.ByteArray;
 import io.bitsquare.common.UserThread;
@@ -30,21 +31,22 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 // Run in UserThread
 public class P2PDataStorage implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(P2PDataStorage.class);
 
     @VisibleForTesting
-    public static int CHECK_TTL_INTERVAL = 10 * 60 * 1000;
+    public static int CHECK_TTL_INTERVAL = new Random().nextInt(1000) + 10 * 60 * 1000; // 10-11 min.
 
     private final PeerManager peerManager;
     private final Map<ByteArray, ProtectedData> map = new HashMap<>();
     private final CopyOnWriteArraySet<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArraySet<>();
     private HashMap<ByteArray, Integer> sequenceNumberMap = new HashMap<>();
     private final Storage<HashMap> storage;
-    private final Timer timer = new Timer();
-
+    protected final ScheduledThreadPoolExecutor removeExpiredEntriesExecutor;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -57,7 +59,8 @@ public class P2PDataStorage implements MessageListener {
         networkNode.addMessageListener(this);
 
         storage = new Storage<>(storageDir);
-
+        removeExpiredEntriesExecutor = Utilities.getScheduledThreadPoolExecutor("removeExpiredEntries", 1, 10, 5);
+        
         init();
     }
 
@@ -67,19 +70,8 @@ public class P2PDataStorage implements MessageListener {
         if (persisted != null)
             sequenceNumberMap = persisted;
 
-        timer.scheduleAtFixedRate(new TimerTask() {
-                                      @Override
-                                      public void run() {
-                                          try {
-                                              Utilities.setThreadName("RemoveExpiredEntriesTimer");
-                                              UserThread.execute(() -> removeExpiredEntries());
-                                          } catch (Throwable t) {
-                                              log.error("Executing task failed. " + t.getMessage());
-                                              t.printStackTrace();
-                                          }
-                                      }
-                                  },
-                CHECK_TTL_INTERVAL, CHECK_TTL_INTERVAL);
+        removeExpiredEntriesExecutor.scheduleAtFixedRate(() -> UserThread.execute(()
+                -> removeExpiredEntries()), CHECK_TTL_INTERVAL, CHECK_TTL_INTERVAL, TimeUnit.SECONDS);
     }
 
     private void removeExpiredEntries() {
@@ -139,7 +131,7 @@ public class P2PDataStorage implements MessageListener {
 
     public void shutDown() {
         Log.traceCall();
-        timer.cancel();
+        MoreExecutors.shutdownAndAwaitTermination(removeExpiredEntriesExecutor, 500, TimeUnit.MILLISECONDS);
     }
 
     public boolean add(ProtectedData protectedData, @Nullable Address sender) {
