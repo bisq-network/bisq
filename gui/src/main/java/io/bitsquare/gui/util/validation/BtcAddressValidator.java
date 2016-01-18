@@ -47,7 +47,7 @@ public final class BtcAddressValidator extends InputValidator {
             new Address(preferences.getBitcoinNetwork().getParameters(), input);
             return new ValidationResult(true);
         } catch (AddressFormatException e) {
-            return new ValidationResult(false, "Bitcoin address is a valid format");
+            return new ValidationResult(false, "Invalid format of the bitcoin address.");
         }
     }
 }

@@ -116,7 +116,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         if (persistedOnionAddress != null)
             this.myOnionAddress = persistedOnionAddress;
 
-        seedNodeAddresses = seedNodesRepository.geSeedNodeAddresses(useLocalhost, networkId);
+        seedNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhost, networkId);
 
         // network node
         networkNode = useLocalhost ? new LocalhostNetworkNode(port) : new TorNetworkNode(port, torDir);

@@ -4,7 +4,7 @@ import io.bitsquare.app.Version;
 import io.bitsquare.p2p.Message;
 
 public abstract class PeerExchangeMessage implements Message {
-    private final int networkId = Version.NETWORK_ID;
+    private final int networkId = Version.getNetworkId();
 
     @Override
     public int networkId() {

@@ -93,7 +93,7 @@ public class SellerSubView extends TradeSubView {
                 showItem(waitTxInBlockchain);
 
                 ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText("Deposit transaction has been published. " +
-                        "The Bitcoin buyer need to wait for at least one blockchain confirmation.");
+                        "The bitcoin buyer need to wait for at least one blockchain confirmation.");
                 break;
             case WAIT_FOR_FIAT_PAYMENT_STARTED:
                 waitTxInBlockchain.setCompleted();
@@ -110,11 +110,11 @@ public class SellerSubView extends TradeSubView {
                 showItem(confirmPaymentReceived);
 
                 if (model.isBlockChainMethod()) {
-                    ((ConfirmPaymentReceivedView) tradeStepDetailsView).setInfoLabelText(BSResources.get("The Bitcoin buyer has started the {0} payment. " +
+                    ((ConfirmPaymentReceivedView) tradeStepDetailsView).setInfoLabelText(BSResources.get("The bitcoin buyer has started the {0} payment. " +
                                     "Check your Altcoin wallet or Block explorer and confirm when you have received the payment.",
                             model.getCurrencyCode()));
                 } else {
-                    ((ConfirmPaymentReceivedView) tradeStepDetailsView).setInfoLabelText(BSResources.get("The Bitcoin buyer has started the {0} payment. " +
+                    ((ConfirmPaymentReceivedView) tradeStepDetailsView).setInfoLabelText(BSResources.get("The bitcoin buyer has started the {0} payment. " +
                                     "Check your payment account and confirm when you have received the payment.",
                             model.getCurrencyCode()));
                 }
@@ -141,7 +141,7 @@ public class SellerSubView extends TradeSubView {
                 showItem(waitPayoutUnlock);
 
                 ((WaitPayoutLockTimeView) tradeStepDetailsView).setInfoLabelText("The payout transaction is signed and finalized by both parties." +
-                        "\nFor reducing bank charge back risks you need to wait until the payout gets unlocked to transfer your Bitcoin.");
+                        "\nFor reducing bank charge back risks you need to wait until the payout gets unlocked to transfer your bitcoin.");
                 break;
             case REQUEST_WITHDRAWAL:
                 waitTxInBlockchain.setCompleted();

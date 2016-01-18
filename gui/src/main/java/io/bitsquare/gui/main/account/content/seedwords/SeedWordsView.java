@@ -178,8 +178,8 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                     .headLine("Wallet is not empty")
                     .warning("You must empty this wallet out before attempting to restore an older one, as mixing wallets " +
                             "together can lead to invalidated backups.\n\n" +
-                            "Please finalize your trades, close all your open offers and go to the Funds section to withdraw your Bitcoin.\n" +
-                            "In case you cannot access your Bitcoin you can use the emergency tool to empty the wallet.\n" +
+                            "Please finalize your trades, close all your open offers and go to the Funds section to withdraw your bitcoin.\n" +
+                            "In case you cannot access your bitcoin you can use the emergency tool to empty the wallet.\n" +
                             "To open that emergency tool press cmd + e.")
                     .show();
         } else if (wallet.isEncrypted()) {

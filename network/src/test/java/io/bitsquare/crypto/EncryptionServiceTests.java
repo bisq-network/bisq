@@ -81,7 +81,7 @@ public class EncryptionServiceTests {
 
 final class TestMessage implements MailboxMessage {
     public String data = "test";
-    private final int networkId = Version.NETWORK_ID;
+    private final int networkId = Version.getNetworkId();
 
     public TestMessage(String data) {
         this.data = data;

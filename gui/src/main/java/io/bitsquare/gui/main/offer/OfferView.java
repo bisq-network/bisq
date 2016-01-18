@@ -116,7 +116,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         if (viewClass == OfferBookView.class && offerBookView == null) {
             view = viewLoader.load(viewClass);
             // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
-            final Tab tab = new Tab(direction == Offer.Direction.BUY ? "Buy Bitcoin" : "Sell Bitcoin");
+            final Tab tab = new Tab(direction == Offer.Direction.BUY ? "Buy bitcoin" : "Sell bitcoin");
             tab.setClosable(false);
             tab.setContent(view.getRoot());
             tabPane.getTabs().add(tab);

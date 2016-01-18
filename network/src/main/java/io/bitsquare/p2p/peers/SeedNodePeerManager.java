@@ -15,8 +15,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class SeedNodePeerManager extends PeerManager {
     private static final Logger log = LoggerFactory.getLogger(SeedNodePeerManager.class);
 
-    public SeedNodePeerManager(NetworkNode networkNode, File storageDir) {
-        super(networkNode, storageDir);
+
+    public SeedNodePeerManager(NetworkNode networkNode) {
+        super(networkNode, null);
     }
 
     public void authenticateToSeedNode() {
@@ -32,6 +33,17 @@ public class SeedNodePeerManager extends PeerManager {
         startCheckSeedNodeConnectionTask();
     }
 
+    @Override
+    protected void createDbStorage(File storageDir) {
+        // Do nothing. 
+        // The seed node does not store persisted peers in the local db 
+    }
+
+    @Override
+    protected void initPersistedPeers() {
+        // Do nothing. 
+        // The seed node does not store persisted peers in the local db 
+    }
 
     @Override
     protected void onFirstSeedNodeAuthenticated() {
@@ -70,5 +82,5 @@ public class SeedNodePeerManager extends PeerManager {
         }
     }
 
-   
+
 }

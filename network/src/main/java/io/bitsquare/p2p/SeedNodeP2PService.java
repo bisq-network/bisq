@@ -30,7 +30,7 @@ public class SeedNodeP2PService extends P2PService {
 
     @Override
     protected PeerManager getNewPeerManager() {
-        return new SeedNodePeerManager(networkNode, storageDir);
+        return new SeedNodePeerManager(networkNode);
     }
 
     @Override

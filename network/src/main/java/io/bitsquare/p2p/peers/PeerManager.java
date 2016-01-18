@@ -60,7 +60,8 @@ public class PeerManager implements MessageListener, ConnectionListener {
     private final NetworkNode networkNode;
     private final PeerExchangeManager peerExchangeManager;
     protected final ScheduledThreadPoolExecutor checkSeedNodeConnectionExecutor;
-    private final Storage<HashSet<ReportedPeer>> dbStorage;
+    @Nullable
+    private Storage<HashSet<ReportedPeer>> dbStorage;
 
     private final CopyOnWriteArraySet<AuthenticationListener> authenticationListeners = new CopyOnWriteArraySet<>();
     protected final Map<Address, Peer> authenticatedPeers = new HashMap<>();
@@ -80,7 +81,7 @@ public class PeerManager implements MessageListener, ConnectionListener {
         Log.traceCall();
 
         this.networkNode = networkNode;
-        dbStorage = new Storage<>(storageDir);
+        createDbStorage(storageDir);
 
         peerExchangeManager = new PeerExchangeManager(networkNode,
                 () -> getAuthenticatedAndReportedPeers(),
@@ -92,10 +93,18 @@ public class PeerManager implements MessageListener, ConnectionListener {
         init();
     }
 
+    protected void createDbStorage(File storageDir) {
+        dbStorage = new Storage<>(storageDir);
+    }
+
     private void init() {
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
 
+        initPersistedPeers();
+    }
+
+    protected void initPersistedPeers() {
         HashSet<ReportedPeer> persistedPeers = dbStorage.initAndGetPersisted("persistedPeers");
         if (persistedPeers != null) {
             log.info("We have persisted reported peers. " +
@@ -712,7 +721,9 @@ public class PeerManager implements MessageListener, ConnectionListener {
         ReportedPeer reportedPeer = new ReportedPeer(peerAddress);
         if (persistedPeers.contains(reportedPeer)) {
             persistedPeers.remove(reportedPeer);
-            dbStorage.queueUpForSave(persistedPeers, 5000);
+
+            if (dbStorage != null)
+                dbStorage.queueUpForSave(persistedPeers, 5000);
         }
     }
 
@@ -885,7 +896,9 @@ public class PeerManager implements MessageListener, ConnectionListener {
                     persistedPeers.remove(list.get(i));
                 }
             }
-            dbStorage.queueUpForSave(persistedPeers);
+
+            if (dbStorage != null)
+                dbStorage.queueUpForSave(persistedPeers);
         }
 
         printReportedPeers();

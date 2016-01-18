@@ -552,7 +552,7 @@ public class Connection implements MessageListener {
                         }
 
                         Message message = (Message) serializable;
-                        if (message.networkId() != Version.NETWORK_ID) {
+                        if (message.networkId() != Version.getNetworkId()) {
                             sharedSpace.reportIllegalRequest(IllegalRequest.WrongNetworkId);
                             return;
                         }

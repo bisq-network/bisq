@@ -60,7 +60,7 @@ public class SeedNode {
                     int networkId = Integer.parseInt(arg1);
                     checkArgument(networkId > -1 && networkId < 3,
                             "networkId out of scope (Mainnet = 0, TestNet = 1, Regtest = 2)");
-                    Version.NETWORK_ID = networkId;
+                    Version.setNetworkId(networkId);
                     if (args.length > 2) {
                         String arg2 = args[2];
                         int maxConnections = Integer.parseInt(arg2);
@@ -100,7 +100,7 @@ public class SeedNode {
     }
 
     public void createAndStartP2PService(boolean useDetailedLogging) {
-        createAndStartP2PService(mySeedNodeAddress, useLocalhost, Version.NETWORK_ID, useDetailedLogging, progArgSeedNodes, null);
+        createAndStartP2PService(mySeedNodeAddress, useLocalhost, Version.getNetworkId(), useDetailedLogging, progArgSeedNodes, null);
     }
 
     @VisibleForTesting

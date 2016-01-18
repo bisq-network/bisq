@@ -104,7 +104,7 @@ public class BuyerSubView extends TradeSubView {
                 startPayment.setCompleted();
                 showItem(waitPaymentReceived);
 
-                ((WaitPaymentReceivedView) tradeStepDetailsView).setInfoLabelText(BSResources.get("Waiting for the Bitcoin sellers confirmation " +
+                ((WaitPaymentReceivedView) tradeStepDetailsView).setInfoLabelText(BSResources.get("Waiting for the bitcoin sellers confirmation " +
                                 "that the {0} payment has arrived.",
                         model.getCurrencyCode()));
                 break;
@@ -116,7 +116,7 @@ public class BuyerSubView extends TradeSubView {
                     showItem(waitPayoutUnlock);
 
                     ((WaitPayoutLockTimeView) tradeStepDetailsView).setInfoLabelText("The payout transaction is signed and finalized by both parties." +
-                            "\nFor reducing bank charge back risks you need to wait until the payout gets unlocked to transfer your Bitcoin.");
+                            "\nFor reducing bank charge back risks you need to wait until the payout gets unlocked to transfer your bitcoin.");
                 }
                 break;
             case REQUEST_WITHDRAWAL:

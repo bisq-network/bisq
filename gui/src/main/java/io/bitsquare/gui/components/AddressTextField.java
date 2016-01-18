@@ -62,13 +62,13 @@ public class AddressTextField extends AnchorPane {
         textField.setId("address-text-field");
         textField.setEditable(false);
         textField.textProperty().bind(address);
-        Tooltip.install(textField, new Tooltip("Open your default Bitcoin wallet with that address."));
+        Tooltip.install(textField, new Tooltip("Open your default bitcoin wallet with that address."));
         textField.setOnMouseClicked(mouseEvent -> {
             try {
                 Utilities.openURI(URI.create(getBitcoinURI()));
             } catch (Exception e) {
                 log.warn(e.getMessage());
-                new Popup().warning("Opening a system Bitcoin wallet application has failed. " +
+                new Popup().warning("Opening a default bitcoin wallet application has failed. " +
                         "Perhaps you don't have one installed?").show();
             }
         });

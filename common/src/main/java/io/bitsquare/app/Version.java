@@ -38,7 +38,15 @@ public class Version {
     public static final long PROTOCOL_VERSION = 1;
 
     // The version for the bitcoin network (Mainnet = 0, TestNet = 1, Regtest = 2)
-    public static int NETWORK_ID;
+    private static int NETWORK_ID;
+
+    public static int getNetworkId() {
+        return NETWORK_ID;
+    }
+
+    public static void setNetworkId(int networkId) {
+        NETWORK_ID = networkId;
+    }
 
     public static void printVersion() {
         log.info("Version{" +
@@ -49,5 +57,6 @@ public class Version {
                 ", NETWORK_ID=" + NETWORK_ID +
                 '}');
     }
+
 
 }

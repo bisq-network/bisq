@@ -84,7 +84,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         BitcoinNetwork bitcoinNetwork = preferences.getBitcoinNetwork();
 
         boolean useLocalhost = p2PService.getNetworkNode() instanceof LocalhostNetworkNode;
-        this.seedNodeAddresses = seedNodesRepository.geSeedNodeAddresses(useLocalhost, bitcoinNetwork.ordinal());
+        this.seedNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhost, bitcoinNetwork.ordinal());
     }
 
     public void initialize() {

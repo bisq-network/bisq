@@ -11,7 +11,7 @@ public final class SealedAndSignedMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
-    private final int networkId = Version.NETWORK_ID;
+    private final int networkId = Version.getNetworkId();
     public final SealedAndSigned sealedAndSigned;
     public final byte[] addressPrefixHash;
 

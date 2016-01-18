@@ -113,8 +113,8 @@ public class ConfirmPaymentReceivedView extends TradeStepDetailsView {
             if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
                 new Popup().headLine("Confirmation")
                         .message("Do you have received the payment from your trading partner?\n\n" +
-                                "Please note that as soon you have confirmed the locked Bitcoin will be released.\n" +
-                                "There is no way to reverse a Bitcoin payment.")
+                                "Please note that as soon you have confirmed the locked bitcoin will be released.\n" +
+                                "There is no way to reverse a bitcoin payment.")
                         .dontShowAgainId(key, preferences)
                         .actionButtonText("Yes I have received the payment")
                         .closeButtonText("No")

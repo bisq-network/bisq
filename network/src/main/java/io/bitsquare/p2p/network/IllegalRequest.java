@@ -5,7 +5,7 @@ public enum IllegalRequest {
     MaxSizeExceeded(1),
     NotAuthenticated(1),
     InvalidDataType(1),
-    WrongNetworkId(1);
+    WrongNetworkId(0);
 
     public final int maxTolerance;
 

@@ -225,9 +225,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 new Popup().information("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
                         "The deposit will stay in your local trading wallet until the offer gets accepted by another trader.\n" +
                         "It will be refunded to you after the trade has successfully completed.\n\n" +
-                        "You need to pay in the exact amount displayed to you from your external Bitcoin wallet into the " +
+                        "You need to pay in the exact amount displayed to you from your external bitcoin wallet into the " +
                         "Bitsquare trade wallet. The amount is the sum of the security deposit, the trading fee and " +
-                        "the Bitcoin mining fee.\n" +
+                        "the bitcoin mining fee.\n" +
                         "You can see the details when you move the mouse over the question mark.").show();
 
                 model.onSecurityDepositInfoDisplayed();

@@ -370,6 +370,6 @@ public class BSFormatter {
     }
 
     public String getDirectionDescription(Offer.Direction direction) {
-        return direction == Offer.Direction.BUY ? "Offerer as Bitcoin buyer / Taker as Bitcoin seller" : "Offerer as Bitcoin seller / Taker as Bitcoin buyer";
+        return direction == Offer.Direction.BUY ? "Offerer as bitcoin buyer / Taker as bitcoin seller" : "Offerer as bitcoin seller / Taker as bitcoin buyer";
     }
 }

@@ -5,7 +5,7 @@ import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
 
 public abstract class AuthenticationMessage implements Message {
-    private final int networkId = Version.NETWORK_ID;
+    private final int networkId = Version.getNetworkId();
 
     public final Address senderAddress;
 

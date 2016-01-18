@@ -49,7 +49,7 @@ public class SeedNodesRepository {
             new Address("localhost:4002")
     );
 
-    public Set<Address> geSeedNodeAddresses(boolean useLocalhost, int networkId) {
+    public Set<Address> getSeedNodeAddresses(boolean useLocalhost, int networkId) {
         String networkIdAsString = String.valueOf(networkId);
         Set<Address> addresses = useLocalhost ? localhostSeedNodeAddresses : torSeedNodeAddresses;
         Set<Address> filtered = addresses.stream()

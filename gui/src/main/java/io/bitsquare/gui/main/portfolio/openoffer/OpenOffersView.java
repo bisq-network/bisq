@@ -100,46 +100,6 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                 });
     }
 
- /*   private void openOfferDetails(OpenOfferListItem item) {
-        Offer offer = item.getOffer();
-        int rowIndex = 0;
-        GridPane gridPane = new GridPane();
-        gridPane.setPrefWidth(700);
-        gridPane.setPadding(new Insets(30, 30, 30, 30));
-        gridPane.setHgap(Layout.GRID_GAP);
-        gridPane.setVgap(Layout.GRID_GAP);
-        gridPane.setStyle("-fx-background-color: -bs-content-bg-grey");
-        ColumnConstraints columnConstraints1 = new ColumnConstraints();
-        columnConstraints1.setHalignment(HPos.RIGHT);
-        columnConstraints1.setHgrow(Priority.SOMETIMES);
-        ColumnConstraints columnConstraints2 = new ColumnConstraints();
-        columnConstraints2.setHgrow(Priority.ALWAYS);
-        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
-
-        int rows = offer.getPaymentMethodCountry() == null ? 10 : 11;
-        addTitledGroupBg(gridPane, rowIndex, rows, "Offer details");
-        addLabelTextField(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_DISTANCE);
-        addLabelTextField(gridPane, ++rowIndex, "Creation date:", formatter.formatDateTime(offer.getDate()));
-        addLabelTextField(gridPane, ++rowIndex, "Offer direction:", formatter.formatDirection(offer.getDirection()));
-        addLabelTextField(gridPane, ++rowIndex, "Currency code:", offer.getCurrencyCode());
-        addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()));
-        addLabelTextField(gridPane, ++rowIndex, "Bitcoin amount:", formatter.formatCoin(offer.getAmount()));
-        addLabelTextField(gridPane, ++rowIndex, "Min. amount:", formatter.formatCoin(offer.getMinAmount()));
-        addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(offer.getPaymentMethod().getName()));
-        if (offer.getPaymentMethodCountry() != null)
-            addLabelTextField(gridPane, ++rowIndex, "Country of bank:", offer.getPaymentMethodCountry().code);
-        addLabelTextField(gridPane, ++rowIndex, "Accepted arbitrators:", formatter.arbitratorNamesToString(offer.getArbitratorNames()));
-
-        addLabelTxIdTextField(gridPane, ++rowIndex, "Create offer fee transaction ID:", offer.getOfferFeePaymentTxID());
-
-        Button closeButton = addButton(gridPane, ++rowIndex, "Close");
-        GridPane.setMargin(closeButton, new Insets(15, 0, 0, 0));
-        PopOver popover = PopOvers.getPopOver(gridPane);
-        PopOvers.showInCenter(popover);
-
-        closeButton.setOnAction(e -> popover.hide());
-    }*/
-
     private void setOfferIdColumnCellFactory() {
         offerIdColumn.setCellValueFactory((openOfferListItem) -> new ReadOnlyObjectWrapper<>(openOfferListItem.getValue()));
         offerIdColumn.setCellFactory(

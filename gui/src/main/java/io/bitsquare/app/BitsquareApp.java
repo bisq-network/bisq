@@ -128,7 +128,7 @@ public class BitsquareApp extends Application {
             injector = Guice.createInjector(bitsquareAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 
-            Version.NETWORK_ID = injector.getInstance(BitsquareEnvironment.class).getBitcoinNetwork().ordinal();
+            Version.setNetworkId(injector.getInstance(BitsquareEnvironment.class).getBitcoinNetwork().ordinal());
 
             // load the main view and create the main scene
             CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);

@@ -142,7 +142,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
         addTitledGroupBg(root, ++gridRow, 1, "Information", Layout.GROUP_DISTANCE);
         addMultilineLabel(root, gridRow,
                 "With password protection you need to enter your password when" +
-                        " withdrawing Bitcoin out of your wallet or " +
+                        " withdrawing bitcoin out of your wallet or " +
                         "if you want to view or restore a wallet from seed words.\n" +
                         "For the transactions used in the trade process we don't support password protection as that would make automatic offer " +
                         "execution impossible.",

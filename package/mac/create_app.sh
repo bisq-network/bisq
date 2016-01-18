@@ -12,6 +12,7 @@ mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 cp gui/target/shaded.jar "gui/deploy/Bitsquare-$fullVersion.jar"
 cp gui/target/shaded.jar "/Users/mk/vm_shared_ubuntu/Bitsquare-$fullVersion.jar"
 cp gui/target/shaded.jar "/Users/mk/vm_shared_windows/Bitsquare-$fullVersion.jar"
+cp seednode/target/SeedNode.jar "gui/deploy/SeedNode.jar"
 
 $JAVA_HOME/bin/javapackager \
     -deploy \

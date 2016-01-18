@@ -359,10 +359,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 });
                 new Popup().information("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
                         "The security deposit will be refunded to you after the trade has successfully completed.\n\n" +
-                        "You need to pay in the exact amount displayed to you from your external Bitcoin wallet into the " +
+                        "You need to pay in the exact amount displayed to you from your external bitcoin wallet into the " +
                         "Bitsquare trade wallet. In case you over pay, you will get it refunded after the trade.\n\n" +
                         "The amount needed for funding is the sum of the trade amount, the security deposit, " +
-                        "the trading fee and the Bitcoin mining fee.\n" +
+                        "the trading fee and the bitcoin mining fee.\n" +
                         "You can see the details when you move the mouse over the question mark.").show();
 
                 model.onSecurityDepositInfoDisplayed();
