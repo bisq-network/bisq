@@ -19,8 +19,10 @@ package io.bitsquare.gui.popups;
 
 import io.bitsquare.common.util.Tuple2;
 import javafx.collections.FXCollections;
+import javafx.geometry.Insets;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
@@ -77,15 +79,17 @@ public class SelectDepositTxPopup extends Popup {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addContent() {
-        addMultilineLabel(gridPane, ++rowIndex,
+        Label label = addMultilineLabel(gridPane, ++rowIndex,
                 "The deposit transaction was not stored in the trade.\n" +
                         "Please select one of the existing MultiSig transactions from your wallet which was the " +
                         "deposit transaction used in the failed trade.",
                 10);
 
-        Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, ++rowIndex);
+        GridPane.setMargin(label, new Insets(0, 0, 10, 0));
+
+        Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, ++rowIndex, "Select deposit transaction");
         transactionsComboBox = tuple.second;
-        transactionsComboBox.setPromptText("Select deposit transaction");
+        transactionsComboBox.setPromptText("Select");
         transactionsComboBox.setConverter(new StringConverter<Transaction>() {
             @Override
             public String toString(Transaction transaction) {

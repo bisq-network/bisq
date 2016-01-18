@@ -110,7 +110,10 @@ public class CompletedView extends TradeStepDetailsView {
         withdrawAmountTextField = addLabelTextField(gridPane, gridRow, "Amount to withdraw:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         withdrawAddressTextField = addLabelInputTextField(gridPane, ++gridRow, "Withdraw to address:").second;
         withdrawButton = addButtonAfterGroup(gridPane, ++gridRow, "Withdraw to external wallet");
-        withdrawButton.setOnAction(e -> model.onWithdrawRequest(withdrawAddressTextField.getText()));
+        withdrawButton.setOnAction(e -> {
+            model.onWithdrawRequest(withdrawAddressTextField.getText());
+            withdrawButton.setDisable(true);
+        });
 
         if (BitsquareApp.DEV_MODE)
             withdrawAddressTextField.setText("mwajQdfYnve1knXnmv7JdeiVpeogTsck6S");
