@@ -25,7 +25,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -98,8 +101,8 @@ class AddressBasedCoinSelector implements CoinSelector {
             if (addressOutput.equals(addressEntry.getAddress())) {
                 return true;
             }
-            log.warn("No match found at matchesRequiredAddress addressOutput/addressEntry " + addressOutput.toString
-                    () + "/" + addressEntry.getAddress().toString());
+            log.trace("No match found at matchesRequiredAddress addressOutput / addressEntry " + addressOutput.toString
+                    () + " / " + addressEntry.getAddress().toString());
         }
         return false;
     }
