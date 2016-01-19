@@ -22,7 +22,7 @@ import io.bitsquare.app.Version;
 import io.bitsquare.gui.common.view.View;
 import io.bitsquare.gui.common.view.ViewPath;
 import io.bitsquare.gui.main.MainView;
-import io.bitsquare.gui.main.market.MarketView;
+import io.bitsquare.gui.main.markets.MarketView;
 import io.bitsquare.storage.Storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

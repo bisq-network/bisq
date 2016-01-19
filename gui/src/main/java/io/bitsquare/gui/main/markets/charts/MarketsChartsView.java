@@ -15,21 +15,22 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.market;
+package io.bitsquare.gui.main.markets.charts;
 
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.main.markets.statistics.MarketStatisticItem;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookListItem;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ListChangeListener;
-import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.chart.AreaChart;
@@ -46,9 +47,7 @@ import org.fxmisc.easybind.Subscription;
 import javax.inject.Inject;
 
 @FxmlView
-public class MarketView extends ActivatableViewAndModel<TabPane, MarketViewModel> {
-    @FXML
-    Tab tab;
+public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChartsViewModel> {
 
     private NumberAxis xAxis, yAxis;
     XYChart.Series seriesBuy, seriesSell;
@@ -63,12 +62,13 @@ public class MarketView extends ActivatableViewAndModel<TabPane, MarketViewModel
     private StringProperty amountColumnLabel = new SimpleStringProperty("Amount (BTC)");
     private StringProperty volumeColumnLabel = new SimpleStringProperty("Volume (EUR)");
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MarketView(MarketViewModel model, BSFormatter formatter) {
+    public MarketsChartsView(MarketsChartsViewModel model, BSFormatter formatter) {
         super(model);
         this.formatter = formatter;
 
@@ -111,13 +111,7 @@ public class MarketView extends ActivatableViewAndModel<TabPane, MarketViewModel
         hBox.setAlignment(Pos.CENTER);
         hBox.getChildren().addAll(tupleBuy.second, tupleSell.second);
 
-        VBox vBox = new VBox();
-        vBox.setSpacing(20);
-        vBox.setFillWidth(true);
-        vBox.setPadding(new Insets(10, 20, 10, 20));
-        vBox.getChildren().addAll(currencyHBox, areaChart, hBox);
-
-        tab.setContent(vBox);
+        root.getChildren().addAll(currencyHBox, areaChart, hBox);
     }
 
     @Override
@@ -283,6 +277,119 @@ public class MarketView extends ActivatableViewAndModel<TabPane, MarketViewModel
 
         seriesBuy.getData().addAll(model.getBuyData());
         seriesSell.getData().addAll(model.getSellData());
+    }
+
+
+    private TableColumn<MarketStatisticItem, MarketStatisticItem> getCurrencyColumn() {
+        TableColumn<MarketStatisticItem, MarketStatisticItem> column = new TableColumn<MarketStatisticItem, MarketStatisticItem>("Currency") {
+            {
+                setMinWidth(100);
+            }
+        };
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<MarketStatisticItem, MarketStatisticItem>, TableCell<MarketStatisticItem,
+                        MarketStatisticItem>>() {
+                    @Override
+                    public TableCell<MarketStatisticItem, MarketStatisticItem> call(
+                            TableColumn<MarketStatisticItem, MarketStatisticItem> column) {
+                        return new TableCell<MarketStatisticItem, MarketStatisticItem>() {
+                            @Override
+                            public void updateItem(final MarketStatisticItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty)
+                                    setText(CurrencyUtil.getNameByCode(item.currencyCode));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
+    private TableColumn<MarketStatisticItem, MarketStatisticItem> getNumberOfOffersColumn() {
+        TableColumn<MarketStatisticItem, MarketStatisticItem> column = new TableColumn<MarketStatisticItem, MarketStatisticItem>("Total offers") {
+            {
+                setMinWidth(100);
+            }
+        };
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<MarketStatisticItem, MarketStatisticItem>, TableCell<MarketStatisticItem,
+                        MarketStatisticItem>>() {
+                    @Override
+                    public TableCell<MarketStatisticItem, MarketStatisticItem> call(
+                            TableColumn<MarketStatisticItem, MarketStatisticItem> column) {
+                        return new TableCell<MarketStatisticItem, MarketStatisticItem>() {
+                            @Override
+                            public void updateItem(final MarketStatisticItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty)
+                                    setText(String.valueOf(item.numberOfOffers));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
+    private TableColumn<MarketStatisticItem, MarketStatisticItem> getTotalAmountColumn() {
+        TableColumn<MarketStatisticItem, MarketStatisticItem> column = new TableColumn<MarketStatisticItem, MarketStatisticItem>("Total amount (BTC)") {
+            {
+                setMinWidth(130);
+            }
+        };
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<MarketStatisticItem, MarketStatisticItem>, TableCell<MarketStatisticItem,
+                        MarketStatisticItem>>() {
+                    @Override
+                    public TableCell<MarketStatisticItem, MarketStatisticItem> call(
+                            TableColumn<MarketStatisticItem, MarketStatisticItem> column) {
+                        return new TableCell<MarketStatisticItem, MarketStatisticItem>() {
+                            @Override
+                            public void updateItem(final MarketStatisticItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty)
+                                    setText(formatter.formatCoin(item.totalAmount));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
+    private TableColumn<MarketStatisticItem, MarketStatisticItem> getSpreadColumn() {
+        TableColumn<MarketStatisticItem, MarketStatisticItem> column = new TableColumn<MarketStatisticItem, MarketStatisticItem>("Spread") {
+            {
+                setMinWidth(130);
+            }
+        };
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<MarketStatisticItem, MarketStatisticItem>, TableCell<MarketStatisticItem,
+                        MarketStatisticItem>>() {
+                    @Override
+                    public TableCell<MarketStatisticItem, MarketStatisticItem> call(
+                            TableColumn<MarketStatisticItem, MarketStatisticItem> column) {
+                        return new TableCell<MarketStatisticItem, MarketStatisticItem>() {
+                            @Override
+                            public void updateItem(final MarketStatisticItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty && item.spread != null)
+                                    setText(formatter.formatFiatWithCode(item.spread));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        return column;
     }
 
 

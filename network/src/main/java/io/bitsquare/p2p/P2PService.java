@@ -341,7 +341,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         connection.setConnectionPriority(ConnectionPriority.DIRECT_MSG);
 
                         log.info("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
-                                "Received SealedAndSignedMessage and decrypted it.\ndecryptedMsgWithPubKey={}"
+                                "Decrypted SealedAndSignedMessage:\ndecryptedMsgWithPubKey={}"
                                 + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n", decryptedMsgWithPubKey);
                         connection.getPeerAddressOptional().ifPresent(peerAddresses ->
                                 decryptedMailListeners.stream().forEach(
@@ -400,6 +400,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         Log.traceCall();
         checkArgument(optionalEncryptionService.isPresent(), "EncryptionService not set. Seems that is called on a seed node which must not happen.");
         try {
+            log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+                    "Encrypt message:\nmessage={}"
+                    + "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n", message);
             SealedAndSignedMessage sealedAndSignedMessage = new SealedAndSignedMessage(
                     optionalEncryptionService.get().encryptAndSign(pubKeyRing, message), peerAddress.getAddressPrefixHash());
             SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, sealedAndSignedMessage);
@@ -495,6 +498,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         checkArgument(optionalEncryptionService.isPresent(), "EncryptionService not set. Seems that is called on a seed node which must not happen.");
         try {
+            log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+                    "Encrypt message:\nmessage={}"
+                    + "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n", message);
             SealedAndSignedMessage sealedAndSignedMessage = new SealedAndSignedMessage(
                     optionalEncryptionService.get().encryptAndSign(peersPubKeyRing, message), peerAddress.getAddressPrefixHash());
             SettableFuture<Connection> future = networkNode.sendMessage(peerAddress, sealedAndSignedMessage);

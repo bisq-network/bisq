@@ -26,7 +26,7 @@ import io.bitsquare.gui.components.SystemNotification;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.disputes.DisputesView;
 import io.bitsquare.gui.main.funds.FundsView;
-import io.bitsquare.gui.main.market.MarketView;
+import io.bitsquare.gui.main.markets.MarketView;
 import io.bitsquare.gui.main.offer.BuyOfferView;
 import io.bitsquare.gui.main.offer.SellOfferView;
 import io.bitsquare.gui.main.portfolio.PortfolioView;

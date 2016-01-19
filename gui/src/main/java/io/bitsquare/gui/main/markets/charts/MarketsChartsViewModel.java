@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.market;
+package io.bitsquare.gui.main.markets.charts;
 
 import com.google.common.math.LongMath;
 import com.google.inject.Inject;
@@ -37,7 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-class MarketViewModel extends ActivatableViewModel {
+class MarketsChartsViewModel extends ActivatableViewModel {
 
     private final OfferBook offerBook;
     private final Preferences preferences;
@@ -56,7 +56,7 @@ class MarketViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MarketViewModel(OfferBook offerBook, Preferences preferences) {
+    public MarketsChartsViewModel(OfferBook offerBook, Preferences preferences) {
         this.offerBook = offerBook;
         this.preferences = preferences;
 
@@ -77,7 +77,7 @@ class MarketViewModel extends ActivatableViewModel {
 
     private void updateChartData(ObservableList<OfferBookListItem> offerBookListItems) {
         List<Offer> offerList = offerBookListItems.stream()
-                .map(e -> e.getOffer())
+                .map(OfferBookListItem::getOffer)
                 .collect(Collectors.toList());
 
         buyOfferList.clear();

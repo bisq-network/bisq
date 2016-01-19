@@ -15,14 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.settings;
+package io.bitsquare.gui.main.markets;
 
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
-import io.bitsquare.gui.main.settings.network.NetworkSettingsView;
-import io.bitsquare.gui.main.settings.preferences.PreferencesView;
+import io.bitsquare.gui.main.markets.charts.MarketsChartsView;
+import io.bitsquare.gui.main.markets.statistics.MarketsStatisticsView;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;
@@ -31,16 +31,16 @@ import javafx.scene.control.TabPane;
 import javax.inject.Inject;
 
 @FxmlView
-public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
+public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
     @FXML
-    Tab preferencesTab, networkSettingsTab;
+    Tab chartsTab, statisticsTab;
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
 
     @Inject
-    public SettingsView(CachingViewLoader viewLoader, Navigation navigation) {
+    public MarketView(CachingViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
@@ -48,15 +48,15 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
     @Override
     public void initialize() {
         navigationListener = viewPath -> {
-            if (viewPath.size() == 3 && viewPath.indexOf(SettingsView.class) == 1)
+            if (viewPath.size() == 3 && viewPath.indexOf(MarketView.class) == 1)
                 loadView(viewPath.tip());
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-            if (newValue == preferencesTab)
-                navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
-            else if (newValue == networkSettingsTab)
-                navigation.navigateTo(MainView.class, SettingsView.class, NetworkSettingsView.class);
+            if (newValue == chartsTab)
+                navigation.navigateTo(MainView.class, MarketView.class, MarketsChartsView.class);
+            else if (newValue == statisticsTab)
+                navigation.navigateTo(MainView.class, MarketView.class, MarketsStatisticsView.class);
         };
     }
 
@@ -65,10 +65,10 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
 
-        if (root.getSelectionModel().getSelectedItem() == preferencesTab)
-            navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
+        if (root.getSelectionModel().getSelectedItem() == chartsTab)
+            navigation.navigateTo(MainView.class, MarketView.class, MarketsChartsView.class);
         else
-            navigation.navigateTo(MainView.class, SettingsView.class, NetworkSettingsView.class);
+            navigation.navigateTo(MainView.class, MarketView.class, MarketsStatisticsView.class);
     }
 
     @Override
@@ -81,12 +81,12 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
         final Tab tab;
         View view = viewLoader.load(viewClass);
 
-        if (view instanceof PreferencesView) tab = preferencesTab;
-        else if (view instanceof NetworkSettingsView) tab = networkSettingsTab;
+        if (view instanceof MarketsChartsView) tab = chartsTab;
+        else if (view instanceof MarketsStatisticsView) tab = statisticsTab;
         else throw new IllegalArgumentException("Navigation to " + viewClass + " is not supported");
 
         tab.setContent(view.getRoot());
         root.getSelectionModel().select(tab);
     }
-}
 
+}

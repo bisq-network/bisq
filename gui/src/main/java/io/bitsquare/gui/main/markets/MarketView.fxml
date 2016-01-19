@@ -20,9 +20,11 @@
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.layout.AnchorPane?>
-<TabPane fx:id="root" fx:controller="io.bitsquare.gui.main.market.MarketView"
+<TabPane fx:id="root" fx:controller="io.bitsquare.gui.main.markets.MarketView"
          AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
          AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
          xmlns:fx="http://javafx.com/fxml">
-    <Tab fx:id="tab" text="All currency markets" closable="false"/>
+
+    <Tab fx:id="chartsTab" text="Offer book" closable="false"/>
+    <Tab fx:id="statisticsTab" text="Spreads" closable="false"/>
 </TabPane>
