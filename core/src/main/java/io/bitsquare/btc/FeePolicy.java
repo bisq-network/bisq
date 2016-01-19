@@ -40,7 +40,7 @@ public class FeePolicy {
 
     // Other good source is: https://tradeblock.com/blockchain 15-100 satoshis/byte
 
-    public static final Coin TX_FEE = Coin.valueOf(20000); // 0.0002 BTC about 0.8 EUR @ 400 EUR/BTC: about 70 satoshi /byte
+    public static final Coin TX_FEE = Coin.valueOf(30000); // 0.0003 BTC about 1.2 EUR @ 400 EUR/BTC: about 100 satoshi /byte
 
     static {
         Wallet.SendRequest.DEFAULT_FEE_PER_KB = TX_FEE;
