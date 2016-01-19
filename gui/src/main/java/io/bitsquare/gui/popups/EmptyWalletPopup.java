@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.popups;
 
-import com.google.common.base.Preconditions;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.util.Tuple2;
@@ -95,17 +94,14 @@ public class EmptyWalletPopup extends Popup {
                 10);
 
         Coin totalBalance = walletService.getAvailableBalance();
-        boolean isBalanceSufficient = Restrictions.isMinSpendableAmount(totalBalance);
-        if (totalBalance.compareTo(Coin.ZERO) > 0)
-            Preconditions.checkArgument(isBalanceSufficient,
-                    "You cannot send an amount which are smaller than the fee + dust output.");
         addressTextField = addLabelTextField(gridPane, ++rowIndex, "Your available wallet balance:",
                 formatter.formatCoinWithCode(totalBalance), 10).second;
         Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++rowIndex, "Your destination address:");
         addressInputTextField = tuple.second;
-
         emptyWalletButton = new Button("Empty wallet");
+        boolean isBalanceSufficient = Restrictions.isMinSpendableAmount(totalBalance);
         emptyWalletButton.setDefaultButton(isBalanceSufficient);
+        closeButton.setDefaultButton(!isBalanceSufficient);
         emptyWalletButton.setDisable(!isBalanceSufficient && addressInputTextField.getText().length() > 0);
         emptyWalletButton.setOnAction(e -> {
             if (addressInputTextField.getText().length() > 0 && isBalanceSufficient) {
