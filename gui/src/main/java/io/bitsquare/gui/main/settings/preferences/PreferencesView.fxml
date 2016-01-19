@@ -20,7 +20,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.*?>
-<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.settings.application.PreferencesView"
+<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.settings.preferences.PreferencesView"
           hgap="5.0" vgap="5.0"
           AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
           AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
