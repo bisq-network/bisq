@@ -216,7 +216,7 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
                     availabilityProtocol.cancel();
                     log.error(errorMessage);
                 });
-        availabilityProtocol.checkOfferAvailability();
+        availabilityProtocol.sendOfferAvailabilityRequest();
     }
 
 

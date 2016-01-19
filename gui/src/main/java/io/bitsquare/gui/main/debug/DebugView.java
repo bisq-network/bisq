@@ -21,7 +21,6 @@ import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.common.view.InitializableView;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityProtocol;
-import io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress;
 import io.bitsquare.trade.protocol.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bitsquare.trade.protocol.availability.tasks.SendOfferAvailabilityRequest;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
@@ -65,7 +64,6 @@ public class DebugView extends InitializableView {
         final ObservableList<Class> items1 = FXCollections.observableArrayList(Arrays.asList(
                         /*---- Protocol ----*/
                         OfferAvailabilityProtocol.class,
-                        GetPeerAddress.class,
                         SendOfferAvailabilityRequest.class,
                         ProcessOfferAvailabilityResponse.class,
                         Boolean.class, /* used as seperator*/

@@ -340,7 +340,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         // That is used as protection against eclipse attacks.
                         connection.setConnectionPriority(ConnectionPriority.DIRECT_MSG);
 
-                        log.info("Received SealedAndSignedMessage and decrypted it: " + decryptedMsgWithPubKey);
+                        log.info("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
+                                "Received SealedAndSignedMessage and decrypted it.\ndecryptedMsgWithPubKey={}"
+                                + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n", decryptedMsgWithPubKey);
                         connection.getPeerAddressOptional().ifPresent(peerAddresses ->
                                 decryptedMailListeners.stream().forEach(
                                         e -> e.onMailMessage(decryptedMsgWithPubKey, peerAddresses)));

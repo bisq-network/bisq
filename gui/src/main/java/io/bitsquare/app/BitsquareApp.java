@@ -148,8 +148,9 @@ public class BitsquareApp extends Application {
 
             // configure the system tray
             SystemTray systemTray = SystemTray.create(primaryStage, shutDownHandler);
-            primaryStage.setOnCloseRequest(e -> {
-                e.consume();
+
+            primaryStage.setOnCloseRequest(event -> {
+                event.consume();
                 if (BitsquareApp.IS_RELEASE_VERSION)
                     stop(); // systemTray.hideStage(); TODO issues with some linux systems (https://github.com/bitsquare/bitsquare/issues/350) 
                 else

@@ -38,4 +38,12 @@ public abstract class OfferMessage implements MailMessage {
     public int networkId() {
         return networkId;
     }
+
+    @Override
+    public String toString() {
+        return "OfferMessage{" +
+                "networkId=" + networkId +
+                ", offerId='" + offerId + '\'' +
+                '}';
+    }
 }
