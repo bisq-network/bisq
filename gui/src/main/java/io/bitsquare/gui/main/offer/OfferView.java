@@ -27,6 +27,7 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.offer.createoffer.CreateOfferView;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookView;
 import io.bitsquare.gui.main.offer.takeoffer.TakeOfferView;
+import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.offer.Offer;
@@ -53,6 +54,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private Tab createOfferTab;
     private Tab takeOfferTab;
     private TradeCurrency tradeCurrency;
+    private boolean createOfferViewOpen, takeOfferViewOpen;
 
     protected OfferView(ViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
@@ -100,15 +102,6 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         navigation.removeListener(listener);
     }
 
-    public void createOffer() {
-        navigation.navigateTo(MainView.class, this.getClass(), CreateOfferView.class);
-    }
-
-    public void takeOffer(Offer offer) {
-        this.offer = offer;
-        navigation.navigateTo(MainView.class, this.getClass(), TakeOfferView.class);
-    }
-
     private void loadView(Class<? extends View> viewClass) {
         TabPane tabPane = root;
         View view;
@@ -125,23 +118,32 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             OfferActionHandler offerActionHandler = new OfferActionHandler() {
                 @Override
                 public void onCreateOffer(TradeCurrency tradeCurrency) {
-                    OfferView.this.tradeCurrency = tradeCurrency;
-                    OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(),
-                            CreateOfferView.class);
+                    if (!createOfferViewOpen) {
+                        OfferView.this.createOfferViewOpen = true;
+                        OfferView.this.tradeCurrency = tradeCurrency;
+                        OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(),
+                                CreateOfferView.class);
+                    } else {
+                        new Popup().information("You have already a \"Create offer\" tab open.").show();
+                    }
                 }
 
                 @Override
                 public void onTakeOffer(Offer offer) {
-                    OfferView.this.offer = offer;
-                    OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(),
-                            TakeOfferView.class);
+                    if (!takeOfferViewOpen) {
+                        OfferView.this.takeOfferViewOpen = true;
+                        OfferView.this.offer = offer;
+                        OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(),
+                                TakeOfferView.class);
+                    } else {
+                        new Popup().information("You have already a \"Take offer\" tab open.").show();
+                    }
                 }
             };
             offerBookView.setOfferActionHandler(offerActionHandler);
 
             offerBookView.setDirection(direction);
-        }
-        else if (viewClass == CreateOfferView.class && createOfferView == null) {
+        } else if (viewClass == CreateOfferView.class && createOfferView == null) {
             view = viewLoader.load(viewClass);
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
@@ -154,8 +156,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             createOfferTab.setContent(createOfferPane);
             tabPane.getTabs().add(createOfferTab);
             tabPane.getSelectionModel().select(createOfferTab);
-        }
-        else if (viewClass == TakeOfferView.class && takeOfferView == null && offer != null) {
+        } else if (viewClass == TakeOfferView.class && takeOfferView == null && offer != null) {
             view = viewLoader.load(viewClass);
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
@@ -173,6 +174,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
 
     private void onCreateOfferViewRemoved() {
+        createOfferViewOpen = false;
         if (createOfferView != null) {
             createOfferView.onClose();
             createOfferView = null;
@@ -184,6 +186,8 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     }
 
     private void onTakeOfferViewRemoved() {
+        offer = null;
+        takeOfferViewOpen = false;
         if (takeOfferView != null) {
             takeOfferView.onClose();
             takeOfferView = null;

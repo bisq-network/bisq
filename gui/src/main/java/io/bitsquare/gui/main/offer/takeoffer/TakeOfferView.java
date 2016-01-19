@@ -111,6 +111,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private Subscription showTransactionPublishedScreenSubscription;
     private Subscription showCheckAvailabilityPopupSubscription;
     private SimpleBooleanProperty errorPopupDisplayed;
+    private Popup isOfferAvailablePopup;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -167,6 +168,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         errorPopupDisplayed = new SimpleBooleanProperty();
         offerWarningSubscription = EasyBind.subscribe(model.offerWarning, newValue -> {
             if (newValue != null) {
+                if (isOfferAvailablePopup != null) {
+                    isOfferAvailablePopup.hide();
+                    isOfferAvailablePopup = null;
+                }
                 new Popup().warning(newValue).onClose(() -> {
                     errorPopupDisplayed.set(true);
                     model.resetOfferWarning();
@@ -192,10 +197,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 (a, b, c, d) -> a == null && b == null && !c && !d)
                 .subscribe((observable, oldValue, newValue) -> {
                     if (newValue) {
-                        new Popup().message(BSResources.get("takeOffer.fundsBox.isOfferAvailable", newValue))
-                                .closeButtonText("Cancel")
-                                .showProgressIndicator()
-                                .width(200)
+                        isOfferAvailablePopup = new Popup().information(BSResources.get("takeOffer.fundsBox.isOfferAvailable"))
                                 .show()
                                 .onClose(() -> {
                                     model.resetErrorMessage();
@@ -392,6 +394,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void close() {
         if (closeHandler != null)
             closeHandler.close();
+
+        isOfferAvailablePopup = null;
     }
 
 
