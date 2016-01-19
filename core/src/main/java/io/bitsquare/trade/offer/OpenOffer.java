@@ -19,7 +19,6 @@ package io.bitsquare.trade.offer;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.TradableList;
@@ -99,7 +98,6 @@ public class OpenOffer implements Tradable, Serializable {
         stopTimeout();
 
         timeoutTimer = UserThread.runAfter(() -> {
-            Utilities.setThreadName("OpenOffer:Timeout");
             log.info("Timeout reached");
             if (state == State.RESERVED)
                 setState(State.AVAILABLE);

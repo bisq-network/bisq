@@ -118,7 +118,6 @@ public class TorNetworkNode extends NetworkNode {
 
         if (executorService != null) {
             executorService.submit(() -> {
-                Utilities.setThreadName("TorNetworkNodeShutDownSuperClass");
                 UserThread.execute(() -> {
                     // We want to stay in UserThread
                     super.shutDown(() -> {

@@ -24,7 +24,6 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.FirstPeerAuthenticatedListener;
 import io.bitsquare.p2p.Message;
@@ -149,7 +148,6 @@ public class OpenOfferManager {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                Utilities.setThreadName("RepublishOffers");
                 UserThread.execute(() -> rePublishOffers());
                 try {
                 } catch (Throwable t) {

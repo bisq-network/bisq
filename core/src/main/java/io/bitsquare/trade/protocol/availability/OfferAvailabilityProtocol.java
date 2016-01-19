@@ -21,7 +21,6 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.messaging.DecryptedMailListener;
 import io.bitsquare.trade.offer.Offer;
@@ -138,7 +137,6 @@ public class OfferAvailabilityProtocol {
         stopTimeout();
 
         timeoutTimer = UserThread.runAfter(() -> {
-            Utilities.setThreadName("OfferAvailabilityProtocol:Timeout");
             log.warn("Timeout reached");
             model.offer.setState(Offer.State.OFFERER_OFFLINE);
             errorMessageHandler.handleErrorMessage("Timeout reached: Peer has not responded.");
