@@ -27,7 +27,6 @@ import io.bitsquare.p2p.messaging.DecryptedMailListener;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.availability.messages.OfferAvailabilityResponse;
 import io.bitsquare.trade.protocol.availability.messages.OfferMessage;
-import io.bitsquare.trade.protocol.availability.tasks.GetPeerAddress;
 import io.bitsquare.trade.protocol.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bitsquare.trade.protocol.availability.tasks.SendOfferAvailabilityRequest;
 import org.slf4j.Logger;
@@ -38,7 +37,7 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 public class OfferAvailabilityProtocol {
     private static final Logger log = LoggerFactory.getLogger(OfferAvailabilityProtocol.class);
 
-    private static final long TIMEOUT_SEC = 30;
+    private static final long TIMEOUT_SEC = 10;
 
     private final OfferAvailabilityModel model;
     private final ResultHandler resultHandler;
@@ -82,16 +81,16 @@ public class OfferAvailabilityProtocol {
     // Called from UI
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void checkOfferAvailability() {
+    public void sendOfferAvailabilityRequest() {
         // reset
         model.offer.setState(Offer.State.UNDEFINED);
 
         model.p2PService.addDecryptedMailListener(decryptedMailListener);
-
+        model.setPeerAddress(model.offer.getOffererAddress());
+        
         taskRunner = new TaskRunner<>(model,
                 () -> {
-                    log.debug("sequence at onCheckOfferAvailability completed");
-                    stopTimeout();
+                    log.debug("sequence at sendOfferAvailabilityRequest completed");
                 },
                 (errorMessage) -> {
                     log.error(errorMessage);
@@ -99,10 +98,7 @@ public class OfferAvailabilityProtocol {
                     errorMessageHandler.handleErrorMessage(errorMessage);
                 }
         );
-        taskRunner.addTasks(
-                GetPeerAddress.class,
-                SendOfferAvailabilityRequest.class
-        );
+        taskRunner.addTasks(SendOfferAvailabilityRequest.class);
         startTimeout();
         taskRunner.run();
     }
@@ -144,6 +140,7 @@ public class OfferAvailabilityProtocol {
         timeoutTimer = UserThread.runAfter(() -> {
             Utilities.setThreadName("OfferAvailabilityProtocol:Timeout");
             log.warn("Timeout reached");
+            model.offer.setState(Offer.State.OFFERER_OFFLINE);
             errorMessageHandler.handleErrorMessage("Timeout reached: Peer has not responded.");
         }, TIMEOUT_SEC);
     }

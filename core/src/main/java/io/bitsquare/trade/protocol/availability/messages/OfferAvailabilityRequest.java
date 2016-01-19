@@ -37,9 +37,8 @@ public final class OfferAvailabilityRequest extends OfferMessage {
 
     @Override
     public String toString() {
-        return "RequestIsOfferAvailableMessage{" +
-                "\nofferId=" + offerId +
-                "\npubKeyRing=" + pubKeyRing != null ? pubKeyRing.toString() : "null" +
-                '}';
+        return "OfferAvailabilityRequest{" +
+                "pubKeyRing=" + pubKeyRing +
+                "} " + super.toString();
     }
 }

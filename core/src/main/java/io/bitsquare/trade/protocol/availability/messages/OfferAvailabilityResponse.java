@@ -29,4 +29,11 @@ public final class OfferAvailabilityResponse extends OfferMessage {
         super(offerId);
         this.isAvailable = isAvailable;
     }
+
+    @Override
+    public String toString() {
+        return "OfferAvailabilityResponse{" +
+                "isAvailable=" + isAvailable +
+                "} " + super.toString();
+    }
 }
