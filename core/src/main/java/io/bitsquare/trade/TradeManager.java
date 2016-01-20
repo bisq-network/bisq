@@ -59,9 +59,7 @@ import org.spongycastle.crypto.params.KeyParameter;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -174,13 +172,11 @@ public class TradeManager {
     private void initPendingTrades() {
         if (firstPeerAuthenticatedListener != null) p2PService.removeP2PServiceListener(firstPeerAuthenticatedListener);
 
-        List<Trade> failedTrades = new ArrayList<>();
+        //List<Trade> failedTrades = new ArrayList<>();
         for (Trade trade : trades) {
             // We continue an interrupted trade.
-            // TODO if the peer has changed its IP address, we need to make another findPeer request. At the moment we use the peer stored in trade to
-            // continue the trade, but that might fail.
 
-            // TODO
+            // TODO 
            /* if (trade.isFailedState()) {
                 failedTrades.add(trade);
             }
@@ -200,7 +196,7 @@ public class TradeManager {
         }
         pendingTradesInitialized.set(true);
 
-        failedTrades.stream().filter(Trade::isTakerFeePaid).forEach(this::addTradeToFailedTrades);
+        //failedTrades.stream().filter(Trade::isTakerFeePaid).forEach(this::addTradeToFailedTrades);
     }
 
     private void handleInitialTakeOfferRequest(TradeMessage message, Address peerAddress) {

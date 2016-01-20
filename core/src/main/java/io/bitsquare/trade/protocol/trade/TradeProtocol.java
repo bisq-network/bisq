@@ -26,6 +26,7 @@ import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
 import org.slf4j.Logger;
@@ -157,10 +158,11 @@ public abstract class TradeProtocol {
         boolean isTakerTrade = trade instanceof TakerTrade;
 
         if (isTakerTrade) {
+            TradeManager tradeManager = processModel.getTradeManager();
             if (tradeState.getPhase() == Trade.Phase.PREPARATION) {
-                processModel.getTradeManager().removePreparedTrade(trade);
+                tradeManager.removePreparedTrade(trade);
             } else if (tradeState.getPhase() == Trade.Phase.TAKER_FEE_PAID) {
-                processModel.getTradeManager().addTradeToFailedTrades(trade);
+                tradeManager.addTradeToFailedTrades(trade);
             }
         }
     }

@@ -43,7 +43,8 @@ public class FailedTradesManager {
     }
 
     public void add(Trade trade) {
-        failedTrades.add(trade);
+        if (!failedTrades.contains(trade))
+            failedTrades.add(trade);
     }
 
     public boolean wasMyOffer(Offer offer) {

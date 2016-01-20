@@ -69,7 +69,7 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
         statisticsTableView.getColumns().add(getTotalAmountColumn());
         statisticsTableView.getColumns().add(getSpreadColumn());
         statisticsTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new Label("Currently there are no offers available");
+        Label placeholder = new Label("Currently there is no data available");
         placeholder.setWrapText(true);
         statisticsTableView.setPlaceholder(placeholder);
     }
