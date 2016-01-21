@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,7 +40,7 @@ public class ArbitrationSelectionRule {
         }
         checkArgument(candidates.size() > 0, "candidates.size() <= 0");
 
-        int index = Math.abs(Sha256Hash.hash(offer.getId().getBytes()).hashCode()) % candidates.size();
+        int index = Math.abs(Arrays.hashCode(Sha256Hash.hash(offer.getId().getBytes()))) % candidates.size();
         NodeAddress selectedArbitrator = candidates.get(index);
         log.debug("selectedArbitrator " + selectedArbitrator);
         return selectedArbitrator;

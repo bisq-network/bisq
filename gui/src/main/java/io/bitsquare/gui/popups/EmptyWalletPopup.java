@@ -101,7 +101,6 @@ public class EmptyWalletPopup extends Popup {
         emptyWalletButton = new Button("Empty wallet");
         boolean isBalanceSufficient = Restrictions.isAboveDust(totalBalance);
         emptyWalletButton.setDefaultButton(isBalanceSufficient);
-        closeButton.setDefaultButton(!isBalanceSufficient);
         emptyWalletButton.setDisable(!isBalanceSufficient && addressInputTextField.getText().length() > 0);
         emptyWalletButton.setOnAction(e -> {
             if (addressInputTextField.getText().length() > 0 && isBalanceSufficient) {
@@ -121,6 +120,7 @@ public class EmptyWalletPopup extends Popup {
             hide();
             closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
         });
+        closeButton.setDefaultButton(!isBalanceSufficient);
 
         HBox hBox = new HBox();
         hBox.setSpacing(10);
