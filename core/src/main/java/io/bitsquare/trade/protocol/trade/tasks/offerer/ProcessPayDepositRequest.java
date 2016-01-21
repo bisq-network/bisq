@@ -72,15 +72,15 @@ public class ProcessPayDepositRequest extends TradeTask {
 
             processModel.tradingPeer.setAccountId(nonEmptyStringOf(payDepositRequest.takerAccountId));
             processModel.setTakeOfferFeeTxId(nonEmptyStringOf(payDepositRequest.takeOfferFeeTxId));
-            processModel.setTakerAcceptedArbitratorAddresses(checkNotNull(payDepositRequest.acceptedArbitratorAddresses));
-            if (payDepositRequest.acceptedArbitratorAddresses.size() < 1)
+            processModel.setTakerAcceptedArbitratorNodeAddresses(checkNotNull(payDepositRequest.acceptedArbitratorNodeAddresses));
+            if (payDepositRequest.acceptedArbitratorNodeAddresses.size() < 1)
                 failed("acceptedArbitratorNames size must be at least 1");
-            trade.setArbitratorAddress(checkNotNull(payDepositRequest.arbitratorAddress));
+            trade.setArbitratorNodeAddress(checkNotNull(payDepositRequest.arbitratorNodeAddress));
             checkArgument(payDepositRequest.tradeAmount > 0);
             trade.setTradeAmount(Coin.valueOf(payDepositRequest.tradeAmount));
 
             // update to the latest peer address of our peer if the payDepositRequest is correct
-            trade.setTradingPeerAddress(processModel.getTempTradingPeerAddress());
+            trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             complete();
         } catch (Throwable t) {

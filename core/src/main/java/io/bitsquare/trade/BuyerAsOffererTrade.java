@@ -19,7 +19,7 @@ package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.BuyerAsOffererProtocol;
@@ -71,7 +71,7 @@ public class BuyerAsOffererTrade extends BuyerTrade implements OffererTrade, Ser
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleTakeOfferRequest(TradeMessage message, Address taker) {
+    public void handleTakeOfferRequest(TradeMessage message, NodeAddress taker) {
         ((OffererProtocol) tradeProtocol).handleTakeOfferRequest(message, taker);
     }
 

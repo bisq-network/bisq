@@ -5,7 +5,7 @@ import io.bitsquare.common.crypto.*;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.crypto.SealedAndSignedMessage;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.TestUtils;
 import io.bitsquare.p2p.mocks.MockMessage;
 import io.bitsquare.p2p.network.NetworkNode;
@@ -35,7 +35,7 @@ public class ProtectedDataStorageTest {
     private static final Logger log = LoggerFactory.getLogger(ProtectedDataStorageTest.class);
 
     boolean useClearNet = true;
-    private Set<Address> seedNodes = new HashSet<>();
+    private Set<NodeAddress> seedNodes = new HashSet<>();
     private NetworkNode networkNode1;
     private PeerManager peerManager1;
     private EncryptionService encryptionService1, encryptionService2;

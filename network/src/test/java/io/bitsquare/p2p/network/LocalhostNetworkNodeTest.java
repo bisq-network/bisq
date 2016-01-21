@@ -1,6 +1,6 @@
 package io.bitsquare.p2p.network;
 
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.peers.messages.auth.AuthenticationRequest;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Before;
@@ -77,8 +77,8 @@ public class LocalhostNetworkNodeTest {
         });
         startupLatch.await();
 
-        node2.sendMessage(new Address("localhost", 9001), new AuthenticationRequest(new Address("localhost", 9002), 1));
-        node1.sendMessage(new Address("localhost", 9002), new AuthenticationRequest(new Address("localhost", 9001), 1));
+        node2.sendMessage(new NodeAddress("localhost", 9001), new AuthenticationRequest(new NodeAddress("localhost", 9002), 1));
+        node1.sendMessage(new NodeAddress("localhost", 9002), new AuthenticationRequest(new NodeAddress("localhost", 9001), 1));
         msgLatch.await();
 
         CountDownLatch shutDownLatch = new CountDownLatch(2);

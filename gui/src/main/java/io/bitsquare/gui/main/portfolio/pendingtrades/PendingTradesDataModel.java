@@ -269,7 +269,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 trade.getContractAsJson(),
                 trade.getOffererContractSignature(),
                 trade.getTakerContractSignature(),
-                user.getAcceptedArbitratorByAddress(trade.getArbitratorAddress()).getPubKeyRing(),
+                user.getAcceptedArbitratorByAddress(trade.getArbitratorNodeAddress()).getPubKeyRing(),
                 isSupportTicket
         );
 

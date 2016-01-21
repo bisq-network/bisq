@@ -172,7 +172,7 @@ public class OfferDetailsPopup extends Popup {
                 acceptedCountries.setTooltip(tooltip);
             }
         }
-        addLabelTextField(gridPane, ++rowIndex, "Accepted arbitrators:", formatter.arbitratorAddressesToString(offer.getArbitratorAddresses()));
+        addLabelTextField(gridPane, ++rowIndex, "Accepted arbitrators:", formatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));
         if (offer.getOfferFeePaymentTxID() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, "Offer fee transaction ID:", offer.getOfferFeePaymentTxID());
 

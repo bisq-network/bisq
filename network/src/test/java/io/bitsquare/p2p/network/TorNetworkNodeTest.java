@@ -86,7 +86,7 @@ public class TorNetworkNodeTest {
                 latch.countDown();
             }
         });
-        SettableFuture<Connection> future = node2.sendMessage(node1.getAddress(), new MockMessage("msg1"));
+        SettableFuture<Connection> future = node2.sendMessage(node1.getNodeAddress(), new MockMessage("msg1"));
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
             public void onSuccess(Connection connection) {
@@ -165,7 +165,7 @@ public class TorNetworkNodeTest {
                 latch.countDown();
             }
         });
-        SettableFuture<Connection> future = node1.sendMessage(node2.getAddress(), new MockMessage("msg1"));
+        SettableFuture<Connection> future = node1.sendMessage(node2.getNodeAddress(), new MockMessage("msg1"));
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
             public void onSuccess(Connection connection) {

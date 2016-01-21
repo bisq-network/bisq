@@ -9,8 +9,8 @@ import io.bitsquare.common.crypto.CryptoException;
 import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.IllegalRequest;
 import io.bitsquare.p2p.network.MessageListener;
@@ -134,17 +134,17 @@ public class P2PDataStorage implements MessageListener {
         MoreExecutors.shutdownAndAwaitTermination(removeExpiredEntriesExecutor, 500, TimeUnit.MILLISECONDS);
     }
 
-    public boolean add(ProtectedData protectedData, @Nullable Address sender) {
+    public boolean add(ProtectedData protectedData, @Nullable NodeAddress sender) {
         Log.traceCall();
         return doAdd(protectedData, sender, false);
     }
 
-    public boolean rePublish(ProtectedData protectedData, @Nullable Address sender) {
+    public boolean rePublish(ProtectedData protectedData, @Nullable NodeAddress sender) {
         Log.traceCall();
         return doAdd(protectedData, sender, true);
     }
 
-    private boolean doAdd(ProtectedData protectedData, @Nullable Address sender, boolean rePublish) {
+    private boolean doAdd(ProtectedData protectedData, @Nullable NodeAddress sender, boolean rePublish) {
         Log.traceCall();
         ByteArray hashOfPayload = getHashAsByteArray(protectedData.expirablePayload);
         boolean result = checkPublicKeys(protectedData, true)
@@ -184,7 +184,7 @@ public class P2PDataStorage implements MessageListener {
         return result;
     }
 
-    public boolean remove(ProtectedData protectedData, @Nullable Address sender) {
+    public boolean remove(ProtectedData protectedData, @Nullable NodeAddress sender) {
         Log.traceCall();
         ByteArray hashOfPayload = getHashAsByteArray(protectedData.expirablePayload);
         boolean containsKey = map.containsKey(hashOfPayload);
@@ -209,7 +209,7 @@ public class P2PDataStorage implements MessageListener {
         return result;
     }
 
-    public boolean removeMailboxData(ProtectedMailboxData protectedMailboxData, @Nullable Address sender) {
+    public boolean removeMailboxData(ProtectedMailboxData protectedMailboxData, @Nullable NodeAddress sender) {
         Log.traceCall();
         ByteArray hashOfData = getHashAsByteArray(protectedMailboxData.expirablePayload);
         boolean containsKey = map.containsKey(hashOfData);
@@ -368,7 +368,7 @@ public class P2PDataStorage implements MessageListener {
         }
     }
 
-    private void broadcast(DataBroadcastMessage message, @Nullable Address sender) {
+    private void broadcast(DataBroadcastMessage message, @Nullable NodeAddress sender) {
         Log.traceCall(message.toString());
         peerManager.broadcast(message, sender);
     }

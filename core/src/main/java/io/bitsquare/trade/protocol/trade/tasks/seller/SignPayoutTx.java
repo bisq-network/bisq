@@ -61,7 +61,7 @@ public class SignPayoutTx extends TradeTask {
                     lockTimeAsBlockHeight,
                     processModel.tradingPeer.getTradeWalletPubKey(),
                     processModel.getTradeWalletPubKey(),
-                    processModel.getArbitratorPubKey(trade.getArbitratorAddress()));
+                    processModel.getArbitratorPubKey(trade.getArbitratorNodeAddress()));
 
             processModel.setPayoutTxSignature(payoutTxSignature);
 

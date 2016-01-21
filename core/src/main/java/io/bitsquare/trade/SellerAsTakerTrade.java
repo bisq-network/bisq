@@ -18,7 +18,7 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.SellerAsTakerProtocol;
@@ -43,8 +43,8 @@ public class SellerAsTakerTrade extends SellerTrade implements TakerTrade, Seria
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SellerAsTakerTrade(Offer offer, Coin tradeAmount, Address tradingPeerAddress, Storage<? extends TradableList> storage) {
-        super(offer, tradeAmount, tradingPeerAddress, storage);
+    public SellerAsTakerTrade(Offer offer, Coin tradeAmount, NodeAddress tradingPeerNodeAddress, Storage<? extends TradableList> storage) {
+        super(offer, tradeAmount, tradingPeerNodeAddress, storage);
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {

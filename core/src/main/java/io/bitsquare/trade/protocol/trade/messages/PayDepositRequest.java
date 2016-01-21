@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.messages;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.data.RawInput;
 import io.bitsquare.common.crypto.PubKeyRing;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.payment.PaymentAccountContractData;
 
@@ -43,11 +43,11 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
     public final PaymentAccountContractData takerPaymentAccountContractData;
     public final String takerAccountId;
     public final String takeOfferFeeTxId;
-    public final List<Address> acceptedArbitratorAddresses;
-    public final Address arbitratorAddress;
-    private final Address senderAddress;
+    public final List<NodeAddress> acceptedArbitratorNodeAddresses;
+    public final NodeAddress arbitratorNodeAddress;
+    private final NodeAddress senderNodeAddress;
 
-    public PayDepositRequest(Address senderAddress,
+    public PayDepositRequest(NodeAddress senderNodeAddress,
                              String tradeId,
                              long tradeAmount,
                              List<RawInput> rawInputs,
@@ -59,10 +59,10 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
                              PaymentAccountContractData takerPaymentAccountContractData,
                              String takerAccountId,
                              String takeOfferFeeTxId,
-                             List<Address> acceptedArbitratorAddresses,
-                             Address arbitratorAddress) {
+                             List<NodeAddress> acceptedArbitratorNodeAddresses,
+                             NodeAddress arbitratorNodeAddress) {
         super(tradeId);
-        this.senderAddress = senderAddress;
+        this.senderNodeAddress = senderNodeAddress;
         this.tradeAmount = tradeAmount;
         this.rawInputs = rawInputs;
         this.changeOutputValue = changeOutputValue;
@@ -73,13 +73,13 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
         this.takerPaymentAccountContractData = takerPaymentAccountContractData;
         this.takerAccountId = takerAccountId;
         this.takeOfferFeeTxId = takeOfferFeeTxId;
-        this.acceptedArbitratorAddresses = acceptedArbitratorAddresses;
-        this.arbitratorAddress = arbitratorAddress;
+        this.acceptedArbitratorNodeAddresses = acceptedArbitratorNodeAddresses;
+        this.arbitratorNodeAddress = arbitratorNodeAddress;
     }
 
     @Override
-    public Address getSenderAddress() {
-        return senderAddress;
+    public NodeAddress getSenderNodeAddress() {
+        return senderNodeAddress;
     }
 
     @Override
@@ -106,11 +106,11 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
             return false;
         if (takeOfferFeeTxId != null ? !takeOfferFeeTxId.equals(that.takeOfferFeeTxId) : that.takeOfferFeeTxId != null)
             return false;
-        if (acceptedArbitratorAddresses != null ? !acceptedArbitratorAddresses.equals(that.acceptedArbitratorAddresses) : that.acceptedArbitratorAddresses != null)
+        if (acceptedArbitratorNodeAddresses != null ? !acceptedArbitratorNodeAddresses.equals(that.acceptedArbitratorNodeAddresses) : that.acceptedArbitratorNodeAddresses != null)
             return false;
-        if (arbitratorAddress != null ? !arbitratorAddress.equals(that.arbitratorAddress) : that.arbitratorAddress != null)
+        if (arbitratorNodeAddress != null ? !arbitratorNodeAddress.equals(that.arbitratorNodeAddress) : that.arbitratorNodeAddress != null)
             return false;
-        return !(senderAddress != null ? !senderAddress.equals(that.senderAddress) : that.senderAddress != null);
+        return !(senderNodeAddress != null ? !senderNodeAddress.equals(that.senderNodeAddress) : that.senderNodeAddress != null);
 
     }
 
@@ -127,9 +127,9 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
         result = 31 * result + (takerPaymentAccountContractData != null ? takerPaymentAccountContractData.hashCode() : 0);
         result = 31 * result + (takerAccountId != null ? takerAccountId.hashCode() : 0);
         result = 31 * result + (takeOfferFeeTxId != null ? takeOfferFeeTxId.hashCode() : 0);
-        result = 31 * result + (acceptedArbitratorAddresses != null ? acceptedArbitratorAddresses.hashCode() : 0);
-        result = 31 * result + (arbitratorAddress != null ? arbitratorAddress.hashCode() : 0);
-        result = 31 * result + (senderAddress != null ? senderAddress.hashCode() : 0);
+        result = 31 * result + (acceptedArbitratorNodeAddresses != null ? acceptedArbitratorNodeAddresses.hashCode() : 0);
+        result = 31 * result + (arbitratorNodeAddress != null ? arbitratorNodeAddress.hashCode() : 0);
+        result = 31 * result + (senderNodeAddress != null ? senderNodeAddress.hashCode() : 0);
         return result;
     }
 }

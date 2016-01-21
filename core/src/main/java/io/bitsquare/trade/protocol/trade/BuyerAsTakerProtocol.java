@@ -18,8 +18,8 @@
 package io.bitsquare.trade.protocol.trade;
 
 
-import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.trade.BuyerAsTakerTrade;
 import io.bitsquare.trade.Trade;
@@ -75,7 +75,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         this.trade = trade;
 
         if (message instanceof FinalizePayoutTxRequest)
-            handle((FinalizePayoutTxRequest) message, ((MailboxMessage) message).getSenderAddress());
+            handle((FinalizePayoutTxRequest) message, ((MailboxMessage) message).getSenderNodeAddress());
     }
 
 
@@ -106,10 +106,10 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(PublishDepositTxRequest tradeMessage, Address sender) {
+    private void handle(PublishDepositTxRequest tradeMessage, NodeAddress sender) {
         stopTimeout();
         processModel.setTradeMessage(tradeMessage);
-        processModel.setTempTradingPeerAddress(sender);
+        processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
                 () -> handleTaskRunnerSuccess("PublishDepositTxRequest"),
@@ -149,9 +149,9 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(FinalizePayoutTxRequest tradeMessage, Address sender) {
+    private void handle(FinalizePayoutTxRequest tradeMessage, NodeAddress sender) {
         processModel.setTradeMessage(tradeMessage);
-        processModel.setTempTradingPeerAddress(sender);
+        processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
                 () -> {
@@ -175,7 +175,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, Address sender) {
+    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress sender) {
         if (tradeMessage instanceof PublishDepositTxRequest) {
             handle((PublishDepositTxRequest) tradeMessage, sender);
         } else if (tradeMessage instanceof FinalizePayoutTxRequest) {

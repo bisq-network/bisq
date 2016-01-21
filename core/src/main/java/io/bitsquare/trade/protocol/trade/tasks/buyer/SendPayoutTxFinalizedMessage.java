@@ -38,7 +38,7 @@ public class SendPayoutTxFinalizedMessage extends TradeTask {
             runInterceptHook();
             if (trade.getPayoutTx() != null) {
                 processModel.getP2PService().sendEncryptedMailboxMessage(
-                        trade.getTradingPeerAddress(),
+                        trade.getTradingPeerNodeAddress(),
                         processModel.tradingPeer.getPubKeyRing(),
                         new PayoutTxFinalizedMessage(
                                 processModel.getId(),

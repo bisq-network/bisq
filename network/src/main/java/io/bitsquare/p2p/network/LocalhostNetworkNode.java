@@ -9,7 +9,7 @@ import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.TorNode;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +29,7 @@ public class LocalhostNetworkNode extends NetworkNode {
 
     private static volatile int simulateTorDelayTorNode = 100;
     private static volatile int simulateTorDelayHiddenService = 500;
-    private Address address;
+    private NodeAddress nodeAddress;
 
     public static void setSimulateTorDelayTorNode(int simulateTorDelayTorNode) {
         LocalhostNetworkNode.simulateTorDelayTorNode = simulateTorDelayTorNode;
@@ -72,7 +72,7 @@ public class LocalhostNetworkNode extends NetworkNode {
                     log.error("Exception at startServer: " + e.getMessage());
                 }
 
-                address = new Address("localhost", servicePort);
+                nodeAddress = new NodeAddress("localhost", servicePort);
 
                 setupListeners.stream().forEach(e -> e.onHiddenServicePublished());
             });
@@ -82,15 +82,15 @@ public class LocalhostNetworkNode extends NetworkNode {
 
     @Override
     @Nullable
-    public Address getAddress() {
-        return address;
+    public NodeAddress getNodeAddress() {
+        return nodeAddress;
     }
 
     // Called from NetworkNode thread
     @Override
-    protected Socket createSocket(Address peerAddress) throws IOException {
+    protected Socket createSocket(NodeAddress peerNodeAddress) throws IOException {
         Log.traceCall();
-        return new Socket(peerAddress.hostName, peerAddress.port);
+        return new Socket(peerNodeAddress.hostName, peerNodeAddress.port);
     }
 
 

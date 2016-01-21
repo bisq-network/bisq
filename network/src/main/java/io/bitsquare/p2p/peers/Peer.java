@@ -1,6 +1,6 @@
 package io.bitsquare.p2p.peers;
 
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,19 +11,19 @@ public class Peer {
     private static final Logger log = LoggerFactory.getLogger(Peer.class);
 
     public final Connection connection;
-    public final Address address;
+    public final NodeAddress nodeAddress;
     public final long pingNonce;
 
-    public Peer(Connection connection, Address address) {
+    public Peer(Connection connection, NodeAddress nodeAddress) {
         this.connection = connection;
-        this.address = address;
+        this.nodeAddress = nodeAddress;
 
         pingNonce = new Random().nextLong();
     }
 
     @Override
     public int hashCode() {
-        return address != null ? address.hashCode() : 0;
+        return nodeAddress != null ? nodeAddress.hashCode() : 0;
     }
 
     @Override
@@ -33,13 +33,13 @@ public class Peer {
 
         Peer peer = (Peer) o;
 
-        return !(address != null ? !address.equals(peer.address) : peer.address != null);
+        return !(nodeAddress != null ? !nodeAddress.equals(peer.nodeAddress) : peer.nodeAddress != null);
     }
 
     @Override
     public String toString() {
         return "Peer{" +
-                "address=" + address +
+                "address=" + nodeAddress +
                 ", pingNonce=" + pingNonce +
                 ", connection=" + connection +
                 '}';

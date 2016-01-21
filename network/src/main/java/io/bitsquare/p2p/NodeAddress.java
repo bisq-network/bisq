@@ -5,17 +5,17 @@ import io.bitsquare.common.crypto.Hash;
 import java.io.Serializable;
 import java.util.regex.Pattern;
 
-public class Address implements Serializable {
+public class NodeAddress implements Serializable {
     public final String hostName;
     public final int port;
     transient private byte[] addressPrefixHash;
 
-    public Address(String hostName, int port) {
+    public NodeAddress(String hostName, int port) {
         this.hostName = hostName;
         this.port = port;
     }
 
-    public Address(String fullAddress) {
+    public NodeAddress(String fullAddress) {
         final String[] split = fullAddress.split(Pattern.quote(":"));
         this.hostName = split[0];
         this.port = Integer.parseInt(split[1]);
@@ -35,12 +35,12 @@ public class Address implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Address)) return false;
+        if (!(o instanceof NodeAddress)) return false;
 
-        Address address = (Address) o;
+        NodeAddress nodeAddress = (NodeAddress) o;
 
-        if (port != address.port) return false;
-        return !(hostName != null ? !hostName.equals(address.hostName) : address.hostName != null);
+        if (port != nodeAddress.port) return false;
+        return !(hostName != null ? !hostName.equals(nodeAddress.hostName) : nodeAddress.hostName != null);
 
     }
 

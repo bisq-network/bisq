@@ -18,7 +18,7 @@
 package io.bitsquare.arbitration.messages;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 
 import java.util.Arrays;
 
@@ -28,12 +28,12 @@ public final class PeerPublishedPayoutTxMessage extends DisputeMessage {
 
     public final byte[] transaction;
     public final String tradeId;
-    private final Address myAddress;
+    private final NodeAddress myNodeAddress;
 
-    public PeerPublishedPayoutTxMessage(byte[] transaction, String tradeId, Address myAddress) {
+    public PeerPublishedPayoutTxMessage(byte[] transaction, String tradeId, NodeAddress myNodeAddress) {
         this.transaction = transaction;
         this.tradeId = tradeId;
-        this.myAddress = myAddress;
+        this.myNodeAddress = myNodeAddress;
     }
 
     @Override
@@ -45,7 +45,7 @@ public final class PeerPublishedPayoutTxMessage extends DisputeMessage {
 
         if (!Arrays.equals(transaction, that.transaction)) return false;
         if (tradeId != null ? !tradeId.equals(that.tradeId) : that.tradeId != null) return false;
-        return !(myAddress != null ? !myAddress.equals(that.myAddress) : that.myAddress != null);
+        return !(myNodeAddress != null ? !myNodeAddress.equals(that.myNodeAddress) : that.myNodeAddress != null);
 
     }
 
@@ -53,13 +53,13 @@ public final class PeerPublishedPayoutTxMessage extends DisputeMessage {
     public int hashCode() {
         int result = transaction != null ? Arrays.hashCode(transaction) : 0;
         result = 31 * result + (tradeId != null ? tradeId.hashCode() : 0);
-        result = 31 * result + (myAddress != null ? myAddress.hashCode() : 0);
+        result = 31 * result + (myNodeAddress != null ? myNodeAddress.hashCode() : 0);
         return result;
     }
 
     @Override
-    public Address getSenderAddress() {
-        return myAddress;
+    public NodeAddress getSenderNodeAddress() {
+        return myNodeAddress;
     }
 
 }

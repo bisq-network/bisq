@@ -19,7 +19,7 @@ package io.bitsquare.arbitration;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.storage.data.PubKeyProtectedExpirablePayload;
 
 import java.security.PublicKey;
@@ -36,14 +36,14 @@ public final class Arbitrator implements PubKeyProtectedExpirablePayload {
     // Persisted fields
     private final byte[] btcPubKey;
     private final PubKeyRing pubKeyRing;
-    private final Address arbitratorAddress;
+    private final NodeAddress arbitratorNodeAddress;
     private final List<String> languageCodes;
     private final String btcAddress;
     private final long registrationDate;
     private final String registrationSignature;
     private final byte[] registrationPubKey;
 
-    public Arbitrator(Address arbitratorAddress,
+    public Arbitrator(NodeAddress arbitratorNodeAddress,
                       byte[] btcPubKey,
                       String btcAddress,
                       PubKeyRing pubKeyRing,
@@ -51,7 +51,7 @@ public final class Arbitrator implements PubKeyProtectedExpirablePayload {
                       Date registrationDate,
                       byte[] registrationPubKey,
                       String registrationSignature) {
-        this.arbitratorAddress = arbitratorAddress;
+        this.arbitratorNodeAddress = arbitratorNodeAddress;
         this.btcPubKey = btcPubKey;
         this.btcAddress = btcAddress;
         this.pubKeyRing = pubKeyRing;
@@ -84,8 +84,8 @@ public final class Arbitrator implements PubKeyProtectedExpirablePayload {
         return pubKeyRing;
     }
 
-    public Address getArbitratorAddress() {
-        return arbitratorAddress;
+    public NodeAddress getArbitratorNodeAddress() {
+        return arbitratorNodeAddress;
     }
 
     public Date getRegistrationDate() {
@@ -118,7 +118,7 @@ public final class Arbitrator implements PubKeyProtectedExpirablePayload {
         if (registrationDate != that.registrationDate) return false;
         if (!Arrays.equals(btcPubKey, that.btcPubKey)) return false;
         if (pubKeyRing != null ? !pubKeyRing.equals(that.pubKeyRing) : that.pubKeyRing != null) return false;
-        if (arbitratorAddress != null ? !arbitratorAddress.equals(that.arbitratorAddress) : that.arbitratorAddress != null)
+        if (arbitratorNodeAddress != null ? !arbitratorNodeAddress.equals(that.arbitratorNodeAddress) : that.arbitratorNodeAddress != null)
             return false;
         if (languageCodes != null ? !languageCodes.equals(that.languageCodes) : that.languageCodes != null)
             return false;
@@ -133,7 +133,7 @@ public final class Arbitrator implements PubKeyProtectedExpirablePayload {
     public int hashCode() {
         int result = btcPubKey != null ? Arrays.hashCode(btcPubKey) : 0;
         result = 31 * result + (pubKeyRing != null ? pubKeyRing.hashCode() : 0);
-        result = 31 * result + (arbitratorAddress != null ? arbitratorAddress.hashCode() : 0);
+        result = 31 * result + (arbitratorNodeAddress != null ? arbitratorNodeAddress.hashCode() : 0);
         result = 31 * result + (languageCodes != null ? languageCodes.hashCode() : 0);
         result = 31 * result + (btcAddress != null ? btcAddress.hashCode() : 0);
         result = 31 * result + (int) (registrationDate ^ (registrationDate >>> 32));
@@ -145,7 +145,7 @@ public final class Arbitrator implements PubKeyProtectedExpirablePayload {
     @Override
     public String toString() {
         return "Arbitrator{" +
-                "arbitratorAddress=" + arbitratorAddress +
+                "arbitratorAddress=" + arbitratorNodeAddress +
                 ", languageCodes=" + languageCodes +
                 ", btcAddress='" + btcAddress + '\'' +
                 ", registrationDate=" + registrationDate +

@@ -26,7 +26,7 @@ import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.network.LocalhostNetworkNode;
@@ -72,7 +72,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private P2PServiceListener p2PServiceListener;
     private ChangeListener<Number> numAuthenticatedPeersChangeListener;
     private ChangeListener<List<Peer>> bitcoinPeersChangeListener;
-    private Set<Address> seedNodeAddresses;
+    private Set<NodeAddress> seedNodeNodeAddresses;
 
     @Inject
     public NetworkSettingsView(WalletService walletService, P2PService p2PService, Preferences preferences,
@@ -84,7 +84,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         BitcoinNetwork bitcoinNetwork = preferences.getBitcoinNetwork();
 
         boolean useLocalhost = p2PService.getNetworkNode() instanceof LocalhostNetworkNode;
-        this.seedNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhost, bitcoinNetwork.ordinal());
+        this.seedNodeNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhost, bitcoinNetwork.ordinal());
     }
 
     public void initialize() {
@@ -111,8 +111,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     @Override
     public void activate() {
-        Address address = p2PService.getAddress();
-        if (address == null) {
+        NodeAddress nodeAddress = p2PService.getAddress();
+        if (nodeAddress == null) {
             p2PServiceListener = new P2PServiceListener() {
                 @Override
                 public void onRequestingDataCompleted() {
@@ -145,7 +145,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             };
             p2PService.addP2PServiceListener(p2PServiceListener);
         } else {
-            onionAddress.setText(address.getFullAddress());
+            onionAddress.setText(nodeAddress.getFullAddress());
         }
 
         bitcoinPeersChangeListener = (observable, oldValue, newValue) -> updateBitcoinPeersTextArea();
@@ -171,11 +171,11 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     private void updateAuthenticatedPeersTextArea() {
         authenticatedPeersTextArea.clear();
-        p2PService.getAuthenticatedPeerAddresses().stream().forEach(e -> {
+        p2PService.getAuthenticatedPeerNodeAddresses().stream().forEach(e -> {
             if (authenticatedPeersTextArea.getText().length() > 0)
                 authenticatedPeersTextArea.appendText("\n");
             authenticatedPeersTextArea.appendText(e.getFullAddress());
-            if (seedNodeAddresses.contains(e))
+            if (seedNodeNodeAddresses.contains(e))
                 authenticatedPeersTextArea.appendText(" (Seed node)");
         });
     }

@@ -7,8 +7,8 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
@@ -34,8 +34,8 @@ public class PeerExchangeManager implements MessageListener {
 
     private final NetworkNode networkNode;
     private final Supplier<Set<ReportedPeer>> authenticatedAndReportedPeersSupplier;
-    private final Supplier<Map<Address, Peer>> authenticatedPeersSupplier;
-    private final Consumer<Address> removePeerConsumer;
+    private final Supplier<Map<NodeAddress, Peer>> authenticatedPeersSupplier;
+    private final Consumer<NodeAddress> removePeerConsumer;
     private final BiConsumer<HashSet<ReportedPeer>, Connection> addReportedPeersConsumer;
     private final ScheduledThreadPoolExecutor executor;
 
@@ -46,8 +46,8 @@ public class PeerExchangeManager implements MessageListener {
 
     public PeerExchangeManager(NetworkNode networkNode,
                                Supplier<Set<ReportedPeer>> authenticatedAndReportedPeersSupplier,
-                               Supplier<Map<Address, Peer>> authenticatedPeersSupplier,
-                               Consumer<Address> removePeerConsumer,
+                               Supplier<Map<NodeAddress, Peer>> authenticatedPeersSupplier,
+                               Consumer<NodeAddress> removePeerConsumer,
                                BiConsumer<HashSet<ReportedPeer>, Connection> addReportedPeersConsumer) {
         this.networkNode = networkNode;
         this.authenticatedAndReportedPeersSupplier = authenticatedAndReportedPeersSupplier;
@@ -94,7 +94,7 @@ public class PeerExchangeManager implements MessageListener {
                     @Override
                     public void onFailure(@NotNull Throwable throwable) {
                         log.info("GetPeersResponse sending failed " + throwable.getMessage());
-                        removePeerConsumer.accept(getPeersRequestMessage.senderAddress);
+                        removePeerConsumer.accept(getPeersRequestMessage.senderNodeAddress);
                     }
                 });
                 addReportedPeersConsumer.accept(reportedPeers, connection);
@@ -115,7 +115,7 @@ public class PeerExchangeManager implements MessageListener {
             connectedPeersList.stream()
                     .forEach(e -> {
                         SettableFuture<Connection> future = networkNode.sendMessage(e.connection,
-                                new GetPeersRequest(networkNode.getAddress(), new HashSet<>(authenticatedAndReportedPeersSupplier.get())));
+                                new GetPeersRequest(networkNode.getNodeAddress(), new HashSet<>(authenticatedAndReportedPeersSupplier.get())));
                         Futures.addCallback(future, new FutureCallback<Connection>() {
                             @Override
                             public void onSuccess(Connection connection) {
@@ -125,7 +125,7 @@ public class PeerExchangeManager implements MessageListener {
                             @Override
                             public void onFailure(@NotNull Throwable throwable) {
                                 log.info("sendGetPeersRequest sending failed " + throwable.getMessage());
-                                removePeerConsumer.accept(e.address);
+                                removePeerConsumer.accept(e.nodeAddress);
                             }
                         });
                     });

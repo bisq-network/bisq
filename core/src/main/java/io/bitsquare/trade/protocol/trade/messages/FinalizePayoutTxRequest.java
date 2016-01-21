@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.messages;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 
 import javax.annotation.concurrent.Immutable;
@@ -32,23 +32,23 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
     public final byte[] sellerSignature;
     public final String sellerPayoutAddress;
     public final long lockTime;
-    private final Address senderAddress;
+    private final NodeAddress senderNodeAddress;
 
     public FinalizePayoutTxRequest(String tradeId,
                                    byte[] sellerSignature,
                                    String sellerPayoutAddress,
                                    long lockTime,
-                                   Address senderAddress) {
+                                   NodeAddress senderNodeAddress) {
         super(tradeId);
         this.sellerSignature = sellerSignature;
         this.sellerPayoutAddress = sellerPayoutAddress;
         this.lockTime = lockTime;
-        this.senderAddress = senderAddress;
+        this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
-    public Address getSenderAddress() {
-        return senderAddress;
+    public NodeAddress getSenderNodeAddress() {
+        return senderNodeAddress;
     }
 
     @Override
@@ -63,7 +63,7 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
         if (!Arrays.equals(sellerSignature, that.sellerSignature)) return false;
         if (sellerPayoutAddress != null ? !sellerPayoutAddress.equals(that.sellerPayoutAddress) : that.sellerPayoutAddress != null)
             return false;
-        return !(senderAddress != null ? !senderAddress.equals(that.senderAddress) : that.senderAddress != null);
+        return !(senderNodeAddress != null ? !senderNodeAddress.equals(that.senderNodeAddress) : that.senderNodeAddress != null);
 
     }
 
@@ -73,7 +73,7 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
         result = 31 * result + (sellerSignature != null ? Arrays.hashCode(sellerSignature) : 0);
         result = 31 * result + (sellerPayoutAddress != null ? sellerPayoutAddress.hashCode() : 0);
         result = 31 * result + (int) (lockTime ^ (lockTime >>> 32));
-        result = 31 * result + (senderAddress != null ? senderAddress.hashCode() : 0);
+        result = 31 * result + (senderNodeAddress != null ? senderNodeAddress.hashCode() : 0);
         return result;
     }
 }

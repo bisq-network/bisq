@@ -37,7 +37,7 @@ public class P2PServiceTest {
     private static final Logger log = LoggerFactory.getLogger(P2PServiceTest.class);
 
     boolean useLocalhost = true;
-    private Set<Address> seedNodes;
+    private Set<NodeAddress> seedNodes;
     private int sleepTime;
     private KeyRing keyRing1, keyRing2, keyRing3;
     private EncryptionService encryptionService1, encryptionService2, encryptionService3;
@@ -71,15 +71,15 @@ public class P2PServiceTest {
 
         seedNodes = new HashSet<>();
         if (useLocalhost) {
-            seedNodes.add(new Address("localhost:8001"));
-            seedNodes.add(new Address("localhost:8002"));
-            seedNodes.add(new Address("localhost:8003"));
+            seedNodes.add(new NodeAddress("localhost:8001"));
+            seedNodes.add(new NodeAddress("localhost:8002"));
+            seedNodes.add(new NodeAddress("localhost:8003"));
             sleepTime = 100;
 
         } else {
-            seedNodes.add(new Address("3omjuxn7z73pxoee.onion:8001"));
-            seedNodes.add(new Address("j24fxqyghjetgpdx.onion:8002"));
-            seedNodes.add(new Address("45367tl6unwec6kw.onion:8003"));
+            seedNodes.add(new NodeAddress("3omjuxn7z73pxoee.onion:8001"));
+            seedNodes.add(new NodeAddress("j24fxqyghjetgpdx.onion:8002"));
+            seedNodes.add(new NodeAddress("45367tl6unwec6kw.onion:8003"));
             sleepTime = 1000;
         }
 
@@ -290,7 +290,7 @@ public class P2PServiceTest {
                     SealedAndSignedMessage sealedAndSignedMessage = (SealedAndSignedMessage) message;
                     DecryptedMsgWithPubKey decryptedMsgWithPubKey = encryptionService2.decryptAndVerify(sealedAndSignedMessage.sealedAndSigned);
                     Assert.assertEquals(mockMessage, decryptedMsgWithPubKey.message);
-                    Assert.assertEquals(p2PService2.getAddress(), ((MailboxMessage) decryptedMsgWithPubKey.message).getSenderAddress());
+                    Assert.assertEquals(p2PService2.getAddress(), ((MailboxMessage) decryptedMsgWithPubKey.message).getSenderNodeAddress());
                     latch2.countDown();
                 } catch (CryptoException e) {
                     e.printStackTrace();
@@ -335,7 +335,7 @@ public class P2PServiceTest {
         );
         CountDownLatch latch2 = new CountDownLatch(1);
         p2PService2.sendEncryptedMailboxMessage(
-                new Address("localhost:8003"),
+                new NodeAddress("localhost:8003"),
                 keyRing3.getPubKeyRing(),
                 mockMessage,
                 new SendMailboxMessageListener() {
@@ -367,7 +367,7 @@ public class P2PServiceTest {
         p2PService3.addDecryptedMailboxListener((decryptedMessageWithPubKey, senderAddress) -> {
             log.debug("decryptedMessageWithPubKey " + decryptedMessageWithPubKey.toString());
             Assert.assertEquals(mockMessage, decryptedMessageWithPubKey.message);
-            Assert.assertEquals(p2PService2.getAddress(), ((MailboxMessage) decryptedMessageWithPubKey.message).getSenderAddress());
+            Assert.assertEquals(p2PService2.getAddress(), ((MailboxMessage) decryptedMessageWithPubKey.message).getSenderNodeAddress());
             latch3.countDown();
         });
         latch3.await();

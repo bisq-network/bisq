@@ -21,7 +21,7 @@ package io.bitsquare.crypto;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.*;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -88,7 +88,7 @@ final class TestMessage implements MailboxMessage {
     }
 
     @Override
-    public Address getSenderAddress() {
+    public NodeAddress getSenderNodeAddress() {
         return null;
     }
 

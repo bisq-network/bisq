@@ -5,8 +5,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.ConnectionPriority;
 import io.bitsquare.p2p.network.MessageListener;
@@ -40,7 +40,7 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
 
         void onNoPeersAvailable();
 
-        void onDataReceived(Address seedNode);
+        void onDataReceived(NodeAddress seedNode);
     }
 
 
@@ -50,8 +50,8 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
     private final HashSet<ReportedPeer> persistedPeers = new HashSet<>();
     private final HashSet<ReportedPeer> remainingPersistedPeers = new HashSet<>();
     private Listener listener;
-    private Optional<Address> optionalConnectedSeedNodeAddress = Optional.empty();
-    private Collection<Address> seedNodeAddresses;
+    private Optional<NodeAddress> optionalConnectedSeedNodeAddress = Optional.empty();
+    private Collection<NodeAddress> seedNodeNodeAddresses;
     protected Timer requestDataFromAuthenticatedSeedNodeTimer;
     private Timer requestDataTimer, requestDataWithPersistedPeersTimer;
     private boolean doNotifyNoSeedNodeAvailableListener = true;
@@ -88,23 +88,23 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
         this.listener = listener;
     }
 
-    public void requestDataFromSeedNodes(Collection<Address> seedNodeAddresses) {
-        checkNotNull(seedNodeAddresses, "requestDataFromSeedNodes: seedNodeAddresses must not be null.");
-        checkArgument(!seedNodeAddresses.isEmpty(), "requestDataFromSeedNodes: seedNodeAddresses must not be empty.");
+    public void requestDataFromSeedNodes(Collection<NodeAddress> seedNodeNodeAddresses) {
+        checkNotNull(seedNodeNodeAddresses, "requestDataFromSeedNodes: seedNodeAddresses must not be null.");
+        checkArgument(!seedNodeNodeAddresses.isEmpty(), "requestDataFromSeedNodes: seedNodeAddresses must not be empty.");
 
-        this.seedNodeAddresses = seedNodeAddresses;
-        requestData(seedNodeAddresses);
+        this.seedNodeNodeAddresses = seedNodeNodeAddresses;
+        requestData(seedNodeNodeAddresses);
     }
 
-    private void requestData(Collection<Address> addresses) {
-        Log.traceCall(addresses.toString());
-        checkArgument(!addresses.isEmpty(), "requestData: addresses must not be empty.");
+    private void requestData(Collection<NodeAddress> nodeAddresses) {
+        Log.traceCall(nodeAddresses.toString());
+        checkArgument(!nodeAddresses.isEmpty(), "requestData: addresses must not be empty.");
         stopRequestDataTimer();
-        List<Address> remainingAddresses = new ArrayList<>(addresses);
-        Address candidate = remainingAddresses.get(new Random().nextInt(remainingAddresses.size()));
+        List<NodeAddress> remainingNodeAddresses = new ArrayList<>(nodeAddresses);
+        NodeAddress candidate = remainingNodeAddresses.get(new Random().nextInt(remainingNodeAddresses.size()));
         if (!peerManager.isInAuthenticationProcess(candidate)) {
             // We only remove it if it is not in the process of authentication
-            remainingAddresses.remove(candidate);
+            remainingNodeAddresses.remove(candidate);
             log.info("We try to send a GetAllDataMessage request to node. " + candidate);
 
             SettableFuture<Connection> future = networkNode.sendMessage(candidate, new DataRequest());
@@ -125,7 +125,7 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
                             "That is expected if the node is offline. " +
                             "Exception:" + throwable.getMessage());
 
-                    if (!remainingAddresses.isEmpty()) {
+                    if (!remainingNodeAddresses.isEmpty()) {
                         log.info("There are more seed nodes available for requesting data. " +
                                 "We will try requestData again.");
 
@@ -133,7 +133,7 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
                         if (remainingPersistedPeers.contains(reportedPeer))
                             remainingPersistedPeers.remove(reportedPeer);
 
-                        requestData(remainingAddresses);
+                        requestData(remainingNodeAddresses);
                     } else {
                         log.info("There is no seed node available for requesting data. " +
                                 "That is expected if no seed node is online.\n" +
@@ -144,12 +144,12 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
                     }
                 }
             });
-        } else if (!remainingAddresses.isEmpty()) {
+        } else if (!remainingNodeAddresses.isEmpty()) {
             log.info("The node ({}) is in the process of authentication.\n" +
                     "We will try requestData again with the remaining addresses.", candidate);
-            remainingAddresses.remove(candidate);
-            if (!remainingAddresses.isEmpty()) {
-                requestData(remainingAddresses);
+            remainingNodeAddresses.remove(candidate);
+            if (!remainingNodeAddresses.isEmpty()) {
+                requestData(remainingNodeAddresses);
             } else {
                 log.info("The node ({}) is in the process of authentication.\n" +
                         "There are no more remaining addresses available.\n" +
@@ -176,11 +176,11 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
             listener.onNoSeedNodeAvailable();
         }
         if (requestDataTimer == null)
-            requestDataTimer = UserThread.runAfterRandomDelay(() -> requestData(seedNodeAddresses),
+            requestDataTimer = UserThread.runAfterRandomDelay(() -> requestData(seedNodeNodeAddresses),
                     10, 20, TimeUnit.SECONDS);
     }
 
-    private void requestDataWithPersistedPeers(@Nullable Address failedPeer) {
+    private void requestDataWithPersistedPeers(@Nullable NodeAddress failedPeer) {
         Log.traceCall("failedPeer=" + failedPeer);
 
         stopRequestDataWithPersistedPeersTimer();
@@ -199,11 +199,11 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
 
         boolean persistedPeersAvailable = false;
         if (!remainingPersistedPeers.isEmpty()) {
-            Set<Address> persistedPeerAddresses = remainingPersistedPeers.stream().map(e -> e.address).collect(Collectors.toSet());
-            if (!persistedPeerAddresses.isEmpty()) {
+            Set<NodeAddress> persistedPeerNodeAddresses = remainingPersistedPeers.stream().map(e -> e.nodeAddress).collect(Collectors.toSet());
+            if (!persistedPeerNodeAddresses.isEmpty()) {
                 log.info("We try to use persisted peers for requestData.");
                 persistedPeersAvailable = true;
-                requestData(persistedPeerAddresses);
+                requestData(persistedPeerNodeAddresses);
             }
         }
 
@@ -253,22 +253,22 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onPeerAuthenticated(Address peerAddress, Connection connection) {
+    public void onPeerAuthenticated(NodeAddress peerNodeAddress, Connection connection) {
         optionalConnectedSeedNodeAddress.ifPresent(connectedSeedNodeAddress -> {
             // We only request the data again if we have initiated the authentication (ConnectionPriority.ACTIVE)
             // We delay a bit to be sure that the authentication state is applied to all listeners
-            if (connectedSeedNodeAddress.equals(peerAddress) && connection.getConnectionPriority() == ConnectionPriority.ACTIVE) {
+            if (connectedSeedNodeAddress.equals(peerNodeAddress) && connection.getConnectionPriority() == ConnectionPriority.ACTIVE) {
                 // We are the node (can be a seed node as well) which requested the authentication
                 if (requestDataFromAuthenticatedSeedNodeTimer == null)
                     requestDataFromAuthenticatedSeedNodeTimer = UserThread.runAfter(()
-                            -> requestDataFromAuthenticatedSeedNode(peerAddress, connection), 100, TimeUnit.MILLISECONDS);
+                            -> requestDataFromAuthenticatedSeedNode(peerNodeAddress, connection), 100, TimeUnit.MILLISECONDS);
             }
         });
     }
 
     // 5. Step after authentication to first seed node we request again the data
-    protected void requestDataFromAuthenticatedSeedNode(Address peerAddress, Connection connection) {
-        Log.traceCall(peerAddress.toString());
+    protected void requestDataFromAuthenticatedSeedNode(NodeAddress peerNodeAddress, Connection connection) {
+        Log.traceCall(peerNodeAddress.toString());
 
         stopRequestDataFromAuthenticatedSeedNodeTimer();
 
@@ -277,21 +277,21 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
             public void onSuccess(@Nullable Connection connection) {
-                log.info("requestDataFromAuthenticatedSeedNode from " + peerAddress + " succeeded.");
+                log.info("requestDataFromAuthenticatedSeedNode from " + peerNodeAddress + " succeeded.");
             }
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                log.warn("requestDataFromAuthenticatedSeedNode from " + peerAddress + " failed. " +
+                log.warn("requestDataFromAuthenticatedSeedNode from " + peerNodeAddress + " failed. " +
                         "Exception:" + throwable.getMessage()
                         + "\nWe will try again to request data from any of our seed nodes.");
 
                 // We will try again to request data from any of our seed nodes. 
-                if (seedNodeAddresses != null && !seedNodeAddresses.isEmpty())
-                    requestData(seedNodeAddresses);
+                if (seedNodeNodeAddresses != null && !seedNodeNodeAddresses.isEmpty())
+                    requestData(seedNodeNodeAddresses);
                 else
                     log.error("seedNodeAddresses is null or empty. That must not happen. seedNodeAddresses="
-                            + seedNodeAddresses);
+                            + seedNodeNodeAddresses);
             }
         });
     }

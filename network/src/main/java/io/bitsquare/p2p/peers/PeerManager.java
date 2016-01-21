@@ -7,8 +7,8 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.messages.auth.AuthenticationRejection;
 import io.bitsquare.p2p.peers.messages.auth.AuthenticationRequest;
@@ -64,12 +64,12 @@ public class PeerManager implements MessageListener, ConnectionListener {
     private Storage<HashSet<ReportedPeer>> dbStorage;
 
     private final CopyOnWriteArraySet<AuthenticationListener> authenticationListeners = new CopyOnWriteArraySet<>();
-    protected final Map<Address, Peer> authenticatedPeers = new HashMap<>();
+    protected final Map<NodeAddress, Peer> authenticatedPeers = new HashMap<>();
     private final HashSet<ReportedPeer> reportedPeers = new HashSet<>();
     private final HashSet<ReportedPeer> persistedPeers = new HashSet<>();
-    protected final Map<Address, AuthenticationHandshake> authenticationHandshakes = new HashMap<>();
-    protected final List<Address> remainingSeedNodes = new ArrayList<>();
-    protected Optional<Set<Address>> seedNodeAddressesOptional = Optional.empty();
+    protected final Map<NodeAddress, AuthenticationHandshake> authenticationHandshakes = new HashMap<>();
+    protected final List<NodeAddress> remainingSeedNodes = new ArrayList<>();
+    protected Optional<Set<NodeAddress>> seedNodeAddressesOptional = Optional.empty();
     protected Timer authenticateToRemainingSeedNodeTimer, authenticateToRemainingReportedPeerTimer;
 
 
@@ -163,33 +163,33 @@ public class PeerManager implements MessageListener, ConnectionListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void broadcast(DataBroadcastMessage message, @Nullable Address sender) {
+    public void broadcast(DataBroadcastMessage message, @Nullable NodeAddress sender) {
         Log.traceCall("Sender " + sender + ". Message " + message.toString());
         if (authenticatedPeers.values().size() > 0) {
             log.info("Broadcast message to {} peers. Message: {}", authenticatedPeers.values().size(), message);
             authenticatedPeers.values().stream()
-                    .filter(e -> !e.address.equals(sender))
+                    .filter(e -> !e.nodeAddress.equals(sender))
                     .forEach(peer -> {
                         if (authenticatedPeers.containsValue(peer)) {
-                            final Address address = peer.address;
-                            log.trace("Broadcast message from " + getMyAddress() + " to " + address + ".");
-                            SettableFuture<Connection> future = networkNode.sendMessage(address, message);
+                            final NodeAddress nodeAddress = peer.nodeAddress;
+                            log.trace("Broadcast message from " + getMyAddress() + " to " + nodeAddress + ".");
+                            SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, message);
                             Futures.addCallback(future, new FutureCallback<Connection>() {
                                 @Override
                                 public void onSuccess(Connection connection) {
-                                    log.trace("Broadcast from " + getMyAddress() + " to " + address + " succeeded.");
+                                    log.trace("Broadcast from " + getMyAddress() + " to " + nodeAddress + " succeeded.");
                                 }
 
                                 @Override
                                 public void onFailure(@NotNull Throwable throwable) {
                                     log.info("Broadcast failed. " + throwable.getMessage());
-                                    UserThread.execute(() -> removePeer(address));
+                                    UserThread.execute(() -> removePeer(nodeAddress));
                                 }
                             });
                         } else {
                             log.debug("Peer is not in our authenticated list anymore. " +
                                     "That can happen as we use a stream loop for the broadcast. " +
-                                    "Peer.address={}", peer.address);
+                                    "Peer.address={}", peer.nodeAddress);
                         }
                     });
         } else {
@@ -225,39 +225,39 @@ public class PeerManager implements MessageListener, ConnectionListener {
 
     private void processAuthenticationRequest(AuthenticationRequest message, final Connection connection) {
         Log.traceCall(message.toString());
-        Address peerAddress = message.senderAddress;
+        NodeAddress peerNodeAddress = message.senderNodeAddress;
 
         // We set the address to the connection, otherwise we will not find the connection when sending
         // a reject message and we would create a new outbound connection instead using the inbound.
-        connection.setPeerAddress(message.senderAddress);
+        connection.setPeerAddress(message.senderNodeAddress);
 
-        if (!authenticatedPeers.containsKey(peerAddress)) {
+        if (!authenticatedPeers.containsKey(peerNodeAddress)) {
             AuthenticationHandshake authenticationHandshake;
-            if (!authenticationHandshakes.containsKey(peerAddress)) {
+            if (!authenticationHandshakes.containsKey(peerNodeAddress)) {
                 log.info("We got an incoming AuthenticationRequest for the peerAddress {}. " +
-                        "We create an AuthenticationHandshake.", peerAddress);
+                        "We create an AuthenticationHandshake.", peerNodeAddress);
                 // We protect that connection from getting closed by maintenance cleanup...
                 connection.setConnectionPriority(ConnectionPriority.AUTH_REQUEST);
                 authenticationHandshake = new AuthenticationHandshake(networkNode,
                         getMyAddress(),
-                        peerAddress,
+                        peerNodeAddress,
                         () -> getAuthenticatedAndReportedPeers(),
                         (newReportedPeers, connection1) -> addToReportedPeers(newReportedPeers, connection1)
                 );
-                authenticationHandshakes.put(peerAddress, authenticationHandshake);
+                authenticationHandshakes.put(peerNodeAddress, authenticationHandshake);
                 SettableFuture<Connection> future = authenticationHandshake.respondToAuthenticationRequest(message, connection);
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                             @Override
                             public void onSuccess(Connection connection) {
-                                log.info("We got the peer ({}) who requested authentication authenticated.", peerAddress);
-                                handleAuthenticationSuccess(connection, peerAddress);
+                                log.info("We got the peer ({}) who requested authentication authenticated.", peerNodeAddress);
+                                handleAuthenticationSuccess(connection, peerNodeAddress);
                             }
 
                             @Override
                             public void onFailure(@NotNull Throwable throwable) {
                                 log.info("Authentication with peer who requested authentication failed.\n" +
                                         "That can happen if the peer went offline. " + throwable.getMessage());
-                                handleAuthenticationFailure(peerAddress, throwable);
+                                handleAuthenticationFailure(peerNodeAddress, throwable);
                             }
                         }
                 );
@@ -265,28 +265,28 @@ public class PeerManager implements MessageListener, ConnectionListener {
                 log.info("We got an incoming AuthenticationRequest but we have started ourselves already " +
                         "an authentication handshake for that peerAddress ({}).\n" +
                         "We terminate such race conditions by rejecting and cancelling the authentication on both " +
-                        "peers.", peerAddress);
+                        "peers.", peerNodeAddress);
 
-                rejectAuthenticationRequest(peerAddress);
-                authenticationHandshakes.get(peerAddress).cancel(peerAddress);
-                authenticationHandshakes.remove(peerAddress);
+                rejectAuthenticationRequest(peerNodeAddress);
+                authenticationHandshakes.get(peerNodeAddress).cancel(peerNodeAddress);
+                authenticationHandshakes.remove(peerNodeAddress);
             }
         } else {
             log.info("We got an incoming AuthenticationRequest but we are already authenticated to peer {}.\n" +
                     "That should not happen. " +
-                    "We reject the request.", peerAddress);
-            rejectAuthenticationRequest(peerAddress);
+                    "We reject the request.", peerNodeAddress);
+            rejectAuthenticationRequest(peerNodeAddress);
 
-            if (authenticationHandshakes.containsKey(peerAddress)) {
-                authenticationHandshakes.get(peerAddress).cancel(peerAddress);
-                authenticationHandshakes.remove(peerAddress);
+            if (authenticationHandshakes.containsKey(peerNodeAddress)) {
+                authenticationHandshakes.get(peerNodeAddress).cancel(peerNodeAddress);
+                authenticationHandshakes.remove(peerNodeAddress);
             }
         }
     }
 
-    private void rejectAuthenticationRequest(Address peerAddress) {
+    private void rejectAuthenticationRequest(NodeAddress peerNodeAddress) {
         Log.traceCall();
-        networkNode.sendMessage(peerAddress, new AuthenticationRejection(getMyAddress()));
+        networkNode.sendMessage(peerNodeAddress, new AuthenticationRejection(getMyAddress()));
     }
 
 
@@ -294,45 +294,45 @@ public class PeerManager implements MessageListener, ConnectionListener {
     // Authentication to seed node
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setSeedNodeAddresses(Set<Address> seedNodeAddresses) {
-        seedNodeAddressesOptional = Optional.of(seedNodeAddresses);
+    public void setSeedNodeAddresses(Set<NodeAddress> seedNodeNodeAddresses) {
+        seedNodeAddressesOptional = Optional.of(seedNodeNodeAddresses);
         checkArgument(!seedNodeAddressesOptional.get().isEmpty(),
                 "seedNodeAddresses must not be empty");
     }
 
-    public void authenticateToSeedNode(Address peerAddress) {
+    public void authenticateToSeedNode(NodeAddress peerNodeAddress) {
         Log.traceCall();
 
         checkArgument(seedNodeAddressesOptional.isPresent(),
                 "seedNodeAddresses must be set before calling authenticateToSeedNode");
-        remainingSeedNodes.remove(peerAddress);
+        remainingSeedNodes.remove(peerNodeAddress);
         remainingSeedNodes.addAll(seedNodeAddressesOptional.get());
-        authenticateToFirstSeedNode(peerAddress);
+        authenticateToFirstSeedNode(peerNodeAddress);
 
         startCheckSeedNodeConnectionTask();
     }
 
-    protected void authenticateToFirstSeedNode(Address peerAddress) {
+    protected void authenticateToFirstSeedNode(NodeAddress peerNodeAddress) {
         Log.traceCall();
         if (!enoughConnections()) {
-            if (!authenticationHandshakes.containsKey(peerAddress)) {
-                log.info("We try to authenticate to seed node {}.", peerAddress);
-                authenticate(peerAddress, new FutureCallback<Connection>() {
+            if (!authenticationHandshakes.containsKey(peerNodeAddress)) {
+                log.info("We try to authenticate to seed node {}.", peerNodeAddress);
+                authenticate(peerNodeAddress, new FutureCallback<Connection>() {
                     @Override
                     public void onSuccess(Connection connection) {
                         log.info("We got our first seed node authenticated. " +
                                 "We try to authenticate to reported peers.");
-                        handleAuthenticationSuccess(connection, peerAddress);
+                        handleAuthenticationSuccess(connection, peerNodeAddress);
                         onFirstSeedNodeAuthenticated();
                     }
 
                     @Override
                     public void onFailure(@NotNull Throwable throwable) {
-                        log.info("Authentication to " + peerAddress + " failed at authenticateToFirstSeedNode." +
+                        log.info("Authentication to " + peerNodeAddress + " failed at authenticateToFirstSeedNode." +
                                 "\nThat is expected if seed node is offline." +
                                 "\nException:" + throwable.toString());
-                        handleAuthenticationFailure(peerAddress, throwable);
-                        Optional<Address> seedNodeOptional = getAndRemoveNotAuthenticatingSeedNode();
+                        handleAuthenticationFailure(peerNodeAddress, throwable);
+                        Optional<NodeAddress> seedNodeOptional = getAndRemoveNotAuthenticatingSeedNode();
                         if (seedNodeOptional.isPresent()) {
                             log.info("We try another random seed node for authenticateToFirstSeedNode.");
                             authenticateToFirstSeedNode(seedNodeOptional.get());
@@ -367,28 +367,28 @@ public class PeerManager implements MessageListener, ConnectionListener {
         }
 
         if (!enoughConnections()) {
-            Optional<Address> seedNodeOptional = getAndRemoveNotAuthenticatingSeedNode();
+            Optional<NodeAddress> seedNodeOptional = getAndRemoveNotAuthenticatingSeedNode();
             if (seedNodeOptional.isPresent()) {
-                Address peerAddress = seedNodeOptional.get();
-                if (!authenticationHandshakes.containsKey(peerAddress)) {
-                    log.info("We try to authenticate to a randomly selected seed node {}.", peerAddress);
-                    authenticate(peerAddress, new FutureCallback<Connection>() {
+                NodeAddress peerNodeAddress = seedNodeOptional.get();
+                if (!authenticationHandshakes.containsKey(peerNodeAddress)) {
+                    log.info("We try to authenticate to a randomly selected seed node {}.", peerNodeAddress);
+                    authenticate(peerNodeAddress, new FutureCallback<Connection>() {
                                 @Override
                                 public void onSuccess(Connection connection) {
                                     log.info("We got a seed node authenticated. " +
                                             "We try to authenticate to reported peers.");
 
-                                    handleAuthenticationSuccess(connection, peerAddress);
+                                    handleAuthenticationSuccess(connection, peerNodeAddress);
                                     onRemainingSeedNodeAuthenticated();
                                 }
 
                                 @Override
                                 public void onFailure(@NotNull Throwable throwable) {
-                                    log.info("Authentication to " + peerAddress + " failed at authenticateToRemainingSeedNode." +
+                                    log.info("Authentication to " + peerNodeAddress + " failed at authenticateToRemainingSeedNode." +
                                             "\nThat is expected if the seed node is offline." +
                                             "\nException:" + throwable.toString());
 
-                                    handleAuthenticationFailure(peerAddress, throwable);
+                                    handleAuthenticationFailure(peerNodeAddress, throwable);
 
                                     log.info("We try authenticateToRemainingSeedNode again.");
                                     authenticateToRemainingSeedNode();
@@ -462,7 +462,7 @@ public class PeerManager implements MessageListener, ConnectionListener {
         resetRemainingSeedNodes();
         if (!remainingSeedNodes.isEmpty()) {
             if (seedNodeAddressesOptional.isPresent()) {
-                Optional<Address> authSeedNodeOptional = authenticatedPeers.keySet().stream()
+                Optional<NodeAddress> authSeedNodeOptional = authenticatedPeers.keySet().stream()
                         .filter(e -> seedNodeAddressesOptional.get().contains(e)).findAny();
                 if (authSeedNodeOptional.isPresent()) {
                     log.info("We are at least to one seed node connected.");
@@ -503,26 +503,26 @@ public class PeerManager implements MessageListener, ConnectionListener {
             if (reportedPeersAvailable()) {
                 Optional<ReportedPeer> reportedPeer = getAndRemoveNotAuthenticatingReportedPeer();
                 if (reportedPeer.isPresent()) {
-                    Address peerAddress = reportedPeer.get().address;
-                    if (!authenticationHandshakes.containsKey(peerAddress)) {
-                        log.info("We try to authenticate to peer {}.", peerAddress);
-                        authenticate(peerAddress, new FutureCallback<Connection>() {
+                    NodeAddress peerNodeAddress = reportedPeer.get().nodeAddress;
+                    if (!authenticationHandshakes.containsKey(peerNodeAddress)) {
+                        log.info("We try to authenticate to peer {}.", peerNodeAddress);
+                        authenticate(peerNodeAddress, new FutureCallback<Connection>() {
                             @Override
                             public void onSuccess(Connection connection) {
                                 log.info("We got a peer authenticated. " +
                                         "We try if there are more reported peers available to authenticate.");
 
-                                handleAuthenticationSuccess(connection, peerAddress);
+                                handleAuthenticationSuccess(connection, peerNodeAddress);
                                 authenticateToRemainingReportedPeer();
                             }
 
                             @Override
                             public void onFailure(@NotNull Throwable throwable) {
-                                log.info("Authentication to " + peerAddress + " failed at authenticateToRemainingReportedPeer." +
+                                log.info("Authentication to " + peerNodeAddress + " failed at authenticateToRemainingReportedPeer." +
                                         "\nThat is expected if the peer is offline." +
                                         "\nException:" + throwable.toString());
 
-                                handleAuthenticationFailure(peerAddress, throwable);
+                                handleAuthenticationFailure(peerNodeAddress, throwable);
 
                                 log.info("We try another random seed node for authentication.");
                                 authenticateToRemainingReportedPeer();
@@ -584,18 +584,18 @@ public class PeerManager implements MessageListener, ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Priority is set when we receive a decrypted mail message as those are used for direct messages
-    public void authenticateToDirectMessagePeer(Address peerAddress,
+    public void authenticateToDirectMessagePeer(NodeAddress peerNodeAddress,
                                                 @Nullable Runnable completeHandler,
                                                 @Nullable Runnable faultHandler) {
-        Log.traceCall(peerAddress.getFullAddress());
+        Log.traceCall(peerNodeAddress.getFullAddress());
 
-        if (authenticatedPeers.containsKey(peerAddress)) {
-            log.warn("We have that peer already authenticated. That should never happen. peerAddress={}", peerAddress);
+        if (authenticatedPeers.containsKey(peerNodeAddress)) {
+            log.warn("We have that peer already authenticated. That should never happen. peerAddress={}", peerNodeAddress);
             if (completeHandler != null)
                 completeHandler.run();
-        } else if (authenticationHandshakes.containsKey(peerAddress)) {
-            log.info("We are in the process to authenticate to that peer. peerAddress={}", peerAddress);
-            Optional<SettableFuture<Connection>> resultFutureOptional = authenticationHandshakes.get(peerAddress).getResultFutureOptional();
+        } else if (authenticationHandshakes.containsKey(peerNodeAddress)) {
+            log.info("We are in the process to authenticate to that peer. peerAddress={}", peerNodeAddress);
+            Optional<SettableFuture<Connection>> resultFutureOptional = authenticationHandshakes.get(peerNodeAddress).getResultFutureOptional();
             if (resultFutureOptional.isPresent()) {
                 Futures.addCallback(resultFutureOptional.get(), new FutureCallback<Connection>() {
                     @Override
@@ -612,29 +612,29 @@ public class PeerManager implements MessageListener, ConnectionListener {
                 });
             } else {
                 log.warn("We are in the process to authenticate to that peer but the future object is not set. " +
-                        "That should not happen. peerAddress={}", peerAddress);
+                        "That should not happen. peerAddress={}", peerNodeAddress);
                 if (faultHandler != null)
                     faultHandler.run();
             }
         } else {
-            log.info("We try to authenticate to peer {} for sending a private message.", peerAddress);
+            log.info("We try to authenticate to peer {} for sending a private message.", peerNodeAddress);
 
-            authenticate(peerAddress, new FutureCallback<Connection>() {
+            authenticate(peerNodeAddress, new FutureCallback<Connection>() {
                 @Override
                 public void onSuccess(Connection connection) {
                     log.info("We got a new peer for sending a private message authenticated.");
 
-                    handleAuthenticationSuccess(connection, peerAddress);
+                    handleAuthenticationSuccess(connection, peerNodeAddress);
                     if (completeHandler != null)
                         completeHandler.run();
                 }
 
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
-                    log.error("Authentication to " + peerAddress + " for sending a private message failed at authenticateToDirectMessagePeer." +
+                    log.error("Authentication to " + peerNodeAddress + " for sending a private message failed at authenticateToDirectMessagePeer." +
                             "\nSeems that the peer is offline." +
                             "\nException:" + throwable.toString());
-                    handleAuthenticationFailure(peerAddress, throwable);
+                    handleAuthenticationFailure(peerNodeAddress, throwable);
                     if (faultHandler != null)
                         faultHandler.run();
                 }
@@ -647,38 +647,38 @@ public class PeerManager implements MessageListener, ConnectionListener {
     // Authentication private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void authenticate(Address peerAddress, FutureCallback<Connection> futureCallback) {
-        Log.traceCall(peerAddress.getFullAddress());
-        checkArgument(!authenticationHandshakes.containsKey(peerAddress),
-                "An authentication handshake is already created for that peerAddress (" + peerAddress + ")");
-        log.info("We create an AuthenticationHandshake to authenticate to peer {}.", peerAddress);
+    private void authenticate(NodeAddress peerNodeAddress, FutureCallback<Connection> futureCallback) {
+        Log.traceCall(peerNodeAddress.getFullAddress());
+        checkArgument(!authenticationHandshakes.containsKey(peerNodeAddress),
+                "An authentication handshake is already created for that peerAddress (" + peerNodeAddress + ")");
+        log.info("We create an AuthenticationHandshake to authenticate to peer {}.", peerNodeAddress);
         AuthenticationHandshake authenticationHandshake = new AuthenticationHandshake(networkNode,
                 getMyAddress(),
-                peerAddress,
+                peerNodeAddress,
                 () -> getAuthenticatedAndReportedPeers(),
                 (newReportedPeers, connection) -> addToReportedPeers(newReportedPeers, connection)
         );
-        authenticationHandshakes.put(peerAddress, authenticationHandshake);
+        authenticationHandshakes.put(peerNodeAddress, authenticationHandshake);
         SettableFuture<Connection> authenticationFuture = authenticationHandshake.requestAuthentication();
         Futures.addCallback(authenticationFuture, futureCallback);
     }
 
-    private void handleAuthenticationSuccess(Connection connection, Address peerAddress) {
-        Log.traceCall(peerAddress.getFullAddress());
+    private void handleAuthenticationSuccess(Connection connection, NodeAddress peerNodeAddress) {
+        Log.traceCall(peerNodeAddress.getFullAddress());
 
         log.info("\n\n############################################################\n" +
                 "We are authenticated to:" +
                 "\nconnection=" + connection.getUid()
                 + "\nmyAddress=" + getMyAddress()
-                + "\npeerAddress= " + peerAddress
+                + "\npeerAddress= " + peerNodeAddress
                 + "\n############################################################\n");
 
-        removeFromAuthenticationHandshakes(peerAddress);
-        connection.setPeerAddress(peerAddress);
+        removeFromAuthenticationHandshakes(peerNodeAddress);
+        connection.setPeerAddress(peerNodeAddress);
         connection.setAuthenticated();
-        authenticatedPeers.put(peerAddress, new Peer(connection, peerAddress));
-        removeFromReportedPeers(peerAddress);
-        authenticationListeners.stream().forEach(e -> e.onPeerAuthenticated(peerAddress, connection));
+        authenticatedPeers.put(peerNodeAddress, new Peer(connection, peerNodeAddress));
+        removeFromReportedPeers(peerNodeAddress);
+        authenticationListeners.stream().forEach(e -> e.onPeerAuthenticated(peerNodeAddress, connection));
 
         printAuthenticatedPeers();
 
@@ -686,40 +686,40 @@ public class PeerManager implements MessageListener, ConnectionListener {
         checkIfConnectedPeersExceeds(MAX_CONNECTIONS_LOW_PRIORITY + 2);
     }
 
-    void handleAuthenticationFailure(@Nullable Address peerAddress, Throwable throwable) {
+    void handleAuthenticationFailure(@Nullable NodeAddress peerNodeAddress, Throwable throwable) {
         if (throwable instanceof AuthenticationException)
-            removeFromAuthenticationHandshakes(peerAddress);
+            removeFromAuthenticationHandshakes(peerNodeAddress);
         else
-            removePeer(peerAddress);
+            removePeer(peerNodeAddress);
     }
 
-    void removePeer(@Nullable Address peerAddress) {
-        Log.traceCall("peerAddress=" + peerAddress);
-        if (peerAddress != null) {
-            removeFromAuthenticationHandshakes(peerAddress);
-            removeFromReportedPeers(peerAddress);
-            removeFromAuthenticatedPeers(peerAddress);
-            removeFromPersistedPeers(peerAddress);
+    void removePeer(@Nullable NodeAddress peerNodeAddress) {
+        Log.traceCall("peerAddress=" + peerNodeAddress);
+        if (peerNodeAddress != null) {
+            removeFromAuthenticationHandshakes(peerNodeAddress);
+            removeFromReportedPeers(peerNodeAddress);
+            removeFromAuthenticatedPeers(peerNodeAddress);
+            removeFromPersistedPeers(peerNodeAddress);
         }
     }
 
-    private void removeFromReportedPeers(Address peerAddress) {
-        reportedPeers.remove(new ReportedPeer(peerAddress));
+    private void removeFromReportedPeers(NodeAddress peerNodeAddress) {
+        reportedPeers.remove(new ReportedPeer(peerNodeAddress));
     }
 
-    private void removeFromAuthenticationHandshakes(Address peerAddress) {
-        if (authenticationHandshakes.containsKey(peerAddress))
-            authenticationHandshakes.remove(peerAddress);
+    private void removeFromAuthenticationHandshakes(NodeAddress peerNodeAddress) {
+        if (authenticationHandshakes.containsKey(peerNodeAddress))
+            authenticationHandshakes.remove(peerNodeAddress);
     }
 
-    private void removeFromAuthenticatedPeers(Address peerAddress) {
-        if (authenticatedPeers.containsKey(peerAddress))
-            authenticatedPeers.remove(peerAddress);
+    private void removeFromAuthenticatedPeers(NodeAddress peerNodeAddress) {
+        if (authenticatedPeers.containsKey(peerNodeAddress))
+            authenticatedPeers.remove(peerNodeAddress);
         printAuthenticatedPeers();
     }
 
-    private void removeFromPersistedPeers(Address peerAddress) {
-        ReportedPeer reportedPeer = new ReportedPeer(peerAddress);
+    private void removeFromPersistedPeers(NodeAddress peerNodeAddress) {
+        ReportedPeer reportedPeer = new ReportedPeer(peerNodeAddress);
         if (persistedPeers.contains(reportedPeer)) {
             persistedPeers.remove(reportedPeer);
 
@@ -740,7 +740,7 @@ public class PeerManager implements MessageListener, ConnectionListener {
     }
 
     private boolean remainingSeedNodesAvailable() {
-        List<Address> list = new ArrayList<>(remainingSeedNodes);
+        List<NodeAddress> list = new ArrayList<>(remainingSeedNodes);
         authenticationHandshakes.keySet().stream().forEach(e -> list.remove(e));
         authenticatedPeers.keySet().stream().forEach(e -> list.remove(e));
         return !list.isEmpty();
@@ -824,15 +824,15 @@ public class PeerManager implements MessageListener, ConnectionListener {
     public Set<ReportedPeer> getAuthenticatedAndReportedPeers() {
         Set<ReportedPeer> all = new HashSet<>(reportedPeers);
         Set<ReportedPeer> authenticated = authenticatedPeers.values().stream()
-                .filter(e -> e.address != null)
-                .filter(e -> !seedNodeAddressesOptional.isPresent() || !seedNodeAddressesOptional.get().contains(e.address))
-                .map(e -> new ReportedPeer(e.address, new Date()))
+                .filter(e -> e.nodeAddress != null)
+                .filter(e -> !seedNodeAddressesOptional.isPresent() || !seedNodeAddressesOptional.get().contains(e.nodeAddress))
+                .map(e -> new ReportedPeer(e.nodeAddress, new Date()))
                 .collect(Collectors.toSet());
         all.addAll(authenticated);
         return all;
     }
 
-    public Map<Address, Peer> getAuthenticatedPeers() {
+    public Map<NodeAddress, Peer> getAuthenticatedPeers() {
         return authenticatedPeers;
     }
 
@@ -840,8 +840,8 @@ public class PeerManager implements MessageListener, ConnectionListener {
         return persistedPeers;
     }
 
-    public boolean isInAuthenticationProcess(Address address) {
-        return authenticationHandshakes.containsKey(address);
+    public boolean isInAuthenticationProcess(NodeAddress nodeAddress) {
+        return authenticationHandshakes.containsKey(nodeAddress);
     }
 
 
@@ -859,18 +859,18 @@ public class PeerManager implements MessageListener, ConnectionListener {
         } else {
             // In case we have one of the peers already we adjust the lastActivityDate by adjusting the date to the mid 
             // of the lastActivityDate of our already stored peer and the reported one
-            Map<Address, ReportedPeer> reportedPeersMap = reportedPeers.stream()
-                    .collect(Collectors.toMap(e -> e.address, Function.identity()));
+            Map<NodeAddress, ReportedPeer> reportedPeersMap = reportedPeers.stream()
+                    .collect(Collectors.toMap(e -> e.nodeAddress, Function.identity()));
             Set<ReportedPeer> adjustedReportedPeers = new HashSet<>();
             reportedPeersToAdd.stream()
-                    .filter(e -> !e.address.equals(getMyAddress()))
-                    .filter(e -> !seedNodeAddressesOptional.isPresent() || !seedNodeAddressesOptional.get().contains(e.address))
-                    .filter(e -> !authenticatedPeers.containsKey(e.address))
+                    .filter(e -> !e.nodeAddress.equals(getMyAddress()))
+                    .filter(e -> !seedNodeAddressesOptional.isPresent() || !seedNodeAddressesOptional.get().contains(e.nodeAddress))
+                    .filter(e -> !authenticatedPeers.containsKey(e.nodeAddress))
                     .forEach(e -> {
-                        if (reportedPeersMap.containsKey(e.address)) {
+                        if (reportedPeersMap.containsKey(e.nodeAddress)) {
                             long adjustedTime = (e.lastActivityDate.getTime() +
-                                    reportedPeersMap.get(e.address).lastActivityDate.getTime()) / 2;
-                            adjustedReportedPeers.add(new ReportedPeer(e.address,
+                                    reportedPeersMap.get(e.nodeAddress).lastActivityDate.getTime()) / 2;
+                            adjustedReportedPeers.add(new ReportedPeer(e.nodeAddress,
                                     new Date(adjustedTime)));
                         } else {
                             adjustedReportedPeers.add(e);
@@ -927,8 +927,8 @@ public class PeerManager implements MessageListener, ConnectionListener {
     }
 
     @Nullable
-    Address getMyAddress() {
-        return networkNode.getAddress();
+    NodeAddress getMyAddress() {
+        return networkNode.getNodeAddress();
     }
 
     private ReportedPeer getAndRemoveRandomReportedPeer(List<ReportedPeer> list) {
@@ -942,20 +942,20 @@ public class PeerManager implements MessageListener, ConnectionListener {
         authenticatedPeers.keySet().stream().forEach(e -> list.remove(new ReportedPeer(e)));
         if (!list.isEmpty()) {
             ReportedPeer reportedPeer = getAndRemoveRandomReportedPeer(list);
-            removeFromReportedPeers(reportedPeer.address);
+            removeFromReportedPeers(reportedPeer.nodeAddress);
             return Optional.of(reportedPeer);
         } else {
             return Optional.empty();
         }
     }
 
-    protected Address getAndRemoveRandomAddress(List<Address> list) {
+    protected NodeAddress getAndRemoveRandomAddress(List<NodeAddress> list) {
         checkArgument(!list.isEmpty(), "List must not be empty");
         return list.remove(new Random().nextInt(list.size()));
     }
 
 
-    private Optional<Address> getAndRemoveNotAuthenticatingSeedNode() {
+    private Optional<NodeAddress> getAndRemoveNotAuthenticatingSeedNode() {
         authenticationHandshakes.keySet().stream().forEach(e -> remainingSeedNodes.remove(e));
         authenticatedPeers.keySet().stream().forEach(e -> remainingSeedNodes.remove(e));
         if (remainingSeedNodesAvailable())
@@ -977,7 +977,7 @@ public class PeerManager implements MessageListener, ConnectionListener {
         if (!authenticatedPeers.isEmpty()) {
             StringBuilder result = new StringBuilder("\n\n------------------------------------------------------------\n" +
                     "Authenticated peers for node " + getMyAddress() + ":");
-            authenticatedPeers.values().stream().forEach(e -> result.append("\n").append(e.address));
+            authenticatedPeers.values().stream().forEach(e -> result.append("\n").append(e.nodeAddress));
             result.append("\n------------------------------------------------------------\n");
             log.info(result.toString());
         }

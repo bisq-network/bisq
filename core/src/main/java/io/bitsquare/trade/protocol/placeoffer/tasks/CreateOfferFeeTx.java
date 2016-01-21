@@ -21,7 +21,7 @@ import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.trade.protocol.trade.ArbitrationSelectionRule;
 import org.bitcoinj.core.Transaction;
@@ -40,9 +40,9 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
         try {
             runInterceptHook();
 
-            Address selectedArbitratorAddress = ArbitrationSelectionRule.select(model.user.getAcceptedArbitratorAddresses(), model.offer);
-            log.debug("selectedArbitratorAddress " + selectedArbitratorAddress);
-            Arbitrator selectedArbitrator = model.user.getAcceptedArbitratorByAddress(selectedArbitratorAddress);
+            NodeAddress selectedArbitratorNodeAddress = ArbitrationSelectionRule.select(model.user.getAcceptedArbitratorAddresses(), model.offer);
+            log.debug("selectedArbitratorAddress " + selectedArbitratorNodeAddress);
+            Arbitrator selectedArbitrator = model.user.getAcceptedArbitratorByAddress(selectedArbitratorNodeAddress);
             Transaction transaction = model.tradeWalletService.createTradingFeeTx(
                     model.walletService.getAddressEntryByOfferId(model.offer.getId()),
                     FeePolicy.getCreateOfferFee(),

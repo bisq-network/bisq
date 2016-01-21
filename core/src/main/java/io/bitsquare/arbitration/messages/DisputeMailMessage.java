@@ -18,7 +18,7 @@
 package io.bitsquare.arbitration.messages;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import org.slf4j.Logger;
@@ -47,17 +47,17 @@ public final class DisputeMailMessage extends DisputeMessage {
     private boolean arrived;
     private boolean storedInMailbox;
     private boolean isSystemMessage;
-    private final Address myAddress;
+    private final NodeAddress myNodeAddress;
 
     transient private BooleanProperty arrivedProperty = new SimpleBooleanProperty();
     transient private BooleanProperty storedInMailboxProperty = new SimpleBooleanProperty();
 
-    public DisputeMailMessage(String tradeId, int traderId, boolean senderIsTrader, String message, Address myAddress) {
+    public DisputeMailMessage(String tradeId, int traderId, boolean senderIsTrader, String message, NodeAddress myNodeAddress) {
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.senderIsTrader = senderIsTrader;
         this.message = message;
-        this.myAddress = myAddress;
+        this.myNodeAddress = myNodeAddress;
         date = new Date().getTime();
     }
 
@@ -72,8 +72,8 @@ public final class DisputeMailMessage extends DisputeMessage {
     }
 
     @Override
-    public Address getSenderAddress() {
-        return myAddress;
+    public NodeAddress getSenderNodeAddress() {
+        return myNodeAddress;
     }
 
     public void addAttachment(Attachment attachment) {
@@ -150,7 +150,7 @@ public final class DisputeMailMessage extends DisputeMessage {
         if (tradeId != null ? !tradeId.equals(that.tradeId) : that.tradeId != null) return false;
         if (message != null ? !message.equals(that.message) : that.message != null) return false;
         if (attachments != null ? !attachments.equals(that.attachments) : that.attachments != null) return false;
-        return !(myAddress != null ? !myAddress.equals(that.myAddress) : that.myAddress != null);
+        return !(myNodeAddress != null ? !myNodeAddress.equals(that.myNodeAddress) : that.myNodeAddress != null);
 
     }
 
@@ -165,7 +165,7 @@ public final class DisputeMailMessage extends DisputeMessage {
         result = 31 * result + (arrived ? 1 : 0);
         result = 31 * result + (storedInMailbox ? 1 : 0);
         result = 31 * result + (isSystemMessage ? 1 : 0);
-        result = 31 * result + (myAddress != null ? myAddress.hashCode() : 0);
+        result = 31 * result + (myNodeAddress != null ? myNodeAddress.hashCode() : 0);
         return result;
     }
 

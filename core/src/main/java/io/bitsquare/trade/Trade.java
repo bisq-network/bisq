@@ -28,7 +28,7 @@ import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.taskrunner.Model;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import io.bitsquare.storage.Storage;
@@ -127,7 +127,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
 
     // Mutable
     private Coin tradeAmount;
-    private Address tradingPeerAddress;
+    private NodeAddress tradingPeerNodeAddress;
     transient private ObjectProperty<Coin> tradeAmountProperty;
     transient private ObjectProperty<Fiat> tradeVolumeProperty;
 
@@ -166,7 +166,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     private long lockTimeAsBlockHeight;
     private int openDisputeTimeAsBlockHeight;
     private int checkPaymentTimeAsBlockHeight;
-    private Address arbitratorAddress;
+    private NodeAddress arbitratorNodeAddress;
     private String takerPaymentAccountId;
     private boolean halfTradePeriodReachedWarningDisplayed;
     private boolean tradePeriodOverWarningDisplayed;
@@ -192,12 +192,12 @@ abstract public class Trade implements Tradable, Model, Serializable {
     }
 
     // taker
-    protected Trade(Offer offer, Coin tradeAmount, Address tradingPeerAddress,
+    protected Trade(Offer offer, Coin tradeAmount, NodeAddress tradingPeerNodeAddress,
                     Storage<? extends TradableList> storage) {
 
         this(offer, storage);
         this.tradeAmount = tradeAmount;
-        this.tradingPeerAddress = tradingPeerAddress;
+        this.tradingPeerNodeAddress = tradingPeerNodeAddress;
         tradeAmountProperty.set(tradeAmount);
         tradeVolumeProperty.set(getTradeVolume());
     }
@@ -417,16 +417,16 @@ abstract public class Trade implements Tradable, Model, Serializable {
         this.takeOfferDate = takeOfferDate;
     }
 
-    public void setTradingPeerAddress(Address tradingPeerAddress) {
-        if (tradingPeerAddress == null)
+    public void setTradingPeerNodeAddress(NodeAddress tradingPeerNodeAddress) {
+        if (tradingPeerNodeAddress == null)
             log.error("tradingPeerAddress=null");
         else
-            this.tradingPeerAddress = tradingPeerAddress;
+            this.tradingPeerNodeAddress = tradingPeerNodeAddress;
     }
 
     @Nullable
-    public Address getTradingPeerAddress() {
-        return tradingPeerAddress;
+    public NodeAddress getTradingPeerNodeAddress() {
+        return tradingPeerNodeAddress;
     }
 
     public void setTradeAmount(Coin tradeAmount) {
@@ -519,12 +519,12 @@ abstract public class Trade implements Tradable, Model, Serializable {
         return errorMessageProperty;
     }
 
-    public Address getArbitratorAddress() {
-        return arbitratorAddress;
+    public NodeAddress getArbitratorNodeAddress() {
+        return arbitratorNodeAddress;
     }
 
-    public void setArbitratorAddress(Address arbitratorAddress) {
-        this.arbitratorAddress = arbitratorAddress;
+    public void setArbitratorNodeAddress(NodeAddress arbitratorNodeAddress) {
+        this.arbitratorNodeAddress = arbitratorNodeAddress;
     }
 
     public String getTakerPaymentAccountId() {
@@ -610,7 +610,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     public String toString() {
         return "Trade{" +
                 "tradeAmount=" + tradeAmount +
-                ", tradingPeer=" + tradingPeerAddress +
+                ", tradingPeer=" + tradingPeerNodeAddress +
                 ", tradeAmountProperty=" + tradeAmountProperty +
                 ", tradeVolumeProperty=" + tradeVolumeProperty +
                 ", processStateProperty=" + processStateProperty +

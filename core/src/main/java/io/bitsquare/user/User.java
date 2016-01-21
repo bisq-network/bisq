@@ -23,7 +23,7 @@ import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.TradeCurrency;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.storage.Storage;
 import javafx.beans.property.ObjectProperty;
@@ -250,8 +250,8 @@ public class User implements Serializable {
         return acceptedArbitrators;
     }
 
-    public List<Address> getAcceptedArbitratorAddresses() {
-        return acceptedArbitrators.stream().map(Arbitrator::getArbitratorAddress).collect(Collectors.toList());
+    public List<NodeAddress> getAcceptedArbitratorAddresses() {
+        return acceptedArbitrators.stream().map(Arbitrator::getArbitratorNodeAddress).collect(Collectors.toList());
     }
 
     public List<String> getAcceptedLanguageLocaleCodes() {
@@ -269,8 +269,8 @@ public class User implements Serializable {
         return receiverAddresses;
     }*/
 
-    public Arbitrator getAcceptedArbitratorByAddress(Address address) {
-        Optional<Arbitrator> arbitratorOptional = acceptedArbitrators.stream().filter(e -> e.getArbitratorAddress().equals(address)).findFirst();
+    public Arbitrator getAcceptedArbitratorByAddress(NodeAddress nodeAddress) {
+        Optional<Arbitrator> arbitratorOptional = acceptedArbitrators.stream().filter(e -> e.getArbitratorNodeAddress().equals(nodeAddress)).findFirst();
         if (arbitratorOptional.isPresent())
             return arbitratorOptional.get();
         else

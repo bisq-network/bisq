@@ -1,16 +1,16 @@
 package io.bitsquare.p2p.peers.messages.auth;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.NodeAddress;
 
 public abstract class AuthenticationMessage implements Message {
     private final int networkId = Version.getNetworkId();
 
-    public final Address senderAddress;
+    public final NodeAddress senderNodeAddress;
 
-    public AuthenticationMessage(Address senderAddress) {
-        this.senderAddress = senderAddress;
+    public AuthenticationMessage(NodeAddress senderNodeAddress) {
+        this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
@@ -20,7 +20,7 @@ public abstract class AuthenticationMessage implements Message {
 
     @Override
     public String toString() {
-        return ", address=" + (senderAddress != null ? senderAddress.toString() : "") +
+        return ", address=" + (senderNodeAddress != null ? senderNodeAddress.toString() : "") +
                 ", networkId=" + networkId +
                 '}';
     }

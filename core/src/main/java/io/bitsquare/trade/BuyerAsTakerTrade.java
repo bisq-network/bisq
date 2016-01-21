@@ -19,7 +19,7 @@ package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.BuyerAsTakerProtocol;
@@ -46,8 +46,8 @@ public class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade, Seriali
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BuyerAsTakerTrade(Offer offer, Coin tradeAmount, Address tradingPeerAddress, Storage<? extends TradableList> storage) {
-        super(offer, tradeAmount, tradingPeerAddress, storage);
+    public BuyerAsTakerTrade(Offer offer, Coin tradeAmount, NodeAddress tradingPeerNodeAddress, Storage<? extends TradableList> storage) {
+        super(offer, tradeAmount, tradingPeerNodeAddress, storage);
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {

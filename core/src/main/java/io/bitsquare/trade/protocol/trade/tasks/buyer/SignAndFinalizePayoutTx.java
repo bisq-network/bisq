@@ -53,7 +53,7 @@ public class SignAndFinalizePayoutTx extends TradeTask {
                     trade.getLockTimeAsBlockHeight(),
                     processModel.getTradeWalletPubKey(),
                     processModel.tradingPeer.getTradeWalletPubKey(),
-                    processModel.getArbitratorPubKey(trade.getArbitratorAddress())
+                    processModel.getArbitratorPubKey(trade.getArbitratorNodeAddress())
             );
 
             trade.setPayoutTx(transaction);

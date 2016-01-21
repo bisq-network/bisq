@@ -24,9 +24,9 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.FirstPeerAuthenticatedListener;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.SendMailMessageListener;
 import io.bitsquare.storage.Storage;
@@ -287,7 +287,7 @@ public class OpenOfferManager {
     // Offer Availability
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handleOfferAvailabilityRequest(OfferAvailabilityRequest message, Address sender) {
+    private void handleOfferAvailabilityRequest(OfferAvailabilityRequest message, NodeAddress sender) {
         log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + sender);
         try {
             nonEmptyStringOf(message.offerId);

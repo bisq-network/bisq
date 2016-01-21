@@ -62,25 +62,25 @@ public class TestUtils {
         return result;
     }
 
-    public static SeedNode getAndStartSeedNode(int port, boolean useLocalhost, Set<Address> seedNodes) throws InterruptedException {
+    public static SeedNode getAndStartSeedNode(int port, boolean useLocalhost, Set<NodeAddress> seedNodes) throws InterruptedException {
         SeedNode seedNode;
 
         if (useLocalhost) {
-            seedNodes.add(new Address("localhost:8001"));
-            seedNodes.add(new Address("localhost:8002"));
-            seedNodes.add(new Address("localhost:8003"));
+            seedNodes.add(new NodeAddress("localhost:8001"));
+            seedNodes.add(new NodeAddress("localhost:8002"));
+            seedNodes.add(new NodeAddress("localhost:8003"));
             sleepTime = 100;
             seedNode = new SeedNode("test_dummy_dir");
         } else {
-            seedNodes.add(new Address("3omjuxn7z73pxoee.onion:8001"));
-            seedNodes.add(new Address("j24fxqyghjetgpdx.onion:8002"));
-            seedNodes.add(new Address("45367tl6unwec6kw.onion:8003"));
+            seedNodes.add(new NodeAddress("3omjuxn7z73pxoee.onion:8001"));
+            seedNodes.add(new NodeAddress("j24fxqyghjetgpdx.onion:8002"));
+            seedNodes.add(new NodeAddress("45367tl6unwec6kw.onion:8003"));
             sleepTime = 10000;
             seedNode = new SeedNode("test_dummy_dir");
         }
 
         CountDownLatch latch = new CountDownLatch(1);
-        seedNode.createAndStartP2PService(new Address("localhost", port), useLocalhost, 2, true,
+        seedNode.createAndStartP2PService(new NodeAddress("localhost", port), useLocalhost, 2, true,
                 seedNodes, new P2PServiceListener() {
                     @Override
                     public void onRequestingDataCompleted() {
@@ -117,15 +117,15 @@ public class TestUtils {
     }
 
     public static P2PService getAndAuthenticateP2PService(int port, EncryptionService encryptionService, KeyRing keyRing,
-                                                          boolean useLocalhost, Set<Address> seedNodes)
+                                                          boolean useLocalhost, Set<NodeAddress> seedNodes)
             throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
         if (seedNodes != null && !seedNodes.isEmpty()) {
             if (useLocalhost)
-                seedNodesRepository.setLocalhostSeedNodeAddresses(seedNodes);
+                seedNodesRepository.setLocalhostSeedNodeNodeAddresses(seedNodes);
             else
-                seedNodesRepository.setTorSeedNodeAddresses(seedNodes);
+                seedNodesRepository.setTorSeedNodeNodeAddresses(seedNodes);
         }
 
         P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhost,

@@ -19,18 +19,18 @@ package io.bitsquare.arbitration.messages;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.DisputeResult;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 
 public final class DisputeResultMessage extends DisputeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     public final DisputeResult disputeResult;
-    private final Address myAddress;
+    private final NodeAddress myNodeAddress;
 
-    public DisputeResultMessage(DisputeResult disputeResult, Address myAddress) {
+    public DisputeResultMessage(DisputeResult disputeResult, NodeAddress myNodeAddress) {
         this.disputeResult = disputeResult;
-        this.myAddress = myAddress;
+        this.myNodeAddress = myNodeAddress;
     }
 
     @Override
@@ -42,19 +42,19 @@ public final class DisputeResultMessage extends DisputeMessage {
 
         if (disputeResult != null ? !disputeResult.equals(that.disputeResult) : that.disputeResult != null)
             return false;
-        return !(myAddress != null ? !myAddress.equals(that.myAddress) : that.myAddress != null);
+        return !(myNodeAddress != null ? !myNodeAddress.equals(that.myNodeAddress) : that.myNodeAddress != null);
 
     }
 
     @Override
     public int hashCode() {
         int result = disputeResult != null ? disputeResult.hashCode() : 0;
-        result = 31 * result + (myAddress != null ? myAddress.hashCode() : 0);
+        result = 31 * result + (myNodeAddress != null ? myNodeAddress.hashCode() : 0);
         return result;
     }
 
     @Override
-    public Address getSenderAddress() {
-        return myAddress;
+    public NodeAddress getSenderNodeAddress() {
+        return myNodeAddress;
     }
 }

@@ -2,7 +2,7 @@ package io.bitsquare.p2p.peers;
 
 import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.NetworkNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +27,8 @@ public class SeedNodePeerManager extends PeerManager {
         checkArgument(!seedNodeAddressesOptional.get().isEmpty(),
                 "seedNodeAddresses must not be empty");
         remainingSeedNodes.addAll(seedNodeAddressesOptional.get());
-        Address peerAddress = getAndRemoveRandomAddress(remainingSeedNodes);
-        authenticateToFirstSeedNode(peerAddress);
+        NodeAddress peerNodeAddress = getAndRemoveRandomAddress(remainingSeedNodes);
+        authenticateToFirstSeedNode(peerNodeAddress);
 
         startCheckSeedNodeConnectionTask();
     }

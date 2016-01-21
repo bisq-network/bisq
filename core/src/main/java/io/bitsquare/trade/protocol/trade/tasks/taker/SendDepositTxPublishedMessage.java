@@ -42,7 +42,7 @@ public class SendDepositTxPublishedMessage extends TradeTask {
                         processModel.getMyAddress());
 
                 processModel.getP2PService().sendEncryptedMailboxMessage(
-                        trade.getTradingPeerAddress(),
+                        trade.getTradingPeerNodeAddress(),
                         processModel.tradingPeer.getPubKeyRing(),
                         tradeMessage,
                         new SendMailboxMessageListener() {

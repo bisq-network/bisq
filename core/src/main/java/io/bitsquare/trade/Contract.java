@@ -20,7 +20,7 @@ package io.bitsquare.trade;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.JsonExclude;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.offer.Offer;
 import org.bitcoinj.core.Coin;
@@ -41,7 +41,7 @@ public class Contract implements Serializable {
     public final Offer offer;
     private final long tradeAmount;
     public final String takeOfferFeeTxID;
-    public final Address arbitratorAddress;
+    public final NodeAddress arbitratorNodeAddress;
     private final boolean isBuyerOffererAndSellerTaker;
     private final String offererAccountId;
     private final String takerAccountId;
@@ -51,8 +51,8 @@ public class Contract implements Serializable {
     private final PubKeyRing offererPubKeyRing;
     @JsonExclude
     private final PubKeyRing takerPubKeyRing;
-    private final Address buyerAddress;
-    private final Address sellerAddress;
+    private final NodeAddress buyerNodeAddress;
+    private final NodeAddress sellerNodeAddress;
 
 
     private final String offererPayoutAddressString;
@@ -65,9 +65,9 @@ public class Contract implements Serializable {
     public Contract(Offer offer,
                     Coin tradeAmount,
                     String takeOfferFeeTxID,
-                    Address buyerAddress,
-                    Address sellerAddress,
-                    Address arbitratorAddress,
+                    NodeAddress buyerNodeAddress,
+                    NodeAddress sellerNodeAddress,
+                    NodeAddress arbitratorNodeAddress,
                     boolean isBuyerOffererAndSellerTaker,
                     String offererAccountId,
                     String takerAccountId,
@@ -80,11 +80,11 @@ public class Contract implements Serializable {
                     byte[] offererBtcPubKey,
                     byte[] takerBtcPubKey) {
         this.offer = offer;
-        this.buyerAddress = buyerAddress;
-        this.sellerAddress = sellerAddress;
+        this.buyerNodeAddress = buyerNodeAddress;
+        this.sellerNodeAddress = sellerNodeAddress;
         this.tradeAmount = tradeAmount.value;
         this.takeOfferFeeTxID = takeOfferFeeTxID;
-        this.arbitratorAddress = arbitratorAddress;
+        this.arbitratorNodeAddress = arbitratorNodeAddress;
         this.isBuyerOffererAndSellerTaker = isBuyerOffererAndSellerTaker;
         this.offererAccountId = offererAccountId;
         this.takerAccountId = takerAccountId;
@@ -150,13 +150,13 @@ public class Contract implements Serializable {
         return Coin.valueOf(tradeAmount);
     }
 
-    public Address getBuyerAddress() {
-        return buyerAddress;
+    public NodeAddress getBuyerNodeAddress() {
+        return buyerNodeAddress;
     }
 
 
-    public Address getSellerAddress() {
-        return sellerAddress;
+    public NodeAddress getSellerNodeAddress() {
+        return sellerNodeAddress;
     }
 
     @Override
@@ -165,7 +165,7 @@ public class Contract implements Serializable {
                 "offer=" + offer +
                 ", tradeAmount=" + tradeAmount +
                 ", takeOfferFeeTxID='" + takeOfferFeeTxID + '\'' +
-                ", arbitratorAddress=" + arbitratorAddress +
+                ", arbitratorAddress=" + arbitratorNodeAddress +
                 ", isBuyerOffererAndSellerTaker=" + isBuyerOffererAndSellerTaker +
                 ", offererAccountId='" + offererAccountId + '\'' +
                 ", takerAccountId='" + takerAccountId + '\'' +
@@ -173,8 +173,8 @@ public class Contract implements Serializable {
                 ", takerPaymentAccountContractData=" + takerPaymentAccountContractData +
                 ", offererPubKeyRing=" + offererPubKeyRing +
                 ", takerPubKeyRing=" + takerPubKeyRing +
-                ", buyerAddress=" + buyerAddress +
-                ", sellerAddress=" + sellerAddress +
+                ", buyerAddress=" + buyerNodeAddress +
+                ", sellerAddress=" + sellerNodeAddress +
                 ", offererPayoutAddressString='" + offererPayoutAddressString + '\'' +
                 ", takerPayoutAddressString='" + takerPayoutAddressString + '\'' +
                 ", offererBtcPubKey=" + Arrays.toString(offererBtcPubKey) +
@@ -194,7 +194,7 @@ public class Contract implements Serializable {
         if (offer != null ? !offer.equals(contract.offer) : contract.offer != null) return false;
         if (takeOfferFeeTxID != null ? !takeOfferFeeTxID.equals(contract.takeOfferFeeTxID) : contract.takeOfferFeeTxID != null)
             return false;
-        if (arbitratorAddress != null ? !arbitratorAddress.equals(contract.arbitratorAddress) : contract.arbitratorAddress != null)
+        if (arbitratorNodeAddress != null ? !arbitratorNodeAddress.equals(contract.arbitratorNodeAddress) : contract.arbitratorNodeAddress != null)
             return false;
         if (offererAccountId != null ? !offererAccountId.equals(contract.offererAccountId) : contract.offererAccountId != null)
             return false;
@@ -208,9 +208,9 @@ public class Contract implements Serializable {
             return false;
         if (takerPubKeyRing != null ? !takerPubKeyRing.equals(contract.takerPubKeyRing) : contract.takerPubKeyRing != null)
             return false;
-        if (buyerAddress != null ? !buyerAddress.equals(contract.buyerAddress) : contract.buyerAddress != null)
+        if (buyerNodeAddress != null ? !buyerNodeAddress.equals(contract.buyerNodeAddress) : contract.buyerNodeAddress != null)
             return false;
-        if (sellerAddress != null ? !sellerAddress.equals(contract.sellerAddress) : contract.sellerAddress != null)
+        if (sellerNodeAddress != null ? !sellerNodeAddress.equals(contract.sellerNodeAddress) : contract.sellerNodeAddress != null)
             return false;
         if (offererPayoutAddressString != null ? !offererPayoutAddressString.equals(contract.offererPayoutAddressString) : contract.offererPayoutAddressString != null)
             return false;
@@ -226,7 +226,7 @@ public class Contract implements Serializable {
         int result = offer != null ? offer.hashCode() : 0;
         result = 31 * result + (int) (tradeAmount ^ (tradeAmount >>> 32));
         result = 31 * result + (takeOfferFeeTxID != null ? takeOfferFeeTxID.hashCode() : 0);
-        result = 31 * result + (arbitratorAddress != null ? arbitratorAddress.hashCode() : 0);
+        result = 31 * result + (arbitratorNodeAddress != null ? arbitratorNodeAddress.hashCode() : 0);
         result = 31 * result + (isBuyerOffererAndSellerTaker ? 1 : 0);
         result = 31 * result + (offererAccountId != null ? offererAccountId.hashCode() : 0);
         result = 31 * result + (takerAccountId != null ? takerAccountId.hashCode() : 0);
@@ -234,8 +234,8 @@ public class Contract implements Serializable {
         result = 31 * result + (takerPaymentAccountContractData != null ? takerPaymentAccountContractData.hashCode() : 0);
         result = 31 * result + (offererPubKeyRing != null ? offererPubKeyRing.hashCode() : 0);
         result = 31 * result + (takerPubKeyRing != null ? takerPubKeyRing.hashCode() : 0);
-        result = 31 * result + (buyerAddress != null ? buyerAddress.hashCode() : 0);
-        result = 31 * result + (sellerAddress != null ? sellerAddress.hashCode() : 0);
+        result = 31 * result + (buyerNodeAddress != null ? buyerNodeAddress.hashCode() : 0);
+        result = 31 * result + (sellerNodeAddress != null ? sellerNodeAddress.hashCode() : 0);
         result = 31 * result + (offererPayoutAddressString != null ? offererPayoutAddressString.hashCode() : 0);
         result = 31 * result + (takerPayoutAddressString != null ? takerPayoutAddressString.hashCode() : 0);
         result = 31 * result + (offererBtcPubKey != null ? Arrays.hashCode(offererBtcPubKey) : 0);

@@ -49,7 +49,7 @@ public class ProcessPayoutTxFinalizedMessage extends TradeTask {
             trade.setState(Trade.State.PAYOUT_TX_RECEIVED);
 
             // update to the latest peer address of our peer if the message is correct
-            trade.setTradingPeerAddress(processModel.getTempTradingPeerAddress());
+            trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             complete();
         } catch (Throwable t) {

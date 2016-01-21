@@ -26,7 +26,7 @@ import io.bitsquare.btc.data.RawInput;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.taskrunner.Model;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.OffererTrade;
@@ -70,11 +70,11 @@ public class ProcessModel implements Model, Serializable {
     private byte[] payoutTxSignature;
     private Transaction takeOfferFeeTx;
 
-    private List<Address> takerAcceptedArbitratorAddresses;
+    private List<NodeAddress> takerAcceptedArbitratorNodeAddresses;
 
     // that is used to store temp. the peers address when we get an incoming message before the message is verified.
     // After successful verified we copy that over to the trade.tradingPeerAddress
-    private Address tempTradingPeerAddress;
+    private NodeAddress tempTradingPeerNodeAddress;
     private byte[] preparedDepositTx;
     private List<RawInput> rawInputs;
     private long changeOutputValue;
@@ -135,8 +135,8 @@ public class ProcessModel implements Model, Serializable {
         return tradeWalletService;
     }
 
-    public byte[] getArbitratorPubKey(Address arbitratorAddress) {
-        return user.getAcceptedArbitratorByAddress(arbitratorAddress).getBtcPubKey();
+    public byte[] getArbitratorPubKey(NodeAddress arbitratorNodeAddress) {
+        return user.getAcceptedArbitratorByAddress(arbitratorNodeAddress).getBtcPubKey();
     }
 
     public Offer getOffer() {
@@ -151,7 +151,7 @@ public class ProcessModel implements Model, Serializable {
         return user;
     }
 
-    public Address getMyAddress() {
+    public NodeAddress getMyAddress() {
         return p2PService.getAddress();
     }
 
@@ -234,20 +234,20 @@ public class ProcessModel implements Model, Serializable {
         return keyRing;
     }
 
-    public void setTakerAcceptedArbitratorAddresses(List<Address> takerAcceptedArbitratorAddresses) {
-        this.takerAcceptedArbitratorAddresses = takerAcceptedArbitratorAddresses;
+    public void setTakerAcceptedArbitratorNodeAddresses(List<NodeAddress> takerAcceptedArbitratorNodeAddresses) {
+        this.takerAcceptedArbitratorNodeAddresses = takerAcceptedArbitratorNodeAddresses;
     }
 
-    public List<Address> getTakerAcceptedArbitratorAddresses() {
-        return takerAcceptedArbitratorAddresses;
+    public List<NodeAddress> getTakerAcceptedArbitratorNodeAddresses() {
+        return takerAcceptedArbitratorNodeAddresses;
     }
 
-    public void setTempTradingPeerAddress(Address tempTradingPeerAddress) {
-        this.tempTradingPeerAddress = tempTradingPeerAddress;
+    public void setTempTradingPeerNodeAddress(NodeAddress tempTradingPeerNodeAddress) {
+        this.tempTradingPeerNodeAddress = tempTradingPeerNodeAddress;
     }
 
-    public Address getTempTradingPeerAddress() {
-        return tempTradingPeerAddress;
+    public NodeAddress getTempTradingPeerNodeAddress() {
+        return tempTradingPeerNodeAddress;
     }
 
     public ArbitratorManager getArbitratorManager() {

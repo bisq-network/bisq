@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.tasks.taker;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.ArbitrationSelectionRule;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
@@ -42,9 +42,9 @@ public class CreateTakeOfferFeeTx extends TradeTask {
             runInterceptHook();
 
             User user = processModel.getUser();
-            Address selectedArbitratorAddress = ArbitrationSelectionRule.select(user.getAcceptedArbitratorAddresses(), processModel.getOffer());
-            log.debug("selectedArbitratorAddress " + selectedArbitratorAddress);
-            Arbitrator selectedArbitrator = user.getAcceptedArbitratorByAddress(selectedArbitratorAddress);
+            NodeAddress selectedArbitratorNodeAddress = ArbitrationSelectionRule.select(user.getAcceptedArbitratorAddresses(), processModel.getOffer());
+            log.debug("selectedArbitratorAddress " + selectedArbitratorNodeAddress);
+            Arbitrator selectedArbitrator = user.getAcceptedArbitratorByAddress(selectedArbitratorNodeAddress);
             Transaction createTakeOfferFeeTx = processModel.getTradeWalletService().createTradingFeeTx(
                     processModel.getAddressEntry(),
                     FeePolicy.getTakeOfferFee(),

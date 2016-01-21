@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.messages;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 
 import javax.annotation.concurrent.Immutable;
@@ -30,17 +30,17 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     public final byte[] depositTx;
-    private final Address senderAddress;
+    private final NodeAddress senderNodeAddress;
 
-    public DepositTxPublishedMessage(String tradeId, byte[] depositTx, Address senderAddress) {
+    public DepositTxPublishedMessage(String tradeId, byte[] depositTx, NodeAddress senderNodeAddress) {
         super(tradeId);
         this.depositTx = depositTx;
-        this.senderAddress = senderAddress;
+        this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
-    public Address getSenderAddress() {
-        return senderAddress;
+    public NodeAddress getSenderNodeAddress() {
+        return senderNodeAddress;
     }
 
     @Override
@@ -52,7 +52,7 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
         DepositTxPublishedMessage that = (DepositTxPublishedMessage) o;
 
         if (!Arrays.equals(depositTx, that.depositTx)) return false;
-        return !(senderAddress != null ? !senderAddress.equals(that.senderAddress) : that.senderAddress != null);
+        return !(senderNodeAddress != null ? !senderNodeAddress.equals(that.senderNodeAddress) : that.senderNodeAddress != null);
 
     }
 
@@ -60,7 +60,7 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (depositTx != null ? Arrays.hashCode(depositTx) : 0);
-        result = 31 * result + (senderAddress != null ? senderAddress.hashCode() : 0);
+        result = 31 * result + (senderNodeAddress != null ? senderNodeAddress.hashCode() : 0);
         return result;
     }
 }

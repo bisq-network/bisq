@@ -4,8 +4,8 @@ import com.google.common.util.concurrent.*;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.NodeAddress;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -63,11 +63,11 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     abstract public void start(@Nullable SetupListener setupListener);
 
-    public SettableFuture<Connection> sendMessage(@NotNull Address peerAddress, Message message) {
-        Log.traceCall("peerAddress: " + peerAddress + " / message: " + message);
-        checkNotNull(peerAddress, "peerAddress must not be null");
+    public SettableFuture<Connection> sendMessage(@NotNull NodeAddress peerNodeAddress, Message message) {
+        Log.traceCall("peerAddress: " + peerNodeAddress + " / message: " + message);
+        checkNotNull(peerNodeAddress, "peerAddress must not be null");
 
-        Optional<Connection> outboundConnectionOptional = lookupOutboundConnection(peerAddress);
+        Optional<Connection> outboundConnectionOptional = lookupOutboundConnection(peerNodeAddress);
         Connection connection = outboundConnectionOptional.isPresent() ? outboundConnectionOptional.get() : null;
         if (connection != null)
             log.trace("We have found a connection in outBoundConnections. Connection.uid=" + connection.getUid());
@@ -79,7 +79,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         }
 
         if (connection == null) {
-            Optional<Connection> inboundConnectionOptional = lookupInboundConnection(peerAddress);
+            Optional<Connection> inboundConnectionOptional = lookupInboundConnection(peerNodeAddress);
             if (inboundConnectionOptional.isPresent()) connection = inboundConnectionOptional.get();
             if (connection != null)
                 log.trace("We have found a connection in inBoundConnections. Connection.uid=" + connection.getUid());
@@ -89,27 +89,27 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
             return sendMessage(connection, message);
         } else {
             log.trace("We have not found any connection for peerAddress {}. " +
-                    "We will create a new outbound connection.", peerAddress);
+                    "We will create a new outbound connection.", peerNodeAddress);
 
             final SettableFuture<Connection> resultFuture = SettableFuture.create();
             final boolean[] timeoutOccurred = new boolean[1];
             timeoutOccurred[0] = false;
             ListenableFuture<Connection> future = executorService.submit(() -> {
-                Thread.currentThread().setName("NetworkNode:SendMessage-to-" + peerAddress);
+                Thread.currentThread().setName("NetworkNode:SendMessage-to-" + peerNodeAddress);
                 try {
                     // can take a while when using tor
-                    Socket socket = createSocket(peerAddress);
+                    Socket socket = createSocket(peerNodeAddress);
                     if (timeoutOccurred[0])
-                        throw new TimeoutException("Timeout occurred when tried to create Socket to peer: " + peerAddress);
+                        throw new TimeoutException("Timeout occurred when tried to create Socket to peer: " + peerNodeAddress);
 
 
                     Connection newConnection = new Connection(socket, NetworkNode.this, NetworkNode.this);
-                    newConnection.setPeerAddress(peerAddress);
+                    newConnection.setPeerAddress(peerNodeAddress);
                     outBoundConnections.add(newConnection);
 
                     log.info("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                             "NetworkNode created new outbound connection:"
-                            + "\npeerAddress=" + peerAddress
+                            + "\npeerAddress=" + peerNodeAddress
                             + "\nconnection.uid=" + newConnection.getUid()
                             + "\nmessage=" + message
                             + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
@@ -333,20 +333,20 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         executorService.submit(server);
     }
 
-    private Optional<Connection> lookupOutboundConnection(Address peerAddress) {
+    private Optional<Connection> lookupOutboundConnection(NodeAddress peerNodeAddress) {
         // Log.traceCall("search for " + peerAddress.toString() + " / outBoundConnections " + outBoundConnections);
         return outBoundConnections.stream()
-                .filter(e -> e.getPeerAddressOptional().isPresent() && peerAddress.equals(e.getPeerAddressOptional().get())).findAny();
+                .filter(e -> e.getPeerAddressOptional().isPresent() && peerNodeAddress.equals(e.getPeerAddressOptional().get())).findAny();
     }
 
-    private Optional<Connection> lookupInboundConnection(Address peerAddress) {
+    private Optional<Connection> lookupInboundConnection(NodeAddress peerNodeAddress) {
         // Log.traceCall("search for " + peerAddress.toString() + " / inBoundConnections " + inBoundConnections);
         return inBoundConnections.stream()
-                .filter(e -> e.getPeerAddressOptional().isPresent() && peerAddress.equals(e.getPeerAddressOptional().get())).findAny();
+                .filter(e -> e.getPeerAddressOptional().isPresent() && peerNodeAddress.equals(e.getPeerAddressOptional().get())).findAny();
     }
 
-    abstract protected Socket createSocket(Address peerAddress) throws IOException;
+    abstract protected Socket createSocket(NodeAddress peerNodeAddress) throws IOException;
 
     @Nullable
-    abstract public Address getAddress();
+    abstract public NodeAddress getNodeAddress();
 }

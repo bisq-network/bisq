@@ -1,6 +1,6 @@
 package io.bitsquare.p2p.routing;
 
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.network.LocalhostNetworkNode;
@@ -25,7 +25,7 @@ public class PeerManagerTest {
 
     boolean useLocalhost = true;
     private CountDownLatch latch;
-    private Set<Address> seedNodes;
+    private Set<NodeAddress> seedNodes;
     private int sleepTime;
     private SeedNode seedNode1, seedNode2, seedNode3;
 
@@ -39,13 +39,13 @@ public class PeerManagerTest {
         if (useLocalhost) {
             //seedNodes.add(new Address("localhost:8001"));
             // seedNodes.add(new Address("localhost:8002"));
-            seedNodes.add(new Address("localhost:8003"));
+            seedNodes.add(new NodeAddress("localhost:8003"));
             sleepTime = 100;
 
         } else {
-            seedNodes.add(new Address("3omjuxn7z73pxoee.onion:8001"));
-            seedNodes.add(new Address("j24fxqyghjetgpdx.onion:8002"));
-            seedNodes.add(new Address("45367tl6unwec6kw.onion:8003"));
+            seedNodes.add(new NodeAddress("3omjuxn7z73pxoee.onion:8001"));
+            seedNodes.add(new NodeAddress("j24fxqyghjetgpdx.onion:8002"));
+            seedNodes.add(new NodeAddress("45367tl6unwec6kw.onion:8003"));
             sleepTime = 1000;
         }
     }
@@ -76,11 +76,11 @@ public class PeerManagerTest {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(0);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(0);
         seedNodes = new HashSet<>();
-        Address address = new Address("localhost:8001");
-        seedNodes.add(address);
+        NodeAddress nodeAddress = new NodeAddress("localhost:8001");
+        seedNodes.add(nodeAddress);
         seedNode1 = new SeedNode("test_dummy_dir");
         latch = new CountDownLatch(2);
-        seedNode1.createAndStartP2PService(address, useLocalhost, 2, true,
+        seedNode1.createAndStartP2PService(nodeAddress, useLocalhost, 2, true,
                 seedNodes, new P2PServiceListener() {
                     @Override
                     public void onRequestingDataCompleted() {
@@ -124,15 +124,15 @@ public class PeerManagerTest {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(0);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(0);
         seedNodes = new HashSet<>();
-        Address address1 = new Address("localhost:8001");
-        seedNodes.add(address1);
-        Address address2 = new Address("localhost:8002");
-        seedNodes.add(address2);
+        NodeAddress nodeAddress1 = new NodeAddress("localhost:8001");
+        seedNodes.add(nodeAddress1);
+        NodeAddress nodeAddress2 = new NodeAddress("localhost:8002");
+        seedNodes.add(nodeAddress2);
 
         latch = new CountDownLatch(6);
 
         seedNode1 = new SeedNode("test_dummy_dir");
-        seedNode1.createAndStartP2PService(address1, useLocalhost, 2, true, seedNodes, new P2PServiceListener() {
+        seedNode1.createAndStartP2PService(nodeAddress1, useLocalhost, 2, true, seedNodes, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
                 latch.countDown();
@@ -170,7 +170,7 @@ public class PeerManagerTest {
         Thread.sleep(500);
 
         seedNode2 = new SeedNode("test_dummy_dir");
-        seedNode2.createAndStartP2PService(address2, useLocalhost, 2, true, seedNodes, new P2PServiceListener() {
+        seedNode2.createAndStartP2PService(nodeAddress2, useLocalhost, 2, true, seedNodes, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
                 latch.countDown();
@@ -407,7 +407,7 @@ public class PeerManagerTest {
         SeedNode seedNode = new SeedNode("test_dummy_dir");
 
         latch = new CountDownLatch(1);
-        seedNode.createAndStartP2PService(new Address("localhost", port), useLocalhost, 2, true, seedNodes, new P2PServiceListener() {
+        seedNode.createAndStartP2PService(new NodeAddress("localhost", port), useLocalhost, 2, true, seedNodes, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
                 latch.countDown();

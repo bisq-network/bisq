@@ -26,7 +26,7 @@ import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.disputes.arbitrator.ArbitratorDisputeView;
 import io.bitsquare.gui.main.disputes.trader.TraderDisputeView;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
@@ -50,7 +50,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     private ChangeListener<Tab> tabChangeListener;
     private Tab currentTab;
     private final ViewLoader viewLoader;
-    private MapChangeListener<Address, Arbitrator> arbitratorMapChangeListener;
+    private MapChangeListener<NodeAddress, Arbitrator> arbitratorMapChangeListener;
 
     @Inject
     public DisputesView(CachingViewLoader viewLoader, Navigation navigation, ArbitratorManager arbitratorManager, KeyRing keyRing) {

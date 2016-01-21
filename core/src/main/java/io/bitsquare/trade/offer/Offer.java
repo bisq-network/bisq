@@ -24,7 +24,7 @@ import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.JsonExclude;
 import io.bitsquare.locale.Country;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.storage.data.PubKeyProtectedExpirablePayload;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
@@ -79,7 +79,7 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
     private final long fiatPrice;
     private final long amount;
     private final long minAmount;
-    private final Address offererAddress;
+    private final NodeAddress offererNodeAddress;
     @JsonExclude
     private final PubKeyRing pubKeyRing;
     private final String paymentMethodName;
@@ -89,7 +89,7 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
 
     @Nullable
     private final List<String> acceptedCountryCodes;
-    private final List<Address> arbitratorAddresses;
+    private final List<NodeAddress> arbitratorNodeAddresses;
 
     // Mutable property. Has to be set before offer is save in P2P network as it changes the objects hash!
     private String offerFeePaymentTxID;
@@ -111,7 +111,7 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Offer(String id,
-                 Address offererAddress,
+                 NodeAddress offererNodeAddress,
                  PubKeyRing pubKeyRing,
                  Direction direction,
                  long fiatPrice,
@@ -121,10 +121,10 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
                  String currencyCode,
                  @Nullable Country paymentMethodCountry,
                  String offererPaymentAccountId,
-                 List<Address> arbitratorAddresses,
+                 List<NodeAddress> arbitratorNodeAddresses,
                  @Nullable List<String> acceptedCountryCodes) {
         this.id = id;
-        this.offererAddress = offererAddress;
+        this.offererNodeAddress = offererNodeAddress;
         this.pubKeyRing = pubKeyRing;
         this.direction = direction;
         this.fiatPrice = fiatPrice;
@@ -134,7 +134,7 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
         this.currencyCode = currencyCode;
         this.paymentMethodCountryCode = paymentMethodCountry != null ? paymentMethodCountry.code : null;
         this.offererPaymentAccountId = offererPaymentAccountId;
-        this.arbitratorAddresses = arbitratorAddresses;
+        this.arbitratorNodeAddresses = arbitratorNodeAddresses;
         this.acceptedCountryCodes = acceptedCountryCodes;
 
         date = new Date().getTime();
@@ -155,7 +155,7 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
 
     public void validate() {
         checkNotNull(getAmount(), "Amount is null");
-        checkNotNull(getArbitratorAddresses(), "Arbitrator is null");
+        checkNotNull(getArbitratorNodeAddresses(), "Arbitrator is null");
         checkNotNull(getDate(), "CreationDate is null");
         checkNotNull(getCurrencyCode(), "Currency is null");
         checkNotNull(getDirection(), "Direction is null");
@@ -266,8 +266,8 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
         return id.substring(0, 8);
     }
 
-    public Address getOffererAddress() {
-        return offererAddress;
+    public NodeAddress getOffererNodeAddress() {
+        return offererNodeAddress;
     }
 
     public PubKeyRing getPubKeyRing() {
@@ -316,8 +316,8 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
         return offerFeePaymentTxID;
     }
 
-    public List<Address> getArbitratorAddresses() {
-        return arbitratorAddresses;
+    public List<NodeAddress> getArbitratorNodeAddresses() {
+        return arbitratorNodeAddresses;
     }
 
     public Date getDate() {
@@ -354,7 +354,7 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
         if (id != null ? !id.equals(offer.id) : offer.id != null) return false;
         if (direction != offer.direction) return false;
         if (currencyCode != null ? !currencyCode.equals(offer.currencyCode) : offer.currencyCode != null) return false;
-        if (offererAddress != null ? !offererAddress.equals(offer.offererAddress) : offer.offererAddress != null)
+        if (offererNodeAddress != null ? !offererNodeAddress.equals(offer.offererNodeAddress) : offer.offererNodeAddress != null)
             return false;
         if (pubKeyRing != null ? !pubKeyRing.equals(offer.pubKeyRing) : offer.pubKeyRing != null) return false;
         if (paymentMethodName != null ? !paymentMethodName.equals(offer.paymentMethodName) : offer.paymentMethodName != null)
@@ -365,7 +365,7 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
             return false;
         if (acceptedCountryCodes != null ? !acceptedCountryCodes.equals(offer.acceptedCountryCodes) : offer.acceptedCountryCodes != null)
             return false;
-        if (arbitratorAddresses != null ? !arbitratorAddresses.equals(offer.arbitratorAddresses) : offer.arbitratorAddresses != null)
+        if (arbitratorNodeAddresses != null ? !arbitratorNodeAddresses.equals(offer.arbitratorNodeAddresses) : offer.arbitratorNodeAddresses != null)
             return false;
         return !(offerFeePaymentTxID != null ? !offerFeePaymentTxID.equals(offer.offerFeePaymentTxID) : offer.offerFeePaymentTxID != null);
 
@@ -380,13 +380,13 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
         result = 31 * result + (int) (fiatPrice ^ (fiatPrice >>> 32));
         result = 31 * result + (int) (amount ^ (amount >>> 32));
         result = 31 * result + (int) (minAmount ^ (minAmount >>> 32));
-        result = 31 * result + (offererAddress != null ? offererAddress.hashCode() : 0);
+        result = 31 * result + (offererNodeAddress != null ? offererNodeAddress.hashCode() : 0);
         result = 31 * result + (pubKeyRing != null ? pubKeyRing.hashCode() : 0);
         result = 31 * result + (paymentMethodName != null ? paymentMethodName.hashCode() : 0);
         result = 31 * result + (paymentMethodCountryCode != null ? paymentMethodCountryCode.hashCode() : 0);
         result = 31 * result + (offererPaymentAccountId != null ? offererPaymentAccountId.hashCode() : 0);
         result = 31 * result + (acceptedCountryCodes != null ? acceptedCountryCodes.hashCode() : 0);
-        result = 31 * result + (arbitratorAddresses != null ? arbitratorAddresses.hashCode() : 0);
+        result = 31 * result + (arbitratorNodeAddresses != null ? arbitratorNodeAddresses.hashCode() : 0);
         result = 31 * result + (offerFeePaymentTxID != null ? offerFeePaymentTxID.hashCode() : 0);
         return result;
     }
@@ -401,13 +401,13 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
                 ", fiatPrice=" + fiatPrice +
                 ", amount=" + amount +
                 ", minAmount=" + minAmount +
-                ", offererAddress=" + offererAddress +
+                ", offererAddress=" + offererNodeAddress +
                 ", pubKeyRing=" + pubKeyRing +
                 ", paymentMethodName='" + paymentMethodName + '\'' +
                 ", paymentMethodCountryCode='" + paymentMethodCountryCode + '\'' +
                 ", offererPaymentAccountId='" + offererPaymentAccountId + '\'' +
                 ", acceptedCountryCodes=" + acceptedCountryCodes +
-                ", arbitratorAddresses=" + arbitratorAddresses +
+                ", arbitratorAddresses=" + arbitratorNodeAddresses +
                 ", offerFeePaymentTxID='" + offerFeePaymentTxID + '\'' +
                 ", state=" + state +
                 ", stateProperty=" + stateProperty +

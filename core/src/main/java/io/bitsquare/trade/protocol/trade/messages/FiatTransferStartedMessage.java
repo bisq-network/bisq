@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.messages;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 
 import javax.annotation.concurrent.Immutable;
@@ -29,17 +29,17 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     public final String buyerPayoutAddress;
-    private final Address senderAddress;
+    private final NodeAddress senderNodeAddress;
 
-    public FiatTransferStartedMessage(String tradeId, String buyerPayoutAddress, Address senderAddress) {
+    public FiatTransferStartedMessage(String tradeId, String buyerPayoutAddress, NodeAddress senderNodeAddress) {
         super(tradeId);
         this.buyerPayoutAddress = buyerPayoutAddress;
-        this.senderAddress = senderAddress;
+        this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
-    public Address getSenderAddress() {
-        return senderAddress;
+    public NodeAddress getSenderNodeAddress() {
+        return senderNodeAddress;
     }
 
     @Override
@@ -52,7 +52,7 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
 
         if (buyerPayoutAddress != null ? !buyerPayoutAddress.equals(that.buyerPayoutAddress) : that.buyerPayoutAddress != null)
             return false;
-        return !(senderAddress != null ? !senderAddress.equals(that.senderAddress) : that.senderAddress != null);
+        return !(senderNodeAddress != null ? !senderNodeAddress.equals(that.senderNodeAddress) : that.senderNodeAddress != null);
 
     }
 
@@ -60,7 +60,7 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (buyerPayoutAddress != null ? buyerPayoutAddress.hashCode() : 0);
-        result = 31 * result + (senderAddress != null ? senderAddress.hashCode() : 0);
+        result = 31 * result + (senderNodeAddress != null ? senderNodeAddress.hashCode() : 0);
         return result;
     }
 }

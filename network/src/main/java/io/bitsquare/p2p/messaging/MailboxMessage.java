@@ -18,8 +18,8 @@
 package io.bitsquare.p2p.messaging;
 
 
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 
 public interface MailboxMessage extends MailMessage {
-    Address getSenderAddress();
+    NodeAddress getSenderNodeAddress();
 }

@@ -27,7 +27,7 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.user.User;
 import javafx.beans.property.*;
@@ -53,7 +53,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     final ObservableList<String> languageCodes = FXCollections.observableArrayList(LanguageUtil.getDefaultLanguageLocaleAsCode());
     final ObservableList<String> allLanguageCodes = FXCollections.observableArrayList(LanguageUtil.getAllLanguageCodes());
     private boolean allDataValid;
-    private final MapChangeListener<Address, Arbitrator> arbitratorMapChangeListener;
+    private final MapChangeListener<NodeAddress, Arbitrator> arbitratorMapChangeListener;
     private ECKey registrationKey;
     StringProperty registrationPubKeyAsHex = new SimpleStringProperty();
 
@@ -73,9 +73,9 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
         this.walletService = walletService;
         this.keyRing = keyRing;
 
-        arbitratorMapChangeListener = new MapChangeListener<Address, Arbitrator>() {
+        arbitratorMapChangeListener = new MapChangeListener<NodeAddress, Arbitrator>() {
             @Override
-            public void onChanged(Change<? extends Address, ? extends Arbitrator> change) {
+            public void onChanged(Change<? extends NodeAddress, ? extends Arbitrator> change) {
                 Arbitrator myRegisteredArbitrator = user.getRegisteredArbitrator();
                 myArbitratorProperty.set(myRegisteredArbitrator);
 

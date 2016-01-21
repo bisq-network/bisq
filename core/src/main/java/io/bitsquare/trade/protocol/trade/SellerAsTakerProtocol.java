@@ -18,8 +18,8 @@
 package io.bitsquare.trade.protocol.trade;
 
 
-import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.trade.SellerAsTakerTrade;
 import io.bitsquare.trade.Trade;
@@ -77,11 +77,11 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         this.trade = trade;
 
         if (message instanceof MailboxMessage) {
-            Address peerAddress = ((MailboxMessage) message).getSenderAddress();
+            NodeAddress peerNodeAddress = ((MailboxMessage) message).getSenderNodeAddress();
             if (message instanceof PayoutTxFinalizedMessage) {
-                handle((PayoutTxFinalizedMessage) message, peerAddress);
+                handle((PayoutTxFinalizedMessage) message, peerNodeAddress);
             } else if (message instanceof FiatTransferStartedMessage) {
-                handle((FiatTransferStartedMessage) message, peerAddress);
+                handle((FiatTransferStartedMessage) message, peerNodeAddress);
             }
         }
     }
@@ -114,11 +114,11 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(PublishDepositTxRequest tradeMessage, Address sender) {
+    private void handle(PublishDepositTxRequest tradeMessage, NodeAddress sender) {
         log.debug("handle RequestPayDepositMessage");
         stopTimeout();
         processModel.setTradeMessage(tradeMessage);
-        processModel.setTempTradingPeerAddress(sender);
+        processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
                 () -> handleTaskRunnerSuccess("PayDepositRequest"),
@@ -139,9 +139,9 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     // After peer has started Fiat tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(FiatTransferStartedMessage tradeMessage, Address sender) {
+    private void handle(FiatTransferStartedMessage tradeMessage, NodeAddress sender) {
         processModel.setTradeMessage(tradeMessage);
-        processModel.setTempTradingPeerAddress(sender);
+        processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
                 () -> handleTaskRunnerSuccess("FiatTransferStartedMessage"),
@@ -173,10 +173,10 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         taskRunner.run();
     }
 
-    private void handle(PayoutTxFinalizedMessage tradeMessage, Address sender) {
+    private void handle(PayoutTxFinalizedMessage tradeMessage, NodeAddress sender) {
         stopTimeout();
         processModel.setTradeMessage(tradeMessage);
-        processModel.setTempTradingPeerAddress(sender);
+        processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
                 () -> {
@@ -199,7 +199,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, Address sender) {
+    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress sender) {
         if (tradeMessage instanceof PublishDepositTxRequest) {
             handle((PublishDepositTxRequest) tradeMessage, sender);
         } else if (tradeMessage instanceof FiatTransferStartedMessage) {

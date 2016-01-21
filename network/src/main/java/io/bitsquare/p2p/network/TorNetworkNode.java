@@ -9,7 +9,7 @@ import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.Utils;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.JavaTorNode;
@@ -91,19 +91,19 @@ public class TorNetworkNode extends NetworkNode {
 
     @Override
     @Nullable
-    public Address getAddress() {
+    public NodeAddress getNodeAddress() {
         if (hiddenServiceDescriptor != null)
-            return new Address(hiddenServiceDescriptor.getFullAddress());
+            return new NodeAddress(hiddenServiceDescriptor.getFullAddress());
         else
             return null;
     }
 
     @Override
-    protected Socket createSocket(Address peerAddress) throws IOException {
+    protected Socket createSocket(NodeAddress peerNodeAddress) throws IOException {
         Log.traceCall();
-        checkArgument(peerAddress.hostName.endsWith(".onion"), "PeerAddress is not an onion address");
+        checkArgument(peerNodeAddress.hostName.endsWith(".onion"), "PeerAddress is not an onion address");
 
-        return torNetworkNode.connectToHiddenService(peerAddress.hostName, peerAddress.port);
+        return torNetworkNode.connectToHiddenService(peerNodeAddress.hostName, peerNodeAddress.port);
     }
 
     //TODO simplify

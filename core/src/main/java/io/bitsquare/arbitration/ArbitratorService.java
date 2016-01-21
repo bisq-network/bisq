@@ -19,7 +19,7 @@ package io.bitsquare.arbitration;
 
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import org.slf4j.Logger;
@@ -82,17 +82,17 @@ public class ArbitratorService {
         return p2PService;
     }
 
-    public Map<Address, Arbitrator> getArbitrators() {
+    public Map<NodeAddress, Arbitrator> getArbitrators() {
         Set<Arbitrator> arbitratorSet = p2PService.getDataMap().values().stream()
                 .filter(e -> e.expirablePayload instanceof Arbitrator)
                 .map(e -> (Arbitrator) e.expirablePayload)
                 .collect(Collectors.toSet());
 
-        Map<Address, Arbitrator> map = new HashMap<>();
+        Map<NodeAddress, Arbitrator> map = new HashMap<>();
         for (Arbitrator arbitrator : arbitratorSet) {
-            Address arbitratorAddress = arbitrator.getArbitratorAddress();
-            if (!map.containsKey(arbitratorAddress))
-                map.put(arbitratorAddress, arbitrator);
+            NodeAddress arbitratorNodeAddress = arbitrator.getArbitratorNodeAddress();
+            if (!map.containsKey(arbitratorNodeAddress))
+                map.put(arbitratorNodeAddress, arbitrator);
             else
                 log.warn("arbitratorAddress already exist in arbitrator map. Seems an arbitrator object is already registered with the same address.");
         }

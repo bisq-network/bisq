@@ -1,7 +1,7 @@
 package io.bitsquare.p2p.peers.messages.auth;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 
 public final class AuthenticationRequest extends AuthenticationMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -9,15 +9,15 @@ public final class AuthenticationRequest extends AuthenticationMessage {
 
     public final long requesterNonce;
 
-    public AuthenticationRequest(Address senderAddress, long requesterNonce) {
-        super(senderAddress);
+    public AuthenticationRequest(NodeAddress senderNodeAddress, long requesterNonce) {
+        super(senderNodeAddress);
         this.requesterNonce = requesterNonce;
     }
 
     @Override
     public String toString() {
         return "AuthenticationRequest{" +
-                "senderAddress=" + senderAddress +
+                "senderAddress=" + senderNodeAddress +
                 ", requesterNonce=" + requesterNonce +
                 super.toString() + "} ";
     }

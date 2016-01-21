@@ -38,7 +38,7 @@ public class SendFiatTransferStartedMessage extends TradeTask {
             runInterceptHook();
 
             processModel.getP2PService().sendEncryptedMailboxMessage(
-                    trade.getTradingPeerAddress(),
+                    trade.getTradingPeerNodeAddress(),
                     processModel.tradingPeer.getPubKeyRing(),
                     new FiatTransferStartedMessage(
                             processModel.getId(),

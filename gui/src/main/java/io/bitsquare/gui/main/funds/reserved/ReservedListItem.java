@@ -114,7 +114,7 @@ public class ReservedListItem {
                         // We ignore the tx fee as it will be paid by both (once deposit, once payout)
                         Coin balanceInDeposit = FeePolicy.getSecurityDeposit();
                         // For the seller we add the trade amount
-                        if (trade.getContract().getSellerAddress().equals(getAddress()))
+                        if (trade.getContract().getSellerNodeAddress().equals(getAddress()))
                             balanceInDeposit.add(trade.getTradeAmount());
 
                         balanceLabel.setText(formatter.formatCoinWithCode(balance) + " (in MS escrow)");

@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade;
 
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.trade.offer.Offer;
 import org.bitcoinj.core.Sha256Hash;
 import org.slf4j.Logger;
@@ -32,15 +32,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class ArbitrationSelectionRule {
     private static final Logger log = LoggerFactory.getLogger(ArbitrationSelectionRule.class);
 
-    public static Address select(List<Address> acceptedArbitratorAddresses, Offer offer) {
-        List<Address> candidates = new ArrayList<>();
-        for (Address offerArbitratorAddress : offer.getArbitratorAddresses()) {
-            candidates.addAll(acceptedArbitratorAddresses.stream().filter(offerArbitratorAddress::equals).collect(Collectors.toList()));
+    public static NodeAddress select(List<NodeAddress> acceptedArbitratorNodeAddresses, Offer offer) {
+        List<NodeAddress> candidates = new ArrayList<>();
+        for (NodeAddress offerArbitratorNodeAddress : offer.getArbitratorNodeAddresses()) {
+            candidates.addAll(acceptedArbitratorNodeAddresses.stream().filter(offerArbitratorNodeAddress::equals).collect(Collectors.toList()));
         }
         checkArgument(candidates.size() > 0, "candidates.size() <= 0");
 
         int index = Math.abs(Sha256Hash.hash(offer.getId().getBytes()).hashCode()) % candidates.size();
-        Address selectedArbitrator = candidates.get(index);
+        NodeAddress selectedArbitrator = candidates.get(index);
         log.debug("selectedArbitrator " + selectedArbitrator);
         return selectedArbitrator;
     }

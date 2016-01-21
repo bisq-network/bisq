@@ -18,7 +18,7 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.SellerProtocol;
@@ -36,8 +36,8 @@ public abstract class SellerTrade extends Trade implements Serializable {
 
     private static final Logger log = LoggerFactory.getLogger(BuyerAsTakerTrade.class);
 
-    public SellerTrade(Offer offer, Coin tradeAmount, Address tradingPeerAddress, Storage<? extends TradableList> storage) {
-        super(offer, tradeAmount, tradingPeerAddress, storage);
+    public SellerTrade(Offer offer, Coin tradeAmount, NodeAddress tradingPeerNodeAddress, Storage<? extends TradableList> storage) {
+        super(offer, tradeAmount, tradingPeerNodeAddress, storage);
     }
 
     public SellerTrade(Offer offer, Storage<? extends TradableList> storage) {

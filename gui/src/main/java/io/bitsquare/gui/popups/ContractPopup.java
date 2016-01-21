@@ -118,9 +118,9 @@ public class ContractPopup extends Popup {
                 contract.getSellerPayoutAddressString()).second.setMouseTransparent(false);
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Contract hash:",
                 Utils.HEX.encode(dispute.getContractHash())).second.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++rowIndex, "Buyer address:", contract.getBuyerAddress().getFullAddress());
-        addLabelTextField(gridPane, ++rowIndex, "Seller address:", contract.getSellerAddress().getFullAddress());
-        addLabelTextField(gridPane, ++rowIndex, "Selected arbitrator:", contract.arbitratorAddress.getFullAddress());
+        addLabelTextField(gridPane, ++rowIndex, "Buyer address:", contract.getBuyerNodeAddress().getFullAddress());
+        addLabelTextField(gridPane, ++rowIndex, "Seller address:", contract.getSellerNodeAddress().getFullAddress());
+        addLabelTextField(gridPane, ++rowIndex, "Selected arbitrator:", contract.arbitratorNodeAddress.getFullAddress());
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Buyer payment details:",
                 BSResources.get(contract.getBuyerPaymentAccountContractData().getPaymentDetails())).second.setMouseTransparent(false);
         addLabelTextField(gridPane, ++rowIndex, "Seller payment details:",

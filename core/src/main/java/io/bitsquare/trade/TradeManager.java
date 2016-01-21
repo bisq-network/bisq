@@ -26,9 +26,9 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.FirstPeerAuthenticatedListener;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.DecryptedMailListener;
 import io.bitsquare.p2p.messaging.DecryptedMailboxListener;
@@ -114,27 +114,27 @@ public class TradeManager {
 
         p2PService.addDecryptedMailListener(new DecryptedMailListener() {
             @Override
-            public void onMailMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, Address peerAddress) {
+            public void onMailMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress peerNodeAddress) {
                 Message message = decryptedMsgWithPubKey.message;
 
                 // Handler for incoming initial messages from taker
                 if (message instanceof PayDepositRequest) {
                     log.trace("Received PayDepositRequest: " + message);
-                    handleInitialTakeOfferRequest((PayDepositRequest) message, peerAddress);
+                    handleInitialTakeOfferRequest((PayDepositRequest) message, peerNodeAddress);
                 }
             }
         });
         p2PService.addDecryptedMailboxListener(new DecryptedMailboxListener() {
             @Override
-            public void onMailboxMessageAdded(DecryptedMsgWithPubKey decryptedMsgWithPubKey, Address senderAddress) {
+            public void onMailboxMessageAdded(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress senderNodeAddress) {
                 log.trace("onMailboxMessageAdded decryptedMessageWithPubKey: " + decryptedMsgWithPubKey);
-                log.trace("onMailboxMessageAdded senderAddress: " + senderAddress);
+                log.trace("onMailboxMessageAdded senderAddress: " + senderNodeAddress);
                 Message message = decryptedMsgWithPubKey.message;
                 if (message instanceof PayDepositRequest) {
                     PayDepositRequest payDepositRequest = (PayDepositRequest) message;
                     log.trace("Received payDepositRequest: " + payDepositRequest);
-                    if (payDepositRequest.getSenderAddress().equals(senderAddress))
-                        handleInitialTakeOfferRequest(payDepositRequest, senderAddress);
+                    if (payDepositRequest.getSenderNodeAddress().equals(senderNodeAddress))
+                        handleInitialTakeOfferRequest(payDepositRequest, senderNodeAddress);
                     else
                         log.warn("Peer address not matching for payDepositRequest");
                 } else if (message instanceof TradeMessage) {
@@ -192,8 +192,8 @@ public class TradeManager {
         //failedTrades.stream().filter(Trade::isTakerFeePaid).forEach(this::addTradeToFailedTrades);
     }
 
-    private void handleInitialTakeOfferRequest(TradeMessage message, Address peerAddress) {
-        log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + peerAddress);
+    private void handleInitialTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress) {
+        log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + peerNodeAddress);
         try {
             nonEmptyStringOf(message.tradeId);
         } catch (Throwable t) {
@@ -215,7 +215,7 @@ public class TradeManager {
             trade.setStorage(tradableListStorage);
             initTrade(trade);
             trades.add(trade);
-            ((OffererTrade) trade).handleTakeOfferRequest(message, peerAddress);
+            ((OffererTrade) trade).handleTakeOfferRequest(message, peerNodeAddress);
         } else {
             // TODO respond
             //(RequestDepositTxInputsMessage)message.
@@ -278,9 +278,9 @@ public class TradeManager {
                              TradeResultHandler tradeResultHandler) {
         Trade trade;
         if (offer.getDirection() == Offer.Direction.BUY)
-            trade = new SellerAsTakerTrade(offer, amount, model.getPeerAddress(), tradableListStorage);
+            trade = new SellerAsTakerTrade(offer, amount, model.getPeerNodeAddress(), tradableListStorage);
         else
-            trade = new BuyerAsTakerTrade(offer, amount, model.getPeerAddress(), tradableListStorage);
+            trade = new BuyerAsTakerTrade(offer, amount, model.getPeerNodeAddress(), tradableListStorage);
 
         trade.setTakeOfferDate(new Date());
         trade.setTakerPaymentAccountId(paymentAccountId);

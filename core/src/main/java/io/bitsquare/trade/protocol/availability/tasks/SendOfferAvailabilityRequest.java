@@ -38,7 +38,7 @@ public class SendOfferAvailabilityRequest extends Task<OfferAvailabilityModel> {
         try {
             runInterceptHook();
 
-            model.p2PService.sendEncryptedMailMessage(model.getPeerAddress(),
+            model.p2PService.sendEncryptedMailMessage(model.getPeerNodeAddress(),
                     model.offer.getPubKeyRing(),
                     new OfferAvailabilityRequest(model.offer.getId(), model.getPubKeyRing()),
                     new SendMailMessageListener() {

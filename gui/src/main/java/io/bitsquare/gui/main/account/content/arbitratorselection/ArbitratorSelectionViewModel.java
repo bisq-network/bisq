@@ -24,7 +24,7 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.collections.FXCollections;
@@ -42,7 +42,7 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
     final ObservableList<String> languageCodes = FXCollections.observableArrayList();
     final ObservableList<ArbitratorListItem> arbitratorListItems = FXCollections.observableArrayList();
     final ObservableList<String> allLanguageCodes = FXCollections.observableArrayList(LanguageUtil.getAllLanguageCodes());
-    private final MapChangeListener<Address, Arbitrator> arbitratorMapChangeListener;
+    private final MapChangeListener<NodeAddress, Arbitrator> arbitratorMapChangeListener;
 
     @Inject
     public ArbitratorSelectionViewModel(User user, ArbitratorManager arbitratorManager, Preferences preferences,

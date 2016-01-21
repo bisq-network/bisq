@@ -52,7 +52,7 @@ public class SendPublishDepositTxRequest extends TradeTask {
             );
 
             processModel.getP2PService().sendEncryptedMailMessage(
-                    trade.getTradingPeerAddress(),
+                    trade.getTradingPeerNodeAddress(),
                     processModel.tradingPeer.getPubKeyRing(),
                     tradeMessage,
                     new SendMailMessageListener() {

@@ -1,19 +1,19 @@
 package io.bitsquare.p2p.mocks;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.p2p.storage.data.ExpirablePayload;
 
 public final class MockMailboxMessage implements MailboxMessage, ExpirablePayload {
     private final int networkId = Version.getNetworkId();
     public String msg;
-    public Address senderAddress;
+    public NodeAddress senderNodeAddress;
     public long ttl;
 
-    public MockMailboxMessage(String msg, Address senderAddress) {
+    public MockMailboxMessage(String msg, NodeAddress senderNodeAddress) {
         this.msg = msg;
-        this.senderAddress = senderAddress;
+        this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
@@ -50,7 +50,7 @@ public final class MockMailboxMessage implements MailboxMessage, ExpirablePayloa
     }
 
     @Override
-    public Address getSenderAddress() {
-        return senderAddress;
+    public NodeAddress getSenderNodeAddress() {
+        return senderNodeAddress;
     }
 }

@@ -33,7 +33,7 @@ public class ArbitratorListItem {
     }
 
     public String getAddressString() {
-        return arbitrator != null ? arbitrator.getArbitratorAddress().getFullAddress() : "";
+        return arbitrator != null ? arbitrator.getArbitratorNodeAddress().getFullAddress() : "";
     }
 
     public String getLanguageCodes() {

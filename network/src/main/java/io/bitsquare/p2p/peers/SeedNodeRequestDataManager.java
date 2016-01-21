@@ -1,7 +1,7 @@
 package io.bitsquare.p2p.peers;
 
 import io.bitsquare.common.UserThread;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.storage.P2PDataStorage;
@@ -18,13 +18,13 @@ public class SeedNodeRequestDataManager extends RequestDataManager {
     }
 
     @Override
-    public void onPeerAuthenticated(Address peerAddress, Connection connection) {
+    public void onPeerAuthenticated(NodeAddress peerNodeAddress, Connection connection) {
         //TODO not clear which use case is handles here...
         if (dataStorage.getMap().isEmpty()) {
             if (requestDataFromAuthenticatedSeedNodeTimer == null)
                 requestDataFromAuthenticatedSeedNodeTimer = UserThread.runAfterRandomDelay(()
-                        -> requestDataFromAuthenticatedSeedNode(peerAddress, connection), 2, 5, TimeUnit.SECONDS);
+                        -> requestDataFromAuthenticatedSeedNode(peerNodeAddress, connection), 2, 5, TimeUnit.SECONDS);
         }
-        super.onPeerAuthenticated(peerAddress, connection);
+        super.onPeerAuthenticated(peerNodeAddress, connection);
     }
 }

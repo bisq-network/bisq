@@ -51,11 +51,11 @@ public class SendPayDepositRequest extends TradeTask {
                         processModel.getAccountId(),
                         processModel.getTakeOfferFeeTx().getHashAsString(),
                         processModel.getUser().getAcceptedArbitratorAddresses(),
-                        trade.getArbitratorAddress()
+                        trade.getArbitratorNodeAddress()
                 );
 
                 processModel.getP2PService().sendEncryptedMailboxMessage(
-                        trade.getTradingPeerAddress(),
+                        trade.getTradingPeerNodeAddress(),
                         processModel.tradingPeer.getPubKeyRing(),
                         payDepositRequest,
                         new SendMailboxMessageListener() {

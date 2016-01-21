@@ -19,8 +19,8 @@ package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.PubKeyRing;
-import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.DecryptedMailListener;
 import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import io.bitsquare.trade.OffererTrade;
@@ -102,7 +102,7 @@ public abstract class TradeProtocol {
 
     protected abstract void doApplyMailboxMessage(Message message, Trade trade);
 
-    protected abstract void doHandleDecryptedMessage(TradeMessage tradeMessage, Address peerAddress);
+    protected abstract void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress peerNodeAddress);
 
     public void checkPayoutTxTimeLock(Trade trade) {
         this.trade = trade;

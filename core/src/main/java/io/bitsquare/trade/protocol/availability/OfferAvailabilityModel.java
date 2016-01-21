@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.availability;
 
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.taskrunner.Model;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.availability.messages.OfferMessage;
@@ -33,7 +33,7 @@ public class OfferAvailabilityModel implements Model {
     public final PubKeyRing pubKeyRing;
     public final P2PService p2PService;
 
-    private Address peerAddress;
+    private NodeAddress peerNodeAddress;
     private OfferMessage message;
 
     public OfferAvailabilityModel(Offer offer,
@@ -44,12 +44,12 @@ public class OfferAvailabilityModel implements Model {
         this.p2PService = p2PService;
     }
 
-    public Address getPeerAddress() {
-        return peerAddress;
+    public NodeAddress getPeerNodeAddress() {
+        return peerNodeAddress;
     }
 
-    public void setPeerAddress(Address peerAddress) {
-        this.peerAddress = peerAddress;
+    public void setPeerNodeAddress(NodeAddress peerNodeAddress) {
+        this.peerNodeAddress = peerNodeAddress;
     }
 
     public void setMessage(OfferMessage message) {

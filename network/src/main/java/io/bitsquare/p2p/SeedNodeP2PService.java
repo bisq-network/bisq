@@ -17,15 +17,15 @@ public class SeedNodeP2PService extends P2PService {
     private static final Logger log = LoggerFactory.getLogger(SeedNodeP2PService.class);
 
     public SeedNodeP2PService(SeedNodesRepository seedNodesRepository,
-                              Address mySeedNodeAddress,
+                              NodeAddress mySeedNodeNodeAddress,
                               File torDir,
                               boolean useLocalhost,
                               int networkId,
                               File storageDir) {
-        super(seedNodesRepository, mySeedNodeAddress.port, torDir, useLocalhost, networkId, storageDir, null, null);
+        super(seedNodesRepository, mySeedNodeNodeAddress.port, torDir, useLocalhost, networkId, storageDir, null, null);
 
         // we remove ourselves from the list of seed nodes
-        seedNodeAddresses.remove(mySeedNodeAddress);
+        seedNodeNodeAddresses.remove(mySeedNodeNodeAddress);
     }
 
     @Override

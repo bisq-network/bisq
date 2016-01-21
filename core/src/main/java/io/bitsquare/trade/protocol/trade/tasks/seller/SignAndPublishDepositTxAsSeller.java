@@ -55,7 +55,7 @@ public class SignAndPublishDepositTxAsSeller extends TradeTask {
                     processModel.getRawInputs(),
                     processModel.tradingPeer.getTradeWalletPubKey(),
                     processModel.getTradeWalletPubKey(),
-                    processModel.getArbitratorPubKey(trade.getArbitratorAddress()),
+                    processModel.getArbitratorPubKey(trade.getArbitratorNodeAddress()),
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {

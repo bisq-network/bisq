@@ -20,7 +20,7 @@ package io.bitsquare.gui.util;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.Coin;
@@ -301,8 +301,8 @@ public class BSFormatter {
     }
 
 
-    public String arbitratorAddressesToString(List<Address> addresses) {
-        return addresses.stream().map(e -> e.getFullAddress()).collect(Collectors.joining(", "));
+    public String arbitratorAddressesToString(List<NodeAddress> nodeAddresses) {
+        return nodeAddresses.stream().map(e -> e.getFullAddress()).collect(Collectors.joining(", "));
     }
 
     public String languageCodesToString(List<String> languageLocales) {

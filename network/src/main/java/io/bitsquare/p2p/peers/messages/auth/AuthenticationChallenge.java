@@ -1,7 +1,7 @@
 package io.bitsquare.p2p.peers.messages.auth;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.peers.ReportedPeer;
 
 import java.util.HashSet;
@@ -14,8 +14,8 @@ public final class AuthenticationChallenge extends AuthenticationMessage {
     public final long responderNonce;
     public final HashSet<ReportedPeer> reportedPeers;
 
-    public AuthenticationChallenge(Address senderAddress, long requesterNonce, long responderNonce, HashSet<ReportedPeer> reportedPeers) {
-        super(senderAddress);
+    public AuthenticationChallenge(NodeAddress senderNodeAddress, long requesterNonce, long responderNonce, HashSet<ReportedPeer> reportedPeers) {
+        super(senderNodeAddress);
         this.requesterNonce = requesterNonce;
         this.responderNonce = responderNonce;
         this.reportedPeers = reportedPeers;

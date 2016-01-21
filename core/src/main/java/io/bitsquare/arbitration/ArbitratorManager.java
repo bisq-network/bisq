@@ -26,8 +26,8 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.FirstPeerAuthenticatedListener;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.data.ProtectedData;
@@ -60,7 +60,7 @@ public class ArbitratorManager {
     private final KeyRing keyRing;
     private final ArbitratorService arbitratorService;
     private final User user;
-    private final ObservableMap<Address, Arbitrator> arbitratorsObservableMap = FXCollections.observableHashMap();
+    private final ObservableMap<NodeAddress, Arbitrator> arbitratorsObservableMap = FXCollections.observableHashMap();
 
     // Keys for invited arbitrators in bootstrapping phase (before registration is open to anyone and security payment is implemented)
     // For testing purpose here is a private key so anyone can setup an arbitrator for now.
@@ -157,13 +157,13 @@ public class ArbitratorManager {
     }
 
     public void applyArbitrators() {
-        Map<Address, Arbitrator> map = arbitratorService.getArbitrators();
+        Map<NodeAddress, Arbitrator> map = arbitratorService.getArbitrators();
         log.trace("Arbitrators . size=" + (map.values() != null ? map.values().size() : "0"));
         arbitratorsObservableMap.clear();
-        Map<Address, Arbitrator> filtered = map.values().stream()
+        Map<NodeAddress, Arbitrator> filtered = map.values().stream()
                 .filter(e -> isPublicKeyInList(Utils.HEX.encode(e.getRegistrationPubKey()))
                         && verifySignature(e.getPubKeyRing().getSignaturePubKey(), e.getRegistrationPubKey(), e.getRegistrationSignature()))
-                .collect(Collectors.toMap(Arbitrator::getArbitratorAddress, Function.identity()));
+                .collect(Collectors.toMap(Arbitrator::getArbitratorNodeAddress, Function.identity()));
 
         arbitratorsObservableMap.putAll(filtered);
         // we need to remove accepted arbitrators which are not available anymore
@@ -184,7 +184,7 @@ public class ArbitratorManager {
 
     public void addArbitrator(Arbitrator arbitrator, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         user.setRegisteredArbitrator(arbitrator);
-        arbitratorsObservableMap.put(arbitrator.getArbitratorAddress(), arbitrator);
+        arbitratorsObservableMap.put(arbitrator.getArbitratorNodeAddress(), arbitrator);
         arbitratorService.addArbitrator(arbitrator,
                 () -> {
                     log.debug("Arbitrator successfully saved in P2P network");
@@ -200,7 +200,7 @@ public class ArbitratorManager {
         Arbitrator registeredArbitrator = user.getRegisteredArbitrator();
         if (registeredArbitrator != null) {
             user.setRegisteredArbitrator(null);
-            arbitratorsObservableMap.remove(registeredArbitrator.getArbitratorAddress());
+            arbitratorsObservableMap.remove(registeredArbitrator.getArbitratorNodeAddress());
             arbitratorService.removeArbitrator(registeredArbitrator,
                     () -> {
                         log.debug("Arbitrator successfully removed from P2P network");
@@ -210,7 +210,7 @@ public class ArbitratorManager {
         }
     }
 
-    public ObservableMap<Address, Arbitrator> getArbitratorsObservableMap() {
+    public ObservableMap<NodeAddress, Arbitrator> getArbitratorsObservableMap() {
         return arbitratorsObservableMap;
     }
 

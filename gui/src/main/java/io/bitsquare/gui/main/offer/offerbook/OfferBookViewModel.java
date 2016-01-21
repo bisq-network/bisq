@@ -26,7 +26,7 @@ import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.payment.SepaAccount;
@@ -283,9 +283,9 @@ class OfferBookViewModel extends ActivatableViewModel {
 
 
     public boolean hasMatchingArbitrator(Offer offer) {
-        for (Address offerArbitratorAddress : offer.getArbitratorAddresses()) {
-            for (Address acceptedArbitratorAddress : user.getAcceptedArbitratorAddresses()) {
-                if (offerArbitratorAddress.equals(acceptedArbitratorAddress))
+        for (NodeAddress offerArbitratorNodeAddress : offer.getArbitratorNodeAddresses()) {
+            for (NodeAddress acceptedArbitratorNodeAddress : user.getAcceptedArbitratorAddresses()) {
+                if (offerArbitratorNodeAddress.equals(acceptedArbitratorNodeAddress))
                     return true;
             }
         }

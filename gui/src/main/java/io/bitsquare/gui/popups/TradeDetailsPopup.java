@@ -133,7 +133,7 @@ public class TradeDetailsPopup extends Popup {
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", Layout.GROUP_DISTANCE);
         addLabelTextField(gridPane, rowIndex, "Trade ID:", trade.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++rowIndex, "Trade date:", formatter.formatDateTime(trade.getDate()));
-        addLabelTextField(gridPane, ++rowIndex, "Selected arbitrator:", trade.getArbitratorAddress().getFullAddress());
+        addLabelTextField(gridPane, ++rowIndex, "Selected arbitrator:", trade.getArbitratorNodeAddress().getFullAddress());
 
         if (contract != null) {
             if (buyerPaymentAccountContractData != null) {

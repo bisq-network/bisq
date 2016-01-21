@@ -36,7 +36,7 @@ public class SendFinalizePayoutTxRequest extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            if (trade.getTradingPeerAddress() != null) {
+            if (trade.getTradingPeerNodeAddress() != null) {
                 FinalizePayoutTxRequest message = new FinalizePayoutTxRequest(
                         processModel.getId(),
                         processModel.getPayoutTxSignature(),
@@ -46,7 +46,7 @@ public class SendFinalizePayoutTxRequest extends TradeTask {
                 );
 
                 processModel.getP2PService().sendEncryptedMailboxMessage(
-                        trade.getTradingPeerAddress(),
+                        trade.getTradingPeerNodeAddress(),
                         processModel.tradingPeer.getPubKeyRing(),
                         message,
                         new SendMailboxMessageListener() {
@@ -72,7 +72,7 @@ public class SendFinalizePayoutTxRequest extends TradeTask {
                         }
                 );
             } else {
-                log.error("trade.getTradingPeerAddress() = " + trade.getTradingPeerAddress());
+                log.error("trade.getTradingPeerAddress() = " + trade.getTradingPeerNodeAddress());
                 failed("A needed dependency is null");
             }
         } catch (Throwable t) {

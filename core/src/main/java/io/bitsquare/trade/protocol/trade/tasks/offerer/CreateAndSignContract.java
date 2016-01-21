@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.tasks.offerer;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.BuyerAsOffererTrade;
 import io.bitsquare.trade.Contract;
@@ -50,18 +50,18 @@ public class CreateAndSignContract extends TradeTask {
             PaymentAccountContractData takerPaymentAccountContractData = taker.getPaymentAccountContractData();
             boolean isBuyerOffererAndSellerTaker = trade instanceof BuyerAsOffererTrade;
 
-            Address buyerAddress = isBuyerOffererAndSellerTaker ? processModel.getMyAddress() : processModel.getTempTradingPeerAddress();
-            Address sellerAddress = isBuyerOffererAndSellerTaker ? processModel.getTempTradingPeerAddress() : processModel.getMyAddress();
+            NodeAddress buyerNodeAddress = isBuyerOffererAndSellerTaker ? processModel.getMyAddress() : processModel.getTempTradingPeerNodeAddress();
+            NodeAddress sellerNodeAddress = isBuyerOffererAndSellerTaker ? processModel.getTempTradingPeerNodeAddress() : processModel.getMyAddress();
             log.debug("isBuyerOffererAndSellerTaker " + isBuyerOffererAndSellerTaker);
-            log.debug("buyerAddress " + buyerAddress);
-            log.debug("sellerAddress " + sellerAddress);
+            log.debug("buyerAddress " + buyerNodeAddress);
+            log.debug("sellerAddress " + sellerNodeAddress);
             Contract contract = new Contract(
                     processModel.getOffer(),
                     trade.getTradeAmount(),
                     processModel.getTakeOfferFeeTxId(),
-                    buyerAddress,
-                    sellerAddress,
-                    trade.getArbitratorAddress(),
+                    buyerNodeAddress,
+                    sellerNodeAddress,
+                    trade.getArbitratorNodeAddress(),
                     isBuyerOffererAndSellerTaker,
                     processModel.getAccountId(),
                     taker.getAccountId(),

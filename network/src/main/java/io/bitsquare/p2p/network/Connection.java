@@ -6,8 +6,8 @@ import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.ByteArrayUtils;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.Utils;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
 import org.jetbrains.annotations.Nullable;
@@ -56,7 +56,7 @@ public class Connection implements MessageListener {
     private ObjectOutputStream objectOutputStream;
 
     // mutable data, set from other threads but not changed internally.
-    private Optional<Address> peerAddressOptional = Optional.empty();
+    private Optional<NodeAddress> peerAddressOptional = Optional.empty();
     private volatile boolean isAuthenticated;
     private volatile boolean stopped;
 
@@ -170,10 +170,10 @@ public class Connection implements MessageListener {
         sharedSpace.reportIllegalRequest(illegalRequest);
     }
 
-    public synchronized void setPeerAddress(Address peerAddress) {
+    public synchronized void setPeerAddress(NodeAddress peerNodeAddress) {
         Log.traceCall();
-        checkNotNull(peerAddress, "peerAddress must not be null");
-        peerAddressOptional = Optional.of(peerAddress);
+        checkNotNull(peerNodeAddress, "peerAddress must not be null");
+        peerAddressOptional = Optional.of(peerNodeAddress);
     }
 
 
@@ -193,11 +193,11 @@ public class Connection implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Nullable
-    public synchronized Address getPeerAddress() {
+    public synchronized NodeAddress getPeerAddress() {
         return peerAddressOptional.isPresent() ? peerAddressOptional.get() : null;
     }
 
-    public synchronized Optional<Address> getPeerAddressOptional() {
+    public synchronized Optional<NodeAddress> getPeerAddressOptional() {
         return peerAddressOptional;
     }
 

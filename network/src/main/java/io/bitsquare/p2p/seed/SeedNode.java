@@ -4,7 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.SeedNodeP2PService;
@@ -26,9 +26,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class SeedNode {
     private static final Logger log = LoggerFactory.getLogger(SeedNode.class);
 
-    private Address mySeedNodeAddress = new Address("localhost:8001");
+    private NodeAddress mySeedNodeNodeAddress = new NodeAddress("localhost:8001");
     private boolean useLocalhost = false;
-    private Set<Address> progArgSeedNodes;
+    private Set<NodeAddress> progArgSeedNodes;
     private SeedNodeP2PService seedNodeP2PService;
     private boolean stopped;
     private final String defaultUserDataDir;
@@ -54,7 +54,7 @@ public class SeedNode {
             if (args.length > 0) {
                 String arg0 = args[0];
                 checkArgument(arg0.contains(":") && arg0.split(":").length == 2 && arg0.split(":")[1].length() > 3, "Wrong program argument: " + arg0);
-                mySeedNodeAddress = new Address(arg0);
+                mySeedNodeNodeAddress = new NodeAddress(arg0);
                 if (args.length > 1) {
                     String arg1 = args[1];
                     int networkId = Integer.parseInt(arg1);
@@ -84,9 +84,9 @@ public class SeedNode {
                         list.forEach(e -> {
                             checkArgument(e.contains(":") && e.split(":").length == 2 && e.split(":")[1].length() == 4,
                                     "Wrong program argument");
-                            progArgSeedNodes.add(new Address(e));
+                            progArgSeedNodes.add(new NodeAddress(e));
                         });
-                        progArgSeedNodes.remove(mySeedNodeAddress);
+                        progArgSeedNodes.remove(mySeedNodeNodeAddress);
                     } else if (args.length > 5) {
                         log.error("Too many program arguments." +
                                 "\nProgram arguments: myAddress (incl. port) bitcoinNetworkId " +
@@ -100,20 +100,20 @@ public class SeedNode {
     }
 
     public void createAndStartP2PService(boolean useDetailedLogging) {
-        createAndStartP2PService(mySeedNodeAddress, useLocalhost, Version.getNetworkId(), useDetailedLogging, progArgSeedNodes, null);
+        createAndStartP2PService(mySeedNodeNodeAddress, useLocalhost, Version.getNetworkId(), useDetailedLogging, progArgSeedNodes, null);
     }
 
     @VisibleForTesting
-    public void createAndStartP2PService(Address mySeedNodeAddress,
+    public void createAndStartP2PService(NodeAddress mySeedNodeNodeAddress,
                                          boolean useLocalhost,
                                          int networkId,
                                          boolean useDetailedLogging,
-                                         @Nullable Set<Address> progArgSeedNodes,
+                                         @Nullable Set<NodeAddress> progArgSeedNodes,
                                          @Nullable P2PServiceListener listener) {
         Log.traceCall();
 
         Path appPath = Paths.get(defaultUserDataDir,
-                "Bitsquare_seed_node_" + String.valueOf(mySeedNodeAddress.getFullAddress().replace(":", "_")));
+                "Bitsquare_seed_node_" + String.valueOf(mySeedNodeNodeAddress.getFullAddress().replace(":", "_")));
 
         String logPath = Paths.get(appPath.toString(), "logs").toString();
         Log.setup(logPath, useDetailedLogging);
@@ -122,9 +122,9 @@ public class SeedNode {
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
         if (progArgSeedNodes != null && !progArgSeedNodes.isEmpty()) {
             if (useLocalhost)
-                seedNodesRepository.setLocalhostSeedNodeAddresses(progArgSeedNodes);
+                seedNodesRepository.setLocalhostSeedNodeNodeAddresses(progArgSeedNodes);
             else
-                seedNodesRepository.setTorSeedNodeAddresses(progArgSeedNodes);
+                seedNodesRepository.setTorSeedNodeNodeAddresses(progArgSeedNodes);
         }
 
         File storageDir = Paths.get(appPath.toString(), "db").toFile();
@@ -135,7 +135,7 @@ public class SeedNode {
         if (torDir.mkdirs())
             log.info("Created torDir at " + torDir.getAbsolutePath());
 
-        seedNodeP2PService = new SeedNodeP2PService(seedNodesRepository, mySeedNodeAddress, torDir, useLocalhost, networkId, storageDir);
+        seedNodeP2PService = new SeedNodeP2PService(seedNodesRepository, mySeedNodeNodeAddress, torDir, useLocalhost, networkId, storageDir);
         seedNodeP2PService.start(listener);
     }
 

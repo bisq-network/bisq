@@ -17,8 +17,8 @@
 
 package io.bitsquare.trade.protocol.trade;
 
-import io.bitsquare.p2p.Address;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.trade.BuyerAsOffererTrade;
 import io.bitsquare.trade.Trade;
@@ -79,11 +79,11 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
 
         if (message instanceof MailboxMessage) {
             MailboxMessage mailboxMessage = (MailboxMessage) message;
-            Address peerAddress = mailboxMessage.getSenderAddress();
+            NodeAddress peerNodeAddress = mailboxMessage.getSenderNodeAddress();
             if (message instanceof FinalizePayoutTxRequest) {
-                handle((FinalizePayoutTxRequest) message, peerAddress);
+                handle((FinalizePayoutTxRequest) message, peerNodeAddress);
             } else if (message instanceof DepositTxPublishedMessage) {
-                handle((DepositTxPublishedMessage) message, peerAddress);
+                handle((DepositTxPublishedMessage) message, peerNodeAddress);
             }
         }
     }
@@ -94,11 +94,11 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleTakeOfferRequest(TradeMessage message, Address peerAddress) {
+    public void handleTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress) {
         checkTradeId(processModel.getId(), message);
         checkArgument(message instanceof PayDepositRequest);
         processModel.setTradeMessage(message);
-        processModel.setTempTradingPeerAddress(peerAddress);
+        processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
                 () -> handleTaskRunnerSuccess("handleTakeOfferRequest"),
@@ -123,10 +123,10 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(DepositTxPublishedMessage tradeMessage, Address peerAddress) {
+    private void handle(DepositTxPublishedMessage tradeMessage, NodeAddress peerNodeAddress) {
         stopTimeout();
         processModel.setTradeMessage(tradeMessage);
-        processModel.setTempTradingPeerAddress(peerAddress);
+        processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
                 () -> handleTaskRunnerSuccess("handle DepositTxPublishedMessage"),
@@ -163,10 +163,10 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(FinalizePayoutTxRequest tradeMessage, Address peerAddress) {
+    private void handle(FinalizePayoutTxRequest tradeMessage, NodeAddress peerNodeAddress) {
         log.debug("handle RequestFinalizePayoutTxMessage called");
         processModel.setTradeMessage(tradeMessage);
-        processModel.setTempTradingPeerAddress(peerAddress);
+        processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
                 () -> {
@@ -191,11 +191,11 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, Address peerAddress) {
+    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress peerNodeAddress) {
         if (tradeMessage instanceof DepositTxPublishedMessage) {
-            handle((DepositTxPublishedMessage) tradeMessage, peerAddress);
+            handle((DepositTxPublishedMessage) tradeMessage, peerNodeAddress);
         } else if (tradeMessage instanceof FinalizePayoutTxRequest) {
-            handle((FinalizePayoutTxRequest) tradeMessage, peerAddress);
+            handle((FinalizePayoutTxRequest) tradeMessage, peerNodeAddress);
         } else {
             log.error("Incoming decrypted tradeMessage not supported. " + tradeMessage);
         }

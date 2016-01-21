@@ -1,8 +1,8 @@
 package io.bitsquare.p2p.messaging;
 
-import io.bitsquare.p2p.Address;
+import io.bitsquare.p2p.NodeAddress;
 
 public interface DecryptedMailboxListener {
 
-    void onMailboxMessageAdded(DecryptedMsgWithPubKey decryptedMsgWithPubKey, Address senderAddress);
+    void onMailboxMessageAdded(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress senderNodeAddress);
 }

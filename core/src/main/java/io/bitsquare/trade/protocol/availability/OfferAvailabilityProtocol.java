@@ -85,7 +85,7 @@ public class OfferAvailabilityProtocol {
         model.offer.setState(Offer.State.UNDEFINED);
 
         model.p2PService.addDecryptedMailListener(decryptedMailListener);
-        model.setPeerAddress(model.offer.getOffererAddress());
+        model.setPeerNodeAddress(model.offer.getOffererNodeAddress());
 
         taskRunner = new TaskRunner<>(model,
                 () -> {
