@@ -25,7 +25,8 @@ public class FileUtilities {
 
     /**
      * Closes both input and output streams when done.
-     * @param in Stream to read from
+     *
+     * @param in  Stream to read from
      * @param out Stream to write to
      * @throws java.io.IOException - If close on input or output fails
      */
@@ -39,7 +40,8 @@ public class FileUtilities {
 
     /**
      * Won't close the input stream when it's done, needed to handle ZipInputStreams
-     * @param in Won't be closed
+     *
+     * @param in  Won't be closed
      * @param out Will be closed
      * @throws java.io.IOException - If close on output fails
      */
@@ -84,7 +86,8 @@ public class FileUtilities {
 
     /**
      * Reads the input stream, deletes fileToWriteTo if it exists and over writes it with the stream.
-     * @param readFrom Stream to read from
+     *
+     * @param readFrom      Stream to read from
      * @param fileToWriteTo File to write to
      * @throws java.io.IOException - If any of the file operations fail
      */
@@ -110,8 +113,9 @@ public class FileUtilities {
 
     /**
      * This has to exist somewhere! Why isn't it a part of the standard Java library?
+     *
      * @param destinationDirectory Directory files are to be extracted to
-     * @param zipFileInputStream Stream to unzip
+     * @param zipFileInputStream   Stream to unzip
      * @throws java.io.IOException - If there are any file errors
      */
     public static void extractContentFromZip(File destinationDirectory, InputStream zipFileInputStream)

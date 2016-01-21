@@ -117,8 +117,7 @@ public class InfoDisplay extends Parent {
                     link.setStyle("-fx-focus-color: transparent;");
                     link.setOnAction(onAction.get());
                     getParent().layout();
-                }
-                else {
+                } else {
                     onAction.get().handle(actionEvent);
                 }
             }

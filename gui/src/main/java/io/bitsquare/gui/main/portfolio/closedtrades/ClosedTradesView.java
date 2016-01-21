@@ -100,8 +100,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                             offerDetailsPopup.show(tradable.getOffer());
                                     });
                                     setGraphic(hyperlink);
-                                }
-                                else {
+                                } else {
                                     setGraphic(null);
                                     setId(null);
                                 }

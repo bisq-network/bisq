@@ -91,8 +91,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                     log.error("That must not happen. We got a pending state but we are in the closed trades list.");
                     return trade.getState().toString();
                 }
-            }
-            else if (item.getTradable() instanceof OpenOffer) {
+            } else if (item.getTradable() instanceof OpenOffer) {
                 OpenOffer.State state = ((OpenOffer) item.getTradable()).getState();
                 log.trace("OpenOffer state {}", state);
                 switch (state) {

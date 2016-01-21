@@ -17,14 +17,13 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps;
 
-import io.bitsquare.gui.util.Colors;
-
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.*;
-
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bitsquare.gui.util.Colors;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 
 public class TradeWizardItem extends Button {
     public Class<? extends TradeStepDetailsView> getViewClass() {

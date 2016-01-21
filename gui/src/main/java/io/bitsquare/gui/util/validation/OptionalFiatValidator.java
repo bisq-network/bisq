@@ -48,8 +48,7 @@ public class OptionalFiatValidator extends FiatValidator {
                 result = validateIfNotNegative(input)
                         .and(validateIfNotExceedsMinFiatValue(input))
                         .and(validateIfNotExceedsMaxFiatValue(input));
-            }
-            else {
+            } else {
                 // we accept zero input
                 return new ValidationResult(true);
             }

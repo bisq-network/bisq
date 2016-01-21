@@ -14,7 +14,7 @@
   ~ You should have received a copy of the GNU Affero General Public License
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
 <AnchorPane xmlns:fx="http://javafx.com/fxml">
 
 </AnchorPane>

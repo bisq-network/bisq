@@ -346,7 +346,7 @@ public class SocksSocket extends Socket {
     private void processReply(ProxyMessage reply) throws SocksException {
         localPort = reply.port;
         /*
-		 * If the server have assigned same host as it was contacted on it might
+         * If the server have assigned same host as it was contacted on it might
 		 * return an address of all zeros
 		 */
         if (reply.host.equals("0.0.0.0")) {

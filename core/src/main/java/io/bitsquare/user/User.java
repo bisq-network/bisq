@@ -106,7 +106,7 @@ public class User implements Serializable {
             String english = LanguageUtil.getEnglishLanguageLocaleCode();
             if (!acceptedLanguageLocaleCodes.contains(english))
                 acceptedLanguageLocaleCodes.add(english);
-            
+
             acceptedArbitrators = new ArrayList<>();
         }
         storage.queueUpForSave();

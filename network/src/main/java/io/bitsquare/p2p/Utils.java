@@ -24,7 +24,7 @@ public class Utils {
             return port;
         } catch (IOException ignored) {
             return new Random().nextInt(10000) + 50000;
-        } 
+        }
     }
 
     public static byte[] compress(Serializable input) {

@@ -32,8 +32,10 @@ import javax.inject.Inject;
 @FxmlView
 public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTradesViewModel> {
 
-    @FXML TableView<FailedTradesListItem> table;
-    @FXML TableColumn<FailedTradesListItem, FailedTradesListItem> priceColumn, amountColumn, volumeColumn,
+    @FXML
+    TableView<FailedTradesListItem> table;
+    @FXML
+    TableColumn<FailedTradesListItem, FailedTradesListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, tradeIdColumn, stateColumn;
     private final TradeDetailsPopup tradeDetailsPopup;
 
@@ -86,8 +88,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                                         tradeDetailsPopup.show(trade);
                                     });
                                     setGraphic(hyperlink);
-                                }
-                                else {
+                                } else {
                                     setGraphic(null);
                                     setId(null);
                                 }

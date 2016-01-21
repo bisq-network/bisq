@@ -60,7 +60,7 @@ public class P2PDataStorage implements MessageListener {
 
         storage = new Storage<>(storageDir);
         removeExpiredEntriesExecutor = Utilities.getScheduledThreadPoolExecutor("removeExpiredEntries", 1, 10, 5);
-        
+
         init();
     }
 

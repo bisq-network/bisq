@@ -38,7 +38,8 @@ import javax.inject.Inject;
 @FxmlView
 public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
 
-    @FXML Tab openOffersTab, pendingTradesTab, closedTradesTab;
+    @FXML
+    Tab openOffersTab, pendingTradesTab, closedTradesTab;
     private final Tab failedTradesTab = new Tab("Failed");
     private Tab currentTab;
     private Navigation.Listener navigationListener;

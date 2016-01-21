@@ -22,19 +22,23 @@ import io.bitsquare.gui.common.view.InitializableView;
 import io.bitsquare.gui.common.view.Wizard;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.PasswordField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 
 import javax.inject.Inject;
-
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
 
 @FxmlView
 public class ChangePasswordView extends InitializableView<GridPane, ChangePasswordViewModel> implements Wizard.Step {
 
-    @FXML HBox buttonsHBox;
-    @FXML Button saveButton, skipButton;
-    @FXML PasswordField oldPasswordField, passwordField, repeatedPasswordField;
+    @FXML
+    HBox buttonsHBox;
+    @FXML
+    Button saveButton, skipButton;
+    @FXML
+    PasswordField oldPasswordField, passwordField, repeatedPasswordField;
 
     private Wizard wizard;
 

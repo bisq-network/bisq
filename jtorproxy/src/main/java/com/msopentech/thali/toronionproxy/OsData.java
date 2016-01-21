@@ -34,6 +34,7 @@ import java.util.Scanner;
 
 public class OsData {
     public enum OsType {Windows, Linux32, Linux64, Mac, Android}
+
     private static OsType detectedType = null;
 
     public static OsType getOsType() {
@@ -50,7 +51,7 @@ public class OsData {
     protected static OsType actualGetOsType() {
 
         //This also works for ART
-        if (System.getProperty("java.vm.name").contains("Dalvik")) { 
+        if (System.getProperty("java.vm.name").contains("Dalvik")) {
             return OsType.Android;
         }
 

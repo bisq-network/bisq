@@ -50,11 +50,11 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
  * Note that you will most likely need to actually call into the
  * AndroidOnionProxyManager or JavaOnionProxyManager in order to create the
  * right bindings for your environment.
- * <p/>
+ * <p>
  * This class is thread safe but that's mostly because we hit everything over
  * the head with 'synchronized'. Given the way this class is used there
  * shouldn't be any performance implications of this.
- * <p/>
+ * <p>
  * This class began life as TorPlugin from the Briar Project
  */
 public abstract class OnionProxyManager {
@@ -98,17 +98,13 @@ public abstract class OnionProxyManager {
      * given time for bootstrap to finish and if it doesn't then will restart
      * the bootstrap process the given number of repeats.
      *
-     * @param secondsBeforeTimeOut
-     *            Seconds to wait for boot strapping to finish
-     * @param numberOfRetries
-     *            Number of times to try recycling the Tor OP before giving up
-     *            on bootstrapping working
+     * @param secondsBeforeTimeOut Seconds to wait for boot strapping to finish
+     * @param numberOfRetries      Number of times to try recycling the Tor OP before giving up
+     *                             on bootstrapping working
      * @return True if bootstrap succeeded, false if there is a problem or the
-     *         bootstrap couldn't complete in the given time.
-     * @throws java.lang.InterruptedException
-     *             - You know, if we are interrupted
-     * @throws java.io.IOException
-     *             - IO Exceptions
+     * bootstrap couldn't complete in the given time.
+     * @throws java.lang.InterruptedException - You know, if we are interrupted
+     * @throws java.io.IOException            - IO Exceptions
      */
     public synchronized boolean startWithRepeat(int secondsBeforeTimeOut, int numberOfRetries)
             throws InterruptedException, IOException {
@@ -165,8 +161,7 @@ public abstract class OnionProxyManager {
      * listening on
      *
      * @return Discovered socks port
-     * @throws java.io.IOException
-     *             - File errors
+     * @throws java.io.IOException - File errors
      */
     public synchronized int getIPv4LocalHostSocksPort() throws IOException {
         if (isRunning() == false) {
@@ -191,14 +186,11 @@ public abstract class OnionProxyManager {
     /**
      * Publishes a hidden service
      *
-     * @param hiddenServicePort
-     *            The port that the hidden service will accept connections on
-     * @param localPort
-     *            The local port that the hidden service will relay connections
-     *            to
+     * @param hiddenServicePort The port that the hidden service will accept connections on
+     * @param localPort         The local port that the hidden service will relay connections
+     *                          to
      * @return The hidden service's onion address in the form X.onion.
-     * @throws java.io.IOException
-     *             - File errors
+     * @throws java.io.IOException - File errors
      */
     public synchronized String publishHiddenService(int hiddenServicePort, int localPort) throws IOException {
         if (controlConnection == null) {
@@ -283,8 +275,7 @@ public abstract class OnionProxyManager {
      * going to work until you either call startWithRepeat or
      * installAndStartTorOp
      *
-     * @throws java.io.IOException
-     *             - File errors
+     * @throws java.io.IOException - File errors
      */
     public synchronized void stop() throws IOException {
         try {
@@ -308,8 +299,7 @@ public abstract class OnionProxyManager {
      * to network connections.
      *
      * @return True if running
-     * @throws java.io.IOException
-     *             - IO exceptions
+     * @throws java.io.IOException - IO exceptions
      */
     public synchronized boolean isRunning() throws IOException {
         return isBootstrapped() && isNetworkEnabled();
@@ -318,11 +308,9 @@ public abstract class OnionProxyManager {
     /**
      * Tells the Tor OP if it should accept network connections
      *
-     * @param enable
-     *            If true then the Tor OP will accept SOCKS connections,
-     *            otherwise not.
-     * @throws java.io.IOException
-     *             - IO exceptions
+     * @param enable If true then the Tor OP will accept SOCKS connections,
+     *               otherwise not.
+     * @throws java.io.IOException - IO exceptions
      */
     public synchronized void enableNetwork(boolean enable) throws IOException {
         if (controlConnection == null) {
@@ -336,9 +324,8 @@ public abstract class OnionProxyManager {
      * Specifies if Tor OP is accepting network connections
      *
      * @return True if network is enabled (that doesn't mean that the device is
-     *         online, only that the Tor OP is trying to connect to the network)
-     * @throws java.io.IOException
-     *             - IO exceptions
+     * online, only that the Tor OP is trying to connect to the network)
+     * @throws java.io.IOException - IO exceptions
      */
     public synchronized boolean isNetworkEnabled() throws IOException {
         if (controlConnection == null) {
@@ -391,10 +378,8 @@ public abstract class OnionProxyManager {
      * to actually connect it to the network.
      *
      * @return True if all files installed and Tor OP successfully started
-     * @throws java.io.IOException
-     *             - IO Exceptions
-     * @throws java.lang.InterruptedException
-     *             - If we are, well, interrupted
+     * @throws java.io.IOException            - IO Exceptions
+     * @throws java.lang.InterruptedException - If we are, well, interrupted
      */
     public synchronized boolean installAndStartTorOp() throws IOException, InterruptedException {
         // The Tor OP will die if it looses the connection to its socket so if
@@ -598,8 +583,7 @@ public abstract class OnionProxyManager {
     /**
      * Alas old versions of Android do not support setExecutable.
      *
-     * @param f
-     *            File to make executable
+     * @param f File to make executable
      * @return True if it worked, otherwise false.
      */
     protected abstract boolean setExecutable(File f);

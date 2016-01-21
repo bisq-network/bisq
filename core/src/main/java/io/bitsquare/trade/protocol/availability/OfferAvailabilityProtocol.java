@@ -86,7 +86,7 @@ public class OfferAvailabilityProtocol {
 
         model.p2PService.addDecryptedMailListener(decryptedMailListener);
         model.setPeerAddress(model.offer.getOffererAddress());
-        
+
         taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("sequence at sendOfferAvailabilityRequest completed");

@@ -17,9 +17,8 @@
 
 package io.bitsquare.gui.common.view;
 
-import java.util.HashMap;
-
 import javax.inject.Inject;
+import java.util.HashMap;
 
 public class CachingViewLoader implements ViewLoader {
 

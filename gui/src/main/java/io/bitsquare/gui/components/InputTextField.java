@@ -18,17 +18,18 @@
 package io.bitsquare.gui.components;
 
 import io.bitsquare.gui.util.validation.InputValidator;
-
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
-import javafx.scene.control.*;
-import javafx.scene.effect.*;
-import javafx.scene.layout.*;
-import javafx.scene.paint.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.effect.BlurType;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.Effect;
+import javafx.scene.layout.Region;
+import javafx.scene.paint.Color;
 import javafx.stage.Window;
-
 import org.controlsfx.control.PopOver;
 
 /**

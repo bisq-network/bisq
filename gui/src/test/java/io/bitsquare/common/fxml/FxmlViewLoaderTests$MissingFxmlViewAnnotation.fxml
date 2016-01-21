@@ -15,7 +15,7 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
 <AnchorPane fx:id="root" fx:controller="io.bitsquare.common.fxml.FxmlViewLoaderTests$MissingFxmlViewAnnotation"
             xmlns:fx="http://javafx.com/fxml">
 </AnchorPane>

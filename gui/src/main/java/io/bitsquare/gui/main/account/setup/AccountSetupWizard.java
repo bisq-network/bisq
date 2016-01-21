@@ -38,8 +38,10 @@ import javax.inject.Inject;
 @FxmlView
 public class AccountSetupWizard extends ActivatableView implements Wizard {
 
-    @FXML VBox leftVBox;
-    @FXML AnchorPane content;
+    @FXML
+    VBox leftVBox;
+    @FXML
+    AnchorPane content;
 
     private WizardItem seedWords, password, fiatAccount, restrictions;
     private Navigation.Listener listener;
@@ -63,8 +65,7 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
 
             if (viewClass == SeedWordsView.class) {
                 seedWords.show();
-            }
-            else if (viewClass == PasswordView.class) {
+            } else if (viewClass == PasswordView.class) {
                 seedWords.onCompleted();
                 password.show();
             } else if (viewClass == ArbitratorSelectionView.class) {
@@ -107,8 +108,7 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
         if (currentStep instanceof SeedWordsView) {
             seedWords.onCompleted();
             password.show();
-        }
-        else if (currentStep instanceof PasswordView) {
+        } else if (currentStep instanceof PasswordView) {
             password.onCompleted();
             restrictions.show();
         } else if (currentStep instanceof ArbitratorSelectionView) {

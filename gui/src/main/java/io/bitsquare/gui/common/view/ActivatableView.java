@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.common.view;
 
-import javafx.scene.*;
+import javafx.scene.Node;
 
 public abstract class ActivatableView<R extends Node, M> extends InitializableView<R, M> {
 

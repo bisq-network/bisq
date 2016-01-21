@@ -80,8 +80,7 @@ abstract public class OnionProxyContext {
     /**
      * Sets environment variables and working directory needed for Tor
      *
-     * @param processBuilder
-     *            we will call start on this to run Tor
+     * @param processBuilder we will call start on this to run Tor
      */
     void setEnvironmentArgsAndWorkingDirectoryForStart(ProcessBuilder processBuilder) {
         processBuilder.directory(getWorkingDirectory());
@@ -164,7 +163,7 @@ abstract public class OnionProxyContext {
      * Files we pull out of the AAR or JAR are typically at the root but for
      * executables outside of Android the executable for a particular platform
      * is in a specific sub-directory.
-     * 
+     *
      * @return Path to executable in JAR Resources
      */
     protected abstract String getPathToTorExecutable();

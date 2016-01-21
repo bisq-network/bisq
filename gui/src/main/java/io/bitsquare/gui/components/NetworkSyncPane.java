@@ -19,8 +19,10 @@ package io.bitsquare.gui.components;
 
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.util.Duration;
 
 // TODO replace with new notification component from lighthouse/bitcoinJ

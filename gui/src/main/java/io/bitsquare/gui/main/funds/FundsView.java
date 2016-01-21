@@ -38,7 +38,8 @@ import javax.inject.Inject;
 @FxmlView
 public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
-    @FXML Tab reservedTab, withdrawalTab, transactionsTab;
+    @FXML
+    Tab reservedTab, withdrawalTab, transactionsTab;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;

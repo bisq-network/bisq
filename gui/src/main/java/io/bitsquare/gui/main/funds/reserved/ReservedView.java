@@ -47,7 +47,8 @@ import java.util.stream.Stream;
 
 @FxmlView
 public class ReservedView extends ActivatableView<VBox, Void> {
-    @FXML TableView<ReservedListItem> table;
+    @FXML
+    TableView<ReservedListItem> table;
     @FXML
     TableColumn<ReservedListItem, ReservedListItem> labelColumn, addressColumn, balanceColumn, confidenceColumn;
 
@@ -154,8 +155,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                                 });
                             }
                             setGraphic(hyperlink);
-                        }
-                        else {
+                        } else {
                             setGraphic(null);
                             setId(null);
                         }
@@ -233,8 +233,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     setGraphic(item.getProgressIndicator());
-                                }
-                                else {
+                                } else {
                                     setGraphic(null);
                                 }
                             }

@@ -31,7 +31,7 @@ public final class PasswordValidator extends InputValidator {
 
         if (externalValidationResult != null && !externalValidationResult.isValid)
             return externalValidationResult;
-        
+
         return result;
     }
 

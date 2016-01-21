@@ -23,7 +23,7 @@ public class SeedNodeRequestDataManager extends RequestDataManager {
         if (dataStorage.getMap().isEmpty()) {
             if (requestDataFromAuthenticatedSeedNodeTimer == null)
                 requestDataFromAuthenticatedSeedNodeTimer = UserThread.runAfterRandomDelay(()
-                    -> requestDataFromAuthenticatedSeedNode(peerAddress, connection), 2, 5, TimeUnit.SECONDS);
+                        -> requestDataFromAuthenticatedSeedNode(peerAddress, connection), 2, 5, TimeUnit.SECONDS);
         }
         super.onPeerAuthenticated(peerAddress, connection);
     }

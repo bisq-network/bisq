@@ -17,12 +17,10 @@
 
 package io.bitsquare.gui.main.account.content.changepassword;
 
+import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.PasswordValidator;
-
-import com.google.inject.Inject;
-
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -74,12 +72,10 @@ class ChangePasswordViewModel implements ViewModel {
                     return true;
                 else
                     errorMessage = "The 2 passwords does not match.";
-            }
-            else {
+            } else {
                 errorMessage = result.errorMessage;
             }
-        }
-        else {
+        } else {
             errorMessage = result.errorMessage;
         }
         return false;

@@ -18,13 +18,11 @@
 package io.bitsquare.gui.util;
 
 import com.google.common.base.Stopwatch;
-
-import java.util.concurrent.TimeUnit;
-
 import javafx.animation.AnimationTimer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.TimeUnit;
 
 public class Profiler {
     private static final Logger log = LoggerFactory.getLogger(Profiler.class);

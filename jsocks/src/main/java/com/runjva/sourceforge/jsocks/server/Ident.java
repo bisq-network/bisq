@@ -169,7 +169,7 @@ public class Ident {
     // /////////////////////////////////////////////
     // USED for Testing
     /*
-	 * public static void main(String[] args) throws IOException{
+     * public static void main(String[] args) throws IOException{
 	 * 
 	 * Socket s = null; s = new Socket("gp101-16", 1391);
 	 * 

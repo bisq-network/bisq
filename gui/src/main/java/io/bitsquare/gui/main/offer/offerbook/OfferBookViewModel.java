@@ -274,7 +274,7 @@ class OfferBookViewModel extends ActivatableViewModel {
             boolean directionResult = offer.getDirection() != direction;
             boolean currencyResult = offer.getCurrencyCode().equals(tradeCurrency.getCode());
             boolean paymentMethodResult = true;
-            if (!(paymentMethod instanceof AllPaymentMethodsEntry)) 
+            if (!(paymentMethod instanceof AllPaymentMethodsEntry))
                 paymentMethodResult = offer.getPaymentMethod().equals(paymentMethod);
 
             return directionResult && currencyResult && paymentMethodResult;

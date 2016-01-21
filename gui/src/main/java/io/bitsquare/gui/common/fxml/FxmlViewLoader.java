@@ -58,8 +58,7 @@ public class FxmlViewLoader implements ViewLoader {
         if (fxmlView == null) {
             convention = defaultConvention;
             specifiedLocation = defaultLocation;
-        }
-        else {
+        } else {
             convention = fxmlView.convention();
             specifiedLocation = fxmlView.location();
         }

@@ -65,7 +65,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         transactionFeeFocusedListener = (o, oldValue, newValue) -> {
             model.onFocusOutTransactionFeeTextField(oldValue, newValue, transactionFeeInputTextField.getText());
         };
-        
+
         addTitledGroupBg(root, ++gridRow, 5, "Display options", Layout.GROUP_DISTANCE);
         useAnimationsCheckBox = addLabelCheckBox(root, gridRow, "Use animations:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         useEffectsCheckBox = addLabelCheckBox(root, ++gridRow, "Use effects:", "").second;

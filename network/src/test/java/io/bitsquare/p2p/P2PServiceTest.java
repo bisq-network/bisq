@@ -44,6 +44,7 @@ public class P2PServiceTest {
     private P2PService p2PService1, p2PService2, p2PService3;
     private SeedNode seedNode1, seedNode2, seedNode3;
     private File dir1, dir2, dir3;
+
     @Before
     public void setup() throws InterruptedException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, CryptoException {
         Security.addProvider(new BouncyCastleProvider());

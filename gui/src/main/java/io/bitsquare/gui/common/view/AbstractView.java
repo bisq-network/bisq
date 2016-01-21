@@ -18,8 +18,7 @@
 package io.bitsquare.gui.common.view;
 
 import javafx.fxml.FXML;
-import javafx.scene.*;
-
+import javafx.scene.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +26,9 @@ public abstract class AbstractView<R extends Node, M> implements View {
 
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    protected @FXML R root;
+    protected
+    @FXML
+    R root;
     protected final M model;
 
     public AbstractView(M model) {

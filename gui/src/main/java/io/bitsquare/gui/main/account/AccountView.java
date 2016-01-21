@@ -113,8 +113,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
             tab = arbitratorRegistrationTab;
             arbitratorRegistrationView = (ArbitratorRegistrationView) view;
             arbitratorRegistrationView.onTabSelection(true);
-        }
-        else {
+        } else {
             throw new IllegalArgumentException("View not supported: " + view);
         }
 

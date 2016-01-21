@@ -17,12 +17,11 @@
 
 package io.bitsquare.gui.common.view;
 
-import java.net.URL;
-
-import java.util.ResourceBundle;
-
 import javafx.fxml.Initializable;
-import javafx.scene.*;
+import javafx.scene.Node;
+
+import java.net.URL;
+import java.util.ResourceBundle;
 
 public abstract class InitializableView<R extends Node, M> extends AbstractView<R, M> implements Initializable {
 

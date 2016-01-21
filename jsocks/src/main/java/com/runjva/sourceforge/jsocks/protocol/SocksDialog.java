@@ -670,7 +670,7 @@ public class SocksDialog extends Dialog implements WindowListener,
     }// end guiInit
 
 	/*
-	 * // Main //////////////////////////////////// public static void
+     * // Main //////////////////////////////////// public static void
 	 * main(String[] args) throws Exception{ Frame f = new
 	 * Frame("Test for SocksDialog"); f.add("Center", new
 	 * Label("Fill the Dialog")); SocksDialog socksdialog = new SocksDialog(f);

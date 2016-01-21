@@ -19,24 +19,18 @@ package io.bitsquare.common.fxml;
 
 import io.bitsquare.gui.common.ViewfxException;
 import io.bitsquare.gui.common.fxml.FxmlViewLoader;
-import io.bitsquare.gui.common.view.AbstractView;
-import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.common.view.View;
-import io.bitsquare.gui.common.view.ViewFactory;
-import io.bitsquare.gui.common.view.ViewLoader;
-
-import java.util.ResourceBundle;
-
+import io.bitsquare.gui.common.view.*;
 import javafx.fxml.LoadException;
-
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.ResourceBundle;
+
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 

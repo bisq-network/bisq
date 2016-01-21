@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.common.view;
 
-import javafx.scene.*;
+import javafx.scene.Node;
 
 public interface View {
     Node getRoot();

@@ -387,8 +387,7 @@ public class Notification {
 
             if (stage.isShowing()) {
                 stage.toFront();
-            }
-            else {
+            } else {
                 stage.show();
             }
 
@@ -530,14 +529,11 @@ public class Notification {
             final EventHandler<NotificationEvent> HANDLER;
             if (NotificationEvent.NOTIFICATION_PRESSED == TYPE) {
                 HANDLER = getOnNotificationPressed();
-            }
-            else if (NotificationEvent.SHOW_NOTIFICATION == TYPE) {
+            } else if (NotificationEvent.SHOW_NOTIFICATION == TYPE) {
                 HANDLER = getOnShowNotification();
-            }
-            else if (NotificationEvent.HIDE_NOTIFICATION == TYPE) {
+            } else if (NotificationEvent.HIDE_NOTIFICATION == TYPE) {
                 HANDLER = getOnHideNotification();
-            }
-            else {
+            } else {
                 HANDLER = null;
             }
             if (null == HANDLER) return;

@@ -20,11 +20,11 @@ package io.bitsquare.common.support;
 import io.bitsquare.gui.common.view.AbstractView;
 import io.bitsquare.gui.common.view.CachingViewLoader;
 import io.bitsquare.gui.common.view.ViewLoader;
-
 import org.junit.Test;
 
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 
 public class CachingViewLoaderTests {
 

@@ -277,7 +277,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     boolean isMinAmountLessOrEqualAmount() {
         //noinspection SimplifiableIfStatement
-        if (offer != null && offer.getMinAmount() != null && amountAsCoin.get() != null) 
+        if (offer != null && offer.getMinAmount() != null && amountAsCoin.get() != null)
             return !offer.getMinAmount().isGreaterThan(amountAsCoin.get());
         return true;
     }

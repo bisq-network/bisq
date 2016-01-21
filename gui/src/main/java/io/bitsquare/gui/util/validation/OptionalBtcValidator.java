@@ -50,8 +50,7 @@ public class OptionalBtcValidator extends BtcValidator {
                 result = validateIfNotNegative(input)
                         .and(validateIfNotFractionalBtcValue(input))
                         .and(validateIfNotExceedsMaxBtcValue(input));
-            }
-            else {
+            } else {
                 // we accept zero input
                 return new ValidationResult(true);
             }
