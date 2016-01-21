@@ -99,7 +99,7 @@ public class EmptyWalletPopup extends Popup {
         Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++rowIndex, "Your destination address:");
         addressInputTextField = tuple.second;
         emptyWalletButton = new Button("Empty wallet");
-        boolean isBalanceSufficient = Restrictions.isMinSpendableAmount(totalBalance);
+        boolean isBalanceSufficient = Restrictions.isAboveDust(totalBalance);
         emptyWalletButton.setDefaultButton(isBalanceSufficient);
         closeButton.setDefaultButton(!isBalanceSufficient);
         emptyWalletButton.setDisable(!isBalanceSufficient && addressInputTextField.getText().length() > 0);

@@ -117,9 +117,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         offerId = UUID.randomUUID().toString();
         addressEntry = walletService.getAddressEntryByOfferId(offerId);
-        offerFeeAsCoin = FeePolicy.CREATE_OFFER_FEE;
-        networkFeeAsCoin = FeePolicy.TX_FEE;
-        securityDepositAsCoin = FeePolicy.SECURITY_DEPOSIT;
+        offerFeeAsCoin = FeePolicy.getCreateOfferFee();
+        networkFeeAsCoin = FeePolicy.getFixedTxFeeForTrades();
+        securityDepositAsCoin = FeePolicy.getSecurityDeposit();
 
         balanceListener = new BalanceListener(getAddressEntry().getAddress()) {
             @Override

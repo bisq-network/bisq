@@ -131,7 +131,6 @@ public class TradeManager {
                 log.trace("onMailboxMessageAdded senderAddress: " + senderAddress);
                 Message message = decryptedMsgWithPubKey.message;
                 if (message instanceof PayDepositRequest) {
-                    //TODO is that used????
                     PayDepositRequest payDepositRequest = (PayDepositRequest) message;
                     log.trace("Received payDepositRequest: " + payDepositRequest);
                     if (payDepositRequest.getSenderAddress().equals(senderAddress))
@@ -162,12 +161,6 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // When all services are initialized we create the protocols for our open offers and persisted pendingTrades
-    // OffererAsBuyerProtocol listens for take offer requests, so we need to instantiate it early.
-    public void onAllServicesInitialized() {
-        log.trace("onAllServicesInitialized");
-    }
 
     private void initPendingTrades() {
         if (firstPeerAuthenticatedListener != null) p2PService.removeP2PServiceListener(firstPeerAuthenticatedListener);

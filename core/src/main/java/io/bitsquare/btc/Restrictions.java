@@ -34,7 +34,11 @@ public class Restrictions {
         MAX_TRADE_AMOUNT = maxTradeAmount;
     }
 
-    public static boolean isMinSpendableAmount(Coin amount) {
-        return amount != null && amount.compareTo(FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT)) > 0;
+    public static boolean isAboveFixedTxFeeAndDust(Coin amount) {
+        return amount != null && amount.compareTo(FeePolicy.getFixedTxFeeForTrades().add(Transaction.MIN_NONDUST_OUTPUT)) > 0;
+    }
+
+    public static boolean isAboveDust(Coin amount) {
+        return amount != null && amount.compareTo(Transaction.MIN_NONDUST_OUTPUT) > 0;
     }
 }

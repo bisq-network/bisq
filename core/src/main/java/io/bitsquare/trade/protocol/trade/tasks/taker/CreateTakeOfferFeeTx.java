@@ -47,7 +47,7 @@ public class CreateTakeOfferFeeTx extends TradeTask {
             Arbitrator selectedArbitrator = user.getAcceptedArbitratorByAddress(selectedArbitratorAddress);
             Transaction createTakeOfferFeeTx = processModel.getTradeWalletService().createTradingFeeTx(
                     processModel.getAddressEntry(),
-                    FeePolicy.TAKE_OFFER_FEE,
+                    FeePolicy.getTakeOfferFee(),
                     selectedArbitrator.getBtcAddress());
 
             processModel.setTakeOfferFeeTx(createTakeOfferFeeTx);

@@ -40,7 +40,7 @@ public class SignAndFinalizePayoutTx extends TradeTask {
         try {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
-            Coin sellerPayoutAmount = FeePolicy.SECURITY_DEPOSIT;
+            Coin sellerPayoutAmount = FeePolicy.getSecurityDeposit();
             Coin buyerPayoutAmount = sellerPayoutAmount.add(trade.getTradeAmount());
 
             Transaction transaction = processModel.getTradeWalletService().buyerSignsAndFinalizesPayoutTx(

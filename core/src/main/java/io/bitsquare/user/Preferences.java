@@ -20,6 +20,7 @@ package io.bitsquare.user;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.BitcoinNetwork;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
@@ -31,6 +32,8 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.MonetaryFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,6 +103,7 @@ public class Preferences implements Serializable {
     private boolean tacAccepted;
     private Locale preferredLocale;
     private TradeCurrency preferredTradeCurrency;
+    private long txFeePerKB = FeePolicy.getFeePerKb().value;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
@@ -146,6 +150,11 @@ public class Preferences implements Serializable {
             defaultLocale = preferredLocale;
             preferredTradeCurrency = persisted.getPreferredTradeCurrency();
             defaultTradeCurrency = preferredTradeCurrency;
+            try {
+                setTxFeePerKB(persisted.getTxFeePerKB());
+            } catch (Exception e) {
+                // leave default value
+            }
         } else {
             setTradeCurrencies(CurrencyUtil.getAllSortedCurrencies());
             tradeCurrencies = new ArrayList<>(tradeCurrenciesAsObservable);
@@ -162,6 +171,7 @@ public class Preferences implements Serializable {
 
             preferredLocale = getDefaultLocale();
             preferredTradeCurrency = getDefaultTradeCurrency();
+
             storage.queueUpForSave();
         }
 
@@ -272,6 +282,14 @@ public class Preferences implements Serializable {
         storage.queueUpForSave();
     }
 
+    public void setTxFeePerKB(long txFeePerKB) throws Exception {
+        if (txFeePerKB < Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value)
+            throw new Exception("Transaction fee must be at least 5 satoshi/byte");
+
+        this.txFeePerKB = txFeePerKB;
+        FeePolicy.setFeePerKb(Coin.valueOf(txFeePerKB));
+        storage.queueUpForSave();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -386,5 +404,9 @@ public class Preferences implements Serializable {
 
     public TradeCurrency getPreferredTradeCurrency() {
         return preferredTradeCurrency;
+    }
+
+    public long getTxFeePerKB() {
+        return Math.max(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value, txFeePerKB);
     }
 }

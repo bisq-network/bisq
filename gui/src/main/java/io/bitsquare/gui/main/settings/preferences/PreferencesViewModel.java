@@ -18,15 +18,20 @@
 package io.bitsquare.gui.main.settings.preferences;
 
 import com.google.inject.Inject;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
+import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.user.BlockChainExplorer;
 import io.bitsquare.user.Preferences;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 class PreferencesViewModel extends ActivatableViewModel {
 
@@ -35,7 +40,8 @@ class PreferencesViewModel extends ActivatableViewModel {
     final ObservableList<BlockChainExplorer> blockExplorers;
     final ObservableList<TradeCurrency> tradeCurrencies;
     final ObservableList<String> languageCodes;
-    
+    final StringProperty transactionFeePerByte = new SimpleStringProperty();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialisation
@@ -52,12 +58,12 @@ class PreferencesViewModel extends ActivatableViewModel {
 
     @Override
     protected void activate() {
+        transactionFeePerByte.set(String.valueOf(preferences.getTxFeePerKB() / 1000));
     }
 
     @Override
     protected void deactivate() {
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
@@ -99,6 +105,19 @@ class PreferencesViewModel extends ActivatableViewModel {
         preferences.setPreferredLocale(new Locale(code, preferences.getPreferredLocale().getCountry()));
     }
 
+    public void onFocusOutTransactionFeeTextField(Boolean oldValue, Boolean newValue, String text) {
+        if (oldValue && !newValue) {
+            try {
+                preferences.setTxFeePerKB(Long.valueOf(transactionFeePerByte.get()) * 1000);
+            } catch (Exception e) {
+                new Popup().warning(e.getMessage())
+                        .onClose(() -> UserThread.runAfter(
+                                () -> transactionFeePerByte.set(String.valueOf(preferences.getTxFeePerKB() / 1000)),
+                                100, TimeUnit.MILLISECONDS))
+                        .show();
+            }
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -139,4 +158,5 @@ class PreferencesViewModel extends ActivatableViewModel {
     public TradeCurrency getTradeCurrency() {
         return preferences.getPreferredTradeCurrency();
     }
+
 }

@@ -116,7 +116,7 @@ public class CompletedView extends TradeStepDetailsView {
         });
 
         if (BitsquareApp.DEV_MODE)
-            withdrawAddressTextField.setText("mwajQdfYnve1knXnmv7JdeiVpeogTsck6S");
+            withdrawAddressTextField.setText("mxAkWWaQBqwqcYstKzqLku3kzR6pbu2zHq");
     }
 
     public void setBtcTradeAmountLabelText(String text) {

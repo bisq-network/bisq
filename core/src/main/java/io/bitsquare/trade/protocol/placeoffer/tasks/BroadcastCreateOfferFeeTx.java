@@ -44,7 +44,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
     protected void run() {
         try {
             runInterceptHook();
-            Coin totalsNeeded = FeePolicy.SECURITY_DEPOSIT.add(FeePolicy.CREATE_OFFER_FEE).add(FeePolicy.TX_FEE);
+            Coin totalsNeeded = FeePolicy.getSecurityDeposit().add(FeePolicy.getCreateOfferFee()).add(FeePolicy.getFixedTxFeeForTrades());
             AddressEntry addressEntry = model.walletService.getAddressEntryByOfferId(model.offer.getId());
             Coin balance = model.walletService.getBalanceForAddress(addressEntry.getAddress());
             if (balance.compareTo(totalsNeeded) >= 0) {

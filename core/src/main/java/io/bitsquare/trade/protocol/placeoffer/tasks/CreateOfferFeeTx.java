@@ -45,7 +45,7 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
             Arbitrator selectedArbitrator = model.user.getAcceptedArbitratorByAddress(selectedArbitratorAddress);
             Transaction transaction = model.tradeWalletService.createTradingFeeTx(
                     model.walletService.getAddressEntryByOfferId(model.offer.getId()),
-                    FeePolicy.CREATE_OFFER_FEE,
+                    FeePolicy.getCreateOfferFee(),
                     selectedArbitrator.getBtcAddress());
 
             // We assume there will be no tx malleability. We add a check later in case the published offer has a different hash.

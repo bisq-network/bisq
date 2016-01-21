@@ -313,7 +313,6 @@ public class MainViewModel implements ViewModel {
         });
         pendingTradesChanged();
         addDisputeStateListeners(tradeManager.getTrades());
-        tradeManager.onAllServicesInitialized();
 
 
         // arbitratorManager

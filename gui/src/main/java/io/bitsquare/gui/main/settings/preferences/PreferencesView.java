@@ -19,10 +19,12 @@ package io.bitsquare.gui.main.settings.preferences;
 
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.user.BlockChainExplorer;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.layout.GridPane;
@@ -44,6 +46,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private CheckBox useAnimationsCheckBox, useEffectsCheckBox, showPlaceOfferConfirmationCheckBox, showTakeOfferConfirmationCheckBox,
             autoSelectArbitratorsCheckBox;
     private int gridRow = 0;
+    private InputTextField transactionFeeInputTextField;
+    private ChangeListener<Boolean> transactionFeeFocusedListener;
 
     @Inject
     public PreferencesView(PreferencesViewModel model) {
@@ -52,12 +56,16 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 3, "Preferences");
+        addTitledGroupBg(root, gridRow, 4, "Preferences");
         tradeCurrencyComboBox = addLabelComboBox(root, gridRow, "Preferred currency:", Layout.FIRST_ROW_DISTANCE).second;
         languageComboBox = addLabelComboBox(root, ++gridRow, "Language:").second;
         // btcDenominationComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin denomination:").second;
         blockExplorerComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin block explorer:").second;
-
+        transactionFeeInputTextField = addLabelInputTextField(root, ++gridRow, "Transaction fee (satoshi/byte):").second;
+        transactionFeeFocusedListener = (o, oldValue, newValue) -> {
+            model.onFocusOutTransactionFeeTextField(oldValue, newValue, transactionFeeInputTextField.getText());
+        };
+        
         addTitledGroupBg(root, ++gridRow, 5, "Display options", Layout.GROUP_DISTANCE);
         useAnimationsCheckBox = addLabelCheckBox(root, gridRow, "Use animations:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         useEffectsCheckBox = addLabelCheckBox(root, ++gridRow, "Use effects:", "").second;
@@ -119,6 +127,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         });
         blockExplorerComboBox.setOnAction(e -> model.onSelectBlockExplorer(blockExplorerComboBox.getSelectionModel().getSelectedItem()));
 
+        transactionFeeInputTextField.textProperty().bindBidirectional(model.transactionFeePerByte);
+        transactionFeeInputTextField.focusedProperty().addListener(transactionFeeFocusedListener);
 
         useAnimationsCheckBox.setSelected(model.getUseAnimations());
         useAnimationsCheckBox.setOnAction(e -> model.onSelectUseAnimations(useAnimationsCheckBox.isSelected()));
@@ -142,6 +152,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         languageComboBox.setOnAction(null);
         tradeCurrencyComboBox.setOnAction(null);
         blockExplorerComboBox.setOnAction(null);
+        transactionFeeInputTextField.textProperty().unbind();
+        transactionFeeInputTextField.focusedProperty().removeListener(transactionFeeFocusedListener);
         useAnimationsCheckBox.setOnAction(null);
         useEffectsCheckBox.setOnAction(null);
         showPlaceOfferConfirmationCheckBox.setOnAction(null);

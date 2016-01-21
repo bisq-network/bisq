@@ -20,7 +20,10 @@ package io.bitsquare.gui.main.offer.takeoffer;
 import com.google.inject.Inject;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.btc.*;
+import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.TradeWalletService;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
@@ -94,9 +97,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.walletPasswordPopup = walletPasswordPopup;
         this.preferences = preferences;
 
-        offerFeeAsCoin = FeePolicy.CREATE_OFFER_FEE;
-        networkFeeAsCoin = FeePolicy.TX_FEE;
-        securityDepositAsCoin = FeePolicy.SECURITY_DEPOSIT;
+        offerFeeAsCoin = FeePolicy.getCreateOfferFee();
+        networkFeeAsCoin = FeePolicy.getFixedTxFeeForTrades();
+        securityDepositAsCoin = FeePolicy.getSecurityDeposit();
     }
 
     @Override
@@ -127,7 +130,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         addressEntry = walletService.getAddressEntryByOfferId(offer.getId());
         checkNotNull(addressEntry, "addressEntry must not be null");
-        
+
         ObservableList<PaymentAccount> possiblePaymentAccounts = getPossiblePaymentAccounts();
         checkArgument(!possiblePaymentAccounts.isEmpty(), "possiblePaymentAccounts.isEmpty()");
         paymentAccount = possiblePaymentAccounts.get(0);
@@ -135,7 +138,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         amountAsCoin.set(offer.getAmount());
 
         if (BitsquareApp.DEV_MODE)
-            amountAsCoin.set(Restrictions.MIN_TRADE_AMOUNT);
+            amountAsCoin.set(offer.getAmount());
 
         calculateVolume();
         calculateTotalToPay();
@@ -274,7 +277,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     boolean isMinAmountLessOrEqualAmount() {
         //noinspection SimplifiableIfStatement
-        if (offer != null && offer.getMinAmount() != null && amountAsCoin.get() != null)
+        if (offer != null && offer.getMinAmount() != null && amountAsCoin.get() != null) 
             return !offer.getMinAmount().isGreaterThan(amountAsCoin.get());
         return true;
     }

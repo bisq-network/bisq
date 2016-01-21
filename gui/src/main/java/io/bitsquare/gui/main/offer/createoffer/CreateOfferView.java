@@ -436,7 +436,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                         () -> {
                             new Popup().headLine(BSResources.get("createOffer.success.headline"))
                                     .message(BSResources.get("createOffer.success.info"))
-                                    .actionButtonText("Go to \"Open offers\"")
+                                    .actionButtonText("Go to \"My offers\"")
                                     .onAction(() -> {
                                         close();
                                         FxTimer.runLater(Duration.ofMillis(100),

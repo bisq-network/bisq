@@ -20,7 +20,6 @@ package io.bitsquare.gui.main.funds.withdrawal;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
@@ -65,9 +64,12 @@ import java.util.stream.Stream;
 @FxmlView
 public class WithdrawalView extends ActivatableView<VBox, Void> {
 
-    @FXML Button withdrawButton;
-    @FXML TableView<WithdrawalListItem> table;
-    @FXML TextField withdrawFromTextField, withdrawToTextField, amountTextField;
+    @FXML
+    Button withdrawButton;
+    @FXML
+    TableView<WithdrawalListItem> table;
+    @FXML
+    TextField withdrawFromTextField, withdrawToTextField, amountTextField;
     @FXML
     TableColumn<WithdrawalListItem, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, confidenceColumn;
 
@@ -114,7 +116,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         setConfidenceColumnCellFactory();
 
         if (BitsquareApp.DEV_MODE)
-            withdrawToTextField.setText("mwajQdfYnve1knXnmv7JdeiVpeogTsck6S");
+            withdrawToTextField.setText("mxAkWWaQBqwqcYstKzqLku3kzR6pbu2zHq");
     }
 
     private boolean areInputsValid() {
@@ -144,8 +146,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 if (Coin.ZERO.compareTo(newValue.getBalance()) <= 0) {
                     amountTextField.setText(newValue.getBalance().toPlainString());
                     withdrawFromTextField.setText(newValue.getAddressEntry().getAddressString());
-                }
-                else {
+                } else {
                     withdrawFromTextField.setText("");
                     withdrawFromTextField.setPromptText("No fund to withdrawal on that address.");
                     amountTextField.setText("");
@@ -173,15 +174,14 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @FXML
     public void onWithdraw() {
-        Coin amount = formatter.parseToCoin(amountTextField.getText());
-        if (Restrictions.isMinSpendableAmount(amount)) {
+        Coin senderAmount = formatter.parseToCoin(amountTextField.getText());
+        if (Restrictions.isAboveDust(senderAmount)) {
             FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
                 @Override
                 public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                     if (transaction != null) {
                         log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
-                    }
-                    else {
+                    } else {
                         log.error("onWithdraw transaction is null");
                     }
                 }
@@ -191,26 +191,29 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     log.error("onWithdraw onFailure");
                 }
             };
+            try {
+                Coin requiredFee = walletService.getRequiredFee(withdrawFromTextField.getText(),
+                        withdrawToTextField.getText(), senderAmount);
+                Coin receiverAmount = senderAmount.subtract(requiredFee);
+                if (BitsquareApp.DEV_MODE) {
+                    doWithdraw(receiverAmount, callback);
+                } else {
+                    new Popup().headLine("Confirm your withdrawal request")
+                            .message("Sending: " + formatter.formatCoinWithCode(senderAmount) + "\n" +
+                                    "From address: " + withdrawFromTextField.getText() + "\n" +
+                                    "To receiving address: " + withdrawToTextField.getText() + ".\n\n" +
+                                    "Required transaction fee is: " + formatter.formatCoinWithCode(requiredFee) + "\n" +
+                                    "Recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
+                                    "Are you sure you want to withdraw that amount?")
+                            .onAction(() -> doWithdraw(receiverAmount, callback))
+                            .show();
 
-            if (BitsquareApp.DEV_MODE) {
-                doWithdraw(amount, callback);
-            } else {
-                new Popup().headLine("Confirm your withdrawal request").message("Amount: " + amountTextField.getText() + " " +
-                        "BTC\n" +
-                        "Sending" +
-                        " address: " + withdrawFromTextField.getText() + "\n" + "Receiving address: " +
-                        withdrawToTextField.getText() + "\n" + "Transaction fee: " +
-                        formatter.formatCoinWithCode(FeePolicy.TX_FEE) + "\n" +
-                        "Receivers amount: " +
-                        formatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
-                        "Are you sure you want to withdraw that amount?")
-                        .onAction(() -> {
-                            doWithdraw(amount, callback);
-                        })
-                        .show();
+                }
+            } catch (AddressFormatException | InsufficientMoneyException e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
             }
-        }
-        else {
+        } else {
             new Popup().warning("The amount to transfer is lower than the transaction fee and the min. possible tx value.").show();
         }
     }
@@ -284,8 +287,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                 hyperlink.setOnAction(event -> openDetails(item));
                             }
                             setGraphic(hyperlink);
-                        }
-                        else {
+                        } else {
                             setGraphic(null);
                             setId(null);
                         }
@@ -363,8 +365,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     setGraphic(item.getProgressIndicator());
-                                }
-                                else {
+                                } else {
                                     setGraphic(null);
                                 }
                             }

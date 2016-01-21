@@ -18,39 +18,67 @@
 package io.bitsquare.btc;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Wallet;
 
 public class FeePolicy {
 
-    // Official min. fee and fee per kiloByte dropped down to 0.00001 BTC / Coin.valueOf(1000) / 1000 satoshis, but as there are reported problems with 
-    // confirmation we use a hgher value.
-    // The should also help to avoid problems when the tx size is larger as the standard (e.g. if the user does not pay
-    // in with one transaction but several tx). We don't do a dynamically fee calculation as we need predictable amounts, so that should help to get a larger 
-    // headroom.
-    // Andreas Schildbach reported problems with confirmation and increased the fee/offered UI side fee setting.
-
-    // http://www.cointape.com/
-    // The fastest and cheapest transaction fee is currently 50 satoshis/byte, shown in green at the top.
-    // For the average transaction size of 597 bytes, this results in a fee of 298 bits (0.298 mBTC). -> 0.0003 BTC or Coin.valueOf(30000);
-
+    // With block getting filled up the needed fee to get fast into a black has become more expensive and less predictable.
+    // To see current fees check out:
+    // https://tradeblock.com/blockchain
+    // http://www.cointape.com
+    // Average values are 10-100 satoshis/byte in january 2016
+    // 
+    // Our trade transactions have a fixed set of inputs and outputs making the size very predictable 
+    // (as long the user does not do multiple funding transactions)
+    // 
     // trade fee tx: 226 bytes
     // deposit tx: 336 bytes
     // payout tx: 371 bytes
-    // disputed payout tx: 408 bytes -> 20400 satoshis with 50 satoshis/byte
+    // disputed payout tx: 408 bytes
 
-    // Other good source is: https://tradeblock.com/blockchain 15-100 satoshis/byte
-
-    public static final Coin TX_FEE = Coin.valueOf(30000); // 0.0003 BTC about 1.2 EUR @ 400 EUR/BTC: about 100 satoshi /byte
-
-    static {
-        Wallet.SendRequest.DEFAULT_FEE_PER_KB = TX_FEE;
+    // We set a fixed fee to make the needed amounts in the trade predictable.
+    // We use 0.0003 BTC (0.12 EUR @ 400 EUR/BTC) which is for our tx sizes about 75-150 satoshi/byte
+    // We cannot make that user defined as it need to be the same for both users, so we can only change that in 
+    // software updates 
+    // TODO before Beta we should get a good future proof guess as a change causes incompatible versions
+    public static Coin getFixedTxFeeForTrades() {
+        return Coin.valueOf(30_000);
     }
 
-    public static final Coin CREATE_OFFER_FEE = Coin.valueOf(100000); // 0.001 BTC  0.1% of 1 BTC about 0.4 EUR @ 400 EUR/BTC
-    public static final Coin TAKE_OFFER_FEE = CREATE_OFFER_FEE;
+    // For non trade transactions (withdrawal) we use the default fee calculation 
+    // To avoid issues with not getting into full blocks, we increase the fee/kb to 30 satoshi/byte
+    // The user can change that in the preferences 
+    // The BitcoinJ fee calculation use kb so a tx size  < 1kb will still pay the fee for a kb tx.
+    // Our payout tx has about 370 bytes so we get a fee/kb value of about 90 satoshi/byte making it high priority
+    // Other payout transactions (E.g. arbitrators many collected transactions) will go with 30 satoshi/byte if > 1kb
+    private static Coin FEE_PER_KB = Coin.valueOf(30_000); // 0.0003 BTC about 0.12 EUR @ 400 EUR/BTC 
 
-    // TODO make final again later 
-    public static Coin SECURITY_DEPOSIT = Coin.valueOf(10000000); // 0.1 BTC; about 4 EUR @ 400 EUR/BTC
+    public static void setFeePerKb(Coin feePerKb) {
+        FEE_PER_KB = feePerKb;
+    }
+
+    public static Coin getFeePerKb() {
+        return FEE_PER_KB;
+    }
+
+
+    // 0.001 BTC  0.1% of 1 BTC about 0.4 EUR @ 400 EUR/BTC
+    public static Coin getCreateOfferFee() {
+        return Coin.valueOf(100_000);
+    }
+
+    // Currently we use the same fee for both offerer and taker 
+    public static Coin getTakeOfferFee() {
+        return getCreateOfferFee();
+    }
+
+
+    // TODO make final again later 100_000_000
+    // 0.1 BTC; about 4 EUR @ 400 EUR/BTC
+    private static Coin SECURITY_DEPOSIT = Coin.valueOf(10_000_000);
+
+    public static Coin getSecurityDeposit() {
+        return SECURITY_DEPOSIT;
+    }
 
     // Called from WalletService to reduce SECURITY_DEPOSIT for mainnet to 0.01 btc
     // TODO remove later when tested enough

@@ -105,28 +105,29 @@ public class ReservedListItem {
                 switch (phase) {
                     case PREPARATION:
                     case TAKER_FEE_PAID:
-                        balanceLabel.setText(formatter.formatCoinWithCode(balance) + " locked in deposit");
+                        balanceLabel.setText(formatter.formatCoinWithCode(balance) + " (locally reserved)");
                         break;
                     case DEPOSIT_REQUESTED:
                     case DEPOSIT_PAID:
                     case FIAT_SENT:
                     case FIAT_RECEIVED:
                         // We ignore the tx fee as it will be paid by both (once deposit, once payout)
-                        Coin balanceInDeposit = FeePolicy.SECURITY_DEPOSIT;
+                        Coin balanceInDeposit = FeePolicy.getSecurityDeposit();
                         // For the seller we add the trade amount
                         if (trade.getContract().getSellerAddress().equals(getAddress()))
                             balanceInDeposit.add(trade.getTradeAmount());
-                        balanceLabel.setText(formatter.formatCoinWithCode(balanceInDeposit) + " locked in deposit");
+
+                        balanceLabel.setText(formatter.formatCoinWithCode(balance) + " (in MS escrow)");
                         break;
                     case PAYOUT_PAID:
-                        balanceLabel.setText(formatter.formatCoinWithCode(balance) + " in wallet");
+                        balanceLabel.setText(formatter.formatCoinWithCode(balance) + " (in local wallet)");
                         break;
                     case WITHDRAWN:
                         log.error("Invalid state at updateBalance (WITHDRAWN)");
                         balanceLabel.setText(formatter.formatCoinWithCode(balance) + " already withdrawn");
                         break;
                     case DISPUTE:
-                        balanceLabel.setText(formatter.formatCoinWithCode(balance) + " locked because of open ticket");
+                        balanceLabel.setText(formatter.formatCoinWithCode(balance) + " open dispute/ticket");
                         break;
                     default:
                         log.warn("Not supported tradePhase: " + phase);

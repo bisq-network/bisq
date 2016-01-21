@@ -368,7 +368,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     }
 
     public Coin getPayoutAmount() {
-        return FeePolicy.SECURITY_DEPOSIT;
+        return FeePolicy.getSecurityDeposit();
     }
 
     public ProcessModel getProcessModel() {

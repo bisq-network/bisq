@@ -142,9 +142,9 @@ public class TradeWalletService {
     public Transaction createTradingFeeTx(AddressEntry addressEntry, Coin tradingFee, String feeReceiverAddresses)
             throws InsufficientMoneyException, AddressFormatException {
         Transaction tradingFeeTx = new Transaction(params);
-        Preconditions.checkArgument(Restrictions.isMinSpendableAmount(tradingFee),
+        Preconditions.checkArgument(Restrictions.isAboveFixedTxFeeAndDust(tradingFee),
                 "You cannot send an amount which are smaller than the fee + dust output.");
-        Coin outPutAmount = tradingFee.subtract(FeePolicy.TX_FEE);
+        Coin outPutAmount = tradingFee.subtract(FeePolicy.getFixedTxFeeForTrades());
         tradingFeeTx.addOutput(outPutAmount, new Address(params, feeReceiverAddresses));
 
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
@@ -154,14 +154,13 @@ public class TradeWalletService {
         sendRequest.shuffleOutputs = false;
         sendRequest.aesKey = aesKey;
         sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry);
-
+        // We use a fixed fee
+        sendRequest.feePerKb = Coin.ZERO;
+        sendRequest.fee = FeePolicy.getFixedTxFeeForTrades();
         // We use always the same address for all transactions in a trade to keep things simple.
         // To be discussed if that introduce any privacy issues.
         sendRequest.changeAddress = addressEntry.getAddress();
 
-        // Wallet.SendRequest.DEFAULT_FEE_PER_KB is set in FeePolicy to our defined amount
-        // We don't want to risk delayed transactions so we set the fee rather high. 
-        // Delayed tx will lead to a broken chain of the deposit transaction.
         wallet.completeTx(sendRequest);
         printTxWithInputs("tradingFeeTx", tradingFeeTx);
 
@@ -212,7 +211,7 @@ public class TradeWalletService {
          */
 
         // inputAmount includes the tx fee. So we subtract the fee to get the dummyOutputAmount.
-        Coin dummyOutputAmount = inputAmount.subtract(FeePolicy.TX_FEE);
+        Coin dummyOutputAmount = inputAmount.subtract(FeePolicy.getFixedTxFeeForTrades());
 
         Transaction dummyTX = new Transaction(params);
         // The output is just used to get the right inputs and change outputs, so we use an anonymous ECKey, as it will never be used for anything.
@@ -303,7 +302,7 @@ public class TradeWalletService {
         // First we construct a dummy TX to get the inputs and outputs we want to use for the real deposit tx. 
         // Similar to the way we did in the createTakerDepositTxInputs method.
         Transaction dummyTx = new Transaction(params);
-        Coin dummyOutputAmount = offererInputAmount.subtract(FeePolicy.TX_FEE);
+        Coin dummyOutputAmount = offererInputAmount.subtract(FeePolicy.getFixedTxFeeForTrades());
         TransactionOutput dummyOutput = new TransactionOutput(params, dummyTx, dummyOutputAmount, new ECKey().toAddress(params));
         dummyTx.addOutput(dummyOutput);
         addAvailableInputsAndChangeOutputs(dummyTx, offererAddressInfo);
@@ -640,7 +639,6 @@ public class TradeWalletService {
         return payoutTx;
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Dispute
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -694,12 +692,15 @@ public class TradeWalletService {
             preparedPayoutTx.addOutput(buyerPayoutAmount, new Address(params, buyerAddressString));
         if (sellerPayoutAmount.isGreaterThan(Coin.ZERO))
             preparedPayoutTx.addOutput(sellerPayoutAmount, new Address(params, sellerAddressString));
-        if (arbitratorPayoutAmount.isGreaterThan(Coin.ZERO))
+        if (arbitratorPayoutAmount.isGreaterThan(Coin.ZERO) && arbitratorAddressEntry.getAddressString() != null)
             preparedPayoutTx.addOutput(arbitratorPayoutAmount, new Address(params, arbitratorAddressEntry.getAddressString()));
 
         // take care of sorting!
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
         Sha256Hash sigHash = preparedPayoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
+        if (arbitratorAddressEntry.getKeyPair() == null)
+            throw new RuntimeException("Unexpected null value: arbitratorAddressEntry.getKeyPair() must not be null");
+
         ECKey.ECDSASignature arbitratorSignature = arbitratorAddressEntry.getKeyPair().sign(sigHash, aesKey).toCanonicalised();
 
         verifyTransaction(preparedPayoutTx);
@@ -1026,6 +1027,9 @@ public class TradeWalletService {
             Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(transaction);
             sendRequest.shuffleOutputs = false;
             sendRequest.aesKey = aesKey;
+            // We use a fixed fee
+            sendRequest.feePerKb = Coin.ZERO;
+            sendRequest.fee = FeePolicy.getFixedTxFeeForTrades();
             // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
             sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry);
             // We use always the same address in a trade for all transactions
@@ -1052,4 +1056,5 @@ public class TradeWalletService {
         }
         return balance;
     }*/
+
 }

@@ -41,8 +41,8 @@ public class CreateAndSignDepositTxAsSeller extends TradeTask {
         try {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
-            Coin sellerInputAmount = FeePolicy.SECURITY_DEPOSIT.add(FeePolicy.TX_FEE).add(trade.getTradeAmount());
-            Coin msOutputAmount = sellerInputAmount.add(FeePolicy.SECURITY_DEPOSIT);
+            Coin sellerInputAmount = FeePolicy.getSecurityDeposit().add(FeePolicy.getFixedTxFeeForTrades()).add(trade.getTradeAmount());
+            Coin msOutputAmount = sellerInputAmount.add(FeePolicy.getSecurityDeposit());
 
             log.info("\n\n------------------------------------------------------------\n"
                     + "Contract as json\n"

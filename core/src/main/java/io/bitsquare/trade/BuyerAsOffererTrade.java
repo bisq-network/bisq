@@ -79,7 +79,7 @@ public class BuyerAsOffererTrade extends BuyerTrade implements OffererTrade, Ser
     public Coin getPayoutAmount() {
         checkNotNull(getTradeAmount(), "Invalid state: getTradeAmount() = null");
 
-        return FeePolicy.SECURITY_DEPOSIT.add(getTradeAmount());
+        return FeePolicy.getSecurityDeposit().add(getTradeAmount());
     }
 
 }

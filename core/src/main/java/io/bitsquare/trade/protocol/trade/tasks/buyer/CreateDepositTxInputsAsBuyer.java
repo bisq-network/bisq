@@ -37,7 +37,7 @@ public class CreateDepositTxInputsAsBuyer extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            Coin takerInputAmount = FeePolicy.SECURITY_DEPOSIT.add(FeePolicy.TX_FEE);
+            Coin takerInputAmount = FeePolicy.getSecurityDeposit().add(FeePolicy.getFixedTxFeeForTrades());
             InputsAndChangeOutput result = processModel.getTradeWalletService().takerCreatesDepositsTxInputs(takerInputAmount, processModel.getAddressEntry());
             processModel.setRawInputs(result.rawInputs);
             processModel.setChangeOutputValue(result.changeOutputValue);

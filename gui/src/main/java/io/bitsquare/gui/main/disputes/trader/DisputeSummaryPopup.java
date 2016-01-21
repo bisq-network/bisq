@@ -406,7 +406,7 @@ public class DisputeSummaryPopup extends Popup {
 
     private void calculatePayoutAmounts(DisputeResult.FeePaymentPolicy feePayment) {
         Contract contract = dispute.getContract();
-        Coin refund = FeePolicy.SECURITY_DEPOSIT;
+        Coin refund = FeePolicy.getSecurityDeposit();
         Coin winnerRefund;
         Coin loserRefund;
         switch (feePayment) {
