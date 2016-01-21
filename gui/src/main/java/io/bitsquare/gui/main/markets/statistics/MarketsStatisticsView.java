@@ -36,8 +36,8 @@ import javax.inject.Inject;
 
 @FxmlView
 public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, MarketsStatisticViewModel> {
-    private BSFormatter formatter;
-    private int gridRow = 0;
+    private final BSFormatter formatter;
+    private final int gridRow = 0;
     private TableView<MarketStatisticItem> statisticsTableView;
 
 

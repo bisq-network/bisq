@@ -34,11 +34,11 @@ import javafx.collections.ObservableList;
 import java.util.stream.Collectors;
 
 class ArbitratorSelectionViewModel extends ActivatableDataModel {
-    private User user;
+    private final User user;
     private final ArbitratorManager arbitratorManager;
     private final Preferences preferences;
     private final KeyRing keyRing;
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
     final ObservableList<String> languageCodes = FXCollections.observableArrayList();
     final ObservableList<ArbitratorListItem> arbitratorListItems = FXCollections.observableArrayList();
     final ObservableList<String> allLanguageCodes = FXCollections.observableArrayList(LanguageUtil.getAllLanguageCodes());

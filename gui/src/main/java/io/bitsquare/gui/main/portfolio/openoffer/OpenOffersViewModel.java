@@ -28,7 +28,7 @@ import io.bitsquare.trade.offer.OpenOffer;
 import javafx.collections.ObservableList;
 
 class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> implements ViewModel {
-    private P2PService p2PService;
+    private final P2PService p2PService;
     private final BSFormatter formatter;
 
 

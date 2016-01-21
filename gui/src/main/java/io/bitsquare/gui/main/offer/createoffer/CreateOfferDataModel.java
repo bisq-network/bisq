@@ -64,7 +64,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final Preferences preferences;
     private final User user;
     private final KeyRing keyRing;
-    private P2PService p2PService;
+    private final P2PService p2PService;
     private final WalletPasswordPopup walletPasswordPopup;
     private final BSFormatter formatter;
     private final String offerId;

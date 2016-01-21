@@ -44,7 +44,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 
 class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel> implements ViewModel {
     private final BtcValidator btcValidator;
-    private P2PService p2PService;
+    private final P2PService p2PService;
     private final BSFormatter formatter;
     private final FiatValidator fiatValidator;
 

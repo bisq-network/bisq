@@ -110,7 +110,7 @@ public class MainViewModel implements ViewModel {
     final StringProperty p2PNetworkLabelId = new SimpleStringProperty("footer-pane");
 
     private MonadicBinding<Boolean> allServicesDone;
-    private User user;
+    private final User user;
     private int numBTCPeers = 0;
     private Timer checkForBtcSyncStateTimer;
     private ChangeListener<Number> numAuthenticatedPeersListener, btcNumPeersListener;

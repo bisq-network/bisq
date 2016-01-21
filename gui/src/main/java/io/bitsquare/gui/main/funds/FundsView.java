@@ -47,7 +47,7 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private Preferences preferences;
+    private final Preferences preferences;
 
     @Inject
     public FundsView(CachingViewLoader viewLoader, Navigation navigation, Preferences preferences) {

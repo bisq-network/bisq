@@ -61,7 +61,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     private final WalletService walletService;
     private final TradeWalletService tradeWalletService;
-    private User user;
+    private final User user;
     private final KeyRing keyRing;
     private final DisputeManager disputeManager;
     private final Navigation navigation;
@@ -75,7 +75,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     private final ObjectProperty<Trade> tradeProperty = new SimpleObjectProperty<>();
     private final StringProperty txId = new SimpleStringProperty();
     private Trade trade;
-    private Preferences preferences;
+    private final Preferences preferences;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

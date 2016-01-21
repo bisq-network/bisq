@@ -36,7 +36,7 @@ import java.util.concurrent.CountDownLatch;
 public class P2PServiceTest {
     private static final Logger log = LoggerFactory.getLogger(P2PServiceTest.class);
 
-    boolean useLocalhost = true;
+    final boolean useLocalhost = true;
     private Set<NodeAddress> seedNodes;
     private int sleepTime;
     private KeyRing keyRing1, keyRing2, keyRing3;

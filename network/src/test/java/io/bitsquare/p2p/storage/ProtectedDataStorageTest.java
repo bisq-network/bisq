@@ -34,8 +34,8 @@ import java.util.concurrent.Executors;
 public class ProtectedDataStorageTest {
     private static final Logger log = LoggerFactory.getLogger(ProtectedDataStorageTest.class);
 
-    boolean useClearNet = true;
-    private Set<NodeAddress> seedNodes = new HashSet<>();
+    final boolean useClearNet = true;
+    private final Set<NodeAddress> seedNodes = new HashSet<>();
     private NetworkNode networkNode1;
     private PeerManager peerManager1;
     private EncryptionService encryptionService1, encryptionService2;
@@ -43,7 +43,7 @@ public class ProtectedDataStorageTest {
     private KeyPair storageSignatureKeyPair1, storageSignatureKeyPair2;
     private KeyRing keyRing1, keyRing2;
     private MockData mockData;
-    private int sleepTime = 100;
+    private final int sleepTime = 100;
     private File dir1;
     private File dir2;
 

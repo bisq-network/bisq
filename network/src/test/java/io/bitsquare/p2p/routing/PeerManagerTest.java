@@ -23,7 +23,7 @@ import java.util.concurrent.CountDownLatch;
 public class PeerManagerTest {
     private static final Logger log = LoggerFactory.getLogger(PeerManagerTest.class);
 
-    boolean useLocalhost = true;
+    final boolean useLocalhost = true;
     private CountDownLatch latch;
     private Set<NodeAddress> seedNodes;
     private int sleepTime;

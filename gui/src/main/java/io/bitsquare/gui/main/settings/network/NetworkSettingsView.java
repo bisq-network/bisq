@@ -56,7 +56,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     private final WalletService walletService;
     private final Preferences preferences;
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
     private final P2PService p2PService;
 
 
@@ -72,7 +72,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private P2PServiceListener p2PServiceListener;
     private ChangeListener<Number> numAuthenticatedPeersChangeListener;
     private ChangeListener<List<Peer>> bitcoinPeersChangeListener;
-    private Set<NodeAddress> seedNodeNodeAddresses;
+    private final Set<NodeAddress> seedNodeNodeAddresses;
 
     @Inject
     public NetworkSettingsView(WalletService walletService, P2PService p2PService, Preferences preferences,

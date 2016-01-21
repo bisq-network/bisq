@@ -42,7 +42,7 @@ import java.util.Date;
 
 class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     private final ArbitratorManager arbitratorManager;
-    private P2PService p2PService;
+    private final P2PService p2PService;
     private final WalletService walletService;
     private final KeyRing keyRing;
 
@@ -55,7 +55,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     private boolean allDataValid;
     private final MapChangeListener<NodeAddress, Arbitrator> arbitratorMapChangeListener;
     private ECKey registrationKey;
-    StringProperty registrationPubKeyAsHex = new SimpleStringProperty();
+    final StringProperty registrationPubKeyAsHex = new SimpleStringProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -53,8 +53,8 @@ public class SepaForm extends PaymentMethodForm {
     private InputTextField ibanInputTextField;
     private InputTextField bicInputTextField;
     private TextField currencyTextField;
-    private List<CheckBox> euroCountryCheckBoxes = new ArrayList<>();
-    private List<CheckBox> nonEuroCountryCheckBoxes = new ArrayList<>();
+    private final List<CheckBox> euroCountryCheckBoxes = new ArrayList<>();
+    private final List<CheckBox> nonEuroCountryCheckBoxes = new ArrayList<>();
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(paymentAccountContractData.getPaymentMethodName()));

@@ -7,8 +7,8 @@ import io.bitsquare.p2p.storage.data.ExpirablePayload;
 
 public final class MockMailboxMessage implements MailboxMessage, ExpirablePayload {
     private final int networkId = Version.getNetworkId();
-    public String msg;
-    public NodeAddress senderNodeAddress;
+    public final String msg;
+    public final NodeAddress senderNodeAddress;
     public long ttl;
 
     public MockMailboxMessage(String msg, NodeAddress senderNodeAddress) {

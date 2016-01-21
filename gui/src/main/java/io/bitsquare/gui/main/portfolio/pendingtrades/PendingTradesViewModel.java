@@ -73,7 +73,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     private final InputValidator inputValidator;
     private final OKPayValidator okPayValidator;
     private final AltCoinAddressValidator altCoinAddressValidator;
-    private P2PService p2PService;
+    private final P2PService p2PService;
 
     private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>(PendingTradesViewModel.BuyerState.UNDEFINED);
     private final ObjectProperty<SellerState> sellerState = new SimpleObjectProperty<>(UNDEFINED);

@@ -51,16 +51,16 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
 
     private NumberAxis xAxis, yAxis;
     XYChart.Series seriesBuy, seriesSell;
-    private ListChangeListener<OfferBookListItem> changeListener;
-    private BSFormatter formatter;
+    private final ListChangeListener<OfferBookListItem> changeListener;
+    private final BSFormatter formatter;
     private TableView<Offer> buyOfferTableView;
     private TableView<Offer> sellOfferTableView;
     private AreaChart<Number, Number> areaChart;
     private ComboBox<TradeCurrency> currencyComboBox;
     private Subscription tradeCurrencySubscriber;
-    private StringProperty priceColumnLabel = new SimpleStringProperty("Price (EUR/BTC)");
-    private StringProperty amountColumnLabel = new SimpleStringProperty("Amount (BTC)");
-    private StringProperty volumeColumnLabel = new SimpleStringProperty("Volume (EUR)");
+    private final StringProperty priceColumnLabel = new SimpleStringProperty("Price (EUR/BTC)");
+    private final StringProperty amountColumnLabel = new SimpleStringProperty("Amount (BTC)");
+    private final StringProperty volumeColumnLabel = new SimpleStringProperty("Volume (EUR)");
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

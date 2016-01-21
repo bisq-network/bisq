@@ -51,7 +51,7 @@ public class OfferDetailsPopup extends Popup {
 
     private final BSFormatter formatter;
     private final Preferences preferences;
-    private User user;
+    private final User user;
     private final Navigation navigation;
     private Offer offer;
     private Coin tradeAmount;
