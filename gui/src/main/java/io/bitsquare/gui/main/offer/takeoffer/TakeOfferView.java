@@ -45,7 +45,6 @@ import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.event.ActionEvent;
 import javafx.geometry.*;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
@@ -54,17 +53,12 @@ import javafx.scene.text.Font;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
 import org.controlsfx.control.PopOver;
-import org.controlsfx.control.action.AbstractAction;
-import org.controlsfx.control.action.Action;
-import org.controlsfx.dialog.Dialog;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.reactfx.util.FxTimer;
 
 import javax.inject.Inject;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
@@ -351,14 +345,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         if (!BitsquareApp.DEV_MODE) {
             if (model.getDisplaySecurityDepositInfo()) {
                 MainView.blur();
-                List<Action> actions = new ArrayList<>();
-                actions.add(new AbstractAction(BSResources.get("shared.close")) {
-                    @Override
-                    public void handle(ActionEvent actionEvent) {
-                        getProperties().put("type", "CLOSE");
-                        Dialog.Actions.CLOSE.handle(actionEvent);
-                    }
-                });
                 new Popup().information("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
                         "The security deposit will be refunded to you after the trade has successfully completed.\n\n" +
                         "You need to pay in the exact amount displayed to you from your external bitcoin wallet into the " +
