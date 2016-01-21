@@ -204,22 +204,17 @@ public class TorNetworkNode extends NetworkNode {
         Log.traceCall();
         ListenableFuture<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>> future = executorService.submit(() -> {
             Utilities.setThreadName("TorNetworkNode:CreateTorNode");
-            try {
-                long ts = System.currentTimeMillis();
-                if (torDir.mkdirs())
-                    log.trace("Created directory for tor");
-
-                log.info("TorDir = " + torDir.getAbsolutePath());
-                log.trace("Create TorNode");
-                TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode = new JavaTorNode(torDir);
-                log.info("\n\n############################################################\n" +
-                        "TorNode created:" +
-                        "\nTook " + (System.currentTimeMillis() - ts) + " ms"
-                        + "\n############################################################\n");
-                return torNode;
-            } catch (Throwable t) {
-                throw t;
-            }
+            long ts = System.currentTimeMillis();
+            if (torDir.mkdirs())
+                log.trace("Created directory for tor");
+            log.info("TorDir = " + torDir.getAbsolutePath());
+            log.trace("Create TorNode");
+            TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode = new JavaTorNode(torDir);
+            log.info("\n\n############################################################\n" +
+                    "TorNode created:" +
+                    "\nTook " + (System.currentTimeMillis() - ts) + " ms"
+                    + "\n############################################################\n");
+            return torNode;
         });
         Futures.addCallback(future, new FutureCallback<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>>() {
             public void onSuccess(TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode) {
@@ -240,11 +235,10 @@ public class TorNetworkNode extends NetworkNode {
         Log.traceCall();
         ListenableFuture<Object> future = executorService.submit(() -> {
             Utilities.setThreadName("TorNetworkNode:CreateHiddenService");
-            try {
+            {
                 long ts = System.currentTimeMillis();
                 log.debug("Create hidden service");
                 HiddenServiceDescriptor hiddenServiceDescriptor = torNode.createHiddenService(localPort, servicePort);
-
                 torNode.addHiddenServiceReadyListener(hiddenServiceDescriptor, descriptor -> {
                     log.info("\n\n############################################################\n" +
                             "Hidden service published:" +
@@ -254,10 +248,7 @@ public class TorNetworkNode extends NetworkNode {
 
                     UserThread.execute(() -> resultHandler.accept(hiddenServiceDescriptor));
                 });
-
                 return null;
-            } catch (Throwable t) {
-                throw t;
             }
         });
         Futures.addCallback(future, new FutureCallback<Object>() {

@@ -201,8 +201,7 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
                 }
 
                 if (spinner != null) {
-                    if (getSkinnable().impl_isTreeVisible() && getSkinnable().getScene() != null) {
-                    } else {
+                    if (!(getSkinnable().impl_isTreeVisible() && getSkinnable().getScene() != null)) {
                         getChildren().remove(spinner);
                         spinner = null;
                         timelineNulled = true;
@@ -259,8 +258,6 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
             spinner = new IndeterminateSpinner(control, this, spinEnabled.get(), progressColor.get());
             getChildren().clear();
             getChildren().add(spinner);
-            if (getSkinnable().impl_isTreeVisible()) {
-            }
         } else {
             // clean up after spinner
             if (spinner != null) {

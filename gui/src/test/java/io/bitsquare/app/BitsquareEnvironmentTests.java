@@ -27,8 +27,6 @@ import static io.bitsquare.app.BitsquareEnvironment.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.springframework.core.env.PropertySource.named;
-import static org.springframework.core.env.StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME;
-import static org.springframework.core.env.StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME;
 
 public class BitsquareEnvironmentTests {
 

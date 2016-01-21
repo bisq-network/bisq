@@ -102,20 +102,14 @@ public class LocalhostNetworkNode extends NetworkNode {
         Log.traceCall();
         ListenableFuture<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>> future = executorService.submit(() -> {
             Utilities.setThreadName("NetworkNode:CreateTorNode");
-            try {
-                long ts = System.currentTimeMillis();
-                if (simulateTorDelayTorNode > 0)
-                    Uninterruptibles.sleepUninterruptibly(simulateTorDelayTorNode, TimeUnit.MILLISECONDS);
-
-                log.info("\n\n############################################################\n" +
-                        "TorNode created [simulation]:" +
-                        "\nTook " + (System.currentTimeMillis() - ts) + " ms"
-                        + "\n############################################################\n");
-                // as we are simulating we return null
-                return null;
-            } catch (Throwable t) {
-                throw t;
-            }
+            long ts = System.currentTimeMillis();
+            if (simulateTorDelayTorNode > 0)
+                Uninterruptibles.sleepUninterruptibly(simulateTorDelayTorNode, TimeUnit.MILLISECONDS);
+            log.info("\n\n############################################################\n" +
+                    "TorNode created [simulation]:" +
+                    "\nTook " + (System.currentTimeMillis() - ts) + " ms"
+                    + "\n############################################################\n");
+            return null;
         });
         Futures.addCallback(future, new FutureCallback<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>>() {
             public void onSuccess(TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode) {
@@ -138,20 +132,14 @@ public class LocalhostNetworkNode extends NetworkNode {
         Log.traceCall();
         ListenableFuture<HiddenServiceDescriptor> future = executorService.submit(() -> {
             Utilities.setThreadName("NetworkNode:CreateHiddenService");
-            try {
-                long ts = System.currentTimeMillis();
-                if (simulateTorDelayHiddenService > 0)
-                    Uninterruptibles.sleepUninterruptibly(simulateTorDelayHiddenService, TimeUnit.MILLISECONDS);
-
-                log.info("\n\n############################################################\n" +
-                        "Hidden service published [simulation]:" +
-                        "\nTook " + (System.currentTimeMillis() - ts) + " ms"
-                        + "\n############################################################\n");
-                // as we are simulating we return null
-                return null;
-            } catch (Throwable t) {
-                throw t;
-            }
+            long ts = System.currentTimeMillis();
+            if (simulateTorDelayHiddenService > 0)
+                Uninterruptibles.sleepUninterruptibly(simulateTorDelayHiddenService, TimeUnit.MILLISECONDS);
+            log.info("\n\n############################################################\n" +
+                    "Hidden service published [simulation]:" +
+                    "\nTook " + (System.currentTimeMillis() - ts) + " ms"
+                    + "\n############################################################\n");
+            return null;
         });
         Futures.addCallback(future, new FutureCallback<HiddenServiceDescriptor>() {
             public void onSuccess(HiddenServiceDescriptor hiddenServiceDescriptor) {

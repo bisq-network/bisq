@@ -45,7 +45,7 @@ class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataMod
 
     String getAmount(FailedTradesListItem item) {
         if (item != null && item.getTrade() instanceof Trade)
-            return formatter.formatCoinWithCode(((Trade) item.getTrade()).getTradeAmount());
+            return formatter.formatCoinWithCode(item.getTrade().getTradeAmount());
         else
             return "";
     }
@@ -56,7 +56,7 @@ class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataMod
 
     String getVolume(FailedTradesListItem item) {
         if (item != null && item.getTrade() instanceof Trade)
-            return formatter.formatFiatWithCode(((Trade) item.getTrade()).getTradeVolume());
+            return formatter.formatFiatWithCode(item.getTrade().getTradeVolume());
         else
             return "";
     }

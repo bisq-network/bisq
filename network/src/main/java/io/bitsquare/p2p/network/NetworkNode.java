@@ -165,12 +165,8 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         // connection.sendMessage might take a bit (compression, write to stream), so we use a thread to not block
         ListenableFuture<Connection> future = executorService.submit(() -> {
             Thread.currentThread().setName("NetworkNode:SendMessage-to-" + connection.getUid());
-            try {
-                connection.sendMessage(message);
-                return connection;
-            } catch (Throwable t) {
-                throw t;
-            }
+            connection.sendMessage(message);
+            return connection;
         });
         final SettableFuture<Connection> resultFuture = SettableFuture.create();
         Futures.addCallback(future, new FutureCallback<Connection>() {

@@ -149,11 +149,6 @@ public class OpenOfferManager {
             @Override
             public void run() {
                 UserThread.execute(() -> rePublishOffers());
-                try {
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                    log.error("Executing task failed. " + t.getMessage());
-                }
             }
         };
         timer.scheduleAtFixedRate(timerTask, 500, period);
