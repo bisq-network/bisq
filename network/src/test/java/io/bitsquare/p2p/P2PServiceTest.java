@@ -32,6 +32,8 @@ import java.util.concurrent.CountDownLatch;
 
 // need to define seed node addresses first before using tor version
 // Ignored for automated tests
+
+//TODO P2P network tests are outdated
 @Ignore
 public class P2PServiceTest {
     private static final Logger log = LoggerFactory.getLogger(P2PServiceTest.class);
@@ -60,7 +62,7 @@ public class P2PServiceTest {
 
         LocalhostNetworkNode.setSimulateTorDelayTorNode(10);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(100);
-        PeerManager.setMaxConnectionsLowPriority(8);
+        PeerManager.setMaxConnections(8);
 
         keyRing1 = new KeyRing(new KeyStorage(dir1));
         keyRing2 = new KeyRing(new KeyStorage(dir2));

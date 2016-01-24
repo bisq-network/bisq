@@ -24,8 +24,8 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.p2p.FirstPeerAuthenticatedListener;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.NetWorkReadyListener;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.SendMailMessageListener;
@@ -67,7 +67,7 @@ public class OpenOfferManager {
     private final TradableList<OpenOffer> openOffers;
     private final Storage<TradableList<OpenOffer>> openOffersStorage;
     private boolean shutDownRequested;
-    private FirstPeerAuthenticatedListener firstPeerAuthenticatedListener;
+    private NetWorkReadyListener netWorkReadyListener;
     private final Timer timer = new Timer();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -103,12 +103,12 @@ public class OpenOfferManager {
                 "OpenOfferManager.ShutDownHook"));
 
         // Handler for incoming offer availability requests
-        p2PService.addDecryptedMailListener((decryptedMessageWithPubKey, peerAddress) -> {
+        p2PService.addDecryptedMailListener((decryptedMessageWithPubKey, peersNodeAddress) -> {
             // We get an encrypted message but don't do the signature check as we don't know the peer yet.
             // A basic sig check is in done also at decryption time
             Message message = decryptedMessageWithPubKey.message;
             if (message instanceof OfferAvailabilityRequest)
-                handleOfferAvailabilityRequest((OfferAvailabilityRequest) message, peerAddress);
+                handleOfferAvailabilityRequest((OfferAvailabilityRequest) message, peersNodeAddress);
         });
     }
 
@@ -126,14 +126,14 @@ public class OpenOfferManager {
         // Before the TTL is reached we re-publish our offers
         // If offer removal at shutdown fails we don't want to have long term dangling dead offers, so we set 
         // TTL quite short and use re-publish as strategy. Offerers need to be online anyway.
-        if (!p2PService.isAuthenticated()) {
-            firstPeerAuthenticatedListener = new FirstPeerAuthenticatedListener() {
+        if (!p2PService.isNetworkReady()) {
+            netWorkReadyListener = new NetWorkReadyListener() {
                 @Override
-                public void onFirstPeerAuthenticated() {
+                public void onBootstrapped() {
                     startRePublishThread();
                 }
             };
-            p2PService.addP2PServiceListener(firstPeerAuthenticatedListener);
+            p2PService.addP2PServiceListener(netWorkReadyListener);
 
         } else {
             startRePublishThread();
@@ -141,8 +141,8 @@ public class OpenOfferManager {
     }
 
     private void startRePublishThread() {
-        if (firstPeerAuthenticatedListener != null)
-            p2PService.removeP2PServiceListener(firstPeerAuthenticatedListener);
+        if (netWorkReadyListener != null)
+            p2PService.removeP2PServiceListener(netWorkReadyListener);
 
         long period = (long) (Offer.TTL * 0.8); // republish sufficiently before offer would expire
         TimerTask timerTask = new TimerTask() {

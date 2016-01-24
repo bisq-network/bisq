@@ -26,8 +26,8 @@ import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
-import io.bitsquare.p2p.FirstPeerAuthenticatedListener;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.NetWorkReadyListener;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
@@ -67,7 +67,7 @@ public class DisputeManager {
     private final DisputeList<Dispute> disputes;
     transient private final ObservableList<Dispute> disputesObservableList;
     private final String disputeInfo;
-    private final FirstPeerAuthenticatedListener firstPeerAuthenticatedListener;
+    private final NetWorkReadyListener netWorkReadyListener;
     private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedMailMessageWithPubKeys = new CopyOnWriteArraySet<>();
 
@@ -106,22 +106,22 @@ public class DisputeManager {
 
         p2PService.addDecryptedMailListener((decryptedMessageWithPubKey, senderAddress) -> {
             decryptedMailMessageWithPubKeys.add(decryptedMessageWithPubKey);
-            if (p2PService.isAuthenticated())
+            if (p2PService.isNetworkReady())
                 applyMessages();
         });
         p2PService.addDecryptedMailboxListener((decryptedMessageWithPubKey, senderAddress) -> {
             decryptedMailboxMessageWithPubKeys.add(decryptedMessageWithPubKey);
-            if (p2PService.isAuthenticated())
+            if (p2PService.isNetworkReady())
                 applyMessages();
         });
 
-        firstPeerAuthenticatedListener = new FirstPeerAuthenticatedListener() {
+        netWorkReadyListener = new NetWorkReadyListener() {
             @Override
-            public void onFirstPeerAuthenticated() {
+            public void onBootstrapped() {
                 applyMessages();
             }
         };
-        p2PService.addP2PServiceListener(firstPeerAuthenticatedListener);
+        p2PService.addP2PServiceListener(netWorkReadyListener);
     }
 
     private void applyMessages() {
@@ -143,7 +143,7 @@ public class DisputeManager {
         });
         decryptedMailboxMessageWithPubKeys.clear();
 
-        p2PService.removeP2PServiceListener(firstPeerAuthenticatedListener);
+        p2PService.removeP2PServiceListener(netWorkReadyListener);
     }
 
 

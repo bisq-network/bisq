@@ -11,5 +11,5 @@ public interface P2PServiceListener extends SetupListener {
 
     void onNoPeersAvailable();
 
-    void onFirstPeerAuthenticated();
+    void onBootstrapped();
 }

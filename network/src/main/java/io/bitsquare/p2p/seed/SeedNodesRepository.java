@@ -14,7 +14,7 @@ public class SeedNodesRepository {
     // mainnet use port 8000
     // testnet use port 8001
     // regtest use port 8002
-    private Set<NodeAddress> torSeedNodeNodeAddresses = Sets.newHashSet(
+    private Set<NodeAddress> torSeedNodeAddresses = Sets.newHashSet(
             // mainnet
             new NodeAddress("lih5zsr2bvxi24pk.onion:8000"),
             new NodeAddress("s5xpstlooosehtxm.onion:8000"),
@@ -32,7 +32,7 @@ public class SeedNodesRepository {
     );
 
 
-    private Set<NodeAddress> localhostSeedNodeNodeAddresses = Sets.newHashSet(
+    private Set<NodeAddress> localhostSeedNodeAddresses = Sets.newHashSet(
             // mainnet
             new NodeAddress("localhost:2000"),
             new NodeAddress("localhost:3000"),
@@ -48,21 +48,28 @@ public class SeedNodesRepository {
             new NodeAddress("localhost:3002"),
             new NodeAddress("localhost:4002")
     );
+    private NodeAddress nodeAddressToExclude;
 
     public Set<NodeAddress> getSeedNodeAddresses(boolean useLocalhost, int networkId) {
         String networkIdAsString = String.valueOf(networkId);
-        Set<NodeAddress> nodeAddresses = useLocalhost ? localhostSeedNodeNodeAddresses : torSeedNodeNodeAddresses;
+        Set<NodeAddress> nodeAddresses = useLocalhost ? localhostSeedNodeAddresses : torSeedNodeAddresses;
         Set<NodeAddress> filtered = nodeAddresses.stream()
-                .filter(e -> String.valueOf(e.port).endsWith(networkIdAsString)).collect(Collectors.toSet());
+                .filter(e -> String.valueOf(e.port).endsWith(networkIdAsString))
+                .filter(e -> !e.equals(nodeAddressToExclude))
+                .collect(Collectors.toSet());
         log.info("SeedNodeAddresses (useLocalhost={}) for networkId {}:\nnetworkId={}", useLocalhost, networkId, filtered);
         return filtered;
     }
 
-    public void setTorSeedNodeNodeAddresses(Set<NodeAddress> torSeedNodeNodeAddresses) {
-        this.torSeedNodeNodeAddresses = torSeedNodeNodeAddresses;
+    public void setTorSeedNodeAddresses(Set<NodeAddress> torSeedNodeAddresses) {
+        this.torSeedNodeAddresses = torSeedNodeAddresses;
     }
 
-    public void setLocalhostSeedNodeNodeAddresses(Set<NodeAddress> localhostSeedNodeNodeAddresses) {
-        this.localhostSeedNodeNodeAddresses = localhostSeedNodeNodeAddresses;
+    public void setLocalhostSeedNodeAddresses(Set<NodeAddress> localhostSeedNodeAddresses) {
+        this.localhostSeedNodeAddresses = localhostSeedNodeAddresses;
+    }
+
+    public void setNodeAddressToExclude(NodeAddress nodeAddress) {
+        this.nodeAddressToExclude = nodeAddress;
     }
 }

@@ -47,6 +47,7 @@ public final class DecryptedMsgWithPubKey implements MailMessage {
 
         DecryptedMsgWithPubKey that = (DecryptedMsgWithPubKey) o;
 
+        //noinspection SimplifiableIfStatement
         if (message != null ? !message.equals(that.message) : that.message != null) return false;
         return !(signaturePubKey != null ? !signaturePubKey.equals(that.signaturePubKey) : that.signaturePubKey != null);
 

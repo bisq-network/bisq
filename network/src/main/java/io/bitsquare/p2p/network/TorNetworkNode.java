@@ -73,7 +73,7 @@ public class TorNetworkNode extends NetworkNode {
             Log.traceCall("torNode created");
             TorNetworkNode.this.torNetworkNode = torNode;
 
-            setupListeners.stream().forEach(e -> e.onTorNodeReady());
+            setupListeners.stream().forEach(SetupListener::onTorNodeReady);
 
             // Create Hidden Service (takes about 40 sec.)
             createHiddenService(torNode,
@@ -84,7 +84,7 @@ public class TorNetworkNode extends NetworkNode {
                         TorNetworkNode.this.hiddenServiceDescriptor = hiddenServiceDescriptor;
 
                         startServer(hiddenServiceDescriptor.getServerSocket());
-                        setupListeners.stream().forEach(e -> e.onHiddenServicePublished());
+                        setupListeners.stream().forEach(SetupListener::onHiddenServicePublished);
                     });
         });
     }
@@ -117,16 +117,14 @@ public class TorNetworkNode extends NetworkNode {
         }, SHUT_DOWN_TIMEOUT, TimeUnit.MILLISECONDS);
 
         if (executorService != null) {
-            executorService.submit(() -> {
-                UserThread.execute(() -> {
-                    // We want to stay in UserThread
-                    super.shutDown(() -> {
-                        networkNodeShutDownDoneComplete = true;
-                        if (torShutDownComplete)
-                            shutDownExecutorService();
-                    });
+            executorService.submit(() -> UserThread.execute(() -> {
+                // We want to stay in UserThread
+                super.shutDown(() -> {
+                    networkNodeShutDownDoneComplete = true;
+                    if (torShutDownComplete)
+                        shutDownExecutorService();
                 });
-            });
+            }));
         } else {
             log.error("executorService must not be null at shutDown");
         }
@@ -188,10 +186,9 @@ public class TorNetworkNode extends NetworkNode {
                 start(null);
             }, WAIT_BEFORE_RESTART, TimeUnit.MILLISECONDS));
         } else {
-            String msg = "We tried to restart tor " + restartCounter
-                    + " times, but we failed to get tor running. We give up now.";
+            String msg = "We tried to restart Tor " + restartCounter
+                    + " times, but it failed to start up. We give up now.";
             log.error(msg);
-            // TODO display better error msg
             throw new RuntimeException(msg);
         }
     }

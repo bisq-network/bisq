@@ -113,7 +113,7 @@ public class MainViewModel implements ViewModel {
     private final User user;
     private int numBTCPeers = 0;
     private Timer checkForBtcSyncStateTimer;
-    private ChangeListener<Number> numAuthenticatedPeersListener, btcNumPeersListener;
+    private ChangeListener<Number> numConnectedPeersListener, btcNumPeersListener;
     private java.util.Timer numberofBtcPeersTimer;
     private java.util.Timer numberofP2PNetworkPeersTimer;
 
@@ -176,8 +176,8 @@ public class MainViewModel implements ViewModel {
     }
 
     public void shutDown() {
-        if (numAuthenticatedPeersListener != null)
-            p2PService.getNumAuthenticatedPeers().removeListener(numAuthenticatedPeersListener);
+        if (numConnectedPeersListener != null)
+            p2PService.getNumConnectedPeers().removeListener(numConnectedPeersListener);
 
         if (btcNumPeersListener != null)
             walletService.numPeersProperty().removeListener(btcNumPeersListener);
@@ -208,17 +208,17 @@ public class MainViewModel implements ViewModel {
 
             @Override
             public void onRequestingDataCompleted() {
-                if (p2PService.getNumAuthenticatedPeers().get() == 0) {
+                if (p2PService.getNumConnectedPeers().get() == 0) {
                     p2PNetworkInfo.set("Initial data received");
                 } else {
-                    updateP2pNetworkInfoWithPeersChanged(p2PService.getNumAuthenticatedPeers().get());
+                    updateP2pNetworkInfoWithPeersChanged(p2PService.getNumConnectedPeers().get());
                 }
                 p2pNetworkInitialized.set(true);
             }
 
             @Override
             public void onNoSeedNodeAvailable() {
-                if (p2PService.getNumAuthenticatedPeers().get() == 0) {
+                if (p2PService.getNumConnectedPeers().get() == 0) {
                     p2PNetworkInfo.set("No seed nodes available");
                 }
                 p2pNetworkInitialized.set(true);
@@ -226,7 +226,7 @@ public class MainViewModel implements ViewModel {
 
             @Override
             public void onNoPeersAvailable() {
-                if (p2PService.getNumAuthenticatedPeers().get() == 0) {
+                if (p2PService.getNumConnectedPeers().get() == 0) {
                     p2PNetworkWarnMsg.set("There are no seed nodes or persisted peers available for requesting data.\n" +
                             "Please check your internet connection or try to restart the application.");
                     p2PNetworkInfo.set("No seed nodes and peers available");
@@ -236,8 +236,8 @@ public class MainViewModel implements ViewModel {
             }
 
             @Override
-            public void onFirstPeerAuthenticated() {
-                updateP2pNetworkInfoWithPeersChanged(p2PService.getNumAuthenticatedPeers().get());
+            public void onBootstrapped() {
+                updateP2pNetworkInfoWithPeersChanged(p2PService.getNumConnectedPeers().get());
                 splashP2PNetworkProgress.set(1);
             }
 
@@ -248,7 +248,7 @@ public class MainViewModel implements ViewModel {
                         + throwable.getMessage() + ").\n" +
                         "Please check your internet connection or try to restart the application.");
                 splashP2PNetworkProgress.set(0);
-                if (p2PService.getNumAuthenticatedPeers().get() == 0)
+                if (p2PService.getNumConnectedPeers().get() == 0)
                     p2PNetworkLabelId.set("splash-error-state-msg");
             }
         });
@@ -385,14 +385,13 @@ public class MainViewModel implements ViewModel {
                     .show();
 
         // update nr of peers in footer
-        numAuthenticatedPeersListener = (observable, oldValue, newValue) -> {
-
+        numConnectedPeersListener = (observable, oldValue, newValue) -> {
             if ((int) oldValue > 0 && (int) newValue == 0) {
                 // give a bit of tolerance
                 if (numberofP2PNetworkPeersTimer != null)
                     numberofP2PNetworkPeersTimer.cancel();
                 numberofP2PNetworkPeersTimer = UserThread.runAfter(() -> {
-                    if (p2PService.getNumAuthenticatedPeers().get() == 0) {
+                    if (p2PService.getNumConnectedPeers().get() == 0) {
                         p2PNetworkWarnMsg.set("You lost the connection to all P2P network peers.\n" +
                                 "Maybe you lost your internet connection or your computer was in hibernate/sleep mode.");
                         p2PNetworkLabelId.set("splash-error-state-msg");
@@ -408,7 +407,7 @@ public class MainViewModel implements ViewModel {
 
             updateP2pNetworkInfoWithPeersChanged((int) newValue);
         };
-        p2PService.getNumAuthenticatedPeers().addListener(numAuthenticatedPeersListener);
+        p2PService.getNumConnectedPeers().addListener(numConnectedPeersListener);
 
         // now show app
         showAppScreen.set(true);
@@ -427,8 +426,8 @@ public class MainViewModel implements ViewModel {
         }
     }
 
-    private void updateP2pNetworkInfoWithPeersChanged(int numAuthenticatedPeers) {
-        p2PNetworkInfo.set("Nr. of connections: " + numAuthenticatedPeers);
+    private void updateP2pNetworkInfoWithPeersChanged(int numPeers) {
+        p2PNetworkInfo.set("Nr. of connections: " + numPeers);
     }
 
     private void displayAlertIfPresent(Alert alert) {

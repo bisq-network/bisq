@@ -10,6 +10,9 @@ import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.Utils;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,16 +38,41 @@ public class Connection implements MessageListener {
     private static final int MAX_MSG_SIZE = 5 * 1024 * 1024;         // 5 MB of compressed data
     //timeout on blocking Socket operations like ServerSocket.accept() or SocketInputStream.read()
     private static final int SOCKET_TIMEOUT = 10 * 60 * 1000;        // 10 min.
-    private ConnectionPriority connectionPriority;
 
     public static int getMaxMsgSize() {
         return MAX_MSG_SIZE;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Enums
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public enum Direction {
+        OUTBOUND,
+        INBOUND
+    }
+
+    public enum State {
+        IDLE,
+        SUCCEEDED,
+        FAILED
+    }
+
+    public enum PeerType {
+        SEED_NODE,
+        PEER,
+        DIRECT_MSG_PEER
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Class fields
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private final Socket socket;
     private final MessageListener messageListener;
     private final ConnectionListener connectionListener;
-
+    private final Direction direction;
     private final String portInfo;
     private final String uid = UUID.randomUUID().toString();
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
@@ -56,8 +84,7 @@ public class Connection implements MessageListener {
     private ObjectOutputStream objectOutputStream;
 
     // mutable data, set from other threads but not changed internally.
-    private Optional<NodeAddress> peerAddressOptional = Optional.empty();
-    private volatile boolean isAuthenticated;
+    private Optional<NodeAddress> peersNodeAddressOptional = Optional.empty();
     private volatile boolean stopped;
 
     //TODO got java.util.zip.DataFormatException: invalid distance too far back
@@ -66,14 +93,20 @@ public class Connection implements MessageListener {
     private final boolean useCompression = false;
 
 
+    private final ObjectProperty<State> stateProperty = new SimpleObjectProperty<>();
+    private PeerType peerType;
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Connection(Socket socket, MessageListener messageListener, ConnectionListener connectionListener) {
+    public Connection(Socket socket, MessageListener messageListener, ConnectionListener connectionListener, Direction direction) {
         this.socket = socket;
         this.messageListener = messageListener;
         this.connectionListener = connectionListener;
+        this.direction = direction;
+        stateProperty.set(State.IDLE);
 
         sharedSpace = new SharedSpace(this, socket);
 
@@ -118,25 +151,16 @@ public class Connection implements MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Called form UserThread
-    public void setAuthenticated() {
-        Log.traceCall();
-        isAuthenticated = true;
-    }
-
-    public void setConnectionPriority(ConnectionPriority connectionPriority) {
-        this.connectionPriority = connectionPriority;
-    }
 
     // Called form various threads
     public void sendMessage(Message message) {
         Log.traceCall();
         if (!stopped) {
             try {
-                String peerAddress = peerAddressOptional.isPresent() ? peerAddressOptional.get().toString() : "null";
+                String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
                 log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                         "Write object to outputStream to peer: {} (uid={})\nmessage={}"
-                        + "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n", peerAddress, uid, message);
+                        + "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n", peersNodeAddress, uid, message);
 
                 Object objectToWrite;
                 if (useCompression) {
@@ -170,12 +194,6 @@ public class Connection implements MessageListener {
         sharedSpace.reportIllegalRequest(illegalRequest);
     }
 
-    public synchronized void setPeerAddress(NodeAddress peerNodeAddress) {
-        Log.traceCall();
-        checkNotNull(peerNodeAddress, "peerAddress must not be null");
-        peerAddressOptional = Optional.of(peerNodeAddress);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener implementation
@@ -188,25 +206,48 @@ public class Connection implements MessageListener {
         UserThread.execute(() -> messageListener.onMessage(message, this));
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setPeerType(PeerType peerType) {
+        Log.traceCall(peerType.toString());
+        this.peerType = peerType;
+    }
+
+    public void setState(State state) {
+        Log.traceCall(state.toString());
+
+        if (state == State.SUCCEEDED) {
+            String peersNodeAddress = getPeersNodeAddressOptional().isPresent() ? getPeersNodeAddressOptional().get().getFullAddress() : "";
+            log.info("\n\n############################################################\n" +
+                    "We are successfully connected to:\n" +
+                    "peerAddress= " + peersNodeAddress +
+                    "\nuid=" + getUid() +
+                    "\n############################################################\n");
+        }
+
+        this.stateProperty.set(state);
+    }
+
+    public synchronized void setPeersNodeAddress(NodeAddress peerNodeAddress) {
+        Log.traceCall();
+        checkNotNull(peerNodeAddress, "peerAddress must not be null");
+        peersNodeAddressOptional = Optional.of(peerNodeAddress);
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable
-    public synchronized NodeAddress getPeerAddress() {
-        return peerAddressOptional.isPresent() ? peerAddressOptional.get() : null;
-    }
-
-    public synchronized Optional<NodeAddress> getPeerAddressOptional() {
-        return peerAddressOptional;
+    public synchronized Optional<NodeAddress> getPeersNodeAddressOptional() {
+        return peersNodeAddressOptional;
     }
 
     public Date getLastActivityDate() {
         return sharedSpace.getLastActivityDate();
-    }
-
-    public boolean isAuthenticated() {
-        return isAuthenticated;
     }
 
     public String getUid() {
@@ -217,8 +258,20 @@ public class Connection implements MessageListener {
         return stopped;
     }
 
-    public ConnectionPriority getConnectionPriority() {
-        return connectionPriority;
+    public PeerType getPeerType() {
+        return peerType;
+    }
+
+    public Direction getDirection() {
+        return direction;
+    }
+
+    public ReadOnlyObjectProperty<State> getStateProperty() {
+        return stateProperty;
+    }
+
+    public State getState() {
+        return stateProperty.get();
     }
 
 
@@ -241,14 +294,13 @@ public class Connection implements MessageListener {
     private void shutDown(boolean sendCloseConnectionMessage, @Nullable Runnable shutDownCompleteHandler) {
         Log.traceCall(this.toString());
         if (!stopped) {
-            String peerAddress = peerAddressOptional.isPresent() ? peerAddressOptional.get().toString() : "null";
+            String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
             log.info("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                     "ShutDown connection:"
-                    + "\npeerAddress=" + peerAddress
+                    + "\npeersNodeAddress=" + peersNodeAddress
                     + "\nlocalPort/port=" + sharedSpace.getSocket().getLocalPort()
                     + "/" + sharedSpace.getSocket().getPort()
                     + "\nuid=" + uid
-                    + "\nisAuthenticated=" + isAuthenticated
                     + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 
             log.trace("ShutDown connection requested. Connection=" + this.toString());
@@ -281,7 +333,6 @@ public class Connection implements MessageListener {
         sharedSpace.stop();
         if (inputHandler != null)
             inputHandler.stop();
-        isAuthenticated = false;
     }
 
     private void doShutDown(@Nullable Runnable shutDownCompleteHandler) {
@@ -319,8 +370,9 @@ public class Connection implements MessageListener {
         Connection that = (Connection) o;
 
         if (portInfo != null ? !portInfo.equals(that.portInfo) : that.portInfo != null) return false;
+        //noinspection SimplifiableIfStatement
         if (uid != null ? !uid.equals(that.uid) : that.uid != null) return false;
-        return peerAddressOptional != null ? peerAddressOptional.equals(that.peerAddressOptional) : that.peerAddressOptional == null;
+        return peersNodeAddressOptional != null ? peersNodeAddressOptional.equals(that.peersNodeAddressOptional) : that.peersNodeAddressOptional == null;
 
     }
 
@@ -328,21 +380,21 @@ public class Connection implements MessageListener {
     public int hashCode() {
         int result = portInfo != null ? portInfo.hashCode() : 0;
         result = 31 * result + (uid != null ? uid.hashCode() : 0);
-        result = 31 * result + (peerAddressOptional != null ? peerAddressOptional.hashCode() : 0);
+        result = 31 * result + (peersNodeAddressOptional != null ? peersNodeAddressOptional.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
         return "Connection{" +
-                "portInfo=" + portInfo +
+                "peerAddress=" + peersNodeAddressOptional +
+                ", peerType=" + peerType +
+                ", direction=" + direction +
+                ", state=" + getState() +
+                ", portInfo=" + portInfo +
                 ", uid='" + uid + '\'' +
                 ", sharedSpace=" + sharedSpace.toString() +
-                ", peerAddress=" + peerAddressOptional +
-                ", isAuthenticated=" + isAuthenticated +
                 ", stopped=" + stopped +
-                ", stopped=" + stopped +
-                ", connectionType=" + connectionPriority +
                 ", useCompression=" + useCompression +
                 '}';
     }

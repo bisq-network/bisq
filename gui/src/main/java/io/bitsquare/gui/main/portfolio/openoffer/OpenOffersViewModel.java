@@ -73,7 +73,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         return formatter.formatDateTime(item.getOffer().getDate());
     }
 
-    boolean isAuthenticated() {
-        return p2PService.isAuthenticated();
+    boolean isNetworkReady() {
+        return p2PService.isNetworkReady();
     }
 }

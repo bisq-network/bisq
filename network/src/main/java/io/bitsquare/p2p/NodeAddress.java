@@ -39,6 +39,7 @@ public class NodeAddress implements Serializable {
 
         NodeAddress nodeAddress = (NodeAddress) o;
 
+        //noinspection SimplifiableIfStatement
         if (port != nodeAddress.port) return false;
         return !(hostName != null ? !hostName.equals(nodeAddress.hostName) : nodeAddress.hostName != null);
 

@@ -199,7 +199,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onPlaceOffer() {
-        if (model.isAuthenticated()) {
+        if (model.isNetworkReady()) {
             Offer offer = model.createAndGetOffer();
             if (model.getShowPlaceOfferConfirmation()) {
                 offerDetailsPopup.onPlaceOffer(o -> model.onPlaceOffer(o)).show(offer);
@@ -214,7 +214,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 }
             }
         } else {
-            new Popup().warning("You need to wait until your client is authenticated in the network.\n" +
+            new Popup().warning("You need to wait until your client is bootstrapped in the network.\n" +
                     "That might take up to about 2 minutes at startup.").show();
         }
     }

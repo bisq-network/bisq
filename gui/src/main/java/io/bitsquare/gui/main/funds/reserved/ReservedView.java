@@ -50,7 +50,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     @FXML
     TableView<ReservedListItem> table;
     @FXML
-    TableColumn<ReservedListItem, ReservedListItem> labelColumn, addressColumn, balanceColumn, confidenceColumn;
+    TableColumn<ReservedListItem, ReservedListItem> detailsColumn, addressColumn, balanceColumn, confidenceColumn;
 
     private final WalletService walletService;
     private final TradeManager tradeManager;
@@ -123,8 +123,8 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     }
 
     private void setLabelColumnCellFactory() {
-        labelColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        labelColumn.setCellFactory(new Callback<TableColumn<ReservedListItem, ReservedListItem>,
+        detailsColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        detailsColumn.setCellFactory(new Callback<TableColumn<ReservedListItem, ReservedListItem>,
                 TableCell<ReservedListItem,
                         ReservedListItem>>() {
 

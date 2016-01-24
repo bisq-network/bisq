@@ -18,6 +18,7 @@
 package io.bitsquare.trade;
 
 import com.google.common.util.concurrent.FutureCallback;
+import io.bitsquare.app.Log;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.TradeWalletService;
@@ -26,8 +27,8 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.p2p.FirstPeerAuthenticatedListener;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.NetWorkReadyListener;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.DecryptedMailListener;
@@ -81,7 +82,7 @@ public class TradeManager {
     private final Storage<TradableList<Trade>> tradableListStorage;
     private final TradableList<Trade> trades;
     private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
-    private final FirstPeerAuthenticatedListener firstPeerAuthenticatedListener;
+    private final NetWorkReadyListener netWorkReadyListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -99,6 +100,7 @@ public class TradeManager {
                         ArbitratorManager arbitratorManager,
                         P2PService p2PService,
                         @Named("storage.dir") File storageDir) {
+        Log.traceCall();
         this.user = user;
         this.keyRing = keyRing;
         this.walletService = walletService;
@@ -147,14 +149,15 @@ public class TradeManager {
             }
         });
 
-        firstPeerAuthenticatedListener = new FirstPeerAuthenticatedListener() {
+        netWorkReadyListener = new NetWorkReadyListener() {
             @Override
-            public void onFirstPeerAuthenticated() {
+            public void onBootstrapped() {
+                Log.traceCall("onNetworkReady");
                 // give a bit delay to be sure other listeners have executed its work
                 UserThread.runAfter(() -> initPendingTrades(), 100, TimeUnit.MILLISECONDS);
             }
         };
-        p2PService.addP2PServiceListener(firstPeerAuthenticatedListener);
+        p2PService.addP2PServiceListener(netWorkReadyListener);
     }
 
 
@@ -163,7 +166,8 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initPendingTrades() {
-        if (firstPeerAuthenticatedListener != null) p2PService.removeP2PServiceListener(firstPeerAuthenticatedListener);
+        Log.traceCall();
+        if (netWorkReadyListener != null) p2PService.removeP2PServiceListener(netWorkReadyListener);
 
         //List<Trade> failedTrades = new ArrayList<>();
         for (Trade trade : trades) {
@@ -178,7 +182,7 @@ public class TradeManager {
             trade.updateDepositTxFromWallet(tradeWalletService);
             initTrade(trade);
 
-            // after we are authenticated we remove mailbox messages. 
+            // after network is ready we remove mailbox messages. 
             DecryptedMsgWithPubKey mailboxMessage = trade.getMailboxMessage();
             if (mailboxMessage != null) {
                 log.trace("initPendingTrades/removeEntryFromMailbox mailboxMessage = " + mailboxMessage);

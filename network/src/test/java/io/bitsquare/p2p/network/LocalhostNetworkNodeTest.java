@@ -1,7 +1,5 @@
 package io.bitsquare.p2p.network;
 
-import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.peers.messages.auth.AuthenticationRequest;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -16,6 +14,8 @@ import java.util.concurrent.CountDownLatch;
 // TorNode created. Took 6 sec.
 // Hidden service created. Took 40-50 sec.
 // Connection establishment takes about 4 sec.
+
+//TODO P2P network tests are outdated
 @Ignore
 public class LocalhostNetworkNodeTest {
     private static final Logger log = LoggerFactory.getLogger(LocalhostNetworkNodeTest.class);
@@ -77,8 +77,6 @@ public class LocalhostNetworkNodeTest {
         });
         startupLatch.await();
 
-        node2.sendMessage(new NodeAddress("localhost", 9001), new AuthenticationRequest(new NodeAddress("localhost", 9002), 1));
-        node1.sendMessage(new NodeAddress("localhost", 9002), new AuthenticationRequest(new NodeAddress("localhost", 9001), 1));
         msgLatch.await();
 
         CountDownLatch shutDownLatch = new CountDownLatch(2);

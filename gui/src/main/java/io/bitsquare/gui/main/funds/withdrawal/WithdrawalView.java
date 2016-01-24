@@ -71,7 +71,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     @FXML
     TextField withdrawFromTextField, withdrawToTextField, amountTextField;
     @FXML
-    TableColumn<WithdrawalListItem, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, confidenceColumn;
+    TableColumn<WithdrawalListItem, WithdrawalListItem> detailsColumn, addressColumn, balanceColumn, confidenceColumn, selectColumn;
 
     private final WalletService walletService;
     private final TradeManager tradeManager;
@@ -114,6 +114,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         setAddressColumnCellFactory();
         setBalanceColumnCellFactory();
         setConfidenceColumnCellFactory();
+        setSelectColumnCellFactory();
 
         if (BitsquareApp.DEV_MODE)
             withdrawToTextField.setText("mxAkWWaQBqwqcYstKzqLku3kzR6pbu2zHq");
@@ -262,8 +263,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     }
 
     private void setLabelColumnCellFactory() {
-        labelColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        labelColumn.setCellFactory(new Callback<TableColumn<WithdrawalListItem, WithdrawalListItem>,
+        detailsColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        detailsColumn.setCellFactory(new Callback<TableColumn<WithdrawalListItem, WithdrawalListItem>,
                 TableCell<WithdrawalListItem,
                         WithdrawalListItem>>() {
 
@@ -272,21 +273,25 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     WithdrawalListItem> column) {
                 return new TableCell<WithdrawalListItem, WithdrawalListItem>() {
 
-                    private Hyperlink hyperlink;
-
                     @Override
                     public void updateItem(final WithdrawalListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
-                            hyperlink = new Hyperlink(item.getLabel());
-                            if (item.getAddressEntry().getOfferId() != null) {
-                                Tooltip tooltip = new Tooltip(item.getAddressEntry().getShortOfferId());
-                                Tooltip.install(hyperlink, tooltip);
+                            if (detailsAvailable(item)) {
+                                Hyperlink hyperlink = new Hyperlink(item.getLabel());
+                                if (item.getAddressEntry().getOfferId() != null) {
+                                    Tooltip tooltip = new Tooltip(item.getAddressEntry().getShortOfferId());
+                                    Tooltip.install(hyperlink, tooltip);
 
-                                hyperlink.setOnAction(event -> openDetails(item));
+                                    hyperlink.setOnAction(event -> openDetails(item));
+                                    setGraphic(hyperlink);
+                                }
+                            } else {
+                                Label label = new Label("No info available");
+                                setGraphic(label);
                             }
-                            setGraphic(hyperlink);
+
                         } else {
                             setGraphic(null);
                             setId(null);
@@ -374,6 +379,42 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 });
     }
 
+    private void setSelectColumnCellFactory() {
+        selectColumn.setCellValueFactory((addressListItem) ->
+                new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        selectColumn.setCellFactory(
+                new Callback<TableColumn<WithdrawalListItem, WithdrawalListItem>, TableCell<WithdrawalListItem,
+                        WithdrawalListItem>>() {
+
+                    @Override
+                    public TableCell<WithdrawalListItem, WithdrawalListItem> call(TableColumn<WithdrawalListItem,
+                            WithdrawalListItem> column) {
+                        return new TableCell<WithdrawalListItem, WithdrawalListItem>() {
+
+                            Button button = new Button("Select");
+
+                            @Override
+                            public void updateItem(final WithdrawalListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty) {
+                                    button.setDefaultButton(true);
+                                    button.setMouseTransparent(true);
+                                    setGraphic(button);
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
+    private boolean detailsAvailable(WithdrawalListItem item) {
+        String offerId = item.getAddressEntry().getOfferId();
+        return closedTradableManager.getTradableById(offerId).isPresent() ||
+                failedTradesManager.getTradeById(offerId).isPresent();
+    }
+
     private void openDetails(WithdrawalListItem item) {
         String offerId = item.getAddressEntry().getOfferId();
         Optional<Tradable> tradableOptional = closedTradableManager.getTradableById(offerId);
@@ -384,8 +425,10 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             } else if (tradable instanceof OpenOffer) {
                 offerDetailsPopup.show(tradable.getOffer());
             }
+        } else if (failedTradesManager.getTradeById(offerId).isPresent()) {
+            tradeDetailsPopup.show(failedTradesManager.getTradeById(offerId).get());
         } else {
-            failedTradesManager.getTradeById(offerId).ifPresent(trade -> tradeDetailsPopup.show(trade));
+            log.warn("no details available. A test with detailsAvailable() is missing.");
         }
     }
 }

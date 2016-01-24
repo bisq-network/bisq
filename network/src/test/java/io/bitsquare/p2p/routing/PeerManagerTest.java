@@ -6,7 +6,10 @@ import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.network.LocalhostNetworkNode;
 import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.seed.SeedNode;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +22,7 @@ import java.util.concurrent.CountDownLatch;
 // Connection establishment takes about 4 sec.
 
 // need to define seed node addresses first before using tor version
+//TODO P2P network tests are outdated
 @Ignore
 public class PeerManagerTest {
     private static final Logger log = LoggerFactory.getLogger(PeerManagerTest.class);
@@ -33,7 +37,7 @@ public class PeerManagerTest {
     public void setup() throws InterruptedException {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(50);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(8);
-        PeerManager.setMaxConnectionsLowPriority(100);
+        PeerManager.setMaxConnections(100);
 
         seedNodes = new HashSet<>();
         if (useLocalhost) {
@@ -100,7 +104,7 @@ public class PeerManagerTest {
                     }
 
                     @Override
-                    public void onFirstPeerAuthenticated() {
+                    public void onBootstrapped() {
                     }
 
                     @Override
@@ -116,7 +120,7 @@ public class PeerManagerTest {
         P2PService p2PService1 = seedNode1.getSeedNodeP2PService();
         latch.await();
         Thread.sleep(500);
-        Assert.assertEquals(0, p2PService1.getPeerManager().getAuthenticatedAndReportedPeers().size());
+        //Assert.assertEquals(0, p2PService1.getPeerManager().getAuthenticatedAndReportedPeers().size());
     }
 
     @Test
@@ -151,7 +155,7 @@ public class PeerManagerTest {
             }
 
             @Override
-            public void onFirstPeerAuthenticated() {
+            public void onBootstrapped() {
                 latch.countDown();
             }
 
@@ -189,7 +193,7 @@ public class PeerManagerTest {
             }
 
             @Override
-            public void onFirstPeerAuthenticated() {
+            public void onBootstrapped() {
                 latch.countDown();
             }
 
@@ -205,8 +209,8 @@ public class PeerManagerTest {
         });
         P2PService p2PService2 = seedNode2.getSeedNodeP2PService();
         latch.await();
-        Assert.assertEquals(1, p2PService1.getPeerManager().getAuthenticatedAndReportedPeers().size());
-        Assert.assertEquals(1, p2PService2.getPeerManager().getAuthenticatedAndReportedPeers().size());
+        // Assert.assertEquals(1, p2PService1.getPeerManager().getAuthenticatedAndReportedPeers().size());
+        // Assert.assertEquals(1, p2PService2.getPeerManager().getAuthenticatedAndReportedPeers().size());
     }
 
     // @Test
@@ -426,7 +430,7 @@ public class PeerManagerTest {
             }
 
             @Override
-            public void onFirstPeerAuthenticated() {
+            public void onBootstrapped() {
             }
 
             @Override

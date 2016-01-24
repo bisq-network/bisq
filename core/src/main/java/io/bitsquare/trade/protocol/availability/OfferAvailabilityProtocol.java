@@ -56,14 +56,14 @@ public class OfferAvailabilityProtocol {
         this.resultHandler = resultHandler;
         this.errorMessageHandler = errorMessageHandler;
 
-        decryptedMailListener = (decryptedMessageWithPubKey, peerAddress) -> {
+        decryptedMailListener = (decryptedMessageWithPubKey, peersNodeAddress) -> {
             Message message = decryptedMessageWithPubKey.message;
             if (message instanceof OfferMessage) {
                 OfferMessage offerMessage = (OfferMessage) message;
                 nonEmptyStringOf(offerMessage.offerId);
                 if (message instanceof OfferAvailabilityResponse
                         && model.offer.getId().equals(offerMessage.offerId)) {
-                    log.trace("handle OfferAvailabilityResponse = " + message.getClass().getSimpleName() + " from " + peerAddress);
+                    log.trace("handle OfferAvailabilityResponse = " + message.getClass().getSimpleName() + " from " + peersNodeAddress);
                     handle((OfferAvailabilityResponse) message);
                 }
             }

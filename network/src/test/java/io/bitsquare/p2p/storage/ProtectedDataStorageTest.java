@@ -9,6 +9,7 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.TestUtils;
 import io.bitsquare.p2p.mocks.MockMessage;
 import io.bitsquare.p2p.network.NetworkNode;
+import io.bitsquare.p2p.peers.Broadcaster;
 import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.storage.data.DataAndSeqNr;
 import io.bitsquare.p2p.storage.data.ExpirableMailboxPayload;
@@ -30,6 +31,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 
+//TODO P2P network tests are outdated
 @Ignore
 public class ProtectedDataStorageTest {
     private static final Logger log = LoggerFactory.getLogger(ProtectedDataStorageTest.class);
@@ -65,8 +67,11 @@ public class ProtectedDataStorageTest {
         storageSignatureKeyPair1 = keyRing1.getSignatureKeyPair();
         encryptionService1 = new EncryptionService(keyRing1);
         networkNode1 = TestUtils.getAndStartSeedNode(8001, useClearNet, seedNodes).getSeedNodeP2PService().getNetworkNode();
-        peerManager1 = new PeerManager(networkNode1, new File("dummy"));
-        dataStorage1 = new P2PDataStorage(peerManager1, networkNode1, new File("dummy"));
+        peerManager1 = new PeerManager(networkNode1, null, new File("dummy"));
+
+        //TODO
+        Broadcaster broadcaster = new Broadcaster(networkNode1);
+        dataStorage1 = new P2PDataStorage(broadcaster, networkNode1, new File("dummy"));
 
         // for mailbox
         keyRing2 = new KeyRing(new KeyStorage(dir2));
@@ -108,7 +113,10 @@ public class ProtectedDataStorageTest {
     public void testExpirableData() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
         P2PDataStorage.CHECK_TTL_INTERVAL = 10;
         // CHECK_TTL_INTERVAL is used in constructor of ProtectedExpirableDataStorage so we recreate it here
-        dataStorage1 = new P2PDataStorage(peerManager1, networkNode1, new File("dummy"));
+
+        //TODO
+        Broadcaster broadcaster = new Broadcaster(networkNode1);
+        dataStorage1 = new P2PDataStorage(broadcaster, networkNode1, new File("dummy"));
         mockData.ttl = 50;
 
         ProtectedData data = dataStorage1.getDataWithSignedSeqNr(mockData, storageSignatureKeyPair1);

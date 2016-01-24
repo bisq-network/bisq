@@ -60,7 +60,7 @@ public class LocalhostNetworkNode extends NetworkNode {
         //Tor delay simulation
         createTorNode(torNode -> {
             Log.traceCall("torNode created");
-            setupListeners.stream().forEach(e -> e.onTorNodeReady());
+            setupListeners.stream().forEach(SetupListener::onTorNodeReady);
 
             // Create Hidden Service (takes about 40 sec.)
             createHiddenService(hiddenServiceDescriptor -> {
@@ -74,7 +74,7 @@ public class LocalhostNetworkNode extends NetworkNode {
 
                 nodeAddress = new NodeAddress("localhost", servicePort);
 
-                setupListeners.stream().forEach(e -> e.onHiddenServicePublished());
+                setupListeners.stream().forEach(SetupListener::onHiddenServicePublished);
             });
         });
     }

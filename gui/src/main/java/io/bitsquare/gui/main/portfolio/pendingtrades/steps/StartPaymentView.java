@@ -140,7 +140,7 @@ public class StartPaymentView extends TradeStepDetailsView {
 
     private void onPaymentStarted(ActionEvent actionEvent) {
         log.debug("onPaymentStarted");
-        if (model.isAuthenticated()) {
+        if (model.isNetworkReady()) {
             String key = PopupId.PAYMENT_SENT;
             if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
                 new Popup().headLine("Confirmation")
@@ -154,7 +154,7 @@ public class StartPaymentView extends TradeStepDetailsView {
                 confirmPaymentStarted();
             }
         } else {
-            new Popup().warning("You need to wait until your client is authenticated in the network.\n" +
+            new Popup().warning("You need to wait until your client is bootstrapped in the network.\n" +
                     "That might take up to about 2 minutes at startup.").show();
         }
     }

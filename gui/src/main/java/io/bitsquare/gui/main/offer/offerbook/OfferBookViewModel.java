@@ -157,8 +157,8 @@ class OfferBookViewModel extends ActivatableViewModel {
         return list;
     }
 
-    boolean isAuthenticated() {
-        return p2PService.isAuthenticated();
+    boolean isNetworkReady() {
+        return p2PService.isNetworkReady();
     }
 
     public TradeCurrency getTradeCurrency() {

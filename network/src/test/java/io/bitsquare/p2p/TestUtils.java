@@ -95,7 +95,7 @@ public class TestUtils {
                     }
 
                     @Override
-                    public void onFirstPeerAuthenticated() {
+                    public void onBootstrapped() {
                     }
 
                     @Override
@@ -123,9 +123,9 @@ public class TestUtils {
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
         if (seedNodes != null && !seedNodes.isEmpty()) {
             if (useLocalhost)
-                seedNodesRepository.setLocalhostSeedNodeNodeAddresses(seedNodes);
+                seedNodesRepository.setLocalhostSeedNodeAddresses(seedNodes);
             else
-                seedNodesRepository.setTorSeedNodeNodeAddresses(seedNodes);
+                seedNodesRepository.setTorSeedNodeAddresses(seedNodes);
         }
 
         P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhost,
@@ -148,7 +148,7 @@ public class TestUtils {
             }
 
             @Override
-            public void onFirstPeerAuthenticated() {
+            public void onBootstrapped() {
                 latch.countDown();
             }
 

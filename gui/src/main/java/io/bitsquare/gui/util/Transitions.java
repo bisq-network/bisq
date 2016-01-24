@@ -83,7 +83,7 @@ public class Transitions {
         fade.setInterpolator(Interpolator.EASE_IN);
         fade.setOnFinished(actionEvent -> {
             ((Pane) (node.getParent())).getChildren().remove(node);
-            Profiler.printMsgWithTime("fadeOutAndRemove");
+            //Profiler.printMsgWithTime("fadeOutAndRemove");
             if (handler != null)
                 handler.handle(actionEvent);
         });

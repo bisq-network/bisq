@@ -8,7 +8,6 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.Connection;
-import io.bitsquare.p2p.network.ConnectionPriority;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.peers.messages.data.DataRequest;
@@ -25,9 +24,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
-public class RequestDataManager implements MessageListener, AuthenticationListener {
+public class RequestDataManager implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(RequestDataManager.class);
 
 
@@ -40,7 +38,11 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
 
         void onNoPeersAvailable();
 
-        void onDataReceived(NodeAddress seedNode);
+        void onDataReceived();
+
+        void onPreliminaryDataReceived();
+
+        void onDataUpdate();
     }
 
 
@@ -50,21 +52,22 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
     private final HashSet<ReportedPeer> persistedPeers = new HashSet<>();
     private final HashSet<ReportedPeer> remainingPersistedPeers = new HashSet<>();
     private Listener listener;
-    private Optional<NodeAddress> optionalConnectedSeedNodeAddress = Optional.empty();
-    private Collection<NodeAddress> seedNodeNodeAddresses;
-    protected Timer requestDataFromAuthenticatedSeedNodeTimer;
-    private Timer requestDataTimer, requestDataWithPersistedPeersTimer;
-    private boolean doNotifyNoSeedNodeAvailableListener = true;
+    private Optional<NodeAddress> seedNodeOfPreliminaryDataRequest = Optional.empty();
+    private final Collection<NodeAddress> seedNodeAddresses;
+    private Timer requestDataFromSeedNodesTimer, requestDataFromPersistedPeersTimer, dataRequestTimeoutTimer;
+    private boolean noSeedNodeAvailableListenerNotified;
+    private boolean dataUpdateRequested;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public RequestDataManager(NetworkNode networkNode, P2PDataStorage dataStorage, PeerManager peerManager) {
+    public RequestDataManager(NetworkNode networkNode, P2PDataStorage dataStorage, PeerManager peerManager, Set<NodeAddress> seedNodeAddresses) {
         this.networkNode = networkNode;
         this.dataStorage = dataStorage;
         this.peerManager = peerManager;
+        this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
 
         networkNode.addMessageListener(this);
     }
@@ -74,9 +77,9 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
 
         networkNode.removeMessageListener(this);
 
-        stopRequestDataTimer();
-        stopRequestDataWithPersistedPeersTimer();
-        stopRequestDataFromAuthenticatedSeedNodeTimer();
+        stopRequestDataFromSeedNodesTimer();
+        stopRequestDataFromPersistedPeersTimer();
+        stopDataRequestTimeoutTimer();
     }
 
 
@@ -88,102 +91,158 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
         this.listener = listener;
     }
 
-    public void requestDataFromSeedNodes(Collection<NodeAddress> seedNodeNodeAddresses) {
-        checkNotNull(seedNodeNodeAddresses, "requestDataFromSeedNodes: seedNodeAddresses must not be null.");
-        checkArgument(!seedNodeNodeAddresses.isEmpty(), "requestDataFromSeedNodes: seedNodeAddresses must not be empty.");
-
-        this.seedNodeNodeAddresses = seedNodeNodeAddresses;
-        requestData(seedNodeNodeAddresses);
+    public void requestPreliminaryData() {
+        requestDataFromPeers(seedNodeAddresses);
     }
 
-    private void requestData(Collection<NodeAddress> nodeAddresses) {
+    public void updateDataFromConnectedSeedNode() {
+        Log.traceCall();
+        checkArgument(seedNodeOfPreliminaryDataRequest.isPresent(), "seedNodeOfPreliminaryDataRequest must be present");
+        dataUpdateRequested = true;
+        requestDataFromPeer(seedNodeOfPreliminaryDataRequest.get(), seedNodeAddresses);
+    }
+
+    public Optional<NodeAddress> getSeedNodeOfPreliminaryDataRequest() {
+        return seedNodeOfPreliminaryDataRequest;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // MessageListener implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onMessage(Message message, Connection connection) {
+        Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
+        if (message instanceof DataRequest) {
+            // We are a seed node and receive that msg from a new node
+            Log.traceCall(message.toString());
+            DataRequest dataRequest = (DataRequest) message;
+            if (peersNodeAddressOptional.isPresent()) {
+                checkArgument(peersNodeAddressOptional.get().equals(dataRequest.senderNodeAddress),
+                        "Sender address in message not matching the peers address in our connection.");
+            } else if (dataRequest.senderNodeAddress != null) {
+                // If first data request the peer does not has its address
+                // in case of requesting from first seed node after hidden service is published we did not knew the peers address
+                connection.setPeersNodeAddress(dataRequest.senderNodeAddress);
+            }
+            networkNode.sendMessage(connection, new DataResponse(new HashSet<>(dataStorage.getMap().values())));
+        } else if (message instanceof DataResponse) {
+            // We are the new node which has requested the data
+            Log.traceCall(message.toString());
+            DataResponse dataResponse = (DataResponse) message;
+            HashSet<ProtectedData> set = dataResponse.set;
+            // we keep that connection open as the bootstrapping peer will use that later for a re-sync
+            // as the hidden service is  not published yet the data adding will not be broadcasted to others
+            peersNodeAddressOptional.ifPresent(peersNodeAddress -> set.stream().forEach(e -> dataStorage.add(e, peersNodeAddress)));
+
+            stopDataRequestTimeoutTimer();
+            connection.getPeersNodeAddressOptional().ifPresent(e -> {
+                if (!seedNodeOfPreliminaryDataRequest.isPresent()) {
+                    seedNodeOfPreliminaryDataRequest = Optional.of(e);
+                    listener.onPreliminaryDataReceived();
+                }
+
+                if (dataUpdateRequested) {
+                    dataUpdateRequested = false;
+                    listener.onDataUpdate();
+                }
+
+                listener.onDataReceived();
+            });
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void requestDataFromPeers(Collection<NodeAddress> nodeAddresses) {
         Log.traceCall(nodeAddresses.toString());
-        checkArgument(!nodeAddresses.isEmpty(), "requestData: addresses must not be empty.");
-        stopRequestDataTimer();
+        checkArgument(!nodeAddresses.isEmpty(), "requestDataFromPeers: nodeAddresses must not be empty.");
+        stopRequestDataFromSeedNodesTimer();
         List<NodeAddress> remainingNodeAddresses = new ArrayList<>(nodeAddresses);
         NodeAddress candidate = remainingNodeAddresses.get(new Random().nextInt(remainingNodeAddresses.size()));
-        if (!peerManager.isInAuthenticationProcess(candidate)) {
-            // We only remove it if it is not in the process of authentication
-            remainingNodeAddresses.remove(candidate);
-            log.info("We try to send a GetAllDataMessage request to node. " + candidate);
-
-            SettableFuture<Connection> future = networkNode.sendMessage(candidate, new DataRequest());
-            Futures.addCallback(future, new FutureCallback<Connection>() {
-                @Override
-                public void onSuccess(@Nullable Connection connection) {
-                    log.info("Send GetAllDataMessage to " + candidate + " succeeded.");
-                    checkArgument(!optionalConnectedSeedNodeAddress.isPresent(), "We have already a connectedSeedNode. That must not happen.");
-                    optionalConnectedSeedNodeAddress = Optional.of(candidate);
-
-                    stopRequestDataTimer();
-                    stopRequestDataWithPersistedPeersTimer();
-                }
-
-                @Override
-                public void onFailure(@NotNull Throwable throwable) {
-                    log.info("Send GetAllDataMessage to " + candidate + " failed. " +
-                            "That is expected if the node is offline. " +
-                            "Exception:" + throwable.getMessage());
-
-                    if (!remainingNodeAddresses.isEmpty()) {
-                        log.info("There are more seed nodes available for requesting data. " +
-                                "We will try requestData again.");
-
-                        ReportedPeer reportedPeer = new ReportedPeer(candidate);
-                        if (remainingPersistedPeers.contains(reportedPeer))
-                            remainingPersistedPeers.remove(reportedPeer);
-
-                        requestData(remainingNodeAddresses);
-                    } else {
-                        log.info("There is no seed node available for requesting data. " +
-                                "That is expected if no seed node is online.\n" +
-                                "We will try again to request data from a seed node after a random pause.");
-
-                        requestDataWithPersistedPeers(candidate);
-                        requestDataWithSeedNodeAddresses();
-                    }
-                }
-            });
-        } else if (!remainingNodeAddresses.isEmpty()) {
-            log.info("The node ({}) is in the process of authentication.\n" +
-                    "We will try requestData again with the remaining addresses.", candidate);
-            remainingNodeAddresses.remove(candidate);
-            if (!remainingNodeAddresses.isEmpty()) {
-                requestData(remainingNodeAddresses);
-            } else {
-                log.info("The node ({}) is in the process of authentication.\n" +
-                        "There are no more remaining addresses available.\n" +
-                        "We try requestData with the persistedPeers and after a pause with " +
-                        "the seed nodes again.", candidate);
-                requestDataWithPersistedPeers(candidate);
-                requestDataWithSeedNodeAddresses();
-            }
-        } else {
-            log.info("The node ({}) is in the process of authentication.\n" +
-                    "There are no more remaining addresses available.\n" +
-                    "We try requestData with the persistedPeers and after a pause with " +
-                    "the seed nodes again.", candidate);
-            requestDataWithPersistedPeers(candidate);
-            requestDataWithSeedNodeAddresses();
-        }
+        requestDataFromPeer(candidate, remainingNodeAddresses);
     }
 
-    private void requestDataWithSeedNodeAddresses() {
+    private void requestDataFromPeer(NodeAddress nodeAddress, Collection<NodeAddress> remainingNodeAddresses) {
+        Log.traceCall(nodeAddress.toString());
+        remainingNodeAddresses.remove(nodeAddress);
+        log.info("We try to send a DataRequest request to node. " + nodeAddress);
+
+        stopDataRequestTimeoutTimer();
+        dataRequestTimeoutTimer = UserThread.runAfter(() -> {
+                    log.info("firstDataRequestTimeoutTimer called");
+                    if (!remainingNodeAddresses.isEmpty()) {
+                        requestDataFromPeers(remainingNodeAddresses);
+                    } else {
+                        requestDataFromPersistedPeersAfterDelay(nodeAddress);
+                        requestDataFromSeedNodesAfterDelay();
+                    }
+                },
+                10, TimeUnit.SECONDS);
+
+        SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, new DataRequest(networkNode.getNodeAddress()));
+        Futures.addCallback(future, new FutureCallback<Connection>() {
+            @Override
+            public void onSuccess(@Nullable Connection connection) {
+                log.info("Send DataRequest to " + nodeAddress + " succeeded.");
+
+                if (connection != null) {
+                    if (!connection.getPeersNodeAddressOptional().isPresent())
+                        connection.setPeersNodeAddress(nodeAddress);
+
+                    if (connection.getPeerType() == null)
+                        connection.setPeerType(peerManager.isSeedNode(connection) ? Connection.PeerType.SEED_NODE : Connection.PeerType.PEER);
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable throwable) {
+                log.info("Send DataRequest to " + nodeAddress + " failed. " +
+                        "That is expected if the node is offline. " +
+                        "Exception:" + throwable.getMessage());
+
+                if (!remainingNodeAddresses.isEmpty()) {
+                    log.info("There are more seed nodes available for requesting data. " +
+                            "We will try requestData again.");
+
+                    ReportedPeer reportedPeer = new ReportedPeer(nodeAddress);
+                    if (remainingPersistedPeers.contains(reportedPeer))
+                        remainingPersistedPeers.remove(reportedPeer);
+
+                    requestDataFromPeers(remainingNodeAddresses);
+                } else {
+                    log.info("There is no seed node available for requesting data. " +
+                            "That is expected if no seed node is online.\n" +
+                            "We will try again to request data from a seed node after a random pause.");
+
+                    requestDataFromPersistedPeersAfterDelay(nodeAddress);
+                    requestDataFromSeedNodesAfterDelay();
+                }
+            }
+        });
+    }
+
+    private void requestDataFromSeedNodesAfterDelay() {
         Log.traceCall();
         // We only want to notify the first time
-        if (doNotifyNoSeedNodeAvailableListener) {
-            doNotifyNoSeedNodeAvailableListener = false;
+        if (!noSeedNodeAvailableListenerNotified) {
+            noSeedNodeAvailableListenerNotified = true;
             listener.onNoSeedNodeAvailable();
         }
-        if (requestDataTimer == null)
-            requestDataTimer = UserThread.runAfterRandomDelay(() -> requestData(seedNodeNodeAddresses),
+
+        if (requestDataFromSeedNodesTimer == null)
+            requestDataFromSeedNodesTimer = UserThread.runAfterRandomDelay(() -> requestDataFromPeers(seedNodeAddresses),
                     10, 20, TimeUnit.SECONDS);
     }
 
-    private void requestDataWithPersistedPeers(@Nullable NodeAddress failedPeer) {
+    private void requestDataFromPersistedPeersAfterDelay(@Nullable NodeAddress failedPeer) {
         Log.traceCall("failedPeer=" + failedPeer);
 
-        stopRequestDataWithPersistedPeersTimer();
+        stopRequestDataFromPersistedPeersTimer();
 
         if (persistedPeers.isEmpty()) {
             persistedPeers.addAll(peerManager.getPersistedPeers());
@@ -203,117 +262,45 @@ public class RequestDataManager implements MessageListener, AuthenticationListen
             if (!persistedPeerNodeAddresses.isEmpty()) {
                 log.info("We try to use persisted peers for requestData.");
                 persistedPeersAvailable = true;
-                requestData(persistedPeerNodeAddresses);
+                requestDataFromPeers(persistedPeerNodeAddresses);
             }
         }
 
         if (!persistedPeersAvailable) {
             log.warn("No seed nodes and no persisted peers are available for requesting data.\n" +
                     "We will try again after a random pause.");
-            doNotifyNoSeedNodeAvailableListener = false;
+            noSeedNodeAvailableListenerNotified = true;
             listener.onNoPeersAvailable();
 
             // reset remainingPersistedPeers
             remainingPersistedPeers.clear();
             remainingPersistedPeers.addAll(persistedPeers);
 
-            if (!remainingPersistedPeers.isEmpty() && requestDataWithPersistedPeersTimer == null)
-                requestDataWithPersistedPeersTimer = UserThread.runAfterRandomDelay(() ->
-                                requestDataWithPersistedPeers(null),
+            if (!remainingPersistedPeers.isEmpty() && requestDataFromPersistedPeersTimer == null)
+                requestDataFromPersistedPeersTimer = UserThread.runAfterRandomDelay(() ->
+                                requestDataFromPersistedPeersAfterDelay(null),
                         30, 40, TimeUnit.SECONDS);
         }
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // MessageListener implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onMessage(Message message, Connection connection) {
-        if (message instanceof DataRequest) {
-            // We are a seed node and receive that msg from a new node
-            Log.traceCall(message.toString());
-            networkNode.sendMessage(connection, new DataResponse(new HashSet<>(dataStorage.getMap().values())));
-        } else if (message instanceof DataResponse) {
-            // We are the new node which has requested the data
-            Log.traceCall(message.toString());
-            DataResponse dataResponse = (DataResponse) message;
-            HashSet<ProtectedData> set = dataResponse.set;
-            // we keep that connection open as the bootstrapping peer will use that for the authentication
-            // as we are not authenticated yet the data adding will not be broadcasted 
-            connection.getPeerAddressOptional().ifPresent(peerAddress -> set.stream().forEach(e -> dataStorage.add(e, peerAddress)));
-            optionalConnectedSeedNodeAddress.ifPresent(connectedSeedNodeAddress -> listener.onDataReceived(connectedSeedNodeAddress));
+    private void stopRequestDataFromSeedNodesTimer() {
+        if (requestDataFromSeedNodesTimer != null) {
+            requestDataFromSeedNodesTimer.cancel();
+            requestDataFromSeedNodesTimer = null;
         }
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // AuthenticationListener implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onPeerAuthenticated(NodeAddress peerNodeAddress, Connection connection) {
-        optionalConnectedSeedNodeAddress.ifPresent(connectedSeedNodeAddress -> {
-            // We only request the data again if we have initiated the authentication (ConnectionPriority.ACTIVE)
-            // We delay a bit to be sure that the authentication state is applied to all listeners
-            if (connectedSeedNodeAddress.equals(peerNodeAddress) && connection.getConnectionPriority() == ConnectionPriority.ACTIVE) {
-                // We are the node (can be a seed node as well) which requested the authentication
-                if (requestDataFromAuthenticatedSeedNodeTimer == null)
-                    requestDataFromAuthenticatedSeedNodeTimer = UserThread.runAfter(()
-                            -> requestDataFromAuthenticatedSeedNode(peerNodeAddress, connection), 100, TimeUnit.MILLISECONDS);
-            }
-        });
-    }
-
-    // 5. Step after authentication to first seed node we request again the data
-    protected void requestDataFromAuthenticatedSeedNode(NodeAddress peerNodeAddress, Connection connection) {
-        Log.traceCall(peerNodeAddress.toString());
-
-        stopRequestDataFromAuthenticatedSeedNodeTimer();
-
-        // We have to request the data again as we might have missed pushed data in the meantime
-        SettableFuture<Connection> future = networkNode.sendMessage(connection, new DataRequest());
-        Futures.addCallback(future, new FutureCallback<Connection>() {
-            @Override
-            public void onSuccess(@Nullable Connection connection) {
-                log.info("requestDataFromAuthenticatedSeedNode from " + peerNodeAddress + " succeeded.");
-            }
-
-            @Override
-            public void onFailure(@NotNull Throwable throwable) {
-                log.warn("requestDataFromAuthenticatedSeedNode from " + peerNodeAddress + " failed. " +
-                        "Exception:" + throwable.getMessage()
-                        + "\nWe will try again to request data from any of our seed nodes.");
-
-                // We will try again to request data from any of our seed nodes. 
-                if (seedNodeNodeAddresses != null && !seedNodeNodeAddresses.isEmpty())
-                    requestData(seedNodeNodeAddresses);
-                else
-                    log.error("seedNodeAddresses is null or empty. That must not happen. seedNodeAddresses="
-                            + seedNodeNodeAddresses);
-            }
-        });
-    }
-
-    private void stopRequestDataTimer() {
-        if (requestDataTimer != null) {
-            requestDataTimer.cancel();
-            requestDataTimer = null;
+    private void stopRequestDataFromPersistedPeersTimer() {
+        if (requestDataFromPersistedPeersTimer != null) {
+            requestDataFromPersistedPeersTimer.cancel();
+            requestDataFromPersistedPeersTimer = null;
         }
     }
 
-    private void stopRequestDataWithPersistedPeersTimer() {
-        if (requestDataWithPersistedPeersTimer != null) {
-            requestDataWithPersistedPeersTimer.cancel();
-            requestDataWithPersistedPeersTimer = null;
-        }
-    }
-
-    private void stopRequestDataFromAuthenticatedSeedNodeTimer() {
-        if (requestDataFromAuthenticatedSeedNodeTimer != null) {
-            requestDataFromAuthenticatedSeedNodeTimer.cancel();
-            requestDataFromAuthenticatedSeedNodeTimer = null;
+    private void stopDataRequestTimeoutTimer() {
+        if (dataRequestTimeoutTimer != null) {
+            dataRequestTimeoutTimer.cancel();
+            dataRequestTimeoutTimer = null;
         }
     }
 }

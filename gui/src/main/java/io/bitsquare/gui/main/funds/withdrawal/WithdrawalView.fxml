@@ -29,7 +29,7 @@
 
     <TableView fx:id="table" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn text="Label" fx:id="labelColumn" minWidth="100" sortable="false"/>
+            <TableColumn text="Details" fx:id="detailsColumn" minWidth="100" sortable="false"/>
             <TableColumn text="Address" fx:id="addressColumn" minWidth="240" sortable="false">
                 <cellValueFactory>
                     <PropertyValueFactory property="addressString"/>
@@ -37,6 +37,7 @@
             </TableColumn>
             <TableColumn text="Balance" fx:id="balanceColumn" minWidth="50" sortable="false"/>
             <TableColumn text="Confirmations" fx:id="confidenceColumn" minWidth="30" sortable="false"/>
+            <TableColumn text="" fx:id="selectColumn" prefWidth="80" sortable="false"/>
         </columns>
     </TableView>
 

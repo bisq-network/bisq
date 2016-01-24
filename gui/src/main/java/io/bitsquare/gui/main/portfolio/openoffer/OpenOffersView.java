@@ -73,7 +73,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     }
 
     private void onRemoveOpenOffer(OpenOffer openOffer) {
-        if (model.isAuthenticated()) {
+        if (model.isNetworkReady()) {
             new Popup().warning("Are you sure you want to remove that offer?\n" +
                     "The offer fee you have paid will be lost if you remove that offer.")
                     .actionButtonText("Remove offer")
@@ -81,7 +81,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     .closeButtonText("Don't remove the offer")
                     .show();
         } else {
-            new Popup().warning("You need to wait until your client is authenticated in the network.\n" +
+            new Popup().warning("You need to wait until your client is bootstrapped in the network.\n" +
                     "That might take up to about 2 minutes at startup.").show();
         }
     }

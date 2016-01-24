@@ -65,14 +65,14 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     @FXML
     ComboBox<BitcoinNetwork> netWorkComboBox;
     @FXML
-    TextArea bitcoinPeersTextArea, authenticatedPeersTextArea;
+    TextArea bitcoinPeersTextArea, p2PPeersTextArea;
     @FXML
-    Label bitcoinPeersLabel, authenticatedPeersLabel;
+    Label bitcoinPeersLabel, p2PPeersLabel;
 
     private P2PServiceListener p2PServiceListener;
-    private ChangeListener<Number> numAuthenticatedPeersChangeListener;
+    private ChangeListener<Number> numP2PPeersChangeListener;
     private ChangeListener<List<Peer>> bitcoinPeersChangeListener;
-    private final Set<NodeAddress> seedNodeNodeAddresses;
+    private final Set<NodeAddress> seedNodeAddresses;
 
     @Inject
     public NetworkSettingsView(WalletService walletService, P2PService p2PService, Preferences preferences,
@@ -84,14 +84,14 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         BitcoinNetwork bitcoinNetwork = preferences.getBitcoinNetwork();
 
         boolean useLocalhost = p2PService.getNetworkNode() instanceof LocalhostNetworkNode;
-        this.seedNodeNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhost, bitcoinNetwork.ordinal());
+        this.seedNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhost, bitcoinNetwork.ordinal());
     }
 
     public void initialize() {
         GridPane.setMargin(bitcoinPeersLabel, new Insets(4, 0, 0, 0));
         GridPane.setValignment(bitcoinPeersLabel, VPos.TOP);
-        GridPane.setMargin(authenticatedPeersLabel, new Insets(4, 0, 0, 0));
-        GridPane.setValignment(authenticatedPeersLabel, VPos.TOP);
+        GridPane.setMargin(p2PPeersLabel, new Insets(4, 0, 0, 0));
+        GridPane.setValignment(p2PPeersLabel, VPos.TOP);
         bitcoinPeersTextArea.setPrefRowCount(12);
         netWorkComboBox.setItems(FXCollections.observableArrayList(BitcoinNetwork.values()));
         netWorkComboBox.getSelectionModel().select(preferences.getBitcoinNetwork());
@@ -127,7 +127,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 }
 
                 @Override
-                public void onFirstPeerAuthenticated() {
+                public void onBootstrapped() {
                 }
 
                 @Override
@@ -152,9 +152,9 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         walletService.connectedPeersProperty().addListener(bitcoinPeersChangeListener);
         updateBitcoinPeersTextArea();
 
-        numAuthenticatedPeersChangeListener = (observable, oldValue, newValue) -> updateAuthenticatedPeersTextArea();
-        p2PService.getNumAuthenticatedPeers().addListener(numAuthenticatedPeersChangeListener);
-        updateAuthenticatedPeersTextArea();
+        numP2PPeersChangeListener = (observable, oldValue, newValue) -> updateP2PPeersTextArea();
+        p2PService.getNumConnectedPeers().addListener(numP2PPeersChangeListener);
+        updateP2PPeersTextArea();
     }
 
     @Override
@@ -165,18 +165,18 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         if (bitcoinPeersChangeListener != null)
             walletService.connectedPeersProperty().removeListener(bitcoinPeersChangeListener);
 
-        if (numAuthenticatedPeersChangeListener != null)
-            p2PService.getNumAuthenticatedPeers().removeListener(numAuthenticatedPeersChangeListener);
+        if (numP2PPeersChangeListener != null)
+            p2PService.getNumConnectedPeers().removeListener(numP2PPeersChangeListener);
     }
 
-    private void updateAuthenticatedPeersTextArea() {
-        authenticatedPeersTextArea.clear();
-        p2PService.getAuthenticatedPeerNodeAddresses().stream().forEach(e -> {
-            if (authenticatedPeersTextArea.getText().length() > 0)
-                authenticatedPeersTextArea.appendText("\n");
-            authenticatedPeersTextArea.appendText(e.getFullAddress());
-            if (seedNodeNodeAddresses.contains(e))
-                authenticatedPeersTextArea.appendText(" (Seed node)");
+    private void updateP2PPeersTextArea() {
+        p2PPeersTextArea.clear();
+        p2PService.getNodeAddressesOfConnectedPeers().stream().forEach(e -> {
+            if (p2PPeersTextArea.getText().length() > 0)
+                p2PPeersTextArea.appendText("\n");
+            p2PPeersTextArea.appendText(e.getFullAddress());
+            if (seedNodeAddresses.contains(e))
+                p2PPeersTextArea.appendText(" (Seed node)");
         });
     }
 

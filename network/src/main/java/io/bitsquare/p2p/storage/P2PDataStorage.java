@@ -12,10 +12,9 @@ import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.Connection;
-import io.bitsquare.p2p.network.IllegalRequest;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
-import io.bitsquare.p2p.peers.PeerManager;
+import io.bitsquare.p2p.peers.Broadcaster;
 import io.bitsquare.p2p.storage.data.*;
 import io.bitsquare.p2p.storage.messages.AddDataMessage;
 import io.bitsquare.p2p.storage.messages.DataBroadcastMessage;
@@ -41,7 +40,7 @@ public class P2PDataStorage implements MessageListener {
     @VisibleForTesting
     public static int CHECK_TTL_INTERVAL = new Random().nextInt(1000) + 10 * 60 * 1000; // 10-11 min.
 
-    private final PeerManager peerManager;
+    private final Broadcaster broadcaster;
     private final Map<ByteArray, ProtectedData> map = new HashMap<>();
     private final CopyOnWriteArraySet<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArraySet<>();
     private HashMap<ByteArray, Integer> sequenceNumberMap = new HashMap<>();
@@ -52,9 +51,9 @@ public class P2PDataStorage implements MessageListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public P2PDataStorage(PeerManager peerManager, NetworkNode networkNode, File storageDir) {
+    public P2PDataStorage(Broadcaster broadcaster, NetworkNode networkNode, File storageDir) {
         Log.traceCall();
-        this.peerManager = peerManager;
+        this.broadcaster = broadcaster;
 
         networkNode.addMessageListener(this);
 
@@ -70,8 +69,7 @@ public class P2PDataStorage implements MessageListener {
         if (persisted != null)
             sequenceNumberMap = persisted;
 
-        removeExpiredEntriesExecutor.scheduleAtFixedRate(() -> UserThread.execute(()
-                -> removeExpiredEntries()), CHECK_TTL_INTERVAL, CHECK_TTL_INTERVAL, TimeUnit.SECONDS);
+        removeExpiredEntriesExecutor.scheduleAtFixedRate(() -> UserThread.execute(this::removeExpiredEntries), CHECK_TTL_INTERVAL, CHECK_TTL_INTERVAL, TimeUnit.SECONDS);
     }
 
     private void removeExpiredEntries() {
@@ -105,22 +103,16 @@ public class P2PDataStorage implements MessageListener {
     public void onMessage(Message message, Connection connection) {
         if (message instanceof DataBroadcastMessage) {
             Log.traceCall(message.toString());
-            if (connection.isAuthenticated()) {
-                log.trace("ProtectedExpirableDataMessage received " + message + " on connection " + connection);
-                connection.getPeerAddressOptional().ifPresent(peerAddress -> {
-                    if (message instanceof AddDataMessage) {
-                        add(((AddDataMessage) message).data, peerAddress);
-                    } else if (message instanceof RemoveDataMessage) {
-                        remove(((RemoveDataMessage) message).data, peerAddress);
-                    } else if (message instanceof RemoveMailboxDataMessage) {
-                        removeMailboxData(((RemoveMailboxDataMessage) message).data, peerAddress);
-                    }
-                });
-            } else {
-                log.warn("Connection is not authenticated yet. " +
-                        "We don't accept storage operations from non-authenticated nodes. connection=", connection);
-                connection.reportIllegalRequest(IllegalRequest.NotAuthenticated);
-            }
+            log.trace("DataBroadcastMessage received " + message + " on connection " + connection);
+            connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress -> {
+                if (message instanceof AddDataMessage) {
+                    add(((AddDataMessage) message).data, peersNodeAddress);
+                } else if (message instanceof RemoveDataMessage) {
+                    remove(((RemoveDataMessage) message).data, peersNodeAddress);
+                } else if (message instanceof RemoveMailboxDataMessage) {
+                    removeMailboxData(((RemoveMailboxDataMessage) message).data, peersNodeAddress);
+                }
+            });
         }
     }
 
@@ -370,7 +362,7 @@ public class P2PDataStorage implements MessageListener {
 
     private void broadcast(DataBroadcastMessage message, @Nullable NodeAddress sender) {
         Log.traceCall(message.toString());
-        peerManager.broadcast(message, sender);
+        broadcaster.broadcast(message, sender);
     }
 
     private ByteArray getHashAsByteArray(ExpirablePayload payload) {

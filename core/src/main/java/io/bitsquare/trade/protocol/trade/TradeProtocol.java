@@ -49,19 +49,19 @@ public abstract class TradeProtocol {
         this.trade = trade;
         this.processModel = trade.getProcessModel();
 
-        decryptedMailListener = (decryptedMessageWithPubKey, peerAddress) -> {
+        decryptedMailListener = (decryptedMessageWithPubKey, peersNodeAddress) -> {
             // We check the sig only as soon we have stored the peers pubKeyRing.
             PubKeyRing tradingPeerPubKeyRing = processModel.tradingPeer.getPubKeyRing();
             PublicKey signaturePubKey = decryptedMessageWithPubKey.signaturePubKey;
             if (tradingPeerPubKeyRing != null && signaturePubKey.equals(tradingPeerPubKeyRing.getSignaturePubKey())) {
                 Message message = decryptedMessageWithPubKey.message;
-                log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + peerAddress);
+                log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + peersNodeAddress);
                 if (message instanceof TradeMessage) {
                     TradeMessage tradeMessage = (TradeMessage) message;
                     nonEmptyStringOf(tradeMessage.tradeId);
 
                     if (tradeMessage.tradeId.equals(processModel.getId())) {
-                        doHandleDecryptedMessage(tradeMessage, peerAddress);
+                        doHandleDecryptedMessage(tradeMessage, peersNodeAddress);
                     }
                 }
             } else {

@@ -18,6 +18,7 @@ public class DataAndSeqNr implements Serializable {
 
         DataAndSeqNr that = (DataAndSeqNr) o;
 
+        //noinspection SimplifiableIfStatement
         if (sequenceNumber != that.sequenceNumber) return false;
         return !(data != null ? !data.equals(that.data) : that.data != null);
 

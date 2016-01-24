@@ -485,8 +485,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         return dataModel.hasAcceptedArbitrators();
     }
 
-    boolean isAuthenticated() {
-        return p2PService.isAuthenticated();
+    boolean isNetworkReady() {
+        return p2PService.isNetworkReady();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

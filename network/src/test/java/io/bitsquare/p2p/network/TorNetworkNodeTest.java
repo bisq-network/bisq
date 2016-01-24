@@ -20,6 +20,7 @@ import java.util.concurrent.CountDownLatch;
 // TorNode created. Took 6 sec.
 // Hidden service created. Took 40-50 sec.
 // Connection establishment takes about 4 sec.
+//TODO P2P network tests are outdated
 @Ignore
 public class TorNetworkNodeTest {
     private static final Logger log = LoggerFactory.getLogger(TorNetworkNodeTest.class);
