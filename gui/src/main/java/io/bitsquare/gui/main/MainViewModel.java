@@ -267,7 +267,7 @@ public class MainViewModel implements ViewModel {
                 numberofBtcPeersTimer = UserThread.runAfter(() -> {
                     if (walletService.numPeersProperty().get() == 0)
                         walletServiceErrorMsg.set("You lost the connection to all bitcoin network peers.\n" +
-                                "Maybe you lost your internet connection or your computer was in hibernate/sleep mode.");
+                                "You lost your connection, Unable to connect to the internet.\n Please check your internet connection or try to restart the application.");
                     else
                         walletServiceErrorMsg.set(null);
                 }, 2);
@@ -394,7 +394,7 @@ public class MainViewModel implements ViewModel {
                 numberofP2PNetworkPeersTimer = UserThread.runAfter(() -> {
                     if (p2PService.getNumAuthenticatedPeers().get() == 0) {
                         p2PNetworkWarnMsg.set("You lost the connection to all P2P network peers.\n" +
-                                "Maybe you lost your internet connection or your computer was in hibernate/sleep mode.");
+                                "You lost your connection, Unable to connect to the internet.\n Please check your internet connection or try to restart the application.");
                         p2PNetworkLabelId.set("splash-error-state-msg");
                     } else {
                         p2PNetworkWarnMsg.set(null);
