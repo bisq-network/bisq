@@ -19,7 +19,6 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -28,15 +27,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public abstract class NetworkNode implements MessageListener, ConnectionListener {
     private static final Logger log = LoggerFactory.getLogger(NetworkNode.class);
 
-    private static final int CREATE_SOCKET_TIMEOUT = 10 * 1000;        // 10 sec.
-
-    protected final int servicePort;
+    final int servicePort;
 
     private final CopyOnWriteArraySet<Connection> inBoundConnections = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<ConnectionListener> connectionListeners = new CopyOnWriteArraySet<>();
-    protected final CopyOnWriteArraySet<SetupListener> setupListeners = new CopyOnWriteArraySet<>();
-    protected ListeningExecutorService executorService;
+    final CopyOnWriteArraySet<SetupListener> setupListeners = new CopyOnWriteArraySet<>();
+    ListeningExecutorService executorService;
     private Server server;
 
     private volatile boolean shutDownInProgress;
@@ -48,7 +45,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public NetworkNode(int servicePort) {
+    NetworkNode(int servicePort) {
         Log.traceCall();
         this.servicePort = servicePort;
     }
@@ -56,11 +53,6 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void start() {
-        Log.traceCall();
-        start(null);
-    }
 
     abstract public void start(@Nullable SetupListener setupListener);
 
@@ -114,7 +106,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                     outboundConnection.sendMessage(message);
                     return outboundConnection;
                 } catch (Throwable throwable) {
-                    if (!(throwable instanceof ConnectException || throwable instanceof IOException || throwable instanceof TimeoutException)) {
+                    if (!(throwable instanceof ConnectException || throwable instanceof IOException)) {
                         throwable.printStackTrace();
                         log.error("Executing task failed. " + throwable.getMessage());
                     }
@@ -203,7 +195,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     // SetupListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addSetupListener(SetupListener setupListener) {
+    void addSetupListener(SetupListener setupListener) {
         Log.traceCall();
         boolean isNewEntry = setupListeners.add(setupListener);
         if (!isNewEntry)
@@ -287,12 +279,12 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void createExecutorService() {
+    void createExecutorService() {
         Log.traceCall();
         executorService = Utilities.getListeningExecutorService("NetworkNode-" + servicePort, 20, 50, 120L);
     }
 
-    protected void startServer(ServerSocket serverSocket) {
+    void startServer(ServerSocket serverSocket) {
         Log.traceCall();
         ConnectionListener startServerConnectionListener = new ConnectionListener() {
             @Override

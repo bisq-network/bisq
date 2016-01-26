@@ -11,7 +11,7 @@ public final class GetPeersRequest extends PeerExchangeMessage implements Sender
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
-    private NodeAddress senderNodeAddress;
+    private final NodeAddress senderNodeAddress;
     public final HashSet<ReportedPeer> reportedPeers;
 
     public GetPeersRequest(NodeAddress senderNodeAddress, HashSet<ReportedPeer> reportedPeers) {

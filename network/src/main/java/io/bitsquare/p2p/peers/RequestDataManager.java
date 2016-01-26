@@ -195,7 +195,6 @@ public class RequestDataManager implements MessageListener {
     private void handleError(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
         Log.traceCall("nodeAddress=" + nodeAddress + " /  remainingNodeAddresses=" + remainingNodeAddresses);
         stopTimeoutTimer();
-        //peerManager.removePeer(nodeAddress);
 
         if (!remainingNodeAddresses.isEmpty()) {
             log.info("There are remaining nodes available for requesting data. " +
@@ -221,12 +220,9 @@ public class RequestDataManager implements MessageListener {
                             // we got from the other seed node contacted but we still have not requested the initial 
                             // data set
                             List<NodeAddress> list = new ArrayList<>(seedNodeAddresses);
-                            list.addAll(peerManager.getNodeAddressesOfReportedPeers().stream()
-                                    .filter(e -> !list.contains(e))
-                                    .collect(Collectors.toSet()));
-                            list.addAll(peerManager.getNodeAddressesOfPersistedPeers().stream()
-                                    .filter(e -> !list.contains(e))
-                                    .collect(Collectors.toSet()));
+                            list.addAll(getFilteredAndSortedList(peerManager.getReportedPeers(), list));
+                            list.addAll(getFilteredAndSortedList(peerManager.getPersistedPeers(), list));
+                            log.trace("Sorted and filtered list: list=" + list);
                             if (!list.isEmpty()) {
                                 NodeAddress nextCandidate = list.get(0);
                                 list.remove(nextCandidate);
@@ -239,6 +235,19 @@ public class RequestDataManager implements MessageListener {
                     },
                     10, 15, TimeUnit.SECONDS);
         }
+    }
+
+    // sorted by most recent lastActivityDate
+    private List<NodeAddress> getFilteredAndSortedList(Set<ReportedPeer> set, List<NodeAddress> list) {
+        return set.stream()
+                .filter(e -> !list.contains(e.nodeAddress) &&
+                        !peerManager.isSeedNode(e) &&
+                        !peerManager.isSelf(e.nodeAddress))
+                .collect(Collectors.toList())
+                .stream()
+                .sorted((o1, o2) -> o2.lastActivityDate.compareTo(o1.lastActivityDate))
+                .map(e -> e.nodeAddress)
+                .collect(Collectors.toList());
     }
 
     private void stopRequestDataTimer() {

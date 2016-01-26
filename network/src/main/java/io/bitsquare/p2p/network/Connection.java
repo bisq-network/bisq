@@ -82,15 +82,15 @@ public class Connection implements MessageListener {
     // use GZIPInputStream but problems with blocking
     private final boolean useCompression = false;
     private PeerType peerType;
-    private ObjectProperty<NodeAddress> nodeAddressProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<NodeAddress> nodeAddressProperty = new SimpleObjectProperty<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Connection(Socket socket, MessageListener messageListener, ConnectionListener connectionListener,
-                      @Nullable NodeAddress peersNodeAddress) {
+    Connection(Socket socket, MessageListener messageListener, ConnectionListener connectionListener,
+               @Nullable NodeAddress peersNodeAddress) {
         Log.traceCall();
         this.socket = socket;
         this.messageListener = messageListener;
@@ -168,10 +168,11 @@ public class Connection implements MessageListener {
                 }
 
                 Object objectToWrite;
+                //noinspection ConstantConditions
                 if (useCompression) {
                     byte[] messageAsBytes = ByteArrayUtils.objectToByteArray(message);
                     // log.trace("Write object uncompressed data size: " + messageAsBytes.length);
-                    byte[] compressed = Utils.compress(message);
+                    @SuppressWarnings("UnnecessaryLocalVariable") byte[] compressed = Utils.compress(message);
                     //log.trace("Write object compressed data size: " + compressed.length);
                     objectToWrite = compressed;
                 } else {
@@ -194,6 +195,7 @@ public class Connection implements MessageListener {
         }
     }
 
+    @SuppressWarnings("unused")
     public void reportIllegalRequest(IllegalRequest illegalRequest) {
         Log.traceCall();
         sharedModel.reportIllegalRequest(illegalRequest);
@@ -221,7 +223,7 @@ public class Connection implements MessageListener {
         this.peerType = peerType;
     }
 
-    public synchronized void setPeersNodeAddress(NodeAddress peerNodeAddress) {
+    private synchronized void setPeersNodeAddress(NodeAddress peerNodeAddress) {
         Log.traceCall(peerNodeAddress.toString());
         checkNotNull(peerNodeAddress, "peerAddress must not be null");
         peersNodeAddressOptional = Optional.of(peerNodeAddress);
@@ -390,6 +392,7 @@ public class Connection implements MessageListener {
                 '}';
     }
 
+    @SuppressWarnings("unused")
     public String printDetails() {
         return "Connection{" +
                 "peerAddress=" + peersNodeAddressOptional +
@@ -458,7 +461,7 @@ public class Connection implements MessageListener {
                         "illegalRequest={}\n" +
                         "illegalRequests={}", violations, illegalRequest, illegalRequests.toString());
                 log.debug("connection={}" + this);
-                shutDown(false);
+                shutDown();
             } else {
                 illegalRequests.put(illegalRequest, ++violations);
             }
@@ -486,14 +489,14 @@ public class Connection implements MessageListener {
                 e.printStackTrace();
             }
 
-            shutDown(false);
+            shutDown();
         }
 
-        public void shutDown(boolean sendCloseConnectionMessage) {
+        public void shutDown() {
             Log.traceCall();
             if (!stopped) {
                 stopped = true;
-                connection.shutDown(sendCloseConnectionMessage);
+                connection.shutDown(false);
             }
         }
 
@@ -617,7 +620,7 @@ public class Connection implements MessageListener {
                         if (message instanceof CloseConnectionMessage) {
                             log.info("CloseConnectionMessage received on connection {}", connection);
                             stopped = true;
-                            sharedModel.shutDown(false);
+                            sharedModel.shutDown();
                         } else if (!stopped) {
                             // First a seed node gets a message form a peer (PreliminaryDataRequest using 
                             // AnonymousMessage interface) which does not has its hidden service 

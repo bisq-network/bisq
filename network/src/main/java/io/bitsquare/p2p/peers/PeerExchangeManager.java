@@ -174,8 +174,9 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
 
     private void handleError(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
         Log.traceCall("nodeAddress=" + nodeAddress + " /  remainingNodeAddresses=" + remainingNodeAddresses);
+
         stopTimeoutTimer();
-        //peerManager.removePeer(nodeAddress);
+
         if (!remainingNodeAddresses.isEmpty()) {
             log.info("There are remaining nodes available for requesting peers. " +
                     "We will try getReportedPeers again.");
@@ -185,8 +186,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
                     "That is expected if no other node is online.\n" +
                     "We will try to use reported peers (if no available we use persisted peers) " +
                     "and try again to request peers from our seed nodes after a random pause.");
-            requestReportedPeersAfterDelayTimer = UserThread.runAfter(() ->
-                            continueWithMorePeers(),
+            requestReportedPeersAfterDelayTimer = UserThread.runAfter(this::continueWithMorePeers,
                     10, TimeUnit.SECONDS);
         }
     }
@@ -201,18 +201,14 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
         Log.traceCall();
         if (!peerManager.hasSufficientConnections()) {
             // We want to keep it sorted but avoid duplicates
-            List<NodeAddress> list = new ArrayList<>(peerManager.getNodeAddressesOfReportedPeers().stream()
-                    .filter(e -> !networkNode.getNodeAddressesOfConfirmedConnections().contains(e))
-                    .collect(Collectors.toSet()));
-            list.addAll(peerManager.getNodeAddressesOfPersistedPeers().stream()
-                    .filter(e -> !list.contains(e) &&
-                            !networkNode.getNodeAddressesOfConfirmedConnections().contains(e))
-                    .collect(Collectors.toSet()));
+            List<NodeAddress> list = new ArrayList<>(getFilteredAndSortedList(peerManager.getReportedPeers(), new ArrayList<>()));
+            list.addAll(getFilteredAndSortedList(peerManager.getPersistedPeers(), list));
             list.addAll(seedNodeAddresses.stream()
                     .filter(e -> !list.contains(e) &&
-                            !networkNode.getNodeAddressesOfConfirmedConnections().contains(e) &&
-                            !e.equals(networkNode.getNodeAddress()))
+                            !peerManager.isSelf(e) &&
+                            !peerManager.isConfirmed(e))
                     .collect(Collectors.toSet()));
+            log.trace("Sorted and filtered list: list=" + list);
             if (!list.isEmpty()) {
                 NodeAddress nextCandidate = list.get(0);
                 list.remove(nextCandidate);
@@ -223,6 +219,20 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
         } else {
             log.info("We have already sufficient connections.");
         }
+    }
+
+    // sorted by most recent lastActivityDate
+    private List<NodeAddress> getFilteredAndSortedList(Set<ReportedPeer> set, List<NodeAddress> list) {
+        return set.stream()
+                .filter(e -> !list.contains(e.nodeAddress) &&
+                        !peerManager.isSeedNode(e) &&
+                        !peerManager.isSelf(e) &&
+                        !peerManager.isConfirmed(e))
+                .collect(Collectors.toList())
+                .stream()
+                .sorted((o1, o2) -> o2.lastActivityDate.compareTo(o1.lastActivityDate))
+                .map(e -> e.nodeAddress)
+                .collect(Collectors.toList());
     }
 
 
@@ -243,7 +253,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
     private HashSet<ReportedPeer> getReportedPeersHashSet(NodeAddress receiverNodeAddress) {
         return new HashSet<>(peerManager.getConnectedAndReportedPeers().stream()
                 .filter(e -> !peerManager.isSeedNode(e) &&
-                                !e.nodeAddress.equals(networkNode.getNodeAddress()) &&
+                                !peerManager.isSelf(e) &&
                                 !e.nodeAddress.equals(receiverNodeAddress)
                 )
                 .collect(Collectors.toSet()));

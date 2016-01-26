@@ -22,8 +22,6 @@ import com.google.inject.name.Names;
 import io.bitsquare.app.AppModule;
 import io.bitsquare.app.ProgramArguments;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
 import java.io.File;
@@ -32,7 +30,6 @@ import static com.google.inject.name.Names.named;
 
 
 public class P2PModule extends AppModule {
-    private static final Logger log = LoggerFactory.getLogger(P2PModule.class);
 
     public P2PModule(Environment env) {
         super(env);

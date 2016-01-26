@@ -45,7 +45,7 @@ public class P2PDataStorage implements MessageListener {
     private final CopyOnWriteArraySet<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArraySet<>();
     private HashMap<ByteArray, Integer> sequenceNumberMap = new HashMap<>();
     private final Storage<HashMap> storage;
-    protected final ScheduledThreadPoolExecutor removeExpiredEntriesExecutor;
+    private final ScheduledThreadPoolExecutor removeExpiredEntriesExecutor;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor

@@ -1,8 +1,6 @@
 package io.bitsquare.p2p;
 
 import io.bitsquare.common.ByteArrayUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -14,7 +12,6 @@ import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
 public class Utils {
-    private static final Logger log = LoggerFactory.getLogger(Utils.class);
 
     public static int findFreeSystemPort() {
         try {
@@ -49,9 +46,9 @@ public class Utils {
         return bos.toByteArray();
     }
 
-    private static byte[] decompress(byte[] compressedData, int offset, int length) {
+    private static byte[] decompress(byte[] compressedData, int length) {
         Inflater inflater = new Inflater();
-        inflater.setInput(compressedData, offset, length);
+        inflater.setInput(compressedData, 0, length);
         ByteArrayOutputStream bos = new ByteArrayOutputStream(length);
         byte[] buf = new byte[8192];
         while (!inflater.finished()) {
@@ -73,7 +70,7 @@ public class Utils {
     }
 
     public static Serializable decompress(byte[] compressedData) {
-        return (Serializable) ByteArrayUtils.byteArrayToObject(decompress(compressedData, 0, compressedData.length));
+        return (Serializable) ByteArrayUtils.byteArrayToObject(decompress(compressedData, compressedData.length));
     }
 
 }

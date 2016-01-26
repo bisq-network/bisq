@@ -20,15 +20,11 @@ package io.bitsquare.crypto;
 import io.bitsquare.common.crypto.*;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.security.KeyPair;
 
 public class EncryptionService {
-    private static final Logger log = LoggerFactory.getLogger(EncryptionService.class);
-
     private final KeyRing keyRing;
 
     @Inject

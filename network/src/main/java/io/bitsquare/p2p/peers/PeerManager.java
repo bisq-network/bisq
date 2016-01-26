@@ -74,12 +74,12 @@ public class PeerManager implements ConnectionListener, MessageListener {
         };
     }
 
-    protected void createDbStorage(File storageDir) {
+    private void createDbStorage(File storageDir) {
         dbStorage = new Storage<>(storageDir);
         initPersistedPeers();
     }
 
-    protected void initPersistedPeers() {
+    private void initPersistedPeers() {
         if (dbStorage != null) {
             HashSet<ReportedPeer> persistedPeers = dbStorage.initAndGetPersisted("persistedPeers");
             if (persistedPeers != null) {
@@ -148,7 +148,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
     // Check seed node connections
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected boolean checkMaxConnections(int limit) {
+    private boolean checkMaxConnections(int limit) {
         Log.traceCall();
         stopCheckMaxConnectionsTimer();
         removeSuperfluousSeedNodes();
@@ -205,7 +205,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
         }
     }
 
-    protected void removeSuperfluousSeedNodes() {
+    private void removeSuperfluousSeedNodes() {
         Set<Connection> allConnections = networkNode.getAllConnections();
         if (allConnections.size() > MAX_CONNECTIONS_EXTENDED_1) {
             List<Connection> candidates = allConnections.stream()
@@ -228,24 +228,13 @@ public class PeerManager implements ConnectionListener, MessageListener {
     // Reported peers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void removeReportedPeer(NodeAddress nodeAddress) {
-        removeReportedPeer(new ReportedPeer(nodeAddress));
-    }
-
-    public void removeReportedPeer(ReportedPeer reportedPeer) {
+    private void removeReportedPeer(ReportedPeer reportedPeer) {
         reportedPeers.remove(reportedPeer);
         printReportedPeers();
     }
 
     public Set<ReportedPeer> getReportedPeers() {
         return reportedPeers;
-    }
-
-    public Set<NodeAddress> getNodeAddressesOfReportedPeers() {
-        return reportedPeers.stream().map(e -> e.nodeAddress)
-                .filter(e -> !isSeedNode(e) &&
-                        !e.equals(networkNode.getNodeAddress()))
-                .collect(Collectors.toSet());
     }
 
     public void addToReportedPeers(HashSet<ReportedPeer> reportedPeersToAdd, Connection connection) {
@@ -317,12 +306,22 @@ public class PeerManager implements ConnectionListener, MessageListener {
         printReportedPeers();
     }
 
+    private void printReportedPeers() {
+        if (!reportedPeers.isEmpty()) {
+            StringBuilder result = new StringBuilder("\n\n------------------------------------------------------------\n" +
+                    "Reported peers for node " + networkNode.getNodeAddress() + ":");
+            reportedPeers.stream().forEach(e -> result.append("\n").append(e));
+            result.append("\n------------------------------------------------------------\n");
+            log.info(result.toString());
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //  Persisted peers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void removeFromPersistedPeers(ReportedPeer reportedPeer) {
+    private void removeFromPersistedPeers(ReportedPeer reportedPeer) {
         if (persistedPeers.contains(reportedPeer)) {
             persistedPeers.remove(reportedPeer);
 
@@ -331,19 +330,8 @@ public class PeerManager implements ConnectionListener, MessageListener {
         }
     }
 
-    public void removeFromPersistedPeers(NodeAddress peerNodeAddress) {
-        removeFromPersistedPeers(new ReportedPeer(peerNodeAddress));
-    }
-
-    public HashSet<ReportedPeer> getPersistedPeers() {
+    public Set<ReportedPeer> getPersistedPeers() {
         return persistedPeers;
-    }
-
-    public Set<NodeAddress> getNodeAddressesOfPersistedPeers() {
-        return persistedPeers.stream().map(e -> e.nodeAddress)
-                .filter(e -> !isSeedNode(e) &&
-                        !e.equals(networkNode.getNodeAddress()))
-                .collect(Collectors.toSet());
     }
 
 
@@ -355,23 +343,10 @@ public class PeerManager implements ConnectionListener, MessageListener {
         return networkNode.getNodeAddressesOfConfirmedConnections().size() >= MIN_CONNECTIONS;
     }
 
-    public void removePeer(NodeAddress nodeAddress) {
-        removeReportedPeer(nodeAddress);
-        removeFromPersistedPeers(nodeAddress);
-    }
-
     public Set<ReportedPeer> getConnectedAndReportedPeers() {
         Set<ReportedPeer> result = new HashSet<>(reportedPeers);
         result.addAll(getConnectedPeers());
         return result;
-    }
-
-    public Set<ReportedPeer> getConnectedPeers() {
-        // networkNode.getConfirmedConnections includes:
-        // filter(connection -> connection.getPeersNodeAddressOptional().isPresent())
-        return networkNode.getConfirmedConnections().stream()
-                .map(c -> new ReportedPeer(c.getPeersNodeAddressOptional().get(), c.getLastActivityDate()))
-                .collect(Collectors.toSet());
     }
 
     public boolean isSeedNode(ReportedPeer reportedPeer) {
@@ -384,6 +359,22 @@ public class PeerManager implements ConnectionListener, MessageListener {
 
     public boolean isSeedNode(Connection connection) {
         return connection.hasPeersNodeAddress() && seedNodeAddresses.contains(connection.getPeersNodeAddressOptional().get());
+    }
+
+    public boolean isSelf(ReportedPeer reportedPeer) {
+        return isSelf(reportedPeer.nodeAddress);
+    }
+
+    public boolean isSelf(NodeAddress nodeAddress) {
+        return nodeAddress.equals(networkNode.getNodeAddress());
+    }
+
+    public boolean isConfirmed(ReportedPeer reportedPeer) {
+        return isConfirmed(reportedPeer.nodeAddress);
+    }
+
+    public boolean isConfirmed(NodeAddress nodeAddress) {
+        return networkNode.getNodeAddressesOfConfirmedConnections().contains(nodeAddress);
     }
 
 
@@ -415,6 +406,13 @@ public class PeerManager implements ConnectionListener, MessageListener {
         return list.remove(new Random().nextInt(list.size()));
     }
 
+    private Set<ReportedPeer> getConnectedPeers() {
+        // networkNode.getConfirmedConnections includes:
+        // filter(connection -> connection.getPeersNodeAddressOptional().isPresent())
+        return networkNode.getConfirmedConnections().stream()
+                .map(c -> new ReportedPeer(c.getPeersNodeAddressOptional().get(), c.getLastActivityDate()))
+                .collect(Collectors.toSet());
+    }
 
     private void stopCheckMaxConnectionsTimer() {
         if (checkMaxConnectionsTimer != null) {
@@ -433,13 +431,4 @@ public class PeerManager implements ConnectionListener, MessageListener {
         }
     }
 
-    private void printReportedPeers() {
-        if (!reportedPeers.isEmpty()) {
-            StringBuilder result = new StringBuilder("\n\n------------------------------------------------------------\n" +
-                    "Reported peers for node " + networkNode.getNodeAddress() + ":");
-            reportedPeers.stream().forEach(e -> result.append("\n").append(e));
-            result.append("\n------------------------------------------------------------\n");
-            log.info(result.toString());
-        }
-    }
 }

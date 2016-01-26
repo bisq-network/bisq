@@ -5,5 +5,6 @@ public interface SetupListener {
 
     void onHiddenServicePublished();
 
+    @SuppressWarnings("unused")
     void onSetupFailed(Throwable throwable);
 }

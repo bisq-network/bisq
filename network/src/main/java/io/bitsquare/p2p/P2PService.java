@@ -48,11 +48,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class P2PService implements SetupListener, MessageListener, ConnectionListener, RequestDataManager.Listener, HashMapChangedListener {
     private static final Logger log = LoggerFactory.getLogger(P2PService.class);
 
-    protected final SeedNodesRepository seedNodesRepository;
-    protected final int port;
-    protected final File torDir;
-    protected final Optional<EncryptionService> optionalEncryptionService;
-    protected final Optional<KeyRing> optionalKeyRing;
+    private final SeedNodesRepository seedNodesRepository;
+    private final int port;
+    private final File torDir;
+    private final Optional<EncryptionService> optionalEncryptionService;
+    private final Optional<KeyRing> optionalKeyRing;
 
     // set in init
     private NetworkNode networkNode;
@@ -102,7 +102,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         init(useLocalhost, networkId, storageDir);
     }
 
-    protected void init(boolean useLocalhost, int networkId, File storageDir) {
+    private void init(boolean useLocalhost, int networkId, File storageDir) {
         Log.traceCall();
 
         connectionNodeAddressListener = (observable, oldValue, newValue) -> {
@@ -631,10 +631,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     public void addDecryptedMailboxListener(DecryptedMailboxListener listener) {
         decryptedMailboxListeners.add(listener);
-    }
-
-    public void removeDecryptedMailboxListener(DecryptedMailboxListener listener) {
-        decryptedMailboxListeners.remove(listener);
     }
 
     public void addP2PServiceListener(P2PServiceListener listener) {

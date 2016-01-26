@@ -145,7 +145,7 @@ public class SeedNode {
         return seedNodeP2PService;
     }
 
-    public void shutDown() {
+    private void shutDown() {
         Log.traceCall();
         shutDown(null);
     }
