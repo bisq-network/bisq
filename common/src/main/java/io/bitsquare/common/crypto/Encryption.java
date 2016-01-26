@@ -34,6 +34,7 @@ import java.security.*;
 import java.util.Arrays;
 
 // TODO: which counter modes and paddings should we use?
+// TODO is Hmac needed/make sense?
 // https://security.stackexchange.com/questions/52665/which-is-the-best-cipher-mode-and-padding-mode-for-aes-encryption
 public class Encryption {
     private static final Logger log = LoggerFactory.getLogger(Encryption.class);

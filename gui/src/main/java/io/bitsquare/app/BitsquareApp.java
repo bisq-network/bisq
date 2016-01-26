@@ -251,7 +251,7 @@ public class BitsquareApp extends Application {
         }
     }
 
-    //TODO just temp.
+    // Used for debugging trade process
     private void showDebugWindow() {
         ViewLoader viewLoader = injector.getInstance(ViewLoader.class);
         View debugView = viewLoader.load(DebugView.class);

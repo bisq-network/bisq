@@ -38,14 +38,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-//TODO convert to non static
-
-/**
- * Central point for formatting and input parsing.
- * <p>
- * Note that we never use for text input values any coin or currency symbol or code.
- * BtcFormat does not support
- */
 public class BSFormatter {
     private static final Logger log = LoggerFactory.getLogger(BSFormatter.class);
 

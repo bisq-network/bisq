@@ -3,8 +3,8 @@ package io.bitsquare.p2p.storage;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.*;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.crypto.DirectMessage;
 import io.bitsquare.crypto.EncryptionService;
-import io.bitsquare.crypto.SealedAndSignedMessage;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.TestUtils;
 import io.bitsquare.p2p.mocks.MockMessage;
@@ -222,8 +222,10 @@ public class ProtectedDataStorageTest {
             KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
         // sender 
         MockMessage mockMessage = new MockMessage("MockMessage");
-        SealedAndSignedMessage sealedAndSignedMessage = new SealedAndSignedMessage(encryptionService1.encryptAndSign(keyRing1.getPubKeyRing(), mockMessage), Hash.getHash("aa"));
-        ExpirableMailboxPayload expirableMailboxPayload = new ExpirableMailboxPayload(sealedAndSignedMessage,
+        DirectMessage directMessage = new DirectMessage(networkNode1.getNodeAddress(),
+                encryptionService1.encryptAndSign(keyRing1.getPubKeyRing(), mockMessage),
+                Hash.getHash("aa"));
+        ExpirableMailboxPayload expirableMailboxPayload = new ExpirableMailboxPayload(directMessage,
                 keyRing1.getSignatureKeyPair().getPublic(),
                 keyRing2.getSignatureKeyPair().getPublic());
 

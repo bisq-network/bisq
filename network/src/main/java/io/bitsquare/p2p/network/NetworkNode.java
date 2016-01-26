@@ -93,64 +93,42 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                     "We will create a new outbound connection.", peersNodeAddress);
 
             final SettableFuture<Connection> resultFuture = SettableFuture.create();
-            final boolean[] timeoutOccurred = new boolean[1];
-            timeoutOccurred[0] = false;
-
             ListenableFuture<Connection> future = executorService.submit(() -> {
                 Thread.currentThread().setName("NetworkNode:SendMessage-to-" + peersNodeAddress);
-                Connection newConnection = null;
+                OutboundConnection outboundConnection = null;
                 try {
                     // can take a while when using tor
                     Socket socket = createSocket(peersNodeAddress);
-                    if (timeoutOccurred[0])
-                        throw new TimeoutException("Timeout occurred when tried to create Socket to peer: " + peersNodeAddress);
-
-                    newConnection = new Connection(socket, NetworkNode.this, NetworkNode.this, Connection.Direction.OUTBOUND);
-                    newConnection.setPeersNodeAddress(peersNodeAddress);
-                    outBoundConnections.add(newConnection);
+                    outboundConnection = new OutboundConnection(socket, NetworkNode.this, NetworkNode.this, peersNodeAddress);
+                    outBoundConnections.add(outboundConnection);
 
                     log.info("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                             "NetworkNode created new outbound connection:"
-                            + "\npeerAddress=" + peersNodeAddress
-                            + "\nuid=" + newConnection.getUid()
+                            + "\nmyNodeAddress=" + getNodeAddress()
+                            + "\npeersNodeAddress=" + peersNodeAddress
+                            + "\nuid=" + outboundConnection.getUid()
                             + "\nmessage=" + message
                             + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 
                     // can take a while when using tor
-                    newConnection.sendMessage(message);
-                    return newConnection;
+                    outboundConnection.sendMessage(message);
+                    return outboundConnection;
                 } catch (Throwable throwable) {
                     if (!(throwable instanceof ConnectException || throwable instanceof IOException || throwable instanceof TimeoutException)) {
                         throwable.printStackTrace();
                         log.error("Executing task failed. " + throwable.getMessage());
                     }
-                    if (newConnection != null)
-                        newConnection.setState(Connection.State.FAILED);
                     throw throwable;
                 }
             });
 
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 public void onSuccess(Connection connection) {
-                    UserThread.execute(() -> {
-                        //timer.cancel();
-                        connection.setState(Connection.State.SUCCEEDED);
-                        resultFuture.set(connection);
-                    });
+                    UserThread.execute(() -> resultFuture.set(connection));
                 }
 
                 public void onFailure(@NotNull Throwable throwable) {
-                    UserThread.execute(() -> {
-                        //timer.cancel();
-
-                        if (lookupInboundConnection(peersNodeAddress).isPresent()) {
-                            lookupInboundConnection(peersNodeAddress).get().setState(Connection.State.FAILED);
-                        } else if (lookupOutboundConnection(peersNodeAddress).isPresent()) {
-                            lookupOutboundConnection(peersNodeAddress).get().setState(Connection.State.FAILED);
-                        }
-
-                        resultFuture.setException(throwable);
-                    });
+                    UserThread.execute(() -> resultFuture.setException(throwable));
                 }
             });
 
@@ -169,12 +147,10 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         final SettableFuture<Connection> resultFuture = SettableFuture.create();
         Futures.addCallback(future, new FutureCallback<Connection>() {
             public void onSuccess(Connection connection) {
-                connection.setState(Connection.State.SUCCEEDED);
                 UserThread.execute(() -> resultFuture.set(connection));
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                connection.setState(Connection.State.FAILED);
                 UserThread.execute(() -> resultFuture.setException(throwable));
             }
         });
@@ -189,18 +165,17 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         return set;
     }
 
-    public Set<Connection> getSucceededConnections() {
+    public Set<Connection> getConfirmedConnections() {
         // Can contain inbound and outbound connections with the same peer node address, 
         // as connection hashcode is using uid and port info
         return getAllConnections().stream()
-                .filter(e -> e.getPeersNodeAddressOptional().isPresent())
-                .filter(e -> e.getState().equals(Connection.State.SUCCEEDED))
+                .filter(Connection::hasPeersNodeAddress)
                 .collect(Collectors.toSet());
     }
 
-    public Set<NodeAddress> getNodeAddressesOfSucceededConnections() {
+    public Set<NodeAddress> getNodeAddressesOfConfirmedConnections() {
         // Does not contain inbound and outbound connection with the same peer node address
-        return getSucceededConnections().stream()
+        return getConfirmedConnections().stream()
                 .map(e -> e.getPeersNodeAddressOptional().get())
                 .collect(Collectors.toSet());
     }

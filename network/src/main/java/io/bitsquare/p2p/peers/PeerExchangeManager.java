@@ -20,11 +20,13 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class PeerExchangeManager implements MessageListener, ConnectionListener {
     private static final Logger log = LoggerFactory.getLogger(PeerExchangeManager.class);
@@ -33,7 +35,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
     private final PeerManager peerManager;
     private final Set<NodeAddress> seedNodeAddresses;
     private final ScheduledThreadPoolExecutor executor;
-    private Timer requestReportedPeersTimer, checkForSeedNodesTimer;
+    private Timer requestReportedPeersAfterDelayTimer, timeoutTimer, checkForSeedNodesTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -45,23 +47,31 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
         this.peerManager = peerManager;
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
 
-        networkNode.addMessageListener(this);
-
         executor = Utilities.getScheduledThreadPoolExecutor("PeerExchangeManager", 1, 10, 5);
-        long delay = new Random().nextInt(60) + 60 * 6; // 6-7 min. 
-        executor.scheduleAtFixedRate(() -> UserThread.execute(() -> {
-            sendGetPeersRequestToAllConnectedPeers();
-            checkSeedNodes();
-        }), delay, delay, TimeUnit.SECONDS);
+        long delay = new Random().nextInt(60) + 60 * 3; // 3-4 min. 
+        executor.scheduleAtFixedRate(() -> UserThread.execute(this::checkForSeedNode),
+                delay, delay, TimeUnit.SECONDS);
+
+        networkNode.addMessageListener(this);
     }
 
     public void shutDown() {
         Log.traceCall();
 
         networkNode.removeMessageListener(this);
-        MoreExecutors.shutdownAndAwaitTermination(executor, 500, TimeUnit.MILLISECONDS);
-        stopRequestReportedPeersTimer();
+        stopRequestReportedPeersAfterDelayTimer();
         stopCheckForSeedNodesTimer();
+        stopTimeoutTimer();
+        MoreExecutors.shutdownAndAwaitTermination(executor, 500, TimeUnit.MILLISECONDS);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void requestReportedPeers(NodeAddress nodeAddress) {
+        requestReportedPeers(nodeAddress, new ArrayList<>(seedNodeAddresses));
     }
 
 
@@ -75,8 +85,10 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
 
     @Override
     public void onDisconnect(Reason reason, Connection connection) {
+        // We use a timer to throttle if we get a series of disconnects
+        // The more connections we have the more relaxed we are with a checkForSeedNode
         if (checkForSeedNodesTimer == null)
-            checkForSeedNodesTimer = UserThread.runAfter(this::checkSeedNodes,
+            checkForSeedNodesTimer = UserThread.runAfter(this::checkForSeedNode,
                     networkNode.getAllConnections().size() * 10, TimeUnit.SECONDS);
     }
 
@@ -94,53 +106,34 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
         if (message instanceof PeerExchangeMessage) {
             Log.traceCall(message.toString());
             if (message instanceof GetPeersRequest) {
-                GetPeersRequest getPeersRequestMessage = (GetPeersRequest) message;
-                HashSet<ReportedPeer> reportedPeers = getPeersRequestMessage.reportedPeers;
-                log.trace("Received peers: " + reportedPeers);
-                if (!connection.getPeersNodeAddressOptional().isPresent())
-                    connection.setPeersNodeAddress(getPeersRequestMessage.senderNodeAddress);
-
+                HashSet<ReportedPeer> reportedPeers = ((GetPeersRequest) message).reportedPeers;
+                log.trace("Received reported peers: " + reportedPeers);
+                checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
+                        "The peers address must have been already set at the moment");
                 SettableFuture<Connection> future = networkNode.sendMessage(connection,
-                        new GetPeersResponse(getReportedPeersHashSet(getPeersRequestMessage.senderNodeAddress)));
+                        new GetPeersResponse(getReportedPeersHashSet(connection.getPeersNodeAddressOptional().get())));
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
                     public void onSuccess(Connection connection) {
                         log.trace("GetPeersResponse sent successfully");
-
-                        handleOnSuccess(connection, null);
                     }
 
                     @Override
                     public void onFailure(@NotNull Throwable throwable) {
-                        log.info("GetPeersResponse sending failed " + throwable.getMessage());
+                        log.info("GetPeersResponse sending failed " + throwable.getMessage() +
+                                " Maybe the peer went offline.");
                     }
                 });
                 peerManager.addToReportedPeers(reportedPeers, connection);
             } else if (message instanceof GetPeersResponse) {
+                stopTimeoutTimer();
                 HashSet<ReportedPeer> reportedPeers = ((GetPeersResponse) message).reportedPeers;
-                log.trace("Received peers: " + reportedPeers);
+                log.trace("Received reported peers: " + reportedPeers);
                 peerManager.addToReportedPeers(reportedPeers, connection);
 
-                if (!peerManager.hasSufficientConnections()) {
-                    List<NodeAddress> remainingNodeAddresses = new ArrayList<>(peerManager.getNodeAddressesOfReportedPeers());
-                    networkNode.getNodeAddressesOfSucceededConnections().stream().forEach(remainingNodeAddresses::remove);
-                    if (!remainingNodeAddresses.isEmpty()) {
-                        NodeAddress nodeAddress = remainingNodeAddresses.get(new Random().nextInt(remainingNodeAddresses.size()));
-                        remainingNodeAddresses.remove(nodeAddress);
-                        requestPeersFromReportedPeers(nodeAddress, remainingNodeAddresses);
-                    }
-                }
+                continueWithMorePeers();
             }
         }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void getReportedPeersFromFirstSeedNode(NodeAddress nodeAddress) {
-        getReportedPeersFromSeedNode(nodeAddress, new ArrayList<>(seedNodeAddresses));
     }
 
 
@@ -148,10 +141,18 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void getReportedPeersFromSeedNode(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
-        Log.traceCall("nodeAddress=" + nodeAddress);
-        stopRequestReportedPeersTimer();
-        stopCheckForSeedNodesTimer();
+    private void requestReportedPeers(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
+        Log.traceCall("nodeAddress=" + nodeAddress + " /  remainingNodeAddresses=" + remainingNodeAddresses);
+        checkNotNull(networkNode.getNodeAddress(), "My node address must not be null at getReportedPeersFromSeedNode");
+
+        stopRequestReportedPeersAfterDelayTimer();
+        stopTimeoutTimer();
+
+        timeoutTimer = UserThread.runAfter(() -> {
+                    log.info("timeoutTimer called");
+                    handleError(nodeAddress, remainingNodeAddresses);
+                },
+                10, TimeUnit.SECONDS);
 
         SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress,
                 new GetPeersRequest(networkNode.getNodeAddress(), getReportedPeersHashSet(nodeAddress)));
@@ -159,97 +160,99 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
             @Override
             public void onSuccess(Connection connection) {
                 log.trace("GetPeersRequest sent successfully");
-
-                handleOnSuccess(connection, nodeAddress);
             }
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                log.info("GetPeersRequest sending failed " + throwable.getMessage());
-
-                if (!remainingNodeAddresses.isEmpty()) {
-                    log.info("There are more seed nodes available for requesting peers. " +
-                            "We will try getReportedPeersFromFirstSeedNode again.");
-
-                    NodeAddress nextCandidate = remainingNodeAddresses.get(new Random().nextInt(remainingNodeAddresses.size()));
-                    remainingNodeAddresses.remove(nextCandidate);
-                    getReportedPeersFromSeedNode(nextCandidate, remainingNodeAddresses);
-                } else {
-                    log.info("There is no seed node available for requesting peers. " +
-                            "That is expected if no seed node is online.\n" +
-                            "We will try again to request peers from a seed node after a random pause.");
-                    requestReportedPeersTimer = UserThread.runAfterRandomDelay(() -> {
-                                if (!seedNodeAddresses.isEmpty()) {
-                                    List<NodeAddress> nodeAddresses = new ArrayList<>(seedNodeAddresses);
-                                    NodeAddress nextCandidate = nodeAddresses.get(new Random().nextInt(nodeAddresses.size()));
-                                    nodeAddresses.remove(nextCandidate);
-                                    getReportedPeersFromSeedNode(nextCandidate, nodeAddresses);
-                                }
-                            },
-                            30, 40, TimeUnit.SECONDS);
-                }
+                log.info("Sending GetPeersRequest to " + nodeAddress + " failed. " +
+                        "That is expected if the peer is offline. " +
+                        "Exception:" + throwable.getMessage());
+                handleError(nodeAddress, remainingNodeAddresses);
             }
         });
     }
 
-    private void handleOnSuccess(Connection connection, @Nullable NodeAddress nodeAddress) {
-        if (connection != null) {
-            if (!connection.getPeersNodeAddressOptional().isPresent() && nodeAddress != null)
-                connection.setPeersNodeAddress(nodeAddress);
-
-            if (connection.getPeerType() == null)
-                connection.setPeerType(peerManager.isSeedNode(connection) ? Connection.PeerType.SEED_NODE : Connection.PeerType.PEER);
+    private void handleError(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
+        Log.traceCall("nodeAddress=" + nodeAddress + " /  remainingNodeAddresses=" + remainingNodeAddresses);
+        stopTimeoutTimer();
+        //peerManager.removePeer(nodeAddress);
+        if (!remainingNodeAddresses.isEmpty()) {
+            log.info("There are remaining nodes available for requesting peers. " +
+                    "We will try getReportedPeers again.");
+            requestReportedPeersFromList(remainingNodeAddresses);
+        } else {
+            log.info("There is no remaining node available for requesting peers. " +
+                    "That is expected if no other node is online.\n" +
+                    "We will try to use reported peers (if no available we use persisted peers) " +
+                    "and try again to request peers from our seed nodes after a random pause.");
+            requestReportedPeersAfterDelayTimer = UserThread.runAfter(() ->
+                            continueWithMorePeers(),
+                    10, TimeUnit.SECONDS);
         }
     }
 
-    private void requestPeersFromReportedPeers(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
-        Log.traceCall("nodeAddress=" + nodeAddress);
-        stopRequestReportedPeersTimer();
-
-        SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress,
-                new GetPeersRequest(networkNode.getNodeAddress(), getReportedPeersHashSet(nodeAddress)));
-        Futures.addCallback(future, new FutureCallback<Connection>() {
-            @Override
-            public void onSuccess(Connection connection) {
-                log.trace("sendGetPeersRequest sent successfully");
-
-                handleOnSuccess(connection, nodeAddress);
-            }
-
-            @Override
-            public void onFailure(@NotNull Throwable throwable) {
-                log.info("sendGetPeersRequest sending failed " + throwable.getMessage());
-
-                peerManager.removePeer(nodeAddress);
-
-                if (!remainingNodeAddresses.isEmpty()) {
-                    log.info("There are more reported peers available for requesting peers. " +
-                            "We will try getReportedPeersFromFirstSeedNode again.");
-
-                    NodeAddress nextCandidate = remainingNodeAddresses.get(new Random().nextInt(remainingNodeAddresses.size()));
-                    remainingNodeAddresses.remove(nextCandidate);
-                    requestPeersFromReportedPeers(nextCandidate, remainingNodeAddresses);
-                } else {
-                    log.info("There are no more reported peers available for requesting peers. " +
-                            "We will try again to request peers from the reported peers again after a random pause.");
-                    requestReportedPeersTimer = UserThread.runAfterRandomDelay(() -> {
-                                List<NodeAddress> nodeAddresses = new ArrayList<>(peerManager.getNodeAddressesOfReportedPeers());
-                                if (!nodeAddresses.isEmpty()) {
-                                    NodeAddress nextCandidate = nodeAddresses.get(new Random().nextInt(nodeAddresses.size()));
-                                    nodeAddresses.remove(nextCandidate);
-                                    requestPeersFromReportedPeers(nextCandidate, nodeAddresses);
-                                }
-                            },
-                            30, 40, TimeUnit.SECONDS);
-                }
-            }
-        });
+    private void requestReportedPeersFromList(List<NodeAddress> remainingNodeAddresses) {
+        NodeAddress nextCandidate = remainingNodeAddresses.get(new Random().nextInt(remainingNodeAddresses.size()));
+        remainingNodeAddresses.remove(nextCandidate);
+        requestReportedPeers(nextCandidate, remainingNodeAddresses);
     }
 
-    private void stopRequestReportedPeersTimer() {
-        if (requestReportedPeersTimer != null) {
-            requestReportedPeersTimer.cancel();
-            requestReportedPeersTimer = null;
+    private void continueWithMorePeers() {
+        Log.traceCall();
+        if (!peerManager.hasSufficientConnections()) {
+            // We want to keep it sorted but avoid duplicates
+            List<NodeAddress> list = new ArrayList<>(peerManager.getNodeAddressesOfReportedPeers().stream()
+                    .filter(e -> !networkNode.getNodeAddressesOfConfirmedConnections().contains(e))
+                    .collect(Collectors.toSet()));
+            list.addAll(peerManager.getNodeAddressesOfPersistedPeers().stream()
+                    .filter(e -> !list.contains(e) &&
+                            !networkNode.getNodeAddressesOfConfirmedConnections().contains(e))
+                    .collect(Collectors.toSet()));
+            list.addAll(seedNodeAddresses.stream()
+                    .filter(e -> !list.contains(e) &&
+                            !networkNode.getNodeAddressesOfConfirmedConnections().contains(e) &&
+                            !e.equals(networkNode.getNodeAddress()))
+                    .collect(Collectors.toSet()));
+            if (!list.isEmpty()) {
+                NodeAddress nextCandidate = list.get(0);
+                list.remove(nextCandidate);
+                requestReportedPeers(nextCandidate, list);
+            } else {
+                log.info("No more peers are available for requestReportedPeers.");
+            }
+        } else {
+            log.info("We have already sufficient connections.");
+        }
+    }
+
+
+    // we check if we have at least one seed node connected
+    private void checkForSeedNode() {
+        Log.traceCall();
+        stopCheckForSeedNodesTimer();
+        Set<Connection> allConnections = networkNode.getConfirmedConnections();
+        List<Connection> seedNodes = allConnections.stream()
+                .filter(peerManager::isSeedNode)
+                .collect(Collectors.toList());
+
+        if (seedNodes.size() == 0 && !seedNodeAddresses.isEmpty()) {
+            requestReportedPeersFromList(new ArrayList<>(seedNodeAddresses));
+        }
+    }
+
+    private HashSet<ReportedPeer> getReportedPeersHashSet(NodeAddress receiverNodeAddress) {
+        return new HashSet<>(peerManager.getConnectedAndReportedPeers().stream()
+                .filter(e -> !peerManager.isSeedNode(e) &&
+                                !e.nodeAddress.equals(networkNode.getNodeAddress()) &&
+                                !e.nodeAddress.equals(receiverNodeAddress)
+                )
+                .collect(Collectors.toSet()));
+    }
+
+    private void stopRequestReportedPeersAfterDelayTimer() {
+        if (requestReportedPeersAfterDelayTimer != null) {
+            requestReportedPeersAfterDelayTimer.cancel();
+            requestReportedPeersAfterDelayTimer = null;
         }
     }
 
@@ -260,58 +263,10 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
         }
     }
 
-
-    private void sendGetPeersRequestToAllConnectedPeers() {
-        // copy set to avoid issues with changes in set (we dont need to be perfectly in sync so no need to use a concurrent set)
-        Set<NodeAddress> connectedPeers = new HashSet<>(networkNode.getNodeAddressesOfSucceededConnections());
-        if (!connectedPeers.isEmpty()) {
-            Log.traceCall("connectedPeers.size=" + connectedPeers.size());
-            connectedPeers.stream().forEach(nodeAddress ->
-                    UserThread.runAfterRandomDelay(() ->
-                            sendGetPeersRequest(nodeAddress), 3, 6));
-        }
-    }
-
-    private void sendGetPeersRequest(NodeAddress nodeAddress) {
-        Log.traceCall("nodeAddress=" + nodeAddress);
-        SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress,
-                new GetPeersRequest(networkNode.getNodeAddress(), getReportedPeersHashSet(nodeAddress)));
-        Futures.addCallback(future, new FutureCallback<Connection>() {
-            @Override
-            public void onSuccess(Connection connection) {
-                log.trace("sendGetPeersRequest sent successfully");
-                handleOnSuccess(connection, nodeAddress);
-            }
-
-            @Override
-            public void onFailure(@NotNull Throwable throwable) {
-                log.info("sendGetPeersRequest sending failed " + throwable.getMessage());
-                peerManager.removePeer(nodeAddress);
-            }
-        });
-    }
-
-    private HashSet<ReportedPeer> getReportedPeersHashSet(@Nullable NodeAddress receiverNodeAddress) {
-        return new HashSet<>(peerManager.getConnectedAndReportedPeers().stream()
-                .filter(e -> !peerManager.isSeedNode(e) &&
-                                !e.nodeAddress.equals(networkNode.getNodeAddress()) &&
-                                !e.nodeAddress.equals(receiverNodeAddress)
-                )
-                .collect(Collectors.toSet()));
-    }
-
-    private void checkSeedNodes() {
-        Log.traceCall();
-        Set<Connection> allConnections = networkNode.getAllConnections();
-        List<Connection> seedNodes = allConnections.stream()
-                .filter(peerManager::isSeedNode)
-                .collect(Collectors.toList());
-
-        if (seedNodes.size() == 0 && !seedNodeAddresses.isEmpty()) {
-            List<NodeAddress> nodeAddresses = new ArrayList<>(seedNodeAddresses);
-            NodeAddress nextCandidate = nodeAddresses.get(new Random().nextInt(nodeAddresses.size()));
-            nodeAddresses.remove(nextCandidate);
-            getReportedPeersFromSeedNode(nextCandidate, nodeAddresses);
+    private void stopTimeoutTimer() {
+        if (timeoutTimer != null) {
+            timeoutTimer.cancel();
+            timeoutTimer = null;
         }
     }
 }

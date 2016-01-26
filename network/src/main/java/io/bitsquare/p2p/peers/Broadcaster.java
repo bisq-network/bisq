@@ -25,25 +25,19 @@ public class Broadcaster {
 
     public void broadcast(DataBroadcastMessage message, @Nullable NodeAddress sender) {
         Log.traceCall("Sender " + sender + ". Message " + message.toString());
-        Set<NodeAddress> receivers = networkNode.getNodeAddressesOfSucceededConnections();
+        Set<Connection> receivers = networkNode.getConfirmedConnections();
         if (!receivers.isEmpty()) {
             log.info("Broadcast message to {} peers. Message: {}", receivers.size(), message);
             receivers.stream()
-                    .filter(e -> !e.equals(sender))
-                    .forEach(nodeAddress -> {
-                        log.trace("Broadcast message from " + networkNode.getNodeAddress() + " to " + nodeAddress + ".");
-                        SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, message);
+                    .filter(connection -> !connection.getPeersNodeAddressOptional().get().equals(sender))
+                    .forEach(connection -> {
+                        log.trace("Broadcast message from " + networkNode.getNodeAddress() + " to " +
+                                connection.getPeersNodeAddressOptional().get() + ".");
+                        SettableFuture<Connection> future = networkNode.sendMessage(connection, message);
                         Futures.addCallback(future, new FutureCallback<Connection>() {
                             @Override
                             public void onSuccess(Connection connection) {
-                                log.trace("Broadcast from " + networkNode.getNodeAddress() + " to " + nodeAddress + " succeeded.");
-                                if (connection != null) {
-                                    if (!connection.getPeersNodeAddressOptional().isPresent())
-                                        connection.setPeersNodeAddress(nodeAddress);
-
-                                    if (connection.getPeerType() == null)
-                                        connection.setPeerType(Connection.PeerType.PEER);
-                                }
+                                log.trace("Broadcast from " + networkNode.getNodeAddress() + " to " + connection + " succeeded.");
                             }
 
                             @Override

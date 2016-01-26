@@ -2,15 +2,16 @@ package io.bitsquare.p2p.peers.messages.peers;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 import io.bitsquare.p2p.peers.ReportedPeer;
 
 import java.util.HashSet;
 
-public final class GetPeersRequest extends PeerExchangeMessage {
+public final class GetPeersRequest extends PeerExchangeMessage implements SendersNodeAddressMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
-    public final NodeAddress senderNodeAddress;
+    private NodeAddress senderNodeAddress;
     public final HashSet<ReportedPeer> reportedPeers;
 
     public GetPeersRequest(NodeAddress senderNodeAddress, HashSet<ReportedPeer> reportedPeers) {
@@ -19,10 +20,16 @@ public final class GetPeersRequest extends PeerExchangeMessage {
     }
 
     @Override
+    public NodeAddress getSenderNodeAddress() {
+        return senderNodeAddress;
+    }
+
+    @Override
     public String toString() {
         return "GetPeersRequest{" +
-                "senderAddress=" + senderNodeAddress +
+                "senderNodeAddress=" + senderNodeAddress +
                 ", reportedPeers=" + reportedPeers +
                 super.toString() + "} ";
     }
+
 }

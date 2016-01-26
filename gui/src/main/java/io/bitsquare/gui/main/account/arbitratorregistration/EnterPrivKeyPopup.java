@@ -90,7 +90,6 @@ public class EnterPrivKeyPopup extends Popup {
         GridPane.setRowIndex(label, ++rowIndex);
 
         keyInputTextField = new InputTextField();
-        //TODO change when testing is done
         if (BitsquareApp.DEV_MODE)
             keyInputTextField.setText("6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a");
         GridPane.setMargin(keyInputTextField, new Insets(3, 0, 0, 0));

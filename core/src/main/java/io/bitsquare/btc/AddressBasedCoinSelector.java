@@ -114,7 +114,6 @@ class AddressBasedCoinSelector implements CoinSelector {
         log.trace("value needed: " + targetAsLong);
         HashSet<TransactionOutput> selected = new HashSet<>();
         // Sort the inputs by age*value so we get the highest "coindays" spent.
-        // TODO: Consider changing the wallets internal format to track just outputs and keep them ordered.
         ArrayList<TransactionOutput> sortedOutputs = new ArrayList<>(candidates);
         // When calculating the wallet balance, we may be asked to select all possible coins, if so, avoid sorting
         // them in order to improve performance.

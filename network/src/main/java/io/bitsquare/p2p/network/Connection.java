@@ -6,10 +6,12 @@ import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.ByteArrayUtils;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.crypto.DirectMessage;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.Utils;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
+import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -26,12 +28,12 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.*;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Connection is created by the server thread or by sendMessage from NetworkNode.
  * All handlers are called on User thread.
- * Shared data between InputHandler thread and that
  */
 public class Connection implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
@@ -47,17 +49,6 @@ public class Connection implements MessageListener {
     // Enums
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public enum Direction {
-        OUTBOUND,
-        INBOUND
-    }
-
-    public enum State {
-        IDLE,
-        SUCCEEDED,
-        FAILED
-    }
-
     public enum PeerType {
         SEED_NODE,
         PEER,
@@ -72,12 +63,11 @@ public class Connection implements MessageListener {
     private final Socket socket;
     private final MessageListener messageListener;
     private final ConnectionListener connectionListener;
-    private final Direction direction;
     private final String portInfo;
     private final String uid = UUID.randomUUID().toString();
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
     // holder of state shared between InputHandler and Connection
-    private final SharedSpace sharedSpace;
+    private final SharedModel sharedModel;
 
     // set in init
     private InputHandler inputHandler;
@@ -91,35 +81,32 @@ public class Connection implements MessageListener {
     // java.util.zip.DataFormatException: invalid literal/lengths set
     // use GZIPInputStream but problems with blocking
     private final boolean useCompression = false;
-
-
-    private final ObjectProperty<State> stateProperty = new SimpleObjectProperty<>();
     private PeerType peerType;
+    private ObjectProperty<NodeAddress> nodeAddressProperty = new SimpleObjectProperty<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Connection(Socket socket, MessageListener messageListener, ConnectionListener connectionListener, Direction direction) {
+    public Connection(Socket socket, MessageListener messageListener, ConnectionListener connectionListener,
+                      @Nullable NodeAddress peersNodeAddress) {
+        Log.traceCall();
         this.socket = socket;
         this.messageListener = messageListener;
         this.connectionListener = connectionListener;
-        this.direction = direction;
-        stateProperty.set(State.IDLE);
 
-        sharedSpace = new SharedSpace(this, socket);
+        sharedModel = new SharedModel(this, socket);
 
-        Log.traceCall();
         if (socket.getLocalPort() == 0)
             portInfo = "port=" + socket.getPort();
         else
             portInfo = "localPort=" + socket.getLocalPort() + "/port=" + socket.getPort();
 
-        init();
+        init(peersNodeAddress);
     }
 
-    private void init() {
+    private void init(@Nullable NodeAddress peersNodeAddress) {
         Log.traceCall();
 
         try {
@@ -134,15 +121,22 @@ public class Connection implements MessageListener {
 
 
             // We create a thread for handling inputStream data
-            inputHandler = new InputHandler(sharedSpace, objectInputStream, portInfo, this, useCompression);
+            inputHandler = new InputHandler(sharedModel, objectInputStream, portInfo, this, useCompression);
             singleThreadExecutor.submit(inputHandler);
         } catch (IOException e) {
-            sharedSpace.handleConnectionException(e);
+            sharedModel.handleConnectionException(e);
         }
 
-        sharedSpace.updateLastActivityDate();
+        sharedModel.updateLastActivityDate();
+
+        // Use Peer as default, in case of other types they will set it as soon as possible.
+        peerType = PeerType.PEER;
+
+        if (peersNodeAddress != null)
+            setPeersNodeAddress(peersNodeAddress);
 
         log.trace("\nNew connection created " + this.toString());
+
         UserThread.execute(() -> connectionListener.onConnection(this));
     }
 
@@ -158,9 +152,20 @@ public class Connection implements MessageListener {
         if (!stopped) {
             try {
                 String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
-                log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                        "Write object to outputStream to peer: {} (uid={})\nmessage={}"
-                        + "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n", peersNodeAddress, uid, message);
+                if (message instanceof DirectMessage && peersNodeAddressOptional.isPresent()) {
+                    setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
+
+                    log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+                                    "Sending direct message to peer" +
+                                    "Write object to outputStream to peer: {} (uid={})\nmessage={}" +
+                                    "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
+                            peersNodeAddress, uid, message);
+                } else {
+                    log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+                                    "Write object to outputStream to peer: {} (uid={})\nmessage={}" +
+                                    "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
+                            peersNodeAddress, uid, message);
+                }
 
                 Object objectToWrite;
                 if (useCompression) {
@@ -178,11 +183,11 @@ public class Connection implements MessageListener {
                         objectOutputStream.writeObject(objectToWrite);
                         objectOutputStream.flush();
                     }
-                    sharedSpace.updateLastActivityDate();
+                    sharedModel.updateLastActivityDate();
                 }
             } catch (IOException e) {
                 // an exception lead to a shutdown
-                sharedSpace.handleConnectionException(e);
+                sharedModel.handleConnectionException(e);
             }
         } else {
             log.debug("called sendMessage but was already stopped");
@@ -191,7 +196,7 @@ public class Connection implements MessageListener {
 
     public void reportIllegalRequest(IllegalRequest illegalRequest) {
         Log.traceCall();
-        sharedSpace.reportIllegalRequest(illegalRequest);
+        sharedModel.reportIllegalRequest(illegalRequest);
     }
 
 
@@ -216,25 +221,21 @@ public class Connection implements MessageListener {
         this.peerType = peerType;
     }
 
-    public void setState(State state) {
-        Log.traceCall(state.toString());
+    public synchronized void setPeersNodeAddress(NodeAddress peerNodeAddress) {
+        Log.traceCall(peerNodeAddress.toString());
+        checkNotNull(peerNodeAddress, "peerAddress must not be null");
+        peersNodeAddressOptional = Optional.of(peerNodeAddress);
 
-        if (state == State.SUCCEEDED) {
-            String peersNodeAddress = getPeersNodeAddressOptional().isPresent() ? getPeersNodeAddressOptional().get().getFullAddress() : "";
+        String peersNodeAddress = getPeersNodeAddressOptional().isPresent() ? getPeersNodeAddressOptional().get().getFullAddress() : "";
+        if (this instanceof InboundConnection) {
             log.info("\n\n############################################################\n" +
-                    "We are successfully connected to:\n" +
-                    "peerAddress= " + peersNodeAddress +
+                    "We got the peers node address set.\n" +
+                    "peersNodeAddress= " + peersNodeAddress +
                     "\nuid=" + getUid() +
                     "\n############################################################\n");
         }
 
-        this.stateProperty.set(state);
-    }
-
-    public synchronized void setPeersNodeAddress(NodeAddress peerNodeAddress) {
-        Log.traceCall();
-        checkNotNull(peerNodeAddress, "peerAddress must not be null");
-        peersNodeAddressOptional = Optional.of(peerNodeAddress);
+        nodeAddressProperty.set(peerNodeAddress);
     }
 
 
@@ -247,11 +248,15 @@ public class Connection implements MessageListener {
     }
 
     public Date getLastActivityDate() {
-        return sharedSpace.getLastActivityDate();
+        return sharedModel.getLastActivityDate();
     }
 
     public String getUid() {
         return uid;
+    }
+
+    public boolean hasPeersNodeAddress() {
+        return peersNodeAddressOptional.isPresent();
     }
 
     public boolean isStopped() {
@@ -262,16 +267,8 @@ public class Connection implements MessageListener {
         return peerType;
     }
 
-    public Direction getDirection() {
-        return direction;
-    }
-
-    public ReadOnlyObjectProperty<State> getStateProperty() {
-        return stateProperty;
-    }
-
-    public State getState() {
-        return stateProperty.get();
+    public ReadOnlyObjectProperty<NodeAddress> getNodeAddressProperty() {
+        return nodeAddressProperty;
     }
 
 
@@ -298,8 +295,8 @@ public class Connection implements MessageListener {
             log.info("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                     "ShutDown connection:"
                     + "\npeersNodeAddress=" + peersNodeAddress
-                    + "\nlocalPort/port=" + sharedSpace.getSocket().getLocalPort()
-                    + "/" + sharedSpace.getSocket().getPort()
+                    + "\nlocalPort/port=" + sharedModel.getSocket().getLocalPort()
+                    + "/" + sharedModel.getSocket().getPort()
                     + "\nuid=" + uid
                     + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 
@@ -330,14 +327,14 @@ public class Connection implements MessageListener {
 
     private void setStopFlags() {
         stopped = true;
-        sharedSpace.stop();
+        sharedModel.stop();
         if (inputHandler != null)
             inputHandler.stop();
     }
 
     private void doShutDown(@Nullable Runnable shutDownCompleteHandler) {
         Log.traceCall();
-        ConnectionListener.Reason shutDownReason = sharedSpace.getShutDownReason();
+        ConnectionListener.Reason shutDownReason = sharedModel.getShutDownReason();
         if (shutDownReason == null)
             shutDownReason = ConnectionListener.Reason.SHUT_DOWN;
         final ConnectionListener.Reason finalShutDownReason = shutDownReason;
@@ -345,7 +342,7 @@ public class Connection implements MessageListener {
         UserThread.execute(() -> connectionListener.onDisconnect(finalShutDownReason, this));
 
         try {
-            sharedSpace.getSocket().close();
+            sharedModel.getSocket().close();
         } catch (SocketException e) {
             log.trace("SocketException at shutdown might be expected " + e.getMessage());
         } catch (IOException e) {
@@ -389,11 +386,17 @@ public class Connection implements MessageListener {
         return "Connection{" +
                 "peerAddress=" + peersNodeAddressOptional +
                 ", peerType=" + peerType +
-                ", direction=" + direction +
-                ", state=" + getState() +
+                ", uid='" + uid + '\'' +
+                '}';
+    }
+
+    public String printDetails() {
+        return "Connection{" +
+                "peerAddress=" + peersNodeAddressOptional +
+                ", peerType=" + peerType +
                 ", portInfo=" + portInfo +
                 ", uid='" + uid + '\'' +
-                ", sharedSpace=" + sharedSpace.toString() +
+                ", sharedSpace=" + sharedModel.toString() +
                 ", stopped=" + stopped +
                 ", useCompression=" + useCompression +
                 '}';
@@ -408,8 +411,8 @@ public class Connection implements MessageListener {
      * Holds all shared data between Connection and InputHandler
      * Runs in same thread as Connection
      */
-    private static class SharedSpace {
-        private static final Logger log = LoggerFactory.getLogger(SharedSpace.class);
+    private static class SharedModel {
+        private static final Logger log = LoggerFactory.getLogger(SharedModel.class);
 
         private final Connection connection;
         private final Socket socket;
@@ -420,7 +423,7 @@ public class Connection implements MessageListener {
         private volatile boolean stopped;
         private ConnectionListener.Reason shutDownReason;
 
-        public SharedSpace(Connection connection, Socket socket) {
+        public SharedModel(Connection connection, Socket socket) {
             Log.traceCall();
             this.connection = connection;
             this.socket = socket;
@@ -531,7 +534,7 @@ public class Connection implements MessageListener {
     private static class InputHandler implements Runnable {
         private static final Logger log = LoggerFactory.getLogger(InputHandler.class);
 
-        private final SharedSpace sharedSpace;
+        private final SharedModel sharedModel;
         private final ObjectInputStream objectInputStream;
         private final String portInfo;
         private final MessageListener messageListener;
@@ -539,10 +542,10 @@ public class Connection implements MessageListener {
 
         private volatile boolean stopped;
 
-        public InputHandler(SharedSpace sharedSpace, ObjectInputStream objectInputStream, String portInfo, MessageListener messageListener, boolean useCompression) {
-            this.useCompression = useCompression;
+        public InputHandler(SharedModel sharedModel, ObjectInputStream objectInputStream, String portInfo, MessageListener messageListener, boolean useCompression) {
             Log.traceCall();
-            this.sharedSpace = sharedSpace;
+            this.useCompression = useCompression;
+            this.sharedModel = sharedModel;
             this.objectInputStream = objectInputStream;
             this.portInfo = portInfo;
             this.messageListener = messageListener;
@@ -560,9 +563,9 @@ public class Connection implements MessageListener {
                 Thread.currentThread().setName("InputHandler-" + portInfo);
                 while (!stopped && !Thread.currentThread().isInterrupted()) {
                     try {
-                        log.trace("InputHandler waiting for incoming messages connection=" + sharedSpace.getConnectionInfo());
+                        log.trace("InputHandler waiting for incoming messages connection=" + sharedModel.getConnectionInfo());
                         Object rawInputObject = objectInputStream.readObject();
-                        log.trace("New data arrived at inputHandler.Connection=" + sharedSpace.getConnectionInfo());
+                        log.trace("New data arrived at inputHandler.Connection=" + sharedModel.getConnectionInfo());
 
                         log.info("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
                                 "New data arrived at inputHandler.\nReceived object={}"
@@ -570,7 +573,7 @@ public class Connection implements MessageListener {
 
                         int size = ByteArrayUtils.objectToByteArray(rawInputObject).length;
                         if (size > getMaxMsgSize()) {
-                            sharedSpace.reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
+                            sharedModel.reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
                             return;
                         }
 
@@ -582,57 +585,83 @@ public class Connection implements MessageListener {
                                 //log.trace("Read object compressed data size: " + size);
                                 serializable = Utils.decompress(compressedObjectAsBytes);
                             } else {
-                                sharedSpace.reportIllegalRequest(IllegalRequest.InvalidDataType);
+                                sharedModel.reportIllegalRequest(IllegalRequest.InvalidDataType);
                             }
                         } else {
                             if (rawInputObject instanceof Serializable) {
                                 serializable = (Serializable) rawInputObject;
                             } else {
-                                sharedSpace.reportIllegalRequest(IllegalRequest.InvalidDataType);
+                                sharedModel.reportIllegalRequest(IllegalRequest.InvalidDataType);
                             }
                         }
                         //log.trace("Read object decompressed data size: " + ByteArrayUtils.objectToByteArray(serializable).length);
 
                         // compressed size might be bigger theoretically so we check again after decompression
                         if (size > getMaxMsgSize()) {
-                            sharedSpace.reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
+                            sharedModel.reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
                             return;
                         }
                         if (!(serializable instanceof Message)) {
-                            sharedSpace.reportIllegalRequest(IllegalRequest.InvalidDataType);
+                            sharedModel.reportIllegalRequest(IllegalRequest.InvalidDataType);
                             return;
                         }
 
                         Message message = (Message) serializable;
                         if (message.networkId() != Version.getNetworkId()) {
-                            sharedSpace.reportIllegalRequest(IllegalRequest.WrongNetworkId);
+                            sharedModel.reportIllegalRequest(IllegalRequest.WrongNetworkId);
                             return;
                         }
 
-                        sharedSpace.updateLastActivityDate();
+                        sharedModel.updateLastActivityDate();
+                        Connection connection = sharedModel.connection;
                         if (message instanceof CloseConnectionMessage) {
-                            log.info("CloseConnectionMessage received on connection {}", sharedSpace.connection);
+                            log.info("CloseConnectionMessage received on connection {}", connection);
                             stopped = true;
-                            sharedSpace.shutDown(false);
+                            sharedModel.shutDown(false);
                         } else if (!stopped) {
-                            messageListener.onMessage(message, null);
+                            // First a seed node gets a message form a peer (PreliminaryDataRequest using 
+                            // AnonymousMessage interface) which does not has its hidden service 
+                            // published, so does not know its address. As the IncomingConnection does not has the 
+                            // peersNodeAddress set that connection cannot be used for outgoing messages until we 
+                            // get the address set.
+                            // At the data update message (DataRequest using SendersNodeAddressMessage interface) 
+                            // after the HS is published we get the peers address set.
+
+                            // There are only those messages used for new connections to a peer:
+                            // 1. PreliminaryDataRequest
+                            // 2. DataRequest (implements SendersNodeAddressMessage)
+                            // 3. GetPeersRequest (implements SendersNodeAddressMessage)
+                            // 4. DirectMessage (implements SendersNodeAddressMessage)
+                            if (message instanceof SendersNodeAddressMessage) {
+                                NodeAddress senderNodeAddress = ((SendersNodeAddressMessage) message).getSenderNodeAddress();
+                                Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
+                                if (peersNodeAddressOptional.isPresent())
+                                    checkArgument(peersNodeAddressOptional.get().equals(senderNodeAddress),
+                                            "senderNodeAddress not matching connections peer address");
+                                else
+                                    connection.setPeersNodeAddress(senderNodeAddress);
+                            }
+                            if (message instanceof DirectMessage)
+                                connection.setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
+
+                            messageListener.onMessage(message, connection);
                         }
                     } catch (IOException | ClassNotFoundException | NoClassDefFoundError e) {
                         stopped = true;
-                        sharedSpace.handleConnectionException(e);
+                        sharedModel.handleConnectionException(e);
                     }
                 }
             } catch (Throwable t) {
                 t.printStackTrace();
                 stopped = true;
-                sharedSpace.handleConnectionException(new Exception(t));
+                sharedModel.handleConnectionException(new Exception(t));
             }
         }
 
         @Override
         public String toString() {
             return "InputHandler{" +
-                    "sharedSpace=" + sharedSpace +
+                    "sharedSpace=" + sharedModel +
                     ", port=" + portInfo +
                     ", stopped=" + stopped +
                     '}';

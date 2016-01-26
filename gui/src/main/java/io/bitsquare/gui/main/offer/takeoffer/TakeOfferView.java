@@ -67,13 +67,9 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 // priceAmountHBox is too large after redesign as to be used as layoutReference.
 @FxmlView
 public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOfferViewModel> {
-
-    // TODO convert unneeded properties to static fields
-
     private final Navigation navigation;
     private final BSFormatter formatter;
     private final OfferDetailsPopup offerDetailsPopup;
-
     private ScrollPane scrollPane;
     private GridPane gridPane;
     private ImageView imageView;
@@ -89,11 +85,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             volumeCurrencyLabel, amountRangeBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, takeOfferSpinnerInfoLabel;
 
     private PopOver totalToPayInfoPopover;
-
     private OfferView.CloseHandler closeHandler;
-
     private ChangeListener<Boolean> amountFocusedListener;
-
     private int gridRow = 0;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private Label paymentAccountsLabel;

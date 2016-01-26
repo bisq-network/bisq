@@ -126,9 +126,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     }
 
     private void openTxDetails(WithdrawalListItem item) {
-        // TODO Open popup with details view
-        log.debug("openTxDetails " + item);
-
         try {
             Utilities.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
         } catch (Exception e) {
@@ -241,8 +238,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         withdrawFromTextField.setPromptText("Select a source address from the table");
         amountTextField.setText("");
         amountTextField.setPromptText("");
-        if (!BitsquareApp.DEV_MODE)
-            withdrawToTextField.setText("");
+        withdrawToTextField.setText("");
         withdrawToTextField.setPromptText("");
     }
 

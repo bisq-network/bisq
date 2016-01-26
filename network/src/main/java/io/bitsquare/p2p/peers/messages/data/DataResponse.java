@@ -11,10 +11,10 @@ public final class DataResponse implements Message {
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
     private final int networkId = Version.getNetworkId();
 
-    public final HashSet<ProtectedData> set;
+    public final HashSet<ProtectedData> dataSet;
 
-    public DataResponse(HashSet<ProtectedData> set) {
-        this.set = set;
+    public DataResponse(HashSet<ProtectedData> dataSet) {
+        this.dataSet = dataSet;
     }
 
     @Override
@@ -29,20 +29,20 @@ public final class DataResponse implements Message {
 
         DataResponse that = (DataResponse) o;
 
-        return !(set != null ? !set.equals(that.set) : that.set != null);
+        return !(dataSet != null ? !dataSet.equals(that.dataSet) : that.dataSet != null);
 
     }
 
     @Override
     public int hashCode() {
-        return set != null ? set.hashCode() : 0;
+        return dataSet != null ? dataSet.hashCode() : 0;
     }
 
     @Override
     public String toString() {
-        return "GetDataResponse{" +
+        return "DataResponse{" +
                 "networkId=" + networkId +
-                ", set=" + set +
+                ", dataSet=" + dataSet +
                 '}';
     }
 }

@@ -270,7 +270,7 @@ public class MainViewModel implements ViewModel {
                                 "Maybe you lost your internet connection or your computer was in hibernate/sleep mode.");
                     else
                         walletServiceErrorMsg.set(null);
-                }, 2);
+                }, 5);
             } else if ((int) oldValue == 0 && (int) newValue > 0) {
                 walletServiceErrorMsg.set(null);
             }
@@ -399,7 +399,7 @@ public class MainViewModel implements ViewModel {
                         p2PNetworkWarnMsg.set(null);
                         p2PNetworkLabelId.set("footer-pane");
                     }
-                }, 2);
+                }, 5);
             } else if ((int) oldValue == 0 && (int) newValue > 0) {
                 p2PNetworkWarnMsg.set(null);
                 p2PNetworkLabelId.set("footer-pane");

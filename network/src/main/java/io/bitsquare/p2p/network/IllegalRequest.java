@@ -1,7 +1,6 @@
 package io.bitsquare.p2p.network;
 
 public enum IllegalRequest {
-    // TODO check for needed allowed tolerance
     MaxSizeExceeded(1),
     InvalidDataType(0),
     WrongNetworkId(0);

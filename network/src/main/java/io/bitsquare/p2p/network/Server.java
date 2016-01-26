@@ -43,7 +43,7 @@ class Server implements Runnable {
                     final Socket socket = serverSocket.accept();
                     if (!stopped && !Thread.currentThread().isInterrupted()) {
                         log.info("Accepted new client on localPort/port " + socket.getLocalPort() + "/" + socket.getPort());
-                        Connection connection = new Connection(socket, messageListener, connectionListener, Connection.Direction.INBOUND);
+                        InboundConnection connection = new InboundConnection(socket, messageListener, connectionListener);
 
                         log.info("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                 "Server created new inbound connection:"

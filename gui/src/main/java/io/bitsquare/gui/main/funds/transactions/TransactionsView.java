@@ -128,9 +128,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     }
 
     private void openTxDetails(TransactionsListItem item) {
-        // TODO Open popup with details view
-        log.debug("openTxDetails " + item);
-
         if (!item.isNotAnAddress()) {
             try {
                 Utilities.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());

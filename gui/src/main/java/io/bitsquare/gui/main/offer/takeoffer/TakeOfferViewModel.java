@@ -26,6 +26,9 @@ import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.p2p.P2PService;
+import io.bitsquare.p2p.network.Connection;
+import io.bitsquare.p2p.network.ConnectionListener;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.Trade;
@@ -44,9 +47,8 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 
 class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> implements ViewModel {
     private final BtcValidator btcValidator;
+    private P2PService p2PService;
     private final BSFormatter formatter;
-
-    // static fields
 
     private String amountRange;
     private String addressAsString;
@@ -58,8 +60,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private String directionLabel;
     private String amountDescription;
 
-    // TODO convert unneeded properties to static fields
-    // dynamic fields
     final StringProperty amount = new SimpleStringProperty();
     final StringProperty volume = new SimpleStringProperty();
     final StringProperty volumeDescriptionLabel = new SimpleStringProperty();
@@ -87,6 +87,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private ChangeListener<String> tradeErrorListener;
     private ChangeListener<Offer.State> offerStateListener;
     private ChangeListener<String> offerErrorListener;
+    private ConnectionListener connectionListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -94,11 +95,12 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TakeOfferViewModel(TakeOfferDataModel dataModel, BtcValidator btcValidator,
+    public TakeOfferViewModel(TakeOfferDataModel dataModel, BtcValidator btcValidator, P2PService p2PService,
                               BSFormatter formatter) {
         super(dataModel);
 
         this.btcValidator = btcValidator;
+        this.p2PService = p2PService;
         this.formatter = formatter;
 
         createListeners();
@@ -390,6 +392,22 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         tradeStateListener = (ov, oldValue, newValue) -> applyTradeState(newValue);
         tradeErrorListener = (ov, oldValue, newValue) -> applyTradeErrorMessage(newValue);
         offerStateListener = (ov, oldValue, newValue) -> applyOfferState(newValue);
+        connectionListener = new ConnectionListener() {
+            @Override
+            public void onDisconnect(Reason reason, Connection connection) {
+                if (connection.getPeersNodeAddressOptional().isPresent() &&
+                        connection.getPeersNodeAddressOptional().get().equals(offer.getOffererNodeAddress()))
+                    offerWarning.set("You cannot take that offer because the offerer went offline.");
+            }
+
+            @Override
+            public void onConnection(Connection connection) {
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+            }
+        };
     }
 
     private void addListeners() {
@@ -401,7 +419,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         dataModel.amountAsCoin.addListener(amountAsCoinListener);
 
         dataModel.isWalletFunded.addListener(isWalletFundedListener);
-
+        p2PService.getNetworkNode().addConnectionListener(connectionListener);
     }
 
     private void removeListeners() {
@@ -420,6 +438,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             trade.stateProperty().removeListener(tradeStateListener);
             trade.errorMessageProperty().removeListener(tradeErrorListener);
         }
+        p2PService.getNetworkNode().removeConnectionListener(connectionListener);
     }
 
 
