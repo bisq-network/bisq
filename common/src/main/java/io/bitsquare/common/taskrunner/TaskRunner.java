@@ -87,8 +87,7 @@ public class TaskRunner<T extends Model> {
     }
 
     void handleErrorMessage(String errorMessage) {
-        log.error("Task failed: " + currentTask.getSimpleName());
-        log.error("errorMessage: " + errorMessage);
+        log.error("Task failed: " + currentTask.getSimpleName() + " / errorMessage: " + errorMessage);
         failed = true;
         errorMessageHandler.handleErrorMessage(errorMessage);
     }

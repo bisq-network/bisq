@@ -39,8 +39,11 @@ import io.bitsquare.gui.popups.DisplayAlertMessagePopup;
 import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.popups.WalletPasswordPopup;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.CountryUtil;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
+import io.bitsquare.payment.OKPayAccount;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOffer;
@@ -411,6 +414,15 @@ public class MainViewModel implements ViewModel {
 
         // now show app
         showAppScreen.set(true);
+
+        if (BitsquareApp.DEV_MODE && user.getPaymentAccounts().isEmpty()) {
+            OKPayAccount okPayAccount = new OKPayAccount();
+            okPayAccount.setAccountNr("dummy");
+            okPayAccount.setAccountName("OKPay dummy");
+            okPayAccount.setSelectedTradeCurrency(CurrencyUtil.getDefaultTradeCurrency());
+            okPayAccount.setCountry(CountryUtil.getDefaultCountry());
+            user.addPaymentAccount(okPayAccount);
+        }
     }
 
     private void checkPeriodicallyForBtcSyncState() {

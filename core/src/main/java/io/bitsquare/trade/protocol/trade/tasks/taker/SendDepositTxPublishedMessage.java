@@ -61,7 +61,7 @@ public class SendDepositTxPublishedMessage extends TradeTask {
                             }
 
                             @Override
-                            public void onFault() {
+                            public void onFault(String errorMessage) {
                                 appendToErrorMessage("DepositTxPublishedMessage sending failed");
                                 failed();
                             }

@@ -86,7 +86,7 @@ public class StartPaymentView extends TradeStepDetailsView {
 
         model.getTxId().removeListener(txIdChangeListener);
         txIdTextField.cleanup();
-        statusProgressIndicator.setProgress(0);
+        removeStatusProgressIndicator();
     }
 
 
@@ -161,12 +161,40 @@ public class StartPaymentView extends TradeStepDetailsView {
 
     private void confirmPaymentStarted() {
         paymentStartedButton.setDisable(true);
+        paymentStartedButton.setMinWidth(130);
 
         statusProgressIndicator.setVisible(true);
+        statusProgressIndicator.setManaged(true);
         statusProgressIndicator.setProgress(-1);
-        statusLabel.setText("Sending message to trading partner...");
 
-        model.fiatPaymentStarted();
+        statusLabel.setWrapText(true);
+        statusLabel.setPrefWidth(220);
+        statusLabel.setText("Sending message to your trading partner.\n" +
+                "Please wait until you get the confirmation that the message has arrived.");
+
+        model.fiatPaymentStarted(() -> {
+            // We would not really need an update as the success triggers a screen change
+            removeStatusProgressIndicator();
+            statusLabel.setText("");
+
+            // In case the first send failed we got the support button displayed. 
+            // If it succeeds at a second try we remove the support button again.
+            if (openSupportTicketButton != null) {
+                gridPane.getChildren().remove(openSupportTicketButton);
+                openSupportTicketButton = null;
+            }
+        }, errorMessage -> {
+            removeStatusProgressIndicator();
+            statusLabel.setText("Sending message to your trading partner failed.\n" +
+                    "Please try again and if it continue to fail report a bug.");
+            paymentStartedButton.setDisable(false);
+        });
+    }
+
+    private void removeStatusProgressIndicator() {
+        statusProgressIndicator.setVisible(false);
+        statusProgressIndicator.setProgress(0);
+        statusProgressIndicator.setManaged(false);
     }
 
 

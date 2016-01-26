@@ -72,7 +72,7 @@ public class SendPayDepositRequest extends TradeTask {
                             }
 
                             @Override
-                            public void onFault() {
+                            public void onFault(String errorMessage) {
                                 appendToErrorMessage("PayDepositRequest sending failed");
                                 failed();
                             }

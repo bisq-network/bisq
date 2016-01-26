@@ -131,7 +131,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         appFocusProperty = scene.getWindow().focusedProperty();
         appFocusProperty.addListener(appFocusChangeListener);
         model.currentTrade().addListener(currentTradeChangeListener);
-        setNewSubView(model.currentTrade().get());
+        //setNewSubView(model.currentTrade().get());
         table.setItems(model.getList());
         table.getSelectionModel().selectedItemProperty().addListener(selectedItemChangeListener);
         PendingTradesListItem selectedItem = model.getSelectedItem();

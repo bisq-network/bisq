@@ -27,6 +27,7 @@ import io.bitsquare.p2p.storage.data.ExpirableMailboxPayload;
 import io.bitsquare.p2p.storage.data.ExpirablePayload;
 import io.bitsquare.p2p.storage.data.ProtectedData;
 import io.bitsquare.p2p.storage.data.ProtectedMailboxData;
+import io.bitsquare.p2p.storage.messages.AddDataMessage;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import org.fxmisc.easybind.EasyBind;
@@ -45,7 +46,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class P2PService implements SetupListener, MessageListener, ConnectionListener, RequestDataManager.Listener, HashMapChangedListener {
+public class P2PService implements SetupListener, MessageListener, ConnectionListener, RequestDataManager.Listener,
+        HashMapChangedListener {
     private static final Logger log = LoggerFactory.getLogger(P2PService.class);
 
     private final SeedNodesRepository seedNodesRepository;
@@ -56,6 +58,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     // set in init
     private NetworkNode networkNode;
+    private Broadcaster broadcaster;
     private P2PDataStorage p2PDataStorage;
     private PeerManager peerManager;
     private RequestDataManager requestDataManager;
@@ -118,7 +121,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         networkNode.addConnectionListener(this);
         networkNode.addMessageListener(this);
 
-        Broadcaster broadcaster = new Broadcaster(networkNode);
+        broadcaster = new Broadcaster(networkNode);
 
         p2PDataStorage = new P2PDataStorage(broadcaster, networkNode, storageDir);
         p2PDataStorage.addHashMapChangedListener(this);
@@ -455,77 +458,110 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
     }
 
-    public void sendEncryptedMailboxMessage(NodeAddress peerNodeAddress, PubKeyRing peersPubKeyRing,
-                                            MailboxMessage message, SendMailboxMessageListener sendMailboxMessageListener) {
+    public void sendEncryptedMailboxMessage(NodeAddress peersNodeAddress, PubKeyRing peersPubKeyRing,
+                                            MailboxMessage message,
+                                            SendMailboxMessageListener sendMailboxMessageListener) {
         Log.traceCall("message " + message);
-        checkNotNull(peerNodeAddress, "PeerAddress must not be null (sendEncryptedMailboxMessage)");
-        checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
-        checkArgument(!optionalKeyRing.get().getPubKeyRing().equals(peersPubKeyRing), "We got own keyring instead of that from peer");
+        checkNotNull(peersNodeAddress,
+                "PeerAddress must not be null (sendEncryptedMailboxMessage)");
+        checkNotNull(networkNode.getNodeAddress(),
+                "My node address must not be null at sendEncryptedMailboxMessage");
+        checkArgument(optionalKeyRing.isPresent(),
+                "keyRing not set. Seems that is called on a seed node which must not happen.");
+        checkArgument(!optionalKeyRing.get().getPubKeyRing().equals(peersPubKeyRing),
+                "We got own keyring instead of that from peer");
+        checkArgument(optionalEncryptionService.isPresent(),
+                "EncryptionService not set. Seems that is called on a seed node which must not happen.");
 
         if (isNetworkReady()) {
-            trySendEncryptedMailboxMessage(peerNodeAddress, peersPubKeyRing, message, sendMailboxMessageListener);
+            if (!networkNode.getAllConnections().isEmpty()) {
+                try {
+                    log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+                            "Encrypt message:\nmessage={}"
+                            + "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n", message);
+                    DirectMessage directMessage = new DirectMessage(
+                            networkNode.getNodeAddress(),
+                            optionalEncryptionService.get().encryptAndSign(peersPubKeyRing, message),
+                            peersNodeAddress.getAddressPrefixHash());
+                    SettableFuture<Connection> future = networkNode.sendMessage(peersNodeAddress, directMessage);
+                    Futures.addCallback(future, new FutureCallback<Connection>() {
+                        @Override
+                        public void onSuccess(@Nullable Connection connection) {
+                            log.trace("SendEncryptedMailboxMessage onSuccess");
+                            sendMailboxMessageListener.onArrived();
+                        }
+
+                        @Override
+                        public void onFailure(@NotNull Throwable throwable) {
+                            log.trace("SendEncryptedMailboxMessage onFailure");
+                            log.debug(throwable.toString());
+                            log.info("We cannot send message to peer. Peer might be offline. We will store message in mailbox.");
+                            log.trace("create MailboxEntry with peerAddress " + peersNodeAddress);
+                            PublicKey receiverStoragePublicKey = peersPubKeyRing.getSignaturePubKey();
+                            addMailboxData(new ExpirableMailboxPayload(directMessage,
+                                            optionalKeyRing.get().getSignatureKeyPair().getPublic(),
+                                            receiverStoragePublicKey),
+                                    receiverStoragePublicKey,
+                                    sendMailboxMessageListener);
+                        }
+                    });
+                } catch (CryptoException e) {
+                    log.error("sendEncryptedMessage failed");
+                    e.printStackTrace();
+                    sendMailboxMessageListener.onFault("Data already exist in our local database");
+                }
+            } else {
+                sendMailboxMessageListener.onFault("There are no P2P network nodes connected. " +
+                        "Please check your internet connection.");
+            }
         } else {
             throw new NetworkNotReadyException();
         }
     }
 
-    // send message and if it fails (peer offline) we store the data to the network
-    private void trySendEncryptedMailboxMessage(NodeAddress peersNodeAddress, PubKeyRing peersPubKeyRing,
-                                                MailboxMessage message, SendMailboxMessageListener sendMailboxMessageListener) {
-        Log.traceCall();
-        checkNotNull(networkNode.getNodeAddress(), "My node address must not be null at trySendEncryptedMailboxMessage");
-        checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
-        checkArgument(optionalEncryptionService.isPresent(), "EncryptionService not set. Seems that is called on a seed node which must not happen.");
-        checkNotNull(networkNode.getNodeAddress(), "networkNode.getNodeAddress() must not be null.");
-        try {
-            log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                    "Encrypt message:\nmessage={}"
-                    + "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n", message);
-            DirectMessage directMessage = new DirectMessage(
-                    networkNode.getNodeAddress(),
-                    optionalEncryptionService.get().encryptAndSign(peersPubKeyRing, message),
-                    peersNodeAddress.getAddressPrefixHash());
-            SettableFuture<Connection> future = networkNode.sendMessage(peersNodeAddress, directMessage);
-            Futures.addCallback(future, new FutureCallback<Connection>() {
-                @Override
-                public void onSuccess(@Nullable Connection connection) {
-                    log.trace("SendEncryptedMailboxMessage onSuccess");
-                    sendMailboxMessageListener.onArrived();
-                }
 
-                @Override
-                public void onFailure(@NotNull Throwable throwable) {
-                    log.trace("SendEncryptedMailboxMessage onFailure");
-                    log.debug(throwable.toString());
-                    log.info("We cannot send message to peer. Peer might be offline. We will store message in mailbox.");
-                    log.trace("create MailboxEntry with peerAddress " + peersNodeAddress);
-                    PublicKey receiverStoragePublicKey = peersPubKeyRing.getSignaturePubKey();
-                    addMailboxData(new ExpirableMailboxPayload(directMessage,
-                                    optionalKeyRing.get().getSignatureKeyPair().getPublic(),
-                                    receiverStoragePublicKey),
-                            receiverStoragePublicKey);
-                    sendMailboxMessageListener.onStoredInMailbox();
-                }
-            });
-        } catch (CryptoException e) {
-            log.error("sendEncryptedMessage failed");
-            e.printStackTrace();
-            sendMailboxMessageListener.onFault();
-        }
-    }
-
-    private void addMailboxData(ExpirableMailboxPayload expirableMailboxPayload, PublicKey receiversPublicKey) {
+    private void addMailboxData(ExpirableMailboxPayload expirableMailboxPayload,
+                                PublicKey receiversPublicKey,
+                                SendMailboxMessageListener sendMailboxMessageListener) {
         Log.traceCall();
-        checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
+        checkArgument(optionalKeyRing.isPresent(),
+                "keyRing not set. Seems that is called on a seed node which must not happen.");
+
         if (isNetworkReady()) {
-            try {
-                ProtectedMailboxData protectedMailboxData = p2PDataStorage.getMailboxDataWithSignedSeqNr(
-                        expirableMailboxPayload,
-                        optionalKeyRing.get().getSignatureKeyPair(),
-                        receiversPublicKey);
-                p2PDataStorage.add(protectedMailboxData, networkNode.getNodeAddress());
-            } catch (CryptoException e) {
-                log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
+            if (!networkNode.getAllConnections().isEmpty()) {
+                try {
+                    ProtectedMailboxData protectedMailboxData = p2PDataStorage.getMailboxDataWithSignedSeqNr(
+                            expirableMailboxPayload,
+                            optionalKeyRing.get().getSignatureKeyPair(),
+                            receiversPublicKey);
+
+                    Timer sendMailboxMessageTimeoutTimer = UserThread.runAfter(() -> {
+                        boolean result = p2PDataStorage.remove(protectedMailboxData, networkNode.getNodeAddress());
+                        log.debug("remove result=" + result);
+                        sendMailboxMessageListener.onFault("A timeout occurred when trying to broadcast mailbox data.");
+                    }, 30);
+                    broadcaster.addOneTimeListener(message -> {
+                        if (message instanceof AddDataMessage &&
+                                ((AddDataMessage) message).data.equals(protectedMailboxData)) {
+                            sendMailboxMessageListener.onStoredInMailbox();
+                            sendMailboxMessageTimeoutTimer.cancel();
+                        }
+                    });
+
+
+                    boolean result = p2PDataStorage.add(protectedMailboxData, networkNode.getNodeAddress());
+                    if (!result) {
+                        sendMailboxMessageTimeoutTimer.cancel();
+                        sendMailboxMessageListener.onFault("Data already exists in our local database");
+                        boolean result2 = p2PDataStorage.remove(protectedMailboxData, networkNode.getNodeAddress());
+                        log.debug("remove result=" + result2);
+                    }
+                } catch (CryptoException e) {
+                    log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
+                }
+            } else {
+                sendMailboxMessageListener.onFault("There are no P2P network nodes connected. " +
+                        "Please check your internet connection.");
             }
         } else {
             throw new NetworkNotReadyException();
@@ -651,8 +687,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean isNetworkReady() {
-        log.debug("###### isNetworkReady networkReadyBinding " + networkReadyBinding.get());
-        log.debug("###### isNetworkReady hiddenServicePublished.get() && preliminaryDataReceived.get() " + (hiddenServicePublished.get() && preliminaryDataReceived.get()));
         return hiddenServicePublished.get() && preliminaryDataReceived.get();
     }
 

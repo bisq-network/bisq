@@ -5,5 +5,5 @@ public interface SendMailboxMessageListener {
 
     void onStoredInMailbox();
 
-    void onFault();
+    void onFault(String errorMessage);
 }

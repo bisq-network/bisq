@@ -36,7 +36,6 @@ public class SendFiatTransferStartedMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-
             processModel.getP2PService().sendEncryptedMailboxMessage(
                     trade.getTradingPeerNodeAddress(),
                     processModel.tradingPeer.getPubKeyRing(),
@@ -48,22 +47,22 @@ public class SendFiatTransferStartedMessage extends TradeTask {
                     new SendMailboxMessageListener() {
                         @Override
                         public void onArrived() {
-                            log.trace("Message arrived at peer.");
+                            log.info("Message arrived at peer.");
                             trade.setState(Trade.State.FIAT_PAYMENT_STARTED_MSG_SENT);
                             complete();
                         }
 
                         @Override
                         public void onStoredInMailbox() {
-                            log.trace("Message stored in mailbox.");
+                            log.info("Message stored in mailbox.");
                             trade.setState(Trade.State.FIAT_PAYMENT_STARTED_MSG_SENT);
                             complete();
                         }
 
                         @Override
-                        public void onFault() {
+                        public void onFault(String errorMessage) {
                             appendToErrorMessage("FiatTransferStartedMessage sending failed");
-                            failed();
+                            failed(errorMessage);
                         }
                     }
             );

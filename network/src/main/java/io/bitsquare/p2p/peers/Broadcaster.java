@@ -14,10 +14,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public class Broadcaster {
     private static final Logger log = LoggerFactory.getLogger(Broadcaster.class);
+
+
+    public interface Listener {
+        void onBroadcasted(DataBroadcastMessage message);
+    }
+
     private final NetworkNode networkNode;
+    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     public Broadcaster(NetworkNode networkNode) {
         this.networkNode = networkNode;
@@ -38,6 +46,10 @@ public class Broadcaster {
                             @Override
                             public void onSuccess(Connection connection) {
                                 log.trace("Broadcast from " + networkNode.getNodeAddress() + " to " + connection + " succeeded.");
+                                listeners.stream().forEach(listener -> {
+                                    listener.onBroadcasted(message);
+                                    listeners.remove(listener);
+                                });
                             }
 
                             @Override
@@ -51,4 +63,10 @@ public class Broadcaster {
                     "message = {}", message);
         }
     }
+
+    // That listener gets immediately removed after the handler is called
+    public void addOneTimeListener(Listener listener) {
+        listeners.add(listener);
+    }
+
 }

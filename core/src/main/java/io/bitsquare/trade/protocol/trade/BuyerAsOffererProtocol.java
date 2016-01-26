@@ -17,6 +17,8 @@
 
 package io.bitsquare.trade.protocol.trade;
 
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
@@ -145,12 +147,18 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
 
     // User clicked the "bank transfer started" button
     @Override
-    public void onFiatPaymentStarted() {
+    public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         buyerAsOffererTrade.setState(Trade.State.FIAT_PAYMENT_STARTED);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
-                () -> handleTaskRunnerSuccess("onFiatPaymentStarted"),
-                this::handleTaskRunnerFault);
+                () -> {
+                    resultHandler.handleResult();
+                    handleTaskRunnerSuccess("onFiatPaymentStarted");
+                },
+                (errorMessage) -> {
+                    errorMessageHandler.handleErrorMessage(errorMessage);
+                    handleTaskRunnerFault(errorMessage);
+                });
         taskRunner.addTasks(
                 VerifyTakeOfferFeePayment.class,
                 SendFiatTransferStartedMessage.class

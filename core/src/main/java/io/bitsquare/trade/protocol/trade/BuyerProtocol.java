@@ -17,6 +17,9 @@
 
 package io.bitsquare.trade.protocol.trade;
 
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
+
 public interface BuyerProtocol {
-    void onFiatPaymentStarted();
+    void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler);
 }

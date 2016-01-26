@@ -19,6 +19,8 @@ package io.bitsquare.gui.main.portfolio.pendingtrades;
 
 import com.google.inject.Inject;
 import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
@@ -179,8 +181,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return dataModel.getTradeProperty();
     }
 
-    public void fiatPaymentStarted() {
-        dataModel.onFiatPaymentStarted();
+    public void fiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        dataModel.onFiatPaymentStarted(resultHandler, errorMessageHandler);
     }
 
     public void fiatPaymentReceived() {
@@ -362,12 +364,9 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 break;
 
             case DEPOSIT_CONFIRMED:
+            case FIAT_PAYMENT_STARTED:
                 sellerState.set(WAIT_FOR_FIAT_PAYMENT_STARTED);
                 buyerState.set(PendingTradesViewModel.BuyerState.REQUEST_START_FIAT_PAYMENT);
-                break;
-
-
-            case FIAT_PAYMENT_STARTED:
                 break;
             case FIAT_PAYMENT_STARTED_MSG_SENT:
                 buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_FIAT_PAYMENT_RECEIPT);

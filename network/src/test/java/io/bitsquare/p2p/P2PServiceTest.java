@@ -317,7 +317,7 @@ public class P2PServiceTest {
                     }
 
                     @Override
-                    public void onFault() {
+                    public void onFault(String errorMessage) {
                         log.error("onFault");
                     }
                 }
@@ -353,7 +353,7 @@ public class P2PServiceTest {
                     }
 
                     @Override
-                    public void onFault() {
+                    public void onFault(String errorMessage) {
                         log.error("onFault");
                     }
                 }

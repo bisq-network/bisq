@@ -26,6 +26,8 @@ import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.MainView;
@@ -54,6 +56,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class PendingTradesDataModel extends ActivatableDataModel {
@@ -152,10 +155,11 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         }
     }
 
-    void onFiatPaymentStarted() {
+    void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         checkNotNull(trade, "trade must not be null");
-        if (trade instanceof BuyerTrade && trade.getDisputeState() == Trade.DisputeState.NONE)
-            ((BuyerTrade) trade).onFiatPaymentStarted();
+        checkArgument(trade instanceof BuyerTrade, "Check failed: trade instanceof BuyerTrade");
+        checkArgument(trade.getDisputeState() == Trade.DisputeState.NONE, "Check failed: trade.getDisputeState() == Trade.DisputeState.NONE");
+        ((BuyerTrade) trade).onFiatPaymentStarted(resultHandler, errorMessageHandler);
     }
 
     void onFiatPaymentReceived() {

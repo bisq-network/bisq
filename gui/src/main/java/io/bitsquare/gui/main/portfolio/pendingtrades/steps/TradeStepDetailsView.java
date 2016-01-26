@@ -22,6 +22,7 @@ import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
+import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.trade.Trade;
 import javafx.geometry.HPos;
@@ -52,7 +53,7 @@ public abstract class TradeStepDetailsView extends AnchorPane {
     protected Label infoLabel;
     protected TitledGroupBg infoTitledGroupBg;
     protected Button openDisputeButton;
-    private Button openSupportTicketButton;
+    protected Button openSupportTicketButton;
 
     private Trade trade;
     private Subscription errorMessageSubscription;
@@ -181,7 +182,12 @@ public abstract class TradeStepDetailsView extends AnchorPane {
     }
 
     private void addErrorLabel() {
-        if (infoLabel == null) {
+        new Popup().warning(trade.errorMessageProperty().getValue()
+                + "\n\nPlease report the problem to your arbitrator. He will forward it to the developers to investigate the problem.\n" +
+                "After the problem has be analysed you will get back all the funds you paid in.\n" +
+                "There will be no arbitration fee charged if it was a technical error.").show();
+        
+        /*if (infoLabel == null) {
             infoTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1, "Error", Layout.GROUP_DISTANCE);
             infoLabel = addMultilineLabel(gridPane, gridRow, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         }
@@ -190,11 +196,10 @@ public abstract class TradeStepDetailsView extends AnchorPane {
                 + "\n\nPlease report the problem to your arbitrator. He will forward it to the developers to investigate the problem.\n" +
                 "After the problem has be analysed you will get back all the funds you paid in.\n" +
                 "There will be no arbitration fee charged if it was a technical error.");
-        infoLabel.setStyle(" -fx-text-fill: -bs-error-red;");
+        infoLabel.setStyle(" -fx-text-fill: -bs-error-red;");*/
 
         if (openSupportTicketButton == null) {
-            openSupportTicketButton = addButtonAfterGroup(gridPane, ++gridRow, "Request support");
-            GridPane.setColumnIndex(openSupportTicketButton, 0);
+            openSupportTicketButton = addButton(gridPane, ++gridRow, "Request support");
             GridPane.setHalignment(openSupportTicketButton, HPos.LEFT);
             openSupportTicketButton.setOnAction(e -> model.dataModel.onOpenSupportTicket());
         }

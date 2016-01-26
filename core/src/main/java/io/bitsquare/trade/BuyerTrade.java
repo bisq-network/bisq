@@ -18,6 +18,8 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
@@ -50,9 +52,9 @@ public abstract class BuyerTrade extends Trade implements Serializable {
             state = State.PREPARATION;
     }
 
-    public void onFiatPaymentStarted() {
-        checkArgument(tradeProtocol instanceof BuyerProtocol, "tradeProtocol NOT instanceof BuyerProtocol");
-        ((BuyerProtocol) tradeProtocol).onFiatPaymentStarted();
+    public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        checkArgument(tradeProtocol instanceof BuyerProtocol, "Check failed:  tradeProtocol instanceof BuyerProtocol");
+        ((BuyerProtocol) tradeProtocol).onFiatPaymentStarted(resultHandler, errorMessageHandler);
     }
 
 

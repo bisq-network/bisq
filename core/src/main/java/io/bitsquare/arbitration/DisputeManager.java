@@ -196,7 +196,7 @@ public class DisputeManager {
                         }
 
                         @Override
-                        public void onFault() {
+                        public void onFault(String errorMessage) {
                             log.error("sendEncryptedMessage failed");
                         }
                     }
@@ -263,7 +263,7 @@ public class DisputeManager {
                     }
 
                     @Override
-                    public void onFault() {
+                    public void onFault(String errorMessage) {
                         log.error("sendEncryptedMessage failed");
                     }
                 }
@@ -313,7 +313,7 @@ public class DisputeManager {
                         }
 
                         @Override
-                        public void onFault() {
+                        public void onFault(String errorMessage) {
                             log.error("sendEncryptedMessage failed");
                         }
                     }
@@ -354,7 +354,7 @@ public class DisputeManager {
                     }
 
                     @Override
-                    public void onFault() {
+                    public void onFault(String errorMessage) {
                         log.error("sendEncryptedMessage failed");
                     }
                 }
@@ -381,7 +381,7 @@ public class DisputeManager {
                     }
 
                     @Override
-                    public void onFault() {
+                    public void onFault(String errorMessage) {
                         log.error("sendEncryptedMessage failed");
                     }
                 }
