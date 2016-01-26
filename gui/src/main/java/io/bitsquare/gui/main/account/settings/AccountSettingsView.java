@@ -56,6 +56,8 @@ public class AccountSettingsView extends ActivatableViewAndModel {
     @FXML
     private AnchorPane content;
 
+    private Class<? extends View> selecteedViewClass;
+
     @Inject
     private AccountSettingsView(CachingViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
@@ -86,10 +88,12 @@ public class AccountSettingsView extends ActivatableViewAndModel {
     protected void activate() {
         navigation.addListener(listener);
         ViewPath viewPath = navigation.getCurrentPath();
-        if (viewPath.size() == 3 && viewPath.indexOf(AccountSettingsView.class) == 2) {
+        if (viewPath.size() == 3 && viewPath.indexOf(AccountSettingsView.class) == 2 ||
+                viewPath.size() == 2 && viewPath.indexOf(AccountView.class) == 1) {
             navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, PaymentAccountView.class);
         } else if (viewPath.size() == 4 && viewPath.indexOf(AccountSettingsView.class) == 2) {
-            loadView(viewPath.get(3));
+            selecteedViewClass = viewPath.get(3);
+            loadView(selecteedViewClass);
         }
     }
 
@@ -119,6 +123,11 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         // else if (view instanceof RegistrationView) registration.setSelected(true);
         //}
     }
+
+    public Class<? extends View> getSelectedViewClass() {
+        return selecteedViewClass;
+    }
+
 }
 
 

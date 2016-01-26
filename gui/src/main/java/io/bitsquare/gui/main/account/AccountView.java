@@ -21,6 +21,7 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.arbitratorregistration.ArbitratorRegistrationView;
+import io.bitsquare.gui.main.account.content.paymentsaccount.PaymentAccountView;
 import io.bitsquare.gui.main.account.settings.AccountSettingsView;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -43,6 +44,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
     private View accountSetupWizardView;
     private Tab tab;
     private ArbitratorRegistrationView arbitratorRegistrationView;
+    private AccountSettingsView accountSettingsView;
 
     @Inject
     private AccountView(AccountViewModel model, CachingViewLoader viewLoader, Navigation navigation) {
@@ -59,10 +61,15 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-            if (newValue == accountSettingsTab)
-                navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class);
-            else
+            if (newValue == accountSettingsTab) {
+                Class<? extends View> selectedViewClass = accountSettingsView.getSelectedViewClass();
+                if (selectedViewClass == null)
+                    navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, PaymentAccountView.class);
+                else
+                    navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, selectedViewClass);
+            } else {
                 navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
+            }
         };
     }
 
@@ -98,6 +105,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
         if (view instanceof AccountSettingsView) {
             tab = accountSettingsTab;
+            accountSettingsView = (AccountSettingsView) view;
             tab.setText("Account settings");
             arbitratorRegistrationTab.setDisable(false);
             if (arbitratorRegistrationView != null)
