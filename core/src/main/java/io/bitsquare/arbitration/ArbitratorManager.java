@@ -26,7 +26,7 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.p2p.NetWorkReadyListener;
+import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
@@ -89,7 +89,7 @@ public class ArbitratorManager {
     ));
     private static final String publicKeyForTesting = "027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee";
     private final boolean isDevTest;
-    private NetWorkReadyListener netWorkReadyListener;
+    private BootstrapListener bootstrapListener;
     private ScheduledThreadPoolExecutor republishArbitratorExecutor;
 
     @Inject
@@ -121,14 +121,14 @@ public class ArbitratorManager {
         if (user.getRegisteredArbitrator() != null) {
 
             P2PService p2PService = arbitratorService.getP2PService();
-            if (!p2PService.isNetworkReady()) {
-                netWorkReadyListener = new NetWorkReadyListener() {
+            if (!p2PService.isBootstrapped()) {
+                bootstrapListener = new BootstrapListener() {
                     @Override
-                    public void onBootstrapped() {
+                    public void onBootstrapComplete() {
                         republishArbitrator();
                     }
                 };
-                p2PService.addP2PServiceListener(netWorkReadyListener);
+                p2PService.addP2PServiceListener(bootstrapListener);
 
             } else {
                 republishArbitrator();
@@ -144,8 +144,8 @@ public class ArbitratorManager {
     }
 
     private void republishArbitrator() {
-        if (netWorkReadyListener != null)
-            arbitratorService.getP2PService().removeP2PServiceListener(netWorkReadyListener);
+        if (bootstrapListener != null)
+            arbitratorService.getP2PService().removeP2PServiceListener(bootstrapListener);
 
         Arbitrator registeredArbitrator = user.getRegisteredArbitrator();
         if (registeredArbitrator != null) {

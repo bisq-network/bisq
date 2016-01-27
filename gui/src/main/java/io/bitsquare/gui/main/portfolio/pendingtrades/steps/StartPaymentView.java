@@ -140,7 +140,7 @@ public class StartPaymentView extends TradeStepDetailsView {
 
     private void onPaymentStarted(ActionEvent actionEvent) {
         log.debug("onPaymentStarted");
-        if (model.isNetworkReady()) {
+        if (model.isBootstrapped()) {
             String key = PopupId.PAYMENT_SENT;
             if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
                 new Popup().headLine("Confirmation")

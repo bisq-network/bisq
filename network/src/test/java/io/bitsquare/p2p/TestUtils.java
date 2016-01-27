@@ -95,7 +95,7 @@ public class TestUtils {
                     }
 
                     @Override
-                    public void onBootstrapped() {
+                    public void onBootstrapComplete() {
                     }
 
                     @Override
@@ -148,7 +148,7 @@ public class TestUtils {
             }
 
             @Override
-            public void onBootstrapped() {
+            public void onBootstrapComplete() {
                 latch.countDown();
             }
 

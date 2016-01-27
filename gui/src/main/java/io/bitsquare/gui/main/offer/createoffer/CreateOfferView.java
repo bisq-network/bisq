@@ -199,7 +199,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onPlaceOffer() {
-        if (model.isNetworkReady()) {
+        if (model.isBootstrapped()) {
             Offer offer = model.createAndGetOffer();
             if (model.getShowPlaceOfferConfirmation()) {
                 offerDetailsPopup.onPlaceOffer(o -> model.onPlaceOffer(o)).show(offer);

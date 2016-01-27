@@ -114,6 +114,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     private void onListChanged() {
+        Log.traceCall();
         list.clear();
         list.addAll(tradeManager.getTrades().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
 

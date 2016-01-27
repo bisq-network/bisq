@@ -26,8 +26,8 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.NetWorkReadyListener;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.DecryptedDirectMessageListener;
@@ -80,7 +80,7 @@ public class TradeManager {
     private final Storage<TradableList<Trade>> tradableListStorage;
     private final TradableList<Trade> trades;
     private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
-    private final NetWorkReadyListener netWorkReadyListener;
+    private final BootstrapListener bootstrapListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -141,21 +141,23 @@ public class TradeManager {
                     log.trace("Received TradeMessage: " + message);
                     String tradeId = ((TradeMessage) message).tradeId;
                     Optional<Trade> tradeOptional = trades.stream().filter(e -> e.getId().equals(tradeId)).findAny();
+                    // The mailbox message will be removed inside the tasks after they are processed successfully
                     if (tradeOptional.isPresent())
                         tradeOptional.get().setMailboxMessage(decryptedMsgWithPubKey);
                 }
             }
         });
 
-        netWorkReadyListener = new NetWorkReadyListener() {
+        bootstrapListener = new BootstrapListener() {
             @Override
-            public void onBootstrapped() {
+            public void onBootstrapComplete() {
                 Log.traceCall("onNetworkReady");
                 // Get called after onMailboxMessageAdded from initial data request
+                // The mailbox message will be removed inside the tasks after they are processed successfully
                 initPendingTrades();
             }
         };
-        p2PService.addP2PServiceListener(netWorkReadyListener);
+        p2PService.addP2PServiceListener(bootstrapListener);
     }
 
 
@@ -165,7 +167,7 @@ public class TradeManager {
 
     private void initPendingTrades() {
         Log.traceCall();
-        if (netWorkReadyListener != null) p2PService.removeP2PServiceListener(netWorkReadyListener);
+        p2PService.removeP2PServiceListener(bootstrapListener);
 
         //List<Trade> failedTrades = new ArrayList<>();
         for (Trade trade : trades) {
@@ -180,13 +182,7 @@ public class TradeManager {
             trade.updateDepositTxFromWallet(tradeWalletService);
             initTrade(trade);
 
-            // after network is ready we remove mailbox messages. 
-            DecryptedMsgWithPubKey mailboxMessage = trade.getMailboxMessage();
-            if (mailboxMessage != null) {
-                log.trace("initPendingTrades/removeEntryFromMailbox mailboxMessage = " + mailboxMessage);
-                p2PService.removeEntryFromMailbox(mailboxMessage);
-                trade.setMailboxMessage(null);
-            }
+
             // }
         }
         pendingTradesInitialized.set(true);

@@ -79,6 +79,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private boolean shutDownComplete;
     private ChangeListener<NodeAddress> connectionNodeAddressListener;
     private Subscription networkReadySubscription;
+    private boolean isBootstrapped;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -266,7 +267,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 "seedNodeOfPreliminaryDataRequest must be present");
         peerExchangeManager.requestReportedPeers(seedNodeOfPreliminaryDataRequest.get());
 
-        p2pServiceListeners.stream().forEach(P2PServiceListener::onBootstrapped);
+        isBootstrapped = true;
+        p2pServiceListeners.stream().forEach(P2PServiceListener::onBootstrapComplete);
     }
 
     @Override
@@ -377,7 +379,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                                            SendDirectMessageListener sendDirectMessageListener) {
         Log.traceCall();
         checkNotNull(peerNodeAddress, "PeerAddress must not be null (sendEncryptedDirectMessage)");
-        if (isNetworkReady()) {
+        if (isBootstrapped()) {
             doSendEncryptedDirectMessage(peerNodeAddress, pubKeyRing, message, sendDirectMessageListener);
         } else {
             throw new NetworkNotReadyException();
@@ -473,7 +475,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         checkArgument(optionalEncryptionService.isPresent(),
                 "EncryptionService not set. Seems that is called on a seed node which must not happen.");
 
-        if (isNetworkReady()) {
+        if (isBootstrapped()) {
             if (!networkNode.getAllConnections().isEmpty()) {
                 try {
                     log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
@@ -527,7 +529,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         checkArgument(optionalKeyRing.isPresent(),
                 "keyRing not set. Seems that is called on a seed node which must not happen.");
 
-        if (isNetworkReady()) {
+        if (isBootstrapped()) {
             if (!networkNode.getAllConnections().isEmpty()) {
                 try {
                     ProtectedMailboxData protectedMailboxData = p2PDataStorage.getMailboxDataWithSignedSeqNr(
@@ -571,7 +573,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void removeEntryFromMailbox(DecryptedMsgWithPubKey decryptedMsgWithPubKey) {
         Log.traceCall();
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
-        if (isNetworkReady()) {
+        if (isBootstrapped()) {
             if (mailboxMap.containsKey(decryptedMsgWithPubKey)) {
                 ProtectedMailboxData mailboxData = mailboxMap.get(decryptedMsgWithPubKey);
                 if (mailboxData != null && mailboxData.expirablePayload instanceof ExpirableMailboxPayload) {
@@ -620,7 +622,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private boolean doAddData(ExpirablePayload expirablePayload, boolean rePublish) {
         Log.traceCall();
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
-        if (isNetworkReady()) {
+        if (isBootstrapped()) {
             try {
                 ProtectedData protectedData = p2PDataStorage.getDataWithSignedSeqNr(expirablePayload, optionalKeyRing.get().getSignatureKeyPair());
                 if (rePublish)
@@ -639,7 +641,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public boolean removeData(ExpirablePayload expirablePayload) {
         Log.traceCall();
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
-        if (isNetworkReady()) {
+        if (isBootstrapped()) {
             try {
                 ProtectedData protectedData = p2PDataStorage.getDataWithSignedSeqNr(expirablePayload, optionalKeyRing.get().getSignatureKeyPair());
                 return p2PDataStorage.remove(protectedData, networkNode.getNodeAddress());
@@ -686,8 +688,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean isNetworkReady() {
-        return hiddenServicePublished.get() && preliminaryDataReceived.get();
+    public boolean isBootstrapped() {
+        return isBootstrapped;
     }
 
     public NetworkNode getNetworkNode() {
@@ -709,7 +711,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public Map<ByteArray, ProtectedData> getDataMap() {
         return p2PDataStorage.getMap();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

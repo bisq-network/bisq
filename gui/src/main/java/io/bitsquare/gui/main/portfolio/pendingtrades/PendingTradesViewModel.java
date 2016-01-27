@@ -221,8 +221,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return btcAddressValidator;
     }
 
-    public boolean isNetworkReady() {
-        return p2PService.isNetworkReady();
+    public boolean isBootstrapped() {
+        return p2PService.isBootstrapped();
     }
 
     // columns

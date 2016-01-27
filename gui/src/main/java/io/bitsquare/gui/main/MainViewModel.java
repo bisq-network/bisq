@@ -239,7 +239,7 @@ public class MainViewModel implements ViewModel {
             }
 
             @Override
-            public void onBootstrapped() {
+            public void onBootstrapComplete() {
                 updateP2pNetworkInfoWithPeersChanged(p2PService.getNumConnectedPeers().get());
                 splashP2PNetworkProgress.set(1);
             }
@@ -566,14 +566,14 @@ public class MainViewModel implements ViewModel {
                     if (!trade.isHalfTradePeriodReachedWarningDisplayed()) {
                         new Popup().warning("Your trade with ID " + trade.getShortId() +
                                 " has reached the half of the max. allowed trading period and " +
-                                "is still not completed.\nPlease check your trade state at Portfolio/open trades for further information.").show();
+                                "is still not completed.\nPlease check your trade state at \"Portfolio/Open trades\" for further information.").show();
                         trade.setHalfTradePeriodReachedWarningDisplayed(true);
                     }
                     break;
                 case TRADE_PERIOD_OVER:
                     if (!trade.isTradePeriodOverWarningDisplayed()) {
                         new Popup().warning("Your trade with ID " + trade.getShortId() + " has reached the max. allowed trading period and is " +
-                                "not completed.\nPlease check your trade at Portfolio/Open trades for contacting the arbitrator.").show();
+                                "not completed.\nPlease check your trade at \"Portfolio/Open trades\" for contacting the arbitrator.").show();
                         trade.setTradePeriodOverWarningDisplayed(true);
                     }
                     break;

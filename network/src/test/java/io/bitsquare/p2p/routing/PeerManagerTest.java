@@ -104,7 +104,7 @@ public class PeerManagerTest {
                     }
 
                     @Override
-                    public void onBootstrapped() {
+                    public void onBootstrapComplete() {
                     }
 
                     @Override
@@ -155,7 +155,7 @@ public class PeerManagerTest {
             }
 
             @Override
-            public void onBootstrapped() {
+            public void onBootstrapComplete() {
                 latch.countDown();
             }
 
@@ -193,7 +193,7 @@ public class PeerManagerTest {
             }
 
             @Override
-            public void onBootstrapped() {
+            public void onBootstrapComplete() {
                 latch.countDown();
             }
 
@@ -430,7 +430,7 @@ public class PeerManagerTest {
             }
 
             @Override
-            public void onBootstrapped() {
+            public void onBootstrapComplete() {
             }
 
             @Override

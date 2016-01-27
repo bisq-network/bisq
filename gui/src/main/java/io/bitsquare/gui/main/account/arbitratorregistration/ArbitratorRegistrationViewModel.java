@@ -183,7 +183,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
         revokeButtonDisabled.set(!allDataValid || myArbitratorProperty.get() == null);
     }
 
-    boolean isNetworkReady() {
-        return p2PService.isNetworkReady();
+    boolean isBootstrapped() {
+        return p2PService.isBootstrapped();
     }
 }

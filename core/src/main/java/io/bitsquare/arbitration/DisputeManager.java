@@ -27,8 +27,8 @@ import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.NetWorkReadyListener;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
@@ -68,7 +68,7 @@ public class DisputeManager {
     private final DisputeList<Dispute> disputes;
     transient private final ObservableList<Dispute> disputesObservableList;
     private final String disputeInfo;
-    private final NetWorkReadyListener netWorkReadyListener;
+    private final BootstrapListener bootstrapListener;
     private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
 
@@ -105,24 +105,25 @@ public class DisputeManager {
                 "Please read more in detail about the dispute process in our wiki:\nhttps://github" +
                 ".com/bitsquare/bitsquare/wiki/Dispute-process";
 
+        // We get first the message handler called then the onBootstrapped
         p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, senderAddress) -> {
             decryptedDirectMessageWithPubKeys.add(decryptedMessageWithPubKey);
-            if (p2PService.isNetworkReady())
+            if (p2PService.isBootstrapped())
                 applyMessages();
         });
         p2PService.addDecryptedMailboxListener((decryptedMessageWithPubKey, senderAddress) -> {
             decryptedMailboxMessageWithPubKeys.add(decryptedMessageWithPubKey);
-            if (p2PService.isNetworkReady())
+            if (p2PService.isBootstrapped())
                 applyMessages();
         });
 
-        netWorkReadyListener = new NetWorkReadyListener() {
+        bootstrapListener = new BootstrapListener() {
             @Override
-            public void onBootstrapped() {
+            public void onBootstrapComplete() {
                 applyMessages();
             }
         };
-        p2PService.addP2PServiceListener(netWorkReadyListener);
+        p2PService.addP2PServiceListener(bootstrapListener);
     }
 
     private void applyMessages() {
@@ -138,13 +139,12 @@ public class DisputeManager {
             log.debug("decryptedMessageWithPubKey.message " + message);
             if (message instanceof DisputeMessage) {
                 dispatchMessage((DisputeMessage) message);
-                //TODO
-                //p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
+                p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
             }
         });
         decryptedMailboxMessageWithPubKeys.clear();
 
-        p2PService.removeP2PServiceListener(netWorkReadyListener);
+        p2PService.removeP2PServiceListener(bootstrapListener);
     }
 
 

@@ -230,7 +230,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private void onTakeOffer(Offer offer) {
-        if (model.isNetworkReady())
+        if (model.isBootstrapped())
             offerActionHandler.onTakeOffer(offer);
         else
             new Popup().warning("You need to wait until your client is bootstrapped in the network.\n" +
@@ -238,7 +238,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private void onRemoveOpenOffer(Offer offer) {
-        if (model.isNetworkReady()) {
+        if (model.isBootstrapped()) {
             new Popup().warning("Are you sure you want to remove that offer?\n" +
                     "The offer fee you have paid will be lost if you remove that offer.")
                     .actionButtonText("Remove offer")

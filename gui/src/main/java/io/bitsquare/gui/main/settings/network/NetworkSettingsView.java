@@ -107,42 +107,42 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 return null;
             }
         });
+        p2PServiceListener = new P2PServiceListener() {
+            @Override
+            public void onHiddenServicePublished() {
+                onionAddress.setText(p2PService.getAddress().getFullAddress());
+            }
+
+            @Override
+            public void onRequestingDataCompleted() {
+            }
+
+            @Override
+            public void onNoSeedNodeAvailable() {
+            }
+
+            @Override
+            public void onNoPeersAvailable() {
+            }
+
+            @Override
+            public void onBootstrapComplete() {
+            }
+
+            @Override
+            public void onTorNodeReady() {
+            }
+
+            @Override
+            public void onSetupFailed(Throwable throwable) {
+            }
+        };
     }
 
     @Override
     public void activate() {
         NodeAddress nodeAddress = p2PService.getAddress();
         if (nodeAddress == null) {
-            p2PServiceListener = new P2PServiceListener() {
-                @Override
-                public void onRequestingDataCompleted() {
-                }
-
-                @Override
-                public void onNoSeedNodeAvailable() {
-                }
-
-                @Override
-                public void onNoPeersAvailable() {
-                }
-
-                @Override
-                public void onBootstrapped() {
-                }
-
-                @Override
-                public void onTorNodeReady() {
-                }
-
-                @Override
-                public void onHiddenServicePublished() {
-                    onionAddress.setText(p2PService.getAddress().getFullAddress());
-                }
-
-                @Override
-                public void onSetupFailed(Throwable throwable) {
-                }
-            };
             p2PService.addP2PServiceListener(p2PServiceListener);
         } else {
             onionAddress.setText(nodeAddress.getFullAddress());

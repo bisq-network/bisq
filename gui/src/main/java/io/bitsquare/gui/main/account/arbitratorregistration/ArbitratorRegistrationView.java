@@ -219,7 +219,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
     }
 
     private void onRevoke() {
-        if (model.isNetworkReady()) {
+        if (model.isBootstrapped()) {
             model.onRevoke(
                     () -> new Popup().information("You have successfully removed your arbitrator from the P2P network.").show(),
                     (errorMessage) -> new Popup().error("Could not remove arbitrator.\nError message: " + errorMessage).show());
@@ -230,7 +230,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
     }
 
     private void onRegister() {
-        if (model.isNetworkReady()) {
+        if (model.isBootstrapped()) {
             model.onRegister(
                     () -> new Popup().information("You have successfully registered your arbitrator to the P2P network.").show(),
                     (errorMessage) -> new Popup().error("Could not register arbitrator.\nError message: " + errorMessage).show());

@@ -107,7 +107,7 @@ public class ConfirmPaymentReceivedView extends TradeStepDetailsView {
 
     private void onPaymentReceived(ActionEvent actionEvent) {
         log.debug("onPaymentReceived");
-        if (model.isNetworkReady()) {
+        if (model.isBootstrapped()) {
             Preferences preferences = model.dataModel.getPreferences();
             String key = PopupId.PAYMENT_RECEIVED;
             if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {

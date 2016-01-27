@@ -1,7 +1,7 @@
 package io.bitsquare.p2p;
 
 
-public abstract class NetWorkReadyListener implements P2PServiceListener {
+public abstract class BootstrapListener implements P2PServiceListener {
     @Override
     public void onTorNodeReady() {
     }
@@ -27,5 +27,5 @@ public abstract class NetWorkReadyListener implements P2PServiceListener {
     }
 
     @Override
-    abstract public void onBootstrapped();
+    abstract public void onBootstrapComplete();
 }

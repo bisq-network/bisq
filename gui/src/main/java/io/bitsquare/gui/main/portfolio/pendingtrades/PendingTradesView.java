@@ -26,6 +26,7 @@ import io.bitsquare.trade.Trade;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.ListChangeListener;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
@@ -71,6 +72,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private ChangeListener<Trade> currentTradeChangeListener;
     private EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
+    private ListChangeListener<PendingTradesListItem> listChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -101,6 +103,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             if (newValue != null)
                 setNewSubView(newValue.getTrade());
         };
+        listChangeListener = c -> updateSelectedItem();
 
         appFocusChangeListener = (observable, oldValue, newValue) -> {
             if (newValue && model.getSelectedItem() != null) {
@@ -134,6 +137,15 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         //setNewSubView(model.currentTrade().get());
         table.setItems(model.getList());
         table.getSelectionModel().selectedItemProperty().addListener(selectedItemChangeListener);
+        updateSelectedItem();
+
+        if (model.getSelectedItem() == null)
+            model.getList().addListener(listChangeListener);
+
+        scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+    }
+
+    private void updateSelectedItem() {
         PendingTradesListItem selectedItem = model.getSelectedItem();
         if (selectedItem != null) {
             // Select and focus selectedItem from model
@@ -144,13 +156,14 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 UserThread.execute(() -> table.getFocusModel().focus(index));
             });
         }
-
-        scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
     @Override
     protected void deactivate() {
         table.getSelectionModel().selectedItemProperty().removeListener(selectedItemChangeListener);
+
+        model.getList().removeListener(listChangeListener);
+        
         if (model.currentTrade() != null)
             model.currentTrade().removeListener(currentTradeChangeListener);
 
