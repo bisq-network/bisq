@@ -394,6 +394,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         ImageView p2PNetworkIcon = new ImageView();
         setRightAnchor(p2PNetworkIcon, 10d);
         setBottomAnchor(p2PNetworkIcon, 7d);
+        p2PNetworkIcon.setOpacity(0.4);
         p2PNetworkIcon.idProperty().bind(model.p2PNetworkIconId);
         p2PNetworkLabel.idProperty().bind(model.p2PNetworkLabelId);
         model.p2PNetworkWarnMsg.addListener((ov, oldValue, newValue) -> {
@@ -402,6 +403,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             } else if (p2PNetworkWarnMsgPopup != null) {
                 p2PNetworkWarnMsgPopup.hide();
             }
+        });
+
+        model.bootstrapComplete.addListener((observable, oldValue, newValue) -> {
+            p2PNetworkIcon.setOpacity(1);
         });
 
         AnchorPane footerContainer = new AnchorPane(separator, blockchainSyncBox, versionLabel, p2PNetworkLabel, p2PNetworkIcon) {{

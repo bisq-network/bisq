@@ -99,7 +99,8 @@ public class MainViewModel implements ViewModel {
     final DoubleProperty splashP2PNetworkProgress = new SimpleDoubleProperty(-1);
     final StringProperty p2PNetworkWarnMsg = new SimpleStringProperty();
     final StringProperty p2PNetworkIconId = new SimpleStringProperty();
-
+    final BooleanProperty bootstrapComplete = new SimpleBooleanProperty();
+    
     // software update
     final String version = "v." + Version.VERSION;
 
@@ -242,6 +243,7 @@ public class MainViewModel implements ViewModel {
             public void onBootstrapComplete() {
                 updateP2pNetworkInfoWithPeersChanged(p2PService.getNumConnectedPeers().get());
                 splashP2PNetworkProgress.set(1);
+                bootstrapComplete.set(true);
             }
 
 
