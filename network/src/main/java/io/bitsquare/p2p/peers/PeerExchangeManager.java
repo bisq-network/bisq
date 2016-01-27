@@ -9,10 +9,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.network.Connection;
-import io.bitsquare.p2p.network.ConnectionListener;
-import io.bitsquare.p2p.network.MessageListener;
-import io.bitsquare.p2p.network.NetworkNode;
+import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.messages.peers.GetPeersRequest;
 import io.bitsquare.p2p.peers.messages.peers.GetPeersResponse;
 import io.bitsquare.p2p.peers.messages.peers.PeerExchangeMessage;
@@ -35,7 +32,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
     private final PeerManager peerManager;
     private final Set<NodeAddress> seedNodeAddresses;
     private final ScheduledThreadPoolExecutor executor;
-    private Timer continueWithMorePeersTimer, timeoutTimer, checkConnectionsTimer;
+    private Timer continueWithMorePeersTimer, timeoutTimer, maintainConnectionsTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -56,7 +53,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
 
         networkNode.removeMessageListener(this);
         stopContinueWithMorePeersTimer();
-        stopCheckConnectionsTimer();
+        stopMaintainConnectionsTimer();
         stopTimeoutTimer();
         MoreExecutors.shutdownAndAwaitTermination(executor, 500, TimeUnit.MILLISECONDS);
     }
@@ -70,7 +67,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
         requestReportedPeers(nodeAddress, new ArrayList<>(seedNodeAddresses));
 
         long delay = new Random().nextInt(60) + 60 * 3; // 3-4 min. 
-        executor.scheduleAtFixedRate(() -> UserThread.execute(this::checkConnections),
+        executor.scheduleAtFixedRate(() -> UserThread.execute(this::maintainConnections),
                 delay, delay, TimeUnit.SECONDS);
     }
 
@@ -87,8 +84,8 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
     public void onDisconnect(Reason reason, Connection connection) {
         // We use a timer to throttle if we get a series of disconnects
         // The more connections we have the more relaxed we are with a checkConnections
-        if (checkConnectionsTimer == null)
-            checkConnectionsTimer = UserThread.runAfter(this::checkConnections,
+        if (maintainConnectionsTimer == null)
+            maintainConnectionsTimer = UserThread.runAfter(this::maintainConnections,
                     networkNode.getAllConnections().size() * 10, TimeUnit.SECONDS);
 
 
@@ -241,20 +238,32 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
 
 
     // we check if we have at least one seed node connected
-    private void checkConnections() {
+    private void maintainConnections() {
         Log.traceCall();
-        stopCheckConnectionsTimer();
+
+        stopMaintainConnectionsTimer();
+
+        // we want at least 1 seed node connected
         Set<Connection> allConnections = networkNode.getConfirmedConnections();
         List<Connection> connectedSeedNodes = allConnections.stream()
                 .filter(peerManager::isSeedNode)
                 .collect(Collectors.toList());
-
-        log.debug("connectedSeedNodes " + connectedSeedNodes);
         if (connectedSeedNodes.size() == 0 && !seedNodeAddresses.isEmpty())
             requestReportedPeersFromList(new ArrayList<>(seedNodeAddresses));
 
+        // We try to get sufficient connections by using reported and persisted peers
         if (continueWithMorePeersTimer == null)
             continueWithMorePeersTimer = UserThread.runAfterRandomDelay(this::continueWithMorePeers, 10, 20);
+
+
+        // Use all outbound connections for updating reported peers and make sure we keep the connection alive
+        // Inbound connections should be maintained be the requesting peer
+        networkNode.getConfirmedConnections().stream()
+                .filter(c -> c.getPeersNodeAddressOptional().isPresent() &&
+                        c instanceof OutboundConnection).
+                forEach(c -> UserThread.runAfterRandomDelay(() ->
+                        requestReportedPeers(c.getPeersNodeAddressOptional().get(), new ArrayList<>())
+                        , 3, 5));
     }
 
     private HashSet<ReportedPeer> getReportedPeersHashSet(NodeAddress receiverNodeAddress) {
@@ -273,10 +282,10 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
         }
     }
 
-    private void stopCheckConnectionsTimer() {
-        if (checkConnectionsTimer != null) {
-            checkConnectionsTimer.cancel();
-            checkConnectionsTimer = null;
+    private void stopMaintainConnectionsTimer() {
+        if (maintainConnectionsTimer != null) {
+            maintainConnectionsTimer.cancel();
+            maintainConnectionsTimer = null;
         }
     }
 
