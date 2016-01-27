@@ -85,6 +85,7 @@ public class RequestDataManager implements MessageListener {
     public void requestPreliminaryData() {
         Log.traceCall();
         ArrayList<NodeAddress> nodeAddresses = new ArrayList<>(seedNodeAddresses);
+        Collections.shuffle(nodeAddresses);
         NodeAddress nextCandidate = nodeAddresses.get(0);
         nodeAddresses.remove(nextCandidate);
         requestData(nextCandidate, nodeAddresses);
@@ -95,6 +96,7 @@ public class RequestDataManager implements MessageListener {
         checkArgument(nodeOfPreliminaryDataRequest.isPresent(), "seedNodeOfPreliminaryDataRequest must be present");
         dataUpdateRequested = true;
         List<NodeAddress> remainingNodeAddresses = new ArrayList<>(seedNodeAddresses);
+        Collections.shuffle(remainingNodeAddresses);
         NodeAddress candidate = nodeOfPreliminaryDataRequest.get();
         remainingNodeAddresses.remove(candidate);
         requestData(candidate, remainingNodeAddresses);
@@ -189,6 +191,7 @@ public class RequestDataManager implements MessageListener {
                                             // we got from the other seed node contacted but we still have not requested the initial 
                                             // data set
                                             List<NodeAddress> list = new ArrayList<>(seedNodeAddresses);
+                                            Collections.shuffle(list);
                                             list.addAll(getFilteredAndSortedList(peerManager.getReportedPeers(), list));
                                             list.addAll(getFilteredAndSortedList(peerManager.getPersistedPeers(), list));
                                             log.trace("Sorted and filtered list: list=" + list);

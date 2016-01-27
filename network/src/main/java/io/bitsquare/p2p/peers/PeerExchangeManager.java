@@ -63,6 +63,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
         checkNotNull(networkNode.getNodeAddress(), "My node address must not be null at requestReportedPeers");
         ArrayList<NodeAddress> remainingNodeAddresses = new ArrayList<>(seedNodeAddresses);
         remainingNodeAddresses.remove(nodeAddress);
+        Collections.shuffle(remainingNodeAddresses);
         requestReportedPeers(nodeAddress, remainingNodeAddresses);
 
         int delay = new Random().nextInt(60) + 60 * 3; // 3-4 min
@@ -180,8 +181,12 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
         long numberOfConnectedSeedNodes = confirmedConnections.stream()
                 .filter(peerManager::isSeedNode)
                 .count();
-        if (numberOfConnectedSeedNodes == 0)
-            requestReportedPeersFromRandomPeer(new ArrayList<>(seedNodeAddresses));
+        if (numberOfConnectedSeedNodes == 0) {
+            ArrayList<NodeAddress> nodeAddresses = new ArrayList<>(seedNodeAddresses);
+            Collections.shuffle(nodeAddresses);
+            requestReportedPeersFromRandomPeer(nodeAddresses);
+        }
+            
 
         // We try to get sufficient connections by connecting to reported and persisted peers
         if (numberOfConnectedSeedNodes == 0) {
@@ -216,6 +221,8 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
             // 3. seenNodes
             List<NodeAddress> list = new ArrayList<>(getFilteredAndSortedList(peerManager.getReportedPeers(), new ArrayList<>()));
             list.addAll(getFilteredAndSortedList(peerManager.getPersistedPeers(), list));
+            ArrayList<NodeAddress> seedNodeAddresses = new ArrayList<>(this.seedNodeAddresses);
+            Collections.shuffle(seedNodeAddresses);
             list.addAll(seedNodeAddresses.stream()
                     .filter(e -> !list.contains(e) &&
                             !peerManager.isSelf(e) &&

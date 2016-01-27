@@ -392,13 +392,15 @@ public class MainViewModel implements ViewModel {
                         preferences.setTacAccepted(true);
                         if (preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET)
                             UserThread.runAfter(() -> new Popup()
-                                    .warning("The application is still in alpha version.\n" +
-                                            "Please be aware that using Mainnet comes with the risk to lose funds in case of software bugs.\n" +
-                                            "To limit the possible losses the maximum allowed trading amount and the security deposit are " +
-                                            "reduced to 0.01 BTC for the alpha version on Mainnet.")
+                                    .warning("This software is still in alpha version.\n" +
+                                            "Please be aware that using Mainnet comes with the risk to lose funds " +
+                                            "in case of software bugs.\n" +
+                                            "To limit the possible losses the maximum allowed trading amount and the " +
+                                            "security deposit have been reduced to 0.01 BTC for the alpha version " +
+                                            "when using Mainnet.")
                                     .headLine("Important information!")
-                                    .actionButtonText("I understand and want to stick with Mainnet")
-                                    .closeButtonText("Restart and use Testnet")
+                                    .actionButtonText("I understand and want to use Mainnet")
+                                    .closeButtonText("Use Testnet and restart")
                                     .onClose(() -> {
                                         UserThread.execute(() -> preferences.setBitcoinNetwork(BitcoinNetwork.TESTNET));
                                         UserThread.runAfter(BitsquareApp.shutDownHandler::run, 300, TimeUnit.MILLISECONDS);
