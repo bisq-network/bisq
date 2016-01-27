@@ -286,7 +286,7 @@ public class Connection implements MessageListener {
         shutDown(true, null);
     }
 
-    private void shutDown(boolean sendCloseConnectionMessage) {
+    public void shutDown(boolean sendCloseConnectionMessage) {
         shutDown(sendCloseConnectionMessage, null);
     }
 
@@ -557,6 +557,11 @@ public class Connection implements MessageListener {
         public void stop() {
             Log.traceCall();
             stopped = true;
+            try {
+                objectInputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         @Override

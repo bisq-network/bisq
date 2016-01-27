@@ -5,7 +5,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
-import io.bitsquare.p2p.peers.messages.data.DataRequest;
+import io.bitsquare.p2p.peers.messages.data.UpdateDataRequest;
 import io.bitsquare.storage.Storage;
 import javafx.beans.value.ChangeListener;
 import org.jetbrains.annotations.Nullable;
@@ -135,7 +135,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
     public void onMessage(Message message, Connection connection) {
         // In case a seed node connects to another seed node we get his address at the DataRequest triggered from
         // RequestDataManager.updateDataFromConnectedSeedNode 
-        if (message instanceof DataRequest) {
+        if (message instanceof UpdateDataRequest) {
             Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
             if (peersNodeAddressOptional.isPresent() &&
                     seedNodeAddresses.contains(peersNodeAddressOptional.get()))
@@ -251,8 +251,9 @@ public class PeerManager implements ConnectionListener, MessageListener {
                     .collect(Collectors.toMap(e -> e, Function.identity()));
             HashSet<ReportedPeer> adjustedReportedPeers = new HashSet<>();
             reportedPeersToAdd.stream()
-                    .filter(e -> !e.nodeAddress.equals(networkNode.getNodeAddress()))
-                    .filter(e -> !getConnectedPeers().contains(e))
+                    .filter(e -> e.nodeAddress != null &&
+                            !e.nodeAddress.equals(networkNode.getNodeAddress()) &&
+                            !getConnectedPeers().contains(e))
                     .forEach(e -> {
                         if (reportedPeersMap.containsKey(e)) {
                             if (e.lastActivityDate != null && reportedPeersMap.get(e).lastActivityDate != null) {
@@ -377,6 +378,19 @@ public class PeerManager implements ConnectionListener, MessageListener {
         return networkNode.getNodeAddressesOfConfirmedConnections().contains(nodeAddress);
     }
 
+    public void shutDownConnection(Connection connection) {
+        if (connection.getPeerType() != Connection.PeerType.DIRECT_MSG_PEER)
+            connection.shutDown();
+    }
+
+    public void shutDownConnection(NodeAddress peersNodeAddress) {
+        networkNode.getAllConnections().stream()
+                .filter(connection -> connection.getPeersNodeAddressOptional().isPresent() &&
+                        connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress) &&
+                        connection.getPeerType() != Connection.PeerType.DIRECT_MSG_PEER)
+                .findFirst()
+                .ifPresent(connection -> connection.shutDown(true));
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //  Private

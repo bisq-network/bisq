@@ -12,9 +12,11 @@ public final class DataResponse implements Message {
     private final int networkId = Version.getNetworkId();
 
     public final HashSet<ProtectedData> dataSet;
+    public final long requestNonce;
 
-    public DataResponse(HashSet<ProtectedData> dataSet) {
+    public DataResponse(HashSet<ProtectedData> dataSet, long requestNonce) {
         this.dataSet = dataSet;
+        this.requestNonce = requestNonce;
     }
 
     @Override
@@ -43,6 +45,7 @@ public final class DataResponse implements Message {
         return "DataResponse{" +
                 "networkId=" + networkId +
                 ", dataSet=" + dataSet +
+                ", requestNonce=" + requestNonce +
                 '}';
     }
 }
