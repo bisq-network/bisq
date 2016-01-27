@@ -65,7 +65,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
         remainingNodeAddresses.remove(nodeAddress);
         requestReportedPeers(nodeAddress, remainingNodeAddresses);
 
-        int delay = new Random().nextInt(60) + 60 * 4; // 4-5 min
+        int delay = new Random().nextInt(60) + 60 * 3; // 3-4 min
         executor.scheduleAtFixedRate(() -> UserThread.execute(this::maintainConnections),
                 delay, delay, TimeUnit.SECONDS);
     }
@@ -127,7 +127,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void requestReportedPeers(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
-        Log.traceCall("nodeAddress=" + nodeAddress + " /  remainingNodeAddresses=" + remainingNodeAddresses);
+        Log.traceCall("nodeAddress=" + nodeAddress);
         if (!peerExchangeHandshakeMap.containsKey(nodeAddress)) {
             PeerExchangeHandshake peerExchangeHandshake = new PeerExchangeHandshake(networkNode,
                     peerManager,
@@ -192,17 +192,16 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
             connectToMorePeers();
         }
 
-        // Use all outbound connections older than 5 min. for updating reported peers and make sure we keep the connection alive
+        // Use all outbound connections older than 4 min. for updating reported peers and make sure we keep the connection alive
         // Inbound connections should be maintained be the requesting peer
         confirmedConnections.stream()
                 .filter(c -> c.getPeersNodeAddressOptional().isPresent() &&
                         c instanceof OutboundConnection &&
-                        new Date().getTime() - c.getLastActivityDate().getTime() > 5 * 60 * 1000)
+                        new Date().getTime() - c.getLastActivityDate().getTime() > 4 * 60 * 1000)
                 .forEach(c -> UserThread.runAfterRandomDelay(() -> {
                     log.trace("Call requestReportedPeers from maintainConnections");
                     requestReportedPeers(c.getPeersNodeAddressOptional().get(), new ArrayList<>());
-                }
-                        , 3, 5));
+                }, 3, 5));
     }
 
     private void connectToMorePeers() {

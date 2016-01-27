@@ -476,7 +476,7 @@ public class Connection implements MessageListener {
                     shutDownReason = ConnectionListener.Reason.RESET;
             } else if (e instanceof SocketTimeoutException || e instanceof TimeoutException) {
                 shutDownReason = ConnectionListener.Reason.TIMEOUT;
-                log.warn("TimeoutException at socket " + socket.toString());
+                log.debug("TimeoutException at socket " + socket.toString());
                 log.debug("connection={}" + this);
             } else if (e instanceof EOFException) {
                 shutDownReason = ConnectionListener.Reason.PEER_DISCONNECTED;

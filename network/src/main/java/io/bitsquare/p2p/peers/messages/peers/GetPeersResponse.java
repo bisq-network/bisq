@@ -21,7 +21,7 @@ public final class GetPeersResponse extends PeerExchangeMessage {
     public String toString() {
         return "GetPeersResponse{" +
                 "requestNonce=" + requestNonce +
-                ", reportedPeers=" + reportedPeers +
+                ", reportedPeers.size()=" + reportedPeers.size() +
                 super.toString() + "} ";
     }
 }

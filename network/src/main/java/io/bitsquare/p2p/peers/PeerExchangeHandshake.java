@@ -75,7 +75,7 @@ public class PeerExchangeHandshake implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void requestReportedPeers(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
-        Log.traceCall("nodeAddress=" + nodeAddress + " /  remainingNodeAddresses=" + remainingNodeAddresses);
+        Log.traceCall("nodeAddress=" + nodeAddress);
         checkNotNull(networkNode.getNodeAddress(), "My node address must not be null at requestReportedPeers");
         checkArgument(timeoutTimer == null, "requestData must not be called twice.");
 

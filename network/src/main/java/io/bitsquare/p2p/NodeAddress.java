@@ -54,6 +54,6 @@ public class NodeAddress implements Serializable {
 
     @Override
     public String toString() {
-        return getFullAddress();
+        return getFullAddress() + "\n";
     }
 }

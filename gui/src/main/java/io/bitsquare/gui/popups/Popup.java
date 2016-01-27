@@ -329,7 +329,7 @@ public class Popup {
             closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
         });
 
-        if (actionHandlerOptional.isPresent()) {
+        if (actionHandlerOptional.isPresent() || actionButtonText != null) {
             actionButton = new Button(actionButtonText == null ? "Ok" : actionButtonText);
             actionButton.setDefaultButton(true);
             actionButton.requestFocus();

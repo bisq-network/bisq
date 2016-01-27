@@ -31,7 +31,7 @@ public enum BitcoinNetwork implements Serializable {
     REGTEST(RegTestParams.get());
 
     public static final String KEY = "bitcoin.network";
-    public static final BitcoinNetwork DEFAULT = TESTNET;
+    public static final BitcoinNetwork DEFAULT = MAINNET;
 
     private final NetworkParameters parameters;
 

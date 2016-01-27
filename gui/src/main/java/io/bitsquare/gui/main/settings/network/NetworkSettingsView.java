@@ -20,7 +20,6 @@ package io.bitsquare.gui.main.settings.network;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -193,22 +192,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     }
 
     private void onSelectNetwork() {
-        if (netWorkComboBox.getSelectionModel().getSelectedItem() != preferences.getBitcoinNetwork()) {
-            if (netWorkComboBox.getSelectionModel().getSelectedItem() == BitcoinNetwork.MAINNET) {
-                new Popup().warning("The application is not sufficiently tested yet. " +
-                        "Please be aware that using Mainnet comes with the risk to lose funds in case of software bugs.\n" +
-                        "To limit the possible losses the maximum allowed trading amount and the security deposit are " +
-                        "reduced to 0.01 BTC on Mainnet.")
-                        .actionButtonText("I will stick with Testnet for now")
-                        .onAction(() -> UserThread.execute(() -> netWorkComboBox.getSelectionModel().select(preferences.getBitcoinNetwork())))
-                        .closeButtonText("I understand the risk and want to use Mainnet")
-                        .onClose(() -> selectNetwork())
-                        .width(800)
-                        .show();
-            } else {
-                selectNetwork();
-            }
-        }
+        if (netWorkComboBox.getSelectionModel().getSelectedItem() != preferences.getBitcoinNetwork())
+            selectNetwork();
     }
 
     private void selectNetwork() {

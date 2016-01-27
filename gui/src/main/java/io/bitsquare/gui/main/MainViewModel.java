@@ -27,6 +27,7 @@ import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
@@ -66,6 +67,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -100,7 +102,7 @@ public class MainViewModel implements ViewModel {
     final StringProperty p2PNetworkWarnMsg = new SimpleStringProperty();
     final StringProperty p2PNetworkIconId = new SimpleStringProperty();
     final BooleanProperty bootstrapComplete = new SimpleBooleanProperty();
-    
+
     // software update
     final String version = "v." + Version.VERSION;
 
@@ -381,14 +383,32 @@ public class MainViewModel implements ViewModel {
                 "3. The user confirms that he has read and agreed to the rules defined in our " +
                 "Wiki regrading the dispute process\n" +
                 "(https://github.com/bitsquare/bitsquare/wiki/Arbitration-system).";
-        if (!preferences.getTacAccepted() && !BitsquareApp.DEV_MODE)
+        if (!preferences.getTacAccepted() && !BitsquareApp.DEV_MODE) {
             new Popup().headLine("USER AGREEMENT")
                     .message(text)
                     .actionButtonText("I agree")
                     .closeButtonText("I disagree and quit")
-                    .onAction(() -> preferences.setTacAccepted(true))
-                    .onClose(() -> BitsquareApp.shutDownHandler.run())
+                    .onAction(() -> {
+                        preferences.setTacAccepted(true);
+                        if (preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET)
+                            UserThread.runAfter(() -> new Popup()
+                                    .warning("The application is still in alpha version.\n" +
+                                            "Please be aware that using Mainnet comes with the risk to lose funds in case of software bugs.\n" +
+                                            "To limit the possible losses the maximum allowed trading amount and the security deposit are " +
+                                            "reduced to 0.01 BTC for the alpha version on Mainnet.")
+                                    .headLine("Important information!")
+                                    .actionButtonText("I understand and want to stick with Mainnet")
+                                    .closeButtonText("Restart and use Testnet")
+                                    .onClose(() -> {
+                                        UserThread.execute(() -> preferences.setBitcoinNetwork(BitcoinNetwork.TESTNET));
+                                        UserThread.runAfter(BitsquareApp.shutDownHandler::run, 300, TimeUnit.MILLISECONDS);
+                                    })
+                                    .width(600)
+                                    .show(), 300, TimeUnit.MILLISECONDS);
+                    })
+                    .onClose(BitsquareApp.shutDownHandler::run)
                     .show();
+        }
 
         // update nr of peers in footer
         numConnectedPeersListener = (observable, oldValue, newValue) -> {

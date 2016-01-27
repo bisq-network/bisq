@@ -83,8 +83,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
         if (dbStorage != null) {
             HashSet<ReportedPeer> persistedPeers = dbStorage.initAndGetPersisted("persistedPeers");
             if (persistedPeers != null) {
-                log.info("We have persisted reported peers. " +
-                        "\npersistedPeers=" + persistedPeers);
+                log.info("We have persisted reported peers. persistedPeers.size()=" + persistedPeers.size());
                 this.persistedPeers.addAll(persistedPeers);
             }
         }
@@ -237,7 +236,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
     }
 
     public void addToReportedPeers(HashSet<ReportedPeer> reportedPeersToAdd, Connection connection) {
-        Log.traceCall("reportedPeersToAdd = " + reportedPeersToAdd);
+        Log.traceCall();
         // we disconnect misbehaving nodes trying to send too many peers
         // reported peers include the connected peers which is normally max. 10 but we give some headroom 
         // for safety

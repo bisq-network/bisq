@@ -354,8 +354,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 btcNetworkWarnMsgPopup = new Popup().warning(newValue).show();
             } else {
                 btcInfoLabel.setId("footer-pane");
-                if (p2PNetworkWarnMsgPopup != null)
-                    p2PNetworkWarnMsgPopup.hide();
+                if (btcNetworkWarnMsgPopup != null)
+                    btcNetworkWarnMsgPopup.hide();
             }
         });
 
