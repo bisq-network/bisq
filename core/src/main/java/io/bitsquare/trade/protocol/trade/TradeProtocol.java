@@ -21,7 +21,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.messaging.DecryptedMailListener;
+import io.bitsquare.p2p.messaging.DecryptedDirectMessageListener;
 import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.TakerTrade;
@@ -41,7 +41,7 @@ public abstract class TradeProtocol {
     private static final long TIMEOUT_SEC = 30;
 
     protected final ProcessModel processModel;
-    private final DecryptedMailListener decryptedMailListener;
+    private final DecryptedDirectMessageListener decryptedDirectMessageListener;
     protected Trade trade;
     private java.util.Timer timeoutTimer;
 
@@ -49,7 +49,7 @@ public abstract class TradeProtocol {
         this.trade = trade;
         this.processModel = trade.getProcessModel();
 
-        decryptedMailListener = (decryptedMessageWithPubKey, peersNodeAddress) -> {
+        decryptedDirectMessageListener = (decryptedMessageWithPubKey, peersNodeAddress) -> {
             // We check the sig only as soon we have stored the peers pubKeyRing.
             PubKeyRing tradingPeerPubKeyRing = processModel.tradingPeer.getPubKeyRing();
             PublicKey signaturePubKey = decryptedMessageWithPubKey.signaturePubKey;
@@ -77,7 +77,7 @@ public abstract class TradeProtocol {
                     log.error("Signature used in seal message does not match the one stored with that trade for the trading peer or arbitrator.");*/
             }
         };
-        processModel.getP2PService().addDecryptedMailListener(decryptedMailListener);
+        processModel.getP2PService().addDecryptedDirectMessageListener(decryptedDirectMessageListener);
     }
 
     public void completed() {
@@ -88,7 +88,7 @@ public abstract class TradeProtocol {
         log.debug("cleanup " + this);
         stopTimeout();
 
-        processModel.getP2PService().removeDecryptedMailListener(decryptedMailListener);
+        processModel.getP2PService().removeDecryptedMailListener(decryptedDirectMessageListener);
 
     }
 

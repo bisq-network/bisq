@@ -19,6 +19,8 @@ package io.bitsquare.trade.protocol.trade.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
+import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.ProcessModel;
 import org.slf4j.Logger;
@@ -56,5 +58,16 @@ public abstract class TradeTask extends Task<Trade> {
         appendExceptionToErrorMessage(t);
         trade.setErrorMessage(errorMessage);
         super.failed();
+    }
+
+    protected void removeMailboxMessageAfterProcessing() {
+        if (processModel.getTradeMessage() instanceof MailboxMessage) {
+            DecryptedMsgWithPubKey mailboxMessage = trade.getMailboxMessage();
+            if (mailboxMessage != null && mailboxMessage.message.equals(processModel.getTradeMessage())) {
+                log.info("Remove mailboxMessage from P2P network. mailboxMessage = " + mailboxMessage);
+                processModel.getP2PService().removeEntryFromMailbox(mailboxMessage);
+                trade.setMailboxMessage(null);
+            }
+        }
     }
 }

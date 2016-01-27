@@ -23,7 +23,6 @@ import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
@@ -31,7 +30,7 @@ import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NetWorkReadyListener;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.messaging.DecryptedMailListener;
+import io.bitsquare.p2p.messaging.DecryptedDirectMessageListener;
 import io.bitsquare.p2p.messaging.DecryptedMailboxListener;
 import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import io.bitsquare.storage.Storage;
@@ -62,7 +61,6 @@ import javax.inject.Named;
 import java.io.File;
 import java.util.Date;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
@@ -114,9 +112,9 @@ public class TradeManager {
         tradableListStorage = new Storage<>(storageDir);
         this.trades = new TradableList<>(tradableListStorage, "PendingTrades");
 
-        p2PService.addDecryptedMailListener(new DecryptedMailListener() {
+        p2PService.addDecryptedDirectMessageListener(new DecryptedDirectMessageListener() {
             @Override
-            public void onMailMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress peerNodeAddress) {
+            public void onDirectMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress peerNodeAddress) {
                 Message message = decryptedMsgWithPubKey.message;
 
                 // Handler for incoming initial messages from taker
@@ -153,8 +151,8 @@ public class TradeManager {
             @Override
             public void onBootstrapped() {
                 Log.traceCall("onNetworkReady");
-                // give a bit delay to be sure other listeners have executed its work
-                UserThread.runAfter(() -> initPendingTrades(), 100, TimeUnit.MILLISECONDS);
+                // Get called after onMailboxMessageAdded from initial data request
+                initPendingTrades();
             }
         };
         p2PService.addP2PServiceListener(netWorkReadyListener);

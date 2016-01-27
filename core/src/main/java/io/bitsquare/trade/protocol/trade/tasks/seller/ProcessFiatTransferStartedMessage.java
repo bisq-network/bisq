@@ -51,6 +51,8 @@ public class ProcessFiatTransferStartedMessage extends TradeTask {
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
+            removeMailboxMessageAfterProcessing();
+
             complete();
         } catch (Throwable t) {
             failed(t);

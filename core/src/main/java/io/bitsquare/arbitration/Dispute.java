@@ -18,7 +18,7 @@
 package io.bitsquare.arbitration;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.arbitration.messages.DisputeMailMessage;
+import io.bitsquare.arbitration.messages.DisputeDirectMessage;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Contract;
@@ -69,13 +69,13 @@ public class Dispute implements Serializable {
     private final PubKeyRing arbitratorPubKeyRing;
     private final boolean isSupportTicket;
 
-    private final List<DisputeMailMessage> disputeMailMessages = new ArrayList<>();
+    private final List<DisputeDirectMessage> disputeDirectMessages = new ArrayList<>();
 
     private boolean isClosed;
     private DisputeResult disputeResult;
 
     transient private Storage<DisputeList<Dispute>> storage;
-    transient private ObservableList<DisputeMailMessage> disputeMailMessagesAsObservableList = FXCollections.observableArrayList(disputeMailMessages);
+    transient private ObservableList<DisputeDirectMessage> disputeDirectMessagesAsObservableList = FXCollections.observableArrayList(disputeDirectMessages);
     transient private BooleanProperty isClosedProperty = new SimpleBooleanProperty(isClosed);
     transient private ObjectProperty<DisputeResult> disputeResultProperty = new SimpleObjectProperty<>(disputeResult);
 
@@ -126,7 +126,7 @@ public class Dispute implements Serializable {
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            disputeMailMessagesAsObservableList = FXCollections.observableArrayList(disputeMailMessages);
+            disputeDirectMessagesAsObservableList = FXCollections.observableArrayList(disputeDirectMessages);
             disputeResultProperty = new SimpleObjectProperty<>(disputeResult);
             isClosedProperty = new SimpleBooleanProperty(isClosed);
         } catch (Throwable t) {
@@ -134,13 +134,13 @@ public class Dispute implements Serializable {
         }
     }
 
-    public void addDisputeMessage(DisputeMailMessage disputeMailMessage) {
-        if (!disputeMailMessages.contains(disputeMailMessage)) {
-            disputeMailMessages.add(disputeMailMessage);
-            disputeMailMessagesAsObservableList.add(disputeMailMessage);
+    public void addDisputeMessage(DisputeDirectMessage disputeDirectMessage) {
+        if (!disputeDirectMessages.contains(disputeDirectMessage)) {
+            disputeDirectMessages.add(disputeDirectMessage);
+            disputeDirectMessagesAsObservableList.add(disputeDirectMessage);
             storage.queueUpForSave();
         } else {
-            log.error("disputeMailMessage already exists");
+            log.error("disputeDirectMessage already exists");
         }
     }
 
@@ -234,8 +234,8 @@ public class Dispute implements Serializable {
         return takerContractSignature;
     }
 
-    public ObservableList<DisputeMailMessage> getDisputeMailMessagesAsObservableList() {
-        return disputeMailMessagesAsObservableList;
+    public ObservableList<DisputeDirectMessage> getDisputeDirectMessagesAsObservableList() {
+        return disputeDirectMessagesAsObservableList;
     }
 
     public boolean isClosed() {
@@ -298,7 +298,7 @@ public class Dispute implements Serializable {
             return false;
         if (arbitratorPubKeyRing != null ? !arbitratorPubKeyRing.equals(dispute.arbitratorPubKeyRing) : dispute.arbitratorPubKeyRing != null)
             return false;
-        if (disputeMailMessages != null ? !disputeMailMessages.equals(dispute.disputeMailMessages) : dispute.disputeMailMessages != null)
+        if (disputeDirectMessages != null ? !disputeDirectMessages.equals(dispute.disputeDirectMessages) : dispute.disputeDirectMessages != null)
             return false;
         return !(disputeResult != null ? !disputeResult.equals(dispute.disputeResult) : dispute.disputeResult != null);
 
@@ -324,7 +324,7 @@ public class Dispute implements Serializable {
         result = 31 * result + (takerContractSignature != null ? takerContractSignature.hashCode() : 0);
         result = 31 * result + (arbitratorPubKeyRing != null ? arbitratorPubKeyRing.hashCode() : 0);
         result = 31 * result + (isSupportTicket ? 1 : 0);
-        result = 31 * result + (disputeMailMessages != null ? disputeMailMessages.hashCode() : 0);
+        result = 31 * result + (disputeDirectMessages != null ? disputeDirectMessages.hashCode() : 0);
         result = 31 * result + (isClosed ? 1 : 0);
         result = 31 * result + (disputeResult != null ? disputeResult.hashCode() : 0);
         return result;
@@ -344,8 +344,8 @@ public class Dispute implements Serializable {
                 ", buyerContractSignature='" + offererContractSignature + '\'' +
                 ", sellerContractSignature='" + takerContractSignature + '\'' +
                 ", arbitratorPubKeyRing=" + arbitratorPubKeyRing +
-                ", disputeMailMessages=" + disputeMailMessages +
-                ", disputeMailMessagesAsObservableList=" + disputeMailMessagesAsObservableList +
+                ", disputeDirectMessages=" + disputeDirectMessages +
+                ", disputeDirectMessagesAsObservableList=" + disputeDirectMessagesAsObservableList +
                 ", isClosed=" + isClosed +
                 ", disputeResult=" + disputeResult +
                 ", disputeResultProperty=" + disputeResultProperty +

@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.tasks.offerer;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.p2p.messaging.SendMailMessageListener;
+import io.bitsquare.p2p.messaging.SendDirectMessageListener;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.PublishDepositTxRequest;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
@@ -51,11 +51,11 @@ public class SendPublishDepositTxRequest extends TradeTask {
                     trade.getCheckPaymentTimeAsBlockHeight()
             );
 
-            processModel.getP2PService().sendEncryptedMailMessage(
+            processModel.getP2PService().sendEncryptedDirectMessage(
                     trade.getTradingPeerNodeAddress(),
                     processModel.tradingPeer.getPubKeyRing(),
                     tradeMessage,
-                    new SendMailMessageListener() {
+                    new SendDirectMessageListener() {
                         @Override
                         public void onArrived() {
                             log.trace("Message arrived at peer.");

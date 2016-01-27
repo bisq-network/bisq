@@ -22,7 +22,7 @@ import io.bitsquare.p2p.Message;
 
 import java.security.PublicKey;
 
-public final class DecryptedMsgWithPubKey implements MailMessage {
+public final class DecryptedMsgWithPubKey implements DirectMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 

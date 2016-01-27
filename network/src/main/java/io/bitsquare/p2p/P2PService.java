@@ -12,8 +12,8 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.CryptoException;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
-import io.bitsquare.crypto.DirectMessage;
 import io.bitsquare.crypto.EncryptionService;
+import io.bitsquare.crypto.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.messaging.*;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.Broadcaster;
@@ -66,7 +66,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> networkReadyBinding;
-    private final Set<DecryptedMailListener> decryptedMailListeners = new CopyOnWriteArraySet<>();
+    private final Set<DecryptedDirectMessageListener> decryptedDirectMessageListeners = new CopyOnWriteArraySet<>();
     private final Set<DecryptedMailboxListener> decryptedMailboxListeners = new CopyOnWriteArraySet<>();
     private final Set<P2PServiceListener> p2pServiceListeners = new CopyOnWriteArraySet<>();
     private final Map<DecryptedMsgWithPubKey, ProtectedMailboxData> mailboxMap = new HashMap<>();
@@ -322,26 +322,26 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     @Override
     public void onMessage(Message message, Connection connection) {
-        if (message instanceof DirectMessage) {
+        if (message instanceof PrefixedSealedAndSignedMessage) {
             Log.traceCall(message.toString());
             // Seed nodes don't have set the encryptionService
             if (optionalEncryptionService.isPresent()) {
                 try {
-                    DirectMessage directMessage = (DirectMessage) message;
-                    if (verifyAddressPrefixHash(directMessage)) {
+                    PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = (PrefixedSealedAndSignedMessage) message;
+                    if (verifyAddressPrefixHash(prefixedSealedAndSignedMessage)) {
                         // We set connectionType to that connection to avoid that is get closed when 
                         // we get too many connection attempts.
                         connection.setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
                         DecryptedMsgWithPubKey decryptedMsgWithPubKey = optionalEncryptionService.get().decryptAndVerify(
-                                directMessage.sealedAndSigned);
+                                prefixedSealedAndSignedMessage.sealedAndSigned);
 
                         log.info("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
                                 "Decrypted SealedAndSignedMessage:\ndecryptedMsgWithPubKey={}"
                                 + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n", decryptedMsgWithPubKey);
                         connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress ->
-                                decryptedMailListeners.stream().forEach(
-                                        e -> e.onMailMessage(decryptedMsgWithPubKey, peersNodeAddress)));
+                                decryptedDirectMessageListeners.stream().forEach(
+                                        e -> e.onDirectMessage(decryptedMsgWithPubKey, peersNodeAddress)));
                     } else {
                         log.info("Wrong receiverAddressMaskHash. The message is not intended for us.");
                     }
@@ -370,49 +370,49 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // MailMessages
+    // DirectMessages
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void sendEncryptedMailMessage(NodeAddress peerNodeAddress, PubKeyRing pubKeyRing, MailMessage message,
-                                         SendMailMessageListener sendMailMessageListener) {
+    public void sendEncryptedDirectMessage(NodeAddress peerNodeAddress, PubKeyRing pubKeyRing, DirectMessage message,
+                                           SendDirectMessageListener sendDirectMessageListener) {
         Log.traceCall();
-        checkNotNull(peerNodeAddress, "PeerAddress must not be null (sendEncryptedMailMessage)");
+        checkNotNull(peerNodeAddress, "PeerAddress must not be null (sendEncryptedDirectMessage)");
         if (isNetworkReady()) {
-            doSendEncryptedMailMessage(peerNodeAddress, pubKeyRing, message, sendMailMessageListener);
+            doSendEncryptedDirectMessage(peerNodeAddress, pubKeyRing, message, sendDirectMessageListener);
         } else {
             throw new NetworkNotReadyException();
         }
     }
 
-    private void doSendEncryptedMailMessage(@NotNull NodeAddress peersNodeAddress, PubKeyRing pubKeyRing, MailMessage message,
-                                            SendMailMessageListener sendMailMessageListener) {
+    private void doSendEncryptedDirectMessage(@NotNull NodeAddress peersNodeAddress, PubKeyRing pubKeyRing, DirectMessage message,
+                                              SendDirectMessageListener sendDirectMessageListener) {
         Log.traceCall();
-        checkNotNull(networkNode.getNodeAddress(), "My node address must not be null at doSendEncryptedMailMessage");
+        checkNotNull(networkNode.getNodeAddress(), "My node address must not be null at doSendEncryptedDirectMessage");
         checkArgument(optionalEncryptionService.isPresent(), "EncryptionService not set. Seems that is called on a seed node which must not happen.");
         checkNotNull(networkNode.getNodeAddress(), "networkNode.getNodeAddress() must not be null.");
         try {
             log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                     "Encrypt message:\nmessage={}"
                     + "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n", message);
-            DirectMessage directMessage = new DirectMessage(networkNode.getNodeAddress(),
+            PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(networkNode.getNodeAddress(),
                     optionalEncryptionService.get().encryptAndSign(pubKeyRing, message),
                     peersNodeAddress.getAddressPrefixHash());
-            SettableFuture<Connection> future = networkNode.sendMessage(peersNodeAddress, directMessage);
+            SettableFuture<Connection> future = networkNode.sendMessage(peersNodeAddress, prefixedSealedAndSignedMessage);
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
                 public void onSuccess(@Nullable Connection connection) {
-                    sendMailMessageListener.onArrived();
+                    sendDirectMessageListener.onArrived();
                 }
 
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
                     throwable.printStackTrace();
-                    sendMailMessageListener.onFault();
+                    sendDirectMessageListener.onFault();
                 }
             });
         } catch (CryptoException e) {
             e.printStackTrace();
-            sendMailMessageListener.onFault();
+            sendDirectMessageListener.onFault();
         }
     }
 
@@ -428,11 +428,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             ExpirablePayload expirablePayload = mailboxData.expirablePayload;
             if (expirablePayload instanceof ExpirableMailboxPayload) {
                 ExpirableMailboxPayload expirableMailboxPayload = (ExpirableMailboxPayload) expirablePayload;
-                DirectMessage directMessage = expirableMailboxPayload.directMessage;
-                if (verifyAddressPrefixHash(directMessage)) {
+                PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = expirableMailboxPayload.prefixedSealedAndSignedMessage;
+                if (verifyAddressPrefixHash(prefixedSealedAndSignedMessage)) {
                     try {
                         DecryptedMsgWithPubKey decryptedMsgWithPubKey = optionalEncryptionService.get().decryptAndVerify(
-                                directMessage.sealedAndSigned);
+                                prefixedSealedAndSignedMessage.sealedAndSigned);
                         if (decryptedMsgWithPubKey.message instanceof MailboxMessage) {
                             MailboxMessage mailboxMessage = (MailboxMessage) decryptedMsgWithPubKey.message;
                             NodeAddress senderNodeAddress = mailboxMessage.getSenderNodeAddress();
@@ -479,11 +479,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                     log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                             "Encrypt message:\nmessage={}"
                             + "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n", message);
-                    DirectMessage directMessage = new DirectMessage(
+                    PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(
                             networkNode.getNodeAddress(),
                             optionalEncryptionService.get().encryptAndSign(peersPubKeyRing, message),
                             peersNodeAddress.getAddressPrefixHash());
-                    SettableFuture<Connection> future = networkNode.sendMessage(peersNodeAddress, directMessage);
+                    SettableFuture<Connection> future = networkNode.sendMessage(peersNodeAddress, prefixedSealedAndSignedMessage);
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
                         public void onSuccess(@Nullable Connection connection) {
@@ -498,7 +498,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                             log.info("We cannot send message to peer. Peer might be offline. We will store message in mailbox.");
                             log.trace("create MailboxEntry with peerAddress " + peersNodeAddress);
                             PublicKey receiverStoragePublicKey = peersPubKeyRing.getSignaturePubKey();
-                            addMailboxData(new ExpirableMailboxPayload(directMessage,
+                            addMailboxData(new ExpirableMailboxPayload(prefixedSealedAndSignedMessage,
                                             optionalKeyRing.get().getSignatureKeyPair().getPublic(),
                                             receiverStoragePublicKey),
                                     receiverStoragePublicKey,
@@ -657,12 +657,12 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     // Listeners
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addDecryptedMailListener(DecryptedMailListener listener) {
-        decryptedMailListeners.add(listener);
+    public void addDecryptedDirectMessageListener(DecryptedDirectMessageListener listener) {
+        decryptedDirectMessageListeners.add(listener);
     }
 
-    public void removeDecryptedMailListener(DecryptedMailListener listener) {
-        decryptedMailListeners.remove(listener);
+    public void removeDecryptedMailListener(DecryptedDirectMessageListener listener) {
+        decryptedDirectMessageListeners.remove(listener);
     }
 
     public void addDecryptedMailboxListener(DecryptedMailboxListener listener) {
@@ -715,11 +715,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean verifyAddressPrefixHash(DirectMessage directMessage) {
+    private boolean verifyAddressPrefixHash(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage) {
         if (networkNode.getNodeAddress() != null) {
             byte[] blurredAddressHash = networkNode.getNodeAddress().getAddressPrefixHash();
             return blurredAddressHash != null &&
-                    Arrays.equals(blurredAddressHash, directMessage.addressPrefixHash);
+                    Arrays.equals(blurredAddressHash, prefixedSealedAndSignedMessage.addressPrefixHash);
         } else {
             log.debug("myOnionAddress is null at verifyAddressPrefixHash. That is expected at startup.");
             return false;

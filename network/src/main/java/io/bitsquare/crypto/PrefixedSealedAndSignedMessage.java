@@ -8,7 +8,7 @@ import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 
 import java.util.Arrays;
 
-public final class DirectMessage implements MailboxMessage, SendersNodeAddressMessage {
+public final class PrefixedSealedAndSignedMessage implements MailboxMessage, SendersNodeAddressMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
@@ -17,7 +17,7 @@ public final class DirectMessage implements MailboxMessage, SendersNodeAddressMe
     public final SealedAndSigned sealedAndSigned;
     public final byte[] addressPrefixHash;
 
-    public DirectMessage(NodeAddress senderNodeAddress, SealedAndSigned sealedAndSigned, byte[] addressPrefixHash) {
+    public PrefixedSealedAndSignedMessage(NodeAddress senderNodeAddress, SealedAndSigned sealedAndSigned, byte[] addressPrefixHash) {
         this.senderNodeAddress = senderNodeAddress;
         this.sealedAndSigned = sealedAndSigned;
         this.addressPrefixHash = addressPrefixHash;

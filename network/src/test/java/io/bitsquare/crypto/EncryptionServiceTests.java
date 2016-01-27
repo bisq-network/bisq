@@ -72,7 +72,7 @@ public class EncryptionServiceTests {
     public void testDecryptAndVerifyMessage() throws CryptoException {
         EncryptionService encryptionService = new EncryptionService(keyRing);
         TestMessage data = new TestMessage("test");
-        DirectMessage encrypted = new DirectMessage(null,
+        PrefixedSealedAndSignedMessage encrypted = new PrefixedSealedAndSignedMessage(null,
                 encryptionService.encryptAndSign(pubKeyRing, data),
                 Hash.getHash("aa"));
         DecryptedMsgWithPubKey decrypted = encryptionService.decryptAndVerify(encrypted.sealedAndSigned);

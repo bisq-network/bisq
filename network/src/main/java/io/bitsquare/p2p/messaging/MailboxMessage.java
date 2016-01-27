@@ -20,6 +20,6 @@ package io.bitsquare.p2p.messaging;
 
 import io.bitsquare.p2p.NodeAddress;
 
-public interface MailboxMessage extends MailMessage {
+public interface MailboxMessage extends DirectMessage {
     NodeAddress getSenderNodeAddress();
 }

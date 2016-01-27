@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.availability.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.p2p.messaging.SendMailMessageListener;
+import io.bitsquare.p2p.messaging.SendDirectMessageListener;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
 import io.bitsquare.trade.protocol.availability.messages.OfferAvailabilityRequest;
@@ -38,10 +38,10 @@ public class SendOfferAvailabilityRequest extends Task<OfferAvailabilityModel> {
         try {
             runInterceptHook();
 
-            model.p2PService.sendEncryptedMailMessage(model.getPeerNodeAddress(),
+            model.p2PService.sendEncryptedDirectMessage(model.getPeerNodeAddress(),
                     model.offer.getPubKeyRing(),
                     new OfferAvailabilityRequest(model.offer.getId(), model.getPubKeyRing()),
-                    new SendMailMessageListener() {
+                    new SendDirectMessageListener() {
                         @Override
                         public void onArrived() {
                             complete();

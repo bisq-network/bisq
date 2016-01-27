@@ -1,6 +1,6 @@
 package io.bitsquare.p2p.messaging;
 
-public interface SendMailMessageListener {
+public interface SendDirectMessageListener {
     void onArrived();
 
     void onFault();

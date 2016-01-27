@@ -82,6 +82,8 @@ public class ProcessPayDepositRequest extends TradeTask {
             // update to the latest peer address of our peer if the payDepositRequest is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
+            removeMailboxMessageAfterProcessing();
+            
             complete();
         } catch (Throwable t) {
             failed(t);

@@ -32,10 +32,10 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-public final class DisputeMailMessage extends DisputeMessage {
+public final class DisputeDirectMessage extends DisputeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
-    private static final Logger log = LoggerFactory.getLogger(DisputeMailMessage.class);
+    private static final Logger log = LoggerFactory.getLogger(DisputeDirectMessage.class);
 
     private final long date;
     private final String tradeId;
@@ -52,7 +52,7 @@ public final class DisputeMailMessage extends DisputeMessage {
     transient private BooleanProperty arrivedProperty = new SimpleBooleanProperty();
     transient private BooleanProperty storedInMailboxProperty = new SimpleBooleanProperty();
 
-    public DisputeMailMessage(String tradeId, int traderId, boolean senderIsTrader, String message, NodeAddress myNodeAddress) {
+    public DisputeDirectMessage(String tradeId, int traderId, boolean senderIsTrader, String message, NodeAddress myNodeAddress) {
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.senderIsTrader = senderIsTrader;
@@ -137,9 +137,9 @@ public final class DisputeMailMessage extends DisputeMessage {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DisputeMailMessage)) return false;
+        if (!(o instanceof DisputeDirectMessage)) return false;
 
-        DisputeMailMessage that = (DisputeMailMessage) o;
+        DisputeDirectMessage that = (DisputeDirectMessage) o;
 
         if (date != that.date) return false;
         if (traderId != that.traderId) return false;
@@ -171,7 +171,7 @@ public final class DisputeMailMessage extends DisputeMessage {
 
     @Override
     public String toString() {
-        return "DisputeMailMessage{" +
+        return "DisputeDirectMessage{" +
                 "date=" + date +
                 ", tradeId='" + tradeId + '\'' +
                 ", traderId='" + traderId + '\'' +

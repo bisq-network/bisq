@@ -1,8 +1,8 @@
 package io.bitsquare.p2p;
 
 import io.bitsquare.common.crypto.*;
-import io.bitsquare.crypto.DirectMessage;
 import io.bitsquare.crypto.EncryptionService;
+import io.bitsquare.crypto.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
@@ -287,10 +287,10 @@ public class P2PServiceTest {
         MockMailboxMessage mockMessage = new MockMailboxMessage("MockMailboxMessage", p2PService2.getAddress());
         p2PService2.getNetworkNode().addMessageListener((message, connection) -> {
             log.trace("message " + message);
-            if (message instanceof DirectMessage) {
+            if (message instanceof PrefixedSealedAndSignedMessage) {
                 try {
-                    DirectMessage directMessage = (DirectMessage) message;
-                    DecryptedMsgWithPubKey decryptedMsgWithPubKey = encryptionService2.decryptAndVerify(directMessage.sealedAndSigned);
+                    PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = (PrefixedSealedAndSignedMessage) message;
+                    DecryptedMsgWithPubKey decryptedMsgWithPubKey = encryptionService2.decryptAndVerify(prefixedSealedAndSignedMessage.sealedAndSigned);
                     Assert.assertEquals(mockMessage, decryptedMsgWithPubKey.message);
                     Assert.assertEquals(p2PService2.getAddress(), ((MailboxMessage) decryptedMsgWithPubKey.message).getSenderNodeAddress());
                     latch2.countDown();

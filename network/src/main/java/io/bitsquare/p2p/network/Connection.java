@@ -6,7 +6,7 @@ import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.ByteArrayUtils;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.crypto.DirectMessage;
+import io.bitsquare.crypto.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.Utils;
@@ -152,7 +152,7 @@ public class Connection implements MessageListener {
         if (!stopped) {
             try {
                 String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
-                if (message instanceof DirectMessage && peersNodeAddressOptional.isPresent()) {
+                if (message instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
                     setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
                     log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
@@ -644,7 +644,7 @@ public class Connection implements MessageListener {
                                 else
                                     connection.setPeersNodeAddress(senderNodeAddress);
                             }
-                            if (message instanceof DirectMessage)
+                            if (message instanceof PrefixedSealedAndSignedMessage)
                                 connection.setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
                             messageListener.onMessage(message, connection);

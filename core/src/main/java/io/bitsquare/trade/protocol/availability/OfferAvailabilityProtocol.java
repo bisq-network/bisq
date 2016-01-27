@@ -22,7 +22,7 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.messaging.DecryptedMailListener;
+import io.bitsquare.p2p.messaging.DecryptedDirectMessageListener;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.availability.messages.OfferAvailabilityResponse;
 import io.bitsquare.trade.protocol.availability.messages.OfferMessage;
@@ -41,7 +41,7 @@ public class OfferAvailabilityProtocol {
     private final OfferAvailabilityModel model;
     private final ResultHandler resultHandler;
     private final ErrorMessageHandler errorMessageHandler;
-    private final DecryptedMailListener decryptedMailListener;
+    private final DecryptedDirectMessageListener decryptedDirectMessageListener;
 
     private TaskRunner<OfferAvailabilityModel> taskRunner;
     private java.util.Timer timeoutTimer;
@@ -56,7 +56,7 @@ public class OfferAvailabilityProtocol {
         this.resultHandler = resultHandler;
         this.errorMessageHandler = errorMessageHandler;
 
-        decryptedMailListener = (decryptedMessageWithPubKey, peersNodeAddress) -> {
+        decryptedDirectMessageListener = (decryptedMessageWithPubKey, peersNodeAddress) -> {
             Message message = decryptedMessageWithPubKey.message;
             if (message instanceof OfferMessage) {
                 OfferMessage offerMessage = (OfferMessage) message;
@@ -72,7 +72,7 @@ public class OfferAvailabilityProtocol {
 
     private void cleanup() {
         stopTimeout();
-        model.p2PService.removeDecryptedMailListener(decryptedMailListener);
+        model.p2PService.removeDecryptedMailListener(decryptedDirectMessageListener);
     }
 
 
@@ -84,7 +84,7 @@ public class OfferAvailabilityProtocol {
         // reset
         model.offer.setState(Offer.State.UNDEFINED);
 
-        model.p2PService.addDecryptedMailListener(decryptedMailListener);
+        model.p2PService.addDecryptedDirectMessageListener(decryptedDirectMessageListener);
         model.setPeerNodeAddress(model.offer.getOffererNodeAddress());
 
         taskRunner = new TaskRunner<>(model,

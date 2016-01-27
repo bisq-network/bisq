@@ -28,7 +28,7 @@ import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NetWorkReadyListener;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.messaging.SendMailMessageListener;
+import io.bitsquare.p2p.messaging.SendDirectMessageListener;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradableList;
 import io.bitsquare.trade.closed.ClosedTradableManager;
@@ -103,7 +103,7 @@ public class OpenOfferManager {
                 "OpenOfferManager.ShutDownHook"));
 
         // Handler for incoming offer availability requests
-        p2PService.addDecryptedMailListener((decryptedMessageWithPubKey, peersNodeAddress) -> {
+        p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, peersNodeAddress) -> {
             // We get an encrypted message but don't do the signature check as we don't know the peer yet.
             // A basic sig check is in done also at decryption time
             Message message = decryptedMessageWithPubKey.message;
@@ -295,10 +295,10 @@ public class OpenOfferManager {
         Optional<OpenOffer> openOfferOptional = findOpenOffer(message.offerId);
         boolean isAvailable = openOfferOptional.isPresent() && openOfferOptional.get().getState() == OpenOffer.State.AVAILABLE;
         try {
-            p2PService.sendEncryptedMailMessage(sender,
+            p2PService.sendEncryptedDirectMessage(sender,
                     message.getPubKeyRing(),
                     new OfferAvailabilityResponse(message.offerId, isAvailable),
-                    new SendMailMessageListener() {
+                    new SendDirectMessageListener() {
                         @Override
                         public void onArrived() {
                             log.trace("OfferAvailabilityResponse successfully arrived at peer");
