@@ -48,10 +48,6 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
 
         executor = Utilities.getScheduledThreadPoolExecutor("PeerExchangeManager", 1, 10, 5);
-        long delay = new Random().nextInt(60) + 60 * 3; // 3-4 min. 
-        executor.scheduleAtFixedRate(() -> UserThread.execute(this::checkForSeedNode),
-                delay, delay, TimeUnit.SECONDS);
-
         networkNode.addMessageListener(this);
     }
 
@@ -72,6 +68,10 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
 
     public void requestReportedPeers(NodeAddress nodeAddress) {
         requestReportedPeers(nodeAddress, new ArrayList<>(seedNodeAddresses));
+
+        long delay = new Random().nextInt(60) + 60 * 3; // 3-4 min. 
+        executor.scheduleAtFixedRate(() -> UserThread.execute(this::checkForSeedNode),
+                delay, delay, TimeUnit.SECONDS);
     }
 
 
@@ -143,7 +143,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
 
     private void requestReportedPeers(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
         Log.traceCall("nodeAddress=" + nodeAddress + " /  remainingNodeAddresses=" + remainingNodeAddresses);
-        checkNotNull(networkNode.getNodeAddress(), "My node address must not be null at getReportedPeersFromSeedNode");
+        checkNotNull(networkNode.getNodeAddress(), "My node address must not be null at requestReportedPeers");
 
         stopRequestReportedPeersAfterDelayTimer();
         stopTimeoutTimer();
