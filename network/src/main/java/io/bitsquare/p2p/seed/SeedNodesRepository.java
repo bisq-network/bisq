@@ -16,10 +16,10 @@ public class SeedNodesRepository {
     // regtest use port 8002
     private Set<NodeAddress> torSeedNodeAddresses = Sets.newHashSet(
             // mainnet
-            new NodeAddress("lih5zsr2bvxi24pk.onion:8000"),
-            new NodeAddress("s5xpstlooosehtxm.onion:8000"),
-            new NodeAddress("izs5oz7i5ta7c2ir.onion:8000"),
-
+            new NodeAddress("oyyii5ogv7y7iadi.onion:8000"),
+            new NodeAddress("ugcro2f5xnkguash.onion:8000"),
+            new NodeAddress("qarhpdsl6mfhbnud.onion:8000"),
+            
             // testnet
             new NodeAddress("znmy44wcstn2rkva.onion:8001"),
             new NodeAddress("zvn7umikgxml6x6h.onion:8001"),
