@@ -440,10 +440,11 @@ public class WalletService {
 
     public Coin getRequiredFee(String fromAddress,
                                String toAddress,
-                               Coin amount) throws AddressFormatException, IllegalArgumentException, InsufficientMoneyException {
+                               Coin amount,
+                               KeyParameter aesKey) throws AddressFormatException, IllegalArgumentException, InsufficientMoneyException {
         Coin fee;
         try {
-            wallet.completeTx(getSendRequest(fromAddress, toAddress, amount, null));
+            wallet.completeTx(getSendRequest(fromAddress, toAddress, amount, aesKey));
             fee = Coin.ZERO;
         } catch (InsufficientMoneyException e) {
             log.info("The amount to be transferred is not enough to pay the transaction fees of {}. " +
@@ -480,7 +481,7 @@ public class WalletService {
                             Coin amount,
                             KeyParameter aesKey,
                             FutureCallback<Transaction> callback) throws AddressFormatException, IllegalArgumentException, InsufficientMoneyException {
-        Coin fee = getRequiredFee(fromAddress, toAddress, amount);
+        Coin fee = getRequiredFee(fromAddress, toAddress, amount, aesKey);
         Wallet.SendResult sendResult = wallet.sendCoins(getSendRequest(fromAddress, toAddress, amount.subtract(fee), aesKey));
         Futures.addCallback(sendResult.broadcastComplete, callback);
 

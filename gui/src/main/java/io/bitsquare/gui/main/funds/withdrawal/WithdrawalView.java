@@ -191,7 +191,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             };
             try {
                 Coin requiredFee = walletService.getRequiredFee(withdrawFromTextField.getText(),
-                        withdrawToTextField.getText(), senderAmount);
+                        withdrawToTextField.getText(), senderAmount, null);
                 Coin receiverAmount = senderAmount.subtract(requiredFee);
                 if (BitsquareApp.DEV_MODE) {
                     doWithdraw(receiverAmount, callback);
