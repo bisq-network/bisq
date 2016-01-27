@@ -38,8 +38,7 @@
 
     <Label fx:id="bitcoinPeersLabel" text="Connected peers:" GridPane.rowIndex="1"/>
     <TextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
-              editable="false" focusTraversable="false"/>
-
+              GridPane.vgrow="ALWAYS" editable="false" focusTraversable="false"/>
 
     <TitledGroupBg text="P2P network" GridPane.rowIndex="3" GridPane.rowSpan="5">
         <padding>
@@ -64,7 +63,7 @@
 
     <Label fx:id="p2PPeersLabel" text="Connected peers:" GridPane.rowIndex="4"/>
     <TextArea fx:id="p2PPeersTextArea" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
-              editable="false" focusTraversable="false"/>
+              GridPane.vgrow="ALWAYS" editable="false" focusTraversable="false"/>
 
     <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="200.0"/>

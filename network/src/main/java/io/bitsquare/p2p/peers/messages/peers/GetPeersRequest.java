@@ -12,10 +12,12 @@ public final class GetPeersRequest extends PeerExchangeMessage implements Sender
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     private final NodeAddress senderNodeAddress;
+    public long nonce;
     public final HashSet<ReportedPeer> reportedPeers;
 
-    public GetPeersRequest(NodeAddress senderNodeAddress, HashSet<ReportedPeer> reportedPeers) {
+    public GetPeersRequest(NodeAddress senderNodeAddress, long nonce, HashSet<ReportedPeer> reportedPeers) {
         this.senderNodeAddress = senderNodeAddress;
+        this.nonce = nonce;
         this.reportedPeers = reportedPeers;
     }
 
@@ -28,6 +30,7 @@ public final class GetPeersRequest extends PeerExchangeMessage implements Sender
     public String toString() {
         return "GetPeersRequest{" +
                 "senderNodeAddress=" + senderNodeAddress +
+                ", requestNonce=" + nonce +
                 ", reportedPeers=" + reportedPeers +
                 super.toString() + "} ";
     }

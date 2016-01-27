@@ -134,13 +134,15 @@ public class OfferAvailabilityProtocol {
     }
 
     private void startTimeout() {
-        stopTimeout();
-
-        timeoutTimer = UserThread.runAfter(() -> {
-            log.warn("Timeout reached");
-            model.offer.setState(Offer.State.OFFERER_OFFLINE);
-            errorMessageHandler.handleErrorMessage("Timeout reached: Peer has not responded.");
-        }, TIMEOUT_SEC);
+        if (timeoutTimer == null) {
+            timeoutTimer = UserThread.runAfter(() -> {
+                log.warn("Timeout reached at " + this);
+                model.offer.setState(Offer.State.OFFERER_OFFLINE);
+                errorMessageHandler.handleErrorMessage("Timeout reached: Peer has not responded.");
+            }, TIMEOUT_SEC);
+        } else {
+            log.warn("timeoutTimer already created. That must not happen.");
+        }
     }
 
     private void stopTimeout() {

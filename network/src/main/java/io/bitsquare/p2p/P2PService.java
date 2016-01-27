@@ -110,12 +110,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         Log.traceCall();
 
         connectionNodeAddressListener = (observable, oldValue, newValue) -> {
-            Set<NodeAddress> nodeAddressesOfConfirmedConnections = networkNode.getNodeAddressesOfConfirmedConnections();
-            Set<Connection> allConfirmedConnections = networkNode.getConfirmedConnections();
-            log.info("nodeAddressesOfConfirmedConnections=" + nodeAddressesOfConfirmedConnections);
-            log.info("allConfirmedConnections=" + allConfirmedConnections);
-            log.info("Nr of connections: {} / {} (nodeAddressesOfConfirmedConnections / allConfirmedConnections)", nodeAddressesOfConfirmedConnections.size(), allConfirmedConnections.size());
-            UserThread.execute(() -> numConnectedPeers.set(nodeAddressesOfConfirmedConnections.size()));
+            UserThread.execute(() -> numConnectedPeers.set(networkNode.getNodeAddressesOfConfirmedConnections().size()));
         };
 
         networkNode = useLocalhost ? new LocalhostNetworkNode(port) : new TorNetworkNode(port, torDir);
@@ -265,7 +260,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         Optional<NodeAddress> seedNodeOfPreliminaryDataRequest = requestDataManager.getNodeOfPreliminaryDataRequest();
         checkArgument(seedNodeOfPreliminaryDataRequest.isPresent(),
                 "seedNodeOfPreliminaryDataRequest must be present");
-        peerExchangeManager.requestReportedPeers(seedNodeOfPreliminaryDataRequest.get());
+        peerExchangeManager.requestReportedPeersFromSeedNodes(seedNodeOfPreliminaryDataRequest.get());
 
         isBootstrapped = true;
         p2pServiceListeners.stream().forEach(P2PServiceListener::onBootstrapComplete);

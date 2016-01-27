@@ -178,9 +178,8 @@ public class PeerManager implements ConnectionListener, MessageListener {
                                 "MAX_CONNECTIONS_HIGH_PRIORITY limit of {}", MAX_CONNECTIONS_EXTENDED_2);
                         if (size > MAX_CONNECTIONS_EXTENDED_2) {
                             log.info("Lets try to remove any connection which is not of type DIRECT_MSG_PEER.");
-                            // All expect DIRECT_MSG_PEER type connections
+                            // All connections
                             candidates = allConnections.stream()
-                                    .filter(e -> e.getPeerType() != Connection.PeerType.DIRECT_MSG_PEER)
                                     .collect(Collectors.toList());
                         }
                     }
@@ -436,10 +435,11 @@ public class PeerManager implements ConnectionListener, MessageListener {
     }
 
     private void printConnectedPeers() {
-        if (!networkNode.getNodeAddressesOfConfirmedConnections().isEmpty()) {
+        if (!networkNode.getConfirmedConnections().isEmpty()) {
             StringBuilder result = new StringBuilder("\n\n------------------------------------------------------------\n" +
                     "Connected peers for node " + networkNode.getNodeAddress() + ":");
-            networkNode.getNodeAddressesOfConfirmedConnections().stream().forEach(e -> result.append("\n").append(e));
+            networkNode.getConfirmedConnections().stream().forEach(e -> result.append("\n")
+                    .append(e.getPeersNodeAddressOptional().get()).append(" ").append(e.getPeerType()));
             result.append("\n------------------------------------------------------------\n");
             log.info(result.toString());
         }

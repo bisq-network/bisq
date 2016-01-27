@@ -49,7 +49,6 @@ public class RequestDataManager implements MessageListener {
     private final Listener listener;
 
     private final Map<NodeAddress, RequestDataHandshake> requestDataHandshakeMap = new HashMap<>();
-
     private Optional<NodeAddress> nodeOfPreliminaryDataRequest = Optional.empty();
     private Timer requestDataTimer;
     private boolean dataUpdateRequested;
@@ -64,20 +63,17 @@ public class RequestDataManager implements MessageListener {
         this.networkNode = networkNode;
         this.dataStorage = dataStorage;
         this.peerManager = peerManager;
-        checkArgument(!seedNodeAddresses.isEmpty(), "seedNodeAddresses must not be empty.");
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
         this.listener = listener;
 
+        checkArgument(!seedNodeAddresses.isEmpty(), "seedNodeAddresses must not be empty.");
         networkNode.addMessageListener(this);
     }
 
     public void shutDown() {
         Log.traceCall();
-
         stopRequestDataTimer();
-
         networkNode.removeMessageListener(this);
-
         requestDataHandshakeMap.values().stream().forEach(RequestDataHandshake::shutDown);
     }
 
@@ -88,7 +84,10 @@ public class RequestDataManager implements MessageListener {
 
     public void requestPreliminaryData() {
         Log.traceCall();
-        requestDataFromRandomPeer(new ArrayList<>(seedNodeAddresses));
+        ArrayList<NodeAddress> nodeAddresses = new ArrayList<>(seedNodeAddresses);
+        NodeAddress nextCandidate = nodeAddresses.get(0);
+        nodeAddresses.remove(nextCandidate);
+        requestData(nextCandidate, nodeAddresses);
     }
 
     public void requestUpdatesData() {
@@ -113,8 +112,6 @@ public class RequestDataManager implements MessageListener {
     @Override
     public void onMessage(Message message, Connection connection) {
         if (message instanceof DataRequest) {
-            Log.traceCall(message.toString());
-            log.trace("Received {} at {}", message.getClass().getSimpleName(), connection);
             RequestDataHandshake requestDataHandshake = new RequestDataHandshake(networkNode, dataStorage, peerManager,
                     new RequestDataHandshake.Listener() {
                         @Override
@@ -125,11 +122,11 @@ public class RequestDataManager implements MessageListener {
 
                         @Override
                         public void onFault(String errorMessage) {
-                            log.info("RequestDataHandshake of inbound connection failed. Connection= {}",
+                            log.trace("RequestDataHandshake of inbound connection failed. {} Connection= {}",
                                     errorMessage, connection);
                         }
                     });
-            requestDataHandshake.onMessage(message, connection);
+            requestDataHandshake.onDataRequest(message, connection);
         }
     }
 
@@ -138,21 +135,15 @@ public class RequestDataManager implements MessageListener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void requestDataFromRandomPeer(List<NodeAddress> nodeAddresses) {
-        Log.traceCall("remainingNodeAddresses=" + nodeAddresses);
-        NodeAddress nextCandidate = nodeAddresses.get(new Random().nextInt(nodeAddresses.size()));
-        nodeAddresses.remove(nextCandidate);
-        requestData(nextCandidate, nodeAddresses);
-    }
-
     private void requestData(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
         Log.traceCall("nodeAddress=" + nodeAddress + " /  remainingNodeAddresses=" + remainingNodeAddresses);
-
         if (!requestDataHandshakeMap.containsKey(nodeAddress)) {
             RequestDataHandshake requestDataHandshake = new RequestDataHandshake(networkNode, dataStorage, peerManager,
                     new RequestDataHandshake.Listener() {
                         @Override
                         public void onComplete() {
+                            log.trace("RequestDataHandshake of outbound connection complete. nodeAddress= {}",
+                                    nodeAddress);
                             stopRequestDataTimer();
 
                             // need to remove before listeners are notified as they cause the update call
@@ -175,10 +166,14 @@ public class RequestDataManager implements MessageListener {
 
                         @Override
                         public void onFault(String errorMessage) {
+                            log.trace("RequestDataHandshake of outbound connection failed. {} nodeAddress= {}",
+                                    errorMessage, nodeAddress);
                             if (!remainingNodeAddresses.isEmpty()) {
                                 log.info("There are remaining nodes available for requesting data. " +
                                         "We will try requestDataFromPeers again.");
-                                requestDataFromRandomPeer(remainingNodeAddresses);
+                                NodeAddress nextCandidate = remainingNodeAddresses.get(0);
+                                remainingNodeAddresses.remove(nextCandidate);
+                                requestData(nextCandidate, remainingNodeAddresses);
                             } else {
                                 log.info("There is no remaining node available for requesting data. " +
                                         "That is expected if no other node is online.\n" +
@@ -219,7 +214,7 @@ public class RequestDataManager implements MessageListener {
             requestDataHandshakeMap.put(nodeAddress, requestDataHandshake);
             requestDataHandshake.requestData(nodeAddress);
         } else {
-            log.warn("We have started already a DataRequest request to peer. " + nodeAddress);
+            log.warn("We have started already a requestDataHandshake to peer. " + nodeAddress);
         }
     }
 
