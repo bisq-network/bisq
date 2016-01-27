@@ -397,7 +397,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             public void onDisconnect(Reason reason, Connection connection) {
                 if (connection.getPeersNodeAddressOptional().isPresent() &&
                         connection.getPeersNodeAddressOptional().get().equals(offer.getOffererNodeAddress()))
-                    offerWarning.set("You cannot take that offer because the offerer went offline.");
+                    offerWarning.set("You lost connection to the offerer.\n" +
+                            "He might have gone offline or has closed the connection to you because of " +
+                            "many other connections.");
             }
 
             @Override
