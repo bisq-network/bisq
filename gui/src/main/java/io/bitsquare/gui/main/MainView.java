@@ -87,7 +87,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Label btcSplashInfo;
     private List<String> persistedFilesCorrupted;
     private static BorderPane baseApplicationContainer;
-    private Popup p2PNetworkWarnMsgPopup;
+    private Popup p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
 
     @Inject
     public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, Transitions transitions,
@@ -351,10 +351,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         model.walletServiceErrorMsg.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 btcInfoLabel.setId("splash-error-state-msg");
-                new Popup().warning(newValue + "\nPlease check your internet connection or try to restart the application.")
-                        .show();
+                btcNetworkWarnMsgPopup = new Popup().warning(newValue).show();
             } else {
                 btcInfoLabel.setId("footer-pane");
+                if (p2PNetworkWarnMsgPopup != null)
+                    p2PNetworkWarnMsgPopup.hide();
             }
         });
 

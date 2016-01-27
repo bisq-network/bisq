@@ -270,11 +270,12 @@ public class MainViewModel implements ViewModel {
                 if (numberofBtcPeersTimer != null)
                     numberofBtcPeersTimer.cancel();
                 numberofBtcPeersTimer = UserThread.runAfter(() -> {
-                    if (walletService.numPeersProperty().get() == 0)
+                    if (walletService.numPeersProperty().get() == 0) {
                         walletServiceErrorMsg.set("You lost the connection to all bitcoin network peers.\n" +
                                 "Maybe you lost your internet connection or your computer was in hibernate/sleep mode.");
-                    else
+                    } else {
                         walletServiceErrorMsg.set(null);
+                    }
                 }, 5);
             } else if ((int) oldValue == 0 && (int) newValue > 0) {
                 walletServiceErrorMsg.set(null);
