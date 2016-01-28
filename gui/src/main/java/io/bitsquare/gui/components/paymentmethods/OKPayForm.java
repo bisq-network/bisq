@@ -31,6 +31,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
@@ -127,7 +128,8 @@ public class OKPayForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", okPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(okPayAccount.getPaymentMethod().getId()));
-        addLabelTextField(gridPane, ++gridRow, "Account nr.:", okPayAccount.getAccountNr());
+        TextField field = addLabelTextField(gridPane, ++gridRow, "Account nr.:", okPayAccount.getAccountNr()).second;
+        field.setMouseTransparent(false);
         addAllowedPeriod();
         addCurrenciesGrid(false);
     }

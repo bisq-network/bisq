@@ -26,6 +26,7 @@ import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.payment.SwishAccount;
 import io.bitsquare.payment.SwishAccountContractData;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,7 +94,8 @@ public class SwishForm extends PaymentMethodForm {
         addLabelTextField(gridPane, gridRow, "Account name:", swishAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(swishAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", swishAccount.getHolderName());
-        addLabelTextField(gridPane, ++gridRow, "Mobile nr.:", swishAccount.getMobileNr());
+        TextField field = addLabelTextField(gridPane, ++gridRow, "Mobile nr.:", swishAccount.getMobileNr()).second;
+        field.setMouseTransparent(false);
         addLabelTextField(gridPane, ++gridRow, "Currency:", swishAccount.getSingleTradeCurrency().getCodeAndName());
         addAllowedPeriod();
     }

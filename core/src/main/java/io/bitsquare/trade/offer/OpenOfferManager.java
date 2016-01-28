@@ -18,6 +18,7 @@
 package io.bitsquare.trade.offer;
 
 import com.google.inject.Inject;
+import io.bitsquare.app.Log;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.UserThread;
@@ -148,14 +149,14 @@ public class OpenOfferManager {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                UserThread.execute(() -> rePublishOffers());
+                UserThread.execute(OpenOfferManager.this::rePublishOffers);
             }
         };
         timer.scheduleAtFixedRate(timerTask, 500, period);
     }
 
     private void rePublishOffers() {
-        if (!openOffers.isEmpty()) log.trace("rePublishOffers");
+        Log.traceCall("Number of offer for republish: " + openOffers.size());
         for (OpenOffer openOffer : openOffers) {
             offerBookService.republishOffer(openOffer.getOffer(),
                     () -> log.debug("Successful added offer to P2P network"),

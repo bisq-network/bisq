@@ -58,9 +58,8 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
     private AreaChart<Number, Number> areaChart;
     private ComboBox<TradeCurrency> currencyComboBox;
     private Subscription tradeCurrencySubscriber;
-    private final StringProperty priceColumnLabel = new SimpleStringProperty("Price (EUR/BTC)");
-    private final StringProperty amountColumnLabel = new SimpleStringProperty("Amount (BTC)");
-    private final StringProperty volumeColumnLabel = new SimpleStringProperty("Volume (EUR)");
+    private final StringProperty priceColumnLabel = new SimpleStringProperty();
+    private final StringProperty volumeColumnLabel = new SimpleStringProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -129,10 +128,10 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
                 newValue -> {
                     String code = newValue.getCode();
                     areaChart.setTitle("Offer book for " + newValue.getName());
-                    xAxis.setLabel(priceColumnLabel.get());
-                    xAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(xAxis, "", ""));
                     priceColumnLabel.set("Price (" + code + "/BTC)");
                     volumeColumnLabel.set("Volume (" + code + ")");
+                    xAxis.setLabel(priceColumnLabel.get());
+                    xAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(xAxis, "", ""));
                 });
 
         buyOfferTableView.setItems(model.getBuyOfferList());
@@ -178,7 +177,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
 
         // amount
         TableColumn<Offer, Offer> amountColumn = new TableColumn<>("Amount (BTC)");
-        amountColumn.textProperty().bind(amountColumnLabel);
+        amountColumn.setText("Amount (BTC)");
         amountColumn.setMinWidth(120);
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
@@ -202,7 +201,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         tableView.getColumns().add(amountColumn);
 
         // volume
-        TableColumn<Offer, Offer> volumeColumn = new TableColumn<>("Amount (EUR)");
+        TableColumn<Offer, Offer> volumeColumn = new TableColumn<>("Amount (BTC)");
         volumeColumn.setMinWidth(120);
         volumeColumn.textProperty().bind(volumeColumnLabel);
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));

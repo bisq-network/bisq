@@ -209,16 +209,16 @@ class OfferBookViewModel extends ActivatableViewModel {
             String methodCountryCode = offer.getPaymentMethodCountryCode();
 
             if (methodCountryCode != null)
-                result = method + "\nOfferers country of bank: " + CountryUtil.getNameByCode(methodCountryCode);
+                result = method + "\n\nOfferers seat of bank country:\n" + CountryUtil.getNameByCode(methodCountryCode);
             else
                 result = method;
 
             List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
             if (acceptedCountryCodes != null && acceptedCountryCodes.size() > 0) {
                 if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes))
-                    result += "\nAccepted taker countries: All Euro countries";
+                    result += "\n\nAccepted takers seat of bank countries:\nAll Euro countries";
                 else
-                    result += "\nAccepted taker countries: " + CountryUtil.getNamesByCodesString(acceptedCountryCodes);
+                    result += "\n\nAccepted taker seat of bank countries:\n" + CountryUtil.getNamesByCodesString(acceptedCountryCodes);
             }
         }
         return result;

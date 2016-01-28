@@ -244,8 +244,10 @@ public class SepaForm extends PaymentMethodForm {
         addLabelTextField(gridPane, gridRow, "Account name:", sepaAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(sepaAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", sepaAccount.getHolderName());
-        addLabelTextField(gridPane, ++gridRow, "IBAN:", sepaAccount.getIban());
-        addLabelTextField(gridPane, ++gridRow, "BIC/SWIFT:", sepaAccount.getBic());
+        TextField ibanField = addLabelTextField(gridPane, ++gridRow, "IBAN:", sepaAccount.getIban()).second;
+        ibanField.setMouseTransparent(false);
+        TextField bicField = addLabelTextField(gridPane, ++gridRow, "BIC/SWIFT:", sepaAccount.getBic()).second;
+        bicField.setMouseTransparent(false);
         addLabelTextField(gridPane, ++gridRow, "Location of Bank:", sepaAccount.getCountry().name);
         addLabelTextField(gridPane, ++gridRow, "Currency:", sepaAccount.getSingleTradeCurrency().getCodeAndName());
         addAllowedPeriod();

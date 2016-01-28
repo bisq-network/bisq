@@ -30,6 +30,7 @@ import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
@@ -70,7 +71,7 @@ public class BlockChainForm extends PaymentMethodForm {
 
         addTradeCurrencyComboBox();
         currencyComboBox.setPrefWidth(250);
-        addressInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Address:").second;
+        addressInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Receiving altcoin address:").second;
         addressInputTextField.setValidator(altCoinAddressValidator);
 
         addressInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -98,7 +99,8 @@ public class BlockChainForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", blockChainAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(blockChainAccount.getPaymentMethod().getId()));
-        addLabelTextField(gridPane, ++gridRow, "Address:", blockChainAccount.getAddress());
+        TextField field = addLabelTextField(gridPane, ++gridRow, "Receiving altcoin address:", blockChainAccount.getAddress()).second;
+        field.setMouseTransparent(false);
         addLabelTextField(gridPane, ++gridRow, "Crypto currency:", blockChainAccount.getSingleTradeCurrency().getCodeAndName());
         addAllowedPeriod();
     }

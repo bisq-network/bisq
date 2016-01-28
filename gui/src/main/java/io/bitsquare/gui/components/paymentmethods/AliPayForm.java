@@ -26,6 +26,7 @@ import io.bitsquare.payment.AliPayAccount;
 import io.bitsquare.payment.AliPayAccountContractData;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +84,8 @@ public class AliPayForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", aliPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(aliPayAccount.getPaymentMethod().getId()));
-        addLabelTextField(gridPane, ++gridRow, "Account nr.:", aliPayAccount.getAccountNr());
+        TextField field = addLabelTextField(gridPane, ++gridRow, "Account nr.:", aliPayAccount.getAccountNr()).second;
+        field.setMouseTransparent(false);
         addLabelTextField(gridPane, ++gridRow, "Currency:", aliPayAccount.getSingleTradeCurrency().getCodeAndName());
         addAllowedPeriod();
     }

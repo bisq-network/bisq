@@ -34,12 +34,16 @@ class PaymentAccountDataModel extends ActivatableDataModel {
     @Inject
     public PaymentAccountDataModel(User user) {
         this.user = user;
-        setChangeListener = change -> paymentAccounts.setAll(user.getPaymentAccounts());
+        setChangeListener = change -> fillAndSortPaymentAccounts();
     }
 
     @Override
     protected void activate() {
         user.getPaymentAccountsAsObservable().addListener(setChangeListener);
+        fillAndSortPaymentAccounts();
+    }
+
+    private void fillAndSortPaymentAccounts() {
         paymentAccounts.setAll(user.getPaymentAccounts());
     }
 

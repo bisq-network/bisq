@@ -161,13 +161,16 @@ public class P2PDataStorage implements MessageListener {
 
             StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n");
             sb.append("Data set after addProtectedExpirableData:");
-            map.values().stream().forEach(e -> sb.append("\n").append(e.toString()).append("\n"));
+            if (map.values().size() < 10)
+                map.values().stream().forEach(e -> sb.append("\n").append(e.toString()).append("\n"));
+            else
+                map.values().stream().forEach(e -> sb.append("\n").append("Truncated logs:").append(map.values().size())
+                        .append(" entries\n").append(e.toString().substring(0, 40)).append("...\n"));
             sb.append("\n------------------------------------------------------------\n");
             log.info(sb.toString());
 
             if (rePublish || !containsKey)
                 broadcast(new AddDataMessage(protectedData), sender);
-
 
             hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedData));
         } else {
