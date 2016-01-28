@@ -100,6 +100,7 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
                 onSelectAccount(paymentAccountsComboBox.getSelectionModel().getSelectedItem());
         };
         paymentAccountsComboBox.setOnAction(paymentAccountsComboBoxHandler);
+        paymentAccountsComboBox.setVisibleRowCount(20);
 
         model.getPaymentAccounts().addListener(
                 (ListChangeListener<PaymentAccount>) c -> paymentAccountsComboBox.setDisable(model.getPaymentAccounts().size() == 0));

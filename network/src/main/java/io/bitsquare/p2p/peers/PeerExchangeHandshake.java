@@ -64,7 +64,6 @@ public class PeerExchangeHandshake implements MessageListener {
     }
 
     public void shutDown() {
-        Log.traceCall();
         networkNode.removeMessageListener(this);
         stopTimeoutTimer();
     }
@@ -76,11 +75,12 @@ public class PeerExchangeHandshake implements MessageListener {
 
     public void requestReportedPeers(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
         Log.traceCall("nodeAddress=" + nodeAddress);
+        Log.traceCall("this=" + this);
         checkNotNull(networkNode.getNodeAddress(), "My node address must not be null at requestReportedPeers");
         checkArgument(timeoutTimer == null, "requestData must not be called twice.");
 
         timeoutTimer = UserThread.runAfter(() -> {
-                    log.info("timeoutTimer called");
+                    log.info("timeoutTimer called on " + this);
                     peerManager.shutDownConnection(nodeAddress);
                     shutDown();
                     listener.onFault("A timeout occurred");
@@ -112,10 +112,11 @@ public class PeerExchangeHandshake implements MessageListener {
     }
 
     public void onGetPeersRequest(GetPeersRequest message, final Connection connection) {
+        Log.traceCall("message=" + message);
+        Log.traceCall("this=" + this);
         checkArgument(timeoutTimer == null, "requestData must not be called twice.");
-
         timeoutTimer = UserThread.runAfter(() -> {
-                    log.info("timeoutTimer called");
+                    log.info("timeoutTimer called on " + this);
                     peerManager.shutDownConnection(connection);
                     shutDown();
                     listener.onFault("A timeout occurred");
@@ -165,6 +166,7 @@ public class PeerExchangeHandshake implements MessageListener {
     public void onMessage(Message message, Connection connection) {
         if (message instanceof GetPeersResponse) {
             Log.traceCall(message.toString() + " / connection=" + connection);
+            Log.traceCall("this=" + this);
             GetPeersResponse getPeersResponse = (GetPeersResponse) message;
             if (getPeersResponse.requestNonce == nonce) {
                 stopTimeoutTimer();

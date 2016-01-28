@@ -30,10 +30,10 @@
         <columns>
             <TableColumn text="Trade ID" fx:id="tradeIdColumn" minWidth="80" sortable="false"/>
             <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="150"/>
-            <TableColumn text="Trade amount in BTC" fx:id="amountColumn" minWidth="130" sortable="false"/>
-            <TableColumn text="Price" fx:id="priceColumn" minWidth="100" sortable="false"/>
-            <TableColumn text="Trade amount" fx:id="volumeColumn" minWidth="130" sortable="false"/>
-            <TableColumn text="Trade type" fx:id="directionColumn" minWidth="80" sortable="false"/>
+            <TableColumn text="Trade amount in BTC" fx:id="amountColumn" minWidth="130"/>
+            <TableColumn text="Price" fx:id="priceColumn" minWidth="100"/>
+            <TableColumn text="Trade amount" fx:id="volumeColumn" minWidth="130"/>
+            <TableColumn text="Trade type" fx:id="directionColumn" minWidth="80"/>
             <TableColumn text="State" fx:id="stateColumn" minWidth="80" sortable="false"/>
         </columns>
     </TableView>
