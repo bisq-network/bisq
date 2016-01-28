@@ -177,7 +177,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BTS", "BitShares"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("XRP", "Ripple"));
-        result.add(new CryptoCurrency("STR", "Stellar"));
+        // Stellar (XLM Lumen) uses an additional memo field. We dont support that for now
+        //result.add(new CryptoCurrency("STR", "Stellar")); 
 
         return result;
     }
