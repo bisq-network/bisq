@@ -27,9 +27,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
 
+import java.util.function.Consumer;
+
 public class TextFieldWithCopyIcon extends AnchorPane {
 
     private final StringProperty text = new SimpleStringProperty();
+    private final TextField textField;
+    private Consumer<String> handler;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -44,20 +48,26 @@ public class TextFieldWithCopyIcon extends AnchorPane {
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         AnchorPane.setRightAnchor(copyIcon, 0.0);
         copyIcon.setOnMouseClicked(e -> {
-            if (getText() != null && getText().length() > 0)
+            if (getText() != null && getText().length() > 0) {
                 Utilities.copyToClipboard(getText());
+                if (handler != null)
+                    handler.accept(getText());
+            }
         });
-        TextField txIdLabel = new TextField();
-        txIdLabel.setEditable(false);
-        txIdLabel.textProperty().bindBidirectional(text);
-        AnchorPane.setRightAnchor(txIdLabel, 30.0);
-        AnchorPane.setLeftAnchor(txIdLabel, 0.0);
-        txIdLabel.focusTraversableProperty().set(focusTraversableProperty().get());
-        focusedProperty().addListener((ov, oldValue, newValue) -> txIdLabel.requestFocus());
+        textField = new TextField();
+        textField.setEditable(false);
+        textField.textProperty().bindBidirectional(text);
+        AnchorPane.setRightAnchor(textField, 30.0);
+        AnchorPane.setLeftAnchor(textField, 0.0);
+        textField.focusTraversableProperty().set(focusTraversableProperty().get());
+        focusedProperty().addListener((ov, oldValue, newValue) -> textField.requestFocus());
 
-        getChildren().addAll(txIdLabel, copyIcon);
+        getChildren().addAll(textField, copyIcon);
     }
 
+    public void setPromptText(String value) {
+        textField.setPromptText(value);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter/Setter
@@ -75,4 +85,7 @@ public class TextFieldWithCopyIcon extends AnchorPane {
         this.text.set(text);
     }
 
+    public void setHandler(Consumer<String> handler) {
+        this.handler = handler;
+    }
 }

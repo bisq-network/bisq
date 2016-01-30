@@ -22,13 +22,11 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.components.AddressTextField;
-import io.bitsquare.gui.components.BalanceTextField;
-import io.bitsquare.gui.components.InputTextField;
-import io.bitsquare.gui.components.TitledGroupBg;
+import io.bitsquare.gui.components.*;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
@@ -79,11 +77,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private TitledGroupBg payFundsPane;
     private Button showPaymentButton, takeOfferButton;
     private InputTextField amountTextField;
-    private TextField paymentMethodTextField, currencyTextField, totalToPayTextField, priceTextField, volumeTextField, amountRangeTextField;
+    private TextField paymentMethodTextField, currencyTextField, priceTextField, volumeTextField, amountRangeTextField;
     private Label buyLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
             amountBtcLabel, priceCurrencyLabel,
             volumeCurrencyLabel, amountRangeBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, takeOfferSpinnerInfoLabel;
-
+    private TextFieldWithCopyIcon totalToPayTextField;
     private PopOver totalToPayInfoPopover;
     private OfferView.CloseHandler closeHandler;
     private ChangeListener<Boolean> amountFocusedListener;
@@ -483,11 +481,15 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         GridPane.setMargin(totalToPayBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         GridPane.setRowIndex(totalToPayBox, gridRow);
         gridPane.getChildren().add(totalToPayBox);
-        totalToPayTextField = new TextField();
-        totalToPayTextField.setEditable(false);
+        totalToPayTextField = new TextFieldWithCopyIcon();
         totalToPayTextField.setFocusTraversable(false);
         totalToPayTextField.setVisible(false);
         totalToPayTextField.setPromptText(BSResources.get("createOffer.fundsBox.totalsNeeded.prompt"));
+        totalToPayTextField.setHandler(value -> {
+            String[] strings = value.split(" ");
+            if (strings.length > 1)
+                Utilities.copyToClipboard(strings[0]); // exclude the BTC postfix
+        });
         GridPane.setRowIndex(totalToPayTextField, gridRow);
         GridPane.setColumnIndex(totalToPayTextField, 1);
         GridPane.setMargin(totalToPayTextField, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));

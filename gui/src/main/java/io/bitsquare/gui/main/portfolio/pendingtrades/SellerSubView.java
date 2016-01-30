@@ -101,7 +101,7 @@ public class SellerSubView extends TradeSubView {
 
                 ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText(BSResources.get("Deposit transaction has at least one blockchain " +
                                 "confirmation. " +
-                                "Waiting that other trader starts the {0} payment.",
+                                "Waiting that the bitcoin buyer starts the {0} payment.",
                         model.getCurrencyCode()));
                 break;
             case REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED:

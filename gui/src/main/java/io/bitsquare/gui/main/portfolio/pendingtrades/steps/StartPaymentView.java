@@ -74,7 +74,7 @@ public class StartPaymentView extends TradeStepDetailsView {
             new Popup().information("You need to transfer now the agreed amount to your trading partner.\n" +
                     "Please take care that you use the exact data presented here, including the reference text\n" +
                     "Please do not click the \"Payment started\" button before you have completed the transfer.\n" +
-                    "Take care that you make the transfer soon to not exceed the trading period.")
+                    "Make sure that you make the transfer soon to not exceed the trading period.")
                     .onClose(() -> preferences.dontShowAgain(key))
                     .show();
         }
@@ -144,7 +144,7 @@ public class StartPaymentView extends TradeStepDetailsView {
             String key = PopupId.PAYMENT_SENT;
             if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
                 new Popup().headLine("Confirmation")
-                        .message("Do you have transferred the payment to your trading partner?")
+                        .message("Did you transfer the payment to your trading partner?")
                         .dontShowAgainId(key, preferences)
                         .actionButtonText("Yes I have started the payment")
                         .closeButtonText("No")
