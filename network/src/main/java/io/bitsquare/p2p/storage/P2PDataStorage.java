@@ -160,14 +160,11 @@ public class P2PDataStorage implements MessageListener {
             storage.queueUpForSave(sequenceNumberMap, 5000);
 
             StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n");
-            sb.append("Data set after addProtectedExpirableData:");
-            if (map.values().size() < 10)
-                map.values().stream().forEach(e -> sb.append("\n").append(e.toString()).append("\n"));
-            else
-                map.values().stream().forEach(e -> sb.append("\n").append("Truncated logs:").append(map.values().size())
-                        .append(" entries\n").append(e.toString().substring(0, 40)).append("...\n"));
+            sb.append("Data set after addProtectedExpirableData (truncated)");
+            map.values().stream().forEach(e -> sb.append("\n").append(e.toString().substring(0, 40)).append("...\n"));
             sb.append("\n------------------------------------------------------------\n");
-            log.info(sb.toString());
+            log.trace(sb.toString());
+            log.info("Data set after addProtectedExpirableData: size=" + map.values().size());
 
             if (rePublish || !containsKey)
                 broadcast(new AddDataMessage(protectedData), sender);
@@ -282,10 +279,12 @@ public class P2PDataStorage implements MessageListener {
         hashMapChangedListeners.stream().forEach(e -> e.onRemoved(protectedData));
 
         StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n" +
-                "Data set after removeProtectedExpirableData:");
-        map.values().stream().forEach(e -> sb.append("\n").append(e.toString()));
+                "Data set after removeProtectedExpirableData: (truncated)");
+        map.values().stream().forEach(e -> sb.append("\n").append(e.toString().substring(0, 40)).append("...\n"));
         sb.append("\n------------------------------------------------------------\n");
-        log.info(sb.toString());
+        log.trace(sb.toString());
+        log.info("Data set after addProtectedExpirableData: size=" + map.values().size());
+
     }
 
     private boolean isSequenceNrValid(ProtectedData data, ByteArray hashOfData) {

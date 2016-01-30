@@ -126,6 +126,7 @@ public class RequestDataManager implements MessageListener {
                         public void onFault(String errorMessage) {
                             log.trace("RequestDataHandshake of inbound connection failed. {} Connection= {}",
                                     errorMessage, connection);
+                            peerManager.penalizeUnreachablePeer(connection);
                         }
                     });
             requestDataHandshake.onDataRequest(message, connection);
@@ -170,6 +171,9 @@ public class RequestDataManager implements MessageListener {
                         public void onFault(String errorMessage) {
                             log.trace("RequestDataHandshake of outbound connection failed. {} nodeAddress= {}",
                                     errorMessage, nodeAddress);
+
+                            peerManager.penalizeUnreachablePeer(nodeAddress);
+                            
                             if (!remainingNodeAddresses.isEmpty()) {
                                 log.info("There are remaining nodes available for requesting data. " +
                                         "We will try requestDataFromPeers again.");

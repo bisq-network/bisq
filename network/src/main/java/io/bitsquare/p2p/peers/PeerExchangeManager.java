@@ -116,6 +116,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
                         public void onFault(String errorMessage) {
                             log.trace("PeerExchangeHandshake of outbound connection failed. {} connection= {}",
                                     errorMessage, connection);
+                            peerManager.penalizeUnreachablePeer(connection);
                         }
                     });
             peerExchangeHandshake.onGetPeersRequest((GetPeersRequest) message, connection);
@@ -147,6 +148,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
                                     errorMessage, nodeAddress);
 
                             peerExchangeHandshakeMap.remove(nodeAddress);
+                            peerManager.penalizeUnreachablePeer(nodeAddress);
                             if (!remainingNodeAddresses.isEmpty()) {
                                 log.info("There are remaining nodes available for requesting peers. " +
                                         "We will try getReportedPeers again.");
@@ -186,7 +188,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
             Collections.shuffle(nodeAddresses);
             requestReportedPeersFromRandomPeer(nodeAddresses);
         }
-            
+
 
         // We try to get sufficient connections by connecting to reported and persisted peers
         if (numberOfConnectedSeedNodes == 0) {
@@ -197,16 +199,16 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
             connectToMorePeers();
         }
 
-        // Use all outbound connections older than 4 min. for updating reported peers and make sure we keep the connection alive
+        // Use all outbound connections older than 10 min. for updating reported peers and make sure we keep the connection alive
         // Inbound connections should be maintained be the requesting peer
         confirmedConnections.stream()
                 .filter(c -> c.getPeersNodeAddressOptional().isPresent() &&
                         c instanceof OutboundConnection &&
-                        new Date().getTime() - c.getLastActivityDate().getTime() > 4 * 60 * 1000)
-                .forEach(c -> UserThread.runAfterRandomDelay(() -> {
+                        new Date().getTime() - c.getLastActivityDate().getTime() > 10 * 60 * 1000)
+                .forEach(c -> {
                     log.trace("Call requestReportedPeers from maintainConnections");
                     requestReportedPeers(c.getPeersNodeAddressOptional().get(), new ArrayList<>());
-                }, 3, 5));
+                });
     }
 
     private void connectToMorePeers() {
@@ -228,6 +230,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
                             !peerManager.isSelf(e) &&
                             !peerManager.isConfirmed(e))
                     .collect(Collectors.toSet()));
+            log.info("Sorted and filtered list: list.size()=" + list.size());
             log.trace("Sorted and filtered list: list=" + list);
             if (!list.isEmpty()) {
                 NodeAddress nextCandidate = list.get(0);

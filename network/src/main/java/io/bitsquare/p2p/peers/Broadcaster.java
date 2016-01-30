@@ -39,13 +39,13 @@ public class Broadcaster {
             receivers.stream()
                     .filter(connection -> !connection.getPeersNodeAddressOptional().get().equals(sender))
                     .forEach(connection -> {
-                        log.trace("Broadcast message from " + networkNode.getNodeAddress() + " to " +
+                        log.trace("Broadcast message to " +
                                 connection.getPeersNodeAddressOptional().get() + ".");
                         SettableFuture<Connection> future = networkNode.sendMessage(connection, message);
                         Futures.addCallback(future, new FutureCallback<Connection>() {
                             @Override
                             public void onSuccess(Connection connection) {
-                                log.trace("Broadcast from " + networkNode.getNodeAddress() + " to " + connection + " succeeded.");
+                                log.trace("Broadcast to " + connection + " succeeded.");
                                 listeners.stream().forEach(listener -> {
                                     listener.onBroadcasted(message);
                                     listeners.remove(listener);

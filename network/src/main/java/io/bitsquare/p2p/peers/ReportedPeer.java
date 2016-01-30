@@ -11,7 +11,7 @@ public class ReportedPeer implements Serializable {
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     public final NodeAddress nodeAddress;
-    public final Date lastActivityDate;
+    public Date lastActivityDate;
 
     public ReportedPeer(NodeAddress nodeAddress, Date lastActivityDate) {
         this.nodeAddress = nodeAddress;
@@ -20,6 +20,10 @@ public class ReportedPeer implements Serializable {
 
     public ReportedPeer(NodeAddress nodeAddress) {
         this(nodeAddress, null);
+    }
+
+    public void setLastActivityDate(Date lastActivityDate) {
+        this.lastActivityDate = lastActivityDate;
     }
 
     // We don't use the lastActivityDate for identity
