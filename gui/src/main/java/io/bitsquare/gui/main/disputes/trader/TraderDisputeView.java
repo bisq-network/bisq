@@ -225,7 +225,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private void onRequestUpload() {
         if (tempAttachments.size() < 3) {
             FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Open file to attach");
+            int maxSizeInKB = Connection.getMaxMsgSize() / 1024;
+            fileChooser.setTitle("Open file to attach (max. file size: " + maxSizeInKB + " kb)");
            /* if (Utilities.isUnix())
                 fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));*/
             File result = fileChooser.showOpenDialog(stage);
@@ -238,7 +239,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             tempAttachments.add(new DisputeDirectMessage.Attachment(result.getName(), filesAsBytes));
                             inputTextArea.setText(inputTextArea.getText() + "\n[Attachment " + result.getName() + "]");
                         } else {
-                            new Popup().error("The max. allowed file size is 100 kB.").show();
+                            new Popup().error("The max. allowed file size is " + maxSizeInKB + " kB.").show();
                         }
                     } catch (java.io.IOException e) {
                         e.printStackTrace();

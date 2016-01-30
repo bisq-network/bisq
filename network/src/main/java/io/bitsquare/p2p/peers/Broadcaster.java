@@ -8,6 +8,8 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.storage.messages.DataBroadcastMessage;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -27,12 +29,16 @@ public class Broadcaster {
     private final NetworkNode networkNode;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
+
+    private IntegerProperty numOfBroadcasts = new SimpleIntegerProperty(0);
+
     public Broadcaster(NetworkNode networkNode) {
         this.networkNode = networkNode;
     }
 
     public void broadcast(DataBroadcastMessage message, @Nullable NodeAddress sender) {
         Log.traceCall("Sender " + sender + ". Message " + message.toString());
+        numOfBroadcasts.set(0);
         Set<Connection> receivers = networkNode.getConfirmedConnections();
         if (!receivers.isEmpty()) {
             log.info("Broadcast message to {} peers. Message: {}", receivers.size(), message);
@@ -46,9 +52,9 @@ public class Broadcaster {
                             @Override
                             public void onSuccess(Connection connection) {
                                 log.trace("Broadcast to " + connection + " succeeded.");
+                                numOfBroadcasts.set(numOfBroadcasts.get() + 1);
                                 listeners.stream().forEach(listener -> {
                                     listener.onBroadcasted(message);
-                                    listeners.remove(listener);
                                 });
                             }
 
@@ -64,9 +70,16 @@ public class Broadcaster {
         }
     }
 
+    public IntegerProperty getNumOfBroadcastsProperty() {
+        return numOfBroadcasts;
+    }
+
     // That listener gets immediately removed after the handler is called
-    public void addOneTimeListener(Listener listener) {
+    public void addListener(Listener listener) {
         listeners.add(listener);
     }
 
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
+    }
 }

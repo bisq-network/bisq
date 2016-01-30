@@ -161,7 +161,8 @@ public class P2PDataStorage implements MessageListener {
 
             StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n");
             sb.append("Data set after addProtectedExpirableData (truncated)");
-            map.values().stream().forEach(e -> sb.append("\n").append(e.toString().substring(0, 40)).append("...\n"));
+            map.values().stream().forEach(e -> sb.append("\n").append(e.toString()
+                    .substring(0, Math.min(50, e.toString().length()))).append("...\n"));
             sb.append("\n------------------------------------------------------------\n");
             log.trace(sb.toString());
             log.info("Data set after addProtectedExpirableData: size=" + map.values().size());
@@ -280,7 +281,8 @@ public class P2PDataStorage implements MessageListener {
 
         StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n" +
                 "Data set after removeProtectedExpirableData: (truncated)");
-        map.values().stream().forEach(e -> sb.append("\n").append(e.toString().substring(0, 40)).append("...\n"));
+        map.values().stream().forEach(e -> sb.append("\n").append(e.toString()
+                .substring(0, Math.min(50, e.toString().length()))).append("...\n"));
         sb.append("\n------------------------------------------------------------\n");
         log.trace(sb.toString());
         log.info("Data set after addProtectedExpirableData: size=" + map.values().size());

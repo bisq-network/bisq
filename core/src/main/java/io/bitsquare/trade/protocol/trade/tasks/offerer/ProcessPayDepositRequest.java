@@ -66,7 +66,7 @@ public class ProcessPayDepositRequest extends TradeTask {
             // We apply the payment ID in case its a cryptoNote coin. It is created form the hash of the trade ID
             if (paymentAccountContractData instanceof BlockChainAccountContractData &&
                     CurrencyUtil.isCryptoNoteCoin(processModel.getOffer().getCurrencyCode())) {
-                String paymentId = Hash.getHashAsHex(trade.getId()).substring(0, 32);
+                String paymentId = Hash.getHashAsHex(trade.getId()).substring(0, Math.min(32, trade.getId().length()));
                 ((BlockChainAccountContractData) paymentAccountContractData).setPaymentId(paymentId);
             }
 

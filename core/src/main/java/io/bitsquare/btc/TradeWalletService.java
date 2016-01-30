@@ -968,7 +968,7 @@ public class TradeWalletService {
         checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
         Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
         ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
-        checkNotNull(sigKey, "sigKey must not be null");
+        checkNotNull(sigKey, "signInput: sigKey must not be null. input.getOutpoint()=" + input.getOutpoint().toString());
         Sha256Hash hash = transaction.hashForSignature(inputIndex, scriptPubKey, Transaction.SigHash.ALL, false);
         ECKey.ECDSASignature signature = sigKey.sign(hash, aesKey);
         TransactionSignature txSig = new TransactionSignature(signature, Transaction.SigHash.ALL, false);

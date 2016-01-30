@@ -107,7 +107,6 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                     return outboundConnection;
                 } catch (Throwable throwable) {
                     if (!(throwable instanceof ConnectException || throwable instanceof IOException)) {
-                        throwable.printStackTrace();
                         log.error("Executing task failed. " + throwable.getMessage());
                     }
                     throw throwable;

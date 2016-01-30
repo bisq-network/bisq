@@ -28,7 +28,7 @@ public class NodeAddress implements Serializable {
     // We use just a few chars form or address to blur the potential receiver for sent messages
     public byte[] getAddressPrefixHash() {
         if (addressPrefixHash == null)
-            addressPrefixHash = Hash.getHash(getFullAddress().substring(0, 2));
+            addressPrefixHash = Hash.getHash(getFullAddress().substring(0, Math.min(2, getFullAddress().length())));
         return addressPrefixHash;
     }
 

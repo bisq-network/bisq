@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps;
 
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.common.util.Tuple3;
+import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.TxIdTextField;
 import io.bitsquare.gui.components.paymentmethods.*;
@@ -208,8 +209,9 @@ public class StartPaymentView extends TradeStepDetailsView {
         txIdTextField = addLabelTxIdTextField(gridPane, gridRow, "Deposit transaction ID:", Layout.FIRST_ROW_DISTANCE).second;
 
         TitledGroupBg accountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1, "Payments details", Layout.GROUP_DISTANCE);
-        addLabelTextFieldWithCopyIcon(gridPane, gridRow, "Amount to transfer:", model.getFiatAmount(),
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        TextFieldWithCopyIcon field = addLabelTextFieldWithCopyIcon(gridPane, gridRow, "Amount to transfer:", model.getFiatAmount(),
+                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        field.setCopyWithoutCurrencyPostFix(true);
         PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
 
         String paymentMethodName = paymentAccountContractData.getPaymentMethodName();

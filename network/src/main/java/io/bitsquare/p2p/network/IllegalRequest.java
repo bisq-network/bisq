@@ -3,7 +3,8 @@ package io.bitsquare.p2p.network;
 public enum IllegalRequest {
     MaxSizeExceeded(1),
     InvalidDataType(0),
-    WrongNetworkId(0);
+    WrongNetworkId(0),
+    TooManyMessages(1);
 
     public final int maxTolerance;
 

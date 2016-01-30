@@ -253,6 +253,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
                         !peerManager.isConfirmed(e))
                 .collect(Collectors.toList())
                 .stream()
+                .filter(e -> e.lastActivityDate != null)
                 .sorted((o1, o2) -> o2.lastActivityDate.compareTo(o1.lastActivityDate))
                 .map(e -> e.nodeAddress)
                 .collect(Collectors.toList());

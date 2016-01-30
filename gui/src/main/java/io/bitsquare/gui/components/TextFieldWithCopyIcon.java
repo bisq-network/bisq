@@ -27,13 +27,11 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
 
-import java.util.function.Consumer;
-
 public class TextFieldWithCopyIcon extends AnchorPane {
 
     private final StringProperty text = new SimpleStringProperty();
     private final TextField textField;
-    private Consumer<String> handler;
+    private boolean copyWithoutCurrencyPostFix;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -48,10 +46,19 @@ public class TextFieldWithCopyIcon extends AnchorPane {
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         AnchorPane.setRightAnchor(copyIcon, 0.0);
         copyIcon.setOnMouseClicked(e -> {
-            if (getText() != null && getText().length() > 0) {
-                Utilities.copyToClipboard(getText());
-                if (handler != null)
-                    handler.accept(getText());
+            String text = getText();
+            if (text != null && text.length() > 0) {
+                String copyText;
+                if (copyWithoutCurrencyPostFix) {
+                    String[] strings = text.split(" ");
+                    if (strings.length > 1)
+                        copyText = strings[0]; // exclude the BTC postfix
+                    else
+                        copyText = text;
+                } else {
+                    copyText = text;
+                }
+                Utilities.copyToClipboard(copyText);
             }
         });
         textField = new TextField();
@@ -85,7 +92,8 @@ public class TextFieldWithCopyIcon extends AnchorPane {
         this.text.set(text);
     }
 
-    public void setHandler(Consumer<String> handler) {
-        this.handler = handler;
+    public void setCopyWithoutCurrencyPostFix(boolean copyWithoutCurrencyPostFix) {
+        this.copyWithoutCurrencyPostFix = copyWithoutCurrencyPostFix;
     }
+
 }

@@ -8,7 +8,6 @@ import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.messages.data.UpdateDataRequest;
 import io.bitsquare.storage.Storage;
 import javafx.beans.value.ChangeListener;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,13 +43,13 @@ public class PeerManager implements ConnectionListener, MessageListener {
 
     private static final int MAX_REPORTED_PEERS = 1000;
     private static final int MAX_PERSISTED_PEERS = 500;
-    private static final long MAX_AGE = 14 * 24 * 60 * 60 * 1000; // max age for reported peers is 14 days
+    private static final long DAY = 24 * 60 * 60 * 1000; // max age for reported peers is 14 days
+    private static final long MAX_AGE = 14 * DAY; // max age for reported peers is 14 days
 
 
     private final NetworkNode networkNode;
     private final Set<NodeAddress> seedNodeAddresses;
-    @Nullable
-    private Storage<HashSet<ReportedPeer>> dbStorage;
+    private final Storage<HashSet<ReportedPeer>> dbStorage;
 
     private final HashSet<ReportedPeer> persistedPeers = new HashSet<>();
     private final Set<ReportedPeer> reportedPeers = new HashSet<>();
@@ -66,7 +65,12 @@ public class PeerManager implements ConnectionListener, MessageListener {
         this.networkNode = networkNode;
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
         networkNode.addConnectionListener(this);
-        createDbStorage(storageDir);
+        dbStorage = new Storage<>(storageDir);
+        HashSet<ReportedPeer> persistedPeers = dbStorage.initAndGetPersisted("persistedPeers");
+        if (persistedPeers != null) {
+            log.info("We have persisted reported peers. persistedPeers.size()=" + persistedPeers.size());
+            this.persistedPeers.addAll(persistedPeers);
+        }
 
         connectionNodeAddressListener = (observable, oldValue, newValue) -> {
             // Every time we get a new peer connected with a known address we check if we need to remove peers
@@ -77,21 +81,6 @@ public class PeerManager implements ConnectionListener, MessageListener {
                     checkMaxConnections(MAX_CONNECTIONS);
                 }, 3);
         };
-    }
-
-    private void createDbStorage(File storageDir) {
-        dbStorage = new Storage<>(storageDir);
-        initPersistedPeers();
-    }
-
-    private void initPersistedPeers() {
-        if (dbStorage != null) {
-            HashSet<ReportedPeer> persistedPeers = dbStorage.initAndGetPersisted("persistedPeers");
-            if (persistedPeers != null) {
-                log.info("We have persisted reported peers. persistedPeers.size()=" + persistedPeers.size());
-                this.persistedPeers.addAll(persistedPeers);
-            }
-        }
     }
 
     public void shutDown() {
@@ -124,10 +113,15 @@ public class PeerManager implements ConnectionListener, MessageListener {
     public void onDisconnect(Reason reason, Connection connection) {
         connection.getNodeAddressProperty().removeListener(connectionNodeAddressListener);
         connection.getPeersNodeAddressOptional().ifPresent(nodeAddress -> {
-            ReportedPeer reportedPeer = new ReportedPeer(nodeAddress);
-            reportedPeers.remove(reportedPeer);
-            persistedPeers.add(reportedPeer);
-            dbStorage.queueUpForSave(persistedPeers, 5000);
+            penalizeUnreachablePeer(nodeAddress);
+            Optional<ReportedPeer> reportedPeerOptional = reportedPeers.stream()
+                    .filter(e -> e.nodeAddress.equals(nodeAddress)).findAny();
+            if (reportedPeerOptional.isPresent()) {
+                ReportedPeer reportedPeer = reportedPeerOptional.get();
+                reportedPeers.remove(reportedPeer);
+                persistedPeers.add(reportedPeer);
+                dbStorage.queueUpForSave(persistedPeers, 5000);
+            }
         });
     }
 
@@ -215,12 +209,14 @@ public class PeerManager implements ConnectionListener, MessageListener {
 
     private void removeTooOldReportedPeers() {
         Set<ReportedPeer> reportedPeersToRemove = reportedPeers.stream()
-                .filter(reportedPeer -> new Date().getTime() - reportedPeer.lastActivityDate.getTime() > MAX_AGE)
+                .filter(reportedPeer -> reportedPeer.lastActivityDate != null &&
+                        new Date().getTime() - reportedPeer.lastActivityDate.getTime() > MAX_AGE)
                 .collect(Collectors.toSet());
         reportedPeersToRemove.forEach(this::removeReportedPeer);
 
         Set<ReportedPeer> persistedPeersToRemove = persistedPeers.stream()
-                .filter(reportedPeer -> new Date().getTime() - reportedPeer.lastActivityDate.getTime() > MAX_AGE)
+                .filter(reportedPeer -> reportedPeer.lastActivityDate != null &&
+                        new Date().getTime() - reportedPeer.lastActivityDate.getTime() > MAX_AGE)
                 .collect(Collectors.toSet());
         persistedPeersToRemove.forEach(this::removeFromPersistedPeers);
     }
@@ -312,6 +308,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
                     if (toRemove2 > 0) {
                         // now we remove second half with a list sorted by oldest lastActivityDate
                         list = new ArrayList<>(persistedPeers);
+                        list = list.stream().filter(e -> e.lastActivityDate != null).collect(Collectors.toList());
                         list.sort((o1, o2) -> o1.lastActivityDate.compareTo(o2.lastActivityDate));
                         for (int i = 0; i < toRemove2; i++) {
                             persistedPeers.remove(list.get(i));
@@ -330,10 +327,11 @@ public class PeerManager implements ConnectionListener, MessageListener {
     private void printReportedPeers() {
         if (!reportedPeers.isEmpty()) {
             StringBuilder result = new StringBuilder("\n\n------------------------------------------------------------\n" +
-                    "Reported peers for node " + networkNode.getNodeAddress() + ":");
+                    "Reported peers:");
             reportedPeers.stream().forEach(e -> result.append("\n").append(e));
             result.append("\n------------------------------------------------------------\n");
-            log.info(result.toString());
+            log.debug(result.toString());
+            log.info("Number of reported peers: {}", reportedPeers.size());
         }
     }
 
@@ -372,21 +370,16 @@ public class PeerManager implements ConnectionListener, MessageListener {
         reportedPeers.stream()
                 .filter(reportedPeer -> reportedPeer.nodeAddress.equals(nodeAddress))
                 .findAny()
-                .ifPresent(this::adjustLastActivityDate);
+                .ifPresent(ReportedPeer::penalizeLastActivityDate);
         persistedPeers.stream()
                 .filter(reportedPeer -> reportedPeer.nodeAddress.equals(nodeAddress))
                 .findAny()
                 .ifPresent(reportedPeer -> {
-                    adjustLastActivityDate(reportedPeer);
+                    reportedPeer.penalizeLastActivityDate();
                     dbStorage.queueUpForSave(persistedPeers, 5000);
                 });
-    }
 
-    private void adjustLastActivityDate(ReportedPeer reportedPeer) {
-        long now = new Date().getTime();
-        long diff = now - reportedPeer.lastActivityDate.getTime();
-        long reduced = now - diff * 2;
-        reportedPeer.setLastActivityDate(new Date(reduced));
+        removeTooOldReportedPeers();
     }
 
     public Set<ReportedPeer> getConnectedAndReportedPeers() {

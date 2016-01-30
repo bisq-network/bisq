@@ -208,7 +208,7 @@ public class Popup {
 
     protected void createPopup() {
         if (owner == null)
-            owner = MainView.getBaseApplicationContainer();
+            owner = MainView.getRootContainer();
 
         stage = new Stage();
         Scene scene = new Scene(gridPane);

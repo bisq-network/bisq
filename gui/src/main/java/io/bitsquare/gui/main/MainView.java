@@ -54,20 +54,20 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     public static final String TITLE_KEY = "view.title";
 
-    public static BorderPane getBaseApplicationContainer() {
-        return baseApplicationContainer;
+    public static StackPane getRootContainer() {
+        return MainView.rootContainer;
     }
 
     public static void blur() {
-        transitions.blur(MainView.base);
+        transitions.blur(MainView.rootContainer);
     }
 
     public static void blurLight() {
-        transitions.blur(MainView.base, Transitions.DEFAULT_DURATION, true, false, 5);
+        transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, true, false, 5);
     }
 
     public static void removeBlur() {
-        transitions.removeBlur(baseApplicationContainer);
+        transitions.removeBlur(MainView.rootContainer);
     }
 
     private final ToggleGroup navButtons = new ToggleGroup();
@@ -86,9 +86,9 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private ProgressBar btcSyncIndicator;
     private Label btcSplashInfo;
     private List<String> persistedFilesCorrupted;
-    private static BorderPane baseApplicationContainer;
-    private static StackPane base;
+    private BorderPane baseApplicationContainer;
     private Popup p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
+    private static StackPane rootContainer;
 
     @Inject
     public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, Transitions transitions,
@@ -102,8 +102,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     @Override
     protected void initialize() {
-        MainView.base = this.root;
-        
+        MainView.rootContainer = this.root;
+
         ToggleButton marketButton = new NavButton(MarketView.class, "Market");
         ToggleButton buyButton = new NavButton(BuyOfferView.class, "Buy BTC");
         ToggleButton sellButton = new NavButton(SellOfferView.class, "Sell BTC");

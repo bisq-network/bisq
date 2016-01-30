@@ -173,7 +173,7 @@ public class RequestDataManager implements MessageListener {
                                     errorMessage, nodeAddress);
 
                             peerManager.penalizeUnreachablePeer(nodeAddress);
-                            
+
                             if (!remainingNodeAddresses.isEmpty()) {
                                 log.info("There are remaining nodes available for requesting data. " +
                                         "We will try requestDataFromPeers again.");
@@ -233,6 +233,7 @@ public class RequestDataManager implements MessageListener {
                         !peerManager.isSelf(e))
                 .collect(Collectors.toList())
                 .stream()
+                .filter(e -> e.lastActivityDate != null)
                 .sorted((o1, o2) -> o2.lastActivityDate.compareTo(o1.lastActivityDate))
                 .map(e -> e.nodeAddress)
                 .collect(Collectors.toList());

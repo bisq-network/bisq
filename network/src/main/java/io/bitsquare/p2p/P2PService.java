@@ -80,6 +80,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private ChangeListener<NodeAddress> connectionNodeAddressListener;
     private Subscription networkReadySubscription;
     private boolean isBootstrapped;
+    private ChangeListener<Number> numOfBroadcastsChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -537,18 +538,35 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         log.debug("remove result=" + result);
                         sendMailboxMessageListener.onFault("A timeout occurred when trying to broadcast mailbox data.");
                     }, 30);
-                    broadcaster.addOneTimeListener(message -> {
+                    Broadcaster.Listener listener = message -> {
                         if (message instanceof AddDataMessage &&
                                 ((AddDataMessage) message).data.equals(protectedMailboxData)) {
                             sendMailboxMessageListener.onStoredInMailbox();
                             sendMailboxMessageTimeoutTimer.cancel();
                         }
-                    });
+                    };
+                    broadcaster.addListener(listener);
+                    if (numOfBroadcastsChangeListener != null) {
+                        log.warn("numOfBroadcastsChangeListener should be null");
+                        broadcaster.getNumOfBroadcastsProperty().removeListener(numOfBroadcastsChangeListener);
+                    }
+                    numOfBroadcastsChangeListener = (observable, oldValue, newValue) -> {
+                        // We want to get at least 1 successful broadcast
+                        if ((int) newValue > 0)
+                            broadcaster.removeListener(listener);
 
+                        UserThread.execute(() -> {
+                            broadcaster.getNumOfBroadcastsProperty().removeListener(numOfBroadcastsChangeListener);
+                            numOfBroadcastsChangeListener = null;
+                        });
+                    };
+                    broadcaster.getNumOfBroadcastsProperty().addListener(numOfBroadcastsChangeListener);
 
                     boolean result = p2PDataStorage.add(protectedMailboxData, networkNode.getNodeAddress());
                     if (!result) {
                         sendMailboxMessageTimeoutTimer.cancel();
+                        broadcaster.removeListener(listener);
+                        broadcaster.getNumOfBroadcastsProperty().removeListener(numOfBroadcastsChangeListener);
                         sendMailboxMessageListener.onFault("Data already exists in our local database");
                         boolean result2 = p2PDataStorage.remove(protectedMailboxData, networkNode.getNodeAddress());
                         log.debug("remove result=" + result2);

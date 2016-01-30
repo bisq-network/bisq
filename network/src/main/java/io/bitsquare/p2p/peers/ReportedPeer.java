@@ -18,12 +18,13 @@ public class ReportedPeer implements Serializable {
         this.lastActivityDate = lastActivityDate;
     }
 
-    public ReportedPeer(NodeAddress nodeAddress) {
-        this(nodeAddress, null);
-    }
-
-    public void setLastActivityDate(Date lastActivityDate) {
-        this.lastActivityDate = lastActivityDate;
+    public void penalizeLastActivityDate() {
+        if (lastActivityDate != null) {
+            long now = new Date().getTime();
+            long diff = Math.max(24 * 60 * 60 * 1000, now - lastActivityDate.getTime());
+            long reduced = now - diff * 2;
+            lastActivityDate = new Date(reduced);
+        }
     }
 
     // We don't use the lastActivityDate for identity

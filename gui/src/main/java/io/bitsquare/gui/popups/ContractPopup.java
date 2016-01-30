@@ -103,6 +103,7 @@ public class ContractPopup extends Popup {
         if (sellerPaymentAccountContractData instanceof BlockChainAccountContractData &&
                 ((BlockChainAccountContractData) sellerPaymentAccountContractData).getPaymentId() != null) {
             rows++;
+            isPaymentIdAvailable = true;
         }
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Contract");
         addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Offer ID:", offer.getId(),
@@ -123,7 +124,7 @@ public class ContractPopup extends Popup {
         addLabelTextField(gridPane, ++rowIndex, "Selected arbitrator:", contract.arbitratorNodeAddress.getFullAddress());
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Buyer payment details:",
                 BSResources.get(contract.getBuyerPaymentAccountContractData().getPaymentDetails())).second.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++rowIndex, "Seller payment details:",
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Seller payment details:",
                 BSResources.get(sellerPaymentAccountContractData.getPaymentDetails())).second.setMouseTransparent(false);
         if (isPaymentIdAvailable)
             addLabelTextField(gridPane, ++rowIndex, "Seller payment ID:",

@@ -121,7 +121,7 @@ public class AddressEntry implements Serializable {
     // For display we usually only display the first 8 characters.
     @Nullable
     public String getShortOfferId() {
-        return offerId != null ? offerId.substring(0, 8) : null;
+        return offerId != null ? offerId.substring(0, Math.min(8, offerId.length())) : null;
     }
 
     public Context getContext() {

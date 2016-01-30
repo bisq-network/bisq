@@ -198,7 +198,7 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
     }
 
     public String getReferenceText() {
-        return id.substring(0, 8);
+        return id.substring(0, Math.min(8, id.length()));
     }
 
 
@@ -263,7 +263,7 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
     }
 
     public String getShortId() {
-        return id.substring(0, 8);
+        return id.substring(0, Math.min(8, id.length()));
     }
 
     public NodeAddress getOffererNodeAddress() {

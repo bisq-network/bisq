@@ -26,6 +26,7 @@ public class BlockChainAccountContractData extends PaymentAccountContractData im
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     private String address;
+    // used in crypto note coins. not supported now but hopefully in future, so leave it for now.
     private String paymentId;
 
     public BlockChainAccountContractData(String paymentMethod, String id, int maxTradePeriod) {
