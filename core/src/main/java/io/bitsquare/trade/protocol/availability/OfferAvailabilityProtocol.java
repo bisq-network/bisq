@@ -36,7 +36,7 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 public class OfferAvailabilityProtocol {
     private static final Logger log = LoggerFactory.getLogger(OfferAvailabilityProtocol.class);
 
-    private static final long TIMEOUT_SEC = 10;
+    private static final long TIMEOUT_SEC = 20;
 
     private final OfferAvailabilityModel model;
     private final ResultHandler resultHandler;
@@ -88,9 +88,7 @@ public class OfferAvailabilityProtocol {
         model.setPeerNodeAddress(model.offer.getOffererNodeAddress());
 
         taskRunner = new TaskRunner<>(model,
-                () -> {
-                    log.debug("sequence at sendOfferAvailabilityRequest completed");
-                },
+                () -> log.debug("sequence at sendOfferAvailabilityRequest completed"),
                 (errorMessage) -> {
                     log.error(errorMessage);
                     stopTimeout();
