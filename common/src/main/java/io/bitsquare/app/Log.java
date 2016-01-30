@@ -48,7 +48,7 @@ public class Log {
         rollingPolicy.start();
 
         triggeringPolicy = new SizeBasedTriggeringPolicy();
-        triggeringPolicy.setMaxFileSize(useDetailedLogging ? "10MB" : "1MB");
+        triggeringPolicy.setMaxFileSize("1MB");
         triggeringPolicy.start();
 
         PatternLayoutEncoder encoder = new PatternLayoutEncoder();
@@ -63,7 +63,7 @@ public class Log {
 
         logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         //TODO for now use always trace 
-        logbackLogger.setLevel(useDetailedLogging ? Level.TRACE : Level.TRACE);
+        logbackLogger.setLevel(useDetailedLogging ? Level.TRACE : Level.INFO);
         // logbackLogger.setLevel(useDetailedLogging ? Level.TRACE : Level.DEBUG);
         logbackLogger.addAppender(appender);
     }
