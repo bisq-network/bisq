@@ -23,10 +23,7 @@ import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -39,8 +36,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class Connection implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
     private static final int MAX_MSG_SIZE = 100 * 1024;         // 100 kb of compressed data
-    private static final int MAX_MSG_PER_SEC = 10;              // With MAX_MSG_SIZE of 100kb results in bandwidth of 10 mbit/sec 
-    private static final int MAX_MSG_PER_10SEC = 50;           // With MAX_MSG_SIZE of 100kb results in bandwidth of 5 mbit/sec for 10 sec 
+    private static final int MSG_THROTTLE_PER_SEC = 10;              // With MAX_MSG_SIZE of 100kb results in bandwidth of 10 mbit/sec 
+    private static final int MSG_THROTTLE_PER_10SEC = 50;           // With MAX_MSG_SIZE of 100kb results in bandwidth of 5 mbit/sec for 10 sec 
     //timeout on blocking Socket operations like ServerSocket.accept() or SocketInputStream.read()
     private static final int SOCKET_TIMEOUT = 30 * 60 * 1000;        // 30 min.
 
@@ -86,7 +83,7 @@ public class Connection implements MessageListener {
     private final boolean useCompression = false;
     private PeerType peerType;
     private final ObjectProperty<NodeAddress> nodeAddressProperty = new SimpleObjectProperty<>();
-
+    private List<Long> messageTimeStamps = new ArrayList<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -204,6 +201,26 @@ public class Connection implements MessageListener {
         sharedModel.reportIllegalRequest(illegalRequest);
     }
 
+    public boolean violatesThrottleLimit() {
+        long now = System.currentTimeMillis();
+        boolean violated = false;
+        if (messageTimeStamps.size() >= MSG_THROTTLE_PER_SEC) {
+            // check if we got more than 10 msg per sec.
+            long compareTo = messageTimeStamps.get(messageTimeStamps.size() - MSG_THROTTLE_PER_SEC);
+            violated = now - compareTo < 1000;
+        }
+
+        if (messageTimeStamps.size() >= MSG_THROTTLE_PER_10SEC) {
+            // check if we got more than 50 msg per 10 sec.
+            long compareTo = messageTimeStamps.get(messageTimeStamps.size() - MSG_THROTTLE_PER_10SEC);
+            violated = violated || now - compareTo < 10000;
+            // we limit to max 50 entries
+            messageTimeStamps.remove(0);
+        }
+
+        messageTimeStamps.add(now);
+        return violated;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener implementation
@@ -428,7 +445,6 @@ public class Connection implements MessageListener {
         private Date lastActivityDate;
         private volatile boolean stopped;
         private ConnectionListener.Reason shutDownReason;
-        private List<Long> messageTimeStamps = new CopyOnWriteArrayList<>();
 
         public SharedModel(Connection connection, Socket socket) {
             Log.traceCall();
@@ -516,27 +532,6 @@ public class Connection implements MessageListener {
         public void stop() {
             Log.traceCall();
             this.stopped = true;
-        }
-
-        private boolean tooManyMessages() {
-            long now = System.currentTimeMillis();
-            boolean exceeds = false;
-            if (messageTimeStamps.size() >= MAX_MSG_PER_SEC) {
-                // check if we got more than 10 msg per sec.
-                long compareTo = messageTimeStamps.get(messageTimeStamps.size() - MAX_MSG_PER_SEC);
-                exceeds = now - compareTo < 1000;
-            }
-
-            if (messageTimeStamps.size() >= MAX_MSG_PER_10SEC) {
-                // check if we got more than 50 msg per 10 sec.
-                long compareTo = messageTimeStamps.get(messageTimeStamps.size() - MAX_MSG_PER_10SEC);
-                exceeds = exceeds || now - compareTo < 10000;
-                // we limit to max 50 entries
-                messageTimeStamps.remove(0);
-            }
-
-            messageTimeStamps.add(now);
-            return exceeds;
         }
 
         public synchronized ConnectionListener.Reason getShutDownReason() {
@@ -635,6 +630,12 @@ public class Connection implements MessageListener {
                             sharedModel.reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
                             return;
                         }
+
+                        if (sharedModel.connection.violatesThrottleLimit()) {
+                            sharedModel.reportIllegalRequest(IllegalRequest.ViolatedThrottleLimit);
+                            return;
+                        }
+
                         if (!(serializable instanceof Message)) {
                             sharedModel.reportIllegalRequest(IllegalRequest.InvalidDataType);
                             return;
@@ -643,11 +644,6 @@ public class Connection implements MessageListener {
                         Message message = (Message) serializable;
                         if (message.networkId() != Version.getNetworkId()) {
                             sharedModel.reportIllegalRequest(IllegalRequest.WrongNetworkId);
-                            return;
-                        }
-
-                        if (sharedModel.tooManyMessages()) {
-                            sharedModel.reportIllegalRequest(IllegalRequest.TooManyMessages);
                             return;
                         }
 

@@ -239,7 +239,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             tempAttachments.add(new DisputeDirectMessage.Attachment(result.getName(), filesAsBytes));
                             inputTextArea.setText(inputTextArea.getText() + "\n[Attachment " + result.getName() + "]");
                         } else {
-                            new Popup().error("The max. allowed file size is " + maxSizeInKB + " kB.").show();
+                            new Popup().warning("The max. allowed file size is " + maxSizeInKB + " kB.").show();
                         }
                     } catch (java.io.IOException e) {
                         e.printStackTrace();

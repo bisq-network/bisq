@@ -4,7 +4,7 @@ public enum IllegalRequest {
     MaxSizeExceeded(1),
     InvalidDataType(0),
     WrongNetworkId(0),
-    TooManyMessages(1);
+    ViolatedThrottleLimit(1);
 
     public final int maxTolerance;
 

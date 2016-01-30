@@ -177,14 +177,12 @@ public class OpenOfferManager {
         if (!shutDownRequested) {
             log.debug("shutDown");
             shutDownRequested = true;
+            int numOffers = openOffers.size();
             // we remove own offers from offerbook when we go offline
-            for (OpenOffer openOffer : openOffers) {
-                offerBookService.removeOfferAtShutDown(openOffer.getOffer());
-            }
+            openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer()));
 
-            // delay a bit before we signal that we are done to give time for network
             if (completeHandler != null)
-                UserThread.runAfter(() -> completeHandler.run(), 500, TimeUnit.MILLISECONDS);
+                UserThread.runAfter(completeHandler::run, numOffers * 200 + 300, TimeUnit.MILLISECONDS);
         }
     }
 
