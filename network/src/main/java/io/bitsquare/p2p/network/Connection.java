@@ -39,7 +39,7 @@ public class Connection implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
     private static final int MAX_MSG_SIZE = 5 * 1024 * 1024;         // 5 MB of compressed data
     //timeout on blocking Socket operations like ServerSocket.accept() or SocketInputStream.read()
-    private static final int SOCKET_TIMEOUT = 10 * 60 * 1000;        // 10 min.
+    private static final int SOCKET_TIMEOUT = 30 * 60 * 1000;        // 30 min.
 
     public static int getMaxMsgSize() {
         return MAX_MSG_SIZE;
