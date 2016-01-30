@@ -42,8 +42,6 @@ public class PerfectMoneyForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(paymentAccountContractData.getPaymentMethodName()));
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name:", ((PerfectMoneyAccountContractData) paymentAccountContractData)
-                .getHolderName());
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account nr.:", ((PerfectMoneyAccountContractData) paymentAccountContractData).getAccountNr());
         addAllowedPeriod(gridPane, ++gridRow, paymentAccountContractData);
         return gridRow;
@@ -59,13 +57,6 @@ public class PerfectMoneyForm extends PaymentMethodForm {
     @Override
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
-
-        InputTextField holderNameInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account holder name:").second;
-        holderNameInputTextField.setValidator(inputValidator);
-        holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            perfectMoneyAccount.setHolderName(newValue);
-            updateFromInputs();
-        });
 
         accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account nr.:").second;
         accountNrInputTextField.setValidator(perfectMoneyValidator);
@@ -95,7 +86,6 @@ public class PerfectMoneyForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", perfectMoneyAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(perfectMoneyAccount.getPaymentMethod().getId()));
-        addLabelTextField(gridPane, ++gridRow, "Account holder name:", perfectMoneyAccount.getHolderName());
         TextField field = addLabelTextField(gridPane, ++gridRow, "Account nr.:", perfectMoneyAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
         addLabelTextField(gridPane, ++gridRow, "Currency:", perfectMoneyAccount.getSingleTradeCurrency().getCodeAndName());

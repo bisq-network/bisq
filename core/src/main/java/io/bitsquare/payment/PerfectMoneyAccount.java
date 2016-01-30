@@ -33,14 +33,6 @@ public class PerfectMoneyAccount extends PaymentAccount implements Serializable 
         contractData = new PerfectMoneyAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
-    public String getHolderName() {
-        return ((PerfectMoneyAccountContractData) contractData).getHolderName();
-    }
-
-    public void setHolderName(String holderName) {
-        ((PerfectMoneyAccountContractData) contractData).setHolderName(holderName);
-    }
-
     public void setAccountNr(String accountNr) {
         ((PerfectMoneyAccountContractData) contractData).setAccountNr(accountNr);
     }

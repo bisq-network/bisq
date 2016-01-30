@@ -25,19 +25,10 @@ public class PerfectMoneyAccountContractData extends PaymentAccountContractData 
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
-    private String holderName;
     private String accountNr;
 
     public PerfectMoneyAccountContractData(String paymentMethod, String id, int maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
-    }
-
-    public String getHolderName() {
-        return holderName;
-    }
-
-    public void setHolderName(String holderName) {
-        this.holderName = holderName;
     }
 
     public void setAccountNr(String accountNr) {
@@ -50,7 +41,7 @@ public class PerfectMoneyAccountContractData extends PaymentAccountContractData 
 
     @Override
     public String getPaymentDetails() {
-        return "PerfectMoney - Holder name: " + holderName + ", account nr.: " + accountNr;
+        return "PerfectMoney - Account nr.: " + accountNr;
     }
 
 }
