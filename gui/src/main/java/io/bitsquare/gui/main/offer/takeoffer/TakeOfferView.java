@@ -22,7 +22,6 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -485,11 +484,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         totalToPayTextField.setFocusTraversable(false);
         totalToPayTextField.setVisible(false);
         totalToPayTextField.setPromptText(BSResources.get("createOffer.fundsBox.totalsNeeded.prompt"));
-        totalToPayTextField.setHandler(value -> {
-            String[] strings = value.split(" ");
-            if (strings.length > 1)
-                Utilities.copyToClipboard(strings[0]); // exclude the BTC postfix
-        });
+        totalToPayTextField.setCopyWithoutCurrencyPostFix(true);
         GridPane.setRowIndex(totalToPayTextField, gridRow);
         GridPane.setColumnIndex(totalToPayTextField, 1);
         GridPane.setMargin(totalToPayTextField, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));

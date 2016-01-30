@@ -40,6 +40,7 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 import org.jetbrains.annotations.NotNull;
@@ -286,6 +287,16 @@ class TakeOfferDataModel extends ActivatableDataModel {
         //noinspection SimplifiableIfStatement
         if (amountAsCoin.get() != null && offer != null)
             return amountAsCoin.get().isGreaterThan(offer.getAmount());
+        return true;
+    }
+
+    boolean isAmountLargerThanOfferAmountMinusFee() {
+        //noinspection SimplifiableIfStatement
+        if (amountAsCoin.get() != null && offer != null)
+            return amountAsCoin.get()
+                    .add(FeePolicy.getFeePerKb())
+                    .add(Transaction.MIN_NONDUST_OUTPUT)
+                    .isGreaterThan(offer.getAmount());
         return true;
     }
 
