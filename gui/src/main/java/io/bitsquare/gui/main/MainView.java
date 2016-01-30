@@ -59,11 +59,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     }
 
     public static void blur() {
-        transitions.blur(baseApplicationContainer);
+        transitions.blur(MainView.base);
     }
 
     public static void blurLight() {
-        transitions.blur(baseApplicationContainer, Transitions.DEFAULT_DURATION, true, false, 5);
+        transitions.blur(MainView.base, Transitions.DEFAULT_DURATION, true, false, 5);
     }
 
     public static void removeBlur() {
@@ -87,6 +87,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Label btcSplashInfo;
     private List<String> persistedFilesCorrupted;
     private static BorderPane baseApplicationContainer;
+    private static StackPane base;
     private Popup p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
 
     @Inject
@@ -101,6 +102,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     @Override
     protected void initialize() {
+        MainView.base = this.root;
+        
         ToggleButton marketButton = new NavButton(MarketView.class, "Market");
         ToggleButton buyButton = new NavButton(BuyOfferView.class, "Buy BTC");
         ToggleButton sellButton = new NavButton(SellOfferView.class, "Sell BTC");

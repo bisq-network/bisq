@@ -122,6 +122,7 @@ public class MainViewModel implements ViewModel {
     private ChangeListener<Number> numConnectedPeersListener, btcNumPeersListener;
     private java.util.Timer numberofBtcPeersTimer;
     private java.util.Timer numberofP2PNetworkPeersTimer;
+    private Timer startupTimeout;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -178,6 +179,17 @@ public class MainViewModel implements ViewModel {
         allServicesDone.subscribe((observable, oldValue, newValue) -> {
             if (newValue)
                 onAllServicesInitialized();
+        });
+
+        startupTimeout = FxTimer.runLater(Duration.ofMillis(60000), () -> {
+            log.warn("startupTimeout called");
+            MainView.blur();
+            new Popup().warning("The application could not startup after 60 seconds.\n" +
+                    "There might be some network connection problems.\n\n" +
+                    "Please restart and try again.")
+                    .closeButtonText("Shut down")
+                    .onClose(() -> BitsquareApp.shutDownHandler.run())
+                    .show();
         });
     }
 
@@ -300,6 +312,8 @@ public class MainViewModel implements ViewModel {
 
     private void onAllServicesInitialized() {
         Log.traceCall();
+
+        startupTimeout.stop();
 
         // disputeManager
         disputeManager.getDisputesAsObservableList().addListener((ListChangeListener<Dispute>) change -> {
