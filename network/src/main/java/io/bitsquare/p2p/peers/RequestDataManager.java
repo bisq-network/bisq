@@ -119,7 +119,7 @@ public class RequestDataManager implements MessageListener {
                     new RequestDataHandshake.Listener() {
                         @Override
                         public void onComplete() {
-                            log.trace("requestDataHandshake of inbound connection complete. Connection={}",
+                            log.trace("requestDataHandshake of inbound connection complete.\n\tConnection={}",
                                     connection);
                         }
 

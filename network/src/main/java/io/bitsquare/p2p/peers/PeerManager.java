@@ -209,7 +209,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
                 candidates.sort((o1, o2) -> o1.getLastActivityDate().compareTo(o2.getLastActivityDate()));
                 log.info("Candidates.size() for shut down=" + candidates.size());
                 Connection connection = candidates.remove(0);
-                log.info("We are going to shut down the oldest connection. connection=" + connection.toString());
+                log.info("We are going to shut down the oldest connection.\n\tconnection=" + connection.toString());
                 connection.shutDown(() -> checkMaxConnections(limit));
                 return true;
             } else {
@@ -251,7 +251,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
                 candidates.sort((o1, o2) -> o1.getLastActivityDate().compareTo(o2.getLastActivityDate()));
                 log.info("Number of connections exceeding MAX_CONNECTIONS_EXTENDED_1. Current size=" + candidates.size());
                 Connection connection = candidates.remove(0);
-                log.info("We are going to shut down the oldest connection. connection=" + connection.toString());
+                log.info("We are going to shut down the oldest connection.\n\tconnection=" + connection.toString());
                 connection.shutDown(this::removeSuperfluousSeedNodes);
             }
         }

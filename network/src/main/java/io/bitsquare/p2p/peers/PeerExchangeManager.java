@@ -109,7 +109,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
                     new PeerExchangeHandshake.Listener() {
                         @Override
                         public void onComplete() {
-                            log.trace("PeerExchangeHandshake of inbound connection complete. Connection={}", connection);
+                            log.trace("PeerExchangeHandshake of inbound connection complete.\n\tConnection={}", connection);
                         }
 
                         @Override

@@ -104,7 +104,7 @@ public class P2PDataStorage implements MessageListener {
     public void onMessage(Message message, Connection connection) {
         if (message instanceof DataBroadcastMessage) {
             Log.traceCall(message.toString() + "\n\tconnection=" + connection);
-            log.trace("DataBroadcastMessage received " + message + " on connection " + connection);
+            log.trace("DataBroadcastMessage received " + message + "\n\tconnection " + connection);
             connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress -> {
                 if (message instanceof AddDataMessage) {
                     add(((AddDataMessage) message).data, peersNodeAddress);

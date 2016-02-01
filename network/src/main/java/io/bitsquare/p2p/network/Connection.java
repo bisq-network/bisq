@@ -485,14 +485,14 @@ public class Connection implements MessageListener {
                     shutDownReason = ConnectionListener.Reason.RESET;
             } else if (e instanceof SocketTimeoutException || e instanceof TimeoutException) {
                 shutDownReason = ConnectionListener.Reason.TIMEOUT;
-                log.debug("TimeoutException at socket " + socket.toString() + " on connection={}" + this);
+                log.debug("TimeoutException at socket " + socket.toString() + "\n\tconnection={}" + this);
             } else if (e instanceof EOFException) {
                 shutDownReason = ConnectionListener.Reason.PEER_DISCONNECTED;
             } else if (e instanceof NoClassDefFoundError || e instanceof ClassNotFoundException) {
                 shutDownReason = ConnectionListener.Reason.INCOMPATIBLE_DATA;
             } else {
                 shutDownReason = ConnectionListener.Reason.UNKNOWN;
-                log.warn("Unknown reason for exception at socket {} on connection={}\n\tException=",
+                log.warn("Unknown reason for exception at socket {}\n\tconnection={}\n\tException=",
                         socket.toString(), this, e.getMessage());
                 e.printStackTrace();
             }
