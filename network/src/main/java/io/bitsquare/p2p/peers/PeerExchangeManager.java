@@ -28,6 +28,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
     private final ScheduledThreadPoolExecutor executor;
     private final Map<NodeAddress, PeerExchangeHandshake> peerExchangeHandshakeMap = new HashMap<>();
     private Timer connectToMorePeersTimer, maintainConnectionsTimer;
+    private boolean shutDownInProgress;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -46,6 +47,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
 
     public void shutDown() {
         Log.traceCall();
+        shutDownInProgress = true;
 
         networkNode.removeMessageListener(this);
         stopConnectToMorePeersTimer();
@@ -148,17 +150,19 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
 
                             peerExchangeHandshakeMap.remove(nodeAddress);
                             peerManager.penalizeUnreachablePeer(nodeAddress);
-                            if (!remainingNodeAddresses.isEmpty()) {
-                                log.info("There are remaining nodes available for requesting peers. " +
-                                        "We will try getReportedPeers again.");
-                                requestReportedPeersFromRandomPeer(remainingNodeAddresses);
-                            } else {
-                                log.info("There is no remaining node available for requesting peers. " +
-                                        "That is expected if no other node is online.\n\t" +
-                                        "We will try again after a random pause.");
-                                if (connectToMorePeersTimer == null)
-                                    connectToMorePeersTimer = UserThread.runAfterRandomDelay(
-                                            PeerExchangeManager.this::connectToMorePeers, 20, 30);
+                            if (!shutDownInProgress) {
+                                if (!remainingNodeAddresses.isEmpty()) {
+                                    log.info("There are remaining nodes available for requesting peers. " +
+                                            "We will try getReportedPeers again.");
+                                    requestReportedPeersFromRandomPeer(remainingNodeAddresses);
+                                } else {
+                                    log.info("There is no remaining node available for requesting peers. " +
+                                            "That is expected if no other node is online.\n\t" +
+                                            "We will try again after a random pause.");
+                                    if (connectToMorePeersTimer == null)
+                                        connectToMorePeersTimer = UserThread.runAfterRandomDelay(
+                                                PeerExchangeManager.this::connectToMorePeers, 20, 30);
+                                }
                             }
                         }
                     });

@@ -52,6 +52,7 @@ public class RequestDataManager implements MessageListener {
     private Optional<NodeAddress> nodeOfPreliminaryDataRequest = Optional.empty();
     private Timer requestDataTimer;
     private boolean dataUpdateRequested;
+    private boolean shutDownInProgress;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -72,6 +73,7 @@ public class RequestDataManager implements MessageListener {
 
     public void shutDown() {
         Log.traceCall();
+        shutDownInProgress = true;
         stopRequestDataTimer();
         networkNode.removeMessageListener(this);
         requestDataHandshakeMap.values().stream().forEach(RequestDataHandshake::shutDown);
@@ -175,46 +177,48 @@ public class RequestDataManager implements MessageListener {
 
                             peerManager.penalizeUnreachablePeer(nodeAddress);
 
-                            if (!remainingNodeAddresses.isEmpty()) {
-                                log.info("There are remaining nodes available for requesting data. " +
-                                        "We will try requestDataFromPeers again.");
-                                NodeAddress nextCandidate = remainingNodeAddresses.get(0);
-                                remainingNodeAddresses.remove(nextCandidate);
-                                requestData(nextCandidate, remainingNodeAddresses);
-                            } else {
-                                log.info("There is no remaining node available for requesting data. " +
-                                        "That is expected if no other node is online.\n\t" +
-                                        "We will try to use reported peers (if no available we use persisted peers) " +
-                                        "and try again to request data from our seed nodes after a random pause.");
+                            if (!shutDownInProgress) {
+                                if (!remainingNodeAddresses.isEmpty()) {
+                                    log.info("There are remaining nodes available for requesting data. " +
+                                            "We will try requestDataFromPeers again.");
+                                    NodeAddress nextCandidate = remainingNodeAddresses.get(0);
+                                    remainingNodeAddresses.remove(nextCandidate);
+                                    requestData(nextCandidate, remainingNodeAddresses);
+                                } else {
+                                    log.info("There is no remaining node available for requesting data. " +
+                                            "That is expected if no other node is online.\n\t" +
+                                            "We will try to use reported peers (if no available we use persisted peers) " +
+                                            "and try again to request data from our seed nodes after a random pause.");
 
-                                // try again after a pause
-                                stopRequestDataTimer();
-                                requestDataTimer = UserThread.runAfterRandomDelay(() -> {
-                                            log.trace("requestDataAfterDelayTimer called");
-                                            // We want to keep it sorted but avoid duplicates
-                                            // We don't filter out already established connections for seed nodes as it might be that
-                                            // we got from the other seed node contacted but we still have not requested the initial 
-                                            // data set
-                                            List<NodeAddress> list = new ArrayList<>(seedNodeAddresses);
-                                            Collections.shuffle(list);
-                                            list.addAll(getFilteredAndSortedList(peerManager.getReportedPeers(), list));
-                                            list.addAll(getFilteredAndSortedList(peerManager.getPersistedPeers(), list));
-                                            checkArgument(!list.isEmpty(), "seedNodeAddresses must not be empty.");
-                                            NodeAddress nextCandidate = list.get(0);
-                                            list.remove(nextCandidate);
-                                            requestData(nextCandidate, list);
-                                        },
-                                        10, 15, TimeUnit.SECONDS);
-                            }
+                                    // try again after a pause
+                                    stopRequestDataTimer();
+                                    requestDataTimer = UserThread.runAfterRandomDelay(() -> {
+                                                log.trace("requestDataAfterDelayTimer called");
+                                                // We want to keep it sorted but avoid duplicates
+                                                // We don't filter out already established connections for seed nodes as it might be that
+                                                // we got from the other seed node contacted but we still have not requested the initial 
+                                                // data set
+                                                List<NodeAddress> list = new ArrayList<>(seedNodeAddresses);
+                                                Collections.shuffle(list);
+                                                list.addAll(getFilteredAndSortedList(peerManager.getReportedPeers(), list));
+                                                list.addAll(getFilteredAndSortedList(peerManager.getPersistedPeers(), list));
+                                                checkArgument(!list.isEmpty(), "seedNodeAddresses must not be empty.");
+                                                NodeAddress nextCandidate = list.get(0);
+                                                list.remove(nextCandidate);
+                                                requestData(nextCandidate, list);
+                                            },
+                                            10, 15, TimeUnit.SECONDS);
+                                }
 
-                            requestDataHandshakeMap.remove(nodeAddress);
+                                requestDataHandshakeMap.remove(nodeAddress);
 
-                            // Notify listeners
-                            if (!nodeOfPreliminaryDataRequest.isPresent()) {
-                                if (peerManager.isSeedNode(nodeAddress))
-                                    listener.onNoSeedNodeAvailable();
-                                else
-                                    listener.onNoPeersAvailable();
+                                // Notify listeners
+                                if (!nodeOfPreliminaryDataRequest.isPresent()) {
+                                    if (peerManager.isSeedNode(nodeAddress))
+                                        listener.onNoSeedNodeAvailable();
+                                    else
+                                        listener.onNoPeersAvailable();
+                                }
                             }
                         }
                     });
