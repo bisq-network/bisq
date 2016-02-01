@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.security.PublicKey;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -52,7 +53,7 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
     @JsonExclude
     private static final Logger log = LoggerFactory.getLogger(Offer.class);
 
-    public static final long TTL = 10 * 60 * 1000; // 10 min.
+    public static final long TTL = TimeUnit.MINUTES.toMillis(10);
     public final static String TAC_OFFERER = "When placing that offer I accept that anyone who fulfills my conditions can " +
             "take that offer.";
     public static final String TAC_TAKER = "With taking the offer I commit to the trade conditions as defined.";

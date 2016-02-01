@@ -43,7 +43,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * This is where all the fun is, this is the class that handles the heavy work.
@@ -62,8 +62,8 @@ public abstract class OnionProxyManager {
     private static final String[] EVENTS_HS = {"EXTENDED", "CIRC", "ORCONN", "INFO", "NOTICE", "WARN", "ERR", "HS_DESC"};
 
     private static final String OWNER = "__OwningControllerProcess";
-    private static final int COOKIE_TIMEOUT = 3 * 1000; // Milliseconds
-    private static final int HOSTNAME_TIMEOUT = 30 * 1000; // Milliseconds
+    private static final long COOKIE_TIMEOUT_IN_SEC = 10;
+    private static final long HOSTNAME_TIMEOUT_IN_SEC = 30;
     private static final Logger LOG = LoggerFactory.getLogger(OnionProxyManager.class);
 
     protected final OnionProxyContext onionProxyContext;
@@ -247,7 +247,7 @@ public abstract class OnionProxyManager {
         controlConnection.setConf(config);
         controlConnection.saveConf();
         // Wait for the hostname file to be created/updated
-        if (!hostNameFileObserver.poll(HOSTNAME_TIMEOUT, MILLISECONDS)) {
+        if (!hostNameFileObserver.poll(HOSTNAME_TIMEOUT_IN_SEC, SECONDS)) {
             FileUtilities.listFilesToLog(hostnameFile.getParentFile());
             throw new RuntimeException("Wait for hidden service hostname file to be created expired.");
         }
@@ -455,7 +455,7 @@ public abstract class OnionProxyManager {
             }
 
             // Wait for the auth cookie file to be created/updated
-            if (!cookieObserver.poll(COOKIE_TIMEOUT, MILLISECONDS)) {
+            if (!cookieObserver.poll(COOKIE_TIMEOUT_IN_SEC, SECONDS)) {
                 LOG.warn("Auth cookie not created");
                 FileUtilities.listFilesToLog(workingDirectory);
                 return false;

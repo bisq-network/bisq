@@ -169,7 +169,7 @@ public class StartPaymentView extends TradeStepDetailsView {
         statusProgressIndicator.setProgress(-1);
 
         statusLabel.setWrapText(true);
-        statusLabel.setPrefWidth(220);
+        statusLabel.setPrefWidth(160);
         statusLabel.setText("Sending message to your trading partner.\n" +
                 "Please wait until you get the confirmation that the message has arrived.");
 

@@ -38,7 +38,7 @@ public class P2PDataStorage implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(P2PDataStorage.class);
 
     @VisibleForTesting
-    public static int CHECK_TTL_INTERVAL = new Random().nextInt(1000) + 10 * 60 * 1000; // 10-11 min.
+    public static int CHECK_TTL_INTERVAL = new Random().nextInt(1000) + (int) TimeUnit.MINUTES.toMillis(10); // 10-11 min.
 
     private final Broadcaster broadcaster;
     private final Map<ByteArray, ProtectedData> map = new HashMap<>();

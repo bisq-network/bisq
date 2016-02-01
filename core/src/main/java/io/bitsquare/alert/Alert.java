@@ -21,12 +21,13 @@ import io.bitsquare.app.Version;
 import io.bitsquare.p2p.storage.data.PubKeyProtectedExpirablePayload;
 
 import java.security.PublicKey;
+import java.util.concurrent.TimeUnit;
 
 public final class Alert implements PubKeyProtectedExpirablePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
-    private static final long TTL = 10 * 24 * 60 * 60 * 1000; // 10 days
+    private static final long TTL = TimeUnit.DAYS.toMillis(10);
 
     public final String message;
     private String signatureAsBase64;

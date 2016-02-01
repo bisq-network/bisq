@@ -59,6 +59,7 @@ public class SepaForm extends PaymentMethodForm {
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(paymentAccountContractData.getPaymentMethodName()));
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name:", ((SepaAccountContractData) paymentAccountContractData).getHolderName());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Country of bank:", CountryUtil.getNameByCode(paymentAccountContractData.getCountryCode()));
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "IBAN:", ((SepaAccountContractData) paymentAccountContractData).getIban());
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "BIC/SWIFT:", ((SepaAccountContractData) paymentAccountContractData).getBic());
         addAllowedPeriod(gridPane, ++gridRow, paymentAccountContractData);

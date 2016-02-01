@@ -108,14 +108,13 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
                     new PeerExchangeHandshake.Listener() {
                         @Override
                         public void onComplete() {
-                            log.trace("PeerExchangeHandshake of inbound connection complete. Connection= {}",
-                                    connection);
+                            log.trace("PeerExchangeHandshake of inbound connection complete. Connection={}", connection);
                         }
 
                         @Override
                         public void onFault(String errorMessage) {
-                            log.trace("PeerExchangeHandshake of outbound connection failed. {} connection= {}",
-                                    errorMessage, connection);
+                            log.trace("PeerExchangeHandshake of outbound connection failed.\nerrorMessage={}\n" +
+                                    "connection={}", errorMessage, connection);
                             peerManager.penalizeUnreachablePeer(connection);
                         }
                     });
@@ -136,16 +135,15 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
                     new PeerExchangeHandshake.Listener() {
                         @Override
                         public void onComplete() {
-                            log.trace("PeerExchangeHandshake of outbound connection complete. nodeAddress= {}",
-                                    nodeAddress);
+                            log.trace("PeerExchangeHandshake of outbound connection complete. nodeAddress={}", nodeAddress);
                             peerExchangeHandshakeMap.remove(nodeAddress);
                             connectToMorePeers();
                         }
 
                         @Override
                         public void onFault(String errorMessage) {
-                            log.trace("PeerExchangeHandshake of outbound connection failed. {} nodeAddress= {}",
-                                    errorMessage, nodeAddress);
+                            log.trace("PeerExchangeHandshake of outbound connection failed.\nerrorMessage={}\n" +
+                                    "nodeAddress={}", errorMessage, nodeAddress);
 
                             peerExchangeHandshakeMap.remove(nodeAddress);
                             peerManager.penalizeUnreachablePeer(nodeAddress);
@@ -164,10 +162,11 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
                         }
                     });
             peerExchangeHandshakeMap.put(nodeAddress, peerExchangeHandshake);
-            peerExchangeHandshake.requestReportedPeers(nodeAddress, remainingNodeAddresses);
+            peerExchangeHandshake.requestReportedPeers(nodeAddress);
         } else {
-            log.trace("We have started already a peerExchangeHandshake to peer. " +
-                    "That can happen by the timers calls. We ignore that call. " +
+            //TODO check when that happens
+            log.warn("We have started already a peerExchangeHandshake. " +
+                    "We ignore that call. " +
                     "nodeAddress=" + nodeAddress);
         }
     }
@@ -204,9 +203,9 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
         confirmedConnections.stream()
                 .filter(c -> c.getPeersNodeAddressOptional().isPresent() &&
                         c instanceof OutboundConnection &&
-                        new Date().getTime() - c.getLastActivityDate().getTime() > 10 * 60 * 1000)
+                        new Date().getTime() - c.getLastActivityDate().getTime() > TimeUnit.MINUTES.toMillis(10))
                 .forEach(c -> {
-                    log.trace("Call requestReportedPeers from maintainConnections");
+                    log.trace("Call requestReportedPeers on a confirmedConnection by the maintainConnections call");
                     requestReportedPeers(c.getPeersNodeAddressOptional().get(), new ArrayList<>());
                 });
     }

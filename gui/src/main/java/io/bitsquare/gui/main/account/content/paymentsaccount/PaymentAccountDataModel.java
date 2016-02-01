@@ -45,6 +45,7 @@ class PaymentAccountDataModel extends ActivatableDataModel {
 
     private void fillAndSortPaymentAccounts() {
         paymentAccounts.setAll(user.getPaymentAccounts());
+        paymentAccounts.sort((o1, o2) -> o1.getCreationDate().compareTo(o2.getCreationDate()));
     }
 
     @Override

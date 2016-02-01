@@ -6,7 +6,7 @@ import io.bitsquare.p2p.storage.data.ProtectedData;
 
 import java.util.HashSet;
 
-public final class DataResponse implements Message {
+public final class GetDataResponse implements Message {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
     private final int networkId = Version.getNetworkId();
@@ -14,7 +14,7 @@ public final class DataResponse implements Message {
     public final HashSet<ProtectedData> dataSet;
     public final long requestNonce;
 
-    public DataResponse(HashSet<ProtectedData> dataSet, long requestNonce) {
+    public GetDataResponse(HashSet<ProtectedData> dataSet, long requestNonce) {
         this.dataSet = dataSet;
         this.requestNonce = requestNonce;
     }
@@ -27,9 +27,9 @@ public final class DataResponse implements Message {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DataResponse)) return false;
+        if (!(o instanceof GetDataResponse)) return false;
 
-        DataResponse that = (DataResponse) o;
+        GetDataResponse that = (GetDataResponse) o;
 
         return !(dataSet != null ? !dataSet.equals(that.dataSet) : that.dataSet != null);
 
@@ -42,7 +42,7 @@ public final class DataResponse implements Message {
 
     @Override
     public String toString() {
-        return "DataResponse{" +
+        return "GetDataResponse{" +
                 "networkId=" + networkId +
                 ", dataSet=" + dataSet +
                 ", requestNonce=" + requestNonce +

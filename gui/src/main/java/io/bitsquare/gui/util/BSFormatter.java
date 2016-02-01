@@ -36,6 +36,7 @@ import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class BSFormatter {
@@ -340,7 +341,7 @@ public class BSFormatter {
     public String getDateFromBlocks(long blocks) {
         DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
         DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.SHORT, locale);
-        Date date = new Date(new Date().getTime() + blocks * 10 * 60 * 1000);
+        Date date = new Date(new Date().getTime() + blocks * TimeUnit.MINUTES.toMillis(10));
         return dateFormatter.format(date) + " " + timeFormatter.format(date);
     }
 

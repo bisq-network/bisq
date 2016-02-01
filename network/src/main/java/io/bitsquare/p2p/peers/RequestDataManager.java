@@ -7,7 +7,7 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
-import io.bitsquare.p2p.peers.messages.data.DataRequest;
+import io.bitsquare.p2p.peers.messages.data.GetDataRequest;
 import io.bitsquare.p2p.storage.P2PDataStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,19 +113,19 @@ public class RequestDataManager implements MessageListener {
 
     @Override
     public void onMessage(Message message, Connection connection) {
-        if (message instanceof DataRequest) {
+        if (message instanceof GetDataRequest) {
             RequestDataHandshake requestDataHandshake = new RequestDataHandshake(networkNode, dataStorage, peerManager,
                     new RequestDataHandshake.Listener() {
                         @Override
                         public void onComplete() {
-                            log.trace("RequestDataHandshake of inbound connection complete. Connection= {}",
+                            log.trace("requestDataHandshake of inbound connection complete. Connection={}",
                                     connection);
                         }
 
                         @Override
                         public void onFault(String errorMessage) {
-                            log.trace("RequestDataHandshake of inbound connection failed. {} Connection= {}",
-                                    errorMessage, connection);
+                            log.trace("requestDataHandshake of inbound connection failed.\nConnection={}\n" +
+                                    "ErrorMessage={}", connection, errorMessage);
                             peerManager.penalizeUnreachablePeer(connection);
                         }
                     });
@@ -145,7 +145,7 @@ public class RequestDataManager implements MessageListener {
                     new RequestDataHandshake.Listener() {
                         @Override
                         public void onComplete() {
-                            log.trace("RequestDataHandshake of outbound connection complete. nodeAddress= {}",
+                            log.trace("RequestDataHandshake of outbound connection complete. nodeAddress={}",
                                     nodeAddress);
                             stopRequestDataTimer();
 
@@ -169,8 +169,8 @@ public class RequestDataManager implements MessageListener {
 
                         @Override
                         public void onFault(String errorMessage) {
-                            log.trace("RequestDataHandshake of outbound connection failed. {} nodeAddress= {}",
-                                    errorMessage, nodeAddress);
+                            log.trace("requestDataHandshake of outbound connection failed.\nnodeAddress={}\n" +
+                                    "ErrorMessage={}", nodeAddress, errorMessage);
 
                             peerManager.penalizeUnreachablePeer(nodeAddress);
 
@@ -198,7 +198,6 @@ public class RequestDataManager implements MessageListener {
                                             Collections.shuffle(list);
                                             list.addAll(getFilteredAndSortedList(peerManager.getReportedPeers(), list));
                                             list.addAll(getFilteredAndSortedList(peerManager.getPersistedPeers(), list));
-                                            log.trace("Sorted and filtered list: list=" + list);
                                             checkArgument(!list.isEmpty(), "seedNodeAddresses must not be empty.");
                                             NodeAddress nextCandidate = list.get(0);
                                             list.remove(nextCandidate);
@@ -221,7 +220,7 @@ public class RequestDataManager implements MessageListener {
             requestDataHandshakeMap.put(nodeAddress, requestDataHandshake);
             requestDataHandshake.requestData(nodeAddress);
         } else {
-            log.warn("We have started already a requestDataHandshake to peer. " + nodeAddress);
+            log.warn("We have started already a requestDataHandshake to peer. nodeAddress=" + nodeAddress);
         }
     }
 

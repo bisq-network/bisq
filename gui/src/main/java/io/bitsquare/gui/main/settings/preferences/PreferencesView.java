@@ -63,7 +63,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         blockExplorerComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin block explorer:").second;
         transactionFeeInputTextField = addLabelInputTextField(root, ++gridRow, "Transaction fee (satoshi/byte):").second;
         transactionFeeFocusedListener = (o, oldValue, newValue) -> {
-            model.onFocusOutTransactionFeeTextField(oldValue, newValue, transactionFeeInputTextField.getText());
+            model.onFocusOutTransactionFeeTextField(oldValue, newValue);
         };
 
         addTitledGroupBg(root, ++gridRow, 5, "Display options", Layout.GROUP_DISTANCE);

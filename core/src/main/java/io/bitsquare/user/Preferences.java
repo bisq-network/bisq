@@ -286,6 +286,9 @@ public class Preferences implements Serializable {
         if (txFeePerKB < Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value)
             throw new Exception("Transaction fee must be at least 5 satoshi/byte");
 
+        if (txFeePerKB < Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value)
+            throw new Exception("Transaction fee must be at least 5 satoshi/byte");
+
         this.txFeePerKB = txFeePerKB;
         FeePolicy.setFeePerKb(Coin.valueOf(txFeePerKB));
         storage.queueUpForSave();

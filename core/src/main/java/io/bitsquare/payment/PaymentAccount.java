@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,6 +37,7 @@ public class PaymentAccount implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(PaymentAccount.class);
 
     protected final String id;
+    protected final Date creationDate;
     protected final PaymentMethod paymentMethod;
     protected String accountName;
     protected final List<TradeCurrency> tradeCurrencies = new ArrayList<>();
@@ -53,6 +55,7 @@ public class PaymentAccount implements Serializable {
     public PaymentAccount(PaymentMethod paymentMethod) {
         this.paymentMethod = paymentMethod;
         id = UUID.randomUUID().toString();
+        creationDate = new Date();
     }
 
 
@@ -147,6 +150,10 @@ public class PaymentAccount implements Serializable {
         return contractData.getMaxTradePeriod();
     }
 
+    public Date getCreationDate() {
+        return creationDate;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Util
@@ -157,6 +164,7 @@ public class PaymentAccount implements Serializable {
         return contractData.toString() + '\'' +
                 "PaymentAccount{" +
                 "id='" + id + '\'' +
+                ", creationDate=" + creationDate +
                 ", paymentMethod=" + paymentMethod +
                 ", accountName='" + accountName + '\'' +
                 ", tradeCurrencies=" + tradeCurrencies +

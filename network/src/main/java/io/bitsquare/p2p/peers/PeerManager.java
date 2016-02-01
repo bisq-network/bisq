@@ -5,7 +5,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
-import io.bitsquare.p2p.peers.messages.data.UpdateDataRequest;
+import io.bitsquare.p2p.peers.messages.data.GetUpdatedDataRequest;
 import io.bitsquare.storage.Storage;
 import javafx.beans.value.ChangeListener;
 import org.slf4j.Logger;
@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -43,8 +44,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
 
     private static final int MAX_REPORTED_PEERS = 1000;
     private static final int MAX_PERSISTED_PEERS = 500;
-    private static final long DAY = 24 * 60 * 60 * 1000; // max age for reported peers is 14 days
-    private static final long MAX_AGE = 14 * DAY; // max age for reported peers is 14 days
+    private static final long MAX_AGE = TimeUnit.DAYS.toMillis(14); // max age for reported peers is 14 days
 
 
     private final NetworkNode networkNode;
@@ -138,7 +138,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
     public void onMessage(Message message, Connection connection) {
         // In case a seed node connects to another seed node we get his address at the DataRequest triggered from
         // RequestDataManager.updateDataFromConnectedSeedNode 
-        if (message instanceof UpdateDataRequest) {
+        if (message instanceof GetUpdatedDataRequest) {
             Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
             if (peersNodeAddressOptional.isPresent() &&
                     seedNodeAddresses.contains(peersNodeAddressOptional.get()))

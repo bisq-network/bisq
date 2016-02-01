@@ -117,7 +117,7 @@ public class WalletService {
         Threading.USER_THREAD = UserThread.getExecutor();
 
         Timer timeoutTimer = UserThread.runAfter(() -> {
-            exceptionHandler.handleException(new TimeoutException("Wallet did not initialize in " + STARTUP_TIMEOUT_SEC / 1000 + " seconds."));
+            exceptionHandler.handleException(new TimeoutException("Wallet did not initialize in " + STARTUP_TIMEOUT_SEC + " seconds."));
         }, STARTUP_TIMEOUT_SEC);
 
         // If seed is non-null it means we are restoring from backup.

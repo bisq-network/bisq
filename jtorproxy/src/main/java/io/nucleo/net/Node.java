@@ -219,7 +219,7 @@ public class Node {
             public void run() {
                 {
                     try {
-                        socket.setSoTimeout(60 * 1000);
+                        socket.setSoTimeout((int) TimeUnit.SECONDS.toMillis(60));
                     } catch (SocketException e2) {
                         e2.printStackTrace();
                         try {

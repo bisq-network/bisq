@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 //TODO P2P network tests are outdated
 @Ignore
@@ -60,7 +61,7 @@ public class ProtectedDataStorageTest {
         dir2.mkdir();
 
         UserThread.setExecutor(Executors.newSingleThreadExecutor());
-        P2PDataStorage.CHECK_TTL_INTERVAL = 10 * 60 * 1000;
+        P2PDataStorage.CHECK_TTL_INTERVAL = (int) TimeUnit.MINUTES.toMillis(10);
 
         keyRing1 = new KeyRing(new KeyStorage(dir1));
 

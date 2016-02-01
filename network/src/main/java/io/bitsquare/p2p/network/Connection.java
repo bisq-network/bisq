@@ -39,7 +39,7 @@ public class Connection implements MessageListener {
     private static final int MSG_THROTTLE_PER_SEC = 10;              // With MAX_MSG_SIZE of 100kb results in bandwidth of 10 mbit/sec 
     private static final int MSG_THROTTLE_PER_10SEC = 50;           // With MAX_MSG_SIZE of 100kb results in bandwidth of 5 mbit/sec for 10 sec 
     //timeout on blocking Socket operations like ServerSocket.accept() or SocketInputStream.read()
-    private static final int SOCKET_TIMEOUT = 30 * 60 * 1000;        // 30 min.
+    private static final int SOCKET_TIMEOUT = (int) TimeUnit.MINUTES.toMillis(30);
 
     public static int getMaxMsgSize() {
         return MAX_MSG_SIZE;
@@ -205,16 +205,20 @@ public class Connection implements MessageListener {
         long now = System.currentTimeMillis();
         boolean violated = false;
         if (messageTimeStamps.size() >= MSG_THROTTLE_PER_SEC) {
-            // check if we got more than 10 msg per sec.
-            long compareTo = messageTimeStamps.get(messageTimeStamps.size() - MSG_THROTTLE_PER_SEC);
-            violated = now - compareTo < 1000;
+            // check if we got more than 10 (MSG_THROTTLE_PER_SEC) msg per sec.
+            long compareValue = messageTimeStamps.get(messageTimeStamps.size() - MSG_THROTTLE_PER_SEC);
+            // if duration < 1 sec we received too much messages
+            violated = now - compareValue < TimeUnit.SECONDS.toMillis(1); 
         }
 
         if (messageTimeStamps.size() >= MSG_THROTTLE_PER_10SEC) {
-            // check if we got more than 50 msg per 10 sec.
-            long compareTo = messageTimeStamps.get(messageTimeStamps.size() - MSG_THROTTLE_PER_10SEC);
-            violated = violated || now - compareTo < 10000;
-            // we limit to max 50 entries
+            if (!violated) {
+                // check if we got more than 50 msg per 10 sec.
+                long compareValue = messageTimeStamps.get(messageTimeStamps.size() - MSG_THROTTLE_PER_10SEC);
+                // if duration < 10 sec we received too much messages
+                violated = now - compareValue < TimeUnit.SECONDS.toMillis(10);
+            }
+            // we limit to max 50 (MSG_THROTTLE_PER_10SEC) entries
             messageTimeStamps.remove(0);
         }
 

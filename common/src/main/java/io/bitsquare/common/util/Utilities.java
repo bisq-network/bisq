@@ -354,7 +354,7 @@ public class Utilities {
         URLConnection connection = URI.create(url).toURL().openConnection();
         connection.setDoOutput(true);
         connection.setUseCaches(false);
-        connection.setConnectTimeout(10 * 1000);
+        connection.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(10));
         connection.addRequestProperty("User-Agent", userAgent);
         connection.connect();
         try (InputStream inputStream = connection.getInputStream()) {

@@ -5,6 +5,7 @@ import io.bitsquare.p2p.NodeAddress;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 public class ReportedPeer implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -21,7 +22,7 @@ public class ReportedPeer implements Serializable {
     public void penalizeLastActivityDate() {
         if (lastActivityDate != null) {
             long now = new Date().getTime();
-            long diff = Math.max(24 * 60 * 60 * 1000, now - lastActivityDate.getTime());
+            long diff = Math.max(TimeUnit.DAYS.toMillis(1), now - lastActivityDate.getTime());
             long reduced = now - diff * 2;
             lastActivityDate = new Date(reduced);
         }

@@ -10,10 +10,10 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
-import io.bitsquare.p2p.peers.messages.data.DataRequest;
-import io.bitsquare.p2p.peers.messages.data.DataResponse;
-import io.bitsquare.p2p.peers.messages.data.PreliminaryDataRequest;
-import io.bitsquare.p2p.peers.messages.data.UpdateDataRequest;
+import io.bitsquare.p2p.peers.messages.data.GetDataRequest;
+import io.bitsquare.p2p.peers.messages.data.GetDataResponse;
+import io.bitsquare.p2p.peers.messages.data.GetUpdatedDataRequest;
+import io.bitsquare.p2p.peers.messages.data.PreliminaryGetDataRequest;
 import io.bitsquare.p2p.storage.P2PDataStorage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -80,73 +80,66 @@ public class RequestDataHandshake implements MessageListener {
 
     public void requestData(NodeAddress nodeAddress) {
         Log.traceCall("nodeAddress=" + nodeAddress);
-        checkArgument(timeoutTimer == null, "requestData must not be called twice.");
-
-        timeoutTimer = UserThread.runAfter(() -> {
-                    log.info("timeoutTimer called");
-                    peerManager.shutDownConnection(nodeAddress);
-                    shutDown();
-                    listener.onFault("A timeout occurred");
-                },
-                10, TimeUnit.SECONDS);
-
-        Message dataRequest;
+        GetDataRequest getDataRequest;
         if (networkNode.getNodeAddress() == null)
-            dataRequest = new PreliminaryDataRequest(nonce);
+            getDataRequest = new PreliminaryGetDataRequest(nonce);
         else
-            dataRequest = new UpdateDataRequest(networkNode.getNodeAddress(), nonce);
+            getDataRequest = new GetUpdatedDataRequest(networkNode.getNodeAddress(), nonce);
 
-        log.info("We send a {} to peer {}. ", dataRequest.getClass().getSimpleName(), nodeAddress);
+        log.info("We send a {} to peer {}. ", getDataRequest.getClass().getSimpleName(), nodeAddress);
 
-        SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, dataRequest);
+        SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getDataRequest);
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
             public void onSuccess(@Nullable Connection connection) {
-                log.trace("Send " + dataRequest + " to " + nodeAddress + " succeeded.");
+                log.trace("Send " + getDataRequest + " to " + nodeAddress + " succeeded.");
             }
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                String errorMessage = "Sending dataRequest to " + nodeAddress +
-                        " failed. That is expected if the peer is offline. dataRequest=" + dataRequest + "." +
-                        "Exception: " + throwable.getMessage();
+                String errorMessage = "Sending getDataRequest to " + nodeAddress +
+                        " failed. That is expected if the peer is offline.\n" +
+                        "getDataRequest=" + getDataRequest + "." +
+                        "\nException=" + throwable.getMessage();
                 log.info(errorMessage);
-
                 peerManager.shutDownConnection(nodeAddress);
                 shutDown();
                 listener.onFault(errorMessage);
             }
         });
+
+        checkArgument(timeoutTimer == null, "requestData must not be called twice.");
+        timeoutTimer = UserThread.runAfter(() -> {
+                    String errorMessage = "A timeout occurred at sending getDataRequest:" + getDataRequest +
+                            " on nodeAddress:" + nodeAddress;
+                    log.info(errorMessage + " / RequestDataHandshake=" +
+                            RequestDataHandshake.this);
+                    peerManager.shutDownConnection(nodeAddress);
+                    shutDown();
+                    listener.onFault(errorMessage);
+                },
+                10, TimeUnit.SECONDS);
     }
 
     public void onDataRequest(Message message, final Connection connection) {
         Log.traceCall(message.toString() + " / connection=" + connection);
 
-        checkArgument(timeoutTimer == null, "requestData must not be called twice.");
-        timeoutTimer = UserThread.runAfter(() -> {
-                    log.info("timeoutTimer called");
-                    peerManager.shutDownConnection(connection);
-                    shutDown();
-                    listener.onFault("A timeout occurred");
-                },
-                10, TimeUnit.SECONDS);
-
-        DataRequest dataRequest = (DataRequest) message;
-        DataResponse dataResponse = new DataResponse(new HashSet<>(dataStorage.getMap().values()), dataRequest.getNonce());
-        SettableFuture<Connection> future = networkNode.sendMessage(connection, dataResponse);
+        GetDataResponse getDataResponse = new GetDataResponse(new HashSet<>(dataStorage.getMap().values()),
+                ((GetDataRequest) message).getNonce());
+        SettableFuture<Connection> future = networkNode.sendMessage(connection, getDataResponse);
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
             public void onSuccess(Connection connection) {
-                log.trace("Send DataResponse to {} succeeded. dataResponse={}",
-                        connection.getPeersNodeAddressOptional(), dataResponse);
+                log.trace("Send DataResponse to {} succeeded. getDataResponse={}",
+                        connection.getPeersNodeAddressOptional(), getDataResponse);
                 shutDown();
                 listener.onComplete();
             }
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                String errorMessage = "Sending dataRequest to " + connection +
-                        " failed. That is expected if the peer is offline. dataRequest=" + dataRequest + "." +
+                String errorMessage = "Sending getDataRequest to " + connection +
+                        " failed. That is expected if the peer is offline. getDataResponse=" + getDataResponse + "." +
                         "Exception: " + throwable.getMessage();
                 log.info(errorMessage);
 
@@ -155,6 +148,18 @@ public class RequestDataHandshake implements MessageListener {
                 listener.onFault(errorMessage);
             }
         });
+
+        checkArgument(timeoutTimer == null, "requestData must not be called twice.");
+        timeoutTimer = UserThread.runAfter(() -> {
+                    String errorMessage = "A timeout occurred for getDataResponse:" + getDataResponse +
+                            " on connection:" + connection;
+                    log.info(errorMessage + " / RequestDataHandshake=" +
+                            RequestDataHandshake.this);
+                    peerManager.shutDownConnection(connection);
+                    shutDown();
+                    listener.onFault(errorMessage);
+                },
+                10, TimeUnit.SECONDS);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -163,25 +168,26 @@ public class RequestDataHandshake implements MessageListener {
 
     @Override
     public void onMessage(Message message, Connection connection) {
-        if (message instanceof DataResponse) {
+        if (message instanceof GetDataResponse) {
             Log.traceCall(message.toString() + " / connection=" + connection);
-            DataResponse dataResponse = (DataResponse) message;
-            if (dataResponse.requestNonce == nonce) {
+            GetDataResponse getDataResponse = (GetDataResponse) message;
+            if (getDataResponse.requestNonce == nonce) {
                 stopTimeoutTimer();
-
-                // connection.getPeersNodeAddressOptional() is not present at the first call
-                log.debug("connection.getPeersNodeAddressOptional() " + connection.getPeersNodeAddressOptional());
-                connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress -> {
-                    ((DataResponse) message).dataSet.stream()
-                            .forEach(e -> dataStorage.add(e, peersNodeAddress));
-                });
+                checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
+                        "RequestDataHandshake.onMessage: connection.getPeersNodeAddressOptional() must be present " +
+                                "at that moment");
+                ((GetDataResponse) message).dataSet.stream()
+                        .forEach(protectedData -> dataStorage.add(protectedData,
+                                connection.getPeersNodeAddressOptional().get()));
 
                 shutDown();
                 listener.onComplete();
             } else {
-                log.debug("Nonce not matching. That happens if we get a response after a canceled handshake " +
-                                "(timeout). We drop that message. nonce={} / requestNonce={}",
-                        nonce, dataResponse.requestNonce);
+                log.debug("Nonce not matching. That can happen rarely if we get a response after a canceled " +
+                                "handshake (timeout causes connection close but peer might have sent a msg before " +
+                                "connection was closed).\n" +
+                                "We drop that message. nonce={} / requestNonce={}",
+                        nonce, getDataResponse.requestNonce);
             }
         }
     }
