@@ -321,7 +321,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     @Override
     public void onMessage(Message message, Connection connection) {
         if (message instanceof PrefixedSealedAndSignedMessage) {
-            Log.traceCall(message.toString() + "\n\tconnection=" + connection);
+            Log.traceCall("\n\t" + message.toString() + "\n\tconnection=" + connection);
             // Seed nodes don't have set the encryptionService
             if (optionalEncryptionService.isPresent()) {
                 try {

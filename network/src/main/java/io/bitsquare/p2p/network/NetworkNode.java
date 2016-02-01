@@ -127,7 +127,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     }
 
     public SettableFuture<Connection> sendMessage(Connection connection, Message message) {
-        Log.traceCall("message=" + message + "\n\tconnection=" + connection);
+        Log.traceCall("\n\tmessage=" + message + "\n\tconnection=" + connection);
         // connection.sendMessage might take a bit (compression, write to stream), so we use a thread to not block
         ListenableFuture<Connection> future = executorService.submit(() -> {
             Thread.currentThread().setName("NetworkNode:SendMessage-to-" + connection.getUid());

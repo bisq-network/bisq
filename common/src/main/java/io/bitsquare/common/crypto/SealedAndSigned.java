@@ -61,14 +61,4 @@ public final class SealedAndSigned implements Serializable {
         result = 31 * result + (sigPublicKey != null ? sigPublicKey.hashCode() : 0);
         return result;
     }
-
-    @Override
-    public String toString() {
-        return "SealedAndSigned{" +
-                "encryptedSecretKey.hashCode()=" + Arrays.toString(encryptedSecretKey).hashCode() +
-                ", encryptedPayloadWithHmac.hashCode()=" + Arrays.toString(encryptedPayloadWithHmac).hashCode() +
-                ", signature.hashCode()=" + Arrays.toString(signature).hashCode() +
-                ", sigPublicKey.hashCode()=" + sigPublicKey.hashCode() +
-                '}';
-    }
 }

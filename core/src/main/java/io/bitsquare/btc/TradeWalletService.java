@@ -482,7 +482,6 @@ public class TradeWalletService {
 
         // Add all outputs from offerersDepositTx to depositTx
         offerersDepositTx.getOutputs().forEach(depositTx::addOutput);
-
         printTxWithInputs("offerersDepositTx", offerersDepositTx);
 
         // Sign inputs 
@@ -625,7 +624,6 @@ public class TradeWalletService {
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
 
-        printTxWithInputs("payoutTx", payoutTx);
         verifyTransaction(payoutTx);
         checkWalletConsistency();
         checkScriptSig(payoutTx, input, 0);
@@ -784,7 +782,6 @@ public class TradeWalletService {
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
 
-        printTxWithInputs("disputed payoutTx", payoutTx);
         verifyTransaction(payoutTx);
         checkWalletConsistency();
         checkScriptSig(payoutTx, input, 0);
