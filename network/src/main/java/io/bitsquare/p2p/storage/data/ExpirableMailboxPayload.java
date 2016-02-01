@@ -45,9 +45,10 @@ public final class ExpirableMailboxPayload implements ExpirablePayload {
 
     @Override
     public String toString() {
-        return "MailboxEntry{" +
-                "hashCode=" + hashCode() +
-                ", sealedAndSignedMessage=" + prefixedSealedAndSignedMessage +
+        return "ExpirableMailboxPayload{" +
+                "prefixedSealedAndSignedMessage=" + prefixedSealedAndSignedMessage +
+                ", senderStoragePublicKey.hashCode()=" + senderStoragePublicKey.hashCode() +
+                ", receiverStoragePublicKey.hashCode()=" + receiverStoragePublicKey.hashCode() +
                 '}';
     }
 }

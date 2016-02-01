@@ -36,6 +36,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.TextAlignment;
 import javafx.util.StringConverter;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -220,7 +221,7 @@ public class SepaForm extends PaymentMethodForm {
         if (autoFillCheckBox != null && autoFillCheckBox.isSelected()) {
             String iban = ibanInputTextField.getText();
             if (iban.length() > 5)
-                iban = "..." + iban.substring(iban.length() - 5, iban.length());
+                iban = StringUtils.abbreviate(iban, 5);
             String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
             String country = paymentAccount.getCountry() != null ? paymentAccount.getCountry().code : "?";
             String currency = paymentAccount.getSingleTradeCurrency() != null ? paymentAccount.getSingleTradeCurrency().getCode() : "?";

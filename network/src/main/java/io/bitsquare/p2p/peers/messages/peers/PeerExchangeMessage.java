@@ -13,7 +13,8 @@ public abstract class PeerExchangeMessage implements Message {
 
     @Override
     public String toString() {
-        return ", networkId=" + networkId +
+        return "PeerExchangeMessage{" +
+                "networkId=" + networkId +
                 '}';
     }
 }

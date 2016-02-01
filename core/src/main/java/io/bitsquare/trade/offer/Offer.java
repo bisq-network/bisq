@@ -395,27 +395,27 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
     @Override
     public String toString() {
         return "Offer{" +
-                "id='" + id + '\'' +
-                ", direction=" + direction +
-                ", currencyCode='" + currencyCode + '\'' +
-                ", date=" + date +
-                ", fiatPrice=" + fiatPrice +
-                ", amount=" + amount +
-                ", minAmount=" + minAmount +
-                ", offererAddress=" + offererNodeAddress +
-                ", pubKeyRing=" + pubKeyRing +
-                ", paymentMethodName='" + paymentMethodName + '\'' +
-                ", paymentMethodCountryCode='" + paymentMethodCountryCode + '\'' +
-                ", offererPaymentAccountId='" + offererPaymentAccountId + '\'' +
-                ", acceptedCountryCodes=" + acceptedCountryCodes +
-                ", arbitratorAddresses=" + arbitratorNodeAddresses +
-                ", offerFeePaymentTxID='" + offerFeePaymentTxID + '\'' +
-                ", state=" + state +
-                ", stateProperty=" + stateProperty +
-                ", availabilityProtocol=" + availabilityProtocol +
-                ", errorMessageProperty=" + errorMessageProperty +
-                ", TAC_OFFERER=" + TAC_OFFERER +
-                ", TAC_TAKER=" + TAC_TAKER +
+                "\n\tid='" + id + '\'' +
+                "\n\tdirection=" + direction +
+                "\n\tcurrencyCode='" + currencyCode + '\'' +
+                "\n\tdate=" + date +
+                "\n\tfiatPrice=" + fiatPrice +
+                "\n\tamount=" + amount +
+                "\n\tminAmount=" + minAmount +
+                "\n\toffererAddress=" + offererNodeAddress +
+                "\n\tpubKeyRing=" + pubKeyRing +
+                "\n\tpaymentMethodName='" + paymentMethodName + '\'' +
+                "\n\tpaymentMethodCountryCode='" + paymentMethodCountryCode + '\'' +
+                "\n\toffererPaymentAccountId='" + offererPaymentAccountId + '\'' +
+                "\n\tacceptedCountryCodes=" + acceptedCountryCodes +
+                "\n\tarbitratorAddresses=" + arbitratorNodeAddresses +
+                "\n\tofferFeePaymentTxID='" + offerFeePaymentTxID + '\'' +
+                "\n\tstate=" + state +
+                "\n\tstateProperty=" + stateProperty +
+                "\n\tavailabilityProtocol=" + availabilityProtocol +
+                "\n\terrorMessageProperty=" + errorMessageProperty +
+                "\n\tTAC_OFFERER=" + TAC_OFFERER +
+                "\n\tTAC_TAKER=" + TAC_TAKER +
                 '}';
     }
 

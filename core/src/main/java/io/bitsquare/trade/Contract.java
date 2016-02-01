@@ -160,29 +160,6 @@ public class Contract implements Serializable {
     }
 
     @Override
-    public String toString() {
-        return "Contract{" +
-                "offer=" + offer +
-                ", tradeAmount=" + tradeAmount +
-                ", takeOfferFeeTxID='" + takeOfferFeeTxID + '\'' +
-                ", arbitratorAddress=" + arbitratorNodeAddress +
-                ", isBuyerOffererAndSellerTaker=" + isBuyerOffererAndSellerTaker +
-                ", offererAccountId='" + offererAccountId + '\'' +
-                ", takerAccountId='" + takerAccountId + '\'' +
-                ", offererPaymentAccountContractData=" + offererPaymentAccountContractData +
-                ", takerPaymentAccountContractData=" + takerPaymentAccountContractData +
-                ", offererPubKeyRing=" + offererPubKeyRing +
-                ", takerPubKeyRing=" + takerPubKeyRing +
-                ", buyerAddress=" + buyerNodeAddress +
-                ", sellerAddress=" + sellerNodeAddress +
-                ", offererPayoutAddressString='" + offererPayoutAddressString + '\'' +
-                ", takerPayoutAddressString='" + takerPayoutAddressString + '\'' +
-                ", offererBtcPubKey=" + Arrays.toString(offererBtcPubKey) +
-                ", takerBtcPubKey=" + Arrays.toString(takerBtcPubKey) +
-                '}';
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Contract)) return false;
@@ -243,4 +220,26 @@ public class Contract implements Serializable {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return "Contract{" +
+                "\n\toffer=" + offer +
+                "\n\ttradeAmount=" + tradeAmount +
+                "\n\ttakeOfferFeeTxID='" + takeOfferFeeTxID + '\'' +
+                "\n\tarbitratorAddress=" + arbitratorNodeAddress +
+                "\n\tisBuyerOffererAndSellerTaker=" + isBuyerOffererAndSellerTaker +
+                "\n\toffererAccountId='" + offererAccountId + '\'' +
+                "\n\ttakerAccountId='" + takerAccountId + '\'' +
+                "\n\toffererPaymentAccountContractData=" + offererPaymentAccountContractData +
+                "\n\ttakerPaymentAccountContractData=" + takerPaymentAccountContractData +
+                "\n\toffererPubKeyRing=" + offererPubKeyRing +
+                "\n\ttakerPubKeyRing=" + takerPubKeyRing +
+                "\n\tbuyerAddress=" + buyerNodeAddress +
+                "\n\tsellerAddress=" + sellerNodeAddress +
+                "\n\toffererPayoutAddressString='" + offererPayoutAddressString + '\'' +
+                "\n\ttakerPayoutAddressString='" + takerPayoutAddressString + '\'' +
+                "\n\toffererBtcPubKey=" + Arrays.toString(offererBtcPubKey) +
+                "\n\ttakerBtcPubKey=" + Arrays.toString(takerBtcPubKey) +
+                '}';
+    }
 }

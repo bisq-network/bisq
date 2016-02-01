@@ -30,9 +30,8 @@ public final class GetPeersRequest extends PeerExchangeMessage implements Sender
     public String toString() {
         return "GetPeersRequest{" +
                 "senderNodeAddress=" + senderNodeAddress +
-                ", requestNonce=" + nonce +
+                ", nonce=" + nonce +
                 ", reportedPeers.size()=" + reportedPeers.size() +
-                super.toString() + "} ";
+                "} " + super.toString();
     }
-
 }

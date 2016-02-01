@@ -28,6 +28,7 @@ import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +74,7 @@ public class AliPayForm extends PaymentMethodForm {
     protected void autoFillNameTextField() {
         if (autoFillCheckBox != null && autoFillCheckBox.isSelected()) {
             String accountNr = accountNrInputTextField.getText();
-            accountNr = accountNr.substring(0, Math.min(5, accountNr.length())) + "...";
+            accountNr = StringUtils.abbreviate(accountNr, 5);
             String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
             accountNameTextField.setText(method.concat(", ").concat(accountNr));
         }

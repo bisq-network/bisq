@@ -114,6 +114,7 @@ public class RequestDataManager implements MessageListener {
     @Override
     public void onMessage(Message message, Connection connection) {
         if (message instanceof GetDataRequest) {
+            Log.traceCall(message.toString() + "\n\tconnection=" + connection);
             RequestDataHandshake requestDataHandshake = new RequestDataHandshake(networkNode, dataStorage, peerManager,
                     new RequestDataHandshake.Listener() {
                         @Override
@@ -124,7 +125,7 @@ public class RequestDataManager implements MessageListener {
 
                         @Override
                         public void onFault(String errorMessage) {
-                            log.trace("requestDataHandshake of inbound connection failed.\nConnection={}\n" +
+                            log.trace("requestDataHandshake of inbound connection failed.\n\tConnection={}\n\t" +
                                     "ErrorMessage={}", connection, errorMessage);
                             peerManager.penalizeUnreachablePeer(connection);
                         }
@@ -169,7 +170,7 @@ public class RequestDataManager implements MessageListener {
 
                         @Override
                         public void onFault(String errorMessage) {
-                            log.trace("requestDataHandshake of outbound connection failed.\nnodeAddress={}\n" +
+                            log.trace("requestDataHandshake of outbound connection failed.\n\tnodeAddress={}\n\t" +
                                     "ErrorMessage={}", nodeAddress, errorMessage);
 
                             peerManager.penalizeUnreachablePeer(nodeAddress);
@@ -182,7 +183,7 @@ public class RequestDataManager implements MessageListener {
                                 requestData(nextCandidate, remainingNodeAddresses);
                             } else {
                                 log.info("There is no remaining node available for requesting data. " +
-                                        "That is expected if no other node is online.\n" +
+                                        "That is expected if no other node is online.\n\t" +
                                         "We will try to use reported peers (if no available we use persisted peers) " +
                                         "and try again to request data from our seed nodes after a random pause.");
 

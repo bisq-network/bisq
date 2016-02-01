@@ -110,6 +110,16 @@ public class OpenOffer implements Tradable, Serializable {
             timeoutTimer = null;
         }
     }
+
+    @Override
+    public String toString() {
+        return "OpenOffer{" +
+                "\n\ttimeoutTimer=" + timeoutTimer +
+                "\n\toffer=" + offer +
+                "\n\tstate=" + state +
+                "\n\tstorage=" + storage +
+                '}';
+    }
 }
 
    

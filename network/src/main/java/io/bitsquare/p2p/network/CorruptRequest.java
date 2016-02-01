@@ -1,6 +1,6 @@
 package io.bitsquare.p2p.network;
 
-public enum IllegalRequest {
+public enum CorruptRequest {
     MaxSizeExceeded(1),
     InvalidDataType(0),
     WrongNetworkId(0),
@@ -8,7 +8,7 @@ public enum IllegalRequest {
 
     public final int maxTolerance;
 
-    IllegalRequest(int maxTolerance) {
+    CorruptRequest(int maxTolerance) {
         this.maxTolerance = maxTolerance;
     }
 }

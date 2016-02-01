@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.Date;
 
 public class ProtectedData implements Serializable {
@@ -49,10 +50,12 @@ public class ProtectedData implements Serializable {
     @Override
     public String toString() {
         return "ProtectedData{" +
-                "data=\n" + expirablePayload +
-                ", \nttl=" + ttl +
-                ", sequenceNumber=" + sequenceNumber +
+                "expirablePayload=" + expirablePayload +
+                ", ttl=" + ttl +
                 ", date=" + date +
-                "\n}";
+                ", sequenceNumber=" + sequenceNumber +
+                ", ownerStoragePubKey.hashCode()=" + ownerStoragePubKey.hashCode() +
+                ", signature.hashCode()=" + Arrays.toString(signature).hashCode() +
+                '}';
     }
 }

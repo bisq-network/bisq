@@ -137,7 +137,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Transient/Immutable
-    transient private ObjectProperty<State> processStateProperty;
+    transient private ObjectProperty<State> stateProperty;
     transient private ObjectProperty<DisputeState> disputeStateProperty;
     transient private ObjectProperty<TradePeriodState> tradePeriodStateProperty;
     // Trades are saved in the TradeList
@@ -242,7 +242,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     }
 
     protected void initStateProperties() {
-        processStateProperty = new SimpleObjectProperty<>(state);
+        stateProperty = new SimpleObjectProperty<>(state);
         disputeStateProperty = new SimpleObjectProperty<>(disputeState);
         tradePeriodStateProperty = new SimpleObjectProperty<>(tradePeriodState);
     }
@@ -300,7 +300,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
 
     public void setState(State state) {
         this.state = state;
-        processStateProperty.set(state);
+        stateProperty.set(state);
         persist();
         persist();
     }
@@ -385,7 +385,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
 
 
     public ReadOnlyObjectProperty<? extends State> stateProperty() {
-        return processStateProperty;
+        return stateProperty;
     }
 
     public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
@@ -609,25 +609,31 @@ abstract public class Trade implements Tradable, Model, Serializable {
     @Override
     public String toString() {
         return "Trade{" +
-                "tradeAmount=" + tradeAmount +
-                ", tradingPeer=" + tradingPeerNodeAddress +
-                ", tradeAmountProperty=" + tradeAmountProperty +
-                ", tradeVolumeProperty=" + tradeVolumeProperty +
-                ", processStateProperty=" + processStateProperty +
-                ", storage=" + storage +
-                ", tradeProtocol=" + tradeProtocol +
-                ", offer=" + offer +
-                ", date=" + takeOfferDate +
-                ", processModel=" + processModel +
-                ", processState=" + state +
-                ", messageWithPubKey=" + decryptedMsgWithPubKey +
-                ", depositTx=" + depositTx +
-               /* ", contract=" + contract +
-                ", contractAsJson='" + contractAsJson + '\'' +*/
-              /*  ", sellerContractSignature='" + sellerContractSignature + '\'' +
-                ", buyerContractSignature='" + buyerContractSignature + '\'' +*/
-                ", payoutTx=" + payoutTx +
-                ", errorMessage='" + errorMessage + '\'' +
+                "\n\ttradeAmount=" + tradeAmount +
+                "\n\ttradingPeerNodeAddress=" + tradingPeerNodeAddress +
+                "\n\ttradeVolume=" + tradeVolumeProperty.get() +
+                "\n\toffer=" + offer +
+                "\n\tprocessModel=" + processModel +
+                "\n\tdecryptedMsgWithPubKey=" + decryptedMsgWithPubKey +
+                "\n\ttakeOfferDate=" + takeOfferDate +
+                "\n\tstate=" + state +
+                "\n\tdisputeState=" + disputeState +
+                "\n\ttradePeriodState=" + tradePeriodState +
+                "\n\tdepositTx=" + depositTx +
+                "\n\tcontract=" + contract +
+              /*  "\n\tcontractAsJson='" + contractAsJson + '\'' +*/
+               /* "\n\tcontractHash=" + Arrays.toString(contractHash) +*/
+                "\n\ttakerContractSignature.hashCode()='" + takerContractSignature.hashCode() + '\'' +
+                "\n\toffererContractSignature.hashCode()='" + offererContractSignature.hashCode() + '\'' +
+                "\n\tpayoutTx=" + payoutTx +
+                "\n\tlockTimeAsBlockHeight=" + lockTimeAsBlockHeight +
+                "\n\topenDisputeTimeAsBlockHeight=" + openDisputeTimeAsBlockHeight +
+                "\n\tcheckPaymentTimeAsBlockHeight=" + checkPaymentTimeAsBlockHeight +
+                "\n\tarbitratorNodeAddress=" + arbitratorNodeAddress +
+                "\n\ttakerPaymentAccountId='" + takerPaymentAccountId + '\'' +
+                "\n\thalfTradePeriodReachedWarningDisplayed=" + halfTradePeriodReachedWarningDisplayed +
+                "\n\ttradePeriodOverWarningDisplayed=" + tradePeriodOverWarningDisplayed +
+                "\n\terrorMessage='" + errorMessage + '\'' +
                 '}';
     }
 }

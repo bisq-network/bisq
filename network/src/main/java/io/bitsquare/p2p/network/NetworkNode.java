@@ -46,7 +46,6 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     NetworkNode(int servicePort) {
-        Log.traceCall();
         this.servicePort = servicePort;
     }
 
@@ -57,7 +56,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     abstract public void start(@Nullable SetupListener setupListener);
 
     public SettableFuture<Connection> sendMessage(@NotNull NodeAddress peersNodeAddress, Message message) {
-        Log.traceCall("peerAddress: " + peersNodeAddress + " / message: " + message);
+        Log.traceCall("peersNodeAddress=" + peersNodeAddress + "\n\tmessage=" + message);
         checkNotNull(peersNodeAddress, "peerAddress must not be null");
 
         Optional<Connection> outboundConnectionOptional = lookupOutboundConnection(peersNodeAddress);
@@ -81,7 +80,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         if (connection != null) {
             return sendMessage(connection, message);
         } else {
-            log.trace("We have not found any connection for peerAddress {}. " +
+            log.trace("We have not found any connection for peerAddress {}.\n\t" +
                     "We will create a new outbound connection.", peersNodeAddress);
 
             final SettableFuture<Connection> resultFuture = SettableFuture.create();
@@ -128,7 +127,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     }
 
     public SettableFuture<Connection> sendMessage(Connection connection, Message message) {
-        Log.traceCall("message: " + message + " to connection: " + connection);
+        Log.traceCall("message=" + message + "\n\tconnection=" + connection);
         // connection.sendMessage might take a bit (compression, write to stream), so we use a thread to not block
         ListenableFuture<Connection> future = executorService.submit(() -> {
             Thread.currentThread().setName("NetworkNode:SendMessage-to-" + connection.getUid());
@@ -174,7 +173,6 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     public void shutDown(Runnable shutDownCompleteHandler) {
         Log.traceCall();
-        log.info("Shutdown NetworkNode");
         if (!shutDownInProgress) {
             shutDownInProgress = true;
             if (server != null) {
@@ -195,7 +193,6 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void addSetupListener(SetupListener setupListener) {
-        Log.traceCall();
         boolean isNewEntry = setupListeners.add(setupListener);
         if (!isNewEntry)
             log.warn("Try to add a setupListener which was already added.");
@@ -208,13 +205,11 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     @Override
     public void onConnection(Connection connection) {
-        Log.traceCall("connection=" + connection);
         connectionListeners.stream().forEach(e -> e.onConnection(connection));
     }
 
     @Override
     public void onDisconnect(Reason reason, Connection connection) {
-        Log.traceCall("connection = " + connection);
         outBoundConnections.remove(connection);
         inBoundConnections.remove(connection);
         connectionListeners.stream().forEach(e -> e.onDisconnect(reason, connection));
@@ -222,7 +217,6 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     @Override
     public void onError(Throwable throwable) {
-        Log.traceCall();
         connectionListeners.stream().forEach(e -> e.onError(throwable));
     }
 
@@ -242,34 +236,29 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addConnectionListener(ConnectionListener connectionListener) {
-        Log.traceCall();
-
         boolean isNewEntry = connectionListeners.add(connectionListener);
         if (!isNewEntry)
-            log.warn("Try to add a connectionListener which was already added.\nconnectionListener={}\nconnectionListeners={}"
+            log.warn("Try to add a connectionListener which was already added.\n\tconnectionListener={}\n\tconnectionListeners={}"
                     , connectionListener, connectionListeners);
     }
 
     public void removeConnectionListener(ConnectionListener connectionListener) {
-        Log.traceCall();
         boolean contained = connectionListeners.remove(connectionListener);
         if (!contained)
-            log.debug("Try to remove a connectionListener which was never added. " +
+            log.debug("Try to remove a connectionListener which was never added.\n\t" +
                     "That might happen because of async behaviour of CopyOnWriteArraySet");
     }
 
     public void addMessageListener(MessageListener messageListener) {
-        Log.traceCall();
         boolean isNewEntry = messageListeners.add(messageListener);
         if (!isNewEntry)
             log.warn("Try to add a messageListener which was already added.");
     }
 
     public void removeMessageListener(MessageListener messageListener) {
-        Log.traceCall();
         boolean contained = messageListeners.remove(messageListener);
         if (!contained)
-            log.debug("Try to remove a messageListener which was never added. " +
+            log.debug("Try to remove a messageListener which was never added.\n\t" +
                     "That might happen because of async behaviour of CopyOnWriteArraySet");
     }
 
@@ -279,30 +268,25 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void createExecutorService() {
-        Log.traceCall();
         executorService = Utilities.getListeningExecutorService("NetworkNode-" + servicePort, 20, 50, 120L);
     }
 
     void startServer(ServerSocket serverSocket) {
-        Log.traceCall();
         ConnectionListener startServerConnectionListener = new ConnectionListener() {
             @Override
             public void onConnection(Connection connection) {
-                Log.traceCall("startServerConnectionListener connection=" + connection);
                 inBoundConnections.add(connection);
                 NetworkNode.this.onConnection(connection);
             }
 
             @Override
             public void onDisconnect(Reason reason, Connection connection) {
-                Log.traceCall("onDisconnect at incoming connection = " + connection);
                 inBoundConnections.remove(connection);
                 NetworkNode.this.onDisconnect(reason, connection);
             }
 
             @Override
             public void onError(Throwable throwable) {
-                Log.traceCall();
                 NetworkNode.this.onError(throwable);
             }
         };
@@ -313,13 +297,21 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     }
 
     private Optional<Connection> lookupOutboundConnection(NodeAddress peersNodeAddress) {
-        Log.traceCall("search for " + peersNodeAddress.toString() + " / outBoundConnections " + outBoundConnections);
+        StringBuilder sb = new StringBuilder("Lookup for peersNodeAddress=");
+        sb.append(peersNodeAddress.toString()).append("/ outBoundConnections.size()=")
+                .append(outBoundConnections.size()).append("/\n\toutBoundConnections=");
+        outBoundConnections.stream().forEach(e -> sb.append(e).append("\n\t"));
+        log.debug(sb.toString());
         return outBoundConnections.stream()
                 .filter(e -> e.getPeersNodeAddressOptional().isPresent() && peersNodeAddress.equals(e.getPeersNodeAddressOptional().get())).findAny();
     }
 
     private Optional<Connection> lookupInboundConnection(NodeAddress peersNodeAddress) {
-        Log.traceCall("search for " + peersNodeAddress.toString() + " / inBoundConnections " + inBoundConnections);
+        StringBuilder sb = new StringBuilder("Lookup for peersNodeAddress=");
+        sb.append(peersNodeAddress.toString()).append("/ inBoundConnections.size()=")
+                .append(inBoundConnections.size()).append("/\n\tinBoundConnections=");
+        inBoundConnections.stream().forEach(e -> sb.append(e).append("\n\t"));
+        log.debug(sb.toString());
         return inBoundConnections.stream()
                 .filter(e -> e.getPeersNodeAddressOptional().isPresent() && peersNodeAddress.equals(e.getPeersNodeAddressOptional().get())).findAny();
     }

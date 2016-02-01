@@ -35,10 +35,9 @@ public final class GetUpdatedDataRequest implements SendersNodeAddressMessage, G
     @Override
     public String toString() {
         return "GetUpdatedDataRequest{" +
-                "senderNodeAddress=" + senderNodeAddress +
-                ", networkId=" + networkId +
+                "networkId=" + networkId +
+                ", senderNodeAddress=" + senderNodeAddress +
                 ", nonce=" + nonce +
                 '}';
     }
-
 }

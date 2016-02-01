@@ -98,9 +98,9 @@ public class RequestDataHandshake implements MessageListener {
             @Override
             public void onFailure(@NotNull Throwable throwable) {
                 String errorMessage = "Sending getDataRequest to " + nodeAddress +
-                        " failed. That is expected if the peer is offline.\n" +
+                        " failed. That is expected if the peer is offline.\n\t" +
                         "getDataRequest=" + getDataRequest + "." +
-                        "\nException=" + throwable.getMessage();
+                        "\n\tException=" + throwable.getMessage();
                 log.info(errorMessage);
                 peerManager.shutDownConnection(nodeAddress);
                 shutDown();
@@ -122,7 +122,7 @@ public class RequestDataHandshake implements MessageListener {
     }
 
     public void onDataRequest(Message message, final Connection connection) {
-        Log.traceCall(message.toString() + " / connection=" + connection);
+        Log.traceCall(message.toString() + "\n\tconnection=" + connection);
 
         GetDataResponse getDataResponse = new GetDataResponse(new HashSet<>(dataStorage.getMap().values()),
                 ((GetDataRequest) message).getNonce());
@@ -169,7 +169,7 @@ public class RequestDataHandshake implements MessageListener {
     @Override
     public void onMessage(Message message, Connection connection) {
         if (message instanceof GetDataResponse) {
-            Log.traceCall(message.toString() + " / connection=" + connection);
+            Log.traceCall(message.toString() + "\n\tconnection=" + connection);
             GetDataResponse getDataResponse = (GetDataResponse) message;
             if (getDataResponse.requestNonce == nonce) {
                 stopTimeoutTimer();
@@ -185,7 +185,7 @@ public class RequestDataHandshake implements MessageListener {
             } else {
                 log.debug("Nonce not matching. That can happen rarely if we get a response after a canceled " +
                                 "handshake (timeout causes connection close but peer might have sent a msg before " +
-                                "connection was closed).\n" +
+                                "connection was closed).\n\t" +
                                 "We drop that message. nonce={} / requestNonce={}",
                         nonce, getDataResponse.requestNonce);
             }

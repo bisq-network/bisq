@@ -21,6 +21,7 @@ import io.bitsquare.p2p.storage.messages.DataBroadcastMessage;
 import io.bitsquare.p2p.storage.messages.RemoveDataMessage;
 import io.bitsquare.p2p.storage.messages.RemoveMailboxDataMessage;
 import io.bitsquare.storage.Storage;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,7 +103,7 @@ public class P2PDataStorage implements MessageListener {
     @Override
     public void onMessage(Message message, Connection connection) {
         if (message instanceof DataBroadcastMessage) {
-            Log.traceCall(message.toString());
+            Log.traceCall(message.toString() + "\n\tconnection=" + connection);
             log.trace("DataBroadcastMessage received " + message + " on connection " + connection);
             connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress -> {
                 if (message instanceof AddDataMessage) {
@@ -161,8 +162,7 @@ public class P2PDataStorage implements MessageListener {
 
             StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n");
             sb.append("Data set after addProtectedExpirableData (truncated)");
-            map.values().stream().forEach(e -> sb.append("\n").append(e.toString()
-                    .substring(0, Math.min(50, e.toString().length()))).append("...\n"));
+            map.values().stream().forEach(e -> sb.append("\n").append(StringUtils.abbreviate(e.toString(), 100)));
             sb.append("\n------------------------------------------------------------\n");
             log.trace(sb.toString());
             log.info("Data set after addProtectedExpirableData: size=" + map.values().size());
@@ -281,8 +281,7 @@ public class P2PDataStorage implements MessageListener {
 
         StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n" +
                 "Data set after removeProtectedExpirableData: (truncated)");
-        map.values().stream().forEach(e -> sb.append("\n").append(e.toString()
-                .substring(0, Math.min(50, e.toString().length()))).append("...\n"));
+        map.values().stream().forEach(e -> sb.append("\n").append(StringUtils.abbreviate(e.toString(), 100)));
         sb.append("\n------------------------------------------------------------\n");
         log.trace(sb.toString());
         log.info("Data set after addProtectedExpirableData: size=" + map.values().size());
@@ -365,7 +364,6 @@ public class P2PDataStorage implements MessageListener {
     }
 
     private void broadcast(DataBroadcastMessage message, @Nullable NodeAddress sender) {
-        Log.traceCall(message.toString());
         broadcaster.broadcast(message, sender);
     }
 

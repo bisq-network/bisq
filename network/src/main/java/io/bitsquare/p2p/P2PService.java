@@ -321,7 +321,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     @Override
     public void onMessage(Message message, Connection connection) {
         if (message instanceof PrefixedSealedAndSignedMessage) {
-            Log.traceCall(message.toString());
+            Log.traceCall(message.toString() + "\n\tconnection=" + connection);
             // Seed nodes don't have set the encryptionService
             if (optionalEncryptionService.isPresent()) {
                 try {
@@ -334,9 +334,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         DecryptedMsgWithPubKey decryptedMsgWithPubKey = optionalEncryptionService.get().decryptAndVerify(
                                 prefixedSealedAndSignedMessage.sealedAndSigned);
 
-                        log.info("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
+                        log.info("\n\nDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD\n" +
                                 "Decrypted SealedAndSignedMessage:\ndecryptedMsgWithPubKey={}"
-                                + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n", decryptedMsgWithPubKey);
+                                + "\nDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD\n", decryptedMsgWithPubKey);
                         connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress ->
                                 decryptedDirectMessageListeners.stream().forEach(
                                         e -> e.onDirectMessage(decryptedMsgWithPubKey, peersNodeAddress)));
@@ -389,9 +389,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         checkArgument(optionalEncryptionService.isPresent(), "EncryptionService not set. Seems that is called on a seed node which must not happen.");
         checkNotNull(networkNode.getNodeAddress(), "networkNode.getNodeAddress() must not be null.");
         try {
-            log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+            log.info("\n\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n" +
                     "Encrypt message:\nmessage={}"
-                    + "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n", message);
+                    + "\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n", message);
             PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(networkNode.getNodeAddress(),
                     optionalEncryptionService.get().encryptAndSign(pubKeyRing, message),
                     peersNodeAddress.getAddressPrefixHash());
@@ -474,9 +474,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         if (isBootstrapped()) {
             if (!networkNode.getAllConnections().isEmpty()) {
                 try {
-                    log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+                    log.info("\n\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n" +
                             "Encrypt message:\nmessage={}"
-                            + "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n", message);
+                            + "\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n", message);
                     PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(
                             networkNode.getNodeAddress(),
                             optionalEncryptionService.get().encryptAndSign(peersPubKeyRing, message),
@@ -609,7 +609,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 }
             } else {
                 log.warn("decryptedMsgWithPubKey not found in mailboxMap. That should never happen." +
-                        "\ndecryptedMsgWithPubKey={}\nmailboxMap={}", decryptedMsgWithPubKey, mailboxMap);
+                        "\n\tdecryptedMsgWithPubKey={}\n\tmailboxMap={}", decryptedMsgWithPubKey, mailboxMap);
             }
         } else {
             throw new NetworkNotReadyException();

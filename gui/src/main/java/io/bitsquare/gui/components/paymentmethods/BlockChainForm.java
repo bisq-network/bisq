@@ -33,6 +33,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,7 +89,7 @@ public class BlockChainForm extends PaymentMethodForm {
         if (autoFillCheckBox != null && autoFillCheckBox.isSelected()) {
             String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
             String address = addressInputTextField.getText();
-            address = address.substring(0, Math.min(9, address.length())) + "...";
+            address = StringUtils.abbreviate(address, 9);
             String currency = paymentAccount.getSingleTradeCurrency() != null ? paymentAccount.getSingleTradeCurrency().getCode() : "?";
             accountNameTextField.setText(method.concat(", ").concat(currency).concat(", ").concat(address));
         }

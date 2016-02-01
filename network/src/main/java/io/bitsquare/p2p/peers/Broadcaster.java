@@ -10,6 +10,7 @@ import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.storage.messages.DataBroadcastMessage;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -37,7 +38,9 @@ public class Broadcaster {
     }
 
     public void broadcast(DataBroadcastMessage message, @Nullable NodeAddress sender) {
-        Log.traceCall("Sender " + sender + ". Message " + message.toString());
+
+        Log.traceCall("Sender=" + sender + "\n\t" +
+                "Message=" + StringUtils.abbreviate(message.toString(), 100));
         numOfBroadcasts.set(0);
         Set<Connection> receivers = networkNode.getConfirmedConnections();
         if (!receivers.isEmpty()) {
@@ -45,27 +48,28 @@ public class Broadcaster {
             receivers.stream()
                     .filter(connection -> !connection.getPeersNodeAddressOptional().get().equals(sender))
                     .forEach(connection -> {
+                        NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
                         log.trace("Broadcast message to " +
-                                connection.getPeersNodeAddressOptional().get() + ".");
+                                nodeAddress + ".");
                         SettableFuture<Connection> future = networkNode.sendMessage(connection, message);
                         Futures.addCallback(future, new FutureCallback<Connection>() {
                             @Override
                             public void onSuccess(Connection connection) {
-                                log.trace("Broadcast to " + connection + " succeeded.");
+                                log.trace("Broadcast to " + nodeAddress + " succeeded.");
                                 numOfBroadcasts.set(numOfBroadcasts.get() + 1);
-                                listeners.stream().forEach(listener -> {
-                                    listener.onBroadcasted(message);
-                                });
+                                listeners.stream().forEach(listener -> listener.onBroadcasted(message));
                             }
 
                             @Override
                             public void onFailure(@NotNull Throwable throwable) {
-                                log.info("Broadcast failed. " + throwable.getMessage());
+                                log.info("Broadcast to " + nodeAddress + " failed.\n\t" +
+                                        "ErrorMessage=" + throwable.getMessage());
                             }
                         });
                     });
         } else {
-            log.info("Message not broadcasted because we have no available peers yet. " +
+            log.warn("Message not broadcasted because we have no available peers yet.\n\t" +
+                    "That should never happen as broadcast should not be called in such cases.\n" +
                     "message = {}", message);
         }
     }

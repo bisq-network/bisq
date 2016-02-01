@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.security.PublicKey;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 public class ProtectedMailboxData extends ProtectedData {
     private static final Logger log = LoggerFactory.getLogger(P2PDataStorage.class);
@@ -27,9 +28,14 @@ public class ProtectedMailboxData extends ProtectedData {
             // in case the reported creation date is in the future 
             // we reset the date to the current time
             if (date.getTime() > new Date().getTime()) {
-                log.warn("Date of object is in future. " +
-                        "That might be ok as clocks are not synced but could be also a spam attack. " +
-                        "date=" + date + " / now=" + new Date());
+                if (date.getTime() > new Date().getTime() + TimeUnit.MINUTES.toMillis(1))
+                    log.warn("Date of object is more then a minute in future. " +
+                            "That might be ok as peers clocks are not synced but could be also a spam attack.\n" +
+                            "date=" + date + " / now=" + new Date());
+                else
+                    log.debug("Date of object is slightly future. " +
+                            "That is probably because peers clocks are not synced.\n" +
+                            "date=" + date + " / now=" + new Date());
                 date = new Date();
             }
             date = new Date();
@@ -46,11 +52,8 @@ public class ProtectedMailboxData extends ProtectedData {
 
     @Override
     public String toString() {
-        return "MailboxData{" +
-                "data=\n" + expirablePayload +
-                ", \nttl=" + ttl +
-                ", sequenceNumber=" + sequenceNumber +
-                ", date=" + date +
-                "\n}";
+        return "ProtectedMailboxData{" +
+                "receiversPubKey.hashCode()=" + receiversPubKey.hashCode() +
+                "} " + super.toString();
     }
 }

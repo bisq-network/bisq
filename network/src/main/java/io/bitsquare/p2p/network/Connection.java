@@ -15,6 +15,7 @@ import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,7 +92,6 @@ public class Connection implements MessageListener {
 
     Connection(Socket socket, MessageListener messageListener, ConnectionListener connectionListener,
                @Nullable NodeAddress peersNodeAddress) {
-        Log.traceCall();
         this.socket = socket;
         this.messageListener = messageListener;
         this.connectionListener = connectionListener;
@@ -107,8 +107,6 @@ public class Connection implements MessageListener {
     }
 
     private void init(@Nullable NodeAddress peersNodeAddress) {
-        Log.traceCall();
-
         try {
             socket.setSoTimeout(SOCKET_TIMEOUT);
             // Need to access first the ObjectOutputStream otherwise the ObjectInputStream would block
@@ -135,7 +133,7 @@ public class Connection implements MessageListener {
         if (peersNodeAddress != null)
             setPeersNodeAddress(peersNodeAddress);
 
-        log.trace("\nNew connection created " + this.toString());
+        log.trace("New connection created: " + this.toString());
 
         UserThread.execute(() -> connectionListener.onConnection(this));
     }
@@ -148,7 +146,6 @@ public class Connection implements MessageListener {
 
     // Called form various threads
     public void sendMessage(Message message) {
-        Log.traceCall();
         if (!stopped) {
             try {
                 String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
@@ -159,12 +156,12 @@ public class Connection implements MessageListener {
                                     "Sending direct message to peer" +
                                     "Write object to outputStream to peer: {} (uid={})\ntruncated message={}" +
                                     "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, message.toString().substring(0, Math.min(60, message.toString().length())));
+                            peersNodeAddress, uid, StringUtils.abbreviate(message.toString(), 100));
                 } else {
                     log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                                     "Write object to outputStream to peer: {} (uid={})\ntruncated message={}" +
                                     "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, message.toString().substring(0, Math.min(60, message.toString().length())));
+                            peersNodeAddress, uid, StringUtils.abbreviate(message.toString(), 100));
                 }
 
                 Object objectToWrite;
@@ -196,9 +193,8 @@ public class Connection implements MessageListener {
     }
 
     @SuppressWarnings("unused")
-    public void reportIllegalRequest(IllegalRequest illegalRequest) {
-        Log.traceCall();
-        sharedModel.reportIllegalRequest(illegalRequest);
+    public void reportIllegalRequest(CorruptRequest corruptRequest) {
+        sharedModel.reportInvalidRequest(corruptRequest);
     }
 
     public boolean violatesThrottleLimit() {
@@ -208,7 +204,7 @@ public class Connection implements MessageListener {
             // check if we got more than 10 (MSG_THROTTLE_PER_SEC) msg per sec.
             long compareValue = messageTimeStamps.get(messageTimeStamps.size() - MSG_THROTTLE_PER_SEC);
             // if duration < 1 sec we received too much messages
-            violated = now - compareValue < TimeUnit.SECONDS.toMillis(1); 
+            violated = now - compareValue < TimeUnit.SECONDS.toMillis(1);
         }
 
         if (messageTimeStamps.size() >= MSG_THROTTLE_PER_10SEC) {
@@ -248,7 +244,6 @@ public class Connection implements MessageListener {
     }
 
     private synchronized void setPeersNodeAddress(NodeAddress peerNodeAddress) {
-        Log.traceCall(peerNodeAddress.toString());
         checkNotNull(peerNodeAddress, "peerAddress must not be null");
         peersNodeAddressOptional = Optional.of(peerNodeAddress);
 
@@ -257,7 +252,7 @@ public class Connection implements MessageListener {
             log.info("\n\n############################################################\n" +
                     "We got the peers node address set.\n" +
                     "peersNodeAddress= " + peersNodeAddress +
-                    "\nuid=" + getUid() +
+                    "\nconnection.uid=" + getUid() +
                     "\n############################################################\n");
         }
 
@@ -321,12 +316,8 @@ public class Connection implements MessageListener {
             log.info("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                     "ShutDown connection:"
                     + "\npeersNodeAddress=" + peersNodeAddress
-                    + "\nlocalPort/port=" + sharedModel.getSocket().getLocalPort()
-                    + "/" + sharedModel.getSocket().getPort()
                     + "\nuid=" + uid
                     + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
-
-            log.trace("ShutDown connection requested. Connection=" + this.toString());
 
             if (sendCloseConnectionMessage) {
                 new Thread(() -> {
@@ -359,7 +350,6 @@ public class Connection implements MessageListener {
     }
 
     private void doShutDown(@Nullable Runnable shutDownCompleteHandler) {
-        Log.traceCall();
         ConnectionListener.Reason shutDownReason = sharedModel.getShutDownReason();
         if (shutDownReason == null)
             shutDownReason = ConnectionListener.Reason.SHUT_DOWN;
@@ -378,8 +368,7 @@ public class Connection implements MessageListener {
             MoreExecutors.shutdownAndAwaitTermination(singleThreadExecutor, 500, TimeUnit.MILLISECONDS);
 
             log.debug("Connection shutdown complete " + this.toString());
-            // keep UserThread.execute as its not clear if that is called from a non-UserThread
-
+            // Use UserThread.execute as its not clear if that is called from a non-UserThread
             if (shutDownCompleteHandler != null)
                 UserThread.execute(shutDownCompleteHandler);
         }
@@ -413,6 +402,7 @@ public class Connection implements MessageListener {
                 "peerAddress=" + peersNodeAddressOptional +
                 ", peerType=" + peerType +
                 ", uid='" + uid + '\'' +
+                ", lastActivityDate=" + getLastActivityDate() +
                 '}';
     }
 
@@ -443,7 +433,7 @@ public class Connection implements MessageListener {
 
         private final Connection connection;
         private final Socket socket;
-        private final ConcurrentHashMap<IllegalRequest, Integer> illegalRequests = new ConcurrentHashMap<>();
+        private final ConcurrentHashMap<CorruptRequest, Integer> corruptRequests = new ConcurrentHashMap<>();
 
         // mutable
         private Date lastActivityDate;
@@ -451,43 +441,38 @@ public class Connection implements MessageListener {
         private ConnectionListener.Reason shutDownReason;
 
         public SharedModel(Connection connection, Socket socket) {
-            Log.traceCall();
             this.connection = connection;
             this.socket = socket;
         }
 
         public synchronized void updateLastActivityDate() {
-            Log.traceCall();
             lastActivityDate = new Date();
         }
 
         public synchronized Date getLastActivityDate() {
-            // Log.traceCall();
             return lastActivityDate;
         }
 
-        public void reportIllegalRequest(IllegalRequest illegalRequest) {
-            Log.traceCall();
-            log.warn("We got reported an illegal request " + illegalRequest);
-            log.debug("connection={}" + this);
-            int violations;
-            if (illegalRequests.contains(illegalRequest))
-                violations = illegalRequests.get(illegalRequest);
+        public void reportInvalidRequest(CorruptRequest corruptRequest) {
+            log.warn("We got reported an corrupt request " + corruptRequest + "\n\tconnection=" + this);
+            int numCorruptRequests;
+            if (corruptRequests.contains(corruptRequest))
+                numCorruptRequests = corruptRequests.get(corruptRequest);
             else
-                violations = 0;
+                numCorruptRequests = 0;
 
-            violations++;
-            illegalRequests.put(illegalRequest, violations);
+            numCorruptRequests++;
+            corruptRequests.put(corruptRequest, numCorruptRequests);
 
-            if (violations >= illegalRequest.maxTolerance) {
-                log.warn("We close connection as we received too many invalid requests.\n" +
-                        "violations={}\n" +
-                        "illegalRequest={}\n" +
-                        "illegalRequests={}", violations, illegalRequest, illegalRequests.toString());
-                log.debug("connection={}" + this);
+            if (numCorruptRequests >= corruptRequest.maxTolerance) {
+                log.warn("We close connection as we received too many corrupt requests.\n" +
+                        "numCorruptRequests={}\n\t" +
+                        "corruptRequest={}\n\t" +
+                        "corruptRequests={}\n\t" +
+                        "connection={}", numCorruptRequests, corruptRequest, corruptRequests.toString(), connection);
                 shutDown();
             } else {
-                illegalRequests.put(illegalRequest, ++violations);
+                corruptRequests.put(corruptRequest, ++numCorruptRequests);
             }
         }
 
@@ -500,16 +485,15 @@ public class Connection implements MessageListener {
                     shutDownReason = ConnectionListener.Reason.RESET;
             } else if (e instanceof SocketTimeoutException || e instanceof TimeoutException) {
                 shutDownReason = ConnectionListener.Reason.TIMEOUT;
-                log.debug("TimeoutException at socket " + socket.toString());
-                log.debug("connection={}" + this);
+                log.debug("TimeoutException at socket " + socket.toString() + " on connection={}" + this);
             } else if (e instanceof EOFException) {
                 shutDownReason = ConnectionListener.Reason.PEER_DISCONNECTED;
             } else if (e instanceof NoClassDefFoundError || e instanceof ClassNotFoundException) {
                 shutDownReason = ConnectionListener.Reason.INCOMPATIBLE_DATA;
             } else {
                 shutDownReason = ConnectionListener.Reason.UNKNOWN;
-                log.warn("Exception at socket " + socket.toString());
-                log.debug("connection={}" + this);
+                log.warn("Unknown reason for exception at socket {} on connection={}\n\tException=",
+                        socket.toString(), this, e.getMessage());
                 e.printStackTrace();
             }
 
@@ -517,24 +501,17 @@ public class Connection implements MessageListener {
         }
 
         public void shutDown() {
-            Log.traceCall();
             if (!stopped) {
                 stopped = true;
                 connection.shutDown(false);
             }
         }
 
-
         public synchronized Socket getSocket() {
             return socket;
         }
 
-        public String getConnectionInfo() {
-            return connection.toString();
-        }
-
         public void stop() {
-            Log.traceCall();
             this.stopped = true;
         }
 
@@ -546,7 +523,7 @@ public class Connection implements MessageListener {
         public String toString() {
             return "SharedSpace{" +
                     ", socket=" + socket +
-                    ", illegalRequests=" + illegalRequests +
+                    ", illegalRequests=" + corruptRequests +
                     ", lastActivityDate=" + lastActivityDate +
                     '}';
         }
@@ -570,7 +547,6 @@ public class Connection implements MessageListener {
         private volatile boolean stopped;
 
         public InputHandler(SharedModel sharedModel, ObjectInputStream objectInputStream, String portInfo, MessageListener messageListener, boolean useCompression) {
-            Log.traceCall();
             this.useCompression = useCompression;
             this.sharedModel = sharedModel;
             this.objectInputStream = objectInputStream;
@@ -579,7 +555,6 @@ public class Connection implements MessageListener {
         }
 
         public void stop() {
-            Log.traceCall();
             stopped = true;
             try {
                 objectInputStream.close();
@@ -590,23 +565,23 @@ public class Connection implements MessageListener {
 
         @Override
         public void run() {
-            Log.traceCall();
             try {
                 Thread.currentThread().setName("InputHandler-" + portInfo);
                 while (!stopped && !Thread.currentThread().isInterrupted()) {
                     try {
-                        log.trace("InputHandler waiting for incoming messages connection=" + sharedModel.getConnectionInfo());
+                        log.trace("InputHandler waiting for incoming messages.\n\tConnection=" + sharedModel.connection);
                         Object rawInputObject = objectInputStream.readObject();
-                        log.trace("New data arrived at inputHandler.Connection=" + sharedModel.getConnectionInfo());
 
                         log.info("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
-                                        "New data arrived at inputHandler.\nTruncated received object={}"
+                                        "New data arrived at inputHandler of connection {}.\n" +
+                                        "Received object (truncated)={}"
                                         + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
-                                rawInputObject.toString().substring(0, Math.min(60, rawInputObject.toString().length())));
+                                sharedModel.connection,
+                                StringUtils.abbreviate(rawInputObject.toString(), 100));
 
                         int size = ByteArrayUtils.objectToByteArray(rawInputObject).length;
                         if (size > getMaxMsgSize()) {
-                            sharedModel.reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
+                            sharedModel.reportInvalidRequest(CorruptRequest.MaxSizeExceeded);
                             return;
                         }
 
@@ -618,36 +593,36 @@ public class Connection implements MessageListener {
                                 //log.trace("Read object compressed data size: " + size);
                                 serializable = Utils.decompress(compressedObjectAsBytes);
                             } else {
-                                sharedModel.reportIllegalRequest(IllegalRequest.InvalidDataType);
+                                sharedModel.reportInvalidRequest(CorruptRequest.InvalidDataType);
                             }
                         } else {
                             if (rawInputObject instanceof Serializable) {
                                 serializable = (Serializable) rawInputObject;
                             } else {
-                                sharedModel.reportIllegalRequest(IllegalRequest.InvalidDataType);
+                                sharedModel.reportInvalidRequest(CorruptRequest.InvalidDataType);
                             }
                         }
                         //log.trace("Read object decompressed data size: " + ByteArrayUtils.objectToByteArray(serializable).length);
 
                         // compressed size might be bigger theoretically so we check again after decompression
                         if (size > getMaxMsgSize()) {
-                            sharedModel.reportIllegalRequest(IllegalRequest.MaxSizeExceeded);
+                            sharedModel.reportInvalidRequest(CorruptRequest.MaxSizeExceeded);
                             return;
                         }
 
                         if (sharedModel.connection.violatesThrottleLimit()) {
-                            sharedModel.reportIllegalRequest(IllegalRequest.ViolatedThrottleLimit);
+                            sharedModel.reportInvalidRequest(CorruptRequest.ViolatedThrottleLimit);
                             return;
                         }
 
                         if (!(serializable instanceof Message)) {
-                            sharedModel.reportIllegalRequest(IllegalRequest.InvalidDataType);
+                            sharedModel.reportInvalidRequest(CorruptRequest.InvalidDataType);
                             return;
                         }
 
                         Message message = (Message) serializable;
                         if (message.networkId() != Version.getNetworkId()) {
-                            sharedModel.reportIllegalRequest(IllegalRequest.WrongNetworkId);
+                            sharedModel.reportInvalidRequest(CorruptRequest.WrongNetworkId);
                             return;
                         }
 

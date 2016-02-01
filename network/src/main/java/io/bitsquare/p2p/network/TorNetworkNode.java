@@ -51,7 +51,6 @@ public class TorNetworkNode extends NetworkNode {
 
     public TorNetworkNode(int servicePort, File torDir) {
         super(servicePort);
-        Log.traceCall();
         this.torDir = torDir;
     }
 
@@ -62,7 +61,6 @@ public class TorNetworkNode extends NetworkNode {
 
     @Override
     public void start(@Nullable SetupListener setupListener) {
-        Log.traceCall();
         if (setupListener != null)
             addSetupListener(setupListener);
 
@@ -100,7 +98,6 @@ public class TorNetworkNode extends NetworkNode {
 
     @Override
     protected Socket createSocket(NodeAddress peerNodeAddress) throws IOException {
-        Log.traceCall();
         checkArgument(peerNodeAddress.hostName.endsWith(".onion"), "PeerAddress is not an onion address");
 
         return torNetworkNode.connectToHiddenService(peerNodeAddress.hostName, peerNodeAddress.port);
@@ -158,7 +155,6 @@ public class TorNetworkNode extends NetworkNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void shutDownExecutorService() {
-        Log.traceCall();
         shutDownTimeoutTimer.cancel();
         new Thread(() -> {
             Utilities.setThreadName("NetworkNode:shutDownExecutorService");
@@ -203,9 +199,7 @@ public class TorNetworkNode extends NetworkNode {
             Utilities.setThreadName("TorNetworkNode:CreateTorNode");
             long ts = System.currentTimeMillis();
             if (torDir.mkdirs())
-                log.trace("Created directory for tor");
-            log.info("TorDir = " + torDir.getAbsolutePath());
-            log.trace("Create TorNode");
+                log.trace("Created directory for tor at {}", torDir.getAbsolutePath());
             TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode = new JavaTorNode(torDir);
             log.info("\n\n############################################################\n" +
                     "TorNode created:" +
@@ -234,7 +228,6 @@ public class TorNetworkNode extends NetworkNode {
             Utilities.setThreadName("TorNetworkNode:CreateHiddenService");
             {
                 long ts = System.currentTimeMillis();
-                log.debug("Create hidden service");
                 HiddenServiceDescriptor hiddenServiceDescriptor = torNode.createHiddenService(localPort, servicePort);
                 torNode.addHiddenServiceReadyListener(hiddenServiceDescriptor, descriptor -> {
                     log.info("\n\n############################################################\n" +

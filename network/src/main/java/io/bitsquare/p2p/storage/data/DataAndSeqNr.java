@@ -11,4 +11,12 @@ public class DataAndSeqNr implements Serializable {
         this.data = data;
         this.sequenceNumber = sequenceNumber;
     }
+
+    @Override
+    public String toString() {
+        return "DataAndSeqNr{" +
+                "data=" + data +
+                ", sequenceNumber=" + sequenceNumber +
+                '}';
+    }
 }

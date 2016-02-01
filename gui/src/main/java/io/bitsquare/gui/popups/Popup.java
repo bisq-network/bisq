@@ -34,6 +34,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
+import org.apache.commons.lang3.StringUtils;
 import org.reactfx.util.FxTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -362,7 +363,7 @@ public class Popup {
 
     protected void setTruncatedMessage() {
         if (message != null && message.length() > 800)
-            truncatedMessage = message.substring(0, 800) + "...";
+            truncatedMessage = StringUtils.abbreviate(message, 800);
         else
             truncatedMessage = message;
     }

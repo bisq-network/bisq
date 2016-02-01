@@ -30,12 +30,14 @@ public class PeerManager implements ConnectionListener, MessageListener {
     private static int MIN_CONNECTIONS;
     private static int MAX_CONNECTIONS_EXTENDED_1;
     private static int MAX_CONNECTIONS_EXTENDED_2;
+    private static int MAX_CONNECTIONS_EXTENDED_3;
 
     public static void setMaxConnections(int maxConnections) {
         MAX_CONNECTIONS = maxConnections;
         MIN_CONNECTIONS = maxConnections - 4;
-        MAX_CONNECTIONS_EXTENDED_1 = MAX_CONNECTIONS + 6;
-        MAX_CONNECTIONS_EXTENDED_2 = MAX_CONNECTIONS_EXTENDED_1 + 6;
+        MAX_CONNECTIONS_EXTENDED_1 = MAX_CONNECTIONS + 5;
+        MAX_CONNECTIONS_EXTENDED_2 = MAX_CONNECTIONS + 10;
+        MAX_CONNECTIONS_EXTENDED_3 = MAX_CONNECTIONS + 20;
     }
 
     static {
@@ -139,6 +141,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
         // In case a seed node connects to another seed node we get his address at the DataRequest triggered from
         // RequestDataManager.updateDataFromConnectedSeedNode 
         if (message instanceof GetUpdatedDataRequest) {
+            Log.traceCall(message.toString() + "\n\tconnection=" + connection);
             Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
             if (peersNodeAddressOptional.isPresent() &&
                     seedNodeAddresses.contains(peersNodeAddressOptional.get()))
@@ -152,16 +155,16 @@ public class PeerManager implements ConnectionListener, MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean checkMaxConnections(int limit) {
-        Log.traceCall();
+        Log.traceCall("limit=" + limit);
         stopCheckMaxConnectionsTimer();
         removeSuperfluousSeedNodes();
         Set<Connection> allConnections = networkNode.getAllConnections();
         int size = allConnections.size();
+        log.info("We have {} connections open. Our limit is {}", size, limit);
         if (size > limit) {
-            log.info("We have {} connections open. Our limit is {}", size, limit);
-            log.info("Lets try to remove the inbound connections of type PEER.");
-
             // Only InboundConnection, and PEER type connections
+            log.info("We have too many connections open. We try to close some.\n\t" +
+                    "Lets try first to remove the inbound connections of type PEER.");
             List<Connection> candidates = allConnections.stream()
                     .filter(e -> e instanceof InboundConnection)
                     .filter(e -> e.getPeerType() == Connection.PeerType.PEER)
@@ -169,21 +172,34 @@ public class PeerManager implements ConnectionListener, MessageListener {
 
             if (candidates.size() == 0) {
                 log.info("No candidates found. We go to the next level and check if we exceed our " +
-                        "MAX_CONNECTIONS_NORMAL_PRIORITY limit of {}", MAX_CONNECTIONS_EXTENDED_1);
+                        "MAX_CONNECTIONS_EXTENDED_1 limit of {}", MAX_CONNECTIONS_EXTENDED_1);
                 if (size > MAX_CONNECTIONS_EXTENDED_1) {
                     log.info("Lets try to remove any connection of type PEER.");
                     // Only PEER type connections
                     candidates = allConnections.stream()
                             .filter(e -> e.getPeerType() == Connection.PeerType.PEER)
                             .collect(Collectors.toList());
+
                     if (candidates.size() == 0) {
                         log.info("No candidates found. We go to the next level and check if we exceed our " +
-                                "MAX_CONNECTIONS_HIGH_PRIORITY limit of {}", MAX_CONNECTIONS_EXTENDED_2);
+                                "MAX_CONNECTIONS_EXTENDED_2 limit of {}", MAX_CONNECTIONS_EXTENDED_2);
                         if (size > MAX_CONNECTIONS_EXTENDED_2) {
                             log.info("Lets try to remove any connection which is not of type DIRECT_MSG_PEER.");
-                            // All connections
+                            // All connections except DIRECT_MSG_PEER
                             candidates = allConnections.stream()
+                                    .filter(e -> e.getPeerType() != Connection.PeerType.DIRECT_MSG_PEER)
                                     .collect(Collectors.toList());
+
+                            if (candidates.size() == 0) {
+                                log.info("No candidates found. We go to the next level and check if we exceed our " +
+                                        "MAX_CONNECTIONS_EXTENDED_3 limit of {}", MAX_CONNECTIONS_EXTENDED_3);
+                                if (size > MAX_CONNECTIONS_EXTENDED_3) {
+                                    log.info("Lets try to remove any connection.");
+                                    // All connections
+                                    candidates = allConnections.stream()
+                                            .collect(Collectors.toList());
+                                }
+                            }
                         }
                     }
                 }
@@ -191,14 +207,15 @@ public class PeerManager implements ConnectionListener, MessageListener {
 
             if (candidates.size() > 0) {
                 candidates.sort((o1, o2) -> o1.getLastActivityDate().compareTo(o2.getLastActivityDate()));
-                log.info("Candidates for shut down=" + candidates);
+                log.info("Candidates.size() for shut down=" + candidates.size());
                 Connection connection = candidates.remove(0);
-                log.info("We are going to shut down the oldest connection with last activity date="
-                        + connection.getLastActivityDate() + " / connection=" + connection);
+                log.info("We are going to shut down the oldest connection. connection=" + connection.toString());
                 connection.shutDown(() -> checkMaxConnections(limit));
                 return true;
             } else {
-                log.debug("No candidates found to remove. allConnections=", allConnections);
+                log.warn("No candidates found to remove (That case should not be possible as we use in the " +
+                        "last case all connections).\n\t" +
+                        "allConnections=", allConnections);
                 return false;
             }
         } else {
@@ -208,6 +225,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
     }
 
     private void removeTooOldReportedPeers() {
+        Log.traceCall();
         Set<ReportedPeer> reportedPeersToRemove = reportedPeers.stream()
                 .filter(reportedPeer -> reportedPeer.lastActivityDate != null &&
                         new Date().getTime() - reportedPeer.lastActivityDate.getTime() > MAX_AGE)
@@ -222,6 +240,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
     }
 
     private void removeSuperfluousSeedNodes() {
+        Log.traceCall();
         Set<Connection> allConnections = networkNode.getAllConnections();
         if (allConnections.size() > MAX_CONNECTIONS_EXTENDED_1) {
             List<Connection> candidates = allConnections.stream()
@@ -230,10 +249,9 @@ public class PeerManager implements ConnectionListener, MessageListener {
 
             if (candidates.size() > 1) {
                 candidates.sort((o1, o2) -> o1.getLastActivityDate().compareTo(o2.getLastActivityDate()));
-                log.info("Number of connections exceeding MAX_CONNECTIONS. Current size=" + candidates.size());
+                log.info("Number of connections exceeding MAX_CONNECTIONS_EXTENDED_1. Current size=" + candidates.size());
                 Connection connection = candidates.remove(0);
-                log.info("We are going to shut down the oldest connection with last activity date="
-                        + connection.getLastActivityDate() + " / connection=" + connection);
+                log.info("We are going to shut down the oldest connection. connection=" + connection.toString());
                 connection.shutDown(this::removeSuperfluousSeedNodes);
             }
         }
@@ -254,7 +272,6 @@ public class PeerManager implements ConnectionListener, MessageListener {
     }
 
     public void addToReportedPeers(HashSet<ReportedPeer> reportedPeersToAdd, Connection connection) {
-        Log.traceCall();
         // we disconnect misbehaving nodes trying to send too many peers
         // reported peers include the connected peers which is normally max. 10 but we give some headroom 
         // for safety
@@ -330,7 +347,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
                     "Reported peers:");
             reportedPeers.stream().forEach(e -> result.append("\n").append(e));
             result.append("\n------------------------------------------------------------\n");
-            log.debug(result.toString());
+            log.trace(result.toString());
             log.info("Number of reported peers: {}", reportedPeers.size());
         }
     }
@@ -367,6 +384,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
     }
 
     public void penalizeUnreachablePeer(NodeAddress nodeAddress) {
+        Log.traceCall("nodeAddress=" + nodeAddress);
         reportedPeers.stream()
                 .filter(reportedPeer -> reportedPeer.nodeAddress.equals(nodeAddress))
                 .findAny()
@@ -449,7 +467,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
                 removeFromPersistedPeers(toRemove);
             }
         } else {
-            log.trace("No need to purge reported peers. We don't have more then {} reported peers yet.", MAX_REPORTED_PEERS);
+            log.trace("No need to purge reported peers.\n\tWe don't have more then {} reported peers yet.", MAX_REPORTED_PEERS);
         }
     }
 

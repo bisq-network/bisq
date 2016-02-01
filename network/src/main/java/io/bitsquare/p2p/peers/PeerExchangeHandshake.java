@@ -87,8 +87,8 @@ public class PeerExchangeHandshake implements MessageListener {
             @Override
             public void onFailure(@NotNull Throwable throwable) {
                 String errorMessage = "Sending getPeersRequest to " + nodeAddress +
-                        " failed. That is expected if the peer is offline.\ngetPeersRequest=" + getPeersRequest +
-                        ".\nException=" + throwable.getMessage();
+                        " failed. That is expected if the peer is offline.\n\tgetPeersRequest=" + getPeersRequest +
+                        ".\n\tException=" + throwable.getMessage();
                 log.info(errorMessage);
 
                 peerManager.shutDownConnection(nodeAddress);
@@ -112,12 +112,12 @@ public class PeerExchangeHandshake implements MessageListener {
     }
 
     public void onGetPeersRequest(GetPeersRequest getPeersRequest, final Connection connection) {
-        Log.traceCall("getPeersRequest=" + getPeersRequest + " / connection=" + connection + " / this=" + this);
+        Log.traceCall("getPeersRequest=" + getPeersRequest + "\n\tconnection=" + connection + "\n\tthis=" + this);
 
         HashSet<ReportedPeer> reportedPeers = getPeersRequest.reportedPeers;
         
        /* StringBuilder result = new StringBuilder("Received peers:");
-        reportedPeers.stream().forEach(e -> result.append("\n").append(e));
+        reportedPeers.stream().forEach(e -> result.append("\n\t").append(e));
         log.trace(result.toString());*/
         log.trace("reportedPeers.size=" + reportedPeers.size());
 
@@ -172,7 +172,7 @@ public class PeerExchangeHandshake implements MessageListener {
     @Override
     public void onMessage(Message message, Connection connection) {
         if (message instanceof GetPeersResponse) {
-            Log.traceCall(message.toString() + " / connection=" + connection);
+            Log.traceCall(message.toString() + "\n\tconnection=" + connection);
             Log.traceCall("this=" + this);
             GetPeersResponse getPeersResponse = (GetPeersResponse) message;
             if (getPeersResponse.requestNonce == nonce) {
@@ -180,7 +180,7 @@ public class PeerExchangeHandshake implements MessageListener {
 
                 HashSet<ReportedPeer> reportedPeers = getPeersResponse.reportedPeers;
                 StringBuilder result = new StringBuilder("Received peers:");
-                reportedPeers.stream().forEach(e -> result.append("\n").append(e));
+                reportedPeers.stream().forEach(e -> result.append("\n\t").append(e));
                 log.trace(result.toString());
                 peerManager.addToReportedPeers(reportedPeers, connection);
 
@@ -189,7 +189,7 @@ public class PeerExchangeHandshake implements MessageListener {
             } else {
                 log.debug("Nonce not matching. That can happen rarely if we get a response after a canceled handshake " +
                                 "(timeout causes connection close but peer might have sent a msg before connection " +
-                                "was closed).\nWe drop that message. nonce={} / requestNonce={}",
+                                "was closed).\n\tWe drop that message. nonce={} / requestNonce={}",
                         nonce, getPeersResponse.requestNonce);
             }
         }

@@ -28,6 +28,7 @@ import io.bitsquare.payment.SwishAccount;
 import io.bitsquare.payment.SwishAccountContractData;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +83,7 @@ public class SwishForm extends PaymentMethodForm {
     protected void autoFillNameTextField() {
         if (autoFillCheckBox != null && autoFillCheckBox.isSelected()) {
             String mobileNr = mobileNrInputTextField.getText();
-            mobileNr = mobileNr.substring(0, Math.min(5, mobileNr.length())) + "...";
+            mobileNr = StringUtils.abbreviate(mobileNr, 5);
             String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
             accountNameTextField.setText(method.concat(", ").concat(mobileNr));
         }

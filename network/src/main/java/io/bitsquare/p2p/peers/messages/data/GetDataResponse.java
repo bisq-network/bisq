@@ -25,26 +25,10 @@ public final class GetDataResponse implements Message {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof GetDataResponse)) return false;
-
-        GetDataResponse that = (GetDataResponse) o;
-
-        return !(dataSet != null ? !dataSet.equals(that.dataSet) : that.dataSet != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        return dataSet != null ? dataSet.hashCode() : 0;
-    }
-
-    @Override
     public String toString() {
         return "GetDataResponse{" +
                 "networkId=" + networkId +
-                ", dataSet=" + dataSet +
+                ", dataSet.size()=" + dataSet.size() +
                 ", requestNonce=" + requestNonce +
                 '}';
     }

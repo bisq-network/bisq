@@ -103,6 +103,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
     @Override
     public void onMessage(Message message, Connection connection) {
         if (message instanceof GetPeersRequest) {
+            Log.traceCall(message.toString() + "\n\tconnection=" + connection);
             PeerExchangeHandshake peerExchangeHandshake = new PeerExchangeHandshake(networkNode,
                     peerManager,
                     new PeerExchangeHandshake.Listener() {
@@ -113,7 +114,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
 
                         @Override
                         public void onFault(String errorMessage) {
-                            log.trace("PeerExchangeHandshake of outbound connection failed.\nerrorMessage={}\n" +
+                            log.trace("PeerExchangeHandshake of outbound connection failed.\n\terrorMessage={}\n\t" +
                                     "connection={}", errorMessage, connection);
                             peerManager.penalizeUnreachablePeer(connection);
                         }
@@ -142,7 +143,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
 
                         @Override
                         public void onFault(String errorMessage) {
-                            log.trace("PeerExchangeHandshake of outbound connection failed.\nerrorMessage={}\n" +
+                            log.trace("PeerExchangeHandshake of outbound connection failed.\n\terrorMessage={}\n\t" +
                                     "nodeAddress={}", errorMessage, nodeAddress);
 
                             peerExchangeHandshakeMap.remove(nodeAddress);
@@ -153,7 +154,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
                                 requestReportedPeersFromRandomPeer(remainingNodeAddresses);
                             } else {
                                 log.info("There is no remaining node available for requesting peers. " +
-                                        "That is expected if no other node is online.\n" +
+                                        "That is expected if no other node is online.\n\t" +
                                         "We will try again after a random pause.");
                                 if (connectToMorePeersTimer == null)
                                     connectToMorePeersTimer = UserThread.runAfterRandomDelay(
