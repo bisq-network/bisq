@@ -128,13 +128,13 @@ public abstract class TradeStepDetailsView extends AnchorPane {
             }
         });
 
+        setDateFromBlocks(model.getBestChainHeight());
 
         // first call updateTradePeriodState as there is the dispute button created in case we are in period over time
         updateTradePeriodState(trade.getTradePeriodState());
         updateDisputeState(trade.getDisputeState());
 
         model.addBlockChainListener(blockChainListener);
-        setDateFromBlocks(model.getBestChainHeight());
     }
 
     public void doDeactivate() {
