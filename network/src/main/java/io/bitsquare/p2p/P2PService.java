@@ -298,7 +298,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     @Override
-    public void onDisconnect(Reason reason, Connection connection) {
+    public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         Log.traceCall();
         connection.getNodeAddressProperty().removeListener(connectionNodeAddressListener);
         // We removed the listener after a delay to be sure the connection has been removed 

@@ -112,7 +112,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
     }
 
     @Override
-    public void onDisconnect(Reason reason, Connection connection) {
+    public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         connection.getNodeAddressProperty().removeListener(connectionNodeAddressListener);
         connection.getPeersNodeAddressOptional().ifPresent(nodeAddress -> {
             penalizeUnreachablePeer(nodeAddress);
@@ -210,7 +210,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
                 log.info("Candidates.size() for shut down=" + candidates.size());
                 Connection connection = candidates.remove(0);
                 log.info("We are going to shut down the oldest connection.\n\tconnection=" + connection.toString());
-                connection.shutDown(() -> checkMaxConnections(limit));
+                connection.shutDown(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN, () -> checkMaxConnections(limit));
                 return true;
             } else {
                 log.warn("No candidates found to remove (That case should not be possible as we use in the " +
@@ -252,7 +252,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
                 log.info("Number of connections exceeding MAX_CONNECTIONS_EXTENDED_1. Current size=" + candidates.size());
                 Connection connection = candidates.remove(0);
                 log.info("We are going to shut down the oldest connection.\n\tconnection=" + connection.toString());
-                connection.shutDown(this::removeSuperfluousSeedNodes);
+                connection.shutDown(CloseConnectionReason.TOO_MANY_SEED_NODES_CONNECTED, this::removeSuperfluousSeedNodes);
             }
         }
     }
@@ -276,7 +276,8 @@ public class PeerManager implements ConnectionListener, MessageListener {
         // reported peers include the connected peers which is normally max. 10 but we give some headroom 
         // for safety
         if (reportedPeersToAdd.size() > (MAX_REPORTED_PEERS + PeerManager.MIN_CONNECTIONS * 3)) {
-            connection.shutDown();
+            // Will trigger a shutdown after 2nd time sending too much
+            connection.reportIllegalRequest(RuleViolation.TOO_MANY_REPORTED_PEERS_SENT);
         } else {
             // In case we have one of the peers already we adjust the lastActivityDate by adjusting the date to the mid 
             // of the lastActivityDate of our already stored peer and the reported one
@@ -434,18 +435,18 @@ public class PeerManager implements ConnectionListener, MessageListener {
         return networkNode.getNodeAddressesOfConfirmedConnections().contains(nodeAddress);
     }
 
-    public void shutDownConnection(Connection connection) {
+    public void shutDownConnection(Connection connection, CloseConnectionReason closeConnectionReason) {
         if (connection.getPeerType() != Connection.PeerType.DIRECT_MSG_PEER)
-            connection.shutDown();
+            connection.shutDown(closeConnectionReason);
     }
 
-    public void shutDownConnection(NodeAddress peersNodeAddress) {
+    public void shutDownConnection(NodeAddress peersNodeAddress, CloseConnectionReason closeConnectionReason) {
         networkNode.getAllConnections().stream()
                 .filter(connection -> connection.getPeersNodeAddressOptional().isPresent() &&
                         connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress) &&
                         connection.getPeerType() != Connection.PeerType.DIRECT_MSG_PEER)
-                .findFirst()
-                .ifPresent(connection -> connection.shutDown(true));
+                .findAny()
+                .ifPresent(connection -> connection.shutDown(closeConnectionReason));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

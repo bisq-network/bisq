@@ -71,7 +71,7 @@ class Server implements Runnable {
         if (!stopped) {
             stopped = true;
 
-            connections.stream().forEach(Connection::shutDown);
+            connections.stream().forEach(c -> c.shutDown(CloseConnectionReason.APP_SHUT_DOWN));
 
             try {
                 serverSocket.close();

@@ -7,6 +7,7 @@ import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.network.CloseConnectionReason;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
@@ -102,7 +103,7 @@ public class RequestDataHandshake implements MessageListener {
                         "getDataRequest=" + getDataRequest + "." +
                         "\n\tException=" + throwable.getMessage();
                 log.info(errorMessage);
-                peerManager.shutDownConnection(nodeAddress);
+                peerManager.shutDownConnection(nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
                 shutDown();
                 listener.onFault(errorMessage);
             }
@@ -114,7 +115,7 @@ public class RequestDataHandshake implements MessageListener {
                             " on nodeAddress:" + nodeAddress;
                     log.info(errorMessage + " / RequestDataHandshake=" +
                             RequestDataHandshake.this);
-                    peerManager.shutDownConnection(nodeAddress);
+                    peerManager.shutDownConnection(nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
                     shutDown();
                     listener.onFault(errorMessage);
                 },
@@ -143,7 +144,7 @@ public class RequestDataHandshake implements MessageListener {
                         "Exception: " + throwable.getMessage();
                 log.info(errorMessage);
 
-                peerManager.shutDownConnection(connection);
+                peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_FAILURE);
                 shutDown();
                 listener.onFault(errorMessage);
             }
@@ -155,7 +156,7 @@ public class RequestDataHandshake implements MessageListener {
                             " on connection:" + connection;
                     log.info(errorMessage + " / RequestDataHandshake=" +
                             RequestDataHandshake.this);
-                    peerManager.shutDownConnection(connection);
+                    peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_TIMEOUT);
                     shutDown();
                     listener.onFault(errorMessage);
                 },

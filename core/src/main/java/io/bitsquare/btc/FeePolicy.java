@@ -63,6 +63,7 @@ public class FeePolicy {
 
     // 0.001 BTC  0.1% of 1 BTC about 0.4 EUR @ 400 EUR/BTC
     public static Coin getCreateOfferFee() {
+        // We cannot reduce it more for alpha testing as we need to pay the quite high miner fee of 30_000
         return Coin.valueOf(100_000);
     }
 

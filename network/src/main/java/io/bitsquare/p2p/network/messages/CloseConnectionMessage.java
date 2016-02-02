@@ -8,8 +8,10 @@ public final class CloseConnectionMessage implements Message {
     private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
 
     private final int networkId = Version.getNetworkId();
+    public final String reason;
 
-    public CloseConnectionMessage() {
+    public CloseConnectionMessage(String reason) {
+        this.reason = reason;
     }
 
     @Override
@@ -20,6 +22,7 @@ public final class CloseConnectionMessage implements Message {
     @Override
     public String toString() {
         return "CloseConnectionMessage{" +
+                ", reason=" + reason +
                 ", networkId=" + networkId +
                 '}';
     }

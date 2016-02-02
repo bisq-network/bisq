@@ -27,6 +27,7 @@ import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.p2p.P2PService;
+import io.bitsquare.p2p.network.CloseConnectionReason;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.ConnectionListener;
 import io.bitsquare.payment.PaymentAccount;
@@ -398,7 +399,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         offerStateListener = (ov, oldValue, newValue) -> applyOfferState(newValue);
         connectionListener = new ConnectionListener() {
             @Override
-            public void onDisconnect(Reason reason, Connection connection) {
+            public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
                 if (connection.getPeersNodeAddressOptional().isPresent() &&
                         connection.getPeersNodeAddressOptional().get().equals(offer.getOffererNodeAddress()))
                     offerWarning.set("You lost connection to the offerer.\n" +

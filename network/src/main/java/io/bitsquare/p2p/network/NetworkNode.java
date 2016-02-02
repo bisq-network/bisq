@@ -180,11 +180,10 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                 server = null;
             }
 
-            getAllConnections().stream().forEach(Connection::shutDown);
-
+            getAllConnections().stream().forEach(c -> c.shutDown(CloseConnectionReason.APP_SHUT_DOWN));
             log.info("NetworkNode shutdown complete");
-            if (shutDownCompleteHandler != null) shutDownCompleteHandler.run();
         }
+        if (shutDownCompleteHandler != null) shutDownCompleteHandler.run();
     }
 
 
@@ -209,10 +208,10 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     }
 
     @Override
-    public void onDisconnect(Reason reason, Connection connection) {
+    public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         outBoundConnections.remove(connection);
         inBoundConnections.remove(connection);
-        connectionListeners.stream().forEach(e -> e.onDisconnect(reason, connection));
+        connectionListeners.stream().forEach(e -> e.onDisconnect(closeConnectionReason, connection));
     }
 
     @Override
@@ -280,9 +279,9 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
             }
 
             @Override
-            public void onDisconnect(Reason reason, Connection connection) {
+            public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
                 inBoundConnections.remove(connection);
-                NetworkNode.this.onDisconnect(reason, connection);
+                NetworkNode.this.onDisconnect(closeConnectionReason, connection);
             }
 
             @Override

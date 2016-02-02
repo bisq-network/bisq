@@ -7,6 +7,7 @@ import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.network.CloseConnectionReason;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
@@ -91,7 +92,7 @@ public class PeerExchangeHandshake implements MessageListener {
                         ".\n\tException=" + throwable.getMessage();
                 log.info(errorMessage);
 
-                peerManager.shutDownConnection(nodeAddress);
+                peerManager.shutDownConnection(nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
                 shutDown();
                 listener.onFault(errorMessage);
             }
@@ -104,7 +105,7 @@ public class PeerExchangeHandshake implements MessageListener {
                             PeerExchangeHandshake.this);
                     
                     log.info("timeoutTimer called on " + this);
-                    peerManager.shutDownConnection(nodeAddress);
+                    peerManager.shutDownConnection(nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
                     shutDown();
                     listener.onFault(errorMessage);
                 },
@@ -142,7 +143,7 @@ public class PeerExchangeHandshake implements MessageListener {
                         "Exception: " + throwable.getMessage();
                 log.info(errorMessage);
 
-                peerManager.shutDownConnection(connection);
+                peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_FAILURE);
                 shutDown();
                 listener.onFault(errorMessage);
             }
@@ -155,7 +156,7 @@ public class PeerExchangeHandshake implements MessageListener {
                             PeerExchangeHandshake.this);
 
                     log.info("timeoutTimer called. this=" + this);
-                    peerManager.shutDownConnection(connection);
+                    peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_TIMEOUT);
                     shutDown();
                     listener.onFault(errorMessage);
                 },

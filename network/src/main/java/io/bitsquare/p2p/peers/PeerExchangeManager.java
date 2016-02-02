@@ -83,7 +83,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
     }
 
     @Override
-    public void onDisconnect(Reason reason, Connection connection) {
+    public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         // We use a timer to throttle if we get a series of disconnects
         // The more connections we have the more relaxed we are with a checkConnections
         stopMaintainConnectionsTimer();

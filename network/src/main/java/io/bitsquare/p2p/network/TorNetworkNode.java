@@ -14,6 +14,10 @@ import io.bitsquare.p2p.Utils;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.JavaTorNode;
 import io.nucleo.net.TorNode;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.monadic.MonadicBinding;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -34,15 +38,14 @@ public class TorNetworkNode extends NetworkNode {
 
     private static final int MAX_RESTART_ATTEMPTS = 3;
     private static final int WAIT_BEFORE_RESTART = 2000;
-    private static final long SHUT_DOWN_TIMEOUT = 5000;
+    private static final long SHUT_DOWN_TIMEOUT_SEC = 5;
 
     private final File torDir;
     private TorNode torNetworkNode;
     private HiddenServiceDescriptor hiddenServiceDescriptor;
     private Timer shutDownTimeoutTimer;
     private int restartCounter;
-    private Runnable shutDownCompleteHandler;
-    private boolean torShutDownComplete, networkNodeShutDownDoneComplete;
+    private MonadicBinding<Boolean> allShutDown;
 
 
     // /////////////////////////////////////////////////////////////////////////////////////////
@@ -103,77 +106,74 @@ public class TorNetworkNode extends NetworkNode {
         return torNetworkNode.connectToHiddenService(peerNodeAddress.hostName, peerNodeAddress.port);
     }
 
-    //TODO simplify
     public void shutDown(Runnable shutDownCompleteHandler) {
         Log.traceCall();
-        this.shutDownCompleteHandler = shutDownCompleteHandler;
+        BooleanProperty torNetworkNodeShutDown = torNetworkNodeShutDown();
+        BooleanProperty networkNodeShutDown = networkNodeShutDown();
+        BooleanProperty shutDownTimerTriggered = shutDownTimerTriggered();
 
-        shutDownTimeoutTimer = UserThread.runAfter(() -> {
-            log.error("A timeout occurred at shutDown");
-            shutDownExecutorService();
-        }, SHUT_DOWN_TIMEOUT, TimeUnit.MILLISECONDS);
-
-        if (executorService != null) {
-            executorService.submit(() -> UserThread.execute(() -> {
-                // We want to stay in UserThread
-                super.shutDown(() -> {
-                    networkNodeShutDownDoneComplete = true;
-                    if (torShutDownComplete)
-                        shutDownExecutorService();
-                });
-            }));
-        } else {
-            log.error("executorService must not be null at shutDown");
-        }
-        executorService.submit(() -> {
-            Utilities.setThreadName("NetworkNode:torNodeShutdown");
-            try {
+        // Need to store allShutDown to not get garbage collected
+        allShutDown = EasyBind.combine(torNetworkNodeShutDown, networkNodeShutDown, shutDownTimerTriggered, (a, b, c) -> (a && b) || c);
+        allShutDown.subscribe((observable, oldValue, newValue) -> {
+            if (newValue) {
+                shutDownTimeoutTimer.cancel();
                 long ts = System.currentTimeMillis();
-                log.info("Shutdown torNode");
-                // Might take a bit so we use a thread
-                if (torNetworkNode != null)
-                    torNetworkNode.shutdown();
-                log.info("Shutdown torNode done after " + (System.currentTimeMillis() - ts) + " ms.");
-                UserThread.execute(() -> {
-                    torShutDownComplete = true;
-                    if (networkNodeShutDownDoneComplete)
-                        shutDownExecutorService();
-                });
-            } catch (Throwable e) {
-                UserThread.execute(() -> {
-                    log.error("Shutdown torNode failed with exception: " + e.getMessage());
-                    e.printStackTrace();
-                    // We want to switch to UserThread
-                    shutDownExecutorService();
-                });
+                log.debug("Shutdown executorService");
+                try {
+                    MoreExecutors.shutdownAndAwaitTermination(executorService, 500, TimeUnit.MILLISECONDS);
+                    log.debug("Shutdown executorService done after " + (System.currentTimeMillis() - ts) + " ms.");
+                    log.info("Shutdown completed");
+                } catch (Throwable t) {
+                    log.error("Shutdown executorService failed with exception: " + t.getMessage());
+                    t.printStackTrace();
+                } finally {
+                    shutDownCompleteHandler.run();
+                }
             }
         });
     }
+
+    private BooleanProperty torNetworkNodeShutDown() {
+        final BooleanProperty done = new SimpleBooleanProperty();
+        executorService.submit(() -> {
+            Utilities.setThreadName("torNetworkNodeShutDown");
+            long ts = System.currentTimeMillis();
+            log.info("Shutdown torNetworkNode");
+            try {
+                if (torNetworkNode != null)
+                    torNetworkNode.shutdown();
+                log.info("Shutdown torNetworkNode done after " + (System.currentTimeMillis() - ts) + " ms.");
+            } catch (Throwable e) {
+                log.error("Shutdown torNetworkNode failed with exception: " + e.getMessage());
+                e.printStackTrace();
+            } finally {
+                UserThread.execute(() -> done.set(true));
+            }
+        });
+        return done;
+    }
+
+    private BooleanProperty networkNodeShutDown() {
+        final BooleanProperty done = new SimpleBooleanProperty();
+        super.shutDown(() -> done.set(true));
+        return done;
+    }
+
+    private BooleanProperty shutDownTimerTriggered() {
+        final BooleanProperty done = new SimpleBooleanProperty();
+        shutDownTimeoutTimer = UserThread.runAfter(() -> {
+            log.error("A timeout occurred at shutDown");
+            done.set(true);
+        }, SHUT_DOWN_TIMEOUT_SEC);
+        return done;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // shutdown, restart
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void shutDownExecutorService() {
-        shutDownTimeoutTimer.cancel();
-        new Thread(() -> {
-            Utilities.setThreadName("NetworkNode:shutDownExecutorService");
-            try {
-                long ts = System.currentTimeMillis();
-                log.debug("Shutdown executorService");
-                MoreExecutors.shutdownAndAwaitTermination(executorService, 500, TimeUnit.MILLISECONDS);
-                log.debug("Shutdown executorService done after " + (System.currentTimeMillis() - ts) + " ms.");
-                log.info("Shutdown completed");
-                shutDownCompleteHandler.run();
-            } catch (Throwable t) {
-                log.error("Shutdown executorService failed with exception: " + t.getMessage());
-                t.printStackTrace();
-                shutDownCompleteHandler.run();
-            }
-        }).start();
-    }
-
-    private void restartTor() {
+    private void restartTor(String errorMessage) {
         Log.traceCall();
         restartCounter++;
         if (restartCounter <= MAX_RESTART_ATTEMPTS) {
@@ -182,8 +182,10 @@ public class TorNetworkNode extends NetworkNode {
                 start(null);
             }, WAIT_BEFORE_RESTART, TimeUnit.MILLISECONDS));
         } else {
-            String msg = "We tried to restart Tor " + restartCounter
-                    + " times, but it failed to start up. We give up now.";
+            String msg = "We tried to restart Tor " + restartCounter +
+                    " times, but it continued to fail with error message:\n" +
+                    errorMessage + "\n\n" +
+                    "Please check your internet connection and firewall and try to start again.";
             log.error(msg);
             throw new RuntimeException(msg);
         }
@@ -215,7 +217,7 @@ public class TorNetworkNode extends NetworkNode {
             public void onFailure(@NotNull Throwable throwable) {
                 UserThread.execute(() -> {
                     log.error("TorNode creation failed with exception: " + throwable.getMessage());
-                    restartTor();
+                    restartTor(throwable.getMessage());
                 });
             }
         });
@@ -249,7 +251,7 @@ public class TorNetworkNode extends NetworkNode {
             public void onFailure(@NotNull Throwable throwable) {
                 UserThread.execute(() -> {
                     log.error("Hidden service creation failed");
-                    restartTor();
+                    restartTor(throwable.getMessage());
                 });
             }
         });

@@ -148,7 +148,8 @@ public class MainViewModel implements ViewModel {
         this.walletPasswordPopup = walletPasswordPopup;
         this.formatter = formatter;
 
-        btcNetworkAsString = formatter.formatBitcoinNetwork(preferences.getBitcoinNetwork());
+        btcNetworkAsString = formatter.formatBitcoinNetwork(preferences.getBitcoinNetwork()) +
+                (preferences.getUseTorForBitcoinJ() ? " (using Tor)" : "");
 
         TxIdTextField.setPreferences(preferences);
         TxIdTextField.setWalletService(walletService);
