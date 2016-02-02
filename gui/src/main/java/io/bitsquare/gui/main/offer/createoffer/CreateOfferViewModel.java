@@ -476,6 +476,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         return paymentLabel;
     }
 
+    public String formatCoin(Coin coin) {
+        return formatter.formatCoin(coin);
+    }
+
     public Offer createAndGetOffer() {
         offer = dataModel.createAndGetOffer();
         return offer;

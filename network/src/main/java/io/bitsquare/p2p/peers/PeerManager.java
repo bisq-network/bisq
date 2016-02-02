@@ -347,7 +347,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
                     "Reported peers:");
             reportedPeers.stream().forEach(e -> result.append("\n").append(e));
             result.append("\n------------------------------------------------------------\n");
-            log.trace(result.toString());
+            //log.trace(result.toString());
             log.info("Number of reported peers: {}", reportedPeers.size());
         }
     }

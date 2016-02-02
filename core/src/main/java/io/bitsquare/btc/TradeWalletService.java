@@ -1040,18 +1040,4 @@ public class TradeWalletService {
             throw new WalletException(t);
         }
     }
-
-    // not used
-  /*  private Coin getBalance(List<TransactionOutput> transactionOutputs, Address address) {
-        Coin balance = Coin.ZERO;
-        for (TransactionOutput transactionOutput : transactionOutputs) {
-            if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-                Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
-                if (addressOutput.equals(address))
-                    balance = balance.add(transactionOutput.getValue());
-            }
-        }
-        return balance;
-    }*/
-
 }

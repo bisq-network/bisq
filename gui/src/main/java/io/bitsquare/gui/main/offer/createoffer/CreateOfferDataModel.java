@@ -42,7 +42,8 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
-import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.*;
+import org.bitcoinj.script.Script;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 import org.jetbrains.annotations.NotNull;
@@ -84,6 +85,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
     final BooleanProperty useMBTC = new SimpleBooleanProperty();
+    final BooleanProperty insufficientFee = new SimpleBooleanProperty();
 
     final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> minAmountAsCoin = new SimpleObjectProperty<>();
@@ -160,8 +162,42 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     private void addListeners() {
         walletService.addBalanceListener(balanceListener);
+        walletService.getWallet().addEventListener(new WalletEventListener() {
+            @Override
+            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                walletService.requestTransactionFromBlockChain(tx, fee -> {
+                    if (fee == null || fee.compareTo(FeePolicy.getFeePerKb()) < 0)
+                        insufficientFee.set(true);
+                });
+            }
+
+            @Override
+            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+            }
+
+            @Override
+            public void onReorganize(Wallet wallet) {
+            }
+
+            @Override
+            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
+            }
+
+            @Override
+            public void onWalletChanged(Wallet wallet) {
+            }
+
+            @Override
+            public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
+            }
+
+            @Override
+            public void onKeysAdded(List<ECKey> keys) {
+            }
+        });
         user.getPaymentAccountsAsObservable().addListener(paymentAccountsChangeListener);
     }
+
 
     private void removeListeners() {
         walletService.removeBalanceListener(balanceListener);
@@ -323,7 +359,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
             if (direction == Offer.Direction.BUY)
                 totalToPayAsCoin.set(offerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin));
             else
-                totalToPayAsCoin.set(offerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin).add(amountAsCoin.get()));
+                totalToPayAsCoin.set(offerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin).add(amountAsCoin.get() == null ? Coin.ZERO : amountAsCoin.get()));
         }
     }
 

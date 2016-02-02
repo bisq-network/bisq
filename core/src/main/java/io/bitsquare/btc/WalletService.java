@@ -53,6 +53,7 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -86,6 +87,7 @@ public class WalletService {
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
     private final ObjectProperty<List<Peer>> connectedPeers = new SimpleObjectProperty<>();
     public final BooleanProperty shutDownDone = new SimpleBooleanProperty();
+    private ArbitraryTransactionBloomFilter arbitraryTransactionBloomFilter;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -129,7 +131,11 @@ public class WalletService {
                 walletAppKit.wallet().allowSpendingUnconfirmedTransactions();
                 if (params != RegTestParams.get())
                     walletAppKit.peerGroup().setMaxConnections(11);
+
+                // https://groups.google.com/forum/#!msg/bitcoinj/Ys13qkTwcNg/9qxnhwnkeoIJ
+                // DEFAULT_BLOOM_FILTER_FP_RATE = 0.00001
                 walletAppKit.peerGroup().setBloomFilterFalsePositiveRate(0.00001);
+
                 wallet = walletAppKit.wallet();
                 wallet.addEventListener(walletEventListener);
 
@@ -613,18 +619,36 @@ public class WalletService {
             }
         }
     }
-    
-     /* // TODO
-    private class BloomFilterForForeignTx extends AbstractPeerEventListener implements PeerFilterProvider {
-        private final String txId;
 
-        public BloomFilterForForeignTx(String txId) {
-            this.txId = txId;
+    public void requestTransactionFromBlockChain(Transaction transaction, Consumer<Coin> resultHandler) {
+        arbitraryTransactionBloomFilter = new ArbitraryTransactionBloomFilter(transaction, resultHandler);
+        PeerGroup peerGroup = walletAppKit.peerGroup();
+        peerGroup.addEventListener(arbitraryTransactionBloomFilter);
+        peerGroup.addPeerFilterProvider(arbitraryTransactionBloomFilter);
+    }
+
+    private class ArbitraryTransactionBloomFilter extends AbstractPeerEventListener implements PeerFilterProvider {
+        private final Transaction transaction;
+        private final Consumer<Coin> resultHandler;
+        private final Set<TransactionOutPoint> transactionOutPoints;
+
+        public ArbitraryTransactionBloomFilter(Transaction transaction, Consumer<Coin> resultHandler) {
+            this.transaction = transaction;
+            this.resultHandler = resultHandler;
+
+            transactionOutPoints = transaction.getInputs().stream()
+                    .map(e -> e.getOutpoint() != null ? e.getOutpoint() : null)
+                    .filter(e -> e != null)
+                    .collect(Collectors.toSet());
+
+            log.debug("transaction=" + transaction);
+            log.debug("transaction.fee=" + transaction.getFee());
+            log.debug("outpoints=" + transactionOutPoints);
         }
 
         @Override
         public long getEarliestKeyCreationTime() {
-            return Utils.currentTimeSeconds();
+            return System.currentTimeMillis() / 1000;
         }
 
         @Override
@@ -633,16 +657,15 @@ public class WalletService {
 
         @Override
         public int getBloomFilterElementCount() {
-            return 1;
+            return transactionOutPoints.size();
         }
 
         @Override
         public BloomFilter getBloomFilter(int size, double falsePositiveRate, long nTweak) {
             BloomFilter filter = new BloomFilter(size, falsePositiveRate, nTweak);
-           *//* for (TransactionOutPoint pledge : allPledges.keySet()) {
-                filter.insert(pledge.bitcoinSerialize());
-            }*//*
-            // how to add txid ???
+            for (TransactionOutPoint transactionOutPoint : transactionOutPoints) {
+                filter.insert(transactionOutPoint.bitcoinSerialize());
+            }
             return filter;
         }
 
@@ -656,20 +679,15 @@ public class WalletService {
         }
 
         @Override
-        public void onTransaction(Peer peer, Transaction t) {
-            // executor.checkOnThread();
-            // TODO: Gate this logic on t being announced by multiple peers.
-            //  checkForRevocation(t);
-            // TODO: Watch out for the confirmation. If no confirmation of the revocation occurs within N hours, alert the user.
+        public void onTransaction(Peer peer, Transaction tx) {
+            if (transactionOutPoints.contains(tx))
+                transactionOutPoints.remove(tx);
+
+            if (transactionOutPoints.isEmpty())
+                resultHandler.accept(transaction.getFee());
+
+            log.debug("onTransaction: transaction=" + tx);
+            log.debug("onTransaction: transaction.fee=" + tx.getFee());
         }
     }
-
-    // TODO
-    public void findTxInBlockChain(String txId) {
-        // https://groups.google.com/forum/?hl=de#!topic/bitcoinj/kinFP7lLsRE
-        // https://groups.google.com/forum/?hl=de#!topic/bitcoinj/f7m87kCWdb8
-        // https://groups.google.com/forum/?hl=de#!topic/bitcoinj/jNE5ohLExVM
-        walletAppKit.peerGroup().addPeerFilterProvider(new BloomFilterForForeignTx(txId));
-    }*/
-
 }

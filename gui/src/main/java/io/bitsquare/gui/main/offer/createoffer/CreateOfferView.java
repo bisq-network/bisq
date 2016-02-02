@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.offer.createoffer;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.Navigation;
@@ -100,9 +101,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private ChangeListener<String> errorMessageListener;
     private ChangeListener<Boolean> isPlaceOfferSpinnerVisibleListener;
     private ChangeListener<Boolean> showTransactionPublishedScreen;
+    private ChangeListener<Boolean> insufficientFeeListener;
     private EventHandler<ActionEvent> paymentAccountsComboBoxSelectionHandler;
-    private EventHandler<ActionEvent> currencyComboBoxSelectionHandler;
 
+    private EventHandler<ActionEvent> currencyComboBoxSelectionHandler;
     private int gridRow = 0;
 
 
@@ -186,7 +188,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     public void onClose() {
         // we use model.requestPlaceOfferSuccess to not react on close caused by placeOffer
         if (model.dataModel.isWalletFunded.get() && !model.requestPlaceOfferSuccess.get())
-            new Popup().warning("You have already funds paid in.\nIn the <Funds/Open for withdrawal> section you can withdraw those funds.").show();
+            new Popup().warning("You have already funds paid in.\nIn the \"Funds/Open for withdrawal\" section you can withdraw those funds.").show();
     }
 
     public void setCloseHandler(OfferView.CloseHandler closeHandler) {
@@ -421,6 +423,19 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             placeOfferSpinner.setVisible(newValue);
         };
 
+        insufficientFeeListener = (observable, oldValue, newValue) -> {
+            if (newValue) {
+                new Popup().warning("You need to use at least a mining fee of " +
+                        model.formatCoin(FeePolicy.getFeePerKb()) +
+                        ".\n\nThe trade transactions might take too much time to be included in " +
+                        "a block if the fee is too low.\n" +
+                        "Please withdraw the amount you have funded back to your wallet and " +
+                        "do a funding again with the correct fee.")
+                        .onClose(() -> close())
+                        .show();
+            }
+        };
+
         paymentAccountsComboBoxSelectionHandler = e -> onPaymentAccountsComboBoxSelected();
         currencyComboBoxSelectionHandler = e -> onCurrencyComboBoxSelected();
 
@@ -464,6 +479,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         model.showWarningAdjustedVolume.addListener(showWarningAdjustedVolumeListener);
         model.errorMessage.addListener(errorMessageListener);
         model.isPlaceOfferSpinnerVisible.addListener(isPlaceOfferSpinnerVisibleListener);
+        model.dataModel.insufficientFee.addListener(insufficientFeeListener);
 
         model.requestPlaceOfferSuccess.addListener(showTransactionPublishedScreen);
 
@@ -485,6 +501,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         model.showWarningAdjustedVolume.removeListener(showWarningAdjustedVolumeListener);
         model.errorMessage.removeListener(errorMessageListener);
         model.isPlaceOfferSpinnerVisible.removeListener(isPlaceOfferSpinnerVisibleListener);
+        model.dataModel.insufficientFee.removeListener(insufficientFeeListener);
 
         model.requestPlaceOfferSuccess.removeListener(showTransactionPublishedScreen);
 
