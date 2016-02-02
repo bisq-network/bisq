@@ -36,8 +36,11 @@
     <Label text="Select Network:" GridPane.rowIndex="0"/>
     <ComboBox fx:id="netWorkComboBox" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
-    <Label fx:id="bitcoinPeersLabel" text="Connected peers:" GridPane.rowIndex="1"/>
-    <TextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
+    <Label text="Use tor:" GridPane.rowIndex="1"/>
+    <CheckBox fx:id="useTorCheckBox" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+    <Label fx:id="bitcoinPeersLabel" text="Connected peers:" GridPane.rowIndex="2"/>
+    <TextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
               GridPane.vgrow="ALWAYS" editable="false" focusTraversable="false"/>
 
     <TitledGroupBg text="P2P network" GridPane.rowIndex="3" GridPane.rowSpan="5">

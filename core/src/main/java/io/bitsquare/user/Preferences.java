@@ -101,6 +101,7 @@ public class Preferences implements Serializable {
     private boolean autoSelectArbitrators = true;
     private final Map<String, Boolean> showAgainMap;
     private boolean tacAccepted;
+    private boolean useTorForBitcoinJ = true;
     private Locale preferredLocale;
     private TradeCurrency preferredTradeCurrency;
     private long txFeePerKB = FeePolicy.getFeePerKb().value;
@@ -150,6 +151,8 @@ public class Preferences implements Serializable {
             defaultLocale = preferredLocale;
             preferredTradeCurrency = persisted.getPreferredTradeCurrency();
             defaultTradeCurrency = preferredTradeCurrency;
+            useTorForBitcoinJ = persisted.getUseTorForBitcoinJ();
+            
             try {
                 setTxFeePerKB(persisted.getTxFeePerKB());
             } catch (Exception e) {
@@ -294,6 +297,12 @@ public class Preferences implements Serializable {
         storage.queueUpForSave();
     }
 
+    public void setUseTorForBitcoinJ(boolean useTorForBitcoinJ) {
+        this.useTorForBitcoinJ = useTorForBitcoinJ;
+        storage.queueUpForSave();
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -411,5 +420,9 @@ public class Preferences implements Serializable {
 
     public long getTxFeePerKB() {
         return Math.max(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value, txFeePerKB);
+    }
+
+    public boolean getUseTorForBitcoinJ() {
+        return useTorForBitcoinJ;
     }
 }

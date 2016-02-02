@@ -80,6 +80,7 @@ public class WalletService {
     private final NetworkParameters params;
     private final File walletDir;
     private final UserAgent userAgent;
+    private final boolean useTor;
 
     private WalletAppKit walletAppKit;
     private Wallet wallet;
@@ -103,6 +104,7 @@ public class WalletService {
         this.params = preferences.getBitcoinNetwork().getParameters();
         this.walletDir = new File(walletDir, "bitcoin");
         this.userAgent = userAgent;
+        useTor = preferences.getUseTorForBitcoinJ();
     }
 
 
@@ -192,9 +194,10 @@ public class WalletService {
             }
         };
 
-        // TODO try to get bitcoinj running over our tor proxy
-       /* if (!params.getId().equals(NetworkParameters.ID_REGTEST))
-            walletAppKit.useTor();*/
+        // TODO Get bitcoinj running over our tor proxy. BlockingClientManager need to be used to use the socket  
+        // from jtorproxy. To get supported it via nio / netty will be harder
+        if (!params.getId().equals(NetworkParameters.ID_REGTEST) && useTor)
+            walletAppKit.useTor();
 
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
@@ -620,11 +623,22 @@ public class WalletService {
         }
     }
 
+    public void requestTransactionBlockchainProvider(Transaction transaction, Consumer<Coin> resultHandler) {
+        // TODO use http server over tor to request tx in question
+        // https://btc.blockr.io/api/v1/tx/info/9a0c37209a45a0e61a50a62fcb7d0f52f3d6ed41faaf0afc044d642ab541b675
+
+    }
+
     public void requestTransactionFromBlockChain(Transaction transaction, Consumer<Coin> resultHandler) {
-        arbitraryTransactionBloomFilter = new ArbitraryTransactionBloomFilter(transaction, resultHandler);
+        requestTransactionBlockchainProvider(transaction, resultHandler);
+        
+      /*  arbitraryTransactionBloomFilter = new ArbitraryTransactionBloomFilter(transaction, resultHandler);
         PeerGroup peerGroup = walletAppKit.peerGroup();
         peerGroup.addEventListener(arbitraryTransactionBloomFilter);
         peerGroup.addPeerFilterProvider(arbitraryTransactionBloomFilter);
+
+        log.debug("transaction=" + transaction);
+        log.debug("transaction.fee=" + transaction.getFee());*/
     }
 
     private class ArbitraryTransactionBloomFilter extends AbstractPeerEventListener implements PeerFilterProvider {
@@ -686,8 +700,8 @@ public class WalletService {
             if (transactionOutPoints.isEmpty())
                 resultHandler.accept(transaction.getFee());
 
-            log.debug("onTransaction: transaction=" + tx);
-            log.debug("onTransaction: transaction.fee=" + tx.getFee());
+            log.debug("## onTransaction: transaction=" + tx);
+            log.debug("## onTransaction: transaction.fee=" + tx.getFee());
         }
     }
 }

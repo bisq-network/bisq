@@ -36,10 +36,7 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 import org.bitcoinj.core.Peer;
@@ -67,6 +64,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     TextArea bitcoinPeersTextArea, p2PPeersTextArea;
     @FXML
     Label bitcoinPeersLabel, p2PPeersLabel;
+    @FXML
+    CheckBox useTorCheckBox;
 
     private P2PServiceListener p2PServiceListener;
     private ChangeListener<Number> numP2PPeersChangeListener;
@@ -91,6 +90,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         GridPane.setValignment(bitcoinPeersLabel, VPos.TOP);
         GridPane.setMargin(p2PPeersLabel, new Insets(4, 0, 0, 0));
         GridPane.setValignment(p2PPeersLabel, VPos.TOP);
+
         bitcoinPeersTextArea.setPrefRowCount(12);
         netWorkComboBox.setItems(FXCollections.observableArrayList(BitcoinNetwork.values()));
         netWorkComboBox.getSelectionModel().select(preferences.getBitcoinNetwork());
@@ -140,6 +140,24 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     @Override
     public void activate() {
+        useTorCheckBox.setSelected(preferences.getUseTorForBitcoinJ());
+        useTorCheckBox.setOnAction(event -> {
+            boolean selected = useTorCheckBox.isSelected();
+            if (selected != preferences.getUseTorForBitcoinJ()) {
+                new Popup().information("You need to restart the application to apply that change.\n" +
+                        "Do you want to do that now?")
+                        .actionButtonText("Apply and shut down")
+                        .onAction(() -> {
+                            preferences.setUseTorForBitcoinJ(selected);
+                            FxTimer.runLater(Duration.ofMillis(500), BitsquareApp.shutDownHandler::run);
+                        })
+                        .closeButtonText("Cancel")
+                        .onClose(() -> useTorCheckBox.setSelected(!selected))
+                        .show();
+
+            }
+        });
+        
         NodeAddress nodeAddress = p2PService.getAddress();
         if (nodeAddress == null) {
             p2PService.addP2PServiceListener(p2PServiceListener);
@@ -158,6 +176,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     @Override
     public void deactivate() {
+        useTorCheckBox.setOnAction(null);
+        
         if (p2PServiceListener != null)
             p2PService.removeP2PServiceListener(p2PServiceListener);
 
@@ -202,7 +222,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 "Do you want to shut down now?")
                 .onAction(() -> {
                     preferences.setBitcoinNetwork(netWorkComboBox.getSelectionModel().getSelectedItem());
-                    FxTimer.runLater(Duration.ofMillis(500), () -> BitsquareApp.shutDownHandler.run());
+                    FxTimer.runLater(Duration.ofMillis(500), BitsquareApp.shutDownHandler::run);
                 })
                 .actionButtonText("Shut down")
                 .closeButtonText("Cancel")
