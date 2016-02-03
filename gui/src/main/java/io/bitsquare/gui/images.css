@@ -200,3 +200,7 @@
     -fx-image: url("../../../images/bubble_arrow_blue_right.png");
 }
 
+#link {
+    -fx-image: url("../../../images/link.png");
+}
+

@@ -29,15 +29,15 @@
 
     <TableView fx:id="table" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn text="Details" fx:id="detailsColumn" minWidth="100" sortable="false"/>
-            <TableColumn text="Address" fx:id="addressColumn" minWidth="240" sortable="false">
+            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="170" maxWidth="170"/>
+            <TableColumn text="Details" fx:id="detailsColumn" minWidth="160" maxWidth="160"/>
+            <TableColumn text="Address" fx:id="addressColumn" minWidth="320" maxWidth="320">
                 <cellValueFactory>
                     <PropertyValueFactory property="addressString"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Balance" fx:id="balanceColumn" minWidth="50" sortable="false"/>
-            <TableColumn text="Confirmations" fx:id="confidenceColumn" minWidth="30" sortable="false"/>
-            <TableColumn text="" fx:id="selectColumn" prefWidth="80" sortable="false"/>
+            <TableColumn text="Balance" fx:id="balanceColumn" minWidth="110"/>
+            <TableColumn text="Selection" fx:id="selectColumn" minWidth="160" sortable="false"/>
         </columns>
     </TableView>
 
@@ -50,7 +50,7 @@
         <TextField fx:id="amountTextField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
         <Label text="Withdraw from address:" GridPane.rowIndex="1"/>
-        <TextField fx:id="withdrawFromTextField" promptText="Select a source address from the table"
+        <TextField fx:id="withdrawFromTextField" editable="false" focusTraversable="false"
                    GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
         <Label text="Withdraw to address:" GridPane.rowIndex="2"/>

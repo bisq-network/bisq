@@ -24,11 +24,9 @@ import org.bitcoinj.wallet.CoinSelector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -39,7 +37,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 class AddressBasedCoinSelector implements CoinSelector {
     private static final Logger log = LoggerFactory.getLogger(AddressBasedCoinSelector.class);
     private final NetworkParameters params;
-    private final AddressEntry addressEntry;
+    @Nullable
+    private Set<AddressEntry> addressEntries;
+    @Nullable
+    private AddressEntry addressEntry;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -48,6 +49,11 @@ class AddressBasedCoinSelector implements CoinSelector {
     public AddressBasedCoinSelector(NetworkParameters params, AddressEntry addressEntry) {
         this.params = params;
         this.addressEntry = addressEntry;
+    }
+
+    public AddressBasedCoinSelector(NetworkParameters params, Set<AddressEntry> addressEntries) {
+        this.params = params;
+        this.addressEntries = addressEntries;
     }
 
     @VisibleForTesting
@@ -94,15 +100,26 @@ class AddressBasedCoinSelector implements CoinSelector {
         if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash
                 ()) {
             Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
-            log.trace("matchesRequiredAddress?");
+            log.trace("matchesRequiredAddress(es)?");
             log.trace(addressOutput.toString());
-            log.trace(addressEntry.getAddress().toString());
+            if (addressEntry != null && addressEntry.getAddress() != null) {
+                log.trace(addressEntry.getAddress().toString());
+                if (addressOutput.equals(addressEntry.getAddress()))
+                    return true;
+                else {
+                    log.trace("No match found at matchesRequiredAddress addressOutput / addressEntry " + addressOutput.toString
+                            () + " / " + addressEntry.getAddress().toString());
+                }
+            } else if (addressEntries != null) {
+                log.trace(addressEntries.toString());
+                for (AddressEntry entry : addressEntries) {
+                    if (addressOutput.equals(entry.getAddress()))
+                        return true;
+                }
 
-            if (addressOutput.equals(addressEntry.getAddress())) {
-                return true;
+                log.trace("No match found at matchesRequiredAddress addressOutput / addressEntries " + addressOutput.toString
+                        () + " / " + addressEntries.toString());
             }
-            log.trace("No match found at matchesRequiredAddress addressOutput / addressEntry " + addressOutput.toString
-                    () + " / " + addressEntry.getAddress().toString());
         }
         return false;
     }

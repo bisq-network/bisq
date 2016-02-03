@@ -28,24 +28,21 @@
     </padding>
     <TableView fx:id="table" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="100" sortable="false">
+            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="160" maxWidth="160">
                 <cellValueFactory>
                     <PropertyValueFactory property="date"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Type" fx:id="typeColumn" minWidth="70" sortable="false">
-                <cellValueFactory>
-                    <PropertyValueFactory property="type"/>
-                </cellValueFactory>
-            </TableColumn>
-            <TableColumn text="Address" fx:id="addressColumn" minWidth="240" sortable="false"/>
-            <TableColumn text="Amount" fx:id="amountColumn" minWidth="70" sortable="false">
+            <TableColumn text="Details" fx:id="detailsColumn" minWidth="210" maxWidth="210"/>
+            <TableColumn text="Address" fx:id="addressColumn" minWidth="180"/>
+            <TableColumn text="Transaction" fx:id="transactionColumn" minWidth="100"/>
+            <TableColumn text="Amount" fx:id="amountColumn" minWidth="110" maxWidth="110">
                 <cellValueFactory>
                     <PropertyValueFactory property="amount"/>
                 </cellValueFactory>
             </TableColumn>
 
-            <TableColumn text="Confirmations" fx:id="confidenceColumn" minWidth="30" sortable="false"/>
+            <TableColumn text="Confirmations" fx:id="confidenceColumn" minWidth="110" maxWidth="110"/>
         </columns>
     </TableView>
 </VBox>

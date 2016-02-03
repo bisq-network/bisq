@@ -50,7 +50,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     @FXML
     TableView<ReservedListItem> table;
     @FXML
-    TableColumn<ReservedListItem, ReservedListItem> detailsColumn, addressColumn, balanceColumn, confidenceColumn;
+    TableColumn<ReservedListItem, ReservedListItem> dateColumn, detailsColumn, addressColumn, balanceColumn, confidenceColumn;
 
     private final WalletService walletService;
     private final TradeManager tradeManager;
@@ -60,6 +60,11 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     private final OfferDetailsPopup offerDetailsPopup;
     private final TradeDetailsPopup tradeDetailsPopup;
     private final ObservableList<ReservedListItem> addressList = FXCollections.observableArrayList();
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
     private ReservedView(WalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager, Preferences preferences,
@@ -87,13 +92,13 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
-        fillList();
+        updateList();
         table.setItems(addressList);
 
         walletService.addBalanceListener(new BalanceListener() {
             @Override
             public void onBalanceChanged(Coin balance) {
-                fillList();
+                updateList();
             }
         });
     }
@@ -104,10 +109,13 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     }
 
 
-    private void fillList() {
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void updateList() {
         addressList.forEach(ReservedListItem::cleanup);
-        addressList.clear();
-        addressList.addAll(Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getTrades().stream())
+        addressList.setAll(Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getTrades().stream())
                 .map(tradable -> new ReservedListItem(tradable, walletService.getAddressEntryByOfferId(tradable.getOffer().getId()), walletService, formatter))
                 .collect(Collectors.toList()));
     }
@@ -121,6 +129,11 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                     "connection.").show();
         }
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // ColumnCellFactories
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setLabelColumnCellFactory() {
         detailsColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));

@@ -18,6 +18,7 @@
   -->
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.VBox?>
 <VBox fx:id="root" fx:controller="io.bitsquare.gui.main.funds.reserved.ReservedView"
@@ -28,6 +29,11 @@
 
     <TableView fx:id="table" VBox.vgrow="ALWAYS">
         <columns>
+            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="100" sortable="false">
+                <cellValueFactory>
+                    <PropertyValueFactory property="date"/>
+                </cellValueFactory>
+            </TableColumn>
             <TableColumn text="Details" fx:id="detailsColumn" minWidth="100" sortable="false"/>
             <TableColumn text="Address" fx:id="addressColumn" minWidth="240" sortable="false"/>
             <TableColumn text="Balance" fx:id="balanceColumn" minWidth="90" sortable="false"/>

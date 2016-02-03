@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.popups;
 
+import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
@@ -43,6 +44,7 @@ public class TradeDetailsPopup extends Popup {
     protected static final Logger log = LoggerFactory.getLogger(TradeDetailsPopup.class);
 
     private final BSFormatter formatter;
+    private DisputeManager disputeManager;
     private Trade trade;
 
 
@@ -51,8 +53,9 @@ public class TradeDetailsPopup extends Popup {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeDetailsPopup(BSFormatter formatter) {
+    public TradeDetailsPopup(BSFormatter formatter, DisputeManager disputeManager) {
         this.formatter = formatter;
+        this.disputeManager = disputeManager;
     }
 
     public TradeDetailsPopup show(Trade trade) {
@@ -119,13 +122,15 @@ public class TradeDetailsPopup extends Popup {
             if (buyerPaymentAccountContractData == null && sellerPaymentAccountContractData == null)
                 rows++;
 
-            if (contract.takeOfferFeeTxID != null)
+            if (trade.getTakeOfferFeeTx() != null)
                 rows++;
         }
 
         if (trade.getDepositTx() != null)
             rows++;
         if (trade.getPayoutTx() != null)
+            rows++;
+        if (disputeManager.findOwnDispute(trade.getId()).isPresent())
             rows++;
         if (trade.errorMessageProperty().get() != null)
             rows += 2;
@@ -151,13 +156,15 @@ public class TradeDetailsPopup extends Popup {
         }
 
         addLabelTxIdTextField(gridPane, ++rowIndex, "Offer fee transaction ID:", offer.getOfferFeePaymentTxID());
-        if (contract != null && contract.takeOfferFeeTxID != null)
-            addLabelTxIdTextField(gridPane, ++rowIndex, "Trading fee transaction ID:", contract.takeOfferFeeTxID);
+        if (contract != null && trade.getTakeOfferFeeTx() != null)
+            addLabelTxIdTextField(gridPane, ++rowIndex, "Taker fee transaction ID:", trade.getTakeOfferFeeTx().getHashAsString());
 
         if (trade.getDepositTx() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, "Deposit transaction ID:", trade.getDepositTx().getHashAsString());
         if (trade.getPayoutTx() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, "Payout transaction ID:", trade.getPayoutTx().getHashAsString());
+        if (disputeManager.findOwnDispute(trade.getId()).isPresent() && disputeManager.findOwnDispute(trade.getId()).get().getDisputePayoutTx() != null)
+            addLabelTxIdTextField(gridPane, ++rowIndex, "Disputed payout transaction ID:", disputeManager.findOwnDispute(trade.getId()).get().getDisputePayoutTx().getHashAsString());
 
         if (contract != null) {
             TextArea textArea = addLabelTextArea(gridPane, ++rowIndex, "Contract in JSON format:", trade.getContractAsJson()).second;

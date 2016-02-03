@@ -140,6 +140,31 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: black;
 }
 
+.external-link-icon {
+    -fx-text-fill: -fx-accent;
+    -fx-cursor: hand;
+}
+
+.received-funds-icon {
+    -fx-text-fill: -bs-green;
+    -fx-cursor: hand;
+}
+
+.received-funds-icon:hover {
+    -fx-text-fill: black;
+    -fx-cursor: hand;
+}
+
+.sent-funds-icon {
+    -fx-text-fill: -bs-error-red;
+    -fx-cursor: hand;
+}
+
+.sent-funds-icon:hover {
+    -fx-text-fill: black;
+    -fx-cursor: hand;
+}
+
 /*******************************************************************************
  *                                                                             *
  * Tooltip                                                                     *

@@ -25,6 +25,8 @@ import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class SendPayDepositRequest extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(SendPayDepositRequest.class);
 
@@ -36,7 +38,8 @@ public class SendPayDepositRequest extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            if (processModel.getTakeOfferFeeTx() != null) {
+            if (trade.getTakeOfferFeeTx() != null) {
+                checkNotNull(trade.getTradeAmount());
                 PayDepositRequest payDepositRequest = new PayDepositRequest(
                         processModel.getMyAddress(),
                         processModel.getId(),
@@ -49,7 +52,7 @@ public class SendPayDepositRequest extends TradeTask {
                         processModel.getPubKeyRing(),
                         processModel.getPaymentAccountContractData(trade),
                         processModel.getAccountId(),
-                        processModel.getTakeOfferFeeTx().getHashAsString(),
+                        trade.getTakeOfferFeeTx().getHashAsString(),
                         processModel.getUser().getAcceptedArbitratorAddresses(),
                         trade.getArbitratorNodeAddress()
                 );
@@ -79,7 +82,7 @@ public class SendPayDepositRequest extends TradeTask {
                         }
                 );
             } else {
-                log.error("processModel.getTakeOfferFeeTx() = " + processModel.getTakeOfferFeeTx());
+                log.error("trade.getTakeOfferFeeTx() = " + trade.getTakeOfferFeeTx());
                 failed("TakeOfferFeeTx is null");
             }
         } catch (Throwable t) {

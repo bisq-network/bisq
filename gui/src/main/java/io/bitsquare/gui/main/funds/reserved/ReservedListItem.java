@@ -26,6 +26,8 @@ import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import org.bitcoinj.core.Address;
@@ -37,6 +39,7 @@ import org.slf4j.LoggerFactory;
 public class ReservedListItem {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
+    private final StringProperty date = new SimpleStringProperty();
     private final BalanceListener balanceListener;
 
     private final Label balanceLabel;
@@ -77,6 +80,8 @@ public class ReservedListItem {
         });
 
         updateConfidence(walletService.getConfidenceForAddress(getAddress()));
+
+        //date.set(formatter.formatDateTime(transaction.getUpdateTime()));
 
 
         // balance

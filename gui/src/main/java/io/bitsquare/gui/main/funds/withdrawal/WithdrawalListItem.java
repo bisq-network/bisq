@@ -19,31 +19,18 @@ package io.bitsquare.gui.main.funds.withdrawal;
 
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.TransactionConfidence;
 
 public class WithdrawalListItem {
     private final BalanceListener balanceListener;
-
     private final Label balanceLabel;
-
     private final AddressEntry addressEntry;
-
     private final WalletService walletService;
     private final BSFormatter formatter;
-    private final AddressConfidenceListener confidenceListener;
-
-    private final ConfidenceProgressIndicator progressIndicator;
-
-    private final Tooltip tooltip;
-
     private Coin balance;
     private final String addressString;
 
@@ -52,24 +39,6 @@ public class WithdrawalListItem {
         this.walletService = walletService;
         this.formatter = formatter;
         addressString = addressEntry.getAddressString();
-
-        // confidence
-        progressIndicator = new ConfidenceProgressIndicator();
-        progressIndicator.setId("funds-confidence");
-        tooltip = new Tooltip("Not used yet");
-        progressIndicator.setProgress(0);
-        progressIndicator.setPrefSize(24, 24);
-        Tooltip.install(progressIndicator, tooltip);
-
-        confidenceListener = walletService.addAddressConfidenceListener(new AddressConfidenceListener(getAddress()) {
-            @Override
-            public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                updateConfidence(confidence);
-            }
-        });
-
-        updateConfidence(walletService.getConfidenceForAddress(getAddress()));
-
 
         // balance
         balanceLabel = new Label();
@@ -84,7 +53,6 @@ public class WithdrawalListItem {
     }
 
     public void cleanup() {
-        walletService.removeAddressConfidenceListener(confidenceListener);
         walletService.removeBalanceListener(balanceListener);
     }
 
@@ -95,61 +63,43 @@ public class WithdrawalListItem {
         }
     }
 
-    private void updateConfidence(TransactionConfidence confidence) {
-        if (confidence != null) {
-            //log.debug("Type numBroadcastPeers getDepthInBlocks " + confidence.getConfidenceType() + " / " +
-            // confidence.numBroadcastPeers() + " / " + confidence.getDepthInBlocks());
-            switch (confidence.getConfidenceType()) {
-                case UNKNOWN:
-                    tooltip.setText("Unknown transaction status");
-                    progressIndicator.setProgress(0);
-                    break;
-                case PENDING:
-                    tooltip.setText("Seen by " + confidence.numBroadcastPeers() + " peer(s) / 0 confirmations");
-                    progressIndicator.setProgress(-1.0);
-                    break;
-                case BUILDING:
-                    tooltip.setText("Confirmed in " + confidence.getDepthInBlocks() + " block(s)");
-                    progressIndicator.setProgress(Math.min(1, (double) confidence.getDepthInBlocks() / 6.0));
-                    break;
-                case DEAD:
-                    tooltip.setText("Transaction is invalid.");
-                    progressIndicator.setProgress(0);
-                    break;
-            }
-        }
-    }
-
-
     public final String getLabel() {
         switch (addressEntry.getContext()) {
             case TRADE:
-                return "Offer ID: " + addressEntry.getShortOfferId();
+                return addressEntry.getShortOfferId();
             case ARBITRATOR:
                 return "Arbitration fee";
         }
         return "";
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof WithdrawalListItem)) return false;
+
+        WithdrawalListItem that = (WithdrawalListItem) o;
+
+        return !(addressEntry != null ? !addressEntry.equals(that.addressEntry) : that.addressEntry != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return addressEntry != null ? addressEntry.hashCode() : 0;
+    }
+
     private Address getAddress() {
         return addressEntry.getAddress();
     }
-
 
     public AddressEntry getAddressEntry() {
         return addressEntry;
     }
 
-
-    public ConfidenceProgressIndicator getProgressIndicator() {
-        return progressIndicator;
-    }
-
-
     public Label getBalanceLabel() {
         return balanceLabel;
     }
-
 
     public Coin getBalance() {
         return balance;

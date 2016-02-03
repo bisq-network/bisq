@@ -25,6 +25,7 @@ import io.bitsquare.trade.Contract;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,6 +74,7 @@ public class Dispute implements Serializable {
 
     private boolean isClosed;
     private DisputeResult disputeResult;
+    private Transaction disputePayoutTx;
 
     transient private Storage<DisputeList<Dispute>> storage;
     transient private ObservableList<DisputeDirectMessage> disputeDirectMessagesAsObservableList = FXCollections.observableArrayList(disputeDirectMessages);
@@ -165,6 +167,11 @@ public class Dispute implements Serializable {
         disputeResultProperty.set(disputeResult);
         storage.queueUpForSave();
     }
+
+    public void setDisputePayoutTx(Transaction disputePayoutTx) {
+        this.disputePayoutTx = disputePayoutTx;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -266,6 +273,9 @@ public class Dispute implements Serializable {
         return new Date(tradeDate);
     }
 
+    public Transaction getDisputePayoutTx() {
+        return disputePayoutTx;
+    }
 
     @Override
     public boolean equals(Object o) {

@@ -42,7 +42,7 @@ public class VerifyAndSignContract extends TradeTask {
         try {
             runInterceptHook();
 
-            if (processModel.getTakeOfferFeeTx() != null) {
+            if (trade.getTakeOfferFeeTx() != null) {
                 TradingPeer offerer = processModel.tradingPeer;
                 PaymentAccountContractData offererPaymentAccountContractData = offerer.getPaymentAccountContractData();
                 PaymentAccountContractData takerPaymentAccountContractData = processModel.getPaymentAccountContractData(trade);
@@ -57,7 +57,7 @@ public class VerifyAndSignContract extends TradeTask {
                 Contract contract = new Contract(
                         processModel.getOffer(),
                         trade.getTradeAmount(),
-                        processModel.getTakeOfferFeeTx().getHashAsString(),
+                        trade.getTakeOfferFeeTx().getHashAsString(),
                         buyerNodeAddress,
                         sellerNodeAddress,
                         trade.getArbitratorNodeAddress(),

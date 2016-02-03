@@ -18,30 +18,40 @@
 package io.bitsquare.gui.main.funds.transactions;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.btc.listeners.AddressConfidenceListener;
+import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.trade.Tradable;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.offer.OpenOffer;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.Tooltip;
 import org.bitcoinj.core.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Optional;
 
 public class TransactionsListItem {
 
-
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final StringProperty date = new SimpleStringProperty();
     private final StringProperty amount = new SimpleStringProperty();
-    private final StringProperty type = new SimpleStringProperty();
-
+    private final String txId;
     private final WalletService walletService;
-
     private final ConfidenceProgressIndicator progressIndicator;
-
     private final Tooltip tooltip;
+    private Tradable tradable;
+    private String details;
     private String addressString;
-    private AddressConfidenceListener confidenceListener;
+    private String direction;
+    private TxConfidenceListener txConfidenceListener;
+    private boolean received;
+    private boolean detailsAvailable;
 
-    public TransactionsListItem(Transaction transaction, WalletService walletService, BSFormatter formatter) {
+    public TransactionsListItem(Transaction transaction, WalletService walletService, Optional<Tradable> tradableOptional, BSFormatter formatter) {
+        txId = transaction.getHashAsString();
         this.walletService = walletService;
 
         Coin valueSentToMe = transaction.getValueSentToMe(walletService.getWallet());
@@ -52,8 +62,8 @@ public class TransactionsListItem {
 
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
                 if (!transactionOutput.isMine(walletService.getWallet())) {
-                    type.set("Sent to");
-
+                    direction = "Sent to:";
+                    received = false;
                     if (transactionOutput.getScriptPubKey().isSentToAddress()
                             || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
                         address = transactionOutput.getScriptPubKey().getToAddress(walletService.getWallet().getParams());
@@ -63,7 +73,8 @@ public class TransactionsListItem {
             }
         } else if (valueSentFromMe.isZero()) {
             amount.set(formatter.formatCoin(valueSentToMe));
-            type.set("Received with");
+            direction = "Received with:";
+            received = true;
 
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
                 if (transactionOutput.isMine(walletService.getWallet())) {
@@ -80,8 +91,8 @@ public class TransactionsListItem {
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
                 if (!transactionOutput.isMine(walletService.getWallet())) {
                     outgoing = true;
-                    if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey()
-                            .isPayToScriptHash()) {
+                    if (transactionOutput.getScriptPubKey().isSentToAddress() ||
+                            transactionOutput.getScriptPubKey().isPayToScriptHash()) {
                         address = transactionOutput.getScriptPubKey().getToAddress(walletService.getWallet().getParams());
                         addressString = address.toString();
                     }
@@ -89,11 +100,39 @@ public class TransactionsListItem {
             }
 
             if (outgoing) {
-                type.set("Sent to");
-            } else {
-                type.set("Internal (TX Fee)");
-                //addressString = "Internal swap between addresses.";
+                direction = "Sent to:";
+                received = false;
             }
+        }
+
+
+        if (tradableOptional.isPresent()) {
+            tradable = tradableOptional.get();
+            detailsAvailable = true;
+            if (tradable instanceof OpenOffer) {
+                details = "Create offer fee: " + tradable.getShortId();
+            } else if (tradable instanceof Trade) {
+                Trade trade = (Trade) tradable;
+                if (trade.getTakeOfferFeeTx() != null && trade.getTakeOfferFeeTx().getHashAsString().equals(txId)) {
+                    details = "Take offer fee: " + tradable.getShortId();
+                } else if (trade.getOffer() != null &&
+                        trade.getOffer().getOfferFeePaymentTxID() != null &&
+                        trade.getOffer().getOfferFeePaymentTxID().equals(txId)) {
+                    details = "Create offer fee: " + tradable.getShortId();
+                } else if (trade.getDepositTx() != null &&
+                        trade.getDepositTx().getHashAsString().equals(txId)) {
+                    details = "MultiSig deposit: " + tradable.getShortId();
+                } else if (trade.getPayoutTx() != null &&
+                        trade.getPayoutTx().getHashAsString().equals(txId)) {
+                    details = "MultiSig payout: " + tradable.getShortId();
+                } else if (trade.getDisputeState() == Trade.DisputeState.DISPUTE_CLOSED) {
+                    details = "Payout after dispute: " + tradable.getShortId();
+                } else {
+                    details = "Unknown reason: " + tradable.getShortId();
+                }
+            }
+        } else {
+            details = received ? "Funded to wallet" : "Withdrawn from wallet";
         }
 
         date.set(formatter.formatDateTime(transaction.getUpdateTime()));
@@ -108,26 +147,24 @@ public class TransactionsListItem {
         Tooltip.install(progressIndicator, tooltip);
 
         if (address != null) {
-            confidenceListener = walletService.addAddressConfidenceListener(new AddressConfidenceListener(address) {
+            txConfidenceListener = walletService.addTxConfidenceListener(new TxConfidenceListener(txId) {
                 @Override
                 public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
                     updateConfidence(confidence);
                 }
             });
 
-            updateConfidence(walletService.getConfidenceForAddress(address));
+            updateConfidence(transaction.getConfidence());
         }
     }
 
 
     public void cleanup() {
-        walletService.removeAddressConfidenceListener(confidenceListener);
+        walletService.removeTxConfidenceListener(txConfidenceListener);
     }
 
     private void updateConfidence(TransactionConfidence confidence) {
         if (confidence != null) {
-            //log.debug("Type numBroadcastPeers getDepthInBlocks " + confidence.getConfidenceType() + " / " +
-            // confidence.numBroadcastPeers() + " / " + confidence.getDepthInBlocks());
             switch (confidence.getConfidenceType()) {
                 case UNKNOWN:
                     tooltip.setText("Unknown transaction status");
@@ -151,32 +188,44 @@ public class TransactionsListItem {
         }
     }
 
-
     public ConfidenceProgressIndicator getProgressIndicator() {
         return progressIndicator;
     }
-
 
     public final StringProperty dateProperty() {
         return this.date;
     }
 
-
     public final StringProperty amountProperty() {
         return this.amount;
-    }
-
-
-    public final StringProperty typeProperty() {
-        return this.type;
     }
 
     public String getAddressString() {
         return addressString;
     }
 
-    public boolean isNotAnAddress() {
-        return addressString == null;
+    public String getDirection() {
+        return direction;
+    }
+
+    public String getTxId() {
+        return txId;
+    }
+
+    public boolean getReceived() {
+        return received;
+    }
+
+    public String getDetails() {
+        return details;
+    }
+
+    public boolean getDetailsAvailable() {
+        return detailsAvailable;
+    }
+
+    public Tradable getTradable() {
+        return tradable;
     }
 }
 

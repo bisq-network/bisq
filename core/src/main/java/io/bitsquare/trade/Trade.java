@@ -21,6 +21,7 @@ import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.FeePolicy;
@@ -125,12 +126,6 @@ abstract public class Trade implements Tradable, Model, Serializable {
         TRADE_PERIOD_OVER
     }
 
-    // Mutable
-    private Coin tradeAmount;
-    private NodeAddress tradingPeerNodeAddress;
-    transient private ObjectProperty<Coin> tradeAmountProperty;
-    transient private ObjectProperty<Fiat> tradeVolumeProperty;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Fields
@@ -152,7 +147,8 @@ abstract public class Trade implements Tradable, Model, Serializable {
     // Mutable
     private DecryptedMsgWithPubKey decryptedMsgWithPubKey;
     private Date takeOfferDate = new Date(0); // in some error cases the date is not set and cause null pointers, so we set a default
-
+    private Coin tradeAmount;
+    private NodeAddress tradingPeerNodeAddress;
     protected State state;
     private DisputeState disputeState = DisputeState.NONE;
     private TradePeriodState tradePeriodState = TradePeriodState.NORMAL;
@@ -172,6 +168,10 @@ abstract public class Trade implements Tradable, Model, Serializable {
     private boolean tradePeriodOverWarningDisplayed;
     private String errorMessage;
     transient private StringProperty errorMessageProperty;
+    transient private ObjectProperty<Coin> tradeAmountProperty;
+    transient private ObjectProperty<Fiat> tradeVolumeProperty;
+    @Nullable
+    private Transaction takeOfferFeeTx;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -306,6 +306,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     }
 
     public void setDisputeState(DisputeState disputeState) {
+        Log.traceCall("disputeState=" + disputeState + "\n\ttrade=" + this);
         this.disputeState = disputeState;
         disputeStateProperty.set(disputeState);
         persist();
@@ -561,6 +562,13 @@ abstract public class Trade implements Tradable, Model, Serializable {
         return contractHash;
     }
 
+    public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {
+        this.takeOfferFeeTx = takeOfferFeeTx;
+    }
+
+    public Transaction getTakeOfferFeeTx() {
+        return takeOfferFeeTx;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -620,11 +628,10 @@ abstract public class Trade implements Tradable, Model, Serializable {
                 "\n\tdisputeState=" + disputeState +
                 "\n\ttradePeriodState=" + tradePeriodState +
                 "\n\tdepositTx=" + depositTx +
+                "\n\ttakeOfferFeeTx.getHashAsString()=" + (takeOfferFeeTx != null ? takeOfferFeeTx.getHashAsString() : "") +
                 "\n\tcontract=" + contract +
-              /*  "\n\tcontractAsJson='" + contractAsJson + '\'' +*/
-               /* "\n\tcontractHash=" + Arrays.toString(contractHash) +*/
-                "\n\ttakerContractSignature.hashCode()='" + takerContractSignature.hashCode() + '\'' +
-                "\n\toffererContractSignature.hashCode()='" + offererContractSignature.hashCode() + '\'' +
+                "\n\ttakerContractSignature.hashCode()='" + (takerContractSignature != null ? takerContractSignature.hashCode() : "") + '\'' +
+                "\n\toffererContractSignature.hashCode()='" + (offererContractSignature != null ? offererContractSignature.hashCode() : "") + '\'' +
                 "\n\tpayoutTx=" + payoutTx +
                 "\n\tlockTimeAsBlockHeight=" + lockTimeAsBlockHeight +
                 "\n\topenDisputeTimeAsBlockHeight=" + openDisputeTimeAsBlockHeight +

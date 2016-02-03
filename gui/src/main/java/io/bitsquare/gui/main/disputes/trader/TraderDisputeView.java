@@ -28,6 +28,7 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.TableGroupHeadline;
+import io.bitsquare.gui.main.disputes.DisputeSummaryPopup;
 import io.bitsquare.gui.popups.ContractPopup;
 import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.popups.TradeDetailsPopup;

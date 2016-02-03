@@ -56,6 +56,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * WalletService handles all non trade specific wallet and bitcoin related services.
  * It startup the wallet app kit and initialized the wallet.
@@ -325,7 +327,9 @@ public class WalletService {
     }
 
     public AddressEntry getAddressEntryByOfferId(String offerId) {
-        Optional<AddressEntry> addressEntry = getAddressEntryList().stream().filter(e -> offerId.equals(e.getOfferId())).findFirst();
+        Optional<AddressEntry> addressEntry = getAddressEntryList().stream()
+                .filter(e -> offerId.equals(e.getOfferId()))
+                .findAny();
         if (addressEntry.isPresent())
             return addressEntry.get();
         else
@@ -333,7 +337,9 @@ public class WalletService {
     }
 
     private Optional<AddressEntry> getAddressEntryByAddress(String address) {
-        return getAddressEntryList().stream().filter(e -> address.equals(e.getAddressString())).findFirst();
+        return getAddressEntryList().stream()
+                .filter(e -> e.getAddressString() != null && e.getAddressString().equals(address))
+                .findAny();
     }
 
 
@@ -450,7 +456,8 @@ public class WalletService {
     public Coin getRequiredFee(String fromAddress,
                                String toAddress,
                                Coin amount,
-                               KeyParameter aesKey) throws AddressFormatException, IllegalArgumentException, InsufficientMoneyException {
+                               @Nullable KeyParameter aesKey) throws AddressFormatException, IllegalArgumentException,
+            InsufficientMoneyException {
         Coin fee;
         try {
             wallet.completeTx(getSendRequest(fromAddress, toAddress, amount, aesKey));
@@ -463,10 +470,28 @@ public class WalletService {
         return fee;
     }
 
+    public Coin getRequiredFeeForMultipleAddresses(Set<String> fromAddresses,
+                                                   String toAddress,
+                                                   Coin amount,
+                                                   @Nullable KeyParameter aesKey) throws AddressFormatException,
+            IllegalArgumentException, InsufficientMoneyException {
+        Coin fee;
+        try {
+            wallet.completeTx(getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, null, aesKey));
+            fee = Coin.ZERO;
+        } catch (InsufficientMoneyException e) {
+            log.info("The amount to be transferred is not enough to pay the transaction fees of {}. " +
+                    "We subtract that fee from the receivers amount to make the transaction possible.");
+            fee = e.missing;
+        }
+        return fee;
+    }
+
     public Wallet.SendRequest getSendRequest(String fromAddress,
                                              String toAddress,
                                              Coin amount,
-                                             @Nullable KeyParameter aesKey) throws AddressFormatException, IllegalArgumentException, InsufficientMoneyException {
+                                             @Nullable KeyParameter aesKey) throws AddressFormatException,
+            IllegalArgumentException, InsufficientMoneyException {
         Transaction tx = new Transaction(params);
         Preconditions.checkArgument(Restrictions.isAboveDust(amount),
                 "You cannot send an amount which are smaller than 546 satoshis.");
@@ -485,13 +510,71 @@ public class WalletService {
         return sendRequest;
     }
 
+    public Wallet.SendRequest getSendRequestForMultipleAddresses(Set<String> fromAddresses,
+                                                                 String toAddress,
+                                                                 Coin amount,
+                                                                 @Nullable String changeAddress,
+                                                                 @Nullable KeyParameter aesKey) throws
+            AddressFormatException, IllegalArgumentException, InsufficientMoneyException {
+        Transaction tx = new Transaction(params);
+        Preconditions.checkArgument(Restrictions.isAboveDust(amount),
+                "You cannot send an amount which are smaller than 546 satoshis.");
+        tx.addOutput(amount, new Address(params, toAddress));
+
+        Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
+        sendRequest.aesKey = aesKey;
+        sendRequest.shuffleOutputs = false;
+        Set<AddressEntry> addressEntries = fromAddresses.stream()
+                .map(e -> getAddressEntryByAddress(e))
+                .filter(e -> e.isPresent())
+                .map(e -> e.get()).collect(Collectors.toSet());
+        if (addressEntries.isEmpty())
+            throw new IllegalArgumentException("No withdrawFromAddresses  not found in our wallets.\n\t" +
+                    "fromAddresses=" + fromAddresses);
+
+        sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntries);
+        Optional<AddressEntry> addressEntryOptional = Optional.empty();
+        AddressEntry changeAddressAddressEntry = null;
+        if (changeAddress != null)
+            addressEntryOptional = getAddressEntryByAddress(changeAddress);
+
+        if (addressEntryOptional.isPresent()) {
+            changeAddressAddressEntry = addressEntryOptional.get();
+        } else {
+            ArrayList<AddressEntry> list = new ArrayList<>(addressEntries);
+            if (!list.isEmpty())
+                changeAddressAddressEntry = list.get(0);
+        }
+        checkNotNull(changeAddressAddressEntry, "change address must not be null");
+        sendRequest.changeAddress = changeAddressAddressEntry.getAddress();
+        sendRequest.feePerKb = FeePolicy.getFeePerKb();
+        return sendRequest;
+    }
+
     public String sendFunds(String fromAddress,
                             String toAddress,
                             Coin amount,
-                            KeyParameter aesKey,
-                            FutureCallback<Transaction> callback) throws AddressFormatException, IllegalArgumentException, InsufficientMoneyException {
+                            @Nullable KeyParameter aesKey,
+                            FutureCallback<Transaction> callback) throws AddressFormatException,
+            IllegalArgumentException, InsufficientMoneyException {
         Coin fee = getRequiredFee(fromAddress, toAddress, amount, aesKey);
         Wallet.SendResult sendResult = wallet.sendCoins(getSendRequest(fromAddress, toAddress, amount.subtract(fee), aesKey));
+        Futures.addCallback(sendResult.broadcastComplete, callback);
+
+        printTxWithInputs("sendFunds", sendResult.tx);
+        return sendResult.tx.getHashAsString();
+    }
+
+    public String sendFundsForMultipleAddresses(Set<String> fromAddresses,
+                                                String toAddress,
+                                                Coin amount,
+                                                @Nullable String changeAddress,
+                                                @Nullable KeyParameter aesKey,
+                                                FutureCallback<Transaction> callback) throws AddressFormatException,
+            IllegalArgumentException, InsufficientMoneyException {
+        Coin fee = getRequiredFeeForMultipleAddresses(fromAddresses, toAddress, amount, aesKey);
+        Wallet.SendResult sendResult = wallet.sendCoins(getSendRequestForMultipleAddresses(fromAddresses, toAddress,
+                amount.subtract(fee), changeAddress, aesKey));
         Futures.addCallback(sendResult.broadcastComplete, callback);
 
         printTxWithInputs("sendFunds", sendResult.tx);

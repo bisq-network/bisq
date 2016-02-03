@@ -510,6 +510,7 @@ public class DisputeManager {
 
                                         // after successful publish we send peer the tx
 
+                                        dispute.setDisputePayoutTx(transaction);
                                         sendPeerPublishedPayoutTxMessage(transaction, dispute, contract);
                                     }
 
@@ -546,7 +547,8 @@ public class DisputeManager {
 
     // losing trader or in case of 50/50 the seller gets the tx sent from the winner or buyer
     private void onDisputedPayoutTxMessage(PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
-        tradeWalletService.addTransactionToWallet(peerPublishedPayoutTxMessage.transaction);
+        Transaction transaction = tradeWalletService.addTransactionToWallet(peerPublishedPayoutTxMessage.transaction);
+        findOwnDispute(peerPublishedPayoutTxMessage.tradeId).ifPresent(dispute -> dispute.setDisputePayoutTx(transaction));
     }
 
 

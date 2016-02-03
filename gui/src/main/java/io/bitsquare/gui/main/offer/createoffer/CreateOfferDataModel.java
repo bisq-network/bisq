@@ -102,7 +102,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     @Inject
     CreateOfferDataModel(OpenOfferManager openOfferManager, WalletService walletService, TradeWalletService tradeWalletService,
                          Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,

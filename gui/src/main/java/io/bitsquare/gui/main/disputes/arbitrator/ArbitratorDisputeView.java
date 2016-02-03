@@ -21,7 +21,7 @@ import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.main.disputes.trader.DisputeSummaryPopup;
+import io.bitsquare.gui.main.disputes.DisputeSummaryPopup;
 import io.bitsquare.gui.main.disputes.trader.TraderDisputeView;
 import io.bitsquare.gui.popups.ContractPopup;
 import io.bitsquare.gui.popups.TradeDetailsPopup;
