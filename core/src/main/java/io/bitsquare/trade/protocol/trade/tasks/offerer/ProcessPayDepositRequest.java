@@ -71,7 +71,7 @@ public class ProcessPayDepositRequest extends TradeTask {
             }
 
             processModel.tradingPeer.setAccountId(nonEmptyStringOf(payDepositRequest.takerAccountId));
-            processModel.setTakeOfferFeeTxId(nonEmptyStringOf(payDepositRequest.takeOfferFeeTxId));
+            trade.setTakeOfferFeeTxId(nonEmptyStringOf(payDepositRequest.takeOfferFeeTxId));
             processModel.setTakerAcceptedArbitratorNodeAddresses(checkNotNull(payDepositRequest.acceptedArbitratorNodeAddresses));
             if (payDepositRequest.acceptedArbitratorNodeAddresses.size() < 1)
                 failed("acceptedArbitratorNames size must be at least 1");

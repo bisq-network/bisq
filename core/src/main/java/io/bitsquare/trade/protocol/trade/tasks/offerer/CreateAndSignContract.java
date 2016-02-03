@@ -43,7 +43,7 @@ public class CreateAndSignContract extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            checkNotNull(processModel.getTakeOfferFeeTxId(), "processModel.getTakeOfferFeeTxId() must not be null");
+            checkNotNull(trade.getTakeOfferFeeTxId(), "trade.getTakeOfferFeeTxId() must not be null");
 
             TradingPeer taker = processModel.tradingPeer;
             PaymentAccountContractData offererPaymentAccountContractData = processModel.getPaymentAccountContractData(trade);
@@ -58,7 +58,7 @@ public class CreateAndSignContract extends TradeTask {
             Contract contract = new Contract(
                     processModel.getOffer(),
                     trade.getTradeAmount(),
-                    processModel.getTakeOfferFeeTxId(),
+                    trade.getTakeOfferFeeTxId(),
                     buyerNodeAddress,
                     sellerNodeAddress,
                     trade.getArbitratorNodeAddress(),

@@ -26,10 +26,7 @@ import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
-import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BitcoinNetwork;
-import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.*;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -94,6 +91,7 @@ public class MainViewModel implements ViewModel {
     final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
     final StringProperty btcSplashSyncIconId = new SimpleStringProperty();
     final StringProperty availableBalance = new SimpleStringProperty();
+    final StringProperty reservedBalance = new SimpleStringProperty();
     final StringProperty lockedBalance = new SimpleStringProperty();
 
     // P2P network
@@ -493,21 +491,42 @@ public class MainViewModel implements ViewModel {
 
     private void updateBalance() {
         updateAvailableBalance();
+        updateReservedBalance();
         updateLockedBalance();
     }
 
+    private void updateReservedBalance() {
+        Coin sum = Coin.valueOf(Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getTrades().stream())
+                .map(tradable -> walletService.getAddressEntryByOfferId(tradable.getId()))
+                .map(addressEntry -> walletService.getBalanceForAddress(addressEntry.getAddress()))
+                .mapToLong(Coin::getValue)
+                .sum());
+        reservedBalance.set(formatter.formatCoinWithCode(sum));
+    }
+
     private void updateLockedBalance() {
-        List<AddressEntry> result = new ArrayList<>();
-
-        result.addAll(Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getTrades().stream())
-                .map(tradable -> walletService.getAddressEntryByOfferId(tradable.getOffer().getId()))
-                .collect(Collectors.toList()));
-
-        Optional<Coin> totalLockedOptional = result.stream().map(e -> walletService.getBalanceForAddress(e.getAddress())).reduce((a, b) -> a.add(b));
-        if (totalLockedOptional.isPresent())
-            lockedBalance.set(formatter.formatCoinWithCode(totalLockedOptional.get()));
-        else
-            lockedBalance.set(formatter.formatCoinWithCode(Coin.ZERO));
+        Coin sum = Coin.valueOf(tradeManager.getTrades().stream()
+                .map(trade -> {
+                    switch (trade.getState().getPhase()) {
+                        case DEPOSIT_REQUESTED:
+                        case DEPOSIT_PAID:
+                        case FIAT_SENT:
+                        case FIAT_RECEIVED:
+                            Coin balanceInDeposit = FeePolicy.getSecurityDeposit().add(FeePolicy.getFeePerKb());
+                            if (trade.getContract() != null &&
+                                    trade.getTradeAmount() != null &&
+                                    trade.getContract().getSellerPayoutAddressString()
+                                            .equals(walletService.getAddressEntryByOfferId(trade.getId()).getAddressString())) {
+                                balanceInDeposit = balanceInDeposit.add(trade.getTradeAmount());
+                            }
+                            return balanceInDeposit;
+                        default:
+                            return Coin.ZERO;
+                    }
+                })
+                .mapToLong(Coin::getValue)
+                .sum());
+        lockedBalance.set(formatter.formatCoinWithCode(sum));
     }
 
     private void updateAvailableBalance() {

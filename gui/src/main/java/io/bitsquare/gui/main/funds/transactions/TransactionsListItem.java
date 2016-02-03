@@ -113,7 +113,7 @@ public class TransactionsListItem {
                 details = "Create offer fee: " + tradable.getShortId();
             } else if (tradable instanceof Trade) {
                 Trade trade = (Trade) tradable;
-                if (trade.getTakeOfferFeeTx() != null && trade.getTakeOfferFeeTx().getHashAsString().equals(txId)) {
+                if (trade.getTakeOfferFeeTxId() != null && trade.getTakeOfferFeeTxId().equals(txId)) {
                     details = "Take offer fee: " + tradable.getShortId();
                 } else if (trade.getOffer() != null &&
                         trade.getOffer().getOfferFeePaymentTxID() != null &&

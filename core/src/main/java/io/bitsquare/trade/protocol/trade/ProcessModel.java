@@ -36,6 +36,7 @@ import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.user.User;
+import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +66,6 @@ public class ProcessModel implements Model, Serializable {
     // Mutable
     public final TradingPeer tradingPeer;
     transient private TradeMessage tradeMessage;
-    private String takeOfferFeeTxId;
     private byte[] payoutTxSignature;
 
     private List<NodeAddress> takerAcceptedArbitratorNodeAddresses;
@@ -78,6 +78,7 @@ public class ProcessModel implements Model, Serializable {
     private long changeOutputValue;
     @Nullable
     private String changeOutputAddress;
+    private Transaction takeOfferFeeTx;
 
     public ProcessModel() {
         tradingPeer = new TradingPeer();
@@ -194,14 +195,6 @@ public class ProcessModel implements Model, Serializable {
         this.payoutTxSignature = payoutTxSignature;
     }
 
-    public String getTakeOfferFeeTxId() {
-        return takeOfferFeeTxId;
-    }
-
-    public void setTakeOfferFeeTxId(String takeOfferFeeTxId) {
-        this.takeOfferFeeTxId = takeOfferFeeTxId;
-    }
-
     @Override
     public void persist() {
     }
@@ -273,5 +266,13 @@ public class ProcessModel implements Model, Serializable {
     @Nullable
     public String getChangeOutputAddress() {
         return changeOutputAddress;
+    }
+
+    public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {
+        this.takeOfferFeeTx = takeOfferFeeTx;
+    }
+
+    public Transaction getTakeOfferFeeTx() {
+        return takeOfferFeeTx;
     }
 }

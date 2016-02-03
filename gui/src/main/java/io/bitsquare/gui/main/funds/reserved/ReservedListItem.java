@@ -20,19 +20,16 @@ package io.bitsquare.gui.main.funds.reserved;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.offer.OpenOffer;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.TransactionConfidence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,19 +38,12 @@ public class ReservedListItem {
 
     private final StringProperty date = new SimpleStringProperty();
     private final BalanceListener balanceListener;
-
     private final Label balanceLabel;
-
+    private String fundsInfo;
     private final Tradable tradable;
     private final AddressEntry addressEntry;
-
     private final WalletService walletService;
     private final BSFormatter formatter;
-    private final AddressConfidenceListener confidenceListener;
-
-    private final ConfidenceProgressIndicator progressIndicator;
-
-    private final Tooltip tooltip;
     private final String addressString;
     private Coin balance;
 
@@ -64,25 +54,7 @@ public class ReservedListItem {
         this.formatter = formatter;
         addressString = addressEntry.getAddressString();
 
-        // confidence
-        progressIndicator = new ConfidenceProgressIndicator();
-        progressIndicator.setId("funds-confidence");
-        tooltip = new Tooltip("Not used yet");
-        progressIndicator.setProgress(0);
-        progressIndicator.setPrefSize(24, 24);
-        Tooltip.install(progressIndicator, tooltip);
-
-        confidenceListener = walletService.addAddressConfidenceListener(new AddressConfidenceListener(getAddress()) {
-            @Override
-            public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                updateConfidence(confidence);
-            }
-        });
-
-        updateConfidence(walletService.getConfidenceForAddress(getAddress()));
-
-        //date.set(formatter.formatDateTime(transaction.getUpdateTime()));
-
+        date.set(formatter.formatDateTime(tradable.getDate()));
 
         // balance
         balanceLabel = new Label();
@@ -97,112 +69,66 @@ public class ReservedListItem {
     }
 
     public void cleanup() {
-        walletService.removeAddressConfidenceListener(confidenceListener);
         walletService.removeBalanceListener(balanceListener);
     }
 
     private void updateBalance(Coin balance) {
         this.balance = balance;
         if (balance != null) {
+            balanceLabel.setText(formatter.formatCoin(balance));
+
             if (tradable instanceof Trade) {
                 Trade trade = (Trade) tradable;
                 Trade.Phase phase = trade.getState().getPhase();
                 switch (phase) {
                     case PREPARATION:
                     case TAKER_FEE_PAID:
-                        balanceLabel.setText(formatter.formatCoinWithCode(balance) + " (locally reserved)");
+                        fundsInfo = "Reserved in local wallet";
                         break;
                     case DEPOSIT_REQUESTED:
                     case DEPOSIT_PAID:
                     case FIAT_SENT:
                     case FIAT_RECEIVED:
+                        fundsInfo = "Locked in MultiSig";
                         // We ignore the tx fee as it will be paid by both (once deposit, once payout)
-                        Coin balanceInDeposit = FeePolicy.getSecurityDeposit();
+                        Coin balanceInDeposit = FeePolicy.getSecurityDeposit().add(FeePolicy.getFeePerKb());
                         // For the seller we add the trade amount
                         if (trade.getContract() != null &&
                                 trade.getTradeAmount() != null &&
                                 trade.getContract().getSellerPayoutAddressString().equals(addressString))
                             balanceInDeposit = balanceInDeposit.add(trade.getTradeAmount());
 
-                        balanceLabel.setText(formatter.formatCoinWithCode(balanceInDeposit) + " (in MS escrow)");
+                        balanceLabel.setText(formatter.formatCoin(balanceInDeposit));
                         break;
                     case PAYOUT_PAID:
-                        balanceLabel.setText(formatter.formatCoinWithCode(balance) + " (in local wallet)");
+                        fundsInfo = "Received in local wallet";
                         break;
                     case WITHDRAWN:
                         log.error("Invalid state at updateBalance (WITHDRAWN)");
-                        balanceLabel.setText(formatter.formatCoinWithCode(balance) + " already withdrawn");
                         break;
                     case DISPUTE:
-                        balanceLabel.setText(formatter.formatCoinWithCode(balance) + " open dispute/ticket");
+                        log.error("Invalid state at updateBalance (DISPUTE)");
                         break;
                     default:
                         log.warn("Not supported tradePhase: " + phase);
                 }
-
-            } else
-                balanceLabel.setText(formatter.formatCoin(balance));
-        }
-    }
-
-    private void updateConfidence(TransactionConfidence confidence) {
-        if (confidence != null) {
-            //log.debug("Type numBroadcastPeers getDepthInBlocks " + confidence.getConfidenceType() + " / " +
-            // confidence.numBroadcastPeers() + " / " + confidence.getDepthInBlocks());
-            switch (confidence.getConfidenceType()) {
-                case UNKNOWN:
-                    tooltip.setText("Unknown transaction status");
-                    progressIndicator.setProgress(0);
-                    break;
-                case PENDING:
-                    tooltip.setText("Seen by " + confidence.numBroadcastPeers() + " peer(s) / 0 confirmations");
-                    progressIndicator.setProgress(-1.0);
-                    break;
-                case BUILDING:
-                    tooltip.setText("Confirmed in " + confidence.getDepthInBlocks() + " block(s)");
-                    progressIndicator.setProgress(Math.min(1, (double) confidence.getDepthInBlocks() / 6.0));
-                    break;
-                case DEAD:
-                    tooltip.setText("Transaction is invalid.");
-                    progressIndicator.setProgress(0);
-                    break;
+            } else if (tradable instanceof OpenOffer) {
+                fundsInfo = "Reserved in local wallet";
             }
         }
-    }
-
-
-    public final String getLabel() {
-        switch (addressEntry.getContext()) {
-            case TRADE:
-                if (tradable instanceof Trade)
-                    return "Trade ID: " + addressEntry.getShortOfferId();
-                else
-                    return "Offer ID: " + addressEntry.getShortOfferId();
-            case ARBITRATOR:
-                return "Arbitration deposit";
-        }
-        return "";
     }
 
     private Address getAddress() {
         return addressEntry.getAddress();
     }
 
-
     public AddressEntry getAddressEntry() {
         return addressEntry;
     }
 
-
-    public ConfidenceProgressIndicator getProgressIndicator() {
-        return progressIndicator;
-    }
-
-
     public Label getBalanceLabel() {
         return balanceLabel;
     }
-
 
     public Coin getBalance() {
         return balance;
@@ -210,5 +136,9 @@ public class ReservedListItem {
 
     public String getAddressString() {
         return addressString;
+    }
+
+    public String getFundsInfo() {
+        return fundsInfo;
     }
 }

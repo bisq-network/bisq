@@ -24,7 +24,7 @@ public class HyperlinkWithIcon extends AnchorPane {
         AnchorPane.setLeftAnchor(hyperlink, 0.0);
         AnchorPane.setRightAnchor(hyperlink, 15.0);
         AnchorPane.setRightAnchor(openLinkIcon, 4.0);
-        AnchorPane.setTopAnchor(openLinkIcon, 3.0);
+        AnchorPane.setTopAnchor(openLinkIcon, awesomeIcon == AwesomeIcon.INFO_SIGN ? 2.0 : 3.0);
 
         getChildren().addAll(hyperlink, openLinkIcon);
     }

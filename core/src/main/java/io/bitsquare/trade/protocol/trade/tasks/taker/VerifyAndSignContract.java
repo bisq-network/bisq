@@ -30,6 +30,8 @@ import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class VerifyAndSignContract extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(VerifyAndSignContract.class);
 
@@ -42,55 +44,53 @@ public class VerifyAndSignContract extends TradeTask {
         try {
             runInterceptHook();
 
-            if (trade.getTakeOfferFeeTx() != null) {
-                TradingPeer offerer = processModel.tradingPeer;
-                PaymentAccountContractData offererPaymentAccountContractData = offerer.getPaymentAccountContractData();
-                PaymentAccountContractData takerPaymentAccountContractData = processModel.getPaymentAccountContractData(trade);
+            checkNotNull(trade.getTakeOfferFeeTxId(), "TakeOfferFeeTxId must not be null");
 
-                boolean isBuyerOffererAndSellerTaker = trade instanceof SellerAsTakerTrade;
-                NodeAddress buyerNodeAddress = isBuyerOffererAndSellerTaker ? processModel.getTempTradingPeerNodeAddress() : processModel.getMyAddress();
-                NodeAddress sellerNodeAddress = isBuyerOffererAndSellerTaker ? processModel.getMyAddress() : processModel.getTempTradingPeerNodeAddress();
-                log.debug("isBuyerOffererAndSellerTaker " + isBuyerOffererAndSellerTaker);
-                log.debug("buyerAddress " + buyerNodeAddress);
-                log.debug("sellerAddress " + sellerNodeAddress);
+            TradingPeer offerer = processModel.tradingPeer;
+            PaymentAccountContractData offererPaymentAccountContractData = offerer.getPaymentAccountContractData();
+            PaymentAccountContractData takerPaymentAccountContractData = processModel.getPaymentAccountContractData(trade);
 
-                Contract contract = new Contract(
-                        processModel.getOffer(),
-                        trade.getTradeAmount(),
-                        trade.getTakeOfferFeeTx().getHashAsString(),
-                        buyerNodeAddress,
-                        sellerNodeAddress,
-                        trade.getArbitratorNodeAddress(),
-                        isBuyerOffererAndSellerTaker,
-                        offerer.getAccountId(),
-                        processModel.getAccountId(),
-                        offererPaymentAccountContractData,
-                        takerPaymentAccountContractData,
-                        offerer.getPubKeyRing(),
-                        processModel.getPubKeyRing(),
-                        offerer.getPayoutAddressString(),
-                        processModel.getAddressEntry().getAddressString(),
-                        offerer.getTradeWalletPubKey(),
-                        processModel.getTradeWalletPubKey()
-                );
-                String contractAsJson = Utilities.objectToJson(contract);
-                String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);
-                trade.setContract(contract);
-                trade.setContractAsJson(contractAsJson);
-                trade.setTakerContractSignature(signature);
+            boolean isBuyerOffererAndSellerTaker = trade instanceof SellerAsTakerTrade;
+            NodeAddress buyerNodeAddress = isBuyerOffererAndSellerTaker ? processModel.getTempTradingPeerNodeAddress() : processModel.getMyAddress();
+            NodeAddress sellerNodeAddress = isBuyerOffererAndSellerTaker ? processModel.getMyAddress() : processModel.getTempTradingPeerNodeAddress();
+            log.debug("isBuyerOffererAndSellerTaker " + isBuyerOffererAndSellerTaker);
+            log.debug("buyerAddress " + buyerNodeAddress);
+            log.debug("sellerAddress " + sellerNodeAddress);
 
-                try {
-                    Sig.verify(offerer.getPubKeyRing().getSignaturePubKey(),
-                            contractAsJson,
-                            offerer.getContractSignature());
-                } catch (Throwable t) {
-                    failed("Signature verification failed. " + t.getMessage());
-                }
+            Contract contract = new Contract(
+                    processModel.getOffer(),
+                    trade.getTradeAmount(),
+                    trade.getTakeOfferFeeTxId(),
+                    buyerNodeAddress,
+                    sellerNodeAddress,
+                    trade.getArbitratorNodeAddress(),
+                    isBuyerOffererAndSellerTaker,
+                    offerer.getAccountId(),
+                    processModel.getAccountId(),
+                    offererPaymentAccountContractData,
+                    takerPaymentAccountContractData,
+                    offerer.getPubKeyRing(),
+                    processModel.getPubKeyRing(),
+                    offerer.getPayoutAddressString(),
+                    processModel.getAddressEntry().getAddressString(),
+                    offerer.getTradeWalletPubKey(),
+                    processModel.getTradeWalletPubKey()
+            );
+            String contractAsJson = Utilities.objectToJson(contract);
+            String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);
+            trade.setContract(contract);
+            trade.setContractAsJson(contractAsJson);
+            trade.setTakerContractSignature(signature);
 
-                complete();
-            } else {
-                failed("processModel.getTakeOfferFeeTx() = null");
+            try {
+                Sig.verify(offerer.getPubKeyRing().getSignaturePubKey(),
+                        contractAsJson,
+                        offerer.getContractSignature());
+            } catch (Throwable t) {
+                failed("Signature verification failed. " + t.getMessage());
             }
+
+            complete();
         } catch (Throwable t) {
             failed(t);
         }

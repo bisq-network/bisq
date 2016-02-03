@@ -73,7 +73,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final BSFormatter formatter;
     private final Preferences preferences;
     private final TradeDetailsPopup tradeDetailsPopup;
-    private DisputeManager disputeManager;
+    private final DisputeManager disputeManager;
     private final OfferDetailsPopup offerDetailsPopup;
     private WalletEventListener walletEventListener;
 
@@ -109,7 +109,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         setTransactionColumnCellFactory();
         setConfidenceColumnCellFactory();
         table.getSortOrder().add(dateColumn);
-        
+
         walletEventListener = new WalletEventListener() {
             @Override
             public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
@@ -150,7 +150,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     @Override
     protected void activate() {
         updateList();
-        table.setItems(transactionsListItems);
         walletService.getWallet().addEventListener(walletEventListener);
     }
 
@@ -169,19 +168,19 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         Stream<Tradable> concat1 = Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getTrades().stream());
         Stream<Tradable> concat2 = Stream.concat(concat1, closedTradableManager.getClosedTrades().stream());
         Stream<Tradable> concat3 = Stream.concat(concat2, failedTradesManager.getFailedTrades().stream());
-        Set<Tradable> allTradables = concat3.collect(Collectors.toSet());
+        Set<Tradable> concated = concat3.collect(Collectors.toSet());
 
         List<TransactionsListItem> listItems = walletService.getWallet().getRecentTransactions(1000, true).stream()
                 .map(transaction -> {
-                    Optional<Tradable> tradableOptional = allTradables.stream()
+                    Optional<Tradable> tradableOptional = concated.stream()
                             .filter(e -> {
                                 String txId = transaction.getHashAsString();
                                 if (e instanceof OpenOffer)
                                     return e.getOffer().getOfferFeePaymentTxID().equals(txId);
                                 else if (e instanceof Trade) {
                                     Trade trade = (Trade) e;
-                                    return (trade.getTakeOfferFeeTx() != null &&
-                                            trade.getTakeOfferFeeTx().getHashAsString().equals(txId)) ||
+                                    return (trade.getTakeOfferFeeTxId() != null &&
+                                            trade.getTakeOfferFeeTxId().equals(txId)) ||
                                             (trade.getOffer() != null &&
                                                     trade.getOffer().getOfferFeePaymentTxID() != null &&
                                                     trade.getOffer().getOfferFeePaymentTxID().equals(txId)) ||
@@ -205,6 +204,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         // are sorted by getRecentTransactions
         transactionsListItems.forEach(TransactionsListItem::cleanup);
         transactionsListItems.setAll(listItems);
+        table.setItems(transactionsListItems);
     }
 
     private void openBlockExplorer(TransactionsListItem item) {

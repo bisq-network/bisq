@@ -37,7 +37,7 @@ public class BroadcastTakeOfferFeeTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            processModel.getTradeWalletService().broadcastTx(trade.getTakeOfferFeeTx(),
+            processModel.getTradeWalletService().broadcastTx(processModel.getTakeOfferFeeTx(),
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {

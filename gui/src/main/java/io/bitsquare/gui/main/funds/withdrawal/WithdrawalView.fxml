@@ -36,7 +36,7 @@
                     <PropertyValueFactory property="addressString"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Balance" fx:id="balanceColumn" minWidth="110"/>
+            <TableColumn text="Balance (BTC)" fx:id="balanceColumn" minWidth="110"/>
             <TableColumn text="Selection" fx:id="selectColumn" minWidth="160" sortable="false"/>
         </columns>
     </TableView>

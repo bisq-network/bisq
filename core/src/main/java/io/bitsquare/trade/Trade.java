@@ -171,7 +171,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     transient private ObjectProperty<Coin> tradeAmountProperty;
     transient private ObjectProperty<Fiat> tradeVolumeProperty;
     @Nullable
-    private Transaction takeOfferFeeTx;
+    private String takeOfferFeeTxId;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -562,12 +562,12 @@ abstract public class Trade implements Tradable, Model, Serializable {
         return contractHash;
     }
 
-    public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {
-        this.takeOfferFeeTx = takeOfferFeeTx;
+    public void setTakeOfferFeeTxId(String takeOfferFeeTxId) {
+        this.takeOfferFeeTxId = takeOfferFeeTxId;
     }
 
-    public Transaction getTakeOfferFeeTx() {
-        return takeOfferFeeTx;
+    public String getTakeOfferFeeTxId() {
+        return takeOfferFeeTxId;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -628,7 +628,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
                 "\n\tdisputeState=" + disputeState +
                 "\n\ttradePeriodState=" + tradePeriodState +
                 "\n\tdepositTx=" + depositTx +
-                "\n\ttakeOfferFeeTx.getHashAsString()=" + (takeOfferFeeTx != null ? takeOfferFeeTx.getHashAsString() : "") +
+                "\n\ttakeOfferFeeTxId=" + takeOfferFeeTxId +
                 "\n\tcontract=" + contract +
                 "\n\ttakerContractSignature.hashCode()='" + (takerContractSignature != null ? takerContractSignature.hashCode() : "") + '\'' +
                 "\n\toffererContractSignature.hashCode()='" + (offererContractSignature != null ? offererContractSignature.hashCode() : "") + '\'' +

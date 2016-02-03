@@ -38,53 +38,52 @@ public class SendPayDepositRequest extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            if (trade.getTakeOfferFeeTx() != null) {
-                checkNotNull(trade.getTradeAmount());
-                PayDepositRequest payDepositRequest = new PayDepositRequest(
-                        processModel.getMyAddress(),
-                        processModel.getId(),
-                        trade.getTradeAmount().value,
-                        processModel.getRawInputs(),
-                        processModel.getChangeOutputValue(),
-                        processModel.getChangeOutputAddress(),
-                        processModel.getTradeWalletPubKey(),
-                        processModel.getAddressEntry().getAddressString(),
-                        processModel.getPubKeyRing(),
-                        processModel.getPaymentAccountContractData(trade),
-                        processModel.getAccountId(),
-                        trade.getTakeOfferFeeTx().getHashAsString(),
-                        processModel.getUser().getAcceptedArbitratorAddresses(),
-                        trade.getArbitratorNodeAddress()
-                );
 
-                processModel.getP2PService().sendEncryptedMailboxMessage(
-                        trade.getTradingPeerNodeAddress(),
-                        processModel.tradingPeer.getPubKeyRing(),
-                        payDepositRequest,
-                        new SendMailboxMessageListener() {
-                            @Override
-                            public void onArrived() {
-                                log.trace("Message arrived at peer.");
-                                complete();
-                            }
+            checkNotNull(trade.getTradeAmount(), "TradeAmount must not be null");
+            checkNotNull(trade.getTakeOfferFeeTxId(), "TakeOfferFeeTxId must not be null");
+            checkNotNull(processModel.getAddressEntry(), "AddressEntry must not be null");
 
-                            @Override
-                            public void onStoredInMailbox() {
-                                log.trace("Message stored in mailbox.");
-                                complete();
-                            }
+            PayDepositRequest payDepositRequest = new PayDepositRequest(
+                    processModel.getMyAddress(),
+                    processModel.getId(),
+                    trade.getTradeAmount().value,
+                    processModel.getRawInputs(),
+                    processModel.getChangeOutputValue(),
+                    processModel.getChangeOutputAddress(),
+                    processModel.getTradeWalletPubKey(),
+                    processModel.getAddressEntry().getAddressString(),
+                    processModel.getPubKeyRing(),
+                    processModel.getPaymentAccountContractData(trade),
+                    processModel.getAccountId(),
+                    trade.getTakeOfferFeeTxId(),
+                    processModel.getUser().getAcceptedArbitratorAddresses(),
+                    trade.getArbitratorNodeAddress()
+            );
 
-                            @Override
-                            public void onFault(String errorMessage) {
-                                appendToErrorMessage("PayDepositRequest sending failed");
-                                failed();
-                            }
+            processModel.getP2PService().sendEncryptedMailboxMessage(
+                    trade.getTradingPeerNodeAddress(),
+                    processModel.tradingPeer.getPubKeyRing(),
+                    payDepositRequest,
+                    new SendMailboxMessageListener() {
+                        @Override
+                        public void onArrived() {
+                            log.trace("Message arrived at peer.");
+                            complete();
                         }
-                );
-            } else {
-                log.error("trade.getTakeOfferFeeTx() = " + trade.getTakeOfferFeeTx());
-                failed("TakeOfferFeeTx is null");
-            }
+
+                        @Override
+                        public void onStoredInMailbox() {
+                            log.trace("Message stored in mailbox.");
+                            complete();
+                        }
+
+                        @Override
+                        public void onFault(String errorMessage) {
+                            appendToErrorMessage("PayDepositRequest sending failed");
+                            failed();
+                        }
+                    }
+            );
         } catch (Throwable t) {
             failed(t);
         }

@@ -17,15 +17,19 @@
 
 package io.bitsquare.gui.main.funds.reserved;
 
+import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.popups.OfferDetailsPopup;
 import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.popups.TradeDetailsPopup;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOffer;
@@ -59,7 +63,8 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     private final BSFormatter formatter;
     private final OfferDetailsPopup offerDetailsPopup;
     private final TradeDetailsPopup tradeDetailsPopup;
-    private final ObservableList<ReservedListItem> addressList = FXCollections.observableArrayList();
+    private final ObservableList<ReservedListItem> reservedAddresses = FXCollections.observableArrayList();
+    private BalanceListener balanceListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -82,30 +87,31 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     @Override
     public void initialize() {
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setPlaceholder(new Label("No funded are reserved in open offers or trades"));
-
-        setLabelColumnCellFactory();
+        table.setPlaceholder(new Label("No funds are reserved in open offers or trades"));
+        setDateColumnCellFactory();
+        setDetailsColumnCellFactory();
         setAddressColumnCellFactory();
         setBalanceColumnCellFactory();
-        setConfidenceColumnCellFactory();
+        table.getSortOrder().add(dateColumn);
+        balanceListener = new BalanceListener() {
+            @Override
+            public void onBalanceChanged(Coin balance) {
+                updateList();
+            }
+        };
     }
 
     @Override
     protected void activate() {
         updateList();
-        table.setItems(addressList);
 
-        walletService.addBalanceListener(new BalanceListener() {
-            @Override
-            public void onBalanceChanged(Coin balance) {
-                updateList();
-            }
-        });
+        walletService.addBalanceListener(balanceListener);
     }
 
     @Override
     protected void deactivate() {
-        addressList.forEach(ReservedListItem::cleanup);
+        reservedAddresses.forEach(ReservedListItem::cleanup);
+        walletService.removeBalanceListener(balanceListener);
     }
 
 
@@ -114,10 +120,13 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateList() {
-        addressList.forEach(ReservedListItem::cleanup);
-        addressList.setAll(Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getTrades().stream())
+        reservedAddresses.forEach(ReservedListItem::cleanup);
+        reservedAddresses.setAll(Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getTrades().stream())
                 .map(tradable -> new ReservedListItem(tradable, walletService.getAddressEntryByOfferId(tradable.getOffer().getId()), walletService, formatter))
                 .collect(Collectors.toList()));
+
+        reservedAddresses.sort((o1, o2) -> getTradable(o2).get().getDate().compareTo(getTradable(o1).get().getDate()));
+        table.setItems(reservedAddresses);
     }
 
     private void openBlockExplorer(ReservedListItem item) {
@@ -130,47 +139,115 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         }
     }
 
+    private Optional<Tradable> getTradable(ReservedListItem item) {
+        String offerId = item.getAddressEntry().getOfferId();
+        Optional<Trade> tradeOptional = tradeManager.getTradeById(offerId);
+        if (tradeOptional.isPresent()) {
+            return Optional.of(tradeOptional.get());
+        } else if (openOfferManager.getOpenOfferById(offerId).isPresent()) {
+            return Optional.of(openOfferManager.getOpenOfferById(offerId).get());
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private void openDetailPopup(ReservedListItem item) {
+        Optional<Tradable> tradableOptional = getTradable(item);
+        if (tradableOptional.isPresent()) {
+            Tradable tradable = tradableOptional.get();
+            if (tradable instanceof Trade) {
+                tradeDetailsPopup.show((Trade) tradable);
+            } else if (tradable instanceof OpenOffer) {
+                offerDetailsPopup.show(tradable.getOffer());
+            }
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ColumnCellFactories
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setLabelColumnCellFactory() {
-        detailsColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        detailsColumn.setCellFactory(new Callback<TableColumn<ReservedListItem, ReservedListItem>,
-                TableCell<ReservedListItem,
-                        ReservedListItem>>() {
+    private void setDateColumnCellFactory() {
+        dateColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        dateColumn.setCellFactory(new Callback<TableColumn<ReservedListItem, ReservedListItem>,
+                TableCell<ReservedListItem, ReservedListItem>>() {
 
             @Override
             public TableCell<ReservedListItem, ReservedListItem> call(TableColumn<ReservedListItem,
                     ReservedListItem> column) {
                 return new TableCell<ReservedListItem, ReservedListItem>() {
 
-                    private Hyperlink hyperlink;
+                    @Override
+                    public void updateItem(final ReservedListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty) {
+                            if (getTradable(item).isPresent())
+                                setText(formatter.formatDateTime(getTradable(item).get().getDate()));
+                            else
+                                setText("No date available");
+                        } else {
+                            setText("");
+                        }
+                    }
+                };
+            }
+        });
+    }
+
+    private void setDetailsColumnCellFactory() {
+        detailsColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        detailsColumn.setCellFactory(new Callback<TableColumn<ReservedListItem, ReservedListItem>,
+                TableCell<ReservedListItem, ReservedListItem>>() {
+
+            @Override
+            public TableCell<ReservedListItem, ReservedListItem> call(TableColumn<ReservedListItem,
+                    ReservedListItem> column) {
+                return new TableCell<ReservedListItem, ReservedListItem>() {
+
+                    private HyperlinkWithIcon field;
 
                     @Override
                     public void updateItem(final ReservedListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
-                            hyperlink = new Hyperlink(item.getLabel());
-                            if (item.getAddressEntry().getOfferId() != null) {
-                                Tooltip tooltip = new Tooltip(item.getAddressEntry().getOfferId());
-                                Tooltip.install(hyperlink, tooltip);
+                            Optional<Tradable> tradableOptional = getTradable(item);
+                            if (tradableOptional.isPresent()) {
+                                AddressEntry addressEntry = item.getAddressEntry();
+                                String details;
+                                if (addressEntry.getContext() == AddressEntry.Context.TRADE) {
+                                    String prefix;
+                                    Tradable tradable = tradableOptional.get();
+                                    if (tradable instanceof Trade)
+                                        prefix = "Trade ID: ";
+                                    else if (tradable instanceof OpenOffer)
+                                        prefix = "Offer ID: ";
+                                    else
+                                        prefix = "";
 
-                                hyperlink.setOnAction(event -> {
-                                    Optional<Trade> tradeOptional = tradeManager.getTradeById(item.getAddressEntry().getOfferId());
-                                    Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(item.getAddressEntry().getOfferId());
-                                    if (tradeOptional.isPresent())
-                                        tradeDetailsPopup.show(tradeOptional.get());
-                                    else if (openOfferOptional.isPresent())
-                                        offerDetailsPopup.show(openOfferOptional.get().getOffer());
-                                });
+                                    details = prefix + addressEntry.getShortOfferId();
+                                } else if (addressEntry.getContext() == AddressEntry.Context.ARBITRATOR) {
+                                    details = "Arbitration fee";
+                                } else {
+                                    details = "-";
+                                }
+
+                                field = new HyperlinkWithIcon(details + " (" + item.getFundsInfo() + ")",
+                                        AwesomeIcon.INFO_SIGN);
+                                field.setOnAction(event -> openDetailPopup(item));
+                                field.setTooltip(new Tooltip("Open popup for details"));
+                                setGraphic(field);
+                            } else if (item.getAddressEntry().getContext() == AddressEntry.Context.ARBITRATOR) {
+                                setGraphic(new Label("Arbitrators fee"));
+                            } else {
+                                setGraphic(new Label("No details available"));
                             }
-                            setGraphic(hyperlink);
+
                         } else {
                             setGraphic(null);
-                            setId(null);
+                            if (field != null)
+                                field.setOnAction(null);
                         }
                     }
                 };
@@ -188,19 +265,23 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                     public TableCell<ReservedListItem, ReservedListItem> call(TableColumn<ReservedListItem,
                             ReservedListItem> column) {
                         return new TableCell<ReservedListItem, ReservedListItem>() {
-                            private Hyperlink hyperlink;
+                            private HyperlinkWithIcon hyperlinkWithIcon;
 
                             @Override
                             public void updateItem(final ReservedListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    hyperlink = new Hyperlink(item.getAddressString());
-                                    hyperlink.setOnAction(event -> openBlockExplorer(item));
-                                    setGraphic(hyperlink);
+                                    String address = item.getAddressString();
+                                    hyperlinkWithIcon = new HyperlinkWithIcon(address, AwesomeIcon.EXTERNAL_LINK);
+                                    hyperlinkWithIcon.setOnAction(event -> openBlockExplorer(item));
+                                    hyperlinkWithIcon.setTooltip(new Tooltip("Open external blockchain explorer for " +
+                                            "address: " + address));
+                                    setGraphic(hyperlinkWithIcon);
                                 } else {
                                     setGraphic(null);
-                                    setId(null);
+                                    if (hyperlinkWithIcon != null)
+                                        hyperlinkWithIcon.setOnAction(null);
                                 }
                             }
                         };
@@ -222,33 +303,6 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                             public void updateItem(final ReservedListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setGraphic((item != null && !empty) ? item.getBalanceLabel() : null);
-                            }
-                        };
-                    }
-                });
-    }
-
-    private void setConfidenceColumnCellFactory() {
-        confidenceColumn.setCellValueFactory((addressListItem) ->
-                new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        confidenceColumn.setCellFactory(
-                new Callback<TableColumn<ReservedListItem, ReservedListItem>, TableCell<ReservedListItem,
-                        ReservedListItem>>() {
-
-                    @Override
-                    public TableCell<ReservedListItem, ReservedListItem> call(TableColumn<ReservedListItem,
-                            ReservedListItem> column) {
-                        return new TableCell<ReservedListItem, ReservedListItem>() {
-
-                            @Override
-                            public void updateItem(final ReservedListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-
-                                if (item != null && !empty) {
-                                    setGraphic(item.getProgressIndicator());
-                                } else {
-                                    setGraphic(null);
-                                }
                             }
                         };
                     }

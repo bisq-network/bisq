@@ -29,15 +29,14 @@
 
     <TableView fx:id="table" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="100" sortable="false">
+            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="170" maxWidth="170"/>
+            <TableColumn text="Details" fx:id="detailsColumn" minWidth="260"/>
+            <TableColumn text="Address" fx:id="addressColumn" minWidth="320" maxWidth="320">
                 <cellValueFactory>
-                    <PropertyValueFactory property="date"/>
+                    <PropertyValueFactory property="addressString"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Details" fx:id="detailsColumn" minWidth="100" sortable="false"/>
-            <TableColumn text="Address" fx:id="addressColumn" minWidth="240" sortable="false"/>
-            <TableColumn text="Balance" fx:id="balanceColumn" minWidth="90" sortable="false"/>
-            <TableColumn text="Confirmations" fx:id="confidenceColumn" minWidth="30" sortable="false"/>
+            <TableColumn text="Balance (BTC)" fx:id="balanceColumn" minWidth="110"/>
         </columns>
     </TableView>
 

@@ -50,10 +50,8 @@ public class CreateTakeOfferFeeTx extends TradeTask {
                     FeePolicy.getTakeOfferFee(),
                     selectedArbitrator.getBtcAddress());
 
-            trade.setTakeOfferFeeTx(createTakeOfferFeeTx);
-
-            // TODO check if needed as we have stored tx already at setTakeOfferFeeTx
-            processModel.setTakeOfferFeeTxId(createTakeOfferFeeTx.getHashAsString());
+            processModel.setTakeOfferFeeTx(createTakeOfferFeeTx);
+            trade.setTakeOfferFeeTxId(createTakeOfferFeeTx.getHashAsString());
 
             complete();
         } catch (Throwable t) {

@@ -21,7 +21,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
@@ -92,6 +91,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private final TradeDetailsPopup tradeDetailsPopup;
     private final ObservableList<WithdrawalListItem> fundedAddresses = FXCollections.observableArrayList();
     private Set<WithdrawalListItem> selectedItems = new HashSet<>();
+    private BalanceListener balanceListener;
+    private Set<String> fromAddresses;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -121,7 +122,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     @Override
     public void initialize() {
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setPlaceholder(new Label("No funds for withdrawal available"));
+        table.setPlaceholder(new Label("No funds for withdrawal are available"));
         setDateColumnCellFactory();
         setDetailsColumnCellFactory();
         setAddressColumnCellFactory();
@@ -129,19 +130,22 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         setSelectColumnCellFactory();
         table.getSortOrder().add(dateColumn);
         table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
+        balanceListener = new BalanceListener() {
+            @Override
+            public void onBalanceChanged(Coin balance) {
+                updateList();
+            }
+        };
     }
 
     @Override
     protected void activate() {
         updateList();
-        table.setItems(fundedAddresses);
+
         reset();
-        walletService.addBalanceListener(new BalanceListener() {
-            @Override
-            public void onBalanceChanged(Coin balance) {
-                updateList();
-            }
-        });
+
+        walletService.addBalanceListener(balanceListener);
         withdrawButton.disableProperty().bind(Bindings.createBooleanBinding(() -> !areInputsValid(),
                 amountTextField.textProperty(), withdrawToTextField.textProperty()));
     }
@@ -150,6 +154,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     protected void deactivate() {
         fundedAddresses.forEach(WithdrawalListItem::cleanup);
         withdrawButton.disableProperty().unbind();
+        walletService.removeBalanceListener(balanceListener);
     }
 
 
@@ -160,7 +165,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     @FXML
     public void onWithdraw() {
         Coin senderAmount = formatter.parseToCoin(amountTextField.getText());
-        if (Restrictions.isAboveDust(senderAmount)) {
+        if (Restrictions.isAboveFixedTxFeeAndDust(senderAmount)) {
             FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
                 @Override
                 public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
@@ -176,33 +181,32 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     log.error("onWithdraw onFailure");
                 }
             };
-            // try {
-               /* Coin requiredFee = walletService.getRequiredFee(withdrawFromTextField.getText(),
-                        withdrawToTextField.getText(), senderAmount, null);*/
-            // TODO static fee might be not enough when using many inputs, but for now its high enough to get probably into the blockchain
-            // Use bitcoinJ fee calculation instead....
-            Coin requiredFee = FeePolicy.getFeePerKb();
-            Coin receiverAmount = senderAmount.subtract(requiredFee);
-            if (BitsquareApp.DEV_MODE) {
-                doWithdraw(receiverAmount, callback);
-            } else {
-                new Popup().headLine("Confirm your withdrawal request")
-                        .message("Sending: " + formatter.formatCoinWithCode(senderAmount) + "\n" +
-                                "From address: " + withdrawFromTextField.getText() + "\n" +
-                                "To receiving address: " + withdrawToTextField.getText() + ".\n\n" +
-                                "Required transaction fee is: " + formatter.formatCoinWithCode(requiredFee) + "\n" +
-                                "Recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
-                                "Are you sure you want to withdraw that amount?")
-                        .onAction(() -> doWithdraw(receiverAmount, callback))
-                        .show();
+            try {
+                Coin requiredFee = walletService.getRequiredFeeForMultipleAddresses(fromAddresses,
+                        withdrawToTextField.getText(), senderAmount, null);
+                Coin receiverAmount = senderAmount.subtract(requiredFee);
+                if (BitsquareApp.DEV_MODE) {
+                    doWithdraw(receiverAmount, callback);
+                } else {
+                    new Popup().headLine("Confirm your withdrawal request")
+                            .message("Sending: " + formatter.formatCoinWithCode(senderAmount) + "\n" +
+                                    "From address: " + withdrawFromTextField.getText() + "\n" +
+                                    "To receiving address: " + withdrawToTextField.getText() + ".\n\n" +
+                                    "Required transaction fee is: " + formatter.formatCoinWithCode(requiredFee) + "\n" +
+                                    "Recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
+                                    "Are you sure you want to withdraw that amount?")
+                            .onAction(() -> doWithdraw(receiverAmount, callback))
+                            .show();
 
-            }
-            /*} catch (AddressFormatException | InsufficientMoneyException e) {
+                }
+            } catch (AddressFormatException | InsufficientMoneyException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
-            }*/
+            }
         } else {
-            new Popup().warning("The amount to transfer is lower than the transaction fee and the min. possible tx value.").show();
+            new Popup()
+                    .warning("The amount to transfer is lower than the transaction fee and the min. possible tx value (dust).")
+                    .show();
         }
     }
 
@@ -211,6 +215,10 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             selectedItems.add(item);
         else
             selectedItems.remove(item);
+
+        fromAddresses = selectedItems.stream()
+                .map(WithdrawalListItem::getAddressString)
+                .collect(Collectors.toSet());
 
         if (!selectedItems.isEmpty()) {
             Coin sum = Coin.valueOf(selectedItems.stream().mapToLong(e -> e.getBalance().getValue()).sum());
@@ -225,10 +233,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 withdrawFromTextField.setText(selectedItems.stream().findAny().get().getAddressEntry().getAddressString());
                 withdrawFromTextField.setTooltip(null);
             } else {
-                //selectedItems.stream().
                 String tooltipText = "Withdraw from multiple addresses:\n" +
                         selectedItems.stream()
-                                .map(e -> e.getAddressString())
+                                .map(WithdrawalListItem::getAddressString)
                                 .collect(Collectors.joining(",\n"));
                 int abbr = Math.max(10, 66 / selectedItems.size());
                 String text = "Withdraw from multiple addresses (" +
@@ -299,6 +306,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
             return date2.compareTo(date1);
         });
+        table.setItems(fundedAddresses);
     }
 
     private void doWithdraw(Coin amount, FutureCallback<Transaction> callback) {
@@ -306,19 +314,13 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             walletPasswordPopup.show().onAesKey(aesKey -> sendFunds(amount, aesKey, callback));
         else
             sendFunds(amount, null, callback);
-        updateList();
     }
 
     private void sendFunds(Coin amount, KeyParameter aesKey, FutureCallback<Transaction> callback) {
         try {
-            Set<String> fromAddresses = selectedItems.stream()
-                    .map(e -> e.getAddressString())
-                    .collect(Collectors.toSet());
-            if (!fromAddresses.isEmpty()) {
-                walletService.sendFundsForMultipleAddresses(fromAddresses, withdrawToTextField.getText(), amount, null, aesKey, callback);
-
-                reset();
-            }
+            walletService.sendFundsForMultipleAddresses(fromAddresses, withdrawToTextField.getText(), amount, null, aesKey, callback);
+            reset();
+            updateList();
         } catch (AddressFormatException e) {
             new Popup().error("The address is not correct. Please check the address format.").show();
         } catch (InsufficientMoneyException e) {
@@ -346,7 +348,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             withdrawToTextField.setText("mxAkWWaQBqwqcYstKzqLku3kzR6pbu2zHq");
     }
 
-
     private Optional<Tradable> getTradable(WithdrawalListItem item) {
         String offerId = item.getAddressEntry().getOfferId();
         Optional<Tradable> tradableOptional = closedTradableManager.getTradableById(offerId);
@@ -357,12 +358,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         } else {
             return Optional.empty();
         }
-    }
-
-    private boolean isTradableAvailable(WithdrawalListItem item) {
-        String offerId = item.getAddressEntry().getOfferId();
-        return closedTradableManager.getTradableById(offerId).isPresent() ||
-                failedTradesManager.getTradeById(offerId).isPresent();
     }
 
     private boolean areInputsValid() {
@@ -420,22 +415,19 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
-                            if (isTradableAvailable(item)) {
+                            Optional<Tradable> tradableOptional = getTradable(item);
+                            if (tradableOptional.isPresent()) {
                                 AddressEntry addressEntry = item.getAddressEntry();
                                 String details;
                                 if (addressEntry.getContext() == AddressEntry.Context.TRADE) {
                                     String prefix;
-                                    if (getTradable(item).isPresent()) {
-                                        Tradable tradable = getTradable(item).get();
-                                        if (tradable instanceof Trade)
-                                            prefix = "Trade ID: ";
-                                        else if (tradable instanceof OpenOffer)
-                                            prefix = "Offer ID: ";
-                                        else
-                                            prefix = "";
-                                    } else {
+                                    Tradable tradable = tradableOptional.get();
+                                    if (tradable instanceof Trade)
+                                        prefix = "Trade ID: ";
+                                    else if (tradable instanceof OpenOffer)
+                                        prefix = "Offer ID: ";
+                                    else
                                         prefix = "";
-                                    }
 
                                     details = prefix + addressEntry.getShortOfferId();
                                 } else if (addressEntry.getContext() == AddressEntry.Context.ARBITRATOR) {

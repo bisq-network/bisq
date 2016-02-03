@@ -121,11 +121,10 @@ public class TradeDetailsPopup extends Popup {
 
             if (buyerPaymentAccountContractData == null && sellerPaymentAccountContractData == null)
                 rows++;
-
-            if (trade.getTakeOfferFeeTx() != null)
-                rows++;
         }
 
+        if (trade.getTakeOfferFeeTxId() != null)
+            rows++;
         if (trade.getDepositTx() != null)
             rows++;
         if (trade.getPayoutTx() != null)
@@ -156,8 +155,8 @@ public class TradeDetailsPopup extends Popup {
         }
 
         addLabelTxIdTextField(gridPane, ++rowIndex, "Offer fee transaction ID:", offer.getOfferFeePaymentTxID());
-        if (contract != null && trade.getTakeOfferFeeTx() != null)
-            addLabelTxIdTextField(gridPane, ++rowIndex, "Taker fee transaction ID:", trade.getTakeOfferFeeTx().getHashAsString());
+        if (trade.getTakeOfferFeeTxId() != null)
+            addLabelTxIdTextField(gridPane, ++rowIndex, "Taker fee transaction ID:", trade.getTakeOfferFeeTxId());
 
         if (trade.getDepositTx() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, "Deposit transaction ID:", trade.getDepositTx().getHashAsString());

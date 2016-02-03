@@ -36,7 +36,7 @@
             <TableColumn text="Details" fx:id="detailsColumn" minWidth="210" maxWidth="210"/>
             <TableColumn text="Address" fx:id="addressColumn" minWidth="180"/>
             <TableColumn text="Transaction" fx:id="transactionColumn" minWidth="100"/>
-            <TableColumn text="Amount" fx:id="amountColumn" minWidth="110" maxWidth="110">
+            <TableColumn text="Amount (BTC)" fx:id="amountColumn" minWidth="110" maxWidth="110">
                 <cellValueFactory>
                     <PropertyValueFactory property="amount"/>
                 </cellValueFactory>
