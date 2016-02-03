@@ -132,7 +132,14 @@ public class TransactionsListItem {
                 }
             }
         } else {
-            details = received ? "Funded to wallet" : "Withdrawn from wallet";
+           /* Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntryList().stream()
+                    .filter(e -> e.getAddressString() != null && e.getAddressString().equals(addressString))
+                    .findAny();
+            if (addressEntryOptional.isPresent() &&
+                    addressEntryOptional.get().getContext() == AddressEntry.Context.ARBITRATOR)
+                details = received ? "Received funds" : "Withdrawn from wallet";
+            else*/
+            details = received ? "Received funds" : "Withdrawn from wallet";
         }
 
         date.set(formatter.formatDateTime(transaction.getUpdateTime()));

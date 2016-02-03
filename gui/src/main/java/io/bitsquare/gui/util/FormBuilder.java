@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.util;
 
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.*;
@@ -154,6 +155,32 @@ public class FormBuilder {
 
         return new Tuple2<>(label, textField);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label  + HyperlinkWithIcon
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex, String title) {
+        return addLabelHyperlinkWithIcon(gridPane, rowIndex, title, "", 0);
+    }
+
+    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex, String title, String value) {
+        return addLabelHyperlinkWithIcon(gridPane, rowIndex, title, value, 0);
+    }
+
+    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex, String title, String value, double top) {
+        Label label = addLabel(gridPane, rowIndex, title, top);
+
+        HyperlinkWithIcon textField = new HyperlinkWithIcon(value, AwesomeIcon.EXTERNAL_LINK);
+        GridPane.setRowIndex(textField, rowIndex);
+        GridPane.setColumnIndex(textField, 1);
+        GridPane.setMargin(textField, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(textField);
+
+        return new Tuple2<>(label, textField);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + TextArea
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -356,6 +383,10 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + CheckBox
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple2<Label, CheckBox> addLabelCheckBox(GridPane gridPane, int rowIndex, String title) {
+        return addLabelCheckBox(gridPane, rowIndex, title, "", 0);
+    }
 
     public static Tuple2<Label, CheckBox> addLabelCheckBox(GridPane gridPane, int rowIndex, String title, String checkBoxTitle) {
         return addLabelCheckBox(gridPane, rowIndex, title, checkBoxTitle, 0);

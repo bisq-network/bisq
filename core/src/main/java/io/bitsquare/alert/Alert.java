@@ -30,11 +30,13 @@ public final class Alert implements PubKeyProtectedExpirablePayload {
     private static final long TTL = TimeUnit.DAYS.toMillis(10);
 
     public final String message;
+    public final boolean isUpdateInfo;
     private String signatureAsBase64;
     private PublicKey storagePublicKey;
 
-    public Alert(String message) {
+    public Alert(String message, boolean isUpdateInfo) {
         this.message = message;
+        this.isUpdateInfo = isUpdateInfo;
     }
 
     public void setSigAndStoragePubKey(String signatureAsBase64, PublicKey storagePublicKey) {

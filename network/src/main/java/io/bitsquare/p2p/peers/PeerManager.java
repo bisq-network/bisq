@@ -68,7 +68,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
         networkNode.addConnectionListener(this);
         dbStorage = new Storage<>(storageDir);
-        HashSet<ReportedPeer> persistedPeers = dbStorage.initAndGetPersisted("persistedPeers");
+        HashSet<ReportedPeer> persistedPeers = dbStorage.initAndGetPersisted("PersistedPeers");
         if (persistedPeers != null) {
             log.info("We have persisted reported peers. persistedPeers.size()=" + persistedPeers.size());
             this.persistedPeers.addAll(persistedPeers);

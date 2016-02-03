@@ -18,6 +18,8 @@
 package io.bitsquare.gui.popups;
 
 import io.bitsquare.alert.Alert;
+import io.bitsquare.common.util.Utilities;
+import io.bitsquare.gui.components.HyperlinkWithIcon;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -28,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static io.bitsquare.gui.util.FormBuilder.addLabelHyperlinkWithIcon;
 import static io.bitsquare.gui.util.FormBuilder.addMultilineLabel;
 
 public class DisplayAlertMessagePopup extends Popup {
@@ -44,17 +47,13 @@ public class DisplayAlertMessagePopup extends Popup {
     }
 
     public DisplayAlertMessagePopup show() {
-        if (headLine == null)
-            headLine = "Global alert message!";
-
         width = 700;
+        // need to set headLine, otherwise the fields will not be created in addHeadLine
+        headLine = "Important information!";
         createGridPane();
         addHeadLine();
         addContent();
         createPopup();
-
-        headLineLabel.setStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 18;");
-
         return this;
     }
 
@@ -75,8 +74,17 @@ public class DisplayAlertMessagePopup extends Popup {
     private void addContent() {
         checkNotNull(alert, "alertMessage must not be null");
         msgLabel = addMultilineLabel(gridPane, ++rowIndex, alert.message, 10);
-        msgLabel.setStyle("-fx-text-fill: -bs-error-red;");
-
+        if (alert.isUpdateInfo) {
+            headLine = "Important update information!";
+            headLineLabel.setStyle("-fx-text-fill: -fx-accent;  -fx-font-weight: bold;  -fx-font-size: 22;");
+            String url = "https://github.com/bitsquare/bitsquare/releases";
+            HyperlinkWithIcon download = addLabelHyperlinkWithIcon(gridPane, ++rowIndex, "Download:", url).second;
+            download.setMaxWidth(350);
+            download.setOnAction(e -> Utilities.openWebPage(url));
+        } else {
+            headLine = "Important information!";
+            headLineLabel.setStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 22;");
+        }
         closeButton = new Button("Cancel");
         closeButton.setOnAction(e -> {
             hide();

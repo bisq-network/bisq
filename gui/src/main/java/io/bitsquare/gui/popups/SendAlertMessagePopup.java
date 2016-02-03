@@ -22,6 +22,7 @@ import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.gui.components.InputTextField;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import org.slf4j.Logger;
@@ -29,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
+import static io.bitsquare.gui.util.FormBuilder.addLabelCheckBox;
 import static io.bitsquare.gui.util.FormBuilder.addLabelInputTextField;
 
 public class SendAlertMessagePopup extends Popup {
@@ -59,9 +61,9 @@ public class SendAlertMessagePopup extends Popup {
 
     public SendAlertMessagePopup show() {
         if (headLine == null)
-            headLine = "Send alert message";
+            headLine = "Send global notification";
 
-        width = 700;
+        width = 600;
         createGridPane();
         addHeadLine();
         addContent();
@@ -91,23 +93,27 @@ public class SendAlertMessagePopup extends Popup {
     private void addContent() {
         InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Alert private key:", 10).second;
         InputTextField alertMessageInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Alert message:").second;
+        CheckBox isUpdateCheckBox = addLabelCheckBox(gridPane, ++rowIndex, "Is update notification:", "").second;
+        isUpdateCheckBox.setSelected(true);
 
         if (BitsquareApp.DEV_MODE) {
             keyInputTextField.setText("2e41038992f89eef2e4634ff3586e342c68ad9a5a7ffafee866781687f77a9b1");
             alertMessageInputTextField.setText("m1");
         }
 
-        openTicketButton = new Button("Send alert message");
+        openTicketButton = new Button("Send notification");
         openTicketButton.setOnAction(e -> {
             if (alertMessageInputTextField.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
-                if (sendAlertMessageHandler.handle(new Alert(alertMessageInputTextField.getText()), keyInputTextField.getText()))
+                if (sendAlertMessageHandler.handle(
+                        new Alert(alertMessageInputTextField.getText(), isUpdateCheckBox.isSelected()),
+                        keyInputTextField.getText()))
                     hide();
                 else
                     new Popup().warning("The key you entered was not correct.").width(300).onClose(() -> blurAgain()).show();
             }
         });
 
-        Button removeAlertMessageButton = new Button("Remove alert message");
+        Button removeAlertMessageButton = new Button("Remove notification");
         removeAlertMessageButton.setOnAction(e -> {
             if (keyInputTextField.getText().length() > 0) {
                 if (removeAlertMessageHandler.handle(keyInputTextField.getText()))
