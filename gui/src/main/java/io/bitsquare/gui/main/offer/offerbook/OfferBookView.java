@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.offer.offerbook;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.components.TableGroupHeadline;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
@@ -63,6 +64,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private OfferView.OfferActionHandler offerActionHandler;
     private int gridRow = 0;
+    private TableGroupHeadline offerBookTitle;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -114,7 +116,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         // createOfferButton
         createOfferButton = addButtonAfterGroup(root, ++gridRow, "Create new offer");
 
-        TableGroupHeadline offerBookTitle = new TableGroupHeadline("Offer book");
+        offerBookTitle = new TableGroupHeadline("");
         GridPane.setRowIndex(offerBookTitle, ++gridRow);
         GridPane.setColumnSpan(offerBookTitle, 2);
         GridPane.setMargin(offerBookTitle, new Insets(20, -10, -10, -10));
@@ -187,6 +189,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     public void setDirection(Offer.Direction direction) {
+        offerBookTitle.setText(direction == Offer.Direction.SELL ? "Buy-bitcoin offers" : "Sell-bitcoin offers");
         model.setDirection(direction);
     }
 
@@ -372,21 +375,21 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     @Override
                     public TableCell<OfferBookListItem, OfferBookListItem> call(TableColumn<OfferBookListItem, OfferBookListItem> column) {
                         return new TableCell<OfferBookListItem, OfferBookListItem>() {
+                            private HyperlinkWithIcon field;
+
                             @Override
                             public void updateItem(final OfferBookListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                Hyperlink hyperlink = null;
+
                                 if (item != null && !empty) {
-                                    hyperlink = new Hyperlink(model.getPaymentMethod(item));
-                                    hyperlink.setTooltip(new Tooltip(model.getPaymentMethodToolTip(item)));
-                                    hyperlink.setOnAction(event -> offerDetailsPopup.show(item.getOffer()));
-                                    setGraphic(hyperlink);
+                                    field = new HyperlinkWithIcon(model.getPaymentMethod(item), true);
+                                    field.setOnAction(event -> offerDetailsPopup.show(item.getOffer()));
+                                    field.setTooltip(new Tooltip(model.getPaymentMethodToolTip(item)));
+                                    setGraphic(field);
                                 } else {
-                                    if (hyperlink != null) {
-                                        hyperlink.setText("");
-                                        hyperlink.setTooltip(null);
-                                    }
                                     setGraphic(null);
+                                    if (field != null)
+                                        field.setOnAction(null);
                                 }
                             }
                         };
@@ -396,7 +399,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getActionColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("") {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("I want to:") {
             {
                 setMinWidth(80);
                 setSortable(false);
@@ -434,12 +437,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         // set first row button as default
                                         button.setDefaultButton(getIndex() == 0);
                                         tableRow.setOnMouseClicked(null);
-                                        // tableRow.setTooltip(null);
                                     } else {
                                         button.setDefaultButton(false);
                                         tableRow.setOnMouseClicked(e -> onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator));
-                                       /* tableRow.setTooltip(
-                                                new Tooltip(hasMatchingArbitrator ? "No matching payment account." : "No matching accepted arbitrators."));*/
                                     }
                                 }
                             }
@@ -472,6 +472,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     setGraphic(button);
                                 } else {
                                     setGraphic(null);
+                                    if (button != null)
+                                        button.setOnAction(null);
                                     TableRow tableRow = getTableRow();
                                     if (tableRow != null) tableRow.setOpacity(1);
                                 }

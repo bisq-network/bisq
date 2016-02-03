@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.portfolio.pendingtrades;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.popups.OpenEmergencyTicketPopup;
 import io.bitsquare.gui.popups.TradeDetailsPopup;
 import io.bitsquare.trade.Trade;
@@ -163,7 +164,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         table.getSelectionModel().selectedItemProperty().removeListener(selectedItemChangeListener);
 
         model.getList().removeListener(listChangeListener);
-        
+
         if (model.currentTrade() != null)
             model.currentTrade().removeListener(currentTradeChangeListener);
 
@@ -224,20 +225,21 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                     public TableCell<PendingTradesListItem, PendingTradesListItem> call(TableColumn<PendingTradesListItem,
                             PendingTradesListItem> column) {
                         return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
-                            private Hyperlink hyperlink;
+                            private HyperlinkWithIcon field;
 
                             @Override
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    hyperlink = new Hyperlink(model.formatTradeId(item.getId()));
-                                    Tooltip.install(hyperlink, new Tooltip(model.formatTradeId(item.getId())));
-                                    hyperlink.setOnAction(event -> tradeDetailsPopup.show(item.getTrade()));
-                                    setGraphic(hyperlink);
+                                    field = new HyperlinkWithIcon(model.formatTradeId(item.getId()), true);
+                                    field.setOnAction(event -> tradeDetailsPopup.show(item.getTrade()));
+                                    field.setTooltip(new Tooltip("Open popup for details"));
+                                    setGraphic(field);
                                 } else {
                                     setGraphic(null);
-                                    setId(null);
+                                    if (field != null)
+                                        field.setOnAction(null);
                                 }
                             }
                         };

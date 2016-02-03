@@ -19,12 +19,14 @@ package io.bitsquare.gui.main.markets.charts;
 
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.main.markets.statistics.MarketStatisticItem;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.offer.BuyOfferView;
+import io.bitsquare.gui.main.offer.SellOfferView;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookListItem;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -37,6 +39,7 @@ import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
@@ -52,6 +55,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
     private NumberAxis xAxis, yAxis;
     XYChart.Series seriesBuy, seriesSell;
     private final ListChangeListener<OfferBookListItem> changeListener;
+    private Navigation navigation;
     private final BSFormatter formatter;
     private TableView<Offer> buyOfferTableView;
     private TableView<Offer> sellOfferTableView;
@@ -67,8 +71,9 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MarketsChartsView(MarketsChartsViewModel model, BSFormatter formatter) {
+    public MarketsChartsView(MarketsChartsViewModel model, Navigation navigation, BSFormatter formatter) {
         super(model);
+        this.navigation = navigation;
         this.formatter = formatter;
 
         changeListener = c -> updateChartData();
@@ -148,7 +153,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
 
 
     private Tuple2<TableView<Offer>, VBox> getOfferTable(Offer.Direction direction) {
-        TableView<Offer> tableView = new TableView();
+        TableView<Offer> tableView = new TableView<>();
 
         // price
         TableColumn<Offer, Offer> priceColumn = new TableColumn<>();
@@ -156,11 +161,9 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         priceColumn.setMinWidth(120);
         priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         priceColumn.setCellFactory(
-                new Callback<TableColumn<Offer, Offer>, TableCell<Offer,
-                        Offer>>() {
+                new Callback<TableColumn<Offer, Offer>, TableCell<Offer, Offer>>() {
                     @Override
-                    public TableCell<Offer, Offer> call(
-                            TableColumn<Offer, Offer> column) {
+                    public TableCell<Offer, Offer> call(TableColumn<Offer, Offer> column) {
                         return new TableCell<Offer, Offer>() {
                             @Override
                             public void updateItem(final Offer item, boolean empty) {
@@ -181,11 +184,9 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         amountColumn.setMinWidth(120);
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
-                new Callback<TableColumn<Offer, Offer>, TableCell<Offer,
-                        Offer>>() {
+                new Callback<TableColumn<Offer, Offer>, TableCell<Offer, Offer>>() {
                     @Override
-                    public TableCell<Offer, Offer> call(
-                            TableColumn<Offer, Offer> column) {
+                    public TableCell<Offer, Offer> call(TableColumn<Offer, Offer> column) {
                         return new TableCell<Offer, Offer>() {
                             @Override
                             public void updateItem(final Offer item, boolean empty) {
@@ -206,11 +207,9 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         volumeColumn.textProperty().bind(volumeColumnLabel);
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         volumeColumn.setCellFactory(
-                new Callback<TableColumn<Offer, Offer>, TableCell<Offer,
-                        Offer>>() {
+                new Callback<TableColumn<Offer, Offer>, TableCell<Offer, Offer>>() {
                     @Override
-                    public TableCell<Offer, Offer> call(
-                            TableColumn<Offer, Offer> column) {
+                    public TableCell<Offer, Offer> call(TableColumn<Offer, Offer> column) {
                         return new TableCell<Offer, Offer>() {
                             @Override
                             public void updateItem(final Offer item, boolean empty) {
@@ -225,12 +224,54 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
                 });
         tableView.getColumns().add(volumeColumn);
 
+        // select
+        TableColumn<Offer, Offer> selectColumn = new TableColumn<>("I want to:");
+        selectColumn.setMinWidth(100);
+        selectColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        selectColumn.setCellFactory(
+                new Callback<TableColumn<Offer, Offer>, TableCell<Offer, Offer>>() {
+                    @Override
+                    public TableCell<Offer, Offer> call(TableColumn<Offer, Offer> column) {
+                        return new TableCell<Offer, Offer>() {
+                            final Button button = new Button();
+                            final ImageView iconView = new ImageView();
+
+                            {
+                                button.setGraphic(iconView);
+                                button.setMinWidth(70);
+                            }
+
+                            @Override
+                            public void updateItem(final Offer item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty) {
+                                    boolean isSellOffer = item.getDirection() == Offer.Direction.SELL;
+                                    iconView.setId(isSellOffer ? "image-buy" : "image-sell");
+                                    button.setText(isSellOffer ? "Buy" : "Sell");
+                                    button.setOnAction(e -> {
+                                        if (isSellOffer)
+                                            navigation.navigateTo(MainView.class, BuyOfferView.class);
+                                        else
+                                            navigation.navigateTo(MainView.class, SellOfferView.class);
+                                    });
+                                    setGraphic(button);
+                                } else {
+                                    setGraphic(null);
+                                    if (button != null)
+                                        button.setOnAction(null);
+                                }
+                            }
+                        };
+                    }
+                });
+        tableView.getColumns().add(selectColumn);
+
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         Label placeholder = new Label("Currently there are no offers available");
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
 
-        Label titleLabel = new Label(direction.equals(Offer.Direction.BUY) ? "Offers for buy bitcoin (bid)" : "Offers for sell bitcoin (ask)");
+        Label titleLabel = new Label(direction.equals(Offer.Direction.BUY) ? "Buy-bitcoin offers (bid)" : "Sell-bitcoin offers (ask)");
         titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16; -fx-alignment: center");
         UserThread.execute(() -> titleLabel.prefWidthProperty().bind(tableView.widthProperty()));
 
@@ -256,10 +297,10 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis, "", ""));
 
         seriesBuy = new XYChart.Series();
-        seriesBuy.setName("Offers for  buy bitcoin  ");
+        seriesBuy.setName("Buy-bitcoin offers  ");
 
         seriesSell = new XYChart.Series();
-        seriesSell.setName("Offers for sell bitcoin");
+        seriesSell.setName("Sell-bitcoin offers");
 
         areaChart = new AreaChart<>(xAxis, yAxis);
         areaChart.setAnimated(false);
@@ -277,119 +318,4 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         seriesBuy.getData().addAll(model.getBuyData());
         seriesSell.getData().addAll(model.getSellData());
     }
-
-
-    private TableColumn<MarketStatisticItem, MarketStatisticItem> getCurrencyColumn() {
-        TableColumn<MarketStatisticItem, MarketStatisticItem> column = new TableColumn<MarketStatisticItem, MarketStatisticItem>("Currency") {
-            {
-                setMinWidth(100);
-            }
-        };
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(
-                new Callback<TableColumn<MarketStatisticItem, MarketStatisticItem>, TableCell<MarketStatisticItem,
-                        MarketStatisticItem>>() {
-                    @Override
-                    public TableCell<MarketStatisticItem, MarketStatisticItem> call(
-                            TableColumn<MarketStatisticItem, MarketStatisticItem> column) {
-                        return new TableCell<MarketStatisticItem, MarketStatisticItem>() {
-                            @Override
-                            public void updateItem(final MarketStatisticItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null && !empty)
-                                    setText(CurrencyUtil.getNameByCode(item.currencyCode));
-                                else
-                                    setText("");
-                            }
-                        };
-                    }
-                });
-        return column;
-    }
-
-    private TableColumn<MarketStatisticItem, MarketStatisticItem> getNumberOfOffersColumn() {
-        TableColumn<MarketStatisticItem, MarketStatisticItem> column = new TableColumn<MarketStatisticItem, MarketStatisticItem>("Total offers") {
-            {
-                setMinWidth(100);
-            }
-        };
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(
-                new Callback<TableColumn<MarketStatisticItem, MarketStatisticItem>, TableCell<MarketStatisticItem,
-                        MarketStatisticItem>>() {
-                    @Override
-                    public TableCell<MarketStatisticItem, MarketStatisticItem> call(
-                            TableColumn<MarketStatisticItem, MarketStatisticItem> column) {
-                        return new TableCell<MarketStatisticItem, MarketStatisticItem>() {
-                            @Override
-                            public void updateItem(final MarketStatisticItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null && !empty)
-                                    setText(String.valueOf(item.numberOfOffers));
-                                else
-                                    setText("");
-                            }
-                        };
-                    }
-                });
-        return column;
-    }
-
-    private TableColumn<MarketStatisticItem, MarketStatisticItem> getTotalAmountColumn() {
-        TableColumn<MarketStatisticItem, MarketStatisticItem> column = new TableColumn<MarketStatisticItem, MarketStatisticItem>("Total amount (BTC)") {
-            {
-                setMinWidth(130);
-            }
-        };
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(
-                new Callback<TableColumn<MarketStatisticItem, MarketStatisticItem>, TableCell<MarketStatisticItem,
-                        MarketStatisticItem>>() {
-                    @Override
-                    public TableCell<MarketStatisticItem, MarketStatisticItem> call(
-                            TableColumn<MarketStatisticItem, MarketStatisticItem> column) {
-                        return new TableCell<MarketStatisticItem, MarketStatisticItem>() {
-                            @Override
-                            public void updateItem(final MarketStatisticItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null && !empty)
-                                    setText(formatter.formatCoin(item.totalAmount));
-                                else
-                                    setText("");
-                            }
-                        };
-                    }
-                });
-        return column;
-    }
-
-    private TableColumn<MarketStatisticItem, MarketStatisticItem> getSpreadColumn() {
-        TableColumn<MarketStatisticItem, MarketStatisticItem> column = new TableColumn<MarketStatisticItem, MarketStatisticItem>("Spread") {
-            {
-                setMinWidth(130);
-            }
-        };
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(
-                new Callback<TableColumn<MarketStatisticItem, MarketStatisticItem>, TableCell<MarketStatisticItem,
-                        MarketStatisticItem>>() {
-                    @Override
-                    public TableCell<MarketStatisticItem, MarketStatisticItem> call(
-                            TableColumn<MarketStatisticItem, MarketStatisticItem> column) {
-                        return new TableCell<MarketStatisticItem, MarketStatisticItem>() {
-                            @Override
-                            public void updateItem(final MarketStatisticItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null && !empty && item.spread != null)
-                                    setText(formatter.formatFiatWithCode(item.spread));
-                                else
-                                    setText("");
-                            }
-                        };
-                    }
-                });
-        return column;
-    }
-
-
 }

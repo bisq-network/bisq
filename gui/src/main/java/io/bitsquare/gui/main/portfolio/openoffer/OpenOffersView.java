@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.portfolio.openoffer;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
@@ -109,19 +110,21 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     public TableCell<OpenOfferListItem, OpenOfferListItem> call(TableColumn<OpenOfferListItem,
                             OpenOfferListItem> column) {
                         return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                            private HyperlinkWithIcon field;
 
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    Hyperlink hyperlink = new Hyperlink(model.getTradeId(item));
-                                    Tooltip.install(hyperlink, new Tooltip(model.getTradeId(item)));
-                                    hyperlink.setOnAction(event -> offerDetailsPopup.show(item.getOffer()));
-                                    setGraphic(hyperlink);
+                                    field = new HyperlinkWithIcon(model.getTradeId(item), true);
+                                    field.setOnAction(event -> offerDetailsPopup.show(item.getOffer()));
+                                    field.setTooltip(new Tooltip("Open popup for details"));
+                                    setGraphic(field);
                                 } else {
                                     setGraphic(null);
-                                    setId(null);
+                                    if (field != null)
+                                        field.setOnAction(null);
                                 }
                             }
                         };

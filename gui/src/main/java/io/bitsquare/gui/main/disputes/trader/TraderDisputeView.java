@@ -27,6 +27,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.components.TableGroupHeadline;
 import io.bitsquare.gui.main.disputes.DisputeSummaryPopup;
 import io.bitsquare.gui.popups.ContractPopup;
@@ -588,26 +589,27 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     @Override
                     public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
                         return new TableCell<Dispute, Dispute>() {
-                            private Hyperlink hyperlink;
+                            private HyperlinkWithIcon field;
 
                             @Override
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
+                                    field = new HyperlinkWithIcon(item.getShortTradeId(), true);
                                     Optional<Trade> tradeOptional = tradeManager.getTradeById(item.getTradeId());
-                                    hyperlink = new Hyperlink(item.getShortTradeId());
                                     if (tradeOptional.isPresent()) {
-                                        hyperlink.setMouseTransparent(false);
-                                        Tooltip.install(hyperlink, new Tooltip(item.getShortTradeId()));
-                                        hyperlink.setOnAction(event -> tradeDetailsPopup.show(tradeOptional.get()));
+                                        field.setMouseTransparent(false);
+                                        field.setTooltip(new Tooltip("Open popup for details"));
+                                        field.setOnAction(event -> tradeDetailsPopup.show(tradeOptional.get()));
                                     } else {
-                                        hyperlink.setMouseTransparent(true);
+                                        field.setMouseTransparent(true);
                                     }
-                                    setGraphic(hyperlink);
+                                    setGraphic(field);
                                 } else {
                                     setGraphic(null);
-                                    setId(null);
+                                    if (field != null)
+                                        field.setOnAction(null);
                                 }
                             }
                         };

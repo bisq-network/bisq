@@ -28,7 +28,7 @@
 
     <TableView fx:id="table" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn text="Trade ID" fx:id="tradeIdColumn" minWidth="80" sortable="false"/>
+            <TableColumn text="Trade ID" fx:id="tradeIdColumn" minWidth="120" maxWidth="120" sortable="false"/>
             <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="150"/>
             <TableColumn text="Trade amount in BTC" fx:id="amountColumn" minWidth="130"/>
             <TableColumn text="Price" fx:id="priceColumn" minWidth="100"/>

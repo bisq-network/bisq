@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.portfolio.closedtrades;
 
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.popups.OfferDetailsPopup;
 import io.bitsquare.gui.popups.TradeDetailsPopup;
 import io.bitsquare.gui.util.BSFormatter;
@@ -83,26 +84,26 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                     public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(TableColumn<ClosedTradableListItem,
                             ClosedTradableListItem> column) {
                         return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
-                            private Hyperlink hyperlink;
+                            private HyperlinkWithIcon field;
 
                             @Override
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-
                                 if (item != null && !empty) {
-                                    hyperlink = new Hyperlink(model.getTradeId(item));
-                                    Tooltip.install(hyperlink, new Tooltip(model.getTradeId(item)));
-                                    hyperlink.setOnAction(event -> {
+                                    field = new HyperlinkWithIcon(model.getTradeId(item), true);
+                                    field.setOnAction(event -> {
                                         Tradable tradable = item.getTradable();
                                         if (tradable instanceof Trade)
                                             tradeDetailsPopup.show((Trade) tradable);
                                         else if (tradable instanceof OpenOffer)
                                             offerDetailsPopup.show(tradable.getOffer());
                                     });
-                                    setGraphic(hyperlink);
+                                    field.setTooltip(new Tooltip("Open popup for details"));
+                                    setGraphic(field);
                                 } else {
                                     setGraphic(null);
-                                    setId(null);
+                                    if (field != null)
+                                        field.setOnAction(null);
                                 }
                             }
                         };

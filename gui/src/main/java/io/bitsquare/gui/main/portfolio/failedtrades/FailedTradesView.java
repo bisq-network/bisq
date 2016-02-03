@@ -19,8 +19,8 @@ package io.bitsquare.gui.main.portfolio.failedtrades;
 
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.popups.TradeDetailsPopup;
-import io.bitsquare.trade.Trade;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -74,23 +74,20 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                     public TableCell<FailedTradesListItem, FailedTradesListItem> call(TableColumn<FailedTradesListItem,
                             FailedTradesListItem> column) {
                         return new TableCell<FailedTradesListItem, FailedTradesListItem>() {
-                            private Hyperlink hyperlink;
+                            private HyperlinkWithIcon field;
 
                             @Override
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-
                                 if (item != null && !empty) {
-                                    hyperlink = new Hyperlink(model.getTradeId(item));
-                                    Tooltip.install(hyperlink, new Tooltip(model.getTradeId(item)));
-                                    hyperlink.setOnAction(event -> {
-                                        Trade trade = item.getTrade();
-                                        tradeDetailsPopup.show(trade);
-                                    });
-                                    setGraphic(hyperlink);
+                                    field = new HyperlinkWithIcon(model.getTradeId(item), true);
+                                    field.setOnAction(event -> tradeDetailsPopup.show(item.getTrade()));
+                                    field.setTooltip(new Tooltip("Open popup for details"));
+                                    setGraphic(field);
                                 } else {
                                     setGraphic(null);
-                                    setId(null);
+                                    if (field != null)
+                                        field.setOnAction(null);
                                 }
                             }
                         };
