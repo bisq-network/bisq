@@ -61,7 +61,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class PendingTradesDataModel extends ActivatableDataModel {
     private final TradeManager tradeManager;
-
     private final WalletService walletService;
     private final TradeWalletService tradeWalletService;
     private final User user;
@@ -295,6 +294,10 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         return trade.getOffer().getDirection() == Offer.Direction.BUY;
     }
 
+    boolean isOfferer(Offer offer) {
+        return tradeManager.isMyOffer(offer);
+    }
+
     boolean isOfferer() {
         return isOfferer;
     }
@@ -380,11 +383,5 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public Preferences getPreferences() {
         return preferences;
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Utils
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
 }
 

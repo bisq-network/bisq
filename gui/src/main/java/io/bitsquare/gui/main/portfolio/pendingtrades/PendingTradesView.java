@@ -58,9 +58,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @FXML
     TableColumn<PendingTradesListItem, Fiat> tradeVolumeColumn;
     @FXML
-    TableColumn<PendingTradesListItem, PendingTradesListItem> directionColumn;
-    @FXML
-    TableColumn<PendingTradesListItem, PendingTradesListItem> idColumn;
+    TableColumn<PendingTradesListItem, PendingTradesListItem> roleColumn, paymentMethodColumn, idColumn;
     @FXML
     TableColumn<PendingTradesListItem, Date> dateColumn;
     @FXML
@@ -93,7 +91,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         setAmountColumnCellFactory();
         setPriceColumnCellFactory();
         setVolumeColumnCellFactory();
-        setDirectionColumnCellFactory();
+        setPaymentMethodColumnCellFactory();
+        setRoleColumnCellFactory();
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPlaceholder(new Label("No pending trades available"));
@@ -308,9 +307,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 }));
     }
 
-    private void setDirectionColumnCellFactory() {
-        directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-        directionColumn.setCellFactory(
+    private void setPaymentMethodColumnCellFactory() {
+        paymentMethodColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        paymentMethodColumn.setCellFactory(
                 new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
                         PendingTradesListItem>>() {
                     @Override
@@ -321,7 +320,29 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(model.evaluateDirection(item));
+                                    setText(model.getPaymentMethod(item));
+                                else
+                                    setText(null);
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setRoleColumnCellFactory() {
+        roleColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        roleColumn.setCellFactory(
+                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
+                        PendingTradesListItem>>() {
+                    @Override
+                    public TableCell<PendingTradesListItem, PendingTradesListItem> call(
+                            TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
+                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                            @Override
+                            public void updateItem(final PendingTradesListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty)
+                                    setText(model.getMyRole(item));
                                 else
                                     setText(null);
                             }

@@ -98,6 +98,10 @@ public class Contract implements Serializable {
         this.takerBtcPubKey = takerBtcPubKey;
     }
 
+    public boolean isBuyerOffererAndSellerTaker() {
+        return isBuyerOffererAndSellerTaker;
+    }
+
     public String getBuyerAccountId() {
         return isBuyerOffererAndSellerTaker ? offererAccountId : takerAccountId;
     }

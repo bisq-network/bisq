@@ -28,7 +28,9 @@ import io.bitsquare.gui.util.validation.*;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.PaymentMethod;
+import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.BlockChainListener;
@@ -242,8 +244,28 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return formatter.formatFiatWithCode(value);
     }
 
-    String evaluateDirection(PendingTradesListItem item) {
-        return (item != null) ? formatter.getDirection(dataModel.getDirection(item.getTrade().getOffer())) : "";
+    String getMyRole(PendingTradesListItem item) {
+        Trade trade = item.getTrade();
+        Contract contract = trade.getContract();
+        if (contract != null)
+            return formatter.getRole(contract.isBuyerOffererAndSellerTaker(), dataModel.isOfferer(trade.getOffer()));
+        else
+            return "";
+    }
+
+    String getPaymentMethod(PendingTradesListItem item) {
+        String result = "";
+        if (item != null) {
+            Offer offer = item.getTrade().getOffer();
+            String method = BSResources.get(offer.getPaymentMethod().getId());
+            String methodCountryCode = offer.getPaymentMethodCountryCode();
+
+            if (methodCountryCode != null)
+                result = method + " (" + methodCountryCode + ")";
+            else
+                result = method;
+        }
+        return result;
     }
 
     String formatDate(Date value) {

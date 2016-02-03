@@ -54,7 +54,8 @@
                     <PropertyValueFactory property="tradeVolume"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Trade type" fx:id="directionColumn" minWidth="80"/>
+            <TableColumn text="Payment method" fx:id="paymentMethodColumn" minWidth="120"/>
+            <TableColumn text="My role" fx:id="roleColumn" minWidth="120" maxWidth="120"/>
         </columns>
     </TableView>
 </VBox>

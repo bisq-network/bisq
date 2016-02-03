@@ -365,4 +365,11 @@ public class BSFormatter {
     public String getDirectionDescription(Offer.Direction direction) {
         return direction == Offer.Direction.BUY ? "Offerer as bitcoin buyer / Taker as bitcoin seller" : "Offerer as bitcoin seller / Taker as bitcoin buyer";
     }
+
+    public String getRole(boolean isBuyerOffererAndSellerTaker, boolean isOfferer) {
+        if (isBuyerOffererAndSellerTaker)
+            return isOfferer ? "Buyer (offerer)" : "Seller (taker)";
+        else
+            return isOfferer ? "Seller (offerer)" : "Buyer (taker)";
+    }
 }
