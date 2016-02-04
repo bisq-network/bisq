@@ -33,8 +33,8 @@ public class SeedNode {
     private final String defaultUserDataDir;
 
     public SeedNode(String defaultUserDataDir) {
+        Log.traceCall("defaultUserDataDir=" + defaultUserDataDir);
         this.defaultUserDataDir = defaultUserDataDir;
-        Log.traceCall();
     }
 
 
@@ -48,21 +48,23 @@ public class SeedNode {
     // or when using localhost:  localhost:8001 2 20 true localhost:8002|localhost:8003
     // BitcoinNetworkId: The id for the bitcoin network (Mainnet = 0, TestNet = 1, Regtest = 2)
     public void processArgs(String[] args) {
-        Log.traceCall();
         try {
             if (args.length > 0) {
                 String arg0 = args[0];
                 checkArgument(arg0.contains(":") && arg0.split(":").length == 2 && arg0.split(":")[1].length() > 3, "Wrong program argument: " + arg0);
                 mySeedNodeAddress = new NodeAddress(arg0);
+                log.info("From processArgs: mySeedNodeAddress=" + mySeedNodeAddress);
                 if (args.length > 1) {
                     String arg1 = args[1];
                     int networkId = Integer.parseInt(arg1);
+                    log.info("From processArgs: networkId=" + networkId);
                     checkArgument(networkId > -1 && networkId < 3,
                             "networkId out of scope (Mainnet = 0, TestNet = 1, Regtest = 2)");
-                    Version.setNetworkId(networkId);
+                    Version.setBtcNetworkId(networkId);
                     if (args.length > 2) {
                         String arg2 = args[2];
                         int maxConnections = Integer.parseInt(arg2);
+                        log.info("From processArgs: maxConnections=" + maxConnections);
                         checkArgument(maxConnections < 1000, "maxConnections seems to be a bit too high...");
                         PeerManager.setMaxConnections(maxConnections);
                     } else {
@@ -73,6 +75,7 @@ public class SeedNode {
                         String arg3 = args[3];
                         checkArgument(arg3.equals("true") || arg3.equals("false"));
                         useLocalhost = ("true").equals(arg3);
+                        log.info("From processArgs: useLocalhost=" + useLocalhost);
                     }
                     if (args.length > 4) {
                         String arg4 = args[4];
@@ -85,6 +88,7 @@ public class SeedNode {
                                     "Wrong program argument");
                             progArgSeedNodes.add(new NodeAddress(e));
                         });
+                        log.info("From processArgs: progArgSeedNodes=" + progArgSeedNodes);
                         progArgSeedNodes.remove(mySeedNodeAddress);
                     } else if (args.length > 5) {
                         log.error("Too many program arguments." +
@@ -99,7 +103,7 @@ public class SeedNode {
     }
 
     public void createAndStartP2PService(boolean useDetailedLogging) {
-        createAndStartP2PService(mySeedNodeAddress, useLocalhost, Version.getNetworkId(), useDetailedLogging, progArgSeedNodes, null);
+        createAndStartP2PService(mySeedNodeAddress, useLocalhost, Version.getBtcNetworkId(), useDetailedLogging, progArgSeedNodes, null);
     }
 
     @VisibleForTesting
@@ -109,8 +113,6 @@ public class SeedNode {
                                          boolean useDetailedLogging,
                                          @Nullable Set<NodeAddress> progArgSeedNodes,
                                          @Nullable P2PServiceListener listener) {
-        Log.traceCall();
-
         Path appPath = Paths.get(defaultUserDataDir,
                 "Bitsquare_seed_node_" + String.valueOf(mySeedNodeAddress.getFullAddress().replace(":", "_")));
 
@@ -141,18 +143,14 @@ public class SeedNode {
 
     @VisibleForTesting
     public P2PService getSeedNodeP2PService() {
-        Log.traceCall();
         return seedNodeP2PService;
     }
 
     private void shutDown() {
-        Log.traceCall();
         shutDown(null);
     }
 
     public void shutDown(@Nullable Runnable shutDownCompleteHandler) {
-        Log.traceCall();
-        log.debug("Request shutdown seed node");
         if (!stopped) {
             stopped = true;
 

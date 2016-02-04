@@ -110,8 +110,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 // Focus selectedItem from model
                 int index = table.getItems().indexOf(model.getSelectedItem());
                 UserThread.execute(() -> {
-                    table.requestFocus();
-                    UserThread.execute(() -> table.getFocusModel().focus(index));
+                    //TODO app wide focus
+                    //table.requestFocus();
+                    //UserThread.execute(() -> table.getFocusModel().focus(index));
                 });
             }
         };
@@ -151,9 +152,10 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             // Select and focus selectedItem from model
             int index = table.getItems().indexOf(selectedItem);
             UserThread.execute(() -> {
+                //TODO app wide focus
                 table.getSelectionModel().select(index);
-                table.requestFocus();
-                UserThread.execute(() -> table.getFocusModel().focus(index));
+                //table.requestFocus();
+                //UserThread.execute(() -> table.getFocusModel().focus(index));
             });
         }
     }

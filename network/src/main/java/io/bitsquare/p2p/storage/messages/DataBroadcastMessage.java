@@ -4,17 +4,17 @@ import io.bitsquare.app.Version;
 import io.bitsquare.p2p.Message;
 
 public abstract class DataBroadcastMessage implements Message {
-    private final int networkId = Version.getNetworkId();
+    private final int messageVersion = Version.getP2PMessageVersion();
 
     @Override
-    public int networkId() {
-        return networkId;
+    public int getMessageVersion() {
+        return messageVersion;
     }
 
     @Override
     public String toString() {
         return "DataBroadcastMessage{" +
-                "networkId=" + networkId +
+                "messageVersion=" + messageVersion +
                 '}';
     }
 }

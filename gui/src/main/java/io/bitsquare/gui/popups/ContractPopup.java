@@ -62,7 +62,7 @@ public class ContractPopup extends Popup {
         width = 850;
         createGridPane();
         addContent();
-        createPopup();
+        display();
         return this;
     }
 
@@ -152,7 +152,8 @@ public class ContractPopup extends Popup {
             addLabelTxIdTextField(gridPane, ++rowIndex, "Payout transaction ID:", dispute.getPayoutTxId());
 
         Button cancelButton = addButtonAfterGroup(gridPane, ++rowIndex, "Close");
-        cancelButton.requestFocus();
+        //TODO app wide focus
+        //cancelButton.requestFocus();
         cancelButton.setOnAction(e -> {
             closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
             hide();

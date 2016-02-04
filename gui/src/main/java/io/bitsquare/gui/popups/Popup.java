@@ -78,7 +78,7 @@ public class Popup {
     public Popup() {
     }
 
-    public Popup show() {
+    public void show() {
         createGridPane();
         addHeadLine();
 
@@ -91,13 +91,16 @@ public class Popup {
 
         addCloseButton();
         addDontShowAgainCheckBox();
-        createPopup();
-        return this;
+        PopupManager.queueForDisplay(this);
     }
 
     public void hide() {
         MainView.removeBlur();
-        stage.hide();
+        if (stage != null)
+            stage.hide();
+        else
+            log.warn("Stage is null");
+        PopupManager.isHidden(this);
     }
 
     public Popup onClose(Runnable closeHandler) {
@@ -207,7 +210,7 @@ public class Popup {
         FxTimer.runLater(Duration.ofMillis(Transitions.DEFAULT_DURATION), () -> MainView.blurLight());
     }
 
-    protected void createPopup() {
+    public void display() {
         if (owner == null)
             owner = MainView.getRootContainer();
 
@@ -333,7 +336,8 @@ public class Popup {
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
             actionButton = new Button(actionButtonText == null ? "Ok" : actionButtonText);
             actionButton.setDefaultButton(true);
-            actionButton.requestFocus();
+            //TODO app wide focus
+            //actionButton.requestFocus();
             actionButton.setOnAction(event -> {
                 hide();
                 actionHandlerOptional.ifPresent(actionHandler -> actionHandler.run());
@@ -366,5 +370,13 @@ public class Popup {
             truncatedMessage = StringUtils.abbreviate(message, 800);
         else
             truncatedMessage = message;
+    }
+
+    @Override
+    public String toString() {
+        return "Popup{" +
+                "headLine='" + headLine + '\'' +
+                ", message='" + message + '\'' +
+                '}';
     }
 }

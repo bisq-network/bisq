@@ -253,10 +253,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
         if (walletService.getWallet().isEncrypted() && tradeWalletService.getAesKey() == null) {
-            walletPasswordPopup.show().onAesKey(aesKey -> {
+            walletPasswordPopup.onAesKey(aesKey -> {
                 tradeWalletService.setAesKey(aesKey);
                 doPlaceOffer(offer, resultHandler);
-            });
+            }).show();
         } else {
             doPlaceOffer(offer, resultHandler);
         }

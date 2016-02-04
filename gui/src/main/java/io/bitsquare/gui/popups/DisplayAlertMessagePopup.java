@@ -46,15 +46,14 @@ public class DisplayAlertMessagePopup extends Popup {
     public DisplayAlertMessagePopup() {
     }
 
-    public DisplayAlertMessagePopup show() {
+    public void show() {
         width = 700;
         // need to set headLine, otherwise the fields will not be created in addHeadLine
         headLine = "Important information!";
         createGridPane();
         addHeadLine();
         addContent();
-        createPopup();
-        return this;
+        PopupManager.queueForDisplay(this);
     }
 
     public DisplayAlertMessagePopup alertMessage(Alert alert) {

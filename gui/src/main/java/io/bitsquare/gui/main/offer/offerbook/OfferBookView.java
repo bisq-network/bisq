@@ -220,7 +220,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         }
     }
 
-    private void onShowInfo(boolean isPaymentAccountValidForOffer, boolean hasMatchingArbitrator) {
+    private void onShowInfo(boolean isPaymentAccountValidForOffer, boolean hasMatchingArbitrator, boolean hasSameProtocolVersion) {
         if (!hasMatchingArbitrator) {
             showWarning("You don't have an arbitrator selected.",
                     "You need to setup at least one arbitrator to be able to trade.\n" +
@@ -229,6 +229,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             showWarning("You don't have a payment account with the payment method required for that offer.",
                     "You need to setup a payment account with that payment method if you want to take that offer.\n" +
                             "Do you want to do this now?", PaymentAccountView.class);
+        } else if (!hasSameProtocolVersion) {
+            new Popup().information("That offer requires a different protocol version as the one used in your " +
+                    "version of the software." +
+                    "\n\n" + "Please check if you have the latest version installed, otherwise the user " +
+                    "who created the offer has used an older version.\n" +
+                    "You cannot trade with an incompatible protocol version.")
+                    .show();
         }
     }
 
@@ -418,30 +425,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             boolean isTradable;
                             boolean isPaymentAccountValidForOffer;
                             boolean hasMatchingArbitrator;
+                            boolean hasSameProtocolVersion;
 
                             {
                                 button.setGraphic(iconView);
                                 button.setMinWidth(70);
-                            }
-
-                            private void verifyIfTradable(final Offer offer) {
-                                TableRow tableRow = getTableRow();
-                                if (tableRow != null) {
-                                    isPaymentAccountValidForOffer = model.isPaymentAccountValidForOffer(offer);
-                                    hasMatchingArbitrator = model.hasMatchingArbitrator(offer);
-                                    isTradable = isPaymentAccountValidForOffer && hasMatchingArbitrator;
-
-                                    tableRow.setOpacity(isTradable ? 1 : 0.4);
-
-                                    if (isTradable) {
-                                        // set first row button as default
-                                        button.setDefaultButton(getIndex() == 0);
-                                        tableRow.setOnMouseClicked(null);
-                                    } else {
-                                        button.setDefaultButton(false);
-                                        tableRow.setOnMouseClicked(e -> onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator));
-                                    }
-                                }
                             }
 
                             @Override
@@ -450,7 +438,29 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                                 if (newItem != null && !empty) {
                                     final Offer offer = newItem.getOffer();
-                                    verifyIfTradable(offer);
+
+                                    TableRow tableRow = getTableRow();
+                                    if (tableRow != null) {
+                                        isPaymentAccountValidForOffer = model.isPaymentAccountValidForOffer(offer);
+                                        hasMatchingArbitrator = model.hasMatchingArbitrator(offer);
+                                        hasSameProtocolVersion = model.hasSameProtocolVersion(offer);
+                                        isTradable = isPaymentAccountValidForOffer && hasMatchingArbitrator &&
+                                                hasSameProtocolVersion;
+
+                                        tableRow.setOpacity(isTradable ? 1 : 0.4);
+
+                                        if (isTradable) {
+                                            // set first row button as default
+                                            button.setDefaultButton(getIndex() == 0);
+                                            tableRow.setOnMouseClicked(null);
+                                        } else {
+                                            button.setDefaultButton(false);
+                                            tableRow.setOnMouseClicked(e ->
+                                                    onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator,
+                                                            hasSameProtocolVersion));
+                                        }
+                                    }
+                                    
                                     String title;
                                     if (isTradable) {
                                         if (model.isMyOffer(offer)) {
@@ -465,7 +475,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     } else {
                                         title = "Not matching";
                                         iconView.setId(null);
-                                        button.setOnAction(e -> onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator));
+                                        button.setOnAction(e -> onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator, hasSameProtocolVersion));
                                     }
 
                                     button.setText(title);

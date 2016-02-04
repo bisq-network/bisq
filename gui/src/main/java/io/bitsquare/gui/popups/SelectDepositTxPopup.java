@@ -51,7 +51,7 @@ public class SelectDepositTxPopup extends Popup {
     public SelectDepositTxPopup() {
     }
 
-    public SelectDepositTxPopup show() {
+    public void show() {
         if (headLine == null)
             headLine = "Select deposit transaction for dispute";
 
@@ -60,8 +60,7 @@ public class SelectDepositTxPopup extends Popup {
         addHeadLine();
         addContent();
         addCloseButton();
-        createPopup();
-        return this;
+        PopupManager.queueForDisplay(this);
     }
 
     public SelectDepositTxPopup onSelect(Consumer<Transaction> selectHandler) {

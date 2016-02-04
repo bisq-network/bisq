@@ -5,7 +5,7 @@ import io.bitsquare.p2p.storage.data.ProtectedMailboxData;
 
 public final class RemoveMailboxDataMessage extends DataBroadcastMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
+    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     public final ProtectedMailboxData data;
 

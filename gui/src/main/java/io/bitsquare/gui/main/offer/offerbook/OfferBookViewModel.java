@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.offer.offerbook;
 
 import com.google.inject.Inject;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
@@ -281,7 +282,6 @@ class OfferBookViewModel extends ActivatableViewModel {
         });
     }
 
-
     public boolean hasMatchingArbitrator(Offer offer) {
         for (NodeAddress offerArbitratorNodeAddress : offer.getArbitratorNodeAddresses()) {
             for (NodeAddress acceptedArbitratorNodeAddress : user.getAcceptedArbitratorAddresses()) {
@@ -290,5 +290,9 @@ class OfferBookViewModel extends ActivatableViewModel {
             }
         }
         return false;
+    }
+
+    public boolean hasSameProtocolVersion(Offer offer) {
+        return offer.getProtocolVersion() == Version.TRADE_PROTOCOL_VERSION;
     }
 }

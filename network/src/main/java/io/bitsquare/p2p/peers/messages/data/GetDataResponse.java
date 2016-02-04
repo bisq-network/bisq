@@ -8,8 +8,8 @@ import java.util.HashSet;
 
 public final class GetDataResponse implements Message {
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
-    private final int networkId = Version.getNetworkId();
+    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
+    private final int messageVersion = Version.getP2PMessageVersion();
 
     public final HashSet<ProtectedData> dataSet;
     public final long requestNonce;
@@ -20,14 +20,14 @@ public final class GetDataResponse implements Message {
     }
 
     @Override
-    public int networkId() {
-        return networkId;
+    public int getMessageVersion() {
+        return messageVersion;
     }
 
     @Override
     public String toString() {
         return "GetDataResponse{" +
-                "networkId=" + networkId +
+                "messageVersion=" + messageVersion +
                 ", dataSet.size()=" + dataSet.size() +
                 ", requestNonce=" + requestNonce +
                 '}';

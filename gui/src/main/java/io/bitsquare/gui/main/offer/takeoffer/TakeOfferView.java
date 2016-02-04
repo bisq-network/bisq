@@ -182,11 +182,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 .subscribe((observable, oldValue, newValue) -> {
                     if (!oldValue && newValue) {
                         isOfferAvailablePopup = new Popup().information(BSResources.get("takeOffer.fundsBox.isOfferAvailable"))
-                                .show()
                                 .onClose(() -> {
                                     model.resetErrorMessage();
                                     close();
-                                }).show();
+                                });
+                        isOfferAvailablePopup.show();
                     }
                 });
 

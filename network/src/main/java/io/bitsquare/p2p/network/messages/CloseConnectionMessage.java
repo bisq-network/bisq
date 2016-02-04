@@ -5,9 +5,11 @@ import io.bitsquare.p2p.Message;
 
 public final class CloseConnectionMessage implements Message {
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
+    // We dont use the Version.NETWORK_PROTOCOL_VERSION here as we report also compatibility issues and 
+    // a changed version would render that message invalid as well, so the peer cannot get notified about the problem.
+    private static final long serialVersionUID = 0;
 
-    private final int networkId = Version.getNetworkId();
+    private final int messageVersion = Version.getP2PMessageVersion();
     public final String reason;
 
     public CloseConnectionMessage(String reason) {
@@ -15,15 +17,15 @@ public final class CloseConnectionMessage implements Message {
     }
 
     @Override
-    public int networkId() {
-        return networkId;
+    public int getMessageVersion() {
+        return messageVersion;
     }
 
     @Override
     public String toString() {
         return "CloseConnectionMessage{" +
+                "messageVersion=" + messageVersion +
                 ", reason=" + reason +
-                ", networkId=" + networkId +
                 '}';
     }
 }

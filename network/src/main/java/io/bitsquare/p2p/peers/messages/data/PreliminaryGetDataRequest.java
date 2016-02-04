@@ -5,9 +5,9 @@ import io.bitsquare.p2p.network.messages.AnonymousMessage;
 
 public final class PreliminaryGetDataRequest implements AnonymousMessage, GetDataRequest {
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
+    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private final int networkId = Version.getNetworkId();
+    private final int messageVersion = Version.getP2PMessageVersion();
     private final long nonce;
 
     public PreliminaryGetDataRequest(long nonce) {
@@ -20,14 +20,14 @@ public final class PreliminaryGetDataRequest implements AnonymousMessage, GetDat
     }
 
     @Override
-    public int networkId() {
-        return networkId;
+    public int getMessageVersion() {
+        return messageVersion;
     }
 
     @Override
     public String toString() {
         return "PreliminaryGetDataRequest{" +
-                "networkId=" + networkId +
+                "messageVersion=" + messageVersion +
                 ", nonce=" + nonce +
                 '}';
     }

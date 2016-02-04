@@ -41,6 +41,9 @@ import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
+import io.bitsquare.p2p.network.CloseConnectionReason;
+import io.bitsquare.p2p.network.Connection;
+import io.bitsquare.p2p.network.ConnectionListener;
 import io.bitsquare.payment.OKPayAccount;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -187,7 +190,7 @@ public class MainViewModel implements ViewModel {
                     "There might be some network connection problems.\n\n" +
                     "Please restart and try again.")
                     .closeButtonText("Shut down")
-                    .onClose(() -> BitsquareApp.shutDownHandler.run())
+                    .onClose(BitsquareApp.shutDownHandler::run)
                     .show();
         });
     }
@@ -211,6 +214,34 @@ public class MainViewModel implements ViewModel {
     private BooleanProperty initP2PNetwork() {
         final BooleanProperty p2pNetworkInitialized = new SimpleBooleanProperty();
         p2PNetworkInfo.set("Connecting to Tor network...");
+        p2PService.getNetworkNode().addConnectionListener(new ConnectionListener() {
+            @Override
+            public void onConnection(Connection connection) {
+            }
+
+            @Override
+            public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
+                // We only check at seed nodes as they are running the latest version
+                // Other disconnects might be caused by peers running an older version
+                if (connection.getPeerType() == Connection.PeerType.SEED_NODE &&
+                        closeConnectionReason == CloseConnectionReason.RULE_VIOLATION) {
+                    new Popup()
+                            .warning("You got disconnected from a seed node.\n\n" +
+                                    "Reason for getting disconnected: " + connection.getRuleViolation().name() + "\n\n" +
+                                    "It might be that your installed version is not compatible with " +
+                                    "the network.\n\n" +
+                                    "Please check if you run the latest software version.\n" +
+                                    "You can download the latest version of Bitsquare at:\n" +
+                                    "https://github.com/bitsquare/bitsquare/releases/\n\n" +
+                                    "")
+                            .show();
+                }
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+            }
+        });
         p2PService.start(new P2PServiceListener() {
             @Override
             public void onTorNodeReady() {
@@ -348,8 +379,9 @@ public class MainViewModel implements ViewModel {
         if (walletService.getWallet().isEncrypted() &&
                 (openOfferManager.getOpenOffers().size() > 0
                         || tradeManager.getTrades().size() > 0
-                        || disputeManager.getDisputesAsObservableList().size() > 0))
-            walletPasswordPopup.show().onAesKey(aesKey -> tradeWalletService.setAesKey(aesKey));
+                        || disputeManager.getDisputesAsObservableList().size() > 0)) {
+            walletPasswordPopup.onAesKey(aesKey -> tradeWalletService.setAesKey(aesKey)).show();
+        }
 
         if (tradeManager.pendingTradesInitializedProperty().get() && isSplashScreenRemoved.get())
             applyTradePeriodState();

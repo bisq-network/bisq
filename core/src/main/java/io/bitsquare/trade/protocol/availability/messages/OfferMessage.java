@@ -25,9 +25,9 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 public abstract class OfferMessage implements DirectMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
+    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private final int networkId = Version.getNetworkId();
+    private final int messageVersion = Version.getP2PMessageVersion();
     public final String offerId;
 
     protected OfferMessage(String offerId) {
@@ -35,14 +35,14 @@ public abstract class OfferMessage implements DirectMessage {
     }
 
     @Override
-    public int networkId() {
-        return networkId;
+    public int getMessageVersion() {
+        return messageVersion;
     }
 
     @Override
     public String toString() {
         return "OfferMessage{" +
-                "networkId=" + networkId +
+                "messageVersion=" + messageVersion +
                 ", offerId='" + offerId + '\'' +
                 '}';
     }

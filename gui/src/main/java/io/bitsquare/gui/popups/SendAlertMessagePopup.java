@@ -59,7 +59,7 @@ public class SendAlertMessagePopup extends Popup {
     public SendAlertMessagePopup() {
     }
 
-    public SendAlertMessagePopup show() {
+    public void show() {
         if (headLine == null)
             headLine = "Send global notification";
 
@@ -67,8 +67,7 @@ public class SendAlertMessagePopup extends Popup {
         createGridPane();
         addHeadLine();
         addContent();
-        createPopup();
-        return this;
+        PopupManager.queueForDisplay(this);
     }
 
     public SendAlertMessagePopup onAddAlertMessage(SendAlertMessageHandler sendAlertMessageHandler) {

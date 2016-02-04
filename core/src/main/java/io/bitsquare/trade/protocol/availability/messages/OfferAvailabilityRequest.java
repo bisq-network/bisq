@@ -22,7 +22,7 @@ import io.bitsquare.common.crypto.PubKeyRing;
 
 public final class OfferAvailabilityRequest extends OfferMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
+    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private final PubKeyRing pubKeyRing;
 

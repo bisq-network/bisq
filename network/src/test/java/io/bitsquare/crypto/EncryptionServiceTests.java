@@ -83,7 +83,7 @@ public class EncryptionServiceTests {
 
 final class TestMessage implements MailboxMessage {
     public String data = "test";
-    private final int networkId = Version.getNetworkId();
+    private final int messageVersion = Version.getP2PMessageVersion();
 
     public TestMessage(String data) {
         this.data = data;
@@ -95,7 +95,7 @@ final class TestMessage implements MailboxMessage {
     }
 
     @Override
-    public int networkId() {
-        return networkId;
+    public int getMessageVersion() {
+        return messageVersion;
     }
 }

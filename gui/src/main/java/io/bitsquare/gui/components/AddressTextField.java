@@ -73,7 +73,8 @@ public class AddressTextField extends AnchorPane {
             }
         });
         textField.focusTraversableProperty().set(focusTraversableProperty().get());
-        focusedProperty().addListener((ov, oldValue, newValue) -> textField.requestFocus());
+        //TODO app wide focus
+        //focusedProperty().addListener((ov, oldValue, newValue) -> textField.requestFocus());
 
         Label copyIcon = new Label();
         copyIcon.setLayoutY(3);

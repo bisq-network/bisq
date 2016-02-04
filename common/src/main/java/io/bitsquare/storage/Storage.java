@@ -17,7 +17,6 @@
 
 package io.bitsquare.storage;
 
-import com.google.common.base.Throwables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -158,23 +157,20 @@ public class Storage<T extends Serializable> {
                 log.trace("Backup {} completed in {}msec", storageFile, System.currentTimeMillis() - now);
 
                 return persistedObject;
-            } catch (ClassCastException | IOException e) {
-                e.printStackTrace();
-                log.error("Version of persisted class has changed. We cannot read the persisted data anymore. We make a backup and remove the inconsistent " +
-                        "file.");
+            } catch (Throwable t) {
+                log.error("Version of persisted class has changed. We cannot read the persisted data anymore. " +
+                        "We make a backup and remove the inconsistent file.");
+                log.error(t.getMessage());
                 try {
-                    // In case the persisted data have been critical (keys) we keep a backup which might be used for recovery
+                    // We keep a backup which might be used for recovery
                     fileManager.removeAndBackupFile(fileName);
                 } catch (IOException e1) {
                     e1.printStackTrace();
                     log.error(e1.getMessage());
                     // We swallow Exception if backup fails
                 }
-                databaseCorruptionHandler.onFileCorrupted(storageFile.getName());
-            } catch (Throwable throwable) {
-                throwable.printStackTrace();
-                log.error(throwable.getMessage());
-                Throwables.propagate(throwable);
+                if (databaseCorruptionHandler != null)
+                    databaseCorruptionHandler.onFileCorrupted(storageFile.getName());
             }
         }
         return null;

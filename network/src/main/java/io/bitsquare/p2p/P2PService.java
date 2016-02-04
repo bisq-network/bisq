@@ -108,8 +108,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     private void init(boolean useLocalhost, int networkId, File storageDir) {
-        Log.traceCall();
-
         connectionNodeAddressListener = (observable, oldValue, newValue) -> {
             UserThread.execute(() -> numConnectedPeers.set(networkNode.getNodeAddressesOfConfirmedConnections().size()));
         };

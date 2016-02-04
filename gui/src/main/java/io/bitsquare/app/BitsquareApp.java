@@ -128,18 +128,24 @@ public class BitsquareApp extends Application {
             injector = Guice.createInjector(bitsquareAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 
-            Version.setNetworkId(injector.getInstance(BitsquareEnvironment.class).getBitcoinNetwork().ordinal());
-
-            // load the main view and create the main scene
-            CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
-            mainView = (MainView) viewLoader.load(MainView.class);
-            mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
+            Version.setBtcNetworkId(injector.getInstance(BitsquareEnvironment.class).getBitcoinNetwork().ordinal());
 
             Storage.setDatabaseCorruptionHandler((String fileName) -> {
                 corruptedDatabaseFiles.add(fileName);
                 if (mainView != null)
                     mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
             });
+            
+            // load the main view and create the main scene
+            CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
+            mainView = (MainView) viewLoader.load(MainView.class);
+            mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
+
+           /* Storage.setDatabaseCorruptionHandler((String fileName) -> {
+                corruptedDatabaseFiles.add(fileName);
+                if (mainView != null)
+                    mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
+            });*/
 
             scene = new Scene(mainView.getRoot(), 1000, 740);
             scene.getStylesheets().setAll(

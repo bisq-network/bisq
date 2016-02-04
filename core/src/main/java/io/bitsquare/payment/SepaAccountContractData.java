@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 
 public class SepaAccountContractData extends PaymentAccountContractData implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
+    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private static final Logger log = LoggerFactory.getLogger(SepaAccountContractData.class);
 

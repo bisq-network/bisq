@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 public final class Arbitrator implements PubKeyProtectedExpirablePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
+    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     public static final long TTL = TimeUnit.DAYS.toMillis(10);
 

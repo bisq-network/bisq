@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main;
 
 import io.bitsquare.BitsquareException;
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.Navigation;
@@ -184,11 +185,18 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
                 if (!persistedFilesCorrupted.isEmpty()) {
                     // show warning that some files has been corrupted
-                    new Popup().warning("Those data base file(s) are not compatible with our current code base." +
-                                    "\n" + persistedFilesCorrupted.toString() +
-                                    "\n\nWe made a backup of the corrupted file(s) and applied the default values." +
-                                    "\n\nThe backup is located at: [data directory]/db/corrupted"
-                    ).show();
+                    new Popup().warning("We detected incompatible data base files!\n\n" +
+                            "Those database file(s) are not compatible with our current code base:" +
+                            "\n" + persistedFilesCorrupted.toString() +
+                            "\n\nWe made a backup of the corrupted file(s) and applied the default values to a new " +
+                            "database version." +
+                            "\n\nThe backup is located at:\n[you local app data directory]/db/backup_of_corrupted_data.\n\n" +
+                            "Please check if you have the latest version of Bitsquare installed.\n" +
+                            "You can download it at:\nhttps://github.com/bitsquare/bitsquare/releases\n\n" +
+                            "Please restart the application.")
+                            .closeButtonText("Shut down")
+                            .onClose(BitsquareApp.shutDownHandler::run)
+                            .show();
                 }
 
                 transitions.fadeOutAndRemove(splashScreen, 1500, actionEvent -> disposeSplashScreen());
@@ -358,7 +366,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         model.walletServiceErrorMsg.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 btcInfoLabel.setId("splash-error-state-msg");
-                btcNetworkWarnMsgPopup = new Popup().warning(newValue).show();
+                btcNetworkWarnMsgPopup = new Popup().warning(newValue);
+                btcNetworkWarnMsgPopup.show();
             } else {
                 btcInfoLabel.setId("footer-pane");
                 if (btcNetworkWarnMsgPopup != null)
@@ -407,7 +416,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         p2PNetworkLabel.idProperty().bind(model.p2PNetworkLabelId);
         model.p2PNetworkWarnMsg.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                p2PNetworkWarnMsgPopup = new Popup().warning(newValue).show();
+                p2PNetworkWarnMsgPopup = new Popup().warning(newValue);
+                p2PNetworkWarnMsgPopup.show();
             } else if (p2PNetworkWarnMsgPopup != null) {
                 p2PNetworkWarnMsgPopup.hide();
             }

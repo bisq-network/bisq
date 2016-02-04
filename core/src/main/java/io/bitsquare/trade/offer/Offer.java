@@ -49,7 +49,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class Offer implements PubKeyProtectedExpirablePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     @JsonExclude
-    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
+    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     @JsonExclude
     private static final Logger log = LoggerFactory.getLogger(Offer.class);
 
@@ -57,7 +57,6 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
     public final static String TAC_OFFERER = "When placing that offer I accept that anyone who fulfills my conditions can " +
             "take that offer.";
     public static final String TAC_TAKER = "With taking the offer I commit to the trade conditions as defined.";
-
 
     public enum Direction {BUY, SELL}
 
@@ -71,12 +70,11 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
     }
 
 
-    // key attributes for lookup
     private final String id;
     private final Direction direction;
     private final String currencyCode;
     private final long date;
-
+    private final long protocolVersion;
     private final long fiatPrice;
     private final long amount;
     private final long minAmount;
@@ -137,6 +135,8 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
         this.offererPaymentAccountId = offererPaymentAccountId;
         this.arbitratorNodeAddresses = arbitratorNodeAddresses;
         this.acceptedCountryCodes = acceptedCountryCodes;
+
+        protocolVersion = Version.TRADE_PROTOCOL_VERSION;
 
         date = new Date().getTime();
         setState(State.UNDEFINED);
@@ -258,6 +258,9 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
         return pubKeyRing.getSignaturePubKey();
     }
 
+    public long getProtocolVersion() {
+        return protocolVersion;
+    }
 
     public String getId() {
         return id;

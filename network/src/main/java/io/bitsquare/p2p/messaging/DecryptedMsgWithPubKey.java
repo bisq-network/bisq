@@ -24,9 +24,9 @@ import java.security.PublicKey;
 
 public final class DecryptedMsgWithPubKey implements DirectMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
+    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private final int networkId = Version.getNetworkId();
+    private final int messageVersion = Version.getP2PMessageVersion();
     public final Message message;
     public final PublicKey signaturePubKey;
 
@@ -36,8 +36,8 @@ public final class DecryptedMsgWithPubKey implements DirectMessage {
     }
 
     @Override
-    public int networkId() {
-        return networkId;
+    public int getMessageVersion() {
+        return messageVersion;
     }
 
     @Override
@@ -63,7 +63,7 @@ public final class DecryptedMsgWithPubKey implements DirectMessage {
     @Override
     public String toString() {
         return "DecryptedMsgWithPubKey{" +
-                "networkId=" + networkId +
+                "messageVersion=" + messageVersion +
                 ", message=" + message +
                 ", signaturePubKey.hashCode()=" + signaturePubKey.hashCode() +
                 '}';

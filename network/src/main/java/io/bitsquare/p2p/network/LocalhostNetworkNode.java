@@ -46,12 +46,10 @@ public class LocalhostNetworkNode extends NetworkNode {
 
     public LocalhostNetworkNode(int port) {
         super(port);
-        Log.traceCall();
     }
 
     @Override
     public void start(@Nullable SetupListener setupListener) {
-        Log.traceCall();
         if (setupListener != null)
             addSetupListener(setupListener);
 
@@ -89,7 +87,6 @@ public class LocalhostNetworkNode extends NetworkNode {
     // Called from NetworkNode thread
     @Override
     protected Socket createSocket(NodeAddress peerNodeAddress) throws IOException {
-        Log.traceCall();
         return new Socket(peerNodeAddress.hostName, peerNodeAddress.port);
     }
 
@@ -99,7 +96,6 @@ public class LocalhostNetworkNode extends NetworkNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createTorNode(final Consumer<TorNode> resultHandler) {
-        Log.traceCall();
         ListenableFuture<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>> future = executorService.submit(() -> {
             Utilities.setThreadName("NetworkNode:CreateTorNode");
             long ts = System.currentTimeMillis();
@@ -129,7 +125,6 @@ public class LocalhostNetworkNode extends NetworkNode {
     }
 
     private void createHiddenService(final Consumer<HiddenServiceDescriptor> resultHandler) {
-        Log.traceCall();
         ListenableFuture<HiddenServiceDescriptor> future = executorService.submit(() -> {
             Utilities.setThreadName("NetworkNode:CreateHiddenService");
             long ts = System.currentTimeMillis();

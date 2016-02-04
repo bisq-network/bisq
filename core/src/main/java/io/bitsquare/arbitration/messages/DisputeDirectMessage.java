@@ -34,7 +34,7 @@ import java.util.List;
 
 public final class DisputeDirectMessage extends DisputeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
+    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final Logger log = LoggerFactory.getLogger(DisputeDirectMessage.class);
 
     private final long date;
@@ -188,7 +188,7 @@ public final class DisputeDirectMessage extends DisputeMessage {
 
     public static class Attachment implements Serializable {
         // That object is sent over the wire, so we need to take care of version compatibility.
-        private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
+        private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
         private static final Logger log = LoggerFactory.getLogger(Attachment.class);
 
         private final byte[] bytes;

@@ -69,11 +69,12 @@ public class CompletedView extends TradeStepDetailsView {
         // We need to handle both cases: Address not set and address already set (when returning from other view)
         // We get address validation after focus out, so first make sure we loose focus and then set it again as hint for user to put address in
         UserThread.execute(() -> {
-            withdrawAddressTextField.requestFocus();
-            UserThread.execute(() -> {
+            //TODO app wide focus
+            // withdrawAddressTextField.requestFocus();
+           /* UserThread.execute(() -> {
                 this.requestFocus();
                 UserThread.execute(() -> withdrawAddressTextField.requestFocus());
-            });
+            });*/
         });
     }
 

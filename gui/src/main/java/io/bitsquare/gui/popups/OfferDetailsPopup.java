@@ -79,7 +79,7 @@ public class OfferDetailsPopup extends Popup {
         width = 850;
         createGridPane();
         addContent();
-        createPopup();
+        display();
         return this;
     }
 
@@ -90,7 +90,7 @@ public class OfferDetailsPopup extends Popup {
         width = 850;
         createGridPane();
         addContent();
-        createPopup();
+        display();
         return this;
     }
 

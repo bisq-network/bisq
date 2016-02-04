@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.disputes;
+package io.bitsquare.gui.popups;
 
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
@@ -26,7 +26,6 @@ import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.common.util.Tuple2;
-import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.Transitions;
@@ -89,7 +88,7 @@ public class DisputeSummaryPopup extends Popup {
         width = 850;
         createGridPane();
         addContent();
-        createPopup();
+        PopupManager.queueForDisplay(this);
     }
 
     public DisputeSummaryPopup onClose(Runnable closeHandler) {

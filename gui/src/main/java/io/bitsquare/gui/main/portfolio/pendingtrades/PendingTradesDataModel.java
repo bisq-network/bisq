@@ -170,9 +170,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     void onWithdrawRequest(String toAddress) {
         checkNotNull(trade, "trade must not be null");
-        if (walletService.getWallet().isEncrypted())
-            walletPasswordPopup.show().onAesKey(aesKey -> doWithdrawRequest(toAddress, aesKey));
-        else
+        if (walletService.getWallet().isEncrypted()) {
+            walletPasswordPopup.onAesKey(aesKey -> doWithdrawRequest(toAddress, aesKey)).show();
+        } else
             doWithdrawRequest(toAddress, null);
     }
 

@@ -7,15 +7,15 @@ import io.bitsquare.p2p.storage.data.ExpirablePayload;
 public final class MockMessage implements Message, ExpirablePayload {
     public final String msg;
     public long ttl;
-    private final int networkId = Version.getNetworkId();
+    private final int messageVersion = Version.getP2PMessageVersion();
 
     public MockMessage(String msg) {
         this.msg = msg;
     }
 
     @Override
-    public int networkId() {
-        return networkId;
+    public int getMessageVersion() {
+        return messageVersion;
     }
 
     @Override

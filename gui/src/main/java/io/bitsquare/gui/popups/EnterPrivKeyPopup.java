@@ -15,11 +15,10 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.account.arbitratorregistration;
+package io.bitsquare.gui.popups;
 
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.gui.components.InputTextField;
-import io.bitsquare.gui.popups.Popup;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -50,7 +49,7 @@ public class EnterPrivKeyPopup extends Popup {
     public EnterPrivKeyPopup() {
     }
 
-    public EnterPrivKeyPopup show() {
+    public void show() {
         if (gridPane != null) {
             rowIndex = -1;
             gridPane.getChildren().clear();
@@ -63,9 +62,7 @@ public class EnterPrivKeyPopup extends Popup {
         addHeadLine();
         addInputFields();
         addButtons();
-        createPopup();
-
-        return this;
+        PopupManager.queueForDisplay(this);
     }
 
     public EnterPrivKeyPopup onClose(Runnable closeHandler) {

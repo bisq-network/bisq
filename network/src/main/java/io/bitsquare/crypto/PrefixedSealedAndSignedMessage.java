@@ -10,9 +10,9 @@ import java.util.Arrays;
 
 public final class PrefixedSealedAndSignedMessage implements MailboxMessage, SendersNodeAddressMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
+    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private final int networkId = Version.getNetworkId();
+    private final int messageVersion = Version.getP2PMessageVersion();
     private final NodeAddress senderNodeAddress;
     public final SealedAndSigned sealedAndSigned;
     public final byte[] addressPrefixHash;
@@ -29,14 +29,14 @@ public final class PrefixedSealedAndSignedMessage implements MailboxMessage, Sen
     }
 
     @Override
-    public int networkId() {
-        return networkId;
+    public int getMessageVersion() {
+        return messageVersion;
     }
 
     @Override
     public String toString() {
         return "SealedAndSignedMessage{" +
-                "networkId=" + networkId +
+                "messageVersion=" + messageVersion +
                 ", sealedAndSigned=" + sealedAndSigned +
                 ", receiverAddressMaskHash.hashCode()=" + Arrays.toString(addressPrefixHash).hashCode() +
                 '}';

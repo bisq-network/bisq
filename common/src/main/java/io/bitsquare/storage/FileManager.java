@@ -133,14 +133,14 @@ public class FileManager<T> {
         executor.schedule(saveFileTask, delayInMilli, TimeUnit.MILLISECONDS);
     }
 
-    public synchronized T read(File file) {
+    public synchronized T read(File file) throws IOException, ClassNotFoundException {
         log.debug("read" + file);
         try (final FileInputStream fileInputStream = new FileInputStream(file);
              final ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
             return (T) objectInputStream.readObject();
         } catch (Throwable t) {
             log.error("Exception at read: " + t.getMessage());
-            return null;
+            throw t;
         }
     }
 
@@ -176,12 +176,12 @@ public class FileManager<T> {
     }
 
     public synchronized void removeAndBackupFile(String fileName) throws IOException {
-        File corruptedBackupDir = new File(Paths.get(dir.getAbsolutePath(), "corrupted").toString());
+        File corruptedBackupDir = new File(Paths.get(dir.getAbsolutePath(), "backup_of_corrupted_data").toString());
         if (!corruptedBackupDir.exists())
             if (!corruptedBackupDir.mkdir())
                 log.warn("make dir failed");
 
-        File corruptedFile = new File(Paths.get(dir.getAbsolutePath(), "corrupted", fileName).toString());
+        File corruptedFile = new File(Paths.get(dir.getAbsolutePath(), "backup_of_corrupted_data", fileName).toString());
         renameTempFileToFile(storageFile, corruptedFile);
     }
 

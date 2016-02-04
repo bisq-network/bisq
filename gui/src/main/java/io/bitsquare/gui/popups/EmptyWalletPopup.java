@@ -64,7 +64,7 @@ public class EmptyWalletPopup extends Popup {
         this.formatter = formatter;
     }
 
-    public EmptyWalletPopup show() {
+    public void show() {
         if (headLine == null)
             headLine = "Empty wallet";
 
@@ -72,8 +72,7 @@ public class EmptyWalletPopup extends Popup {
         createGridPane();
         addHeadLine();
         addContent();
-        createPopup();
-        return this;
+        PopupManager.queueForDisplay(this);
     }
 
     public EmptyWalletPopup onClose(Runnable closeHandler) {

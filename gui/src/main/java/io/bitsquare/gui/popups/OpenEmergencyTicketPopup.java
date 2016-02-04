@@ -42,7 +42,7 @@ public class OpenEmergencyTicketPopup extends Popup {
     public OpenEmergencyTicketPopup() {
     }
 
-    public OpenEmergencyTicketPopup show() {
+    public void show() {
         if (headLine == null)
             headLine = "Open support ticket";
 
@@ -50,8 +50,7 @@ public class OpenEmergencyTicketPopup extends Popup {
         createGridPane();
         addHeadLine();
         addContent();
-        createPopup();
-        return this;
+        PopupManager.queueForDisplay(this);
     }
 
     public OpenEmergencyTicketPopup onOpenTicket(ResultHandler openTicketHandler) {

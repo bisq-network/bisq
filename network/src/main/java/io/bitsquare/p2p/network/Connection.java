@@ -177,10 +177,8 @@ public class Connection implements MessageListener {
                     objectToWrite = message;
                 }
                 if (!stopped) {
-                    synchronized (objectOutputStream) {
-                        objectOutputStream.writeObject(objectToWrite);
-                        objectOutputStream.flush();
-                    }
+                    objectOutputStream.writeObject(objectToWrite);
+                    objectOutputStream.flush();
                     sharedModel.updateLastActivityDate();
                 }
             } catch (IOException e) {
@@ -243,7 +241,7 @@ public class Connection implements MessageListener {
         this.peerType = peerType;
     }
 
-    private synchronized void setPeersNodeAddress(NodeAddress peerNodeAddress) {
+    private void setPeersNodeAddress(NodeAddress peerNodeAddress) {
         checkNotNull(peerNodeAddress, "peerAddress must not be null");
         peersNodeAddressOptional = Optional.of(peerNodeAddress);
 
@@ -264,7 +262,7 @@ public class Connection implements MessageListener {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public synchronized Optional<NodeAddress> getPeersNodeAddressOptional() {
+    public Optional<NodeAddress> getPeersNodeAddressOptional() {
         return peersNodeAddressOptional;
     }
 
@@ -290,6 +288,10 @@ public class Connection implements MessageListener {
 
     public ReadOnlyObjectProperty<NodeAddress> getNodeAddressProperty() {
         return nodeAddressProperty;
+    }
+
+    public RuleViolation getRuleViolation() {
+        return sharedModel.getRuleViolation();
     }
 
 
@@ -436,11 +438,11 @@ public class Connection implements MessageListener {
             this.socket = socket;
         }
 
-        public synchronized void updateLastActivityDate() {
+        public void updateLastActivityDate() {
             lastActivityDate = new Date();
         }
 
-        public synchronized Date getLastActivityDate() {
+        public Date getLastActivityDate() {
             return lastActivityDate;
         }
 
@@ -477,11 +479,9 @@ public class Connection implements MessageListener {
                     closeConnectionReason = CloseConnectionReason.RESET;
             } else if (e instanceof SocketTimeoutException || e instanceof TimeoutException) {
                 closeConnectionReason = CloseConnectionReason.SOCKET_TIMEOUT;
-                log.debug("TimeoutException at socket " + socket.toString() + "\n\tconnection={}" + this);
+                log.warn("SocketTimeoutException at socket " + socket.toString() + "\n\tconnection={}" + this);
             } else if (e instanceof EOFException) {
                 closeConnectionReason = CloseConnectionReason.TERMINATED;
-            } else if (e instanceof NoClassDefFoundError || e instanceof ClassNotFoundException) {
-                closeConnectionReason = CloseConnectionReason.INCOMPATIBLE_DATA;
             } else {
                 closeConnectionReason = CloseConnectionReason.UNKNOWN_EXCEPTION;
                 log.warn("Unknown reason for exception at socket {}\n\tconnection={}\n\tException=",
@@ -499,7 +499,7 @@ public class Connection implements MessageListener {
             }
         }
 
-        public synchronized Socket getSocket() {
+        public Socket getSocket() {
             return socket;
         }
 
@@ -522,9 +522,9 @@ public class Connection implements MessageListener {
     }
 
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// InputHandler
-///////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // InputHandler
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Runs in same thread as Connection
     private static class InputHandler implements Runnable {
@@ -547,11 +547,15 @@ public class Connection implements MessageListener {
         }
 
         public void stop() {
-            stopped = true;
-            try {
-                objectInputStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (!stopped) {
+                try {
+                    objectInputStream.close();
+                } catch (IOException e) {
+                    log.error("IOException at InputHandler.stop\n" + e.getMessage());
+                    e.printStackTrace();
+                } finally {
+                    stopped = true;
+                }
             }
         }
 
@@ -573,7 +577,7 @@ public class Connection implements MessageListener {
 
                         int size = ByteArrayUtils.objectToByteArray(rawInputObject).length;
                         if (size > getMaxMsgSize()) {
-                            sharedModel.reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED);
+                            reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED);
                             return;
                         }
 
@@ -585,36 +589,38 @@ public class Connection implements MessageListener {
                                 //log.trace("Read object compressed data size: " + size);
                                 serializable = Utils.decompress(compressedObjectAsBytes);
                             } else {
-                                sharedModel.reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                                reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                                return;
                             }
                         } else {
                             if (rawInputObject instanceof Serializable) {
                                 serializable = (Serializable) rawInputObject;
                             } else {
-                                sharedModel.reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                                reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                                return;
                             }
                         }
                         //log.trace("Read object decompressed data size: " + ByteArrayUtils.objectToByteArray(serializable).length);
 
                         // compressed size might be bigger theoretically so we check again after decompression
                         if (size > getMaxMsgSize()) {
-                            sharedModel.reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED);
+                            reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED);
                             return;
                         }
 
                         if (sharedModel.connection.violatesThrottleLimit()) {
-                            sharedModel.reportInvalidRequest(RuleViolation.THROTTLE_LIMIT_EXCEEDED);
+                            reportInvalidRequest(RuleViolation.THROTTLE_LIMIT_EXCEEDED);
                             return;
                         }
 
                         if (!(serializable instanceof Message)) {
-                            sharedModel.reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                            reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                             return;
                         }
 
                         Message message = (Message) serializable;
-                        if (message.networkId() != Version.getNetworkId()) {
-                            sharedModel.reportInvalidRequest(RuleViolation.WRONG_NETWORK_ID);
+                        if (message.getMessageVersion() != Version.getP2PMessageVersion()) {
+                            reportInvalidRequest(RuleViolation.WRONG_NETWORK_ID);
                             return;
                         }
 
@@ -624,7 +630,7 @@ public class Connection implements MessageListener {
                             CloseConnectionReason[] values = CloseConnectionReason.values();
                             log.info("CloseConnectionMessage received. Reason={}\n\t" +
                                     "connection={}", ((CloseConnectionMessage) message).reason, connection);
-                            stopped = true;
+                            stop();
                             sharedModel.shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
                         } else if (!stopped) {
                             // First a seed node gets a message form a peer (PreliminaryDataRequest using 
@@ -655,15 +661,24 @@ public class Connection implements MessageListener {
                             messageListener.onMessage(message, connection);
                         }
                     } catch (IOException | ClassNotFoundException | NoClassDefFoundError e) {
-                        stopped = true;
-                        sharedModel.handleConnectionException(e);
+                        reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                        return;
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                        stop();
+                        sharedModel.handleConnectionException(new Exception(t));
                     }
                 }
             } catch (Throwable t) {
                 t.printStackTrace();
-                stopped = true;
+                stop();
                 sharedModel.handleConnectionException(new Exception(t));
             }
+        }
+
+        private void reportInvalidRequest(RuleViolation ruleViolation) {
+            sharedModel.reportInvalidRequest(ruleViolation);
+            stop();
         }
 
         @Override

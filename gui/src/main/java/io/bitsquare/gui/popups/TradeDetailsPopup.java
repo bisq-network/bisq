@@ -65,7 +65,7 @@ public class TradeDetailsPopup extends Popup {
         width = 850;
         createGridPane();
         addContent();
-        createPopup();
+        display();
         return this;
     }
 
@@ -191,7 +191,8 @@ public class TradeDetailsPopup extends Popup {
         }
 
         Button cancelButton = addButtonAfterGroup(gridPane, ++rowIndex, "Close");
-        cancelButton.requestFocus();
+        //TODO app wide focus
+        //cancelButton.requestFocus();
         cancelButton.setOnAction(e -> {
             closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
             hide();

@@ -310,10 +310,11 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     }
 
     private void doWithdraw(Coin amount, FutureCallback<Transaction> callback) {
-        if (walletService.getWallet().isEncrypted())
-            walletPasswordPopup.show().onAesKey(aesKey -> sendFunds(amount, aesKey, callback));
-        else
+        if (walletService.getWallet().isEncrypted()) {
+            walletPasswordPopup.onAesKey(aesKey -> sendFunds(amount, aesKey, callback)).show();
+        } else {
             sendFunds(amount, null, callback);
+        }
     }
 
     private void sendFunds(Coin amount, KeyParameter aesKey, FutureCallback<Transaction> callback) {

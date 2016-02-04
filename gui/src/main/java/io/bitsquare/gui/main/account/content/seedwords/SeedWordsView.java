@@ -114,13 +114,13 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
 
     private void askForPassword() {
-        walletPasswordPopup.show().onAesKey(aesKey -> {
+        walletPasswordPopup.onAesKey(aesKey -> {
             Wallet wallet = walletService.getWallet();
             KeyCrypter keyCrypter = wallet.getKeyCrypter();
             keyChainSeed = wallet.getKeyChainSeed();
             DeterministicSeed decryptedSeed = keyChainSeed.decrypt(keyCrypter, "", aesKey);
             showSeedScreen(decryptedSeed);
-        });
+        }).show();
     }
 
     private void showSeedScreen(DeterministicSeed seed) {

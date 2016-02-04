@@ -36,7 +36,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class Contract implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     @JsonExclude
-    public static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
+    public static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     public final Offer offer;
     private final long tradeAmount;

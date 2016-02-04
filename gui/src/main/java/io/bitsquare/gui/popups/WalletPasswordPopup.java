@@ -64,7 +64,7 @@ public class WalletPasswordPopup extends Popup {
         this.walletService = walletService;
     }
 
-    public WalletPasswordPopup show() {
+    public void show() {
         if (gridPane != null) {
             rowIndex = -1;
             gridPane.getChildren().clear();
@@ -77,9 +77,7 @@ public class WalletPasswordPopup extends Popup {
         addHeadLine();
         addInputFields();
         addButtons();
-        createPopup();
-
-        return this;
+        PopupManager.queueForDisplay(this);
     }
 
     public WalletPasswordPopup onClose(Runnable closeHandler) {

@@ -6,9 +6,9 @@ import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 
 public final class GetUpdatedDataRequest implements SendersNodeAddressMessage, GetDataRequest {
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.NETWORK_PROTOCOL_VERSION;
+    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private final int networkId = Version.getNetworkId();
+    private final int messageVersion = Version.getP2PMessageVersion();
     private final NodeAddress senderNodeAddress;
     private final long nonce;
 
@@ -28,14 +28,14 @@ public final class GetUpdatedDataRequest implements SendersNodeAddressMessage, G
     }
 
     @Override
-    public int networkId() {
-        return networkId;
+    public int getMessageVersion() {
+        return messageVersion;
     }
 
     @Override
     public String toString() {
         return "GetUpdatedDataRequest{" +
-                "networkId=" + networkId +
+                "messageVersion=" + messageVersion +
                 ", senderNodeAddress=" + senderNodeAddress +
                 ", nonce=" + nonce +
                 '}';

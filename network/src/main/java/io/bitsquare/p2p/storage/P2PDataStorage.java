@@ -53,7 +53,6 @@ public class P2PDataStorage implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public P2PDataStorage(Broadcaster broadcaster, NetworkNode networkNode, File storageDir) {
-        Log.traceCall();
         this.broadcaster = broadcaster;
 
         networkNode.addMessageListener(this);
@@ -65,7 +64,6 @@ public class P2PDataStorage implements MessageListener {
     }
 
     private void init() {
-        Log.traceCall();
         HashMap<ByteArray, Integer> persisted = storage.initAndGetPersisted("SequenceNumberMap");
         if (persisted != null)
             sequenceNumberMap = persisted;
@@ -264,7 +262,6 @@ public class P2PDataStorage implements MessageListener {
     }
 
     public void addHashMapChangedListener(HashMapChangedListener hashMapChangedListener) {
-        Log.traceCall();
         hashMapChangedListeners.add(hashMapChangedListener);
     }
 

@@ -167,10 +167,10 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // have it persisted as well.
     void onTakeOffer(TradeResultHandler tradeResultHandler) {
         if (walletService.getWallet().isEncrypted() && tradeWalletService.getAesKey() == null) {
-            walletPasswordPopup.show().onAesKey(aesKey -> {
+            walletPasswordPopup.onAesKey(aesKey -> {
                 tradeWalletService.setAesKey(aesKey);
                 doTakeOffer(tradeResultHandler);
-            });
+            }).show();
         } else {
             doTakeOffer(tradeResultHandler);
         }

@@ -67,7 +67,8 @@ public class TextFieldWithCopyIcon extends AnchorPane {
         AnchorPane.setRightAnchor(textField, 30.0);
         AnchorPane.setLeftAnchor(textField, 0.0);
         textField.focusTraversableProperty().set(focusTraversableProperty().get());
-        focusedProperty().addListener((ov, oldValue, newValue) -> textField.requestFocus());
+        //TODO app wide focus
+        //focusedProperty().addListener((ov, oldValue, newValue) -> textField.requestFocus());
 
         getChildren().addAll(textField, copyIcon);
     }

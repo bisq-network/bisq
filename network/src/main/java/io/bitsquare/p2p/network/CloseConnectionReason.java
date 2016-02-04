@@ -6,7 +6,6 @@ public enum CloseConnectionReason {
     RESET(false),
     SOCKET_TIMEOUT(false),
     TERMINATED(false), // EOFException
-    INCOMPATIBLE_DATA(false),
     UNKNOWN_EXCEPTION(false),
 
     // Planned
