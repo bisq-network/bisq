@@ -9,6 +9,7 @@ import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.peers.messages.data.GetDataRequest;
 import io.bitsquare.p2p.storage.P2PDataStorage;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,10 +127,10 @@ public class RequestDataManager implements MessageListener {
                         }
 
                         @Override
-                        public void onFault(String errorMessage) {
+                        public void onFault(String errorMessage, @Nullable Connection connection) {
                             log.trace("requestDataHandshake of inbound connection failed.\n\tConnection={}\n\t" +
                                     "ErrorMessage={}", connection, errorMessage);
-                            peerManager.penalizeUnreachablePeer(connection);
+                            peerManager.handleConnectionFault(connection);
                         }
                     });
             requestDataHandshake.onDataRequest(message, connection);
@@ -171,11 +172,11 @@ public class RequestDataManager implements MessageListener {
                         }
 
                         @Override
-                        public void onFault(String errorMessage) {
+                        public void onFault(String errorMessage, @Nullable Connection connection) {
                             log.trace("requestDataHandshake of outbound connection failed.\n\tnodeAddress={}\n\t" +
                                     "ErrorMessage={}", nodeAddress, errorMessage);
 
-                            peerManager.penalizeUnreachablePeer(nodeAddress);
+                            peerManager.handleConnectionFault(nodeAddress, connection);
 
                             if (!shutDownInProgress) {
                                 if (!remainingNodeAddresses.isEmpty()) {

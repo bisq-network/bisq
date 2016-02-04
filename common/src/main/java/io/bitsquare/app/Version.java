@@ -39,9 +39,10 @@ public class Version {
 
 
     public static int getP2PMessageVersion() {
-        // A changed NETWORK_PROTOCOL_VERSION for the serialized objects does not trigger reliable a disconnect.
-        // TODO investigate why, but java serialisation should be replaced anyway, so using one existing field
+        // TODO investigate why a changed NETWORK_PROTOCOL_VERSION for the serialized objects does not trigger 
+        // reliable a disconnect., but java serialisation should be replaced anyway, so using one existing field
         // for the version is fine.
+
         // BTC_NETWORK_ID  is 0, 1 or 2, we use for changes at NETWORK_PROTOCOL_VERSION a multiplication with 10 
         // to avoid conflicts:
         // E.g. btc BTC_NETWORK_ID=1, NETWORK_PROTOCOL_VERSION=1 -> getNetworkId()=2;

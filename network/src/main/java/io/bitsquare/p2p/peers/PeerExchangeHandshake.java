@@ -17,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Timer;
@@ -36,7 +37,7 @@ public class PeerExchangeHandshake implements MessageListener {
     public interface Listener {
         void onComplete();
 
-        void onFault(String errorMessage);
+        void onFault(String errorMessage, @Nullable Connection connection);
     }
 
 
@@ -94,7 +95,7 @@ public class PeerExchangeHandshake implements MessageListener {
 
                 peerManager.shutDownConnection(nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
                 shutDown();
-                listener.onFault(errorMessage);
+                listener.onFault(errorMessage, null);
             }
         });
 
@@ -103,11 +104,11 @@ public class PeerExchangeHandshake implements MessageListener {
                     String errorMessage = "A timeout occurred at sending getPeersRequest:" + getPeersRequest + " for nodeAddress:" + nodeAddress;
                     log.info(errorMessage + " / PeerExchangeHandshake=" +
                             PeerExchangeHandshake.this);
-                    
+
                     log.info("timeoutTimer called on " + this);
                     peerManager.shutDownConnection(nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
                     shutDown();
-                    listener.onFault(errorMessage);
+                    listener.onFault(errorMessage, null);
                 },
                 20, TimeUnit.SECONDS);
     }
@@ -145,7 +146,7 @@ public class PeerExchangeHandshake implements MessageListener {
 
                 peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_FAILURE);
                 shutDown();
-                listener.onFault(errorMessage);
+                listener.onFault(errorMessage, connection);
             }
         });
 
@@ -158,7 +159,7 @@ public class PeerExchangeHandshake implements MessageListener {
                     log.info("timeoutTimer called. this=" + this);
                     peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_TIMEOUT);
                     shutDown();
-                    listener.onFault(errorMessage);
+                    listener.onFault(errorMessage, connection);
                 },
                 20, TimeUnit.SECONDS);
 

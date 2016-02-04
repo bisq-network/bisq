@@ -38,7 +38,7 @@ public class RequestDataHandshake implements MessageListener {
     public interface Listener {
         void onComplete();
 
-        void onFault(String errorMessage);
+        void onFault(String errorMessage, @Nullable Connection connection);
     }
 
 
@@ -105,7 +105,7 @@ public class RequestDataHandshake implements MessageListener {
                 log.info(errorMessage);
                 peerManager.shutDownConnection(nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
                 shutDown();
-                listener.onFault(errorMessage);
+                listener.onFault(errorMessage, null);
             }
         });
 
@@ -117,7 +117,7 @@ public class RequestDataHandshake implements MessageListener {
                             RequestDataHandshake.this);
                     peerManager.shutDownConnection(nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
                     shutDown();
-                    listener.onFault(errorMessage);
+                    listener.onFault(errorMessage, null);
                 },
                 10, TimeUnit.SECONDS);
     }
@@ -146,7 +146,7 @@ public class RequestDataHandshake implements MessageListener {
 
                 peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_FAILURE);
                 shutDown();
-                listener.onFault(errorMessage);
+                listener.onFault(errorMessage, connection);
             }
         });
 
@@ -158,7 +158,7 @@ public class RequestDataHandshake implements MessageListener {
                             RequestDataHandshake.this);
                     peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_TIMEOUT);
                     shutDown();
-                    listener.onFault(errorMessage);
+                    listener.onFault(errorMessage, connection);
                 },
                 10, TimeUnit.SECONDS);
     }

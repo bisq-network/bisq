@@ -660,9 +660,12 @@ public class Connection implements MessageListener {
 
                             messageListener.onMessage(message, connection);
                         }
-                    } catch (IOException | ClassNotFoundException | NoClassDefFoundError e) {
+                    } catch (ClassNotFoundException | NoClassDefFoundError e) {
                         reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                         return;
+                    } catch (IOException e) {
+                        stop();
+                        sharedModel.handleConnectionException(e);
                     } catch (Throwable t) {
                         t.printStackTrace();
                         stop();

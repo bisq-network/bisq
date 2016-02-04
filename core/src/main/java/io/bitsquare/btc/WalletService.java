@@ -198,7 +198,7 @@ public class WalletService {
 
         // TODO Get bitcoinj running over our tor proxy. BlockingClientManager need to be used to use the socket  
         // from jtorproxy. To get supported it via nio / netty will be harder
-        if (!params.getId().equals(NetworkParameters.ID_REGTEST) && useTor)
+        if (useTor && params.getId().equals(NetworkParameters.ID_MAINNET))
             walletAppKit.useTor();
 
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen

@@ -8,6 +8,7 @@ import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.messages.peers.GetPeersRequest;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,10 +116,10 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
                         }
 
                         @Override
-                        public void onFault(String errorMessage) {
+                        public void onFault(String errorMessage, @Nullable Connection connection) {
                             log.trace("PeerExchangeHandshake of outbound connection failed.\n\terrorMessage={}\n\t" +
                                     "connection={}", errorMessage, connection);
-                            peerManager.penalizeUnreachablePeer(connection);
+                            peerManager.handleConnectionFault(connection);
                         }
                     });
             peerExchangeHandshake.onGetPeersRequest((GetPeersRequest) message, connection);
@@ -144,12 +145,12 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
                         }
 
                         @Override
-                        public void onFault(String errorMessage) {
+                        public void onFault(String errorMessage, @Nullable Connection connection) {
                             log.trace("PeerExchangeHandshake of outbound connection failed.\n\terrorMessage={}\n\t" +
                                     "nodeAddress={}", errorMessage, nodeAddress);
 
                             peerExchangeHandshakeMap.remove(nodeAddress);
-                            peerManager.penalizeUnreachablePeer(nodeAddress);
+                            peerManager.handleConnectionFault(nodeAddress, connection);
                             if (!shutDownInProgress) {
                                 if (!remainingNodeAddresses.isEmpty()) {
                                     log.info("There are remaining nodes available for requesting peers. " +
