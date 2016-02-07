@@ -225,7 +225,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
                             BSResources.get("takeOffer.validation.amountLargerThanOfferAmount")));
 
-                if (dataModel.isAmountLargerThanOfferAmountMinusFee())
+                if (dataModel.wouldCreateDustForOfferer())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
                             BSResources.get("takeOffer.validation.amountLargerThanOfferAmountMinusFee")));
             }
