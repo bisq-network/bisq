@@ -531,7 +531,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     if (checkBox == null) {
-                                        checkBox = new CheckBox("Select for withdrawal");
+                                        checkBox = new CheckBox();
                                         checkBox.setOnAction(e -> selectForWithdrawal(item, checkBox.isSelected()));
                                         setGraphic(checkBox);
                                     }

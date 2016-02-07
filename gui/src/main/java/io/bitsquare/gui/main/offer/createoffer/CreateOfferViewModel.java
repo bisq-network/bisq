@@ -92,6 +92,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private ChangeListener<Fiat> priceAsFiatListener;
     private ChangeListener<Fiat> volumeAsFiatListener;
     private ChangeListener<Boolean> isWalletFundedListener;
+    private ChangeListener<Coin> feeFromFundingTxListener;
     private ChangeListener<Boolean> requestPlaceOfferSuccessListener;
     private ChangeListener<String> requestPlaceOfferErrorMessageListener;
     private ChangeListener<String> errorMessageListener;
@@ -231,6 +232,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         volumeAsFiatListener = (ov, oldValue, newValue) -> volume.set(formatter.formatFiat(newValue));
 
         isWalletFundedListener = (ov, oldValue, newValue) -> updateButtonDisableState();
+        feeFromFundingTxListener = (ov, oldValue, newValue) -> updateButtonDisableState();
         requestPlaceOfferSuccessListener = (ov, oldValue, newValue) -> {
             isPlaceOfferButtonVisible.set(!newValue);
             isPlaceOfferSpinnerVisible.set(false);
@@ -254,7 +256,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         dataModel.minAmountAsCoin.addListener(minAmountAsCoinListener);
         dataModel.priceAsFiat.addListener(priceAsFiatListener);
         dataModel.volumeAsFiat.addListener(volumeAsFiatListener);
-
+        dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
         dataModel.isWalletFunded.addListener(isWalletFundedListener);
         requestPlaceOfferSuccess.addListener(requestPlaceOfferSuccessListener);
         errorMessage.addListener(requestPlaceOfferErrorMessageListener);
@@ -273,6 +275,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         dataModel.priceAsFiat.removeListener(priceAsFiatListener);
         dataModel.volumeAsFiat.removeListener(volumeAsFiatListener);
 
+        dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
         dataModel.isWalletFunded.removeListener(isWalletFundedListener);
         requestPlaceOfferSuccess.removeListener(requestPlaceOfferSuccessListener);
         errorMessage.removeListener(requestPlaceOfferErrorMessageListener);
@@ -432,7 +435,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         return dataModel.getDisplaySecurityDepositInfo();
     }
 
-    boolean isSeller() {
+    boolean isSellOffer() {
         return dataModel.getDirection() == Offer.Direction.SELL;
     }
 
@@ -549,13 +552,15 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     private void updateButtonDisableState() {
+        log.debug("updateButtonDisableState");
         isPlaceOfferButtonDisabled.set(
                 !(isBtcInputValid(amount.get()).isValid &&
                         isBtcInputValid(minAmount.get()).isValid &&
                         isFiatInputValid(price.get()).isValid &&
                         isFiatInputValid(volume.get()).isValid &&
                         dataModel.isMinAmountLessOrEqualAmount() &&
-                        dataModel.isWalletFunded.get())
+                        dataModel.isWalletFunded.get() &&
+                        dataModel.isFeeFromFundingTxSufficient())
         );
     }
 

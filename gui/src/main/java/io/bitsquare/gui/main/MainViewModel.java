@@ -116,7 +116,7 @@ public class MainViewModel implements ViewModel {
     private final String btcNetworkAsString;
     final StringProperty p2PNetworkLabelId = new SimpleStringProperty("footer-pane");
 
-    private MonadicBinding<Boolean> allServicesDone;
+    private MonadicBinding<Boolean> allServicesDone, tradesAndUIReady;
     private final User user;
     private int numBTCPeers = 0;
     private Timer checkForBtcSyncStateTimer;
@@ -383,18 +383,13 @@ public class MainViewModel implements ViewModel {
             walletPasswordPopup.onAesKey(aesKey -> tradeWalletService.setAesKey(aesKey)).show();
         }
 
-        if (tradeManager.pendingTradesInitializedProperty().get() && isSplashScreenRemoved.get())
-            applyTradePeriodState();
-        else {
-            isSplashScreenRemoved.addListener((observable, oldValue, newValue) -> {
-                if (tradeManager.pendingTradesInitializedProperty().get() && isSplashScreenRemoved.get())
-                    applyTradePeriodState();
-            });
-            tradeManager.pendingTradesInitializedProperty().addListener((observable, oldValue, newValue) -> {
-                if (tradeManager.pendingTradesInitializedProperty().get() && isSplashScreenRemoved.get())
-                    applyTradePeriodState();
-            });
-        }
+        // We handle the trade period here as we display a global popup if we reached dispute time
+        tradesAndUIReady = EasyBind.combine(isSplashScreenRemoved, tradeManager.pendingTradesInitializedProperty(), (a, b) -> a && b);
+        tradesAndUIReady.subscribe((observable, oldValue, newValue) -> {
+            if (newValue)
+                applyTradePeriodState();
+        });
+
         walletService.addBalanceListener(new BalanceListener() {
             @Override
             public void onBalanceChanged(Coin balance) {
@@ -445,7 +440,7 @@ public class MainViewModel implements ViewModel {
                                             "when using Mainnet.")
                                     .headLine("Important information!")
                                     .actionButtonText("I understand and want to use Mainnet")
-                                    .closeButtonText("Use Testnet and restart")
+                                    .closeButtonText("Restart and use Testnet")
                                     .onClose(() -> {
                                         UserThread.execute(() -> preferences.setBitcoinNetwork(BitcoinNetwork.TESTNET));
                                         UserThread.runAfter(BitsquareApp.shutDownHandler::run, 300, TimeUnit.MILLISECONDS);
@@ -644,28 +639,40 @@ public class MainViewModel implements ViewModel {
     private void updateTradePeriodState() {
         tradeManager.getTrades().stream().forEach(trade -> {
             int bestChainHeight = tradeWalletService.getBestChainHeight();
-            if (trade.getCheckPaymentTimeAsBlockHeight() > 0 && bestChainHeight >= trade.getCheckPaymentTimeAsBlockHeight())
-                trade.setTradePeriodState(Trade.TradePeriodState.HALF_REACHED);
 
             if (trade.getOpenDisputeTimeAsBlockHeight() > 0 && bestChainHeight >= trade.getOpenDisputeTimeAsBlockHeight())
                 trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
+            else if (trade.getCheckPaymentTimeAsBlockHeight() > 0 && bestChainHeight >= trade.getCheckPaymentTimeAsBlockHeight())
+                trade.setTradePeriodState(Trade.TradePeriodState.HALF_REACHED);
 
+            String id;
+            String limitDate = formatter.addBlocksToNowDateFormatted(trade.getOpenDisputeTimeAsBlockHeight() - tradeWalletService.getBestChainHeight());
             switch (trade.getTradePeriodState()) {
                 case NORMAL:
                     break;
                 case HALF_REACHED:
-                    if (!trade.isHalfTradePeriodReachedWarningDisplayed()) {
+                    id = "displayHalfTradePeriodOver" + trade.getId();
+                    if (preferences.showAgain(id)) {
                         new Popup().warning("Your trade with ID " + trade.getShortId() +
                                 " has reached the half of the max. allowed trading period and " +
-                                "is still not completed.\nPlease check your trade state at \"Portfolio/Open trades\" for further information.").show();
-                        trade.setHalfTradePeriodReachedWarningDisplayed(true);
+                                "is still not completed.\n\n" +
+                                "The trade period ends on " + limitDate + "\n\n" +
+                                "Please check your trade state at \"Portfolio/Open trades\" for further information.")
+                                .onClose(() -> preferences.dontShowAgain(id))
+                                .show();
                     }
                     break;
                 case TRADE_PERIOD_OVER:
-                    if (!trade.isTradePeriodOverWarningDisplayed()) {
-                        new Popup().warning("Your trade with ID " + trade.getShortId() + " has reached the max. allowed trading period and is " +
-                                "not completed.\nPlease check your trade at \"Portfolio/Open trades\" for contacting the arbitrator.").show();
-                        trade.setTradePeriodOverWarningDisplayed(true);
+                    id = "displayTradePeriodOver" + trade.getId();
+                    if (preferences.showAgain(id)) {
+                        new Popup().warning("Your trade with ID " + trade.getShortId() +
+                                " has reached the max. allowed trading period and is " +
+                                "not completed.\n\n" +
+                                "The trade period ended on " + limitDate + "\n\n" +
+                                "Please check your trade at \"Portfolio/Open trades\" for contacting " +
+                                "the arbitrator.")
+                                .onClose(() -> preferences.dontShowAgain(id))
+                                .show();
                     }
                     break;
             }

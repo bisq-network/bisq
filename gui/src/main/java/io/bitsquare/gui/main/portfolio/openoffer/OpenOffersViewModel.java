@@ -58,7 +58,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     String getPrice(OpenOfferListItem item) {
-        return (item != null) ? formatter.formatFiat(item.getOffer().getPrice()) : "";
+        return (item != null) ? formatter.formatPriceWithCode(item.getOffer().getPrice()) : "";
     }
 
     String getVolume(OpenOfferListItem item) {

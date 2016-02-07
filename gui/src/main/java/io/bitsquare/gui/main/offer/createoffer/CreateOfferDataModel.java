@@ -23,7 +23,9 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.http.HttpException;
 import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.popups.WalletPasswordPopup;
@@ -48,6 +50,7 @@ import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -85,7 +88,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
     final BooleanProperty useMBTC = new SimpleBooleanProperty();
-    final BooleanProperty insufficientFee = new SimpleBooleanProperty();
+    final ObjectProperty<Coin> feeFromFundingTxProperty = new SimpleObjectProperty(Coin.NEGATIVE_SATOSHI);
 
     final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> minAmountAsCoin = new SimpleObjectProperty<>();
@@ -96,6 +99,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
 
     private PaymentAccount paymentAccount;
+    private int retryRequestFeeCounter = 0;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -159,15 +163,21 @@ class CreateOfferDataModel extends ActivatableDataModel {
         btcCode.unbind();
     }
 
+    boolean isFeeFromFundingTxSufficient() {
+        // if fee was never set because of api provider not available we check with default value and return true
+        log.debug("FeePolicy.getFeePerKb() " + FeePolicy.getFeePerKb());
+        log.debug("feeFromFundingTxProperty " + feeFromFundingTxProperty);
+        log.debug(">? " + (feeFromFundingTxProperty.get().compareTo(FeePolicy.getFeePerKb()) >= 0));
+        return feeFromFundingTxProperty.get().equals(Coin.NEGATIVE_SATOSHI) ||
+                feeFromFundingTxProperty.get().compareTo(FeePolicy.getFeePerKb()) >= 0;
+    }
+
     private void addListeners() {
         walletService.addBalanceListener(balanceListener);
         walletService.getWallet().addEventListener(new WalletEventListener() {
             @Override
             public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                walletService.requestTransactionFromBlockChain(tx, fee -> {
-                    if (fee == null || fee.compareTo(FeePolicy.getFeePerKb()) < 0)
-                        insufficientFee.set(true);
-                });
+                requestFee(tx.getHashAsString());
             }
 
             @Override
@@ -195,6 +205,20 @@ class CreateOfferDataModel extends ActivatableDataModel {
             }
         });
         user.getPaymentAccountsAsObservable().addListener(paymentAccountsChangeListener);
+    }
+
+    private void requestFee(String transactionId) {
+        try {
+            feeFromFundingTxProperty.set(preferences.getBlockchainApiProvider().getFee(transactionId));
+        } catch (IOException | HttpException e) {
+            log.warn("Could not get fee from block explorer" + e);
+            if (retryRequestFeeCounter < 3) {
+                retryRequestFeeCounter++;
+                log.warn("We try again after 5 seconds");
+                // TODO if we have more providers, try another one
+                UserThread.runAfter(() -> requestFee(transactionId), 5);
+            }
+        }
     }
 
 

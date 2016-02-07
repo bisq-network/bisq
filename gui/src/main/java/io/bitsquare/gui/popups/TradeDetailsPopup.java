@@ -95,7 +95,7 @@ public class TradeDetailsPopup extends Popup {
 
         int rows = 5;
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Trade");
-        addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionDescription(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
+        addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionBothSides(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
         addLabelTextField(gridPane, ++rowIndex, "Currency:", offer.getCurrencyCode());
         addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode());
         addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(trade.getTradeAmount()));

@@ -103,7 +103,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         paymentMethodComboBox.setConverter(new StringConverter<PaymentMethod>() {
             @Override
             public String toString(PaymentMethod paymentMethod) {
-                return paymentMethod.getId();
+                return BSResources.get(paymentMethod.getId());
             }
 
             @Override
@@ -189,7 +189,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     public void setDirection(Offer.Direction direction) {
-        offerBookTitle.setText(direction == Offer.Direction.SELL ? "Buy-bitcoin offers" : "Sell-bitcoin offers");
+        offerBookTitle.setText(direction == Offer.Direction.SELL ? "Offers for buying bitcoin " : "Offers for selling bitcoin ");
         model.setDirection(direction);
     }
 

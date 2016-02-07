@@ -130,7 +130,7 @@ public class OfferDetailsPopup extends Popup {
             rows++;
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Offer");
-        addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionDescription(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
+        addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getOfferDirection(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
         addLabelTextField(gridPane, ++rowIndex, "Currency:", offer.getCurrencyCode());
         addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode() + "/" + "BTC");
         if (takeOfferHandlerOptional.isPresent()) {

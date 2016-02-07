@@ -49,13 +49,11 @@ public class BlockChainForm extends PaymentMethodForm {
     private ComboBox<TradeCurrency> currencyComboBox;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(paymentAccountContractData.getPaymentMethodName()));
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Address:", ((BlockChainAccountContractData) paymentAccountContractData).getAddress());
         if (paymentAccountContractData instanceof BlockChainAccountContractData &&
                 ((BlockChainAccountContractData) paymentAccountContractData).getPaymentId() != null)
             addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Payment ID:", ((BlockChainAccountContractData) paymentAccountContractData).getPaymentId());
 
-        addAllowedPeriod(gridPane, ++gridRow, paymentAccountContractData);
         return gridRow;
     }
 
@@ -86,7 +84,7 @@ public class BlockChainForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (autoFillCheckBox != null && autoFillCheckBox.isSelected()) {
+        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
             String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
             String address = addressInputTextField.getText();
             address = StringUtils.abbreviate(address, 9);

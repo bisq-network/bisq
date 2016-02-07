@@ -31,7 +31,11 @@ bg color of non edit textFields: fafafa
 
     -fx-accent: #0f87c3;
     -bs-green: #00aa33;
+    -bs-green-soft: derive(-bs-green, 60%);
     -bs-error-red: #dd0000;
+    -bs-red-soft: derive(-bs-error-red, 60%);
+    -bs-orange: #dd8f05;
+
 
     -bs-blue-transparent: #0f87c344;
     -bs-green-transparent: #00aa3344;
@@ -146,7 +150,7 @@ bg color of non edit textFields: fafafa
 }
 
 .received-funds-icon {
-    -fx-text-fill: -bs-green;
+    -fx-text-fill: -bs-green-soft;
     -fx-cursor: hand;
 }
 
@@ -156,7 +160,7 @@ bg color of non edit textFields: fafafa
 }
 
 .sent-funds-icon {
-    -fx-text-fill: -bs-error-red;
+    -fx-text-fill: -bs-red-soft;
     -fx-cursor: hand;
 }
 
@@ -612,6 +616,65 @@ textfield */
     -fx-background-insets: 0 0 -1 0, 0, 1, 2;
     -fx-background-radius: 3px, 3px, 2px, 1px;
 }
+
+#open-support-button {
+    -fx-font-weight: bold;
+    -fx-font-size: 14;
+    -fx-base: -bs-orange;
+}
+
+#open-dispute-button {
+    -fx-font-weight: bold;
+    -fx-font-size: 14;
+    -fx-base: #dd0000;
+}
+
+#trade-notification-warning {
+    -fx-font-size: 14;
+    -fx-base: -bs-red-soft;
+}
+
+#trade-notification-information {
+    -fx-font-size: 14;
+    -fx-outer-border: linear-gradient(to bottom, #ffb34b, #ff9200);
+}
+
+#trade-notification-dispute {
+    -fx-font-size: 14;
+    -fx-base: -bs-error-red;
+}
+
+#trade-notification-support {
+    -fx-font-size: 14;
+    -fx-base: -bs-orange;
+}
+
+#support-info-label {
+    -fx-font-size: 14;
+    -fx-text-fill: -bs-red-soft;
+}
+
+#titled-group-bg-warn {
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, #F0F0F0);
+    -fx-outer-border: linear-gradient(to bottom, #ffb34b, #ff9200);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#titled-group-bg-label-warn {
+    -fx-font-weight: bold;
+    -fx-font-size: 14;
+    -fx-text-fill: #ff9200;
+    -fx-background-color: -bs-content-bg-grey;
+}
+
+
+
+
 
 /* TitledGroupBg */
 #titled-group-bg-label {

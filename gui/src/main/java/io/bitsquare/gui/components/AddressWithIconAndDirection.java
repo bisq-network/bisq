@@ -26,7 +26,6 @@ public class AddressWithIconAndDirection extends AnchorPane {
         directionIcon.setLayoutY(3);
         directionIcon.getStyleClass().add(received ? "received-funds-icon" : "sent-funds-icon");
         AwesomeDude.setIcon(directionIcon, received ? AwesomeIcon.SIGNIN : AwesomeIcon.SIGNOUT);
-        directionIcon.setOpacity(0.7);
         directionIcon.setMouseTransparent(true);
 
         HBox hBox = new HBox();
@@ -48,6 +47,7 @@ public class AddressWithIconAndDirection extends AnchorPane {
         openLinkIcon = new Label();
         openLinkIcon.setLayoutY(3);
         openLinkIcon.getStyleClass().add("external-link-icon");
+        openLinkIcon.setOpacity(0.7);
         AwesomeDude.setIcon(openLinkIcon, awesomeIcon);
 
         AnchorPane.setLeftAnchor(directionIcon, 3.0);

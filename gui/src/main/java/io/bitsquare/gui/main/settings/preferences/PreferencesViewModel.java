@@ -58,7 +58,7 @@ class PreferencesViewModel extends ActivatableViewModel {
 
     @Override
     protected void activate() {
-        transactionFeePerByte.set(String.valueOf(preferences.getTxFeePerKB() / 1024));
+        transactionFeePerByte.set(String.valueOf(preferences.getTxFeePerKB() / 1000));
     }
 
     @Override
@@ -108,12 +108,12 @@ class PreferencesViewModel extends ActivatableViewModel {
     public void onFocusOutTransactionFeeTextField(Boolean oldValue, Boolean newValue) {
         if (oldValue && !newValue) {
             try {
-                preferences.setTxFeePerKB(Long.parseLong(transactionFeePerByte.get()) * 1024);
+                preferences.setTxFeePerKB(Long.parseLong(transactionFeePerByte.get()) * 1000);
             } catch (Exception e) {
                 log.warn("Error at onFocusOutTransactionFeeTextField: " + e.getMessage());
                 new Popup().warning(e.getMessage())
                         .onClose(() -> UserThread.runAfter(
-                                () -> transactionFeePerByte.set(String.valueOf(preferences.getTxFeePerKB() / 1024)),
+                                () -> transactionFeePerByte.set(String.valueOf(preferences.getTxFeePerKB() / 1000)),
                                 100, TimeUnit.MILLISECONDS))
                         .show();
             }

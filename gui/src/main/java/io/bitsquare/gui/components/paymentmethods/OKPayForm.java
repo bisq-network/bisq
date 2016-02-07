@@ -49,9 +49,7 @@ public class OKPayForm extends PaymentMethodForm {
     private InputTextField accountNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(paymentAccountContractData.getPaymentMethodName()));
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account nr.:", ((OKPayAccountContractData) paymentAccountContractData).getAccountNr());
-        addAllowedPeriod(gridPane, ++gridRow, paymentAccountContractData);
         return gridRow;
     }
 
@@ -116,7 +114,7 @@ public class OKPayForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (autoFillCheckBox != null && autoFillCheckBox.isSelected()) {
+        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
             String accountNr = accountNrInputTextField.getText();
             accountNr = StringUtils.abbreviate(accountNr, 5);
             String method = BSResources.get(paymentAccount.getPaymentMethod().getId());

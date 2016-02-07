@@ -187,7 +187,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         GridPane.setMargin(table, new Insets(60, -10, 5, -10));
         root.getChildren().add(table);
 
-        autoSelectAllMatchingCheckBox = addCheckBox(root, ++gridRow, "Auto select all with matching language");
+        autoSelectAllMatchingCheckBox = addCheckBox(root, ++gridRow, "Auto select all arbitrators with matching language");
         GridPane.setColumnSpan(autoSelectAllMatchingCheckBox, 2);
         GridPane.setHalignment(autoSelectAllMatchingCheckBox, HPos.LEFT);
         GridPane.setColumnIndex(autoSelectAllMatchingCheckBox, 0);

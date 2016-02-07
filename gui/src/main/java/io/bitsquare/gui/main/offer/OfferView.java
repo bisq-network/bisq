@@ -150,7 +150,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             createOfferView = (CreateOfferView) view;
             createOfferView.initWithData(direction, tradeCurrency);
             createOfferPane = createOfferView.getRoot();
-            createOfferTab = new Tab("Create offer");
+            createOfferTab = new Tab(getCreateOfferTabName());
             // close handler from close on create offer action
             createOfferView.setCloseHandler(() -> tabPane.getTabs().remove(createOfferTab));
             createOfferTab.setContent(createOfferPane);
@@ -163,7 +163,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             takeOfferView = (TakeOfferView) view;
             takeOfferView.initWithData(offer);
             takeOfferPane = ((TakeOfferView) view).getRoot();
-            takeOfferTab = new Tab("Take offer");
+            takeOfferTab = new Tab(getTakeOfferTabName());
             // close handler from close on take offer action
             takeOfferView.setCloseHandler(() -> tabPane.getTabs().remove(takeOfferTab));
             takeOfferTab.setContent(takeOfferPane);
@@ -171,6 +171,10 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             tabPane.getSelectionModel().select(takeOfferTab);
         }
     }
+
+    protected abstract String getCreateOfferTabName();
+
+    protected abstract String getTakeOfferTabName();
 
 
     private void onCreateOfferViewRemoved() {

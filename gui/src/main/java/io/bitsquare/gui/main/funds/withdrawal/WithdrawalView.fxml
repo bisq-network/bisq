@@ -29,6 +29,7 @@
 
     <TableView fx:id="table" VBox.vgrow="ALWAYS">
         <columns>
+            <TableColumn text="Select" fx:id="selectColumn" minWidth="60" maxWidth="60" sortable="false"/>
             <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="170" maxWidth="170"/>
             <TableColumn text="Details" fx:id="detailsColumn" minWidth="160" maxWidth="160"/>
             <TableColumn text="Address" fx:id="addressColumn" minWidth="320" maxWidth="320">
@@ -37,7 +38,6 @@
                 </cellValueFactory>
             </TableColumn>
             <TableColumn text="Balance (BTC)" fx:id="balanceColumn" minWidth="110"/>
-            <TableColumn text="Selection" fx:id="selectColumn" minWidth="160" sortable="false"/>
         </columns>
     </TableView>
 
@@ -56,7 +56,8 @@
         <Label text="Withdraw to address:" GridPane.rowIndex="2"/>
         <TextField fx:id="withdrawToTextField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-        <Button fx:id="withdrawButton" text="Withdraw" defaultButton="true" onAction="#onWithdraw" GridPane.rowIndex="3"
+        <Button fx:id="withdrawButton" text="Withdraw selected" defaultButton="true" onAction="#onWithdraw"
+                GridPane.rowIndex="3"
                 GridPane.columnIndex="1"/>
 
         <columnConstraints>

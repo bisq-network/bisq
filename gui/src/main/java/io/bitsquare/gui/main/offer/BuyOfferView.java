@@ -30,5 +30,15 @@ public class BuyOfferView extends OfferView {
     public BuyOfferView(ViewLoader viewLoader, Navigation navigation) {
         super(viewLoader, navigation);
     }
+
+    @Override
+    protected String getCreateOfferTabName() {
+        return "Create offer for buying bitcoin";
+    }
+
+    @Override
+    protected String getTakeOfferTabName() {
+        return "Take offer for buying bitcoin";
+    }
 }
 

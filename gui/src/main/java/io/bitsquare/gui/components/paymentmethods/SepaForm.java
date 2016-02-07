@@ -58,12 +58,10 @@ public class SepaForm extends PaymentMethodForm {
     private final List<CheckBox> nonEuroCountryCheckBoxes = new ArrayList<>();
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(paymentAccountContractData.getPaymentMethodName()));
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name:", ((SepaAccountContractData) paymentAccountContractData).getHolderName());
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Country of bank:", CountryUtil.getNameByCode(paymentAccountContractData.getCountryCode()));
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "IBAN:", ((SepaAccountContractData) paymentAccountContractData).getIban());
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "BIC/SWIFT:", ((SepaAccountContractData) paymentAccountContractData).getBic());
-        addAllowedPeriod(gridPane, ++gridRow, paymentAccountContractData);
         return gridRow;
     }
 
@@ -218,7 +216,7 @@ public class SepaForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (autoFillCheckBox != null && autoFillCheckBox.isSelected()) {
+        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
             String iban = ibanInputTextField.getText();
             if (iban.length() > 5)
                 iban = StringUtils.abbreviate(iban, 5);

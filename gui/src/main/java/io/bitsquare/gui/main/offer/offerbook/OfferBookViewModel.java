@@ -52,7 +52,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final OfferBook offerBook;
     private final Preferences preferences;
     private final P2PService p2PService;
-    private final BSFormatter formatter;
+    final BSFormatter formatter;
 
     private final FilteredList<OfferBookListItem> filteredItems;
     private final SortedList<OfferBookListItem> sortedItems;

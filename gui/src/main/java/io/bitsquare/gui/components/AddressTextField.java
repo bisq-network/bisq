@@ -62,19 +62,19 @@ public class AddressTextField extends AnchorPane {
         textField.setId("address-text-field");
         textField.setEditable(false);
         textField.textProperty().bind(address);
-        Tooltip.install(textField, new Tooltip("Open your default bitcoin wallet with that address."));
-        textField.setOnMouseClicked(mouseEvent -> {
-            try {
-                Utilities.openURI(URI.create(getBitcoinURI()));
-            } catch (Exception e) {
-                log.warn(e.getMessage());
-                new Popup().warning("Opening a default bitcoin wallet application has failed. " +
-                        "Perhaps you don't have one installed?").show();
-            }
-        });
+        String tooltipText = "Open your default bitcoin wallet";
+        Tooltip.install(textField, new Tooltip(tooltipText));
+        textField.setOnMouseClicked(mouseEvent -> openExtWallet());
         textField.focusTraversableProperty().set(focusTraversableProperty().get());
         //TODO app wide focus
         //focusedProperty().addListener((ov, oldValue, newValue) -> textField.requestFocus());
+
+        Label extWalletIcon = new Label();
+        extWalletIcon.setLayoutY(3);
+        extWalletIcon.getStyleClass().add("copy-icon");
+        Tooltip.install(extWalletIcon, new Tooltip(tooltipText));
+        AwesomeDude.setIcon(extWalletIcon, AwesomeIcon.SIGNIN);
+        extWalletIcon.setOnMouseClicked(e -> openExtWallet());
 
         Label copyIcon = new Label();
         copyIcon.setLayoutY(3);
@@ -121,10 +121,21 @@ public class AddressTextField extends AnchorPane {
 
         AnchorPane.setRightAnchor(qrCode, 5.0);
         AnchorPane.setRightAnchor(copyIcon, 30.0);
-        AnchorPane.setRightAnchor(textField, 55.0);
+        AnchorPane.setRightAnchor(extWalletIcon, 55.0);
+        AnchorPane.setRightAnchor(textField, 77.0);
         AnchorPane.setLeftAnchor(textField, 0.0);
 
-        getChildren().addAll(textField, copyIcon, qrCode);
+        getChildren().addAll(textField, extWalletIcon, copyIcon, qrCode);
+    }
+
+    private void openExtWallet() {
+        try {
+            Utilities.openURI(URI.create(getBitcoinURI()));
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+            new Popup().warning("Opening a default bitcoin wallet application has failed. " +
+                    "Perhaps you don't have one installed?").show();
+        }
     }
 
 

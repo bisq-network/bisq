@@ -217,6 +217,10 @@ public class BSFormatter {
         }
     }
 
+    public String formatPriceWithCode(Fiat fiat) {
+        return formatFiatWithCode(fiat) + "/BTC";
+    }
+
     private Fiat parseToFiat(String input, String currencyCode) {
         if (input != null && input.length() > 0) {
             try {
@@ -264,7 +268,7 @@ public class BSFormatter {
 
 
     public String getDirection(Offer.Direction direction) {
-        return getDirection(direction, true);
+        return getDirection(direction, false) + " bitcoin";
     }
 
     private String getDirection(Offer.Direction direction, boolean allUpperCase) {
@@ -338,12 +342,45 @@ public class BSFormatter {
         return input;
     }
 
-    public String getDateFromBlocks(long blocks) {
+    public Date addBlocksToNowDate(long blocks) {
+        return new Date(new Date().getTime() + blocks * TimeUnit.MINUTES.toMillis(10));
+    }
+
+    public String addBlocksToNowDateFormatted(long blocks) {
         DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
         DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.SHORT, locale);
-        Date date = new Date(new Date().getTime() + blocks * TimeUnit.MINUTES.toMillis(10));
+        Date date = addBlocksToNowDate(blocks);
         return dateFormatter.format(date) + " " + timeFormatter.format(date);
     }
+
+    public String getPeriodBetweenBlockHeights(long startBlockHeight, long endBlockHeight) {
+        return getDaysHoursMinutes(addBlocksToNowDate(startBlockHeight), addBlocksToNowDate(endBlockHeight));
+    }
+
+    public String getDaysHoursMinutes(Date startDate, Date endDate) {
+        long different = endDate.getTime() - startDate.getTime();
+        long secondsInMilli = 1000;
+        long minutesInMilli = secondsInMilli * 60;
+        long hoursInMilli = minutesInMilli * 60;
+        long daysInMilli = hoursInMilli * 24;
+        long elapsedDays = different / daysInMilli;
+        different = different % daysInMilli;
+        long elapsedHours = different / hoursInMilli;
+        different = different % hoursInMilli;
+        long elapsedMinutes = different / minutesInMilli;
+        String dayString = elapsedDays == 1 ? "day" : "days";
+        String hourString = elapsedHours == 1 ? "hour" : "hours";
+        String minuteString = elapsedMinutes == 1 ? "minute" : "minutes";
+        if (elapsedDays > 0)
+            return elapsedDays + " " + dayString + ", " + elapsedHours + " " + hourString + " and " + elapsedMinutes + " " + minuteString;
+        else if (elapsedHours > 0)
+            return elapsedHours + " " + hourString + " and " + elapsedMinutes + " " + minuteString;
+        else if (elapsedMinutes > 0)
+            return elapsedMinutes + " " + minuteString;
+        else
+            return null;
+    }
+
 
     public String booleanToYesNo(boolean value) {
         return value ? "Yes" : "No";
@@ -362,8 +399,12 @@ public class BSFormatter {
         }
     }
 
-    public String getDirectionDescription(Offer.Direction direction) {
+    public String getDirectionBothSides(Offer.Direction direction) {
         return direction == Offer.Direction.BUY ? "Offerer as bitcoin buyer / Taker as bitcoin seller" : "Offerer as bitcoin seller / Taker as bitcoin buyer";
+    }
+
+    public String getOfferDirection(Offer.Direction direction) {
+        return direction == Offer.Direction.BUY ? "Offer for buying bitcoin" : "Offer for selling bitcoin";
     }
 
     public String getRole(boolean isBuyerOffererAndSellerTaker, boolean isOfferer) {

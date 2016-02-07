@@ -91,7 +91,6 @@ public class DebugView extends InitializableView {
                         SendPublishDepositTxRequest.class,
 
                         ProcessDepositTxPublishedMessage.class,
-                        AddDepositTxToWallet.class,
 
                         VerifyTakeOfferFeePayment.class,
                         SendFiatTransferStartedMessage.class,
@@ -169,7 +168,6 @@ public class DebugView extends InitializableView {
                         SendPublishDepositTxRequest.class,
 
                         ProcessDepositTxPublishedMessage.class,
-                        AddDepositTxToWallet.class,
 
                         ProcessFiatTransferStartedMessage.class,
 

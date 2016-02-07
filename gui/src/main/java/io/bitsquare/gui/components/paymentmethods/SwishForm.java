@@ -43,10 +43,8 @@ public class SwishForm extends PaymentMethodForm {
     private InputTextField mobileNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(paymentAccountContractData.getPaymentMethodName()));
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", ((SwishAccountContractData) paymentAccountContractData).getHolderName());
         addLabelTextField(gridPane, ++gridRow, "Mobile nr.:", ((SwishAccountContractData) paymentAccountContractData).getMobileNr());
-        addAllowedPeriod(gridPane, ++gridRow, paymentAccountContractData);
         return gridRow;
     }
 
@@ -81,7 +79,7 @@ public class SwishForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (autoFillCheckBox != null && autoFillCheckBox.isSelected()) {
+        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
             String mobileNr = mobileNrInputTextField.getText();
             mobileNr = StringUtils.abbreviate(mobileNr, 5);
             String method = BSResources.get(paymentAccount.getPaymentMethod().getId());

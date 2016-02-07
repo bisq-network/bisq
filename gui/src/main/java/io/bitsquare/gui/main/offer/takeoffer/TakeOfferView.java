@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.offer.takeoffer;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.Navigation;
@@ -56,6 +57,7 @@ import org.reactfx.util.FxTimer;
 
 import javax.inject.Inject;
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
@@ -74,7 +76,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private BalanceTextField balanceTextField;
     private ProgressIndicator takeOfferSpinner;
     private TitledGroupBg payFundsPane;
-    private Button showPaymentButton, takeOfferButton;
+    private Button nextButton, takeOfferButton, cancelButton1, cancelButton2;
     private InputTextField amountTextField;
     private TextField paymentMethodTextField, currencyTextField, priceTextField, volumeTextField, amountRangeTextField;
     private Label buyLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
@@ -347,8 +349,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             }
         }
 
-        showPaymentButton.setVisible(false);
+        nextButton.setVisible(false);
+        cancelButton1.setVisible(false);
+        cancelButton1.setOnAction(null);
         takeOfferButton.setVisible(true);
+        cancelButton2.setVisible(true);
 
         payFundsPane.setVisible(true);
         totalToPayLabel.setVisible(true);
@@ -458,10 +463,16 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         addAmountRangeBox();
 
-        showPaymentButton = addButton(gridPane, ++gridRow, BSResources.get("takeOffer.amountPriceBox.next"));
-        GridPane.setMargin(showPaymentButton, new Insets(-35, 0, 0, 0));
-        showPaymentButton.setId("show-details-button");
-        showPaymentButton.setOnAction(e -> onShowPayFundsScreen());
+        Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++gridRow, BSResources.get("takeOffer.amountPriceBox.next"), BSResources.get("shared.cancel"));
+        nextButton = tuple.first;
+        UserThread.runAfter(() -> nextButton.requestFocus(), 100, TimeUnit.MILLISECONDS);
+        cancelButton1 = tuple.second;
+        cancelButton1.setDefaultButton(false);
+        cancelButton1.setOnAction(e -> close());
+
+        GridPane.setMargin(nextButton, new Insets(-35, 0, 0, 0));
+        nextButton.setId("show-details-button");
+        nextButton.setOnAction(e -> onShowPayFundsScreen());
     }
 
     private void addFundingGroup() {
@@ -510,6 +521,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         takeOfferSpinnerInfoLabel = takeOfferTuple.third;
         takeOfferSpinnerInfoLabel.setText(BSResources.get("takeOffer.fundsBox.takeOfferSpinnerInfo"));
         takeOfferSpinnerInfoLabel.setVisible(false);
+
+        cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));
+        cancelButton2.setOnAction(e -> close());
+        cancelButton2.setDefaultButton(false);
+        cancelButton2.setVisible(false);
     }
 
     private void addAmountPriceFields() {

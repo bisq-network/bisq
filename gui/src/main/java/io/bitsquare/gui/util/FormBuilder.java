@@ -602,18 +602,25 @@ public class FormBuilder {
     // Button + Button
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Button, Button> add2ButtonsAfterGroup(GridPane gridPane,
+    public static Tuple2<Button, Button> add2Buttons(GridPane gridPane,
                                                                int rowIndex,
                                                                String title1,
                                                                String title2) {
-        return add2ButtonsAfterGroup(gridPane, rowIndex, title1, title2, 15);
+        return add2Buttons(gridPane, rowIndex, title1, title2, 0);
     }
 
     public static Tuple2<Button, Button> add2ButtonsAfterGroup(GridPane gridPane,
                                                                int rowIndex,
                                                                String title1,
-                                                               String title2,
-                                                               double top) {
+                                                               String title2) {
+        return add2Buttons(gridPane, rowIndex, title1, title2, 15);
+    }
+
+    public static Tuple2<Button, Button> add2Buttons(GridPane gridPane,
+                                                     int rowIndex,
+                                                     String title1,
+                                                     String title2,
+                                                     double top) {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         Button button1 = new Button(title1);

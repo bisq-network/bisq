@@ -48,7 +48,7 @@ public abstract class PaymentMethodForm {
 
     protected int gridRowFrom;
     protected InputTextField accountNameTextField;
-    protected CheckBox autoFillCheckBox;
+    protected CheckBox useCustomAccountNameCheckBox;
     private ComboBox<TradeCurrency> currencyComboBox;
 
     public PaymentMethodForm(PaymentAccount paymentAccount, InputValidator inputValidator, GridPane gridPane, int gridRow) {
@@ -80,7 +80,7 @@ public abstract class PaymentMethodForm {
     }
 
     protected void addAccountNameTextFieldWithAutoFillCheckBox() {
-        Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(gridPane, ++gridRow, "Account name:", "Auto-fill");
+        Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(gridPane, ++gridRow, "Account name:", "Use custom account name");
         accountNameTextField = tuple.second;
         accountNameTextField.setPrefWidth(250);
         accountNameTextField.setEditable(false);
@@ -89,23 +89,29 @@ public abstract class PaymentMethodForm {
             paymentAccount.setAccountName(newValue);
             updateAllInputsValid();
         });
-        autoFillCheckBox = tuple.third;
-        autoFillCheckBox.setSelected(true);
-        autoFillCheckBox.setOnAction(e -> {
-            accountNameTextField.setEditable(!autoFillCheckBox.isSelected());
+        useCustomAccountNameCheckBox = tuple.third;
+        useCustomAccountNameCheckBox.setSelected(false);
+        useCustomAccountNameCheckBox.setOnAction(e -> {
+            accountNameTextField.setEditable(useCustomAccountNameCheckBox.isSelected());
             autoFillNameTextField();
         });
     }
 
-    static void addAllowedPeriod(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
+    public static void addAllowedPeriod(GridPane gridPane, int gridRow,
+                                        PaymentAccountContractData paymentAccountContractData, String dateFromBlocks) {
         long hours = paymentAccountContractData.getMaxTradePeriod() / 6;
-        String displayText = hours + " hours";
+        String displayText;
+        if (hours == 1)
+            displayText = hours + " hour";
+        else
+            displayText = hours + " hours";
         if (hours == 24)
             displayText = "1 day";
         if (hours > 24)
             displayText = hours / 24 + " days";
 
-        addLabelTextField(gridPane, gridRow, "Max. allowed trade period:", displayText);
+
+        addLabelTextField(gridPane, gridRow, "Trade period/end date:", displayText + " / " + dateFromBlocks);
     }
 
     protected void addAllowedPeriod() {
@@ -118,9 +124,9 @@ public abstract class PaymentMethodForm {
         else if (hours > 24)
             displayText = hours / 24 + " days";
 
-        displayText += " (Max. permitted period until the trade needs to be completed)";
+        displayText += " (Max. permitted period until the trade has to be completed)";
 
-        addLabelTextField(gridPane, ++gridRow, "Max. permitted trade period:", displayText);
+        addLabelTextField(gridPane, ++gridRow, "Allowed trade period:", displayText);
     }
 
     abstract protected void autoFillNameTextField();

@@ -271,7 +271,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
 
-        Label titleLabel = new Label(direction.equals(Offer.Direction.BUY) ? "Buy-bitcoin offers (bid)" : "Sell-bitcoin offers (ask)");
+        Label titleLabel = new Label(direction.equals(Offer.Direction.BUY) ? "Offers for buying bitcoin  (bid)" : "Offers for selling bitcoin  (ask)");
         titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16; -fx-alignment: center");
         UserThread.execute(() -> titleLabel.prefWidthProperty().bind(tableView.widthProperty()));
 
@@ -297,10 +297,10 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis, "", ""));
 
         seriesBuy = new XYChart.Series();
-        seriesBuy.setName("Buy-bitcoin offers  ");
+        seriesBuy.setName("Offers for buying bitcoin   ");
 
         seriesSell = new XYChart.Series();
-        seriesSell.setName("Sell-bitcoin offers");
+        seriesSell.setName("Offers for selling bitcoin ");
 
         areaChart = new AreaChart<>(xAxis, yAxis);
         areaChart.setAnimated(false);

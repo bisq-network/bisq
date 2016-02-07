@@ -10,11 +10,12 @@
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
+    <logger name="io.bitsquare.storage.Storage" level="WARN"/>
+    <logger name="io.bitsquare.storage.FileManager" level="WARN"/>
 
     <!-- <logger name="io.bitsquare.p2p.peers.PeerGroup" level="TRACE"/>
     
-     <logger name="io.bitsquare.storage.Storage" level="WARN"/>
-    <logger name="io.bitsquare.storage.FileManager" level="WARN"/>
+    
 
      <logger name="io.bitsquare.p2p.P2PService" level="TRACE"/>
      <logger name="io.bitsquare.p2p.storage.ProtectedExpirableDataStorage" level="TRACE"/>
