@@ -24,9 +24,15 @@ import io.bitsquare.gui.main.account.arbitratorregistration.ArbitratorRegistrati
 import io.bitsquare.gui.main.account.content.paymentsaccount.PaymentAccountView;
 import io.bitsquare.gui.main.account.settings.AccountSettingsView;
 import javafx.beans.value.ChangeListener;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 
 import javax.inject.Inject;
 
@@ -34,17 +40,21 @@ import javax.inject.Inject;
 public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
     @FXML
-    Tab accountSettingsTab, arbitratorRegistrationTab;
+    Tab accountSettingsTab;
+
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private View accountSetupWizardView;
-    private Tab tab;
+    private Tab selectedTab;
+    Tab arbitratorRegistrationTab;
     private ArbitratorRegistrationView arbitratorRegistrationView;
     private AccountSettingsView accountSettingsView;
+    private Scene scene;
+    private EventHandler<KeyEvent> keyEventEventHandler;
+
 
     @Inject
     private AccountView(AccountViewModel model, CachingViewLoader viewLoader, Navigation navigation) {
@@ -55,9 +65,23 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
     @Override
     public void initialize() {
+
         navigationListener = viewPath -> {
-            if (viewPath.size() == 3 && viewPath.indexOf(AccountView.class) == 1)
-                loadView(viewPath.tip());
+            if (viewPath.size() == 3 && viewPath.indexOf(AccountView.class) == 1) {
+                if (arbitratorRegistrationTab == null && viewPath.get(2).equals(ArbitratorRegistrationView.class))
+                    navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, PaymentAccountView.class);
+                else
+                    loadView(viewPath.tip());
+            }
+        };
+
+        keyEventEventHandler = event -> {
+            if (new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN).match(event) &&
+                    arbitratorRegistrationTab == null) {
+                arbitratorRegistrationTab = new Tab("Arbitrator registration");
+                arbitratorRegistrationTab.setClosable(false);
+                root.getTabs().add(arbitratorRegistrationTab);
+            }
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
@@ -67,8 +91,10 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
                     navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, PaymentAccountView.class);
                 else
                     navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, selectedViewClass);
-            } else {
+            } else if (arbitratorRegistrationTab != null) {
                 navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
+            } else {
+                navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class);
             }
         };
     }
@@ -77,17 +103,17 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
     protected void activate() {
         navigation.addListener(navigationListener);
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
+        scene = root.getScene();
+        if (scene != null)
+            scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
 
         if (navigation.getCurrentPath().size() == 2 && navigation.getCurrentPath().get(1) == AccountView.class) {
-           /* if (model.getNeedRegistration()) {
-                navigation.navigateTo(MainView.class, AccountView.class, AccountSetupWizard.class);
-            }
-            else {*/
             if (root.getSelectionModel().getSelectedItem() == accountSettingsTab)
                 navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class);
-            else
+            else if (arbitratorRegistrationTab != null)
                 navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
-            // }
+            else
+                navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class);
         }
     }
 
@@ -96,36 +122,33 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         navigation.removeListener(navigationListener);
         root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
 
-       /* if (accountSetupWizardView != null)
-            tab.setContent(null);*/
+        if (scene != null)
+            scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
     private void loadView(Class<? extends View> viewClass) {
         View view = viewLoader.load(viewClass);
 
         if (view instanceof AccountSettingsView) {
-            tab = accountSettingsTab;
+            selectedTab = accountSettingsTab;
             accountSettingsView = (AccountSettingsView) view;
-            tab.setText("Account settings");
-            arbitratorRegistrationTab.setDisable(false);
-            if (arbitratorRegistrationView != null)
-                arbitratorRegistrationView.onTabSelection(false);
-        }
-       /* else if (view instanceof AccountSetupWizard) {
-            tab = accountSettingsTab;
-            tab.setText("Account setup");
-            arbitratorRegistrationTab.setDisable(true);
-            accountSetupWizardView = view;
-        }*/
-        else if (view instanceof ArbitratorRegistrationView) {
-            tab = arbitratorRegistrationTab;
-            arbitratorRegistrationView = (ArbitratorRegistrationView) view;
-            arbitratorRegistrationView.onTabSelection(true);
+            selectedTab.setText("Account settings");
+            if (arbitratorRegistrationTab != null) {
+                arbitratorRegistrationTab.setDisable(false);
+                if (arbitratorRegistrationView != null)
+                    arbitratorRegistrationView.onTabSelection(false);
+            }
+        } else if (view instanceof ArbitratorRegistrationView) {
+            if (arbitratorRegistrationTab != null) {
+                selectedTab = arbitratorRegistrationTab;
+                arbitratorRegistrationView = (ArbitratorRegistrationView) view;
+                arbitratorRegistrationView.onTabSelection(true);
+            }
         } else {
             throw new IllegalArgumentException("View not supported: " + view);
         }
 
-        tab.setContent(view.getRoot());
-        root.getSelectionModel().select(tab);
+        selectedTab.setContent(view.getRoot());
+        root.getSelectionModel().select(selectedTab);
     }
 }
