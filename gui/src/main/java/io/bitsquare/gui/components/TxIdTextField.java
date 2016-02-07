@@ -52,6 +52,7 @@ public class TxIdTextField extends AnchorPane {
     private final Tooltip progressIndicatorTooltip;
     private final ConfidenceProgressIndicator progressIndicator;
     private final Label copyIcon;
+    private final Label blockExplorerIcon;
     private TxConfidenceListener txConfidenceListener;
 
 
@@ -78,19 +79,22 @@ public class TxIdTextField extends AnchorPane {
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         AnchorPane.setRightAnchor(copyIcon, 30.0);
 
+        blockExplorerIcon = new Label();
+        blockExplorerIcon.getStyleClass().add("external-link-icon");
+        AwesomeDude.setIcon(blockExplorerIcon, AwesomeIcon.EXTERNAL_LINK);
+        blockExplorerIcon.setMinWidth(20);
+        AnchorPane.setRightAnchor(blockExplorerIcon, 52.0);
+        AnchorPane.setTopAnchor(blockExplorerIcon, 4.0);
+
         textField = new TextField();
         textField.setId("address-text-field");
         textField.setEditable(false);
         Tooltip.install(textField, new Tooltip("Open a blockchain explorer with that transactions ID"));
-        AnchorPane.setRightAnchor(textField, 55.0);
+        AnchorPane.setRightAnchor(textField, 80.0);
         AnchorPane.setLeftAnchor(textField, 0.0);
         textField.focusTraversableProperty().set(focusTraversableProperty().get());
-        //TODO app wide focus
-        //focusedProperty().addListener((ov, oldValue, newValue) -> textField.requestFocus());
-
-        getChildren().addAll(textField, copyIcon, progressIndicator);
+        getChildren().addAll(textField, copyIcon, blockExplorerIcon, progressIndicator);
     }
-
 
     public void setup(String txID) {
         if (txConfidenceListener != null)
@@ -106,34 +110,35 @@ public class TxIdTextField extends AnchorPane {
         updateConfidence(walletService.getConfidenceForTxId(txID));
 
         textField.setText(txID);
-        textField.setOnMouseClicked(mouseEvent -> {
-            try {
-                if (preferences != null)
-                    Utilities.openWebPage(preferences.getBlockChainExplorer().txUrl + txID);
-            } catch (Exception e) {
-                log.error(e.getMessage());
-                new Popup().warning("Opening browser failed. Please check your internet " +
-                        "connection.").show();
-            }
-        });
-
+        textField.setOnMouseClicked(mouseEvent -> openBlockExplorer(txID));
+        blockExplorerIcon.setOnMouseClicked(mouseEvent -> openBlockExplorer(txID));
         copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(txID));
     }
 
     public void cleanup() {
         if (walletService != null && txConfidenceListener != null)
             walletService.removeTxConfidenceListener(txConfidenceListener);
+
+        textField.setOnMouseClicked(null);
+        blockExplorerIcon.setOnMouseClicked(null);
+        copyIcon.setOnMouseClicked(null);
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters/Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void openBlockExplorer(String txID) {
+        try {
+            if (preferences != null)
+                Utilities.openWebPage(preferences.getBlockChainExplorer().txUrl + txID);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            new Popup().warning("Opening browser failed. Please check your internet " +
+                    "connection.").show();
+        }
+    }
 
     private void updateConfidence(TransactionConfidence confidence) {
         if (confidence != null) {
