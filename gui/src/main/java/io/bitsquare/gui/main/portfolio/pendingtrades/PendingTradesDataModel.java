@@ -49,7 +49,6 @@ import javafx.collections.ObservableList;
 import org.bitcoinj.core.BlockChainListener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionOutput;
 import org.spongycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
@@ -211,6 +210,19 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     Coin valueSentFromMe = transaction.getValueSentFromMe(walletService.getWallet());
                     if (!valueSentFromMe.isZero()) {
                         // spending tx
+                        // MS tx
+                        candidates.addAll(transaction.getOutputs().stream()
+                                .filter(transactionOutput -> !transactionOutput.isMine(walletService.getWallet()))
+                                .filter(transactionOutput -> transactionOutput.getScriptPubKey().isPayToScriptHash())
+                                .map(transactionOutput -> transaction)
+                                .collect(Collectors.toList()));
+                    }
+                });
+
+                /*transactions.stream().forEach(transaction -> {
+                    Coin valueSentFromMe = transaction.getValueSentFromMe(walletService.getWallet());
+                    if (!valueSentFromMe.isZero()) {
+                        // spending tx
                         for (TransactionOutput transactionOutput : transaction.getOutputs()) {
                             if (!transactionOutput.isMine(walletService.getWallet())) {
                                 if (transactionOutput.getScriptPubKey().isPayToScriptHash()) {
@@ -220,15 +232,13 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                             }
                         }
                     }
-                });
+                });*/
 
                 if (candidates.size() == 1)
                     doOpenDispute(isSupportTicket, candidates.get(0));
                 else if (candidates.size() > 1)
                     new SelectDepositTxPopup().transactions(candidates)
-                            .onSelect(transaction -> {
-                                doOpenDispute(isSupportTicket, transaction);
-                            })
+                            .onSelect(transaction -> doOpenDispute(isSupportTicket, transaction))
                             .closeButtonText("Cancel")
                             .show();
                 else
@@ -365,7 +375,10 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     public PaymentAccountContractData getSellersPaymentAccountContractData() {
-        return trade.getContract().getSellerPaymentAccountContractData();
+        if (trade.getContract() != null)
+            return trade.getContract().getSellerPaymentAccountContractData();
+        else
+            return null;
     }
 
     public String getReference() {

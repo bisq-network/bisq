@@ -15,13 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.portfolio.pendingtrades.steps;
+package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
+import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.util.Layout;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;
@@ -30,7 +31,7 @@ import javafx.scene.control.TextField;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
-public class CompletedView extends TradeStepDetailsView {
+public class BuyerStep5View extends TradeStepView {
     private final ChangeListener<Boolean> focusedPropertyListener;
 
     private Label btcTradeAmountLabel;
@@ -48,7 +49,7 @@ public class CompletedView extends TradeStepDetailsView {
     // Constructor, Initialisation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletedView(PendingTradesViewModel model) {
+    public BuyerStep5View(PendingTradesViewModel model) {
         super(model);
 
         focusedPropertyListener = (ov, oldValue, newValue) -> {
@@ -87,12 +88,12 @@ public class CompletedView extends TradeStepDetailsView {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Build view
+    // Content
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void buildGridEntries() {
-        addTitledGroupBg(gridPane, gridRow, 4, "Summary", 0);
+    protected void addContent() {
+        addTitledGroupBg(gridPane, gridRow, 4, "Summary of completed trade ", 0);
         Tuple2<Label, TextField> btcTradeAmountPair = addLabelTextField(gridPane, gridRow, "You have bought:", "", Layout.FIRST_ROW_DISTANCE);
         btcTradeAmountLabel = btcTradeAmountPair.first;
         btcTradeAmountTextField = btcTradeAmountPair.second;
@@ -119,6 +120,21 @@ public class CompletedView extends TradeStepDetailsView {
         if (BitsquareApp.DEV_MODE)
             withdrawAddressTextField.setText("mxAkWWaQBqwqcYstKzqLku3kzR6pbu2zHq");
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Warning
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected String getWarningText() {
+        setInformationState();
+        return "The trade took a bit longer as expected but has been completed successfully in the allowed trade period.";
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setters
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setBtcTradeAmountLabelText(String text) {
         btcTradeAmountLabel.setText(text);

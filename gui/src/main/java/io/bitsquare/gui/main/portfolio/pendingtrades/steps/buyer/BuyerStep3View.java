@@ -1,0 +1,87 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
+
+import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
+import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
+import io.bitsquare.locale.BSResources;
+
+public class BuyerStep3View extends TradeStepView {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, Initialisation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public BuyerStep3View(PendingTradesViewModel model) {
+        super(model);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Info
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected String getInfoBlockTitle() {
+        return "Wait for seller's payment confirmation";
+    }
+
+    @Override
+    protected String getInfoText() {
+        return BSResources.get("Waiting for the bitcoin seller's confirmation " +
+                        "for the receipt of the {0} payment.",
+                model.getCurrencyCode());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Warning
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected String getWarningText() {
+        setInformationState();
+        String substitute = model.isBlockChainMethod() ?
+                "on the " + model.getCurrencyCode() + "blockchain" :
+                "at your payment provider (e.g. bank)";
+        return "The seller still has not confirmed your payment!\n" +
+                "Please check " + substitute + " if the payment sending was successful.\n" +
+                "If the seller does not confirm the receipt of your payment until " +
+                model.getOpenDisputeTimeAsFormattedDate() +
+                " the trade will be investigated by the arbitrator.";
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Dispute
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected String getOpenForDisputeText() {
+        return "The seller has not confirmed your payment!\n" +
+                "The max. period for the trade has elapsed (" +
+                model.getOpenDisputeTimeAsFormattedDate() +
+                ") and you need to contact now the arbitrator to investigate the problem.";
+    }
+
+    @Override
+    protected void applyOnDisputeOpened() {
+    }
+}
+
+

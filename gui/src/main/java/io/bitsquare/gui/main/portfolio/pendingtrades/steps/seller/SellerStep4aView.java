@@ -15,34 +15,19 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.portfolio.pendingtrades.steps;
+package io.bitsquare.gui.main.portfolio.pendingtrades.steps.seller;
 
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
+import io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer.BuyerStep4View;
 
-public class WaitPaymentStartedView extends WaitTxInBlockchainView {
-    public WaitPaymentStartedView(PendingTradesViewModel model) {
+public class SellerStep4aView extends BuyerStep4View {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, Initialisation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public SellerStep4aView(PendingTradesViewModel model) {
         super(model);
-    }
-
-    @Override
-    public void doActivate() {
-        super.doActivate();
-    }
-
-    @Override
-    protected void displayRequestCheckPayment() {
-        // does not make sense to warn here
-    }
-
-    @Override
-    protected void displayOpenForDisputeForm() {
-        addDisputeInfoLabel();
-        infoLabel.setText("The buyer has not started his payment!\n" +
-                "The max. period for the trade has elapsed (" +
-                model.getDateFromBlocks(openDisputeTimeInBlocks) + ")." +
-                "\nPlease contact the arbitrator for opening a dispute.");
-
-        addOpenDisputeButton();
     }
 }
 

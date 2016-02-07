@@ -22,8 +22,6 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
-import java.util.Date;
-
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.
  */
@@ -31,39 +29,20 @@ public class PendingTradesListItem {
 
     private final Trade trade;
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     public PendingTradesListItem(Trade trade) {
         this.trade = trade;
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Trade getTrade() {
         return trade;
     }
 
     public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
-        if (trade instanceof Trade)
-            return trade.tradeAmountProperty();
-        else
-            return trade.tradeAmountProperty();
+        return trade.tradeAmountProperty();
     }
 
     public ReadOnlyObjectProperty<Fiat> tradeVolumeProperty() {
-        if (trade instanceof Trade)
-            return trade.tradeVolumeProperty();
-        else
-            return trade.tradeVolumeProperty();
-    }
-
-    public Date getDate() {
-        return trade.getDate();
+        return trade.tradeVolumeProperty();
     }
 
     public String getId() {

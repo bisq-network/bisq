@@ -18,7 +18,7 @@
   -->
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.cell.*?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.VBox?>
 <VBox fx:id="root" fx:controller="io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView"
@@ -34,11 +34,7 @@
                     <PropertyValueFactory property="id"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="130">
-                <cellValueFactory>
-                    <PropertyValueFactory property="date"/>
-                </cellValueFactory>
-            </TableColumn>
+            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="130"/>
             <TableColumn text="Trade amount in BTC" fx:id="tradeAmountColumn" minWidth="130">
                 <cellValueFactory>
                     <PropertyValueFactory property="tradeAmount"/>

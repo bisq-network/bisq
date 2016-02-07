@@ -167,7 +167,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return sellerState;
     }
 
-    public ReadOnlyStringProperty getTxId() {
+    public ReadOnlyStringProperty txIdProperty() {
         return txId;
     }
 
@@ -244,6 +244,32 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return formatter.formatFiatWithCode(value);
     }
 
+    public String getRemainingTime() {
+        return formatter.getPeriodBetweenBlockHeights(getBestChainHeight(),
+                dataModel.getTrade().getOpenDisputeTimeAsBlockHeight());
+    }
+
+    public double getRemainingTimeAsPercentage() {
+        double remainingBlocks = dataModel.getTrade().getOpenDisputeTimeAsBlockHeight() - getBestChainHeight();
+        double maxPeriod = dataModel.getTrade().getOffer().getPaymentMethod().getMaxTradePeriod();
+        if (maxPeriod != 0)
+            return 1 - remainingBlocks / maxPeriod;
+        else
+            return 0;
+    }
+
+    String getDate(PendingTradesListItem item) {
+        return formatter.formatDateTime(item.getTrade().getDate());
+    }
+
+    public boolean showWarning(Trade trade) {
+        return getBestChainHeight() >= trade.getCheckPaymentTimeAsBlockHeight();
+    }
+
+    public boolean showDispute(Trade trade) {
+        return getBestChainHeight() >= trade.getOpenDisputeTimeAsBlockHeight();
+    }
+
     String getMyRole(PendingTradesListItem item) {
         Trade trade = item.getTrade();
         Contract contract = trade.getContract();
@@ -288,7 +314,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return dataModel.getCheckPaymentTimeAsBlockHeight();
     }
 
-    public long getOpenDisputeTimeAsBlockHeight() {
+    private long getOpenDisputeTimeAsBlockHeight() {
         return dataModel.getOpenDisputeTimeAsBlockHeight();
     }
 
@@ -297,8 +323,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return dataModel.getBestChainHeight();
     }
 
-    public String getDateFromBlocks(long missingBlocks) {
-        return formatter.getDateFromBlocks(missingBlocks);
+    public String getOpenDisputeTimeAsFormattedDate() {
+        return formatter.addBlocksToNowDateFormatted(getOpenDisputeTimeAsBlockHeight() - getBestChainHeight());
     }
 
     public String getReference() {

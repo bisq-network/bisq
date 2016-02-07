@@ -17,16 +17,16 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
-import io.bitsquare.gui.main.portfolio.pendingtrades.steps.*;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeWizardItem;
+import io.bitsquare.gui.main.portfolio.pendingtrades.steps.seller.*;
 import javafx.beans.value.ChangeListener;
 
 public class SellerSubView extends TradeSubView {
-    private TradeWizardItem waitTxInBlockchain;
-    private TradeWizardItem waitPaymentStarted;
-    private TradeWizardItem confirmPaymentReceived;
-    private TradeWizardItem waitPayoutUnlock;
-    private TradeWizardItem completed;
+    private TradeWizardItem step1;
+    private TradeWizardItem step2;
+    private TradeWizardItem step3;
+    private TradeWizardItem step4;
+    private TradeWizardItem step5;
 
     private final ChangeListener<PendingTradesViewModel.SellerState> stateChangeListener;
 
@@ -55,16 +55,16 @@ public class SellerSubView extends TradeSubView {
 
     @Override
     protected void addWizards() {
-        waitTxInBlockchain = new TradeWizardItem(WaitTxInBlockchainView.class, "Wait for blockchain confirmation");
-        waitPaymentStarted = new TradeWizardItem(WaitPaymentStartedView.class, "Wait until payment has started");
-        confirmPaymentReceived = new TradeWizardItem(ConfirmPaymentReceivedView.class, "Confirm payment received");
-        waitPayoutUnlock = new TradeWizardItem(WaitPayoutLockTimeView.class, "Wait for payout unlock");
-        completed = new TradeWizardItem(CompletedView.class, "Completed");
+        step1 = new TradeWizardItem(SellerStep1View.class, "Wait for blockchain confirmation");
+        step2 = new TradeWizardItem(SellerStep2View.class, "Wait until payment has started");
+        step3 = new TradeWizardItem(SellerStep3View.class, "Confirm payment received");
+        step4 = new TradeWizardItem(SellerStep4aView.class, "Wait for payout unlock");
+        step5 = new TradeWizardItem(SellerStep5View.class, "Completed");
 
         if (model.getLockTime() > 0)
-            leftVBox.getChildren().setAll(waitTxInBlockchain, waitPaymentStarted, confirmPaymentReceived, waitPayoutUnlock, completed);
+            leftVBox.getChildren().setAll(step1, step2, step3, step4, step5);
         else
-            leftVBox.getChildren().setAll(waitTxInBlockchain, waitPaymentStarted, confirmPaymentReceived, completed);
+            leftVBox.getChildren().setAll(step1, step2, step3, step5);
     }
 
 
@@ -75,14 +75,14 @@ public class SellerSubView extends TradeSubView {
     private void applyState(PendingTradesViewModel.SellerState viewState) {
         log.debug("applyState " + viewState);
 
-        waitTxInBlockchain.setDisabled();
-        waitPaymentStarted.setDisabled();
-        confirmPaymentReceived.setDisabled();
-        waitPayoutUnlock.setDisabled();
-        completed.setDisabled();
+        step1.setDisabled();
+        step2.setDisabled();
+        step3.setDisabled();
+        step4.setDisabled();
+        step5.setDisabled();
 
-        if (tradeStepDetailsView != null)
-            tradeStepDetailsView.doDeactivate();
+        if (tradeStepView != null)
+            tradeStepView.doDeactivate();
 
         switch (viewState) {
             case UNDEFINED:
@@ -90,83 +90,57 @@ public class SellerSubView extends TradeSubView {
                 leftVBox.getChildren().clear();
                 break;
             case WAIT_FOR_BLOCKCHAIN_CONFIRMATION:
-                showItem(waitTxInBlockchain);
-
-                ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText("Deposit transaction has been published. " +
-                        "The bitcoin buyer need to wait for at least one blockchain confirmation.");
+                showItem(step1);
                 break;
             case WAIT_FOR_FIAT_PAYMENT_STARTED:
-                waitTxInBlockchain.setCompleted();
-                showItem(waitPaymentStarted);
-
-                ((WaitTxInBlockchainView) tradeStepDetailsView).setInfoLabelText(BSResources.get("Deposit transaction has at least one blockchain " +
-                                "confirmation. " +
-                                "Waiting that the bitcoin buyer starts the {0} payment.",
-                        model.getCurrencyCode()));
+                step1.setCompleted();
+                showItem(step2);
                 break;
             case REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED:
-                waitTxInBlockchain.setCompleted();
-                waitPaymentStarted.setCompleted();
-                showItem(confirmPaymentReceived);
-
-                if (model.isBlockChainMethod()) {
-                    ((ConfirmPaymentReceivedView) tradeStepDetailsView).setInfoLabelText(BSResources.get("The bitcoin buyer has started the {0} payment. " +
-                                    "Check your Altcoin wallet or Block explorer and confirm when you have received the payment.",
-                            model.getCurrencyCode()));
-                } else {
-                    ((ConfirmPaymentReceivedView) tradeStepDetailsView).setInfoLabelText(BSResources.get("The bitcoin buyer has started the {0} payment. " +
-                                    "Check your payment account and confirm when you have received the payment.",
-                            model.getCurrencyCode()));
-                }
-
+                step1.setCompleted();
+                step2.setCompleted();
+                showItem(step3);
                 break;
             case WAIT_FOR_PAYOUT_TX:
-                waitTxInBlockchain.setCompleted();
-                waitPaymentStarted.setCompleted();
-                confirmPaymentReceived.setCompleted();
-                showItem(waitPayoutUnlock);
+                step1.setCompleted();
+                step2.setCompleted();
+                step3.setCompleted();
+                showItem(step4);
 
                 // We don't use a wizard for that step as it only gets displayed in case the other peer is offline
-                tradeStepDetailsView = new WaitPayoutFinalizedView(model);
-                contentPane.getChildren().setAll(tradeStepDetailsView);
-
-                ((WaitPayoutFinalizedView) tradeStepDetailsView).setInfoLabelText("We requested the trading peer to sign and finalize the payout " +
-                        "transaction.\n" +
-                        "It might be that the other peer is offline, so we need to wait until he finalize the transaction when he goes online again.");
+                tradeStepView = new SellerStep4bView(model);
+                contentPane.getChildren().setAll(tradeStepView);
                 break;
             case WAIT_FOR_UNLOCK_PAYOUT:
-                waitTxInBlockchain.setCompleted();
-                waitPaymentStarted.setCompleted();
-                confirmPaymentReceived.setCompleted();
-                showItem(waitPayoutUnlock);
-
-                ((WaitPayoutLockTimeView) tradeStepDetailsView).setInfoLabelText("The payout transaction is signed and finalized by both parties." +
-                        "\nFor reducing bank charge back risks you need to wait until the payout gets unlocked to transfer your bitcoin.");
+                step1.setCompleted();
+                step2.setCompleted();
+                step3.setCompleted();
+                showItem(step4);
                 break;
             case REQUEST_WITHDRAWAL:
-                waitTxInBlockchain.setCompleted();
-                waitPaymentStarted.setCompleted();
-                confirmPaymentReceived.setCompleted();
-                waitPayoutUnlock.setCompleted();
-                showItem(completed);
+                step1.setCompleted();
+                step2.setCompleted();
+                step3.setCompleted();
+                step4.setCompleted();
+                showItem(step5);
 
-                CompletedView completedView = (CompletedView) tradeStepDetailsView;
-                completedView.setBtcTradeAmountLabelText("You have sold:");
-                completedView.setFiatTradeAmountLabelText("You have received:");
-                completedView.setBtcTradeAmountTextFieldText(model.getTradeVolume());
-                completedView.setFiatTradeAmountTextFieldText(model.getFiatVolume());
-                completedView.setFeesTextFieldText(model.getTotalFees());
-                completedView.setSecurityDepositTextFieldText(model.getSecurityDeposit());
+                SellerStep5View sellerStep5View = (SellerStep5View) tradeStepView;
+                sellerStep5View.setBtcTradeAmountLabelText("You have sold:");
+                sellerStep5View.setFiatTradeAmountLabelText("You have received:");
+                sellerStep5View.setBtcTradeAmountTextFieldText(model.getTradeVolume());
+                sellerStep5View.setFiatTradeAmountTextFieldText(model.getFiatVolume());
+                sellerStep5View.setFeesTextFieldText(model.getTotalFees());
+                sellerStep5View.setSecurityDepositTextFieldText(model.getSecurityDeposit());
 
-                completedView.setWithdrawAmountTextFieldText(model.getPayoutAmount());
+                sellerStep5View.setWithdrawAmountTextFieldText(model.getPayoutAmount());
                 break;
             default:
                 log.warn("unhandled viewState " + viewState);
                 break;
         }
 
-        if (tradeStepDetailsView != null)
-            tradeStepDetailsView.doActivate();
+        if (tradeStepView != null)
+            tradeStepView.doActivate();
     }
 }
 

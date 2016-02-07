@@ -45,7 +45,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
-import java.util.Date;
 
 @FxmlView
 public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTradesViewModel> {
@@ -54,13 +53,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @FXML
     TableView<PendingTradesListItem> table;
     @FXML
-    TableColumn<PendingTradesListItem, Fiat> priceColumn;
+    TableColumn<PendingTradesListItem, Fiat> priceColumn, tradeVolumeColumn;
     @FXML
-    TableColumn<PendingTradesListItem, Fiat> tradeVolumeColumn;
-    @FXML
-    TableColumn<PendingTradesListItem, PendingTradesListItem> roleColumn, paymentMethodColumn, idColumn;
-    @FXML
-    TableColumn<PendingTradesListItem, Date> dateColumn;
+    TableColumn<PendingTradesListItem, PendingTradesListItem> roleColumn, paymentMethodColumn, idColumn, dateColumn;
     @FXML
     TableColumn<PendingTradesListItem, Coin> tradeAmountColumn;
 
@@ -119,31 +114,35 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         currentTradeChangeListener = (observable, oldValue, newValue) -> {
             log.debug("currentTradeChangeListener {} ", newValue);
-            setNewSubView(newValue);
+            // setNewSubView(newValue);
         };
 
         // we use a hidden emergency shortcut to open support ticket
         keyEventEventHandler = event -> {
             if (new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN).match(event))
-                new OpenEmergencyTicketPopup().onOpenTicket(() -> model.dataModel.onOpenSupportTicket()).show();
+                new OpenEmergencyTicketPopup().onOpenTicket(model.dataModel::onOpenSupportTicket).show();
         };
     }
 
     @Override
     protected void activate() {
         scene = root.getScene();
-        appFocusProperty = scene.getWindow().focusedProperty();
+        if (scene != null) {
+            appFocusProperty = scene.getWindow().focusedProperty();
+            scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+        }
+        
         appFocusProperty.addListener(appFocusChangeListener);
         model.currentTrade().addListener(currentTradeChangeListener);
         //setNewSubView(model.currentTrade().get());
         table.setItems(model.getList());
         table.getSelectionModel().selectedItemProperty().addListener(selectedItemChangeListener);
-        updateSelectedItem();
 
         if (model.getSelectedItem() == null)
             model.getList().addListener(listChangeListener);
 
-        scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+
+        updateSelectedItem();
     }
 
     private void updateSelectedItem() {
@@ -204,7 +203,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 else
                     currentSubView = new BuyerSubView(model);
             }
-            currentSubView.setMinHeight(420);
+            currentSubView.setMinHeight(430);
             VBox.setVgrow(currentSubView, Priority.ALWAYS);
             root.getChildren().add(1, currentSubView);
 
@@ -249,18 +248,33 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private void setDateColumnCellFactory() {
-        dateColumn.setCellFactory(TextFieldTableCell.<PendingTradesListItem, Date>forTableColumn(
-                new StringConverter<Date>() {
+        dateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        dateColumn.setCellFactory(
+                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
+                        PendingTradesListItem>>() {
                     @Override
-                    public String toString(Date value) {
-                        return model.formatDate(value);
+                    public TableCell<PendingTradesListItem, PendingTradesListItem> call(
+                            TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
+                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                            @Override
+                            public void updateItem(final PendingTradesListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty) {
+                                    if (model.showDispute(item.getTrade())) {
+                                        setStyle("-fx-text-fill: -bs-error-red");
+                                    } else if (model.showWarning(item.getTrade())) {
+                                        setStyle("-fx-text-fill: -bs-orange");
+                                    } else {
+                                        setId("-fx-text-fill: black");
+                                    }
+                                    setText(model.getDate(item));
+                                } else {
+                                    setText(null);
+                                }
+                            }
+                        };
                     }
-
-                    @Override
-                    public Date fromString(String string) {
-                        return null;
-                    }
-                }));
+                });
     }
 
     private void setAmountColumnCellFactory() {

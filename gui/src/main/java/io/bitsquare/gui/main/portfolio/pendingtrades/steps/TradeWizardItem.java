@@ -26,13 +26,13 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 
 public class TradeWizardItem extends Button {
-    public Class<? extends TradeStepDetailsView> getViewClass() {
+    public Class<? extends TradeStepView> getViewClass() {
         return viewClass;
     }
 
-    private final Class<? extends TradeStepDetailsView> viewClass;
+    private final Class<? extends TradeStepView> viewClass;
 
-    public TradeWizardItem(Class<? extends TradeStepDetailsView> viewClass, String title) {
+    public TradeWizardItem(Class<? extends TradeStepView> viewClass, String title) {
         this.viewClass = viewClass;
 
         setMouseTransparent(true);
