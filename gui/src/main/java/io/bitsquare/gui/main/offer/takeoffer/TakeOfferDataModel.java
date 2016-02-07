@@ -290,14 +290,15 @@ class TakeOfferDataModel extends ActivatableDataModel {
         return true;
     }
 
-    boolean isAmountLargerThanOfferAmountMinusFee() {
+    boolean wouldCreateDustForOfferer() {
         //noinspection SimplifiableIfStatement
-        if (amountAsCoin.get() != null && offer != null)
-            return amountAsCoin.get()
-                    .add(FeePolicy.getFeePerKb())
-                    .add(Transaction.MIN_NONDUST_OUTPUT)
-                    .isGreaterThan(offer.getAmount());
-        return true;
+        if (amountAsCoin.get() != null && offer != null) {
+            Coin customAmount = offer.getAmount().subtract(amountAsCoin.get());
+            Coin dustAndFee = FeePolicy.getFeePerKb().add(Transaction.MIN_NONDUST_OUTPUT);
+            return customAmount.isPositive() && customAmount.isLessThan(dustAndFee);
+        } else {
+            return true;
+        }
     }
 
     public PaymentMethod getPaymentMethod() {
