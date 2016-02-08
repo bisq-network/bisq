@@ -133,11 +133,14 @@ public class SepaForm extends PaymentMethodForm {
 
         countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllSepaCountries()));
         Country country = CountryUtil.getDefaultCountry();
-        countryComboBox.getSelectionModel().select(country);
-        sepaAccount.setCountry(country);
-        TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(country.code);
-        sepaAccount.setSingleTradeCurrency(currency);
-        currencyTextField.setText(currency.getCodeAndName());
+        if (CountryUtil.getAllSepaCountries().contains(country)) {
+            countryComboBox.getSelectionModel().select(country);
+            sepaAccount.setCountry(country);
+            TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(country.code);
+            sepaAccount.setSingleTradeCurrency(currency);
+            currencyTextField.setText(currency.getCodeAndName());
+        }
+
         updateFromInputs();
     }
 
@@ -195,12 +198,15 @@ public class SepaForm extends PaymentMethodForm {
         checkBoxList.stream().forEach(checkBox -> {
             String countryCode = (String) checkBox.getUserData();
             TradeCurrency selectedCurrency = sepaAccount.getSelectedTradeCurrency();
-            if (selectedCurrency == null)
-                selectedCurrency = CurrencyUtil.getCurrencyByCountryCode(CountryUtil.getDefaultCountry().code);
+            if (selectedCurrency == null) {
+                Country country = CountryUtil.getDefaultCountry();
+                if (CountryUtil.getAllSepaCountries().contains(country))
+                    selectedCurrency = CurrencyUtil.getCurrencyByCountryCode(country.code);
+            }
 
             boolean selected;
 
-            if (isEditable) {
+            if (isEditable && selectedCurrency != null) {
                 selected = CurrencyUtil.getCurrencyByCountryCode(countryCode).getCode().equals(selectedCurrency.getCode());
 
                 if (selected)
