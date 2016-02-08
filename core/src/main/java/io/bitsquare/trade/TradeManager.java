@@ -281,6 +281,7 @@ public class TradeManager {
             trade = new BuyerAsTakerTrade(offer, amount, model.getPeerNodeAddress(), tradableListStorage);
 
         trade.setTakeOfferDate(new Date());
+        trade.setTakeOfferDateAsBlockHeight(tradeWalletService.getBestChainHeight());
         trade.setTakerPaymentAccountId(paymentAccountId);
 
         initTrade(trade);
@@ -382,8 +383,11 @@ public class TradeManager {
         return offer.isMyOffer(keyRing);
     }
 
+    public boolean isMyOfferInBtcBuyerRole(Offer offer) {
+        return !(isMyOffer(offer) ^ offer.getDirection() == Offer.Direction.BUY);
+    }
+
     public Optional<Trade> getTradeById(String tradeId) {
         return trades.stream().filter(e -> e.getId().equals(tradeId)).findFirst();
     }
-
 }

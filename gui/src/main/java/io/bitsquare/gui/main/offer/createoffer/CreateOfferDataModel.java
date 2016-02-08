@@ -165,11 +165,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     boolean isFeeFromFundingTxSufficient() {
         // if fee was never set because of api provider not available we check with default value and return true
-        log.debug("FeePolicy.getFeePerKb() " + FeePolicy.getFeePerKb());
-        log.debug("feeFromFundingTxProperty " + feeFromFundingTxProperty);
-        log.debug(">? " + (feeFromFundingTxProperty.get().compareTo(FeePolicy.getFeePerKb()) >= 0));
         return feeFromFundingTxProperty.get().equals(Coin.NEGATIVE_SATOSHI) ||
-                feeFromFundingTxProperty.get().compareTo(FeePolicy.getFeePerKb()) >= 0;
+                feeFromFundingTxProperty.get().compareTo(FeePolicy.getMinFundingFee()) >= 0;
     }
 
     private void addListeners() {
@@ -177,7 +174,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         walletService.getWallet().addEventListener(new WalletEventListener() {
             @Override
             public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                requestFee(tx.getHashAsString());
+                requestFeeFromBlockchain(tx.getHashAsString());
             }
 
             @Override
@@ -207,7 +204,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         user.getPaymentAccountsAsObservable().addListener(paymentAccountsChangeListener);
     }
 
-    private void requestFee(String transactionId) {
+    private void requestFeeFromBlockchain(String transactionId) {
         try {
             feeFromFundingTxProperty.set(preferences.getBlockchainApiProvider().getFee(transactionId));
         } catch (IOException | HttpException e) {
@@ -216,7 +213,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 retryRequestFeeCounter++;
                 log.warn("We try again after 5 seconds");
                 // TODO if we have more providers, try another one
-                UserThread.runAfter(() -> requestFee(transactionId), 5);
+                UserThread.runAfter(() -> requestFeeFromBlockchain(transactionId), 5);
             }
         }
     }
@@ -292,11 +289,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
         );
     }
 
-    void onSecurityDepositInfoDisplayed() {
-        preferences.setDisplaySecurityDepositInfo(false);
-    }
-
-
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
         if (paymentAccount != null)
             this.paymentAccount = paymentAccount;
@@ -334,10 +326,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     AddressEntry getAddressEntry() {
         return addressEntry;
-    }
-
-    boolean getDisplaySecurityDepositInfo() {
-        return preferences.getDisplaySecurityDepositInfo();
     }
 
     public TradeCurrency getTradeCurrency() {

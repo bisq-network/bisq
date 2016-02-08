@@ -133,10 +133,7 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
                 () -> handleTaskRunnerSuccess("handle DepositTxPublishedMessage"),
                 this::handleTaskRunnerFault);
-        taskRunner.addTasks(
-                ProcessDepositTxPublishedMessage.class,
-                AddDepositTxToWallet.class
-        );
+        taskRunner.addTasks(ProcessDepositTxPublishedMessage.class);
         taskRunner.run();
     }
 

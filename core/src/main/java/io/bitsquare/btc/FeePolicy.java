@@ -60,6 +60,11 @@ public class FeePolicy {
         return FEE_PER_KB;
     }
 
+    // Some wallets (Mycelium) don't support higher fees 
+    public static Coin getMinFundingFee() {
+        return Coin.valueOf(20_000); 
+    }
+
 
     // 0.001 BTC  0.1% of 1 BTC about 0.4 EUR @ 400 EUR/BTC
     public static Coin getCreateOfferFee() {

@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.portfolio.pendingtrades;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.seller.*;
 import javafx.beans.value.ChangeListener;
+import javafx.scene.layout.GridPane;
 
 public class SellerSubView extends TradeSubView {
     private TradeWizardItem step1;
@@ -61,10 +62,20 @@ public class SellerSubView extends TradeSubView {
         step4 = new TradeWizardItem(SellerStep4aView.class, "Wait for payout unlock");
         step5 = new TradeWizardItem(SellerStep5View.class, "Completed");
 
-        if (model.getLockTime() > 0)
-            leftVBox.getChildren().setAll(step1, step2, step3, step4, step5);
-        else
-            leftVBox.getChildren().setAll(step1, step2, step3, step5);
+        if (model.getLockTime() > 0) {
+            addWizardsToGridPane(step1);
+            addWizardsToGridPane(step2);
+            addWizardsToGridPane(step3);
+            addWizardsToGridPane(step4);
+            addWizardsToGridPane(step5);
+
+        } else {
+            addWizardsToGridPane(step1);
+            addWizardsToGridPane(step2);
+            addWizardsToGridPane(step3);
+            addWizardsToGridPane(step5);
+            GridPane.setRowSpan(tradeProcessTitledGroupBg, 4);
+        }
     }
 
 

@@ -29,10 +29,14 @@ import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.btc.*;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ViewModel;
+import io.bitsquare.gui.common.view.ViewPath;
 import io.bitsquare.gui.components.BalanceTextField;
 import io.bitsquare.gui.components.BalanceWithConfirmationTextField;
 import io.bitsquare.gui.components.TxIdTextField;
+import io.bitsquare.gui.main.portfolio.PortfolioView;
+import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
 import io.bitsquare.gui.popups.DisplayAlertMessagePopup;
 import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.popups.WalletPasswordPopup;
@@ -57,6 +61,7 @@ import javafx.collections.ListChangeListener;
 import org.bitcoinj.core.*;
 import org.bitcoinj.store.BlockStoreException;
 import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 import org.reactfx.util.FxTimer;
 import org.reactfx.util.Timer;
@@ -85,6 +90,7 @@ public class MainViewModel implements ViewModel {
     private final Preferences preferences;
     private final AlertManager alertManager;
     private final WalletPasswordPopup walletPasswordPopup;
+    private Navigation navigation;
     private final BSFormatter formatter;
 
     // BTC network
@@ -135,7 +141,7 @@ public class MainViewModel implements ViewModel {
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
                          User user, AlertManager alertManager, WalletPasswordPopup walletPasswordPopup,
-                         BSFormatter formatter) {
+                         Navigation navigation, BSFormatter formatter) {
         this.user = user;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
@@ -147,6 +153,7 @@ public class MainViewModel implements ViewModel {
         this.preferences = preferences;
         this.alertManager = alertManager;
         this.walletPasswordPopup = walletPasswordPopup;
+        this.navigation = navigation;
         this.formatter = formatter;
 
         btcNetworkAsString = formatter.formatBitcoinNetwork(preferences.getBitcoinNetwork()) +
@@ -362,10 +369,12 @@ public class MainViewModel implements ViewModel {
         tradeManager.getTrades().addListener((ListChangeListener<Trade>) change -> {
             change.next();
             addDisputeStateListeners(change.getAddedSubList());
+            addTradeStateListeners(change.getAddedSubList());
             pendingTradesChanged();
         });
         pendingTradesChanged();
         addDisputeStateListeners(tradeManager.getTrades());
+        addTradeStateListeners(tradeManager.getTrades());
 
 
         // arbitratorManager
@@ -653,25 +662,25 @@ public class MainViewModel implements ViewModel {
                 case HALF_REACHED:
                     id = "displayHalfTradePeriodOver" + trade.getId();
                     if (preferences.showAgain(id)) {
+                        preferences.dontShowAgain(id);
                         new Popup().warning("Your trade with ID " + trade.getShortId() +
                                 " has reached the half of the max. allowed trading period and " +
                                 "is still not completed.\n\n" +
                                 "The trade period ends on " + limitDate + "\n\n" +
                                 "Please check your trade state at \"Portfolio/Open trades\" for further information.")
-                                .onClose(() -> preferences.dontShowAgain(id))
                                 .show();
                     }
                     break;
                 case TRADE_PERIOD_OVER:
                     id = "displayTradePeriodOver" + trade.getId();
                     if (preferences.showAgain(id)) {
+                        preferences.dontShowAgain(id);
                         new Popup().warning("Your trade with ID " + trade.getShortId() +
                                 " has reached the max. allowed trading period and is " +
                                 "not completed.\n\n" +
                                 "The trade period ended on " + limitDate + "\n\n" +
                                 "Please check your trade at \"Portfolio/Open trades\" for contacting " +
                                 "the arbitrator.")
-                                .onClose(() -> preferences.dontShowAgain(id))
                                 .show();
                     }
                     break;
@@ -704,6 +713,142 @@ public class MainViewModel implements ViewModel {
             numPendingTradesAsString.set("?");
 
         showPendingTradesNotification.set(numPendingTrades > 0);
+    }
+
+    private void addTradeStateListeners(List<? extends Trade> addedTrades) {
+        addedTrades.stream().forEach(trade -> {
+            Subscription tradeStateSubscription = EasyBind.subscribe(trade.stateProperty(), newValue -> {
+                if (newValue != null) {
+                    applyState(trade);
+                }
+            });
+        });
+        
+                
+        
+       /* addedTrades.stream()
+                .forEach(trade -> trade.stateProperty().addListener((observable, oldValue, newValue) -> {
+                    String msg = "";
+                    log.debug("addTradeStateListeners " + newValue);
+                    switch (newValue) {
+                        case PREPARATION:
+                        case TAKER_FEE_PAID:
+                        case DEPOSIT_PUBLISH_REQUESTED:
+                        case DEPOSIT_PUBLISHED:
+                        case DEPOSIT_SEEN_IN_NETWORK:
+                        case DEPOSIT_PUBLISHED_MSG_SENT:
+                        case DEPOSIT_PUBLISHED_MSG_RECEIVED:
+                            break;
+                        case DEPOSIT_CONFIRMED:
+                            msg = newValue.name();
+                            break;
+                        case FIAT_PAYMENT_STARTED:
+                            break;
+                        case FIAT_PAYMENT_STARTED_MSG_SENT:
+                            break;
+                        case FIAT_PAYMENT_STARTED_MSG_RECEIVED:
+                            break;
+
+                        case FIAT_PAYMENT_RECEIPT:
+                            break;
+                        case FIAT_PAYMENT_RECEIPT_MSG_SENT:
+                            break;
+                        case FIAT_PAYMENT_RECEIPT_MSG_RECEIVED:
+                            break;
+
+
+                        case PAYOUT_TX_SENT:
+                            break;
+                        case PAYOUT_TX_RECEIVED:
+                            break;
+                        case PAYOUT_TX_COMMITTED:
+                            break;
+                        case PAYOUT_BROAD_CASTED:
+                            break;
+
+                        case WITHDRAW_COMPLETED:
+                            break;
+
+                        default:
+                            log.warn("unhandled processState " + newValue);
+                            break;
+                    }
+
+                    //new Popup().information(msg).show();
+
+                }));*/
+    }
+
+    private void applyState(Trade trade) {
+        Trade.State state = trade.getState();
+        log.debug("addTradeStateListeners " + state);
+        boolean isBtcBuyer = tradeManager.isMyOfferInBtcBuyerRole(trade.getOffer());
+        String headLine = "Notification for trade with ID " + trade.getShortId();
+        String message = null;
+        String id = "notificationPopup_" + state + trade.getId();
+        if (isBtcBuyer) {
+            switch (state) {
+                case DEPOSIT_PUBLISHED_MSG_RECEIVED:
+                    message = "Your offer has been accepted by a seller.\n" +
+                            "You need to wait for one blockchain confirmation before starting the payment.";
+                    break;
+                case DEPOSIT_CONFIRMED:
+                    message = "The deposit transaction of your trade has got the first blockchain confirmation.\n" +
+                            "You have to start the payment to the bitcoin seller now.";
+                    break;
+               /* case FIAT_PAYMENT_RECEIPT_MSG_RECEIVED:
+                case PAYOUT_TX_COMMITTED:
+                case PAYOUT_TX_SENT:*/
+                case PAYOUT_BROAD_CASTED:
+                    message = "The bitcoin seller has confirmed the receipt of your payment and the payout transaction has been published.\n" +
+                            "The trade is now completed and you can withdraw your funds.";
+                    break;
+            }
+        } else {
+            switch (state) {
+                case DEPOSIT_PUBLISHED_MSG_RECEIVED:
+                    message = "Your offer has been accepted by a buyer.\n" +
+                            "You need to wait for one blockchain confirmation before starting the payment.";
+                    break;
+                case FIAT_PAYMENT_STARTED_MSG_RECEIVED:
+                    message = "The bitcoin buyer has started the payment.\n" +
+                            "Please check your payment account if you have received his payment.";
+                    break;
+               /* case FIAT_PAYMENT_RECEIPT_MSG_SENT:
+                case PAYOUT_TX_RECEIVED:
+                case PAYOUT_TX_COMMITTED:*/
+                case PAYOUT_BROAD_CASTED:
+                    message = "The payout transaction has been published.\n" +
+                            "The trade is now completed and you can withdraw your funds.";
+            }
+        }
+
+        ViewPath currentPath = navigation.getCurrentPath();
+        boolean isPendingTradesViewCurrentView = currentPath != null &&
+                currentPath.size() == 3 &&
+                currentPath.get(2).equals(PendingTradesView.class);
+        if (message != null) {
+            //TODO we get that called initially before the navigation is inited
+            if (isPendingTradesViewCurrentView || currentPath == null) {
+                if (preferences.showAgain(id))
+                    new Popup().headLine(headLine)
+                            .message(message)
+                            .show();
+                preferences.dontShowAgain(id);
+            } else {
+                if (preferences.showAgain(id))
+                    new Popup().headLine(headLine)
+                            .message(message)
+                            .actionButtonText("Go to \"Portfolio/Open trades\"")
+                            .onAction(() -> {
+                                FxTimer.runLater(Duration.ofMillis(100),
+                                        () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
+                                );
+                            })
+                            .show();
+                preferences.dontShowAgain(id);
+            }
+        }
     }
 
     private void addDisputeStateListeners(List<? extends Trade> addedTrades) {

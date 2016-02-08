@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.popups;
 
+import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.main.MainView;
@@ -52,6 +53,7 @@ public class OfferDetailsPopup extends Popup {
     private final BSFormatter formatter;
     private final Preferences preferences;
     private final User user;
+    private KeyRing keyRing;
     private final Navigation navigation;
     private Offer offer;
     private Coin tradeAmount;
@@ -64,10 +66,11 @@ public class OfferDetailsPopup extends Popup {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferDetailsPopup(BSFormatter formatter, Preferences preferences, User user, Navigation navigation) {
+    public OfferDetailsPopup(BSFormatter formatter, Preferences preferences, User user, KeyRing keyRing, Navigation navigation) {
         this.formatter = formatter;
         this.preferences = preferences;
         this.user = user;
+        this.keyRing = keyRing;
         this.navigation = navigation;
     }
 
@@ -139,7 +142,10 @@ public class OfferDetailsPopup extends Popup {
             addLabelTextField(gridPane, ++rowIndex, "Amount:", formatter.formatCoinWithCode(offer.getAmount()));
             addLabelTextField(gridPane, ++rowIndex, "Min. amount:", formatter.formatCoinWithCode(offer.getMinAmount()));
         }
-        addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(offer.getPaymentMethod().getId()));
+        if (offer.isMyOffer(keyRing) && user.getPaymentAccount(offer.getOffererPaymentAccountId()) != null)
+            addLabelTextField(gridPane, ++rowIndex, "Payment account:", user.getPaymentAccount(offer.getOffererPaymentAccountId()).getAccountName());
+        else
+            addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(offer.getPaymentMethod().getId()));
 
         rows = 3;
         if (offer.getPaymentMethodCountryCode() != null)

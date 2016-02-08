@@ -61,10 +61,19 @@ public class BuyerSubView extends TradeSubView {
         step4 = new TradeWizardItem(BuyerStep4View.class, "Wait for payout unlock");
         step5 = new TradeWizardItem(BuyerStep5View.class, "Completed");
 
-        if (model.getLockTime() > 0)
-            leftVBox.getChildren().setAll(step1, step2, step3, step4, step5);
-        else
-            leftVBox.getChildren().setAll(step1, step2, step3, step5);
+        if (model.getLockTime() > 0) {
+            addWizardsToGridPane(step1);
+            addWizardsToGridPane(step2);
+            addWizardsToGridPane(step3);
+            addWizardsToGridPane(step4);
+            addWizardsToGridPane(step5);
+
+        } else {
+            addWizardsToGridPane(step1);
+            addWizardsToGridPane(step2);
+            addWizardsToGridPane(step3);
+            addWizardsToGridPane(step5);
+        }
     }
 
 

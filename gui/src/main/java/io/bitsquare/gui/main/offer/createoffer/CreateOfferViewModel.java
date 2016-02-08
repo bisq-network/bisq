@@ -45,7 +45,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel> implements ViewModel {
     private final BtcValidator btcValidator;
     private final P2PService p2PService;
-    private final BSFormatter formatter;
+    final BSFormatter formatter;
     private final FiatValidator fiatValidator;
 
     private String amountDescription;
@@ -322,10 +322,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         isPlaceOfferButtonVisible.set(true);
     }
 
-    void onSecurityDepositInfoDisplayed() {
-        dataModel.onSecurityDepositInfoDisplayed();
-    }
-
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
         dataModel.onPaymentAccountSelected(paymentAccount);
     }
@@ -429,10 +425,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     BSFormatter getFormatter() {
         return formatter;
-    }
-
-    boolean getDisplaySecurityDepositInfo() {
-        return dataModel.getDisplaySecurityDepositInfo();
     }
 
     boolean isSellOffer() {

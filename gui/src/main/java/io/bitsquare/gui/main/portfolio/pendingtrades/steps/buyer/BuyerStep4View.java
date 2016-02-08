@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
-import io.bitsquare.gui.util.Layout;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.bitcoinj.core.*;
@@ -76,6 +75,7 @@ public class BuyerStep4View extends TradeStepView {
         super.doActivate();
 
         model.addBlockChainListener(blockChainListener);
+        updateDateFromBlockHeight(model.getBestChainHeight());
     }
 
     @Override
@@ -93,9 +93,9 @@ public class BuyerStep4View extends TradeStepView {
     @Override
     protected void addContent() {
         addTradeInfoBlock();
-        blockTextField = addLabelTextField(gridPane, gridRow, "Block(s) to wait until lock time elapsed:", "", Layout.FIRST_ROW_DISTANCE).second;
+        blockTextField = addLabelTextField(gridPane, gridRow, "Block(s) to wait until lock time elapsed:", "").second;
         timeTextField = addLabelTextField(gridPane, ++gridRow, "Approx. date when payout gets unlocked:").second;
-        GridPane.setRowSpan(tradeInfoTitledGroupBg, 4);
+        GridPane.setRowSpan(tradeInfoTitledGroupBg, 5);
 
         addInfoBlock();
     }
@@ -125,7 +125,7 @@ public class BuyerStep4View extends TradeStepView {
 
     @Override
     protected String getWarningText() {
-        setInformationState();
+        setInformationHeadline();
         return "The payout transaction is still blocked by the lock time!\n" +
                 "If the trade has not been completed on " +
                 model.getOpenDisputeTimeAsFormattedDate() +

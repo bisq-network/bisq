@@ -21,6 +21,8 @@ import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.http.BlockchainApiProvider;
+import io.bitsquare.btc.http.BlockrIOProvider;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
@@ -65,12 +67,15 @@ public class Preferences implements Serializable {
             new BlockChainExplorer("Blockr.io", "https://btc.blockr.io/tx/info/", "https://btc.blockr.io/address/info/"),
             new BlockChainExplorer("Biteasy", "https://www.biteasy.com/transactions/", "https://www.biteasy.com/addresses/")
     ));
+    private BlockchainApiProvider blockchainApiProvider;
 
     public static List<String> getBtcDenominations() {
         return BTC_DENOMINATIONS;
     }
 
     private static Locale defaultLocale = Locale.getDefault();
+    //TODO test with other locales
+    //private static Locale defaultLocale = Locale.US;
 
     public static Locale getDefaultLocale() {
         return defaultLocale;
@@ -91,7 +96,6 @@ public class Preferences implements Serializable {
     private String btcDenomination = MonetaryFormat.CODE_BTC;
     private boolean useAnimations = true;
     private boolean useEffects = true;
-    private boolean displaySecurityDepositInfo = true;
     private final ArrayList<TradeCurrency> tradeCurrencies;
     private BlockChainExplorer blockChainExplorerMainNet;
     private BlockChainExplorer blockChainExplorerTestNet;
@@ -130,7 +134,6 @@ public class Preferences implements Serializable {
             setUseEffects(persisted.useEffects);
             setTradeCurrencies(persisted.tradeCurrencies);
             tradeCurrencies = new ArrayList<>(tradeCurrenciesAsObservable);
-            displaySecurityDepositInfo = persisted.getDisplaySecurityDepositInfo();
 
             setBlockChainExplorerTestNet(persisted.getBlockChainExplorerTestNet());
             setBlockChainExplorerMainNet(persisted.getBlockChainExplorerMainNet());
@@ -152,6 +155,8 @@ public class Preferences implements Serializable {
             preferredTradeCurrency = persisted.getPreferredTradeCurrency();
             defaultTradeCurrency = preferredTradeCurrency;
             useTorForBitcoinJ = persisted.getUseTorForBitcoinJ();
+
+            blockchainApiProvider = persisted.getBlockchainApiProvider();
             
             try {
                 setTxFeePerKB(persisted.getTxFeePerKB());
@@ -174,6 +179,8 @@ public class Preferences implements Serializable {
 
             preferredLocale = getDefaultLocale();
             preferredTradeCurrency = getDefaultTradeCurrency();
+
+            blockchainApiProvider = new BlockrIOProvider();
 
             storage.queueUpForSave();
         }
@@ -221,11 +228,6 @@ public class Preferences implements Serializable {
 
     public void setUseEffects(boolean useEffectsProperty) {
         this.useEffectsProperty.set(useEffectsProperty);
-    }
-
-    public void setDisplaySecurityDepositInfo(boolean displaySecurityDepositInfo) {
-        this.displaySecurityDepositInfo = displaySecurityDepositInfo;
-        storage.queueUpForSave(2000);
     }
 
     public void setBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {
@@ -302,6 +304,10 @@ public class Preferences implements Serializable {
         storage.queueUpForSave();
     }
 
+    public void setBlockchainApiProvider(BlockchainApiProvider blockchainApiProvider) {
+        this.blockchainApiProvider = blockchainApiProvider;
+        storage.queueUpForSave();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -317,10 +323,6 @@ public class Preferences implements Serializable {
 
     public boolean getUseAnimations() {
         return useAnimationsProperty.get();
-    }
-
-    public boolean getDisplaySecurityDepositInfo() {
-        return displaySecurityDepositInfo;
     }
 
     public StringProperty btcDenominationProperty() {
@@ -425,4 +427,9 @@ public class Preferences implements Serializable {
     public boolean getUseTorForBitcoinJ() {
         return useTorForBitcoinJ;
     }
+
+    public BlockchainApiProvider getBlockchainApiProvider() {
+        return blockchainApiProvider;
+    }
+
 }

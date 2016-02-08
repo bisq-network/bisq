@@ -184,10 +184,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
         );
     }
 
-    void onSecurityDepositInfoDisplayed() {
-        preferences.setDisplaySecurityDepositInfo(false);
-    }
-
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
         if (paymentAccount != null)
             this.paymentAccount = paymentAccount;
@@ -200,10 +196,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     Offer.Direction getDirection() {
         return offer.getDirection();
-    }
-
-    boolean getDisplaySecurityDepositInfo() {
-        return preferences.getDisplaySecurityDepositInfo();
     }
 
     public Offer getOffer() {

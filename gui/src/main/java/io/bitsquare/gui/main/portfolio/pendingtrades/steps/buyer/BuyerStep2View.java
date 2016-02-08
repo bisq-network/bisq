@@ -56,7 +56,7 @@ public class BuyerStep2View extends TradeStepView {
     public void doActivate() {
         super.doActivate();
 
-        String id = PopupId.SEND_PAYMENT_INFO;
+       /* String id = PopupId.SEND_PAYMENT_INFO;
         if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE) {
             //TODO use payment method and trade values
             new Popup().information("You need to transfer now the agreed amount to your trading partner.\n" +
@@ -65,7 +65,7 @@ public class BuyerStep2View extends TradeStepView {
                     "Make sure that you make the transfer soon to not exceed the trading period.")
                     .onClose(() -> preferences.dontShowAgain(id))
                     .show();
-        }
+        }*/
     }
 
     @Override
@@ -135,9 +135,9 @@ public class BuyerStep2View extends TradeStepView {
 
     @Override
     protected String getWarningText() {
-        setWarningState();
+        setWarningHeadline();
         return "You still have not done your " + model.getCurrencyCode() + " payment!\n" +
-                "Please not that the trade has to be completed until " +
+                "Please note that the trade has to be completed until " +
                 model.getOpenDisputeTimeAsFormattedDate() +
                 " otherwise the trade will be investigated by the arbitrator.";
     }
@@ -150,9 +150,8 @@ public class BuyerStep2View extends TradeStepView {
     @Override
     protected String getOpenForDisputeText() {
         return "You have not completed your payment!\n" +
-                "The max. period for the trade has elapsed (" +
-                model.getOpenDisputeTimeAsFormattedDate() + ")." +
-                "\nPlease contact now the arbitrator for opening a dispute.";
+                "The max. period for the trade has elapsed.\n" +
+                "\nPlease contact the arbitrator for opening a dispute.";
     }
 
     @Override
@@ -205,10 +204,10 @@ public class BuyerStep2View extends TradeStepView {
 
             // In case the first send failed we got the support button displayed. 
             // If it succeeds at a second try we remove the support button again.
-            if (openDisputeButton != null) {
-                openDisputeButton.setVisible(false);
-                openDisputeButton.setManaged(false);
-            }
+            //TODO check for support. in case of a dispute we dont want to hid ethe button
+            /*if (notificationGroup != null) {
+                notificationGroup.setButtonVisible(false);
+            }*/
         }, errorMessage -> {
             removeStatusProgressIndicator();
             statusLabel.setText("Sending message to your trading partner failed.\n" +

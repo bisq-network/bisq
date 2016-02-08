@@ -22,6 +22,7 @@ import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
+import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,9 +48,15 @@ public class ProcessDepositTxPublishedMessage extends TradeTask {
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);
             checkArgument(message.depositTx != null);
-            trade.setDepositTx(processModel.getWalletService().getTransactionFromSerializedTx(message.depositTx));
+
+            // To access tx confidence we need to add that tx into our wallet.
+            Transaction transactionFromSerializedTx = processModel.getWalletService().getTransactionFromSerializedTx(message.depositTx);
+            // update with full tx
+            trade.setDepositTx(processModel.getTradeWalletService().addTransactionToWallet(transactionFromSerializedTx));
+           
             trade.setState(Trade.State.DEPOSIT_PUBLISHED_MSG_RECEIVED);
             trade.setTakeOfferDate(new Date());
+            trade.setTakeOfferDateAsBlockHeight(processModel.getTradeWalletService().getBestChainHeight());
 
             if (trade instanceof OffererTrade)
                 processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer());

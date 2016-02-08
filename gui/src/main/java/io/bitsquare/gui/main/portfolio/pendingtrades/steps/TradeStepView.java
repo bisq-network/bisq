@@ -18,18 +18,16 @@
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps;
 
 import io.bitsquare.arbitration.Dispute;
-import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.TxIdTextField;
 import io.bitsquare.gui.components.paymentmethods.PaymentMethodForm;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
+import io.bitsquare.gui.main.portfolio.pendingtrades.TradeSubView;
 import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
@@ -63,11 +61,8 @@ public abstract class TradeStepView extends AnchorPane {
     protected TitledGroupBg tradeInfoTitledGroupBg;
     private TextField timeLeftTextField;
     private ProgressBar timeLeftProgressBar;
-    private GridPane notificationGridPane;
-    private Label notificationLabel;
-    private TitledGroupBg notificationTitledGroupBg;
-    protected Button openDisputeButton;
     private TxIdTextField txIdTextField;
+    protected TradeSubView.NotificationGroup notificationGroup;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -135,8 +130,8 @@ public abstract class TradeStepView extends AnchorPane {
         if (tradePeriodStateSubscription != null)
             tradePeriodStateSubscription.unsubscribe();
 
-        if (openDisputeButton != null)
-            openDisputeButton.setOnAction(null);
+        if (notificationGroup != null)
+            notificationGroup.button.setOnAction(null);
 
         if (timer != null)
             timer.stop();
@@ -212,63 +207,68 @@ public abstract class TradeStepView extends AnchorPane {
 
     // We have the dispute button and text field on the left side, but we handle the content here as it 
     // is trade state specific
-    public void setNotificationFields(Tuple3<GridPane, TitledGroupBg, Label> notificationTuple) {
-        this.notificationGridPane = notificationTuple.first;
-        this.notificationTitledGroupBg = notificationTuple.second;
-        this.notificationLabel = notificationTuple.third;
-    }
-
-    public void setOpenDisputeButton(Button openDisputeButton) {
-        this.openDisputeButton = openDisputeButton;
+    public void setNotificationGroup(TradeSubView.NotificationGroup notificationGroup) {
+        this.notificationGroup = notificationGroup;
     }
 
     private void showDisputeInfoLabel() {
-        if (notificationGridPane != null) {
-            notificationGridPane.setVisible(true);
-            notificationGridPane.setManaged(true);
+        if (notificationGroup != null) {
+            notificationGroup.setLabelAndHeadlineVisible(true);
         }
     }
 
     private void showOpenDisputeButton() {
-        if (openDisputeButton != null) {
-            openDisputeButton.setVisible(true);
-            openDisputeButton.setManaged(true);
-            openDisputeButton.setOnAction(e -> {
-                openDisputeButton.setDisable(true);
+        if (notificationGroup != null) {
+            notificationGroup.setButtonVisible(true);
+            notificationGroup.button.setOnAction(e -> {
+                notificationGroup.button.setDisable(true);
                 onDisputeOpened();
-                setDisputeState();
                 model.dataModel.onOpenDispute();
             });
         }
     }
 
-    protected void setWarningState() {
-        if (notificationGridPane != null) {
-            notificationTitledGroupBg.setText("Warning");
-            //notificationGridPane.setId("trade-notification-warning");
+    protected void setWarningHeadline() {
+        if (notificationGroup != null) {
+            notificationGroup.titledGroupBg.setText("Warning");
+            //notificationGroup.setId("trade-notification-warning");
         }
     }
 
-    protected void setInformationState() {
-        if (notificationGridPane != null) {
-            notificationTitledGroupBg.setText("Notification");
-            notificationTitledGroupBg.setId("titled-group-bg-warn");
-            notificationTitledGroupBg.getLabel().setId("titled-group-bg-label-warn");
+    protected void setInformationHeadline() {
+        if (notificationGroup != null) {
+            notificationGroup.titledGroupBg.setText("Notification");
+            //notificationGroup.titledGroupBg.setId("titled-group-bg-warn");
+            //notificationGroup.label.setId("titled-group-bg-label-warn");
             //notificationLabel.setId("titled-group-bg-label-warn");
         }
     }
 
-    protected void setDisputeState() {
-        if (notificationGridPane != null) {
-            notificationTitledGroupBg.setText("Dispute opened");
-            //notificationGridPane.setId("trade-notification-dispute");
+    protected void setOpenDisputeHeadline() {
+        if (notificationGroup != null) {
+            notificationGroup.titledGroupBg.setText("Open a dispute");
+            //notificationGroup.setId("trade-notification-dispute");
         }
     }
 
-    protected void setSupportState() {
-        if (notificationGridPane != null) {
-            notificationTitledGroupBg.setText("Support ticket opened");
-            //notificationGridPane.setId("trade-notification-support");
+    protected void setDisputeOpenedHeadline() {
+        if (notificationGroup != null) {
+            notificationGroup.titledGroupBg.setText("Dispute opened");
+            //notificationGroup.setId("trade-notification-dispute");
+        }
+    }
+
+    protected void setRequestSupportHeadline() {
+        if (notificationGroup != null) {
+            notificationGroup.titledGroupBg.setText("Open support ticket");
+            //notificationGroup.setId("trade-notification-support");
+        }
+    }
+
+    protected void setSupportOpenedHeadline() {
+        if (notificationGroup != null) {
+            notificationGroup.titledGroupBg.setText("Support ticket opened");
+            //notificationGroup.setId("trade-notification-support");
         }
     }
 
@@ -277,10 +277,10 @@ public abstract class TradeStepView extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void showSupportFields() {
-        if (openDisputeButton != null) {
-            openDisputeButton.setText("Request support");
-            openDisputeButton.setId("open-support-button");
-            openDisputeButton.setOnAction(e -> model.dataModel.onOpenSupportTicket());
+        if (notificationGroup != null) {
+            notificationGroup.button.setText("Request support");
+            notificationGroup.button.setId("open-support-button");
+            notificationGroup.button.setOnAction(e -> model.dataModel.onOpenSupportTicket());
         }
         new Popup().warning(trade.errorMessageProperty().getValue()
                 + "\n\nPlease report the problem to your arbitrator.\n\n" +
@@ -299,8 +299,8 @@ public abstract class TradeStepView extends AnchorPane {
     private void showWarning() {
         showDisputeInfoLabel();
 
-        if (notificationLabel != null)
-            notificationLabel.setText(getWarningText());
+        if (notificationGroup != null)
+            notificationGroup.label.setText(getWarningText());
     }
 
     protected String getWarningText() {
@@ -315,19 +315,20 @@ public abstract class TradeStepView extends AnchorPane {
     private void onOpenForDispute() {
         showDisputeInfoLabel();
         showOpenDisputeButton();
+        setOpenDisputeHeadline();
 
-        if (notificationLabel != null)
-            notificationLabel.setText(getOpenForDisputeText());
+        if (notificationGroup != null)
+            notificationGroup.label.setText(getOpenForDisputeText());
     }
 
     private void onDisputeOpened() {
         showDisputeInfoLabel();
         showOpenDisputeButton();
         applyOnDisputeOpened();
+        setDisputeOpenedHeadline();
 
-
-        if (openDisputeButton != null)
-            openDisputeButton.setDisable(true);
+        if (notificationGroup != null)
+            notificationGroup.button.setDisable(true);
     }
 
     protected String getOpenForDisputeText() {
@@ -335,6 +336,11 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     protected void applyOnDisputeOpened() {
+    }
+
+    protected void hideNotificationGroup() {
+        notificationGroup.setLabelAndHeadlineVisible(false);
+        notificationGroup.setButtonVisible(false);
     }
 
     private void updateDisputeState(Trade.DisputeState disputeState) {
@@ -348,16 +354,16 @@ public abstract class TradeStepView extends AnchorPane {
                 ownDispute.ifPresent(dispute -> {
                     String msg;
                     if (dispute.isSupportTicket()) {
-                        setSupportState();
+                        setSupportOpenedHeadline();
                         msg = "You opened already a support ticket.\n" +
                                 "Please communicate in the support section with the arbitrator.";
                     } else {
-                        setDisputeState();
+                        setDisputeOpenedHeadline();
                         msg = "You opened already a dispute.\n" +
                                 "Please communicate in the support section with the arbitrator.";
                     }
-                    if (notificationLabel != null)
-                        notificationLabel.setText(msg);
+                    if (notificationGroup != null)
+                        notificationGroup.label.setText(msg);
                 });
 
                 break;
@@ -367,16 +373,16 @@ public abstract class TradeStepView extends AnchorPane {
                 ownDispute.ifPresent(dispute -> {
                     String msg;
                     if (dispute.isSupportTicket()) {
-                        setSupportState();
+                        setSupportOpenedHeadline();
                         msg = "Your trading peer opened a support ticket due technical problems.\n" +
                                 "Please communicate in the support section with the arbitrator.";
                     } else {
-                        setDisputeState();
+                        setDisputeOpenedHeadline();
                         msg = "Your trading peer opened a dispute.\n" +
                                 "Please communicate in the support section with the arbitrator.";
                     }
-                    if (notificationLabel != null)
-                        notificationLabel.setText(msg);
+                    if (notificationGroup != null)
+                        notificationGroup.label.setText(msg);
                 });
                 break;
             case DISPUTE_CLOSED:

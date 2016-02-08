@@ -49,7 +49,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> implements ViewModel {
     private final BtcValidator btcValidator;
     private P2PService p2PService;
-    private final BSFormatter formatter;
+    final BSFormatter formatter;
 
     private String amountRange;
     private String addressAsString;
@@ -192,10 +192,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
         dataModel.onPaymentAccountSelected(paymentAccount);
-    }
-
-    void onSecurityDepositInfoDisplayed() {
-        dataModel.onSecurityDepositInfoDisplayed();
     }
 
 
@@ -469,10 +465,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     BSFormatter getFormatter() {
         return formatter;
-    }
-
-    boolean getDisplaySecurityDepositInfo() {
-        return dataModel.getDisplaySecurityDepositInfo();
     }
 
     boolean isSeller() {

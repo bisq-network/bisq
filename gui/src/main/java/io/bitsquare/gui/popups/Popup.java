@@ -118,6 +118,14 @@ public class Popup {
         return this;
     }
 
+    public Popup notification(String message) {
+        // TODO use icons
+        this.headLine = "Notification";
+        this.message = message;
+        setTruncatedMessage();
+        return this;
+    }
+
     public Popup information(String message) {
         this.headLine = "Information";
         this.message = message;
@@ -219,7 +227,7 @@ public class Popup {
         scene.getStylesheets().setAll(owner.getScene().getStylesheets());
         scene.setFill(Color.TRANSPARENT);
         stage.setScene(scene);
-        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.initModality(Modality.WINDOW_MODAL);
         stage.initStyle(StageStyle.TRANSPARENT);
         stage.initOwner(owner.getScene().getWindow());
         stage.show();
@@ -317,10 +325,11 @@ public class Popup {
 
     private void addDontShowAgainCheckBox() {
         if (dontShowAgainId != null && preferences != null) {
-            CheckBox dontShowAgain = addCheckBox(gridPane, ++rowIndex, "Don't show again", 10);
-            GridPane.setHalignment(dontShowAgain, HPos.RIGHT);
-            dontShowAgain.setOnAction(e -> {
-                if (dontShowAgain.isSelected())
+            CheckBox dontShowAgainCheckBox = addCheckBox(gridPane, rowIndex, "Don't show again", 30);
+            GridPane.setColumnIndex(dontShowAgainCheckBox, 0);
+            GridPane.setHalignment(dontShowAgainCheckBox, HPos.LEFT);
+            dontShowAgainCheckBox.setOnAction(e -> {
+                if (dontShowAgainCheckBox.isSelected())
                     preferences.dontShowAgain(dontShowAgainId);
             });
         }
@@ -352,7 +361,7 @@ public class Popup {
             GridPane.setHalignment(hBox, HPos.RIGHT);
             GridPane.setRowIndex(hBox, ++rowIndex);
             GridPane.setColumnSpan(hBox, 2);
-            GridPane.setMargin(hBox, new Insets(20, 0, 0, 0));
+            GridPane.setMargin(hBox, new Insets(30, 0, 0, 0));
             gridPane.getChildren().add(hBox);
         } else {
             closeButton.setDefaultButton(true);
@@ -366,8 +375,8 @@ public class Popup {
     }
 
     protected void setTruncatedMessage() {
-        if (message != null && message.length() > 800)
-            truncatedMessage = StringUtils.abbreviate(message, 800);
+        if (message != null && message.length() > 900)
+            truncatedMessage = StringUtils.abbreviate(message, 900);
         else
             truncatedMessage = message;
     }

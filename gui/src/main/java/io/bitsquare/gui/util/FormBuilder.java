@@ -577,23 +577,20 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Button addButton(GridPane gridPane, int rowIndex, String title) {
-        Button button = new Button(title);
-        button.setDefaultButton(true);
-        GridPane.setRowIndex(button, rowIndex);
-        GridPane.setColumnIndex(button, 1);
-        gridPane.getChildren().add(button);
-        return button;
+        return addButton(gridPane, rowIndex, title, 0);
     }
 
-    public static Button addButtonAfterGroup(GridPane gridPane,
-                                             int rowIndex,
-                                             String title) {
+    public static Button addButtonAfterGroup(GridPane gridPane, int rowIndex, String title) {
+        return addButton(gridPane, rowIndex, title, 15);
+    }
+
+    public static Button addButton(GridPane gridPane, int rowIndex, String title, double top) {
         Button button = new Button(title);
         button.setDefaultButton(true);
         GridPane.setRowIndex(button, rowIndex);
         GridPane.setColumnIndex(button, 1);
-        GridPane.setMargin(button, new Insets(15, 0, 0, 0));
         gridPane.getChildren().add(button);
+        GridPane.setMargin(button, new Insets(top, 0, 0, 0));
         return button;
     }
 
@@ -603,9 +600,9 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Button, Button> add2Buttons(GridPane gridPane,
-                                                               int rowIndex,
-                                                               String title1,
-                                                               String title2) {
+                                                     int rowIndex,
+                                                     String title1,
+                                                     String title2) {
         return add2Buttons(gridPane, rowIndex, title1, title2, 0);
     }
 

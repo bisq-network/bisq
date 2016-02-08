@@ -56,8 +56,8 @@ public class SellerStep2View extends TradeStepView {
 
     @Override
     protected String getWarningText() {
-        setInformationState();
-        return "The buyer still has not done the " + model.getCurrencyCode() + " payment!\n" +
+        setInformationHeadline();
+        return "The buyer still has not done the " + model.getCurrencyCode() + " payment.\n" +
                 "You need to wait until he starts the payment.\n" +
                 "If the trade has not been completed on " +
                 model.getOpenDisputeTimeAsFormattedDate() +

@@ -23,6 +23,7 @@ import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
+import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.util.Layout;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;
@@ -77,6 +78,8 @@ public class BuyerStep5View extends TradeStepView {
                 UserThread.execute(() -> withdrawAddressTextField.requestFocus());
             });*/
         });
+
+        hideNotificationGroup();
     }
 
     @Override
@@ -113,22 +116,31 @@ public class BuyerStep5View extends TradeStepView {
         withdrawAddressTextField = addLabelInputTextField(gridPane, ++gridRow, "Withdraw to address:").second;
         withdrawButton = addButtonAfterGroup(gridPane, ++gridRow, "Withdraw to external wallet");
         withdrawButton.setOnAction(e -> {
-            model.onWithdrawRequest(withdrawAddressTextField.getText());
             withdrawButton.setDisable(true);
+            model.dataModel.onWithdrawRequest(withdrawAddressTextField.getText(),
+                    () -> {
+                        String id = "TradeCompletedInfoPopup";
+                        if (preferences.showAgain(id)) {
+                            new Popup()
+                                    .information("You can review your completed trades under \"Portfolio/History\" or " +
+                                            "review your transactions under \"Funds/Transactions\"")
+                                    .dontShowAgainId(id, preferences)
+                                    .show();
+                        }
+                        withdrawButton.setDisable(true);
+                    },
+                    (errorMessage, throwable) -> {
+                        withdrawButton.setDisable(false);
+                        if (throwable == null)
+                            new Popup().warning(errorMessage).show();
+                        else
+                            new Popup().error("An error occurred:\n" + throwable.getMessage()).show();
+                    });
+
         });
 
         if (BitsquareApp.DEV_MODE)
-            withdrawAddressTextField.setText("mxAkWWaQBqwqcYstKzqLku3kzR6pbu2zHq");
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Warning
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected String getWarningText() {
-        setInformationState();
-        return "The trade took a bit longer as expected but has been completed successfully in the allowed trade period.";
+            withdrawAddressTextField.setText("mhpVDvMjJT1Gn7da44dkq1HXd3wXdFZpXu");
     }
 
 

@@ -55,7 +55,7 @@ public class BuyerStep3View extends TradeStepView {
 
     @Override
     protected String getWarningText() {
-        setInformationState();
+        setInformationHeadline();
         String substitute = model.isBlockChainMethod() ?
                 "on the " + model.getCurrencyCode() + "blockchain" :
                 "at your payment provider (e.g. bank)";
@@ -74,9 +74,8 @@ public class BuyerStep3View extends TradeStepView {
     @Override
     protected String getOpenForDisputeText() {
         return "The seller has not confirmed your payment!\n" +
-                "The max. period for the trade has elapsed (" +
-                model.getOpenDisputeTimeAsFormattedDate() +
-                ") and you need to contact now the arbitrator to investigate the problem.";
+                "The max. period for the trade has elapsed.\n" +
+                "Please contact the arbitrator for opening a dispute.";
     }
 
     @Override

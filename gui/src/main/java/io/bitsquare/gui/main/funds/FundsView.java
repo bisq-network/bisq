@@ -89,7 +89,7 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
         String text = "Bitsquare does not use a single application wallet, but dedicated wallets for every trade.\n" +
                 "Funding of the wallet will be done when needed, for instance when you create or take an offer.\n" +
                 "Withdrawing funds can be done after a trade is completed.\n" +
-                "Dedicated wallets help protect user privacy and prevent leaking information of previous trades to other\n" +
+                "Dedicated wallets help protect user privacy and prevent leaking information of previous trades to other" +
                 "traders.\n\n" +
                 "For more background information please see the Bitsquare FAQ on our web page.";
         if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE)

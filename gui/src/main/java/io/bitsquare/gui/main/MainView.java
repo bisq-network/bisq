@@ -23,7 +23,6 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.*;
-import io.bitsquare.gui.components.SystemNotification;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.disputes.DisputesView;
 import io.bitsquare.gui.main.funds.FundsView;
@@ -454,10 +453,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         notification.visibleProperty().bind(model.showPendingTradesNotification);
         buttonHolder.getChildren().add(notification);
 
-        model.showPendingTradesNotification.addListener((ov, oldValue, newValue) -> {
+       /* model.showPendingTradesNotification.addListener((ov, oldValue, newValue) -> {
             if (newValue)
                 SystemNotification.openInfoNotification(title, "You received a new trade message.");
-        });
+        });*/
     }
 
     private void setupDisputesIcon(Pane buttonHolder) {
@@ -478,10 +477,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         notification.visibleProperty().bind(model.showOpenDisputesNotification);
         buttonHolder.getChildren().add(notification);
 
-        model.showOpenDisputesNotification.addListener((ov, oldValue, newValue) -> {
+      /*  model.showOpenDisputesNotification.addListener((ov, oldValue, newValue) -> {
             if (newValue)
                 SystemNotification.openInfoNotification(title, "You received a dispute message.");
-        });
+        });*/
     }
 
     private class NavButton extends ToggleButton {

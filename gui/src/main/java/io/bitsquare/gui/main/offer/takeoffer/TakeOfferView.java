@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.offer.takeoffer;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
@@ -214,7 +215,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 FxTimer.runLater(Duration.ofMillis(100),
                         () -> {
                             new Popup().information(BSResources.get("takeOffer.success.info"))
-                                    .actionButtonText("Go to \"Open trades\"")
+                                    .actionButtonText("Go to \"Portfolio/Open trades\"")
                                     .onAction(() -> {
                                         close();
                                         FxTimer.runLater(Duration.ofMillis(100),
@@ -335,17 +336,23 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void onShowPayFundsScreen() {
         if (!BitsquareApp.DEV_MODE) {
-            if (model.getDisplaySecurityDepositInfo()) {
-                MainView.blur();
+            String id = "tradeWalletInfoPopup";
+            if (model.dataModel.getPreferences().showAgain(id)) {
                 new Popup().information("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
-                        "The security deposit will be refunded to you after the trade has successfully completed.\n\n" +
+                        "The deposit will be refunded to you after the trade has successfully completed.\n\n" +
                         "You need to pay in the exact amount displayed to you from your external bitcoin wallet into the " +
-                        "Bitsquare trade wallet. In case you over pay, you will get it refunded after the trade.\n\n" +
-                        "The amount needed for funding is the sum of the trade amount, the security deposit, " +
-                        "the trading fee and the bitcoin mining fee.\n" +
-                        "You can see the details when you move the mouse over the question mark.").show();
-
-                model.onSecurityDepositInfoDisplayed();
+                        "Bitsquare trade wallet.\n" +
+                        "The amount is the sum of the trade amount, the security deposit, the trading fee and " +
+                        "the bitcoin mining fee.\n" +
+                        "You can see the details when you move the mouse over the question mark.\n\n" +
+                        "Important notice!\n" +
+                        "Please take care that you use a mining fee of at least " +
+                        model.formatter.formatCoinWithCode(FeePolicy.getMinFundingFee()) + " when you transfer bitcoin from your external " +
+                        "wallet to ensure the trade transactions will get into the blockchain.\n" +
+                        "A too low mining fee might result in a delayed trade and will be rejected!")
+                        .closeButtonText("I understand")
+                        .show();
+                model.dataModel.getPreferences().dontShowAgain(id);
             }
         }
 

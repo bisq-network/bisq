@@ -39,7 +39,6 @@ public class TradeWizardItem extends Button {
         setText(title);
         setPrefHeight(40);
         setPrefWidth(360);
-        setPadding(new Insets(0, 20, 0, 10));
         setAlignment(Pos.CENTER_LEFT);
         setDisabled();
     }

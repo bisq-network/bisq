@@ -135,6 +135,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
         if (dataModel.getTrade() != null) {
             tradeStateSubscription = EasyBind.subscribe(dataModel.getTrade().stateProperty(), newValue -> {
+                log.debug("tradeStateSubscription " + newValue);
                 if (newValue != null) {
                     applyState(newValue);
                 }
@@ -189,10 +190,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public void fiatPaymentReceived() {
         dataModel.onFiatPaymentReceived();
-    }
-
-    public void onWithdrawRequest(String withdrawToAddress) {
-        dataModel.onWithdrawRequest(withdrawToAddress);
     }
 
     public void withdrawAddressFocusOut(String text) {
@@ -324,7 +321,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getOpenDisputeTimeAsFormattedDate() {
-        return formatter.addBlocksToNowDateFormatted(getOpenDisputeTimeAsBlockHeight() - getBestChainHeight());
+        return formatter.addBlocksToNowDateFormatted(getOpenDisputeTimeAsBlockHeight() - getBestChainHeight() + (getLockTime() - getBestChainHeight()));
     }
 
     public String getReference() {
@@ -448,9 +445,13 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 break;
 
             case WITHDRAW_COMPLETED:
+                sellerState.set(UNDEFINED);
+                buyerState.set(PendingTradesViewModel.BuyerState.UNDEFINED);
                 break;
 
             default:
+                sellerState.set(UNDEFINED);
+                buyerState.set(PendingTradesViewModel.BuyerState.UNDEFINED);
                 log.warn("unhandled processState " + tradeState);
                 break;
         }

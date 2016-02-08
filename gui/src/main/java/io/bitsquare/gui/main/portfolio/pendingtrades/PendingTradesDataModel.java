@@ -24,17 +24,14 @@ import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.disputes.DisputesView;
-import io.bitsquare.gui.main.portfolio.PortfolioView;
-import io.bitsquare.gui.main.portfolio.closedtrades.ClosedTradesView;
-import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.popups.SelectDepositTxPopup;
 import io.bitsquare.gui.popups.WalletPasswordPopup;
 import io.bitsquare.payment.PaymentAccountContractData;
@@ -167,25 +164,29 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             ((SellerTrade) trade).onFiatPaymentReceived();
     }
 
-    void onWithdrawRequest(String toAddress) {
+    public void onWithdrawRequest(String toAddress, ResultHandler resultHandler, FaultHandler faultHandler) {
         checkNotNull(trade, "trade must not be null");
         if (walletService.getWallet().isEncrypted()) {
-            walletPasswordPopup.onAesKey(aesKey -> doWithdrawRequest(toAddress, aesKey)).show();
+            walletPasswordPopup.onAesKey(aesKey -> doWithdrawRequest(toAddress, aesKey, resultHandler, faultHandler)).show();
         } else
-            doWithdrawRequest(toAddress, null);
+            doWithdrawRequest(toAddress, null, resultHandler, faultHandler);
     }
 
-    private void doWithdrawRequest(String toAddress, KeyParameter aesKey) {
+    private void doWithdrawRequest(String toAddress, KeyParameter aesKey, ResultHandler resultHandler, FaultHandler faultHandler) {
         if (toAddress != null && toAddress.length() > 0) {
             tradeManager.onWithdrawRequest(
                     toAddress,
                     aesKey,
                     trade,
-                    () -> UserThread.execute(() -> navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class)),
+                    () -> {
+                        resultHandler.handleResult();
+                    },
                     (errorMessage, throwable) -> {
                         log.error(errorMessage);
-                        new Popup().error("An error occurred:\n" + throwable.getMessage()).show();
+                        faultHandler.handleFault(errorMessage, throwable);
                     });
+        } else {
+            faultHandler.handleFault("No receiver address defined", null);
         }
     }
 

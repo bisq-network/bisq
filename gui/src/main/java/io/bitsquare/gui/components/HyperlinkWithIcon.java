@@ -30,7 +30,6 @@ public class HyperlinkWithIcon extends HBox {
 
         icon = new Label();
         icon.getStyleClass().add("external-link-icon");
-
         AwesomeDude.setIcon(icon, awesomeIcon);
         icon.setMinWidth(20);
         icon.setOpacity(0.7);

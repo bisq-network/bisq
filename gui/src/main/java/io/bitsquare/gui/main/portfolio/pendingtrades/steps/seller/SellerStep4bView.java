@@ -54,7 +54,7 @@ public class SellerStep4bView extends TradeStepView {
 
     @Override
     protected String getWarningText() {
-        setInformationState();
+        setInformationHeadline();
         return "The trading peer has not finalized the payout transaction!\n" +
                 "He might be offline. You need to wait until he finalizes the payout transaction.\n" +
                 "If the trade has not been completed on " +
@@ -70,9 +70,8 @@ public class SellerStep4bView extends TradeStepView {
     @Override
     protected String getOpenForDisputeText() {
         return "The trading peer has not finalized the payout transaction!\n" +
-                "The max. period for the trade has elapsed (" +
-                model.getOpenDisputeTimeAsFormattedDate() + ").\n" +
-                "Please contact now the arbitrator for opening a dispute.";
+                "The max. period for the trade has elapsed.\n" +
+                "Please contact the arbitrator for opening a dispute.";
     }
 
     @Override

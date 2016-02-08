@@ -53,7 +53,6 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -90,7 +89,6 @@ public class WalletService {
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
     private final ObjectProperty<List<Peer>> connectedPeers = new SimpleObjectProperty<>();
     public final BooleanProperty shutDownDone = new SimpleBooleanProperty();
-    private ArbitraryTransactionBloomFilter arbitraryTransactionBloomFilter;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -703,88 +701,6 @@ public class WalletService {
 
                 balanceListener.onBalanceChanged(balance);
             }
-        }
-    }
-
-    public void requestTransactionBlockchainProvider(Transaction transaction, Consumer<Coin> resultHandler) {
-        // TODO use http server over tor to request tx in question
-        // https://btc.blockr.io/api/v1/tx/info/9a0c37209a45a0e61a50a62fcb7d0f52f3d6ed41faaf0afc044d642ab541b675
-
-    }
-
-    public void requestTransactionFromBlockChain(Transaction transaction, Consumer<Coin> resultHandler) {
-        requestTransactionBlockchainProvider(transaction, resultHandler);
-        
-      /*  arbitraryTransactionBloomFilter = new ArbitraryTransactionBloomFilter(transaction, resultHandler);
-        PeerGroup peerGroup = walletAppKit.peerGroup();
-        peerGroup.addEventListener(arbitraryTransactionBloomFilter);
-        peerGroup.addPeerFilterProvider(arbitraryTransactionBloomFilter);
-
-        log.debug("transaction=" + transaction);
-        log.debug("transaction.fee=" + transaction.getFee());*/
-    }
-
-    private class ArbitraryTransactionBloomFilter extends AbstractPeerEventListener implements PeerFilterProvider {
-        private final Transaction transaction;
-        private final Consumer<Coin> resultHandler;
-        private final Set<TransactionOutPoint> transactionOutPoints;
-
-        public ArbitraryTransactionBloomFilter(Transaction transaction, Consumer<Coin> resultHandler) {
-            this.transaction = transaction;
-            this.resultHandler = resultHandler;
-
-            transactionOutPoints = transaction.getInputs().stream()
-                    .map(e -> e.getOutpoint() != null ? e.getOutpoint() : null)
-                    .filter(e -> e != null)
-                    .collect(Collectors.toSet());
-
-            log.debug("transaction=" + transaction);
-            log.debug("transaction.fee=" + transaction.getFee());
-            log.debug("outpoints=" + transactionOutPoints);
-        }
-
-        @Override
-        public long getEarliestKeyCreationTime() {
-            return System.currentTimeMillis() / 1000;
-        }
-
-        @Override
-        public void beginBloomFilterCalculation() {
-        }
-
-        @Override
-        public int getBloomFilterElementCount() {
-            return transactionOutPoints.size();
-        }
-
-        @Override
-        public BloomFilter getBloomFilter(int size, double falsePositiveRate, long nTweak) {
-            BloomFilter filter = new BloomFilter(size, falsePositiveRate, nTweak);
-            for (TransactionOutPoint transactionOutPoint : transactionOutPoints) {
-                filter.insert(transactionOutPoint.bitcoinSerialize());
-            }
-            return filter;
-        }
-
-        @Override
-        public boolean isRequiringUpdateAllBloomFilter() {
-            return false;
-        }
-
-        @Override
-        public void endBloomFilterCalculation() {
-        }
-
-        @Override
-        public void onTransaction(Peer peer, Transaction tx) {
-            if (transactionOutPoints.contains(tx))
-                transactionOutPoints.remove(tx);
-
-            if (transactionOutPoints.isEmpty())
-                resultHandler.accept(transaction.getFee());
-
-            log.debug("## onTransaction: transaction=" + tx);
-            log.debug("## onTransaction: transaction.fee=" + tx.getFee());
         }
     }
 }

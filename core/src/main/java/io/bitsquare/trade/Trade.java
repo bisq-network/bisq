@@ -147,6 +147,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     // Mutable
     private DecryptedMsgWithPubKey decryptedMsgWithPubKey;
     private Date takeOfferDate = new Date(0); // in some error cases the date is not set and cause null pointers, so we set a default
+    private int takeOfferDateAsBlockHeight;
     private Coin tradeAmount;
     private NodeAddress tradingPeerNodeAddress;
     protected State state;
@@ -164,8 +165,6 @@ abstract public class Trade implements Tradable, Model, Serializable {
     private int checkPaymentTimeAsBlockHeight;
     private NodeAddress arbitratorNodeAddress;
     private String takerPaymentAccountId;
-    private boolean halfTradePeriodReachedWarningDisplayed;
-    private boolean tradePeriodOverWarningDisplayed;
     private String errorMessage;
     transient private StringProperty errorMessageProperty;
     transient private ObjectProperty<Coin> tradeAmountProperty;
@@ -418,6 +417,14 @@ abstract public class Trade implements Tradable, Model, Serializable {
         this.takeOfferDate = takeOfferDate;
     }
 
+    public int getTakeOfferDateAsBlockHeight() {
+        return takeOfferDateAsBlockHeight;
+    }
+
+    public void setTakeOfferDateAsBlockHeight(int blockHeight) {
+        takeOfferDateAsBlockHeight = blockHeight;
+    }
+
     public void setTradingPeerNodeAddress(NodeAddress tradingPeerNodeAddress) {
         if (tradingPeerNodeAddress == null)
             log.error("tradingPeerAddress=null");
@@ -536,24 +543,6 @@ abstract public class Trade implements Tradable, Model, Serializable {
         this.takerPaymentAccountId = takerPaymentAccountId;
     }
 
-    public void setHalfTradePeriodReachedWarningDisplayed(boolean halfTradePeriodReachedWarningDisplayed) {
-        this.halfTradePeriodReachedWarningDisplayed = halfTradePeriodReachedWarningDisplayed;
-        persist();
-    }
-
-    public boolean isHalfTradePeriodReachedWarningDisplayed() {
-        return halfTradePeriodReachedWarningDisplayed;
-    }
-
-    public void setTradePeriodOverWarningDisplayed(boolean tradePeriodOverWarningDisplayed) {
-        this.tradePeriodOverWarningDisplayed = tradePeriodOverWarningDisplayed;
-        persist();
-    }
-
-    public boolean isTradePeriodOverWarningDisplayed() {
-        return tradePeriodOverWarningDisplayed;
-    }
-
     public void setContractHash(byte[] contractHash) {
         this.contractHash = contractHash;
     }
@@ -638,8 +627,6 @@ abstract public class Trade implements Tradable, Model, Serializable {
                 "\n\tcheckPaymentTimeAsBlockHeight=" + checkPaymentTimeAsBlockHeight +
                 "\n\tarbitratorNodeAddress=" + arbitratorNodeAddress +
                 "\n\ttakerPaymentAccountId='" + takerPaymentAccountId + '\'' +
-                "\n\thalfTradePeriodReachedWarningDisplayed=" + halfTradePeriodReachedWarningDisplayed +
-                "\n\ttradePeriodOverWarningDisplayed=" + tradePeriodOverWarningDisplayed +
                 "\n\terrorMessage='" + errorMessage + '\'' +
                 '}';
     }

@@ -33,12 +33,12 @@ public class SellOfferView extends OfferView {
 
     @Override
     protected String getCreateOfferTabName() {
-        return "Create offer for selling bitcoin";
+        return "Create offer";
     }
 
     @Override
     protected String getTakeOfferTabName() {
-        return "Take offer for selling bitcoin";
+        return "Take offer";
     }
 }
 
