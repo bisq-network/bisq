@@ -56,6 +56,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.bitcoinj.store.BlockStoreException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.controlsfx.dialog.Dialogs;
 import org.reactfx.EventStreams;
@@ -108,10 +109,15 @@ public class BitsquareApp extends Application {
         // setup UncaughtExceptionHandler
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
             // Might come from another thread 
-            log.error("Uncaught Exception from thread " + Thread.currentThread().getName());
-            log.error("Uncaught Exception throwableMessage= " + throwable.getMessage());
-            throwable.printStackTrace();
-            UserThread.execute(() -> showErrorPopup(throwable, false));
+            if (throwable.getCause() != null && throwable.getCause().getCause() != null &&
+                    throwable.getCause().getCause() instanceof BlockStoreException) {
+                log.error(throwable.getMessage());
+            } else {
+                log.error("Uncaught Exception from thread " + Thread.currentThread().getName());
+                log.error("Uncaught Exception throwableMessage= " + throwable.getMessage());
+                throwable.printStackTrace();
+                UserThread.execute(() -> showErrorPopup(throwable, false));
+            }
         };
         Thread.setDefaultUncaughtExceptionHandler(handler);
         Thread.currentThread().setUncaughtExceptionHandler(handler);
@@ -135,7 +141,7 @@ public class BitsquareApp extends Application {
                 if (mainView != null)
                     mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
             });
-            
+
             // load the main view and create the main scene
             CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
             mainView = (MainView) viewLoader.load(MainView.class);

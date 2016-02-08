@@ -637,7 +637,10 @@ public class MainViewModel implements ViewModel {
         if (error instanceof TimeoutException) {
             walletServiceErrorMsg.set("Connecting to the bitcoin network failed because of a timeout.");
         } else if (error.getCause() instanceof BlockStoreException) {
-            walletServiceErrorMsg.set("Bitsquare is already running. You cannot run 2 instances of Bitsquare.");
+            new Popup().warning("Bitsquare is already running. You cannot run 2 instances of Bitsquare.")
+                    .closeButtonText("Shut down")
+                    .onClose(BitsquareApp.shutDownHandler::run)
+                    .show();
         } else if (error.getMessage() != null) {
             walletServiceErrorMsg.set("Connection to the bitcoin network failed because of an error:" + error.getMessage());
         } else {

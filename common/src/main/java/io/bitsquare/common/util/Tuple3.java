@@ -50,6 +50,4 @@ public class Tuple3<A, B, C> implements Serializable {
         result = 31 * result + (third != null ? third.hashCode() : 0);
         return result;
     }
-
-
 }

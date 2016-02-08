@@ -103,6 +103,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
 
     private PaymentAccount paymentAccount;
+    private WalletEventListener walletEventListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -138,42 +139,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         };
 
         paymentAccountsChangeListener = change -> paymentAccounts.setAll(user.getPaymentAccounts());
-    }
-
-
-    @Override
-    protected void activate() {
-        addBindings();
-        addListeners();
-
-        paymentAccounts.setAll(user.getPaymentAccounts());
-        updateBalance(walletService.getBalanceForAddress(getAddressEntry().getAddress()));
-
-        if (direction == Offer.Direction.BUY)
-            calculateTotalToPay();
-    }
-
-    @Override
-    protected void deactivate() {
-        removeBindings();
-        removeListeners();
-    }
-
-    private void addBindings() {
-        btcCode.bind(preferences.btcDenominationProperty());
-    }
-
-    private void removeBindings() {
-        btcCode.unbind();
-    }
-
-    boolean isFeeFromFundingTxSufficient() {
-        return feeFromFundingTxProperty.get().compareTo(FeePolicy.getMinFundingFee()) >= 0;
-    }
-
-    private void addListeners() {
-        walletService.addBalanceListener(balanceListener);
-        walletService.getWallet().addEventListener(new WalletEventListener() {
+        walletEventListener = new WalletEventListener() {
             @Override
             public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
                 requestFeeFromBlockchain(tx.getHashAsString());
@@ -202,28 +168,45 @@ class CreateOfferDataModel extends ActivatableDataModel {
             @Override
             public void onKeysAdded(List<ECKey> keys) {
             }
-        });
-        user.getPaymentAccountsAsObservable().addListener(paymentAccountsChangeListener);
+        };
     }
 
-    private void requestFeeFromBlockchain(String transactionId) {
-        SettableFuture<Coin> future = blockchainService.requestFeeFromBlockchain(transactionId);
-        Futures.addCallback(future, new FutureCallback<Coin>() {
-            public void onSuccess(Coin fee) {
-                UserThread.execute(() -> feeFromFundingTxProperty.set(fee));
-            }
+    @Override
+    protected void activate() {
+        addBindings();
+        addListeners();
 
-            public void onFailure(@NotNull Throwable throwable) {
-                UserThread.execute(() -> new Popup()
-                        .warning("We did not get a result for the mining fee used in the funding transaction.")
-                        .show());
-            }
-        });
+        paymentAccounts.setAll(user.getPaymentAccounts());
+        updateBalance(walletService.getBalanceForAddress(getAddressEntry().getAddress()));
+
+        if (direction == Offer.Direction.BUY)
+            calculateTotalToPay();
+    }
+
+    @Override
+    protected void deactivate() {
+        removeBindings();
+        removeListeners();
+    }
+
+    private void addBindings() {
+        btcCode.bind(preferences.btcDenominationProperty());
+    }
+
+    private void removeBindings() {
+        btcCode.unbind();
+    }
+
+    private void addListeners() {
+        walletService.addBalanceListener(balanceListener);
+        walletService.getWallet().addEventListener(walletEventListener);
+        user.getPaymentAccountsAsObservable().addListener(paymentAccountsChangeListener);
     }
 
 
     private void removeListeners() {
         walletService.removeBalanceListener(balanceListener);
+        walletService.getWallet().removeEventListener(walletEventListener);
         user.getPaymentAccountsAsObservable().removeListener(paymentAccountsChangeListener);
     }
 
@@ -343,9 +326,29 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return user.getAcceptedArbitrators().size() > 0;
     }
 
+    boolean isFeeFromFundingTxSufficient() {
+        return feeFromFundingTxProperty.get().compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0;
+    }
+
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void requestFeeFromBlockchain(String transactionId) {
+        SettableFuture<Coin> future = blockchainService.requestFeeFromBlockchain(transactionId);
+        Futures.addCallback(future, new FutureCallback<Coin>() {
+            public void onSuccess(Coin fee) {
+                UserThread.execute(() -> feeFromFundingTxProperty.set(fee));
+            }
+
+            public void onFailure(@NotNull Throwable throwable) {
+                UserThread.execute(() -> new Popup()
+                        .warning("We did not get a response for the request of the mining fee used in the funding transaction.")
+                        .show());
+            }
+        });
+    }
 
     void calculateVolume() {
         if (priceAsFiat.get() != null &&

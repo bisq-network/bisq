@@ -150,7 +150,6 @@ public abstract class TradeStepView extends AnchorPane {
         tradeInfoTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 4, "Trade information");
         txIdTextField = addLabelTxIdTextField(gridPane, gridRow, "Deposit transaction ID:", Layout.FIRST_ROW_DISTANCE).second;
 
-        //TODO
         PaymentMethodForm.addAllowedPeriod(gridPane, ++gridRow, model.dataModel.getSellersPaymentAccountContractData(),
                 model.getOpenDisputeTimeAsFormattedDate());
 

@@ -294,8 +294,8 @@ public class FormBuilder {
 
         InputTextField inputTextField = new InputTextField();
         CheckBox checkBox = new CheckBox(checkBoxTitle);
-        checkBox.setPadding(new Insets(6, 0, 0, 0));
-
+        HBox.setMargin(checkBox, new Insets(4, 0, 0, 0));
+        
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         hBox.getChildren().addAll(inputTextField, checkBox);

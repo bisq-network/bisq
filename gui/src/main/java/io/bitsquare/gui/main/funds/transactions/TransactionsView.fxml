@@ -28,12 +28,12 @@
     </padding>
     <TableView fx:id="table" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="160" maxWidth="160">
+            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="180" maxWidth="180">
                 <cellValueFactory>
                     <PropertyValueFactory property="date"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Details" fx:id="detailsColumn" minWidth="210" maxWidth="210"/>
+            <TableColumn text="Details" fx:id="detailsColumn" minWidth="220" maxWidth="220"/>
             <TableColumn text="Address" fx:id="addressColumn" minWidth="180"/>
             <TableColumn text="Transaction" fx:id="transactionColumn" minWidth="100"/>
             <TableColumn text="Amount (BTC)" fx:id="amountColumn" minWidth="110" maxWidth="110">

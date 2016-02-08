@@ -26,7 +26,6 @@ import javafx.scene.layout.Pane;
 
 public class TitledGroupBg extends Pane {
 
-
     private final Label label;
     private final StringProperty text = new SimpleStringProperty();
 

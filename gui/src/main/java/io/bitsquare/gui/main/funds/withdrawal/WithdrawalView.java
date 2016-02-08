@@ -191,9 +191,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     new Popup().headLine("Confirm your withdrawal request")
                             .message("Sending: " + formatter.formatCoinWithCode(senderAmount) + "\n" +
                                     "From address: " + withdrawFromTextField.getText() + "\n" +
-                                    "To receiving address: " + withdrawToTextField.getText() + ".\n\n" +
-                                    "Required transaction fee is: " + formatter.formatCoinWithCode(requiredFee) + "\n" +
-                                    "Recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
+                                    "To receiving address: " + withdrawToTextField.getText() + ".\n" +
+                                    "Required transaction fee is: " + formatter.formatCoinWithCode(requiredFee) + "\n\n" +
+                                    "The recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
                                     "Are you sure you want to withdraw that amount?")
                             .onAction(() -> doWithdraw(receiverAmount, callback))
                             .show();

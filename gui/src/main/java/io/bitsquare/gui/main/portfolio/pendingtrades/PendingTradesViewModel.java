@@ -321,7 +321,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getOpenDisputeTimeAsFormattedDate() {
-        return formatter.addBlocksToNowDateFormatted(getOpenDisputeTimeAsBlockHeight() - getBestChainHeight() + (getLockTime() - getBestChainHeight()));
+        return formatter.addBlocksToNowDateFormatted(getOpenDisputeTimeAsBlockHeight() - getBestChainHeight() +
+                (dataModel.getTrade().getOffer().getPaymentMethod().getLockTime()));
     }
 
     public String getReference() {

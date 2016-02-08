@@ -61,7 +61,7 @@ public class FeePolicy {
     }
 
     // Some wallets (Mycelium) don't support higher fees 
-    public static Coin getMinFundingFee() {
+    public static Coin getMinRequiredFeeForFundingTx() {
         return Coin.valueOf(20_000); 
     }
 

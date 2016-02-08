@@ -347,7 +347,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         "You can see the details when you move the mouse over the question mark.\n\n" +
                         "Important notice!\n" +
                         "Please take care that you use a mining fee of at least " +
-                        model.formatter.formatCoinWithCode(FeePolicy.getMinFundingFee()) + " when you transfer bitcoin from your external " +
+                        model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) + " when you transfer bitcoin from your external " +
                         "wallet to ensure the trade transactions will get into the blockchain.\n" +
                         "A too low mining fee might result in a delayed trade and will be rejected!")
                         .closeButtonText("I understand")

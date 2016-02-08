@@ -29,7 +29,7 @@
 
     <TableView fx:id="table" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="170" maxWidth="170"/>
+            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="180" maxWidth="180"/>
             <TableColumn text="Details" fx:id="detailsColumn" minWidth="260"/>
             <TableColumn text="Address" fx:id="addressColumn" minWidth="320" maxWidth="320">
                 <cellValueFactory>

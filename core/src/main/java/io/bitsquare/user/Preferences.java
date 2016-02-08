@@ -72,7 +72,7 @@ public class Preferences implements Serializable {
 
     private static Locale defaultLocale = Locale.getDefault();
     //TODO test with other locales
-    //private static Locale defaultLocale = Locale.US;
+    // private static Locale defaultLocale = Locale.US;
 
     public static Locale getDefaultLocale() {
         return defaultLocale;
@@ -416,5 +416,4 @@ public class Preferences implements Serializable {
     public boolean getUseTorForBitcoinJ() {
         return useTorForBitcoinJ;
     }
-
 }

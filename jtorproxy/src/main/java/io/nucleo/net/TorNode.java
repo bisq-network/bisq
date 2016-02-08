@@ -23,11 +23,6 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
     private static final Logger log = LoggerFactory.getLogger(TorNode.class);
 
     private final OnionProxyManager tor;
-
-    public Socks5Proxy getProxy() {
-        return proxy;
-    }
-
     private final Socks5Proxy proxy;
 
     public TorNode(M mgr) throws IOException {

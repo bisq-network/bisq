@@ -6,7 +6,7 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>io.bitsquare</groupId>
-        <version>0.3.4-SNAPSHOT</version>
+        <version>0.3.4</version>
     </parent>
 
     <artifactId>core</artifactId>
@@ -51,7 +51,6 @@
             <artifactId>jopt-simple</artifactId>
             <version>4.8</version>
         </dependency>
-
 
     </dependencies>
 </project>

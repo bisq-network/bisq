@@ -45,7 +45,7 @@ public class ProcessFinalizePayoutTxRequest extends TradeTask {
 
             processModel.tradingPeer.setSignature(checkNotNull(message.sellerSignature));
             processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(message.sellerPayoutAddress));
-            trade.setLockTimeAsBlockHeight(nonNegativeLongOf(message.lockTime));
+            trade.setLockTimeAsBlockHeight(nonNegativeLongOf(message.lockTimeAsBlockHeight));
 
             trade.setState(Trade.State.FIAT_PAYMENT_RECEIPT_MSG_RECEIVED);
 
