@@ -21,8 +21,6 @@ import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.btc.http.BlockchainApiProvider;
-import io.bitsquare.btc.http.BlockrIOProvider;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
@@ -67,7 +65,6 @@ public class Preferences implements Serializable {
             new BlockChainExplorer("Blockr.io", "https://btc.blockr.io/tx/info/", "https://btc.blockr.io/address/info/"),
             new BlockChainExplorer("Biteasy", "https://www.biteasy.com/transactions/", "https://www.biteasy.com/addresses/")
     ));
-    private BlockchainApiProvider blockchainApiProvider;
 
     public static List<String> getBtcDenominations() {
         return BTC_DENOMINATIONS;
@@ -156,8 +153,6 @@ public class Preferences implements Serializable {
             defaultTradeCurrency = preferredTradeCurrency;
             useTorForBitcoinJ = persisted.getUseTorForBitcoinJ();
 
-            blockchainApiProvider = persisted.getBlockchainApiProvider();
-            
             try {
                 setTxFeePerKB(persisted.getTxFeePerKB());
             } catch (Exception e) {
@@ -179,8 +174,6 @@ public class Preferences implements Serializable {
 
             preferredLocale = getDefaultLocale();
             preferredTradeCurrency = getDefaultTradeCurrency();
-
-            blockchainApiProvider = new BlockrIOProvider();
 
             storage.queueUpForSave();
         }
@@ -304,10 +297,6 @@ public class Preferences implements Serializable {
         storage.queueUpForSave();
     }
 
-    public void setBlockchainApiProvider(BlockchainApiProvider blockchainApiProvider) {
-        this.blockchainApiProvider = blockchainApiProvider;
-        storage.queueUpForSave();
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -426,10 +415,6 @@ public class Preferences implements Serializable {
 
     public boolean getUseTorForBitcoinJ() {
         return useTorForBitcoinJ;
-    }
-
-    public BlockchainApiProvider getBlockchainApiProvider() {
-        return blockchainApiProvider;
     }
 
 }

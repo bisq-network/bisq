@@ -1,4 +1,4 @@
-package io.bitsquare.btc.http;
+package io.bitsquare.btc.blockchain;
 
 public class HttpException extends Exception {
     public HttpException(String message) {

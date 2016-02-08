@@ -17,17 +17,21 @@
 
 package io.bitsquare.gui.main.offer.createoffer;
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.btc.http.HttpException;
+import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
+import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.popups.WalletPasswordPopup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
@@ -50,7 +54,6 @@ import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -70,6 +73,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final KeyRing keyRing;
     private final P2PService p2PService;
     private final WalletPasswordPopup walletPasswordPopup;
+    private BlockchainService blockchainService;
     private final BSFormatter formatter;
     private final String offerId;
     private final AddressEntry addressEntry;
@@ -99,7 +103,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
 
     private PaymentAccount paymentAccount;
-    private int retryRequestFeeCounter = 0;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -109,7 +112,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     @Inject
     CreateOfferDataModel(OpenOfferManager openOfferManager, WalletService walletService, TradeWalletService tradeWalletService,
                          Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,
-                         WalletPasswordPopup walletPasswordPopup, BSFormatter formatter) {
+                         WalletPasswordPopup walletPasswordPopup, BlockchainService blockchainService, BSFormatter formatter) {
         this.openOfferManager = openOfferManager;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
@@ -118,6 +121,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.walletPasswordPopup = walletPasswordPopup;
+        this.blockchainService = blockchainService;
         this.formatter = formatter;
 
         offerId = UUID.randomUUID().toString();
@@ -164,9 +168,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     boolean isFeeFromFundingTxSufficient() {
-        // if fee was never set because of api provider not available we check with default value and return true
-        return feeFromFundingTxProperty.get().equals(Coin.NEGATIVE_SATOSHI) ||
-                feeFromFundingTxProperty.get().compareTo(FeePolicy.getMinFundingFee()) >= 0;
+        return feeFromFundingTxProperty.get().compareTo(FeePolicy.getMinFundingFee()) >= 0;
     }
 
     private void addListeners() {
@@ -205,17 +207,18 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     private void requestFeeFromBlockchain(String transactionId) {
-        try {
-            feeFromFundingTxProperty.set(preferences.getBlockchainApiProvider().getFee(transactionId));
-        } catch (IOException | HttpException e) {
-            log.warn("Could not get fee from block explorer" + e);
-            if (retryRequestFeeCounter < 3) {
-                retryRequestFeeCounter++;
-                log.warn("We try again after 5 seconds");
-                // TODO if we have more providers, try another one
-                UserThread.runAfter(() -> requestFeeFromBlockchain(transactionId), 5);
+        SettableFuture<Coin> future = blockchainService.requestFeeFromBlockchain(transactionId);
+        Futures.addCallback(future, new FutureCallback<Coin>() {
+            public void onSuccess(Coin fee) {
+                UserThread.execute(() -> feeFromFundingTxProperty.set(fee));
             }
-        }
+
+            public void onFailure(@NotNull Throwable throwable) {
+                UserThread.execute(() -> new Popup()
+                        .warning("We did not get a result for the mining fee used in the funding transaction.")
+                        .show());
+            }
+        });
     }
 
 
