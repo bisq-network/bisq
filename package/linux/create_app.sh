@@ -6,7 +6,7 @@ mkdir -p gui/deploy
 set -e
 
 # Edit versions
-fullVersion=0.3.4
+fullVersion=0.3.5
 jarFile="/home/mk/Desktop/sf_vm_shared_ubuntu/Bitsquare-$fullVersion.jar"
 
 # Note: fakeroot needs to be installed on linux
