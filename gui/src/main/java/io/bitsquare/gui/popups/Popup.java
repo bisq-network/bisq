@@ -17,11 +17,13 @@
 
 package io.bitsquare.gui.popups;
 
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.user.Preferences;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -241,12 +243,27 @@ public class Popup {
         centerPopup();
 
         MainView.blurLight();
+
+        // sometimes the positioning fails if UI is very busy and app window gets moved
+        ChangeListener<Number> positionListener = (observable, oldValue, newValue) -> {
+            if (stage != null)
+                UserThread.runAfter(this::centerPopup, 1);
+        };
+        owner.getScene().getWindow().xProperty().addListener(positionListener);
+        owner.getScene().getWindow().yProperty().addListener(positionListener);
+
+        UserThread.runAfter(() -> {
+            owner.getScene().getWindow().xProperty().removeListener(positionListener);
+            owner.getScene().getWindow().yProperty().removeListener(positionListener);
+        }, 5);
     }
 
     protected void centerPopup() {
         Window window = owner.getScene().getWindow();
         double titleBarHeight = window.getHeight() - owner.getScene().getHeight();
         Point2D point = owner.localToScene(0, 0);
+        log.error("window window.getX()=" + window.getX());
+        log.error("window window.getY()=" + window.getY());
         stage.setX(Math.round(window.getX() + point.getX() + (owner.getWidth() - stage.getWidth()) / 2));
         stage.setY(Math.round(window.getY() + titleBarHeight + point.getY() + (owner.getHeight() - stage.getHeight()) / 2));
     }
