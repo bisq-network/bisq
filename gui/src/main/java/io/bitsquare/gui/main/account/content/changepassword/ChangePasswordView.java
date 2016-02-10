@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.account.content.changepassword;
 
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.common.view.InitializableView;
-import io.bitsquare.gui.common.view.Wizard;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import javafx.fxml.FXML;
@@ -31,7 +30,7 @@ import javafx.scene.layout.HBox;
 import javax.inject.Inject;
 
 @FxmlView
-public class ChangePasswordView extends InitializableView<GridPane, ChangePasswordViewModel> implements Wizard.Step {
+public class ChangePasswordView extends InitializableView<GridPane, ChangePasswordViewModel> {
 
     @FXML
     HBox buttonsHBox;
@@ -39,8 +38,6 @@ public class ChangePasswordView extends InitializableView<GridPane, ChangePasswo
     Button saveButton, skipButton;
     @FXML
     PasswordField oldPasswordField, passwordField, repeatedPasswordField;
-
-    private Wizard wizard;
 
     @Inject
     private ChangePasswordView(ChangePasswordViewModel model) {
@@ -55,21 +52,9 @@ public class ChangePasswordView extends InitializableView<GridPane, ChangePasswo
         saveButton.disableProperty().bind(model.saveButtonDisabled);
     }
 
-    @Override
-    public void setWizard(Wizard wizard) {
-        this.wizard = wizard;
-    }
-
-    @Override
-    public void hideWizardNavigation() {
-        buttonsHBox.getChildren().remove(skipButton);
-    }
-
     @FXML
     private void onSaved() {
-        if (wizard != null && model.requestSavePassword())
-            wizard.nextStep(this);
-        else
+        if (!model.requestSavePassword())
             log.debug(model.getErrorMessage()); // TODO use validating TF
     }
 
@@ -80,8 +65,6 @@ public class ChangePasswordView extends InitializableView<GridPane, ChangePasswo
 
     @FXML
     private void onSkipped() {
-        if (wizard != null)
-            wizard.nextStep(this);
     }
 }
 

@@ -123,9 +123,6 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         else {*/
         View view = viewLoader.load(viewClass);
         content.getChildren().setAll(view.getRoot());
-        if (view instanceof Wizard.Step)
-            ((Wizard.Step) view).hideWizardNavigation();
-
 
         if (view instanceof PasswordView) password.setSelected(true);
         else if (view instanceof SeedWordsView) seedWords.setSelected(true);
