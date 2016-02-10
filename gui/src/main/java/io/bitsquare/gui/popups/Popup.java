@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.Timer;
 
 import static io.bitsquare.gui.util.FormBuilder.addCheckBox;
 
@@ -72,6 +73,7 @@ public class Popup {
     private String dontShowAgainId;
     private Preferences preferences;
     private ChangeListener<Number> positionListener;
+    private Timer centerTime;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -98,6 +100,14 @@ public class Popup {
     }
 
     public void hide() {
+        if (Utilities.isLinux() && owner != null && positionListener != null) {
+            owner.getScene().getWindow().xProperty().removeListener(positionListener);
+            owner.getScene().getWindow().yProperty().removeListener(positionListener);
+        }
+
+        if (centerTime != null)
+            centerTime.cancel();
+
         MainView.removeBlur();
         if (stage != null)
             stage.hide();
@@ -106,11 +116,6 @@ public class Popup {
 
         cleanup();
         PopupManager.isHidden(this);
-
-        if (Utilities.isUnix()) {
-            owner.getScene().getWindow().xProperty().removeListener(positionListener);
-            owner.getScene().getWindow().yProperty().removeListener(positionListener);
-        }
     }
 
     protected void cleanup() {
@@ -250,14 +255,17 @@ public class Popup {
 
         MainView.blurLight();
 
-        if (Utilities.isUnix()) {
+        if (Utilities.isLinux()) {
             // On Linux the owner stage does not move the child stage as it does on Mac
             // So we need to apply centerPopup. Further with fast movements the handler loses
             // the latest position, with a delay it fixes that.
             positionListener = (observable, oldValue, newValue) -> {
                 if (stage != null) {
                     centerPopup();
-                    UserThread.runAfter(this::centerPopup, 3);
+                    if (centerTime != null)
+                        centerTime.cancel();
+
+                    centerTime = UserThread.runAfter(this::centerPopup, 3);
                 }
             };
             owner.getScene().getWindow().xProperty().addListener(positionListener);

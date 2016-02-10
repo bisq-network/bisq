@@ -114,7 +114,7 @@ public class Utilities {
         return getOSName().contains("mac") || getOSName().contains("darwin");
     }
 
-    private static boolean isLinux() {
+    public static boolean isLinux() {
         return getOSName().contains("linux");
     }
 

@@ -28,10 +28,10 @@ public class Version {
 
     // The version nr. for the objects sent over the network. A change will break the serialization of old objects.
     // If objects are used for both network and database the network version is applied.
-    public static final long P2P_NETWORK_VERSION = 1;
+    public static final long P2P_NETWORK_VERSION = 2;
 
     // The version nr. of the serialized data stored to disc. A change will break the serialization of old objects.
-    public static final long LOCAL_DB_VERSION = 1;
+    public static final long LOCAL_DB_VERSION = 2;
 
     // The version nr. of the current protocol. The offer holds that version. 
     // A taker will check the version of the offers to see if his version is compatible.
