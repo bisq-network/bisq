@@ -71,6 +71,7 @@ public class Popup {
     protected Label headLineLabel;
     private String dontShowAgainId;
     private Preferences preferences;
+    private ChangeListener<Number> positionListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -105,6 +106,11 @@ public class Popup {
 
         cleanup();
         PopupManager.isHidden(this);
+
+        if (Utilities.isUnix()) {
+            owner.getScene().getWindow().xProperty().removeListener(positionListener);
+            owner.getScene().getWindow().yProperty().removeListener(positionListener);
+        }
     }
 
     protected void cleanup() {
@@ -244,26 +250,25 @@ public class Popup {
 
         MainView.blurLight();
 
-        // sometimes the positioning fails if UI is very busy and app window gets moved
-        ChangeListener<Number> positionListener = (observable, oldValue, newValue) -> {
-            if (stage != null)
-                UserThread.runAfter(this::centerPopup, 1);
-        };
-        owner.getScene().getWindow().xProperty().addListener(positionListener);
-        owner.getScene().getWindow().yProperty().addListener(positionListener);
-
-        UserThread.runAfter(() -> {
-            owner.getScene().getWindow().xProperty().removeListener(positionListener);
-            owner.getScene().getWindow().yProperty().removeListener(positionListener);
-        }, 5);
+        if (Utilities.isUnix()) {
+            // On Linux the owner stage does not move the child stage as it does on Mac
+            // So we need to apply centerPopup. Further with fast movements the handler loses
+            // the latest position, with a delay it fixes that.
+            positionListener = (observable, oldValue, newValue) -> {
+                if (stage != null) {
+                    centerPopup();
+                    UserThread.runAfter(this::centerPopup, 3);
+                }
+            };
+            owner.getScene().getWindow().xProperty().addListener(positionListener);
+            owner.getScene().getWindow().yProperty().addListener(positionListener);
+        }
     }
 
     protected void centerPopup() {
         Window window = owner.getScene().getWindow();
         double titleBarHeight = window.getHeight() - owner.getScene().getHeight();
         Point2D point = owner.localToScene(0, 0);
-        log.error("window window.getX()=" + window.getX());
-        log.error("window window.getY()=" + window.getY());
         stage.setX(Math.round(window.getX() + point.getX() + (owner.getWidth() - stage.getWidth()) / 2));
         stage.setY(Math.round(window.getY() + titleBarHeight + point.getY() + (owner.getHeight() - stage.getHeight()) / 2));
     }
