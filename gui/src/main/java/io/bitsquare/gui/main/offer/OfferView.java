@@ -83,11 +83,20 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                     UserThread.execute(InputTextField::hideErrorMessageDisplay);
                     if (newValue != null) {
                         if (newValue.equals(createOfferTab) && createOfferView != null) {
-                            createOfferView.onTabSelected();
+                            createOfferView.onTabSelected(true);
                         } else if (newValue.equals(takeOfferTab) && takeOfferView != null) {
-                            takeOfferView.onTabSelected();
+                            takeOfferView.onTabSelected(true);
                         } else if (newValue.equals(offerBookTab) && offerBookView != null) {
-                            offerBookView.onTabSelected();
+                            offerBookView.onTabSelected(true);
+                        }
+                    }
+                    if (oldValue != null) {
+                        if (oldValue.equals(createOfferTab) && createOfferView != null) {
+                            createOfferView.onTabSelected(false);
+                        } else if (oldValue.equals(takeOfferTab) && takeOfferView != null) {
+                            takeOfferView.onTabSelected(false);
+                        } else if (oldValue.equals(offerBookTab) && offerBookView != null) {
+                            offerBookView.onTabSelected(false);
                         }
                     }
                 });
@@ -130,7 +139,8 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             offerBookTab.setContent(view.getRoot());
             tabPane.getTabs().add(offerBookTab);
             offerBookView = (OfferBookView) view;
-
+            offerBookView.onTabSelected(true);
+            
             OfferActionHandler offerActionHandler = new OfferActionHandler() {
                 @Override
                 public void onCreateOffer(TradeCurrency tradeCurrency) {

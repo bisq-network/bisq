@@ -310,8 +310,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             new Popup().warning("You have already funds paid in.\nIn the <Funds/Open for withdrawal> section you can withdraw those funds.").show();*/
     }
 
-    public void onTabSelected() {
-        model.dataModel.onTabSelected();
+    public void onTabSelected(boolean isSelected) {
+        model.dataModel.onTabSelected(isSelected);
     }
     
     

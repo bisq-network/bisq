@@ -247,7 +247,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Tuple3<TextField, Label, VBox> getMarketPriceBox(String text) {
         TextField textField = new TextField();
         textField.setEditable(false);
-        textField.setPrefWidth(140);
+        textField.setPrefWidth(150);
         textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
         textField.setStyle("-fx-alignment: center; -fx-background-color: -bs-bg-grey;");

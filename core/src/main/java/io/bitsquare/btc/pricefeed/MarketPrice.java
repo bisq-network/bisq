@@ -13,10 +13,21 @@ public class MarketPrice {
     private final double last;
 
     public MarketPrice(String currencyCode, String ask, String bid, String last) {
+        this(currencyCode, ask, bid, last, false);
+    }
+
+    public MarketPrice(String currencyCode, String ask, String bid, String last, boolean invert) {
         this.currencyCode = currencyCode;
-        this.ask = parseDouble(ask);
-        this.bid = parseDouble(bid);
-        this.last = parseDouble(last);
+        if (invert) {
+            this.ask = 1d / parseDouble(ask);
+            this.bid = 1d / parseDouble(bid);
+            this.last = 1d / parseDouble(last);
+        } else {
+            this.ask = parseDouble(ask);
+            this.bid = parseDouble(bid);
+            this.last = parseDouble(last);
+        }
+
     }
 
     public double getPrice(MarketPriceFeed.Type type) {

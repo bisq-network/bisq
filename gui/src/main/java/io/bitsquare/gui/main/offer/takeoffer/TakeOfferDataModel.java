@@ -82,6 +82,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     private BalanceListener balanceListener;
     private PaymentAccount paymentAccount;
+    private boolean isTabSelected;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -114,6 +115,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
         addBindings();
         addListeners();
         updateBalance(walletService.getBalanceForAddress(addressEntry.getAddress()));
+
+        if (isTabSelected)
+            marketPriceFeed.setCurrencyCode(offer.getCurrencyCode());
     }
 
     @Override
@@ -162,8 +166,10 @@ class TakeOfferDataModel extends ActivatableDataModel {
         tradeManager.checkOfferAvailability(offer, resultHandler);
     }
 
-    void onTabSelected() {
-        marketPriceFeed.setCurrencyCode(offer.getCurrencyCode());
+    void onTabSelected(boolean isSelected) {
+        this.isTabSelected = isSelected;
+        if (isTabSelected)
+            marketPriceFeed.setCurrencyCode(offer.getCurrencyCode());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

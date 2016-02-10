@@ -178,20 +178,20 @@ public class CurrencyUtil {
         // result.add(new CryptoCurrency("XMR", "Monero")); 
         // result.add(new CryptoCurrency("BCN", "Bytecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
-        result.add(new CryptoCurrency("ANC", "Anoncoin"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
         result.add(new CryptoCurrency("NSR", "NuShares"));
-        result.add(new CryptoCurrency("FAIR", "FairCoin"));
         result.add(new CryptoCurrency("PPC", "Peercoin"));
         result.add(new CryptoCurrency("XPM", "Primecoin"));
+        result.add(new CryptoCurrency("SC", "Siacoin"));
+        result.add(new CryptoCurrency("SJCX", "StorjcoinX"));
+        result.add(new CryptoCurrency("GEMZ", "Gemz"));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
+        result.add(new CryptoCurrency("BLK", "Blackcoin"));
+        result.add(new CryptoCurrency("FCT", "Factom"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
         result.add(new CryptoCurrency("BTS", "BitShares"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("XRP", "Ripple"));
-        // Stellar (XLM Lumen) uses an additional memo field. We dont support that for now
-        //result.add(new CryptoCurrency("STR", "Stellar")); 
-
         return result;
     }
 

@@ -201,8 +201,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         this.closeHandler = closeHandler;
     }
 
-    public void onTabSelected() {
-        model.dataModel.onTabSelected();
+    public void onTabSelected(boolean isSelected) {
+        model.dataModel.onTabSelected(isSelected);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

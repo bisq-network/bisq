@@ -67,6 +67,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private PaymentMethod paymentMethod = new AllPaymentMethodsEntry();
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> listChangeListener;
+    private boolean isTabSelected;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -94,7 +95,6 @@ class OfferBookViewModel extends ActivatableViewModel {
 
         tradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
         tradeCurrencyCode.set(tradeCurrency.getCode());
-        marketPriceFeed.setCurrencyCode(tradeCurrencyCode.get());
     }
 
     @Override
@@ -103,6 +103,8 @@ class OfferBookViewModel extends ActivatableViewModel {
         offerBookListItems.addListener(listChangeListener);
         offerBook.fillOfferBookListItems();
         filterList();
+        if (isTabSelected)
+            marketPriceFeed.setCurrencyCode(tradeCurrencyCode.get());
     }
 
     @Override
@@ -119,10 +121,12 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.direction = direction;
     }
 
-    void onTabSelected() {
-        marketPriceFeed.setCurrencyCode(tradeCurrencyCode.get());
+    void onTabSelected(boolean isSelected) {
+        this.isTabSelected = isSelected;
+        if (isTabSelected)
+            marketPriceFeed.setCurrencyCode(tradeCurrencyCode.get());
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions

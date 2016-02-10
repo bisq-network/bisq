@@ -197,8 +197,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         this.offerActionHandler = offerActionHandler;
     }
 
-    public void onTabSelected() {
-        model.onTabSelected();
+    public void onTabSelected(boolean isSelected) {
+        model.onTabSelected(isSelected);
     }
 
 

@@ -23,6 +23,7 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.popups.OpenEmergencyTicketPopup;
 import io.bitsquare.gui.popups.TradeDetailsPopup;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Trade;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -50,6 +51,7 @@ import javax.inject.Inject;
 public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTradesViewModel> {
 
     private final TradeDetailsPopup tradeDetailsPopup;
+    private BSFormatter formatter;
     @FXML
     TableView<PendingTradesListItem> table;
     @FXML
@@ -74,9 +76,10 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradesView(PendingTradesViewModel model, TradeDetailsPopup tradeDetailsPopup) {
+    public PendingTradesView(PendingTradesViewModel model, TradeDetailsPopup tradeDetailsPopup, BSFormatter formatter) {
         super(model);
         this.tradeDetailsPopup = tradeDetailsPopup;
+        this.formatter = formatter;
     }
 
     @Override
@@ -131,7 +134,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             appFocusProperty = scene.getWindow().focusedProperty();
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
         }
-        
+
         appFocusProperty.addListener(appFocusChangeListener);
         model.currentTrade().addListener(currentTradeChangeListener);
         //setNewSubView(model.currentTrade().get());
@@ -232,7 +235,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(model.formatTradeId(item.getId()), true);
+                                    field = new HyperlinkWithIcon(item.getId(), true);
                                     field.setOnAction(event -> tradeDetailsPopup.show(item.getTrade()));
                                     field.setTooltip(new Tooltip("Open popup for details"));
                                     setGraphic(field);
@@ -267,7 +270,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     } else {
                                         setId("-fx-text-fill: black");
                                     }
-                                    setText(model.getDate(item));
+                                    setText(formatter.formatDateTime(item.getTrade().getDate()));
                                 } else {
                                     setText(null);
                                 }
@@ -282,7 +285,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 new StringConverter<Coin>() {
                     @Override
                     public String toString(Coin value) {
-                        return model.formatTradeAmount(value);
+                        return formatter.formatCoinWithCode(value);
                     }
 
                     @Override
@@ -297,7 +300,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 new StringConverter<Fiat>() {
                     @Override
                     public String toString(Fiat value) {
-                        return model.formatPrice(value);
+                        return formatter.formatPriceWithCode(value);
                     }
 
                     @Override
@@ -313,7 +316,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 new StringConverter<Fiat>() {
                     @Override
                     public String toString(Fiat value) {
-                        return model.formatTradeVolume(value);
+                        return formatter.formatFiatWithCode(value);
                     }
 
                     @Override

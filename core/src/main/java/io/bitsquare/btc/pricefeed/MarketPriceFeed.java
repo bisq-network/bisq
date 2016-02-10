@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
 import io.bitsquare.app.Log;
 import io.bitsquare.btc.pricefeed.providers.BitcoinAveragePriceProvider;
+import io.bitsquare.btc.pricefeed.providers.PoloniexPriceProvider;
 import io.bitsquare.btc.pricefeed.providers.PriceProvider;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.FaultHandler;
@@ -18,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -43,15 +45,15 @@ public class MarketPriceFeed {
         }
     }
 
-    // TODO 
-    // https://poloniex.com/public?command=returnTicker  33 kb
-    private static long PERIOD = 30;
+    private static long PERIOD_FIAT = 1;    // We load only the selected currency on interval. Only the first request we load all
+    private static long PERIOD_CRYPTO = 10; // We load the full list with 33kb so we don't want to load too often
 
-    private final ScheduledThreadPoolExecutor executorService = Utilities.getScheduledThreadPoolExecutor("MarketPriceFeed", 5, 10, 120L);
+    private final ScheduledThreadPoolExecutor executorService = Utilities.getScheduledThreadPoolExecutor("MarketPriceFeed", 5, 10, 700L);
     private final Map<String, MarketPrice> cache = new HashMap<>();
+    private final PriceProvider fiatPriceProvider = new BitcoinAveragePriceProvider();
+    private final PriceProvider cryptoCurrenciesPriceProvider = new PoloniexPriceProvider();
     private Consumer<Double> priceConsumer;
     private FaultHandler faultHandler;
-    private PriceProvider fiatPriceProvider = new BitcoinAveragePriceProvider();
     private Type type;
     private String currencyCode;
     transient private final StringProperty currencyCodeProperty = new SimpleStringProperty();
@@ -66,6 +68,7 @@ public class MarketPriceFeed {
     public MarketPriceFeed() {
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -76,8 +79,18 @@ public class MarketPriceFeed {
 
         requestAllPrices(fiatPriceProvider, () -> {
             applyPrice();
-            executorService.scheduleAtFixedRate(() -> requestPrice(fiatPriceProvider), PERIOD, PERIOD, TimeUnit.SECONDS);
+            executorService.scheduleAtFixedRate(
+                    () -> requestPrice(fiatPriceProvider),
+                    PERIOD_FIAT, PERIOD_FIAT, TimeUnit.MINUTES);
         });
+        requestAllPrices(cryptoCurrenciesPriceProvider, () -> {
+            applyPrice();
+            executorService.scheduleAtFixedRate(
+                    () -> requestAllPrices(cryptoCurrenciesPriceProvider,
+                            this::applyPrice),
+                    PERIOD_CRYPTO, PERIOD_CRYPTO, TimeUnit.MINUTES);
+        });
+        requestAllPrices(cryptoCurrenciesPriceProvider, this::applyPrice);
     }
 
 
@@ -156,7 +169,7 @@ public class MarketPriceFeed {
         });
     }
 
-    private void requestAllPrices(PriceProvider provider, Runnable resultHandler) {
+    private void requestAllPrices(PriceProvider provider, @Nullable Runnable resultHandler) {
         Log.traceCall();
         GetPriceRequest getPriceRequest = new GetPriceRequest();
         SettableFuture<Map<String, MarketPrice>> future = getPriceRequest.requestAllPrices(provider);
@@ -164,7 +177,8 @@ public class MarketPriceFeed {
             public void onSuccess(Map<String, MarketPrice> marketPriceMap) {
                 UserThread.execute(() -> {
                     cache.putAll(marketPriceMap);
-                    resultHandler.run();
+                    if (resultHandler != null)
+                        resultHandler.run();
                 });
             }
 

@@ -103,6 +103,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     private PaymentAccount paymentAccount;
     private WalletEventListener walletEventListener;
+    private boolean isTabSelected;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -181,6 +182,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         if (direction == Offer.Direction.BUY)
             calculateTotalToPay();
+
+        if (isTabSelected)
+            marketPriceFeed.setCurrencyCode(tradeCurrencyCode.get());
     }
 
     @Override
@@ -227,8 +231,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
         marketPriceFeed.setCurrencyCode(tradeCurrencyCode.get());
     }
 
-    void onTabSelected() {
-        marketPriceFeed.setCurrencyCode(tradeCurrencyCode.get());
+    void onTabSelected(boolean isSelected) {
+        this.isTabSelected = isSelected;
+        if (isTabSelected)
+            marketPriceFeed.setCurrencyCode(tradeCurrencyCode.get());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

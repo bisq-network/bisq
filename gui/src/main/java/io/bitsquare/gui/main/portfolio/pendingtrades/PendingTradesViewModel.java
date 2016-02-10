@@ -34,8 +34,6 @@ import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.BlockChainListener;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.Fiat;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
@@ -225,21 +223,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     // columns
-    String formatTradeId(String value) {
-        return value;
-    }
-
-    String formatTradeAmount(Coin value) {
-        return formatter.formatCoinWithCode(value);
-    }
-
-    String formatPrice(Fiat value) {
-        return formatter.formatFiat(value);
-    }
-
-    String formatTradeVolume(Fiat value) {
-        return formatter.formatFiatWithCode(value);
-    }
 
     public String getRemainingTime() {
         return formatter.getPeriodBetweenBlockHeights(getBestChainHeight(),
@@ -253,10 +236,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             return 1 - remainingBlocks / maxPeriod;
         else
             return 0;
-    }
-
-    String getDate(PendingTradesListItem item) {
-        return formatter.formatDateTime(item.getTrade().getDate());
     }
 
     public boolean showWarning(Trade trade) {
