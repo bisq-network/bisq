@@ -29,6 +29,7 @@ import io.bitsquare.gui.main.account.content.password.PasswordView;
 import io.bitsquare.gui.main.account.content.paymentsaccount.PaymentAccountView;
 import io.bitsquare.gui.main.account.content.seedwords.SeedWordsView;
 import io.bitsquare.gui.util.Colors;
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -95,11 +96,22 @@ public class AccountSettingsView extends ActivatableViewAndModel {
             selecteedViewClass = viewPath.get(3);
             loadView(selecteedViewClass);
         }
+        paymentAccount.activate();
+        arbitratorSelection.activate();
+        password.activate();
+        seedWords.activate();
+        backup.activate();
     }
 
     @Override
     protected void deactivate() {
         navigation.removeListener(listener);
+
+        paymentAccount.deactivate();
+        arbitratorSelection.deactivate();
+        password.deactivate();
+        seedWords.deactivate();
+        backup.deactivate();
     }
 
     private void loadView(Class<? extends View> viewClass) {
@@ -133,7 +145,14 @@ public class AccountSettingsView extends ActivatableViewAndModel {
 
 class MenuItem extends ToggleButton {
 
+    private final ChangeListener<Boolean> selectedPropertyChangeListener;
+    private final ChangeListener<Boolean> disablePropertyChangeListener;
+    private Navigation navigation;
+    private Class<? extends View> viewClass;
+
     MenuItem(Navigation navigation, ToggleGroup toggleGroup, String title, Class<? extends View> viewClass, AwesomeIcon awesomeIcon) {
+        this.navigation = navigation;
+        this.viewClass = viewClass;
 
         setToggleGroup(toggleGroup);
         setText(title);
@@ -151,10 +170,7 @@ class MenuItem extends ToggleButton {
         icon.setMaxWidth(25);
         setGraphic(icon);
 
-        setOnAction((event) ->
-                navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, viewClass));
-
-        selectedProperty().addListener((ov, oldValue, newValue) -> {
+        selectedPropertyChangeListener = (ov, oldValue, newValue) -> {
             if (newValue) {
                 setId("account-settings-item-background-selected");
                 icon.setTextFill(Colors.BLUE);
@@ -162,9 +178,9 @@ class MenuItem extends ToggleButton {
                 setId("account-settings-item-background-active");
                 icon.setTextFill(Paint.valueOf("#333"));
             }
-        });
+        };
 
-        disableProperty().addListener((ov, oldValue, newValue) -> {
+        disablePropertyChangeListener = (ov, oldValue, newValue) -> {
             if (newValue) {
                 setId("account-settings-item-background-disabled");
                 icon.setTextFill(Paint.valueOf("#ccc"));
@@ -172,7 +188,19 @@ class MenuItem extends ToggleButton {
                 setId("account-settings-item-background-active");
                 icon.setTextFill(Paint.valueOf("#333"));
             }
-        });
+        };
+    }
+
+    public void activate() {
+        setOnAction((event) -> navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, viewClass));
+        selectedProperty().addListener(selectedPropertyChangeListener);
+        disableProperty().addListener(disablePropertyChangeListener);
+    }
+
+    public void deactivate() {
+        setOnAction(null);
+        selectedProperty().removeListener(selectedPropertyChangeListener);
+        disableProperty().removeListener(disablePropertyChangeListener);
     }
 }
 

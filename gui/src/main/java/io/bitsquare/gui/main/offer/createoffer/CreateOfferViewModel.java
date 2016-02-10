@@ -64,6 +64,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final StringProperty errorMessage = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
+    final StringProperty placeOfferSpinnerInfoText = new SimpleStringProperty();
 
     final BooleanProperty isPlaceOfferButtonVisible = new SimpleBooleanProperty(false);
     final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
@@ -105,7 +106,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     @Inject
     public CreateOfferViewModel(CreateOfferDataModel dataModel, FiatValidator fiatValidator, BtcValidator btcValidator,
-                                P2PService p2PService, 
+                                P2PService p2PService,
                                 BSFormatter formatter) {
         super(dataModel);
 
@@ -231,15 +232,30 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         priceAsFiatListener = (ov, oldValue, newValue) -> price.set(formatter.formatFiat(newValue));
         volumeAsFiatListener = (ov, oldValue, newValue) -> volume.set(formatter.formatFiat(newValue));
 
-        isWalletFundedListener = (ov, oldValue, newValue) -> updateButtonDisableState();
-        feeFromFundingTxListener = (ov, oldValue, newValue) -> updateButtonDisableState();
+        isWalletFundedListener = (ov, oldValue, newValue) -> {
+            updateButtonDisableState();
+            isPlaceOfferSpinnerVisible.set(true);
+            placeOfferSpinnerInfoText.set("Checking funding tx miner fee...");
+        };
+        feeFromFundingTxListener = (ov, oldValue, newValue) -> {
+            updateButtonDisableState();
+            if (newValue.isPositive()) {
+                isPlaceOfferSpinnerVisible.set(false);
+                placeOfferSpinnerInfoText.set("");
+            }
+        };
         requestPlaceOfferSuccessListener = (ov, oldValue, newValue) -> {
-            isPlaceOfferButtonVisible.set(!newValue);
-            isPlaceOfferSpinnerVisible.set(false);
+            if (newValue) {
+                isPlaceOfferButtonVisible.set(!newValue);
+                isPlaceOfferSpinnerVisible.set(false);
+                placeOfferSpinnerInfoText.set("");
+            }
         };
         requestPlaceOfferErrorMessageListener = (ov, oldValue, newValue) -> {
-            if (newValue != null)
+            if (newValue != null) {
                 isPlaceOfferSpinnerVisible.set(false);
+                placeOfferSpinnerInfoText.set("");
+            }
         };
     }
 
@@ -256,6 +272,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         dataModel.minAmountAsCoin.addListener(minAmountAsCoinListener);
         dataModel.priceAsFiat.addListener(priceAsFiatListener);
         dataModel.volumeAsFiat.addListener(volumeAsFiatListener);
+
         dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
         dataModel.isWalletFunded.addListener(isWalletFundedListener);
         requestPlaceOfferSuccess.addListener(requestPlaceOfferSuccessListener);
@@ -275,7 +292,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         dataModel.priceAsFiat.removeListener(priceAsFiatListener);
         dataModel.volumeAsFiat.removeListener(volumeAsFiatListener);
 
-        dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
+        dataModel.feeFromFundingTxProperty.removeListener(feeFromFundingTxListener);
         dataModel.isWalletFunded.removeListener(isWalletFundedListener);
         requestPlaceOfferSuccess.removeListener(requestPlaceOfferSuccessListener);
         errorMessage.removeListener(requestPlaceOfferErrorMessageListener);
@@ -302,6 +319,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         errorMessage.set(null);
         isPlaceOfferSpinnerVisible.set(true);
         requestPlaceOfferSuccess.set(false);
+        placeOfferSpinnerInfoText.set(BSResources.get("createOffer.fundsBox.placeOfferSpinnerInfo"));
 
         errorMessageListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -315,7 +333,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             }
         };
         offer.errorMessageProperty().addListener(errorMessageListener);
-        dataModel.onPlaceOffer(offer, (transaction) -> requestPlaceOfferSuccess.set(true));
+        dataModel.onPlaceOffer(offer, transaction -> requestPlaceOfferSuccess.set(true));
     }
 
     void onShowPayFundsScreen() {

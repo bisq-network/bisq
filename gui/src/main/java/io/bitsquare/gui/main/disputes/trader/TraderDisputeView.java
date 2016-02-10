@@ -38,6 +38,7 @@ import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
@@ -56,6 +57,7 @@ import javafx.util.Callback;
 import org.reactfx.util.FxTimer;
 import org.reactfx.util.Timer;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -92,6 +94,13 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private VBox messagesInputBox;
     private ProgressIndicator sendMsgProgressIndicator;
     private Label sendMsgInfoLabel;
+    private ChangeListener<Boolean> arrivedPropertyListener;
+    private ChangeListener<Boolean> storedInMailboxPropertyListener;
+    @Nullable
+    private DisputeDirectMessage disputeDirectMessage;
+    private ListChangeListener<DisputeDirectMessage> disputeDirectMessageListListener;
+    private ChangeListener<String> inputTextAreaListener;
+    private ChangeListener<Boolean> selectedDisputeClosedPropertyListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -159,6 +168,23 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     @Override
     protected void deactivate() {
         disputesTable.getSelectionModel().selectedItemProperty().removeListener(disputeChangeListener);
+
+        if (disputeDirectMessage != null) {
+            disputeDirectMessage.arrivedProperty().removeListener(arrivedPropertyListener);
+            disputeDirectMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
+        }
+
+        if (selectedDispute != null) {
+            selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
+            ObservableList<DisputeDirectMessage> disputeDirectMessages = selectedDispute.getDisputeDirectMessagesAsObservableList();
+            if (disputeDirectMessages != null) {
+                disputeDirectMessages.removeListener(disputeDirectMessageListListener);
+            }
+        }
+
+        if (inputTextArea != null)
+            inputTextArea.textProperty().removeListener(inputTextAreaListener);
+
     }
 
     protected void setFilteredListPredicate(FilteredList<Dispute> filteredList) {
@@ -175,7 +201,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private void onSendMessage(String inputText, Dispute dispute) {
-        DisputeDirectMessage disputeDirectMessage = disputeManager.sendDisputeDirectMessage(dispute, inputText, new ArrayList<>(tempAttachments));
+        if (disputeDirectMessage != null) {
+            disputeDirectMessage.arrivedProperty().removeListener(arrivedPropertyListener);
+            disputeDirectMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
+        }
+
+        disputeDirectMessage = disputeManager.sendDisputeDirectMessage(dispute, inputText, new ArrayList<>(tempAttachments));
         tempAttachments.clear();
         scrollToBottom();
 
@@ -192,19 +223,21 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             sendMsgProgressIndicator.setManaged(true);
         });
 
-        disputeDirectMessage.arrivedProperty().addListener((observable, oldValue, newValue) -> {
+        arrivedPropertyListener = (observable, oldValue, newValue) -> {
             if (newValue) {
                 hideSendMsgInfo(timer);
             }
-        });
-        disputeDirectMessage.storedInMailboxProperty().addListener((observable, oldValue, newValue) -> {
+        };
+        disputeDirectMessage.arrivedProperty().addListener(arrivedPropertyListener);
+        storedInMailboxPropertyListener = (observable, oldValue, newValue) -> {
             if (newValue) {
                 sendMsgInfoLabel.setVisible(true);
                 sendMsgInfoLabel.setManaged(true);
                 sendMsgInfoLabel.setText("Receiver is not online. Message is saved to his mailbox.");
                 hideSendMsgInfo(timer);
             }
-        });
+        };
+        disputeDirectMessage.storedInMailboxProperty().addListener(storedInMailboxPropertyListener);
     }
 
     private void hideSendMsgInfo(Timer timer) {
@@ -221,7 +254,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private void onCloseDispute(Dispute dispute) {
-        disputeSummaryPopup.onFinalizeDispute(() -> messagesAnchorPane.getChildren().remove(messagesInputBox)).show(dispute);
+        disputeSummaryPopup.onFinalizeDispute(() -> messagesAnchorPane.getChildren().remove(messagesInputBox))
+                .show(dispute);
     }
 
     private void onRequestUpload() {
@@ -275,6 +309,14 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private void onSelectDispute(Dispute dispute) {
+        if (selectedDispute != null) {
+            selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
+            ObservableList<DisputeDirectMessage> disputeDirectMessages = selectedDispute.getDisputeDirectMessagesAsObservableList();
+            if (disputeDirectMessages != null) {
+                disputeDirectMessages.removeListener(disputeDirectMessageListListener);
+            }
+        }
+
         if (dispute == null) {
             if (root.getChildren().size() > 1)
                 root.getChildren().remove(1);
@@ -283,7 +325,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         } else if (selectedDispute != dispute) {
             this.selectedDispute = dispute;
 
-            boolean isTrader = disputeManager.isTrader(dispute);
+            boolean isTrader = disputeManager.isTrader(selectedDispute);
 
             TableGroupHeadline tableGroupHeadline = new TableGroupHeadline();
             tableGroupHeadline.setText("Messages");
@@ -293,10 +335,11 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             AnchorPane.setBottomAnchor(tableGroupHeadline, 0d);
             AnchorPane.setLeftAnchor(tableGroupHeadline, 0d);
 
-            ObservableList<DisputeDirectMessage> list = dispute.getDisputeDirectMessagesAsObservableList();
-            SortedList<DisputeDirectMessage> sortedList = new SortedList<>(list);
+            ObservableList<DisputeDirectMessage> disputeDirectMessages = selectedDispute.getDisputeDirectMessagesAsObservableList();
+            SortedList<DisputeDirectMessage> sortedList = new SortedList<>(disputeDirectMessages);
             sortedList.setComparator((o1, o2) -> o1.getDate().compareTo(o2.getDate()));
-            list.addListener((ListChangeListener<DisputeDirectMessage>) c -> scrollToBottom());
+            disputeDirectMessageListListener = c -> scrollToBottom();
+            disputeDirectMessages.addListener(disputeDirectMessageListListener);
             messageListView = new ListView<>(sortedList);
             messageListView.setId("message-list-view");
             messageListView.prefWidthProperty().bind(root.widthProperty());
@@ -315,11 +358,13 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
             Button sendButton = new Button("Send");
             sendButton.setDefaultButton(true);
-            sendButton.setOnAction(e -> onSendMessage(inputTextArea.getText(), dispute));
+            sendButton.setOnAction(e -> onSendMessage(inputTextArea.getText(), selectedDispute));
             sendButton.setDisable(true);
-            inputTextArea.textProperty().addListener((observable, oldValue, newValue) -> {
-                sendButton.setDisable(newValue.length() == 0 && tempAttachments.size() == 0 && dispute.disputeResultProperty().get() == null);
-            });
+            inputTextAreaListener = (observable, oldValue, newValue) ->
+                    sendButton.setDisable(newValue.length() == 0
+                            && tempAttachments.size() == 0 &&
+                            selectedDispute.disputeResultProperty().get() == null);
+            inputTextArea.textProperty().addListener(inputTextAreaListener);
 
             Button uploadButton = new Button("Add attachments");
             uploadButton.setOnAction(e -> onRequestUpload());
@@ -335,19 +380,20 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             sendMsgProgressIndicator.setVisible(false);
             sendMsgProgressIndicator.setManaged(false);
 
-            dispute.isClosedProperty().addListener((observable, oldValue, newValue) -> {
+            selectedDisputeClosedPropertyListener = (observable, oldValue, newValue) -> {
                 messagesInputBox.setVisible(!newValue);
                 messagesInputBox.setManaged(!newValue);
                 AnchorPane.setBottomAnchor(messageListView, newValue ? 0d : 120d);
-            });
-            if (!dispute.isClosed()) {
+            };
+            selectedDispute.isClosedProperty().addListener(selectedDisputeClosedPropertyListener);
+            if (!selectedDispute.isClosed()) {
                 HBox buttonBox = new HBox();
                 buttonBox.setSpacing(10);
                 buttonBox.getChildren().addAll(sendButton, uploadButton, sendMsgProgressIndicator, sendMsgInfoLabel);
 
                 if (!isTrader) {
                     Button closeDisputeButton = new Button("Close ticket");
-                    closeDisputeButton.setOnAction(e -> onCloseDispute(dispute));
+                    closeDisputeButton.setOnAction(e -> onCloseDispute(selectedDispute));
                     closeDisputeButton.setDefaultButton(true);
                     Pane spacer = new Pane();
                     HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -375,6 +421,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 @Override
                 public ListCell<DisputeDirectMessage> call(ListView<DisputeDirectMessage> list) {
                     return new ListCell<DisputeDirectMessage>() {
+                        public ChangeListener<Number> sendMsgProgressIndicatorListener;
                         final Pane bg = new Pane();
                         final ImageView arrow = new ImageView();
                         final Label headerLabel = new Label();
@@ -434,14 +481,15 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     else
                                         arrow.setId("bubble_arrow_blue_right");
 
-                                    sendMsgProgressIndicator.progressProperty().addListener((observable, oldValue, newValue) -> {
+                                    sendMsgProgressIndicatorListener = (observable, oldValue, newValue) -> {
                                         if ((double) oldValue == -1 && (double) newValue == 0) {
                                             if (item.arrivedProperty().get())
                                                 showArrivedIcon();
                                             else if (item.storedInMailboxProperty().get())
                                                 showMailboxIcon();
                                         }
-                                    });
+                                    };
+                                    sendMsgProgressIndicator.progressProperty().addListener(sendMsgProgressIndicatorListener);
 
                                     if (item.arrivedProperty().get())
                                         showArrivedIcon();
@@ -527,6 +575,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 // TODO There are still some cell rendering issues on updates
                                 setGraphic(messageAnchorPane);
                             } else {
+                                if (sendMsgProgressIndicator != null)
+                                    sendMsgProgressIndicator.progressProperty().removeListener(sendMsgProgressIndicatorListener);
+
                                 messageAnchorPane.prefWidthProperty().unbind();
 
                                 AnchorPane.clearConstraints(bg);
@@ -726,18 +777,26 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         return new TableCell<Dispute, Dispute>() {
 
 
+                            public ReadOnlyBooleanProperty closedProperty;
+                            public ChangeListener<Boolean> listener;
+
                             @Override
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    item.isClosedProperty().addListener((observable, oldValue, newValue) -> {
+                                    listener = (observable, oldValue, newValue) -> {
                                         setText(newValue ? "Closed" : "Open");
                                         getTableRow().setOpacity(newValue ? 0.4 : 1);
-                                    });
+                                    };
+                                    closedProperty = item.isClosedProperty();
+                                    closedProperty.addListener(listener);
                                     boolean isClosed = item.isClosed();
                                     setText(isClosed ? "Closed" : "Open");
                                     getTableRow().setOpacity(isClosed ? 0.4 : 1);
                                 } else {
+                                    if (closedProperty != null)
+                                        closedProperty.removeListener(listener);
+                                    
                                     setText("");
                                 }
                             }

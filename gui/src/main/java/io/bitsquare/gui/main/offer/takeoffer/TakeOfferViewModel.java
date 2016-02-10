@@ -68,6 +68,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final StringProperty errorMessage = new SimpleStringProperty();
     final StringProperty offerWarning = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
+    final StringProperty takeOfferSpinnerInfoText = new SimpleStringProperty();
 
     final BooleanProperty isOfferAvailable = new SimpleBooleanProperty();
     final BooleanProperty isTakeOfferButtonDisabled = new SimpleBooleanProperty(true);
@@ -89,6 +90,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private ChangeListener<Offer.State> offerStateListener;
     private ChangeListener<String> offerErrorListener;
     private ConnectionListener connectionListener;
+    private ChangeListener<Coin> feeFromFundingTxListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -177,9 +179,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     void onTakeOffer() {
         takeOfferRequested = true;
-        applyOnTakeOfferResult(false);
-
+        showTransactionPublishedScreen.set(false);
         isTakeOfferSpinnerVisible.set(true);
+        takeOfferSpinnerInfoText.set(BSResources.get("takeOffer.fundsBox.takeOfferSpinnerInfo"));
         dataModel.onTakeOffer(trade -> {
             this.trade = trade;
             trade.stateProperty().addListener(tradeStateListener);
@@ -328,18 +330,14 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 || trade.getState() == Trade.State.DEPOSIT_PUBLISHED_MSG_SENT
                 || trade.getState() == Trade.State.DEPOSIT_PUBLISHED_MSG_RECEIVED) {
             if (trade.getDepositTx() != null)
-                applyOnTakeOfferResult(true);
+                showTransactionPublishedScreen.set(true);
             else
                 log.error("trade.getDepositTx() == null. That must not happen");
         }
 
-        if (errorMessage.get() != null)
+        takeOfferSpinnerInfoText.set("");
+        if (errorMessage.get() == null)
             isTakeOfferSpinnerVisible.set(false);
-    }
-
-    private void applyOnTakeOfferResult(boolean success) {
-        isTakeOfferSpinnerVisible.set(false);
-        showTransactionPublishedScreen.set(success);
     }
 
     private void updateButtonDisableState() {
@@ -347,7 +345,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                         && dataModel.isMinAmountLessOrEqualAmount()
                         && !dataModel.isAmountLargerThanOfferAmount()
                         && dataModel.isWalletFunded.get()
-                        && !takeOfferRequested)
+                        && !takeOfferRequested
+                        && dataModel.isFeeFromFundingTxSufficient())
         );
     }
 
@@ -389,7 +388,11 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             updateButtonDisableState();
         };
         amountAsCoinListener = (ov, oldValue, newValue) -> amount.set(formatter.formatCoin(newValue));
-        isWalletFundedListener = (ov, oldValue, newValue) -> updateButtonDisableState();
+        isWalletFundedListener = (ov, oldValue, newValue) -> {
+            updateButtonDisableState();
+            isTakeOfferSpinnerVisible.set(true);
+            takeOfferSpinnerInfoText.set("Checking funding tx miner fee...");
+        };
         tradeStateListener = (ov, oldValue, newValue) -> applyTradeState(newValue);
         tradeErrorListener = (ov, oldValue, newValue) -> applyTradeErrorMessage(newValue);
         offerStateListener = (ov, oldValue, newValue) -> applyOfferState(newValue);
@@ -411,6 +414,13 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             public void onError(Throwable throwable) {
             }
         };
+        feeFromFundingTxListener = (ov, oldValue, newValue) -> {
+            updateButtonDisableState();
+            if (newValue.isPositive()) {
+                isTakeOfferSpinnerVisible.set(false);
+                takeOfferSpinnerInfoText.set("");
+            }
+        };
     }
 
     private void addListeners() {
@@ -423,6 +433,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         dataModel.isWalletFunded.addListener(isWalletFundedListener);
         p2PService.getNetworkNode().addConnectionListener(connectionListener);
+        dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
     }
 
     private void removeListeners() {
@@ -434,7 +445,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         dataModel.isWalletFunded.removeListener(isWalletFundedListener);
         if (offer != null) {
             offer.stateProperty().removeListener(offerStateListener);
-            offer.errorMessageProperty().addListener(offerErrorListener);
+            offer.errorMessageProperty().removeListener(offerErrorListener);
         }
 
         if (trade != null) {
@@ -442,6 +453,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             trade.errorMessageProperty().removeListener(tradeErrorListener);
         }
         p2PService.getNetworkNode().removeConnectionListener(connectionListener);
+        dataModel.feeFromFundingTxProperty.removeListener(feeFromFundingTxListener);
     }
 
 

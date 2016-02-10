@@ -45,7 +45,6 @@ class ChangePasswordViewModel implements ViewModel {
         repeatedPasswordField.addListener((ov) -> saveButtonDisabled.set(!validate()));
     }
 
-
     boolean requestSavePassword() {
         if (validate()) {
             savePassword(passwordField.get());

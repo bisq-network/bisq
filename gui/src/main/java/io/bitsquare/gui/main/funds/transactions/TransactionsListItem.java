@@ -154,13 +154,13 @@ public class TransactionsListItem {
         Tooltip.install(progressIndicator, tooltip);
 
         if (address != null) {
-            txConfidenceListener = walletService.addTxConfidenceListener(new TxConfidenceListener(txId) {
+            txConfidenceListener = new TxConfidenceListener(txId) {
                 @Override
                 public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
                     updateConfidence(confidence);
                 }
-            });
-
+            };
+            walletService.addTxConfidenceListener(txConfidenceListener);
             updateConfidence(transaction.getConfidence());
         }
     }

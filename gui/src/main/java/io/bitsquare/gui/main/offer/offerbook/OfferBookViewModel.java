@@ -110,6 +110,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     @Override
     protected void deactivate() {
         btcCode.unbind();
+        offerBookListItems.removeListener(listChangeListener);
     }
 
 
@@ -168,7 +169,6 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     public ObservableList<TradeCurrency> getTradeCurrencies() {
         ObservableList<TradeCurrency> list = preferences.getTradeCurrenciesAsObservable();
-       /* list.add(0, new AllTradeCurrenciesEntry());*/
         return list;
     }
 

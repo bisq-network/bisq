@@ -32,6 +32,7 @@ import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.offer.Offer;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -46,7 +47,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private TakeOfferView takeOfferView;
     private AnchorPane createOfferPane;
     private AnchorPane takeOfferPane;
-    private Navigation.Listener listener;
+    private Navigation.Listener navigationListener;
     private Offer offer;
 
     private final ViewLoader viewLoader;
@@ -56,6 +57,8 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private Tab takeOfferTab, createOfferTab, offerBookTab;
     private TradeCurrency tradeCurrency;
     private boolean createOfferViewOpen, takeOfferViewOpen;
+    private ChangeListener<Tab> tabChangeListener;
+    private ListChangeListener<Tab> tabListChangeListener;
 
     protected OfferView(ViewLoader viewLoader, Navigation navigation, MarketPriceFeed marketPriceFeed) {
         this.viewLoader = viewLoader;
@@ -66,43 +69,32 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
     @Override
     protected void initialize() {
-        listener = viewPath -> {
+        navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(this.getClass()) == 1)
                 loadView(viewPath.tip());
         };
-    }
-
-    @Override
-    protected void activate() {
-        // We need to remove open validation error popups
-        // UserThread.execute needed as focus-out event is called after selectedIndexProperty changed
-        // TODO Find a way to do that in the InputTextField directly, but a tab change does not trigger any event...
-        TabPane tabPane = root;
-        tabPane.getSelectionModel().selectedItemProperty()
-                .addListener((observableValue, oldValue, newValue) -> {
-                    UserThread.execute(InputTextField::hideErrorMessageDisplay);
-                    if (newValue != null) {
-                        if (newValue.equals(createOfferTab) && createOfferView != null) {
-                            createOfferView.onTabSelected(true);
-                        } else if (newValue.equals(takeOfferTab) && takeOfferView != null) {
-                            takeOfferView.onTabSelected(true);
-                        } else if (newValue.equals(offerBookTab) && offerBookView != null) {
-                            offerBookView.onTabSelected(true);
-                        }
-                    }
-                    if (oldValue != null) {
-                        if (oldValue.equals(createOfferTab) && createOfferView != null) {
-                            createOfferView.onTabSelected(false);
-                        } else if (oldValue.equals(takeOfferTab) && takeOfferView != null) {
-                            takeOfferView.onTabSelected(false);
-                        } else if (oldValue.equals(offerBookTab) && offerBookView != null) {
-                            offerBookView.onTabSelected(false);
-                        }
-                    }
-                });
-
-        // We want to get informed when a tab get closed
-        tabPane.getTabs().addListener((ListChangeListener<Tab>) change -> {
+        tabChangeListener = (observableValue, oldValue, newValue) -> {
+            UserThread.execute(InputTextField::hideErrorMessageDisplay);
+            if (newValue != null) {
+                if (newValue.equals(createOfferTab) && createOfferView != null) {
+                    createOfferView.onTabSelected(true);
+                } else if (newValue.equals(takeOfferTab) && takeOfferView != null) {
+                    takeOfferView.onTabSelected(true);
+                } else if (newValue.equals(offerBookTab) && offerBookView != null) {
+                    offerBookView.onTabSelected(true);
+                }
+            }
+            if (oldValue != null) {
+                if (oldValue.equals(createOfferTab) && createOfferView != null) {
+                    createOfferView.onTabSelected(false);
+                } else if (oldValue.equals(takeOfferTab) && takeOfferView != null) {
+                    takeOfferView.onTabSelected(false);
+                } else if (oldValue.equals(offerBookTab) && offerBookView != null) {
+                    offerBookView.onTabSelected(false);
+                }
+            }
+        };
+        tabListChangeListener = (ListChangeListener<Tab>) change -> {
             change.next();
             List<? extends Tab> removedTabs = change.getRemoved();
             if (removedTabs.size() == 1) {
@@ -111,17 +103,23 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 else if (removedTabs.get(0).getContent().equals(takeOfferPane))
                     onTakeOfferViewRemoved();
             }
-        });
+        };
+    }
 
+    @Override
+    protected void activate() {
         tradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
-
-        navigation.addListener(listener);
+        root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
+        root.getTabs().addListener(tabListChangeListener);
+        navigation.addListener(navigationListener);
         navigation.navigateTo(MainView.class, this.getClass(), OfferBookView.class);
     }
 
     @Override
     protected void deactivate() {
-        navigation.removeListener(listener);
+        navigation.removeListener(navigationListener);
+        root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
+        root.getTabs().removeListener(tabListChangeListener);
     }
 
     private void loadView(Class<? extends View> viewClass) {
@@ -140,7 +138,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             tabPane.getTabs().add(offerBookTab);
             offerBookView = (OfferBookView) view;
             offerBookView.onTabSelected(true);
-            
+
             OfferActionHandler offerActionHandler = new OfferActionHandler() {
                 @Override
                 public void onCreateOffer(TradeCurrency tradeCurrency) {

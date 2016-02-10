@@ -43,6 +43,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 import java.util.Optional;
@@ -95,7 +96,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         table.getSortOrder().add(dateColumn);
         balanceListener = new BalanceListener() {
             @Override
-            public void onBalanceChanged(Coin balance) {
+            public void onBalanceChanged(Coin balance, Transaction tx) {
                 updateList();
             }
         };

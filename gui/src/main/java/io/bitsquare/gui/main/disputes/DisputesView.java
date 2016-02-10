@@ -40,7 +40,9 @@ import javax.inject.Inject;
 public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @FXML
-    Tab tradersDisputesTab, arbitratorsDisputesTab;
+    Tab tradersDisputesTab;
+
+    private Tab arbitratorsDisputesTab;
 
     private final Navigation navigation;
     private final ArbitratorManager arbitratorManager;
@@ -51,6 +53,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     private Tab currentTab;
     private final ViewLoader viewLoader;
     private MapChangeListener<NodeAddress, Arbitrator> arbitratorMapChangeListener;
+    private boolean isArbitrator;
 
     @Inject
     public DisputesView(CachingViewLoader viewLoader, Navigation navigation, ArbitratorManager arbitratorManager, KeyRing keyRing) {
@@ -58,6 +61,8 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         this.navigation = navigation;
         this.arbitratorManager = arbitratorManager;
         this.keyRing = keyRing;
+
+
     }
 
     @Override
@@ -79,12 +84,16 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     }
 
     private void updateArbitratorsDisputesTabDisableState() {
-        boolean isArbitrator = arbitratorManager.getArbitratorsObservableMap().values().stream()
+        isArbitrator = arbitratorManager.getArbitratorsObservableMap().values().stream()
                 .filter(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(keyRing.getPubKeyRing()))
                 .findAny().isPresent();
-        arbitratorsDisputesTab.setDisable(!isArbitrator);
-        if (arbitratorsDisputesTab.getContent() != null)
-            arbitratorsDisputesTab.getContent().setDisable(!isArbitrator);
+
+        if (arbitratorsDisputesTab == null && isArbitrator) {
+            arbitratorsDisputesTab = new Tab("Arbitrators support tickets");
+            arbitratorsDisputesTab.setClosable(false);
+            root.getTabs().add(arbitratorsDisputesTab);
+            tradersDisputesTab.setText("Traders support tickets");
+        }
     }
 
     @Override
@@ -96,10 +105,10 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
 
-        if (root.getSelectionModel().getSelectedItem() == tradersDisputesTab)
-            navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
-        else if (root.getSelectionModel().getSelectedItem() == arbitratorsDisputesTab)
+        if (arbitratorsDisputesTab != null && root.getSelectionModel().getSelectedItem() == arbitratorsDisputesTab)
             navigation.navigateTo(MainView.class, DisputesView.class, ArbitratorDisputeView.class);
+        else
+            navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
     }
 
     @Override
@@ -117,9 +126,9 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
         View view = viewLoader.load(viewClass);
 
-        if (view instanceof ArbitratorDisputeView)
+        if (arbitratorsDisputesTab != null && view instanceof ArbitratorDisputeView)
             currentTab = arbitratorsDisputesTab;
-        else if (view instanceof TraderDisputeView)
+        else
             currentTab = tradersDisputesTab;
 
         currentTab.setContent(view.getRoot());

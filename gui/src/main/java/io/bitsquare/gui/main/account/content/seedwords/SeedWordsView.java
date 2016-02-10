@@ -29,6 +29,7 @@ import io.bitsquare.gui.popups.WalletPasswordPopup;
 import io.bitsquare.gui.util.Layout;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextArea;
@@ -61,6 +62,12 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     private int gridRow = 0;
     private DeterministicSeed keyChainSeed;
+    private ChangeListener<Boolean> seedWordsValidChangeListener;
+    private SimpleBooleanProperty seedWordsValid;
+    private SimpleBooleanProperty dateValid;
+    private ChangeListener<String> seedWordsTextAreaChangeListener;
+    private ChangeListener<Boolean> datePickerChangeListener;
+    private ChangeListener<LocalDate> dateChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -105,6 +112,11 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void deactivate() {
+        seedWordsValid.removeListener(seedWordsValidChangeListener);
+        seedWordsTextArea.textProperty().removeListener(seedWordsTextAreaChangeListener);
+        dateValid.removeListener(datePickerChangeListener);
+        datePicker.valueProperty().removeListener(dateChangeListener);
+
         seedWordsTextArea.setText("");
         datePicker.setValue(null);
         restoreButton.disableProperty().unbind();
@@ -134,15 +146,18 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         restoreButton.setOnAction(e -> onRestore());
 
         BooleanProperty seedWordsEdited = new SimpleBooleanProperty();
-        BooleanProperty seedWordsValid = new SimpleBooleanProperty(true);
-        seedWordsValid.addListener((observable, oldValue, newValue) -> {
+
+        seedWordsValid = new SimpleBooleanProperty(true);
+        seedWordsValidChangeListener = (observable, oldValue, newValue) -> {
             if (newValue) {
                 seedWordsTextArea.getStyleClass().remove("validation_error");
             } else {
                 seedWordsTextArea.getStyleClass().add("validation_error");
             }
-        });
-        seedWordsTextArea.textProperty().addListener((observable, oldValue, newValue) -> {
+        };
+        seedWordsValid.addListener(seedWordsValidChangeListener);
+
+        seedWordsTextAreaChangeListener = (observable, oldValue, newValue) -> {
             seedWordsEdited.set(true);
             try {
                 MnemonicCode codec = new MnemonicCode();
@@ -154,18 +169,22 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
             if (creationDate.equals(datePicker.getValue()))
                 datePicker.setValue(null);
-        });
+        };
+        seedWordsTextArea.textProperty().addListener(seedWordsTextAreaChangeListener);
 
-        BooleanProperty dateValid = new SimpleBooleanProperty(true);
-        dateValid.addListener((observable, oldValue, newValue) -> {
+        dateValid = new SimpleBooleanProperty(true);
+        datePickerChangeListener = (observable, oldValue, newValue) -> {
             if (newValue)
                 datePicker.getStyleClass().remove("validation_error");
             else
                 datePicker.getStyleClass().add("validation_error");
-        });
-        datePicker.valueProperty().addListener((observable, oldValue, newValue) -> {
+        };
+        dateValid.addListener(datePickerChangeListener);
+
+        dateChangeListener = (observable, oldValue, newValue) -> {
             dateValid.set(newValue != null && !newValue.isAfter(LocalDate.now()));
-        });
+        };
+        datePicker.valueProperty().addListener(dateChangeListener);
 
         restoreButton.disableProperty().bind(createBooleanBinding(() -> !seedWordsValid.get() || !dateValid.get() || !seedWordsEdited.get(),
                 seedWordsValid, dateValid, seedWordsEdited));

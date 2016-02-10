@@ -64,6 +64,7 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
     private Button addAccountButton;
     private Button saveNewAccountButton;
     private int gridRow = 0;
+    private ListChangeListener<PaymentAccount> paymentAccountListChangeListener;
 
     @Inject
     public PaymentAccountView(PaymentAccountViewModel model,
@@ -90,6 +91,7 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
     @Override
     public void initialize() {
         buildForm();
+        paymentAccountListChangeListener = c -> paymentAccountsComboBox.setDisable(model.getPaymentAccounts().size() == 0);
     }
 
     @Override
@@ -102,13 +104,13 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
         paymentAccountsComboBox.setOnAction(paymentAccountsComboBoxHandler);
         paymentAccountsComboBox.setVisibleRowCount(20);
 
-        model.getPaymentAccounts().addListener(
-                (ListChangeListener<PaymentAccount>) c -> paymentAccountsComboBox.setDisable(model.getPaymentAccounts().size() == 0));
+        model.getPaymentAccounts().addListener(paymentAccountListChangeListener);
         paymentAccountsComboBox.setDisable(model.getPaymentAccounts().size() == 0);
     }
 
     @Override
     protected void deactivate() {
+        model.getPaymentAccounts().removeListener(paymentAccountListChangeListener);
         paymentAccountsComboBox.setOnAction(null);
     }
 

@@ -26,6 +26,7 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.slf4j.Logger;
@@ -51,12 +52,12 @@ public class SetupDepositBalanceListener extends TradeTask {
 
             WalletService walletService = processModel.getWalletService();
             Address address = walletService.getAddressEntryByOfferId(trade.getId()).getAddress();
-            balanceListener = walletService.addBalanceListener(new BalanceListener(address) {
+            balanceListener = new BalanceListener(address) {
                 @Override
-                public void onBalanceChanged(Coin balance) {
+                public void onBalanceChanged(Coin balance, Transaction tx) {
                     updateBalance(balance);
                 }
-            });
+            };
             walletService.addBalanceListener(balanceListener);
 
             tradeStateSubscription = EasyBind.subscribe(trade.stateProperty(), newValue -> {

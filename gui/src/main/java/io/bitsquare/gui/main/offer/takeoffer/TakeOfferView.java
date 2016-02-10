@@ -32,6 +32,8 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
 import io.bitsquare.gui.main.account.settings.AccountSettingsView;
+import io.bitsquare.gui.main.funds.FundsView;
+import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 import io.bitsquare.gui.main.offer.OfferView;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
@@ -51,6 +53,7 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
+import org.bitcoinj.core.Coin;
 import org.controlsfx.control.PopOver;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -99,6 +102,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private Subscription showCheckAvailabilityPopupSubscription;
     private SimpleBooleanProperty errorPopupDisplayed;
     private Popup isOfferAvailablePopup;
+    private ChangeListener<Coin> feeFromFundingTxListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -233,6 +237,30 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             paymentAccountsComboBox.setItems(model.getPossiblePaymentAccounts());
             paymentAccountsComboBox.getSelectionModel().select(0);
         }
+
+        feeFromFundingTxListener = (observable, oldValue, newValue) -> {
+            log.debug("feeFromFundingTxListener " + newValue);
+            if (!model.dataModel.isFeeFromFundingTxSufficient()) {
+                new Popup().warning("The mining fee from your funding transaction is not sufficiently high.\n\n" +
+                        "You need to use at least a mining fee of " +
+                        model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) + ".\n\n" +
+                        "The fee used in your funding transaction was only " +
+                        model.formatter.formatCoinWithCode(newValue) + ".\n\n" +
+                        "The trade transactions might take too much time to be included in " +
+                        "a block if the fee is too low.\n" +
+                        "Please check at your external wallet that you set the required fee and " +
+                        "do a funding again with the correct fee.\n\n" +
+                        "In the \"Funds/Open for withdrawal\" section you can withdraw those funds.")
+                        .closeButtonText("Close")
+                        .onClose(() -> {
+                            close();
+                            navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
+                        })
+                        .show();
+            }
+        };
+        model.dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
+
     }
 
     @Override
@@ -261,6 +289,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         showWarningInvalidBtcDecimalPlacesSubscription.unsubscribe();
         showTransactionPublishedScreenSubscription.unsubscribe();
         showCheckAvailabilityPopupSubscription.unsubscribe();
+
+        model.dataModel.feeFromFundingTxProperty.removeListener(feeFromFundingTxListener);
     }
 
 
@@ -313,8 +343,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     public void onTabSelected(boolean isSelected) {
         model.dataModel.onTabSelected(isSelected);
     }
-    
-    
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -530,8 +560,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         takeOfferButton.setVisible(false);
         takeOfferButton.setOnAction(e -> onTakeOffer());
         takeOfferSpinner = takeOfferTuple.second;
+        takeOfferSpinner.setPrefSize(18, 18);
         takeOfferSpinnerInfoLabel = takeOfferTuple.third;
-        takeOfferSpinnerInfoLabel.setText(BSResources.get("takeOffer.fundsBox.takeOfferSpinnerInfo"));
+        takeOfferSpinnerInfoLabel.textProperty().bind(model.takeOfferSpinnerInfoText);
         takeOfferSpinnerInfoLabel.setVisible(false);
 
         cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));

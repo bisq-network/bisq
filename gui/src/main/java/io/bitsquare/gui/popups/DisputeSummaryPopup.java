@@ -32,6 +32,7 @@ import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.trade.Contract;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.*;
@@ -66,6 +67,10 @@ public class DisputeSummaryPopup extends Popup {
     private ToggleGroup feeToggleGroup;
     private String role;
     private TextArea summaryNotesTextArea;
+    private ObjectBinding<Tuple2<DisputeResult.FeePaymentPolicy, Toggle>> feePaymentPolicyChanged;
+    private ChangeListener<Tuple2<DisputeResult.FeePaymentPolicy, Toggle>> feePaymentPolicyListener;
+    private ChangeListener<Boolean> shareRadioButtonSelectedListener;
+    private ChangeListener<Toggle> feeToggleSelectionListener;
     // keep a reference to not get GCed
 
 
@@ -105,6 +110,18 @@ public class DisputeSummaryPopup extends Popup {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void cleanup() {
+        if (feePaymentPolicyChanged != null)
+            feePaymentPolicyChanged.removeListener(feePaymentPolicyListener);
+
+        if (shareRadioButton != null)
+            shareRadioButton.selectedProperty().removeListener(shareRadioButtonSelectedListener);
+
+        if (feeToggleGroup != null)
+            feeToggleGroup.selectedToggleProperty().removeListener(feeToggleSelectionListener);
+    }
 
     @Override
     protected void createGridPane() {
@@ -164,13 +181,14 @@ public class DisputeSummaryPopup extends Popup {
             applyTradeAmountRadioButtonStates();
         } else {
             applyPayoutAmounts(disputeResult.feePaymentPolicyProperty().get(), tradeAmountToggleGroup.selectedToggleProperty().get());
-            ObjectBinding<Tuple2<DisputeResult.FeePaymentPolicy, Toggle>> changed = Bindings.createObjectBinding(
+            feePaymentPolicyChanged = Bindings.createObjectBinding(
                     () -> new Tuple2(disputeResult.feePaymentPolicyProperty().get(), tradeAmountToggleGroup.selectedToggleProperty().get()),
                     disputeResult.feePaymentPolicyProperty(),
                     tradeAmountToggleGroup.selectedToggleProperty());
-            changed.addListener((observable, oldValue, newValue) -> {
+            feePaymentPolicyListener = (observable, oldValue, newValue) -> {
                 applyPayoutAmounts(newValue.first, newValue.second);
-            });
+            };
+            feePaymentPolicyChanged.addListener(feePaymentPolicyListener);
         }
 
         setFeeRadioButtonState();
@@ -242,7 +260,7 @@ public class DisputeSummaryPopup extends Popup {
         sellerIsWinnerRadioButton.setToggleGroup(tradeAmountToggleGroup);
         shareRadioButton.setToggleGroup(tradeAmountToggleGroup);
 
-        shareRadioButton.selectedProperty().addListener((observable, oldValue, newValue) -> {
+        shareRadioButtonSelectedListener = (observable, oldValue, newValue) -> {
             if (newValue) {
                 loserPaysFeeRadioButton.setSelected(false);
 
@@ -254,7 +272,8 @@ public class DisputeSummaryPopup extends Popup {
             }
 
             loserPaysFeeRadioButton.setDisable(newValue);
-        });
+        };
+        shareRadioButton.selectedProperty().addListener(shareRadioButtonSelectedListener);
     }
 
     private void addFeeControls() {
@@ -277,16 +296,15 @@ public class DisputeSummaryPopup extends Popup {
         splitFeeRadioButton.setToggleGroup(feeToggleGroup);
         waiveFeeRadioButton.setToggleGroup(feeToggleGroup);
 
-        //setFeeRadioButtonState();
-
-        feeToggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+        feeToggleSelectionListener = (observable, oldValue, newValue) -> {
             if (newValue == loserPaysFeeRadioButton)
                 disputeResult.setFeePaymentPolicy(DisputeResult.FeePaymentPolicy.LOSER);
             else if (newValue == splitFeeRadioButton)
                 disputeResult.setFeePaymentPolicy(DisputeResult.FeePaymentPolicy.SPLIT);
             else if (newValue == waiveFeeRadioButton)
                 disputeResult.setFeePaymentPolicy(DisputeResult.FeePaymentPolicy.WAIVE);
-        });
+        };
+        feeToggleGroup.selectedToggleProperty().addListener(feeToggleSelectionListener);
 
         if (dispute.isSupportTicket())
             feeToggleGroup.selectToggle(waiveFeeRadioButton);

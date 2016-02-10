@@ -26,7 +26,6 @@
          AnchorPane.topAnchor="0.0"
          xmlns:fx="http://javafx.com/fxml">
 
-    <Tab fx:id="tradersDisputesTab" text="Traders support tickets" closable="false"></Tab>
-    <Tab fx:id="arbitratorsDisputesTab" text="Arbitrators support tickets" closable="false"/>
+    <Tab fx:id="tradersDisputesTab" text="Support tickets" closable="false"></Tab>
 
 </TabPane>

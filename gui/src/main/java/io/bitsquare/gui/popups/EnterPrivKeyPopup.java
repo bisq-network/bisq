@@ -19,6 +19,7 @@ package io.bitsquare.gui.popups;
 
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.gui.components.InputTextField;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -31,6 +32,7 @@ public class EnterPrivKeyPopup extends Popup {
     private Button unlockButton;
     private InputTextField keyInputTextField;
     private PrivKeyHandler privKeyHandler;
+    private ChangeListener<String> changeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -47,6 +49,8 @@ public class EnterPrivKeyPopup extends Popup {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public EnterPrivKeyPopup() {
+        if (keyInputTextField != null)
+            keyInputTextField.textProperty().addListener(changeListener);
     }
 
     public void show() {
@@ -80,6 +84,10 @@ public class EnterPrivKeyPopup extends Popup {
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
+    protected void cleanup() {
+    }
+
     private void addInputFields() {
         Label label = new Label("Enter private key:");
         label.setWrapText(true);
@@ -92,9 +100,10 @@ public class EnterPrivKeyPopup extends Popup {
         GridPane.setMargin(keyInputTextField, new Insets(3, 0, 0, 0));
         GridPane.setRowIndex(keyInputTextField, rowIndex);
         GridPane.setColumnIndex(keyInputTextField, 1);
-        keyInputTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+        changeListener = (observable, oldValue, newValue) -> {
             unlockButton.setDisable(newValue.length() == 0);
-        });
+        };
+        keyInputTextField.textProperty().addListener(changeListener);
         gridPane.getChildren().addAll(label, keyInputTextField);
     }
 

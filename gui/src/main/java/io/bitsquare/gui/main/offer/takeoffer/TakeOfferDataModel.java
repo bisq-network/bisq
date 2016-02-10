@@ -17,18 +17,22 @@
 
 package io.bitsquare.gui.main.offer.takeoffer;
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.*;
+import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.pricefeed.MarketPriceFeed;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
+import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.popups.WalletPasswordPopup;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentMethod;
@@ -65,6 +69,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private final WalletPasswordPopup walletPasswordPopup;
     private final Preferences preferences;
     private MarketPriceFeed marketPriceFeed;
+    private BlockchainService blockchainService;
+    private BSFormatter formatter;
 
     private final Coin offerFeeAsCoin;
     private final Coin networkFeeAsCoin;
@@ -79,6 +85,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> feeFromFundingTxProperty = new SimpleObjectProperty(Coin.NEGATIVE_SATOSHI);
 
     private BalanceListener balanceListener;
     private PaymentAccount paymentAccount;
@@ -93,7 +100,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
     @Inject
     TakeOfferDataModel(TradeManager tradeManager, TradeWalletService tradeWalletService,
                        WalletService walletService, User user, WalletPasswordPopup walletPasswordPopup,
-                       Preferences preferences, MarketPriceFeed marketPriceFeed) {
+                       Preferences preferences, MarketPriceFeed marketPriceFeed, BlockchainService blockchainService,
+                       BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
@@ -101,6 +109,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.walletPasswordPopup = walletPasswordPopup;
         this.preferences = preferences;
         this.marketPriceFeed = marketPriceFeed;
+        this.blockchainService = blockchainService;
+        this.formatter = formatter;
 
         offerFeeAsCoin = FeePolicy.getCreateOfferFee();
         networkFeeAsCoin = FeePolicy.getFixedTxFeeForTrades();
@@ -115,6 +125,12 @@ class TakeOfferDataModel extends ActivatableDataModel {
         addBindings();
         addListeners();
         updateBalance(walletService.getBalanceForAddress(addressEntry.getAddress()));
+
+        // TODO In case that we have funded but restarted, or canceled but took again the offer we would need to 
+        // store locally the result when we received the funding tx(s).
+        // For now we just ignore that rare case and bypass the check by setting a sufficient value
+        if (isWalletFunded.get())
+            feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx());
 
         if (isTabSelected)
             marketPriceFeed.setCurrencyCode(offer.getCurrencyCode());
@@ -153,8 +169,32 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         balanceListener = new BalanceListener(addressEntry.getAddress()) {
             @Override
-            public void onBalanceChanged(@NotNull Coin balance) {
+            public void onBalanceChanged(Coin balance, Transaction tx) {
                 updateBalance(balance);
+
+                if (preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET) {
+                    SettableFuture<Coin> future = blockchainService.requestFee(tx.getHashAsString());
+                    Futures.addCallback(future, new FutureCallback<Coin>() {
+                        public void onSuccess(Coin fee) {
+                            UserThread.execute(() -> feeFromFundingTxProperty.set(fee));
+                        }
+
+                        public void onFailure(@NotNull Throwable throwable) {
+                            UserThread.execute(() -> new Popup()
+                                    .warning("We did not get a response for the request of the mining fee used " +
+                                            "in the funding transaction.\n\n" +
+                                            "Are you sure you used a sufficiently high fee of at least " +
+                                            formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) + "?")
+                                    .actionButtonText("Yes, I used a sufficiently high fee.")
+                                    .onAction(() -> feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx()))
+                                    .closeButtonText("No. Let's cancel that payment.")
+                                    .onClose(() -> feeFromFundingTxProperty.set(Coin.ZERO))
+                                    .show());
+                        }
+                    });
+                } else {
+                    feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx());
+                }
             }
         };
 
@@ -233,6 +273,10 @@ class TakeOfferDataModel extends ActivatableDataModel {
         return user.getAcceptedArbitrators().size() > 0;
     }
 
+    boolean isFeeFromFundingTxSufficient() {
+        return feeFromFundingTxProperty.get().compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Bindings, listeners
@@ -279,6 +323,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     private void updateBalance(@NotNull Coin balance) {
         isWalletFunded.set(totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0);
+
+        if (isWalletFunded.get())
+            walletService.removeBalanceListener(balanceListener);
     }
 
     boolean isMinAmountLessOrEqualAmount() {

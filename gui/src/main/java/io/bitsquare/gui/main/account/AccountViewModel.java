@@ -19,18 +19,10 @@ package io.bitsquare.gui.main.account;
 
 import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ViewModel;
-import io.bitsquare.user.User;
 
 class AccountViewModel implements ViewModel {
 
-    private final User user;
-
     @Inject
-    public AccountViewModel(User user) {
-        this.user = user;
-    }
-
-    boolean getNeedRegistration() {
-        return user.getAccountId() == null;
+    public AccountViewModel() {
     }
 }

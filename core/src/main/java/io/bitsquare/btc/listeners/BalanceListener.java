@@ -19,6 +19,7 @@ package io.bitsquare.btc.listeners;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
 public class BalanceListener {
     private Address address;
@@ -35,6 +36,6 @@ public class BalanceListener {
     }
 
     @SuppressWarnings("UnusedParameters")
-    public void onBalanceChanged(Coin balance) {
+    public void onBalanceChanged(Coin balance, Transaction tx) {
     }
 }

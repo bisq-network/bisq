@@ -28,6 +28,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
 public class BalanceTextField extends AnchorPane {
 
@@ -64,7 +65,7 @@ public class BalanceTextField extends AnchorPane {
 
         balanceListener = new BalanceListener(address) {
             @Override
-            public void onBalanceChanged(Coin balance) {
+            public void onBalanceChanged(Coin balance, Transaction tx) {
                 updateBalance(balance);
             }
         };
@@ -72,7 +73,7 @@ public class BalanceTextField extends AnchorPane {
         updateBalance(walletService.getBalanceForAddress(address));
     }
 
-    public void disarm() {
+    public void cleanup() {
         walletService.removeBalanceListener(balanceListener);
     }
 

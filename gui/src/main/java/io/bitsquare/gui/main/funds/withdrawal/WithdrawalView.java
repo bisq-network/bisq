@@ -133,7 +133,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
         balanceListener = new BalanceListener() {
             @Override
-            public void onBalanceChanged(Coin balance) {
+            public void onBalanceChanged(Coin balance, Transaction tx) {
                 updateList();
             }
         };

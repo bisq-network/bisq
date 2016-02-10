@@ -46,8 +46,8 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
-import org.bitcoinj.core.*;
-import org.bitcoinj.script.Script;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 import org.jetbrains.annotations.NotNull;
@@ -102,7 +102,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
 
     private PaymentAccount paymentAccount;
-    private WalletEventListener walletEventListener;
     private boolean isTabSelected;
 
 
@@ -134,42 +133,36 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         balanceListener = new BalanceListener(getAddressEntry().getAddress()) {
             @Override
-            public void onBalanceChanged(@NotNull Coin balance) {
+            public void onBalanceChanged(Coin balance, Transaction tx) {
                 updateBalance(balance);
+
+                if (preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET) {
+                    SettableFuture<Coin> future = blockchainService.requestFee(tx.getHashAsString());
+                    Futures.addCallback(future, new FutureCallback<Coin>() {
+                        public void onSuccess(Coin fee) {
+                            UserThread.execute(() -> feeFromFundingTxProperty.set(fee));
+                        }
+
+                        public void onFailure(@NotNull Throwable throwable) {
+                            UserThread.execute(() -> new Popup()
+                                    .warning("We did not get a response for the request of the mining fee used " +
+                                            "in the funding transaction.\n\n" +
+                                            "Are you sure you used a sufficiently high fee of at least " +
+                                            formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) + "?")
+                                    .actionButtonText("Yes, I used a sufficiently high fee.")
+                                    .onAction(() -> feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx()))
+                                    .closeButtonText("No. Let's cancel that payment.")
+                                    .onClose(() -> feeFromFundingTxProperty.set(Coin.ZERO))
+                                    .show());
+                        }
+                    });
+                } else {
+                    feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx());
+                }
             }
         };
 
         paymentAccountsChangeListener = change -> paymentAccounts.setAll(user.getPaymentAccounts());
-        walletEventListener = new WalletEventListener() {
-            @Override
-            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                requestFeeFromBlockchain(tx.getHashAsString());
-            }
-
-            @Override
-            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-            }
-
-            @Override
-            public void onReorganize(Wallet wallet) {
-            }
-
-            @Override
-            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
-            }
-
-            @Override
-            public void onWalletChanged(Wallet wallet) {
-            }
-
-            @Override
-            public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
-            }
-
-            @Override
-            public void onKeysAdded(List<ECKey> keys) {
-            }
-        };
     }
 
     @Override
@@ -203,14 +196,12 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     private void addListeners() {
         walletService.addBalanceListener(balanceListener);
-        walletService.getWallet().addEventListener(walletEventListener);
         user.getPaymentAccountsAsObservable().addListener(paymentAccountsChangeListener);
     }
 
 
     private void removeListeners() {
         walletService.removeBalanceListener(balanceListener);
-        walletService.getWallet().removeEventListener(walletEventListener);
         user.getPaymentAccountsAsObservable().removeListener(paymentAccountsChangeListener);
     }
 
@@ -281,9 +272,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     private void doPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
-        openOfferManager.onPlaceOffer(offer,
-                resultHandler
-        );
+        openOfferManager.onPlaceOffer(offer, resultHandler);
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
@@ -349,25 +338,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void requestFeeFromBlockchain(String transactionId) {
-        if (preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET) {
-            SettableFuture<Coin> future = blockchainService.requestFee(transactionId);
-            Futures.addCallback(future, new FutureCallback<Coin>() {
-                public void onSuccess(Coin fee) {
-                    UserThread.execute(() -> feeFromFundingTxProperty.set(fee));
-                }
-
-                public void onFailure(@NotNull Throwable throwable) {
-                    UserThread.execute(() -> new Popup()
-                            .warning("We did not get a response for the request of the mining fee used in the funding transaction.")
-                            .show());
-                }
-            });
-        } else {
-            feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx());
-        }
-    }
-
     void calculateVolume() {
         if (priceAsFiat.get() != null &&
                 amountAsCoin.get() != null &&
@@ -400,6 +370,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     private void updateBalance(Coin balance) {
         isWalletFunded.set(totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0);
+
+        if (isWalletFunded.get())
+            walletService.removeBalanceListener(balanceListener);
     }
 
     public Coin getOfferFeeAsCoin() {

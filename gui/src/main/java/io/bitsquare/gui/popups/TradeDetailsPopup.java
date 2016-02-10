@@ -27,6 +27,7 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
@@ -46,6 +47,8 @@ public class TradeDetailsPopup extends Popup {
     private final BSFormatter formatter;
     private DisputeManager disputeManager;
     private Trade trade;
+    private ChangeListener<Number> changeListener;
+    private TextArea textArea;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -77,6 +80,12 @@ public class TradeDetailsPopup extends Popup {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void cleanup() {
+        if (textArea != null)
+            textArea.scrollTopProperty().addListener(changeListener);
+    }
 
     @Override
     protected void createGridPane() {
@@ -173,17 +182,18 @@ public class TradeDetailsPopup extends Popup {
         }
 
         if (trade.errorMessageProperty().get() != null) {
-            TextArea textArea = addLabelTextArea(gridPane, ++rowIndex, "Error message:", "").second;
+            textArea = addLabelTextArea(gridPane, ++rowIndex, "Error message:", "").second;
             textArea.setText(trade.errorMessageProperty().get());
             textArea.setEditable(false);
 
             IntegerProperty count = new SimpleIntegerProperty(20);
             int rowHeight = 10;
             textArea.prefHeightProperty().bindBidirectional(count);
-            textArea.scrollTopProperty().addListener((ov, old, newVal) -> {
+            changeListener = (ov, old, newVal) -> {
                 if (newVal.intValue() > rowHeight)
                     count.setValue(count.get() + newVal.intValue() + 10);
-            });
+            };
+            textArea.scrollTopProperty().addListener(changeListener);
             textArea.setScrollTop(30);
 
             TextField state = addLabelTextField(gridPane, ++rowIndex, "Trade state:").second;

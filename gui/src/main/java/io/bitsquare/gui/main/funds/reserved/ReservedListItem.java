@@ -30,6 +30,7 @@ import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,13 +59,13 @@ public class ReservedListItem {
 
         // balance
         balanceLabel = new Label();
-        balanceListener = walletService.addBalanceListener(new BalanceListener(getAddress()) {
+        balanceListener = new BalanceListener(getAddress()) {
             @Override
-            public void onBalanceChanged(Coin balance) {
+            public void onBalanceChanged(Coin balance, Transaction tx) {
                 updateBalance(balance);
             }
-        });
-
+        };
+        walletService.addBalanceListener(balanceListener);
         updateBalance(walletService.getBalanceForAddress(getAddress()));
     }
 

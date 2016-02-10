@@ -58,6 +58,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
 
     private ChangeListener<Arbitrator> arbitratorChangeListener;
     private EnterPrivKeyPopup enterPrivKeyPopup;
+    private ListChangeListener<String> listChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -84,6 +85,8 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
 
     @Override
     protected void deactivate() {
+        model.myArbitratorProperty.removeListener(arbitratorChangeListener);
+        languagesListView.getItems().removeListener(listChangeListener);
     }
 
     public void onTabSelection(boolean isSelectedTab) {
@@ -106,8 +109,8 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
     private void updateLanguageList() {
         languagesListView.setItems(model.languageCodes);
         languagesListView.setPrefHeight(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2);
-        languagesListView.getItems().addListener((ListChangeListener<String>)
-                c -> languagesListView.setPrefHeight(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2));
+        listChangeListener = c -> languagesListView.setPrefHeight(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2);
+        languagesListView.getItems().addListener(listChangeListener);
     }
 
     private void buildUI() {

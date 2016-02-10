@@ -30,6 +30,7 @@ import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.PasswordValidator;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
@@ -54,6 +55,8 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
     private TitledGroupBg headline;
     private int gridRow = 0;
     private Label repeatedPasswordLabel;
+    private ChangeListener<String> passwordFieldChangeListener;
+    private ChangeListener<String> repeatedPasswordFieldChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -72,17 +75,13 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
         headline = addTitledGroupBg(root, gridRow, 3, "");
         passwordField = addLabelPasswordTextField(root, gridRow, "Enter password:", Layout.FIRST_ROW_DISTANCE).second;
         passwordField.setValidator(passwordValidator);
-        passwordField.textProperty().addListener((observable, oldValue, newValue) -> {
-            validatePasswords();
-        });
+        passwordFieldChangeListener = (observable, oldValue, newValue) -> validatePasswords();
 
         Tuple2<Label, PasswordTextField> tuple2 = addLabelPasswordTextField(root, ++gridRow, "Repeat password:");
         repeatedPasswordLabel = tuple2.first;
         repeatedPasswordField = tuple2.second;
         repeatedPasswordField.setValidator(passwordValidator);
-        repeatedPasswordField.textProperty().addListener((observable, oldValue, newValue) -> {
-            validatePasswords();
-        });
+        repeatedPasswordFieldChangeListener = (observable, oldValue, newValue) -> validatePasswords();
 
         Tuple3<Button, ProgressIndicator, Label> tuple = addButtonWithStatus(root, ++gridRow, "", 0);
         pwButton = tuple.first;
@@ -104,7 +103,6 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                 keyCrypterScrypt = (KeyCrypterScrypt) wallet.getKeyCrypter();
             else
                 keyCrypterScrypt = ScryptUtil.getKeyCrypterScrypt();
-
 
             ScryptUtil.deriveKeyWithScrypt(keyCrypterScrypt, passwordField.getText(), aesKey -> {
                 deriveStatusLabel.setText("");
@@ -169,10 +167,16 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void activate() {
+        passwordField.textProperty().addListener(passwordFieldChangeListener);
+        repeatedPasswordField.textProperty().addListener(repeatedPasswordFieldChangeListener);
+
     }
 
     @Override
     protected void deactivate() {
+        passwordField.textProperty().removeListener(passwordFieldChangeListener);
+        repeatedPasswordField.textProperty().removeListener(repeatedPasswordFieldChangeListener);
+
     }
 
     private void validatePasswords() {

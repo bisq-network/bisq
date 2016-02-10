@@ -148,20 +148,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         updateSelectedItem();
     }
 
-    private void updateSelectedItem() {
-        PendingTradesListItem selectedItem = model.getSelectedItem();
-        if (selectedItem != null) {
-            // Select and focus selectedItem from model
-            int index = table.getItems().indexOf(selectedItem);
-            UserThread.execute(() -> {
-                //TODO app wide focus
-                table.getSelectionModel().select(index);
-                //table.requestFocus();
-                //UserThread.execute(() -> table.getFocusModel().focus(index));
-            });
-        }
-    }
-
     @Override
     protected void deactivate() {
         table.getSelectionModel().selectedItemProperty().removeListener(selectedItemChangeListener);
@@ -183,7 +169,21 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
-
+    private void updateSelectedItem() {
+        PendingTradesListItem selectedItem = model.getSelectedItem();
+        if (selectedItem != null) {
+            // Select and focus selectedItem from model
+            int index = table.getItems().indexOf(selectedItem);
+            UserThread.execute(() -> {
+                //TODO app wide focus
+                table.getSelectionModel().select(index);
+                //table.requestFocus();
+                //UserThread.execute(() -> table.getFocusModel().focus(index));
+            });
+        }
+    }
+    
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Subviews
     ///////////////////////////////////////////////////////////////////////////////////////////

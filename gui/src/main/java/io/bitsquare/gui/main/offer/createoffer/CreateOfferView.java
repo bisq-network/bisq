@@ -451,8 +451,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             if (!model.dataModel.isFeeFromFundingTxSufficient()) {
                 new Popup().warning("The mining fee from your funding transaction is not sufficiently high.\n\n" +
                         "You need to use at least a mining fee of " +
-                        model.formatCoin(FeePolicy.getMinRequiredFeeForFundingTx()) + ".\n\n" +
-                        "The fee used in your funding transaction was only " + model.formatCoin(newValue) + ".\n\n" +
+                        model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) + ".\n\n" +
+                        "The fee used in your funding transaction was only " +
+                        model.formatter.formatCoinWithCode(newValue) + ".\n\n" +
                         "The trade transactions might take too much time to be included in " +
                         "a block if the fee is too low.\n" +
                         "Please check at your external wallet that you set the required fee and " +
@@ -680,8 +681,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         placeOfferButton.setVisible(false);
         placeOfferButton.setOnAction(e -> onPlaceOffer());
         placeOfferSpinner = placeOfferTuple.second;
+        placeOfferSpinner.setPrefSize(18, 18);
         placeOfferSpinnerInfoLabel = placeOfferTuple.third;
-        placeOfferSpinnerInfoLabel.setText(BSResources.get("createOffer.fundsBox.placeOfferSpinnerInfo"));
+        placeOfferSpinnerInfoLabel.textProperty().bind(model.placeOfferSpinnerInfoText);
         placeOfferSpinnerInfoLabel.setVisible(false);
 
         cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));

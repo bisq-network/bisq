@@ -22,6 +22,7 @@ import io.bitsquare.crypto.ScryptUtil;
 import io.bitsquare.gui.components.PasswordTextField;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.gui.util.validation.PasswordValidator;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -44,6 +45,7 @@ public class WalletPasswordPopup extends Popup {
     private Button unlockButton;
     private AesKeyHandler aesKeyHandler;
     private PasswordTextField passwordTextField;
+    private ChangeListener<String> changeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -58,6 +60,12 @@ public class WalletPasswordPopup extends Popup {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void cleanup() {
+        if (passwordTextField != null)
+            passwordTextField.textProperty().addListener(changeListener);
+    }
 
     @Inject
     public WalletPasswordPopup(WalletService walletService) {
@@ -106,9 +114,10 @@ public class WalletPasswordPopup extends Popup {
         GridPane.setRowIndex(passwordTextField, rowIndex);
         GridPane.setColumnIndex(passwordTextField, 1);
         PasswordValidator passwordValidator = new PasswordValidator();
-        passwordTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+        changeListener = (observable, oldValue, newValue) -> {
             unlockButton.setDisable(!passwordValidator.validate(newValue).isValid);
-        });
+        };
+        passwordTextField.textProperty().addListener(changeListener);
         gridPane.getChildren().addAll(label, passwordTextField);
     }
 

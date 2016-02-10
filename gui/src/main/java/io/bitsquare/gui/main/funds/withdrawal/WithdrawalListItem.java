@@ -24,6 +24,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import javafx.scene.control.Label;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
 public class WithdrawalListItem {
     private final BalanceListener balanceListener;
@@ -42,12 +43,13 @@ public class WithdrawalListItem {
 
         // balance
         balanceLabel = new Label();
-        balanceListener = walletService.addBalanceListener(new BalanceListener(getAddress()) {
+        balanceListener = new BalanceListener(getAddress()) {
             @Override
-            public void onBalanceChanged(Coin balance) {
+            public void onBalanceChanged(Coin balance, Transaction tx) {
                 updateBalance(balance);
             }
-        });
+        };
+        walletService.addBalanceListener(balanceListener);
 
         updateBalance(walletService.getBalanceForAddress(getAddress()));
     }

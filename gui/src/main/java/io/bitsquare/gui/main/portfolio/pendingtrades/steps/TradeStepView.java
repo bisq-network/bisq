@@ -105,13 +105,14 @@ public abstract class TradeStepView extends AnchorPane {
             }
         });
 
-        timer = FxTimer.runPeriodically(Duration.ofSeconds(1), this::updateTimeLeft);
-
         tradePeriodStateSubscription = EasyBind.subscribe(trade.getTradePeriodStateProperty(), newValue -> {
             if (newValue != null) {
                 updateTradePeriodState(newValue);
             }
         });
+
+        timer = FxTimer.runPeriodically(Duration.ofSeconds(1), this::updateTimeLeft);
+
     }
 
     public void doDeactivate() {
@@ -130,11 +131,11 @@ public abstract class TradeStepView extends AnchorPane {
         if (tradePeriodStateSubscription != null)
             tradePeriodStateSubscription.unsubscribe();
 
-        if (notificationGroup != null)
-            notificationGroup.button.setOnAction(null);
-
         if (timer != null)
             timer.stop();
+
+        if (notificationGroup != null)
+            notificationGroup.button.setOnAction(null);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

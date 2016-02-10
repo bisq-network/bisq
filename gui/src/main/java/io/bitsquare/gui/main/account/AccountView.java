@@ -42,7 +42,6 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
     @FXML
     Tab accountSettingsTab;
 
-
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
 

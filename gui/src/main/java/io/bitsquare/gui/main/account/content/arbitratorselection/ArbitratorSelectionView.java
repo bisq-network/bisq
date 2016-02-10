@@ -26,7 +26,9 @@ import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.LanguageUtil;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -52,6 +54,9 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
     private TableView<ArbitratorListItem> table;
     private int gridRow = 0;
     private CheckBox autoSelectAllMatchingCheckBox;
+    private ListChangeListener<String> listChangeListener;
+    private ListChangeListener<String> languageCodesListChangeListener;
+    private ChangeListener<Boolean> isSelectedChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -68,13 +73,12 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
     public void initialize() {
         addLanguageGroup();
         addArbitratorsGroup();
+        listChangeListener = c -> languagesListView.setPrefHeight(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2);
     }
 
     @Override
     protected void activate() {
-        languagesListView.getItems().addListener((ListChangeListener<String>) c -> {
-            languagesListView.setPrefHeight(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2);
-        });
+        languagesListView.getItems().addListener(listChangeListener);
         languageComboBox.setItems(model.allLanguageCodes);
         languagesListView.setItems(model.languageCodes);
         languagesListView.setPrefHeight(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2);
@@ -85,6 +89,8 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
 
     @Override
     protected void deactivate() {
+        languagesListView.getItems().removeListener(listChangeListener);
+        model.languageCodes.removeListener(languageCodesListChangeListener);
     }
 
 
@@ -222,6 +228,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                         return new TableCell<ArbitratorListItem, ArbitratorListItem>() {
                             private final CheckBox checkBox = new CheckBox();
                             private TableRow tableRow;
+                            private BooleanProperty selectedProperty;
 
                             private void updateDisableState(final ArbitratorListItem item) {
                                 boolean selected = model.isAcceptedArbitrator(item.arbitrator);
@@ -261,8 +268,12 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    model.languageCodes.addListener((ListChangeListener<String>) c -> updateDisableState(item));
-                                    item.isSelectedProperty().addListener((observable, oldValue, newValue) -> checkBox.setSelected(newValue));
+                                    selectedProperty = item.isSelectedProperty();
+                                    languageCodesListChangeListener = c -> updateDisableState(item);
+                                    model.languageCodes.addListener(languageCodesListChangeListener);
+
+                                    isSelectedChangeListener = (observable, oldValue, newValue) -> checkBox.setSelected(newValue);
+                                    selectedProperty.addListener(isSelectedChangeListener);
 
                                     checkBox.setSelected(model.isAcceptedArbitrator(item.arbitrator));
                                     checkBox.setOnAction(e -> {
@@ -281,6 +292,10 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                                     updateDisableState(item);
                                     setGraphic(checkBox);
                                 } else {
+                                    model.languageCodes.removeListener(languageCodesListChangeListener);
+                                    if (selectedProperty != null)
+                                        selectedProperty.removeListener(isSelectedChangeListener);
+
                                     setGraphic(null);
 
                                     if (checkBox != null)

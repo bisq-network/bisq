@@ -100,7 +100,13 @@ public class Popup {
             stage.hide();
         else
             log.warn("Stage is null");
+
+        cleanup();
         PopupManager.isHidden(this);
+    }
+
+    protected void cleanup() {
+
     }
 
     public Popup onClose(Runnable closeHandler) {
@@ -249,7 +255,7 @@ public class Popup {
         if (headLine != null) {
             headLineLabel = new Label(BSResources.get(headLine));
             headLineLabel.setMouseTransparent(true);
-            headLineLabel.setStyle("-fx-font-size: 16; -fx-text-fill: #333;");
+            headLineLabel.setId("popup-headline");
             GridPane.setHalignment(headLineLabel, HPos.LEFT);
             GridPane.setRowIndex(headLineLabel, ++rowIndex);
             GridPane.setColumnSpan(headLineLabel, 2);
@@ -271,6 +277,7 @@ public class Popup {
             messageLabel = new Label(truncatedMessage);
             messageLabel.setMouseTransparent(true);
             messageLabel.setWrapText(true);
+            messageLabel.setId("popup-message");
             GridPane.setHalignment(messageLabel, HPos.LEFT);
             GridPane.setHgrow(messageLabel, Priority.ALWAYS);
             GridPane.setMargin(messageLabel, new Insets(3, 0, 0, 0));
@@ -288,6 +295,7 @@ public class Popup {
                 "It will make debugging easier if you can attach the bitsquare.log file which you can find in the application directory.");
 
         Button githubButton = new Button("Report to Github issue tracker");
+        githubButton.setId("popup-button");
         GridPane.setMargin(githubButton, new Insets(20, 0, 0, 0));
         GridPane.setHalignment(githubButton, HPos.RIGHT);
         GridPane.setRowIndex(githubButton, ++rowIndex);
@@ -300,6 +308,7 @@ public class Popup {
         });
 
         Button mailButton = new Button("Report by email");
+        mailButton.setId("popup-button");
         GridPane.setHalignment(mailButton, HPos.RIGHT);
         GridPane.setRowIndex(mailButton, ++rowIndex);
         GridPane.setColumnIndex(mailButton, 1);
@@ -337,6 +346,7 @@ public class Popup {
 
     protected void addCloseButton() {
         closeButton = new Button(closeButtonText == null ? "Close" : closeButtonText);
+        closeButton.setId("popup-button");
         closeButton.setOnAction(event -> {
             hide();
             closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
@@ -344,6 +354,7 @@ public class Popup {
 
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
             actionButton = new Button(actionButtonText == null ? "Ok" : actionButtonText);
+            actionButton.setId("popup-button");
             actionButton.setDefaultButton(true);
             //TODO app wide focus
             //actionButton.requestFocus();

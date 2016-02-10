@@ -36,7 +36,6 @@ bg color of non edit textFields: fafafa
     -bs-red-soft: derive(-bs-error-red, 60%);
     -bs-orange: #dd8f05;
 
-
     -bs-blue-transparent: #0f87c344;
     -bs-green-transparent: #00aa3344;
 
@@ -678,10 +677,6 @@ textfield */
     -fx-background-color: -bs-content-bg-grey;
 }
 
-
-
-
-
 /* TitledGroupBg */
 #titled-group-bg-label {
     -fx-font-weight: bold;
@@ -875,4 +870,23 @@ textfield */
 #charts .axis-label {
     -fx-font-size: 16;
     -fx-alignment: center;
+}
+
+/********************************************************************************************************************
+ *
+ * Popups
+ *
+ ********************************************************************************************************************/
+
+#popup-headline {
+    -fx-font-size: 18;
+    -fx-text-fill: #333;
+}
+
+#popup-message {
+    -fx-font-size: 15;
+}
+
+#popup-button {
+    -fx-font-size: 15;
 }

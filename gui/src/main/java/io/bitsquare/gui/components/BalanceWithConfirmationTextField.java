@@ -31,11 +31,14 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 
 public class BalanceWithConfirmationTextField extends AnchorPane {
 
     private static WalletService walletService;
+    private BalanceListener balanceListener;
+    private AddressConfidenceListener confidenceListener;
 
     public static void setWalletService(WalletService walletService) {
         BalanceWithConfirmationTextField.walletService = walletService;
@@ -77,22 +80,29 @@ public class BalanceWithConfirmationTextField extends AnchorPane {
         getChildren().addAll(textField, progressIndicator);
     }
 
+    public void cleanup() {
+        walletService.removeBalanceListener(balanceListener);
+        walletService.removeAddressConfidenceListener(confidenceListener);
+    }
+
     public void setup(Address address, BSFormatter formatter) {
         this.formatter = formatter;
-        walletService.addAddressConfidenceListener(new AddressConfidenceListener(address) {
+        confidenceListener = new AddressConfidenceListener(address) {
             @Override
             public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
                 updateConfidence(confidence);
             }
-        });
+        };
+        walletService.addAddressConfidenceListener(confidenceListener);
         updateConfidence(walletService.getConfidenceForAddress(address));
 
-        walletService.addBalanceListener(new BalanceListener(address) {
+        balanceListener = new BalanceListener(address) {
             @Override
-            public void onBalanceChanged(Coin balance) {
+            public void onBalanceChanged(Coin balance, Transaction tx) {
                 updateBalance(balance);
             }
-        });
+        };
+        walletService.addBalanceListener(balanceListener);
         updateBalance(walletService.getBalanceForAddress(address));
     }
 

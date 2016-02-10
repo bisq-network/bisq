@@ -408,7 +408,7 @@ public class MainViewModel implements ViewModel {
 
         walletService.addBalanceListener(new BalanceListener() {
             @Override
-            public void onBalanceChanged(Coin balance) {
+            public void onBalanceChanged(Coin balance, Transaction tx) {
                 updateBalance();
             }
         });

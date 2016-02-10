@@ -284,27 +284,24 @@ public class WalletService {
     // Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AddressConfidenceListener addAddressConfidenceListener(AddressConfidenceListener listener) {
+    public void addAddressConfidenceListener(AddressConfidenceListener listener) {
         addressConfidenceListeners.add(listener);
-        return listener;
     }
 
     public void removeAddressConfidenceListener(AddressConfidenceListener listener) {
         addressConfidenceListeners.remove(listener);
     }
 
-    public TxConfidenceListener addTxConfidenceListener(TxConfidenceListener listener) {
+    public void addTxConfidenceListener(TxConfidenceListener listener) {
         txConfidenceListeners.add(listener);
-        return listener;
     }
 
     public void removeTxConfidenceListener(TxConfidenceListener listener) {
         txConfidenceListeners.remove(listener);
     }
 
-    public BalanceListener addBalanceListener(BalanceListener listener) {
+    public void addBalanceListener(BalanceListener listener) {
         balanceListeners.add(listener);
-        return listener;
     }
 
     public void removeBalanceListener(BalanceListener listener) {
@@ -667,12 +664,12 @@ public class WalletService {
     private class BitsquareWalletEventListener extends AbstractWalletEventListener {
         @Override
         public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-            notifyBalanceListeners();
+            notifyBalanceListeners(tx);
         }
 
         @Override
         public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-            notifyBalanceListeners();
+            notifyBalanceListeners(tx);
         }
 
         @Override
@@ -691,7 +688,7 @@ public class WalletService {
                             txConfidenceListener.onTransactionConfidenceChanged(tx.getConfidence()));
         }
 
-        private void notifyBalanceListeners() {
+        private void notifyBalanceListeners(Transaction tx) {
             for (BalanceListener balanceListener : balanceListeners) {
                 Coin balance;
                 if (balanceListener.getAddress() != null)
@@ -699,7 +696,7 @@ public class WalletService {
                 else
                     balance = getAvailableBalance();
 
-                balanceListener.onBalanceChanged(balance);
+                balanceListener.onBalanceChanged(balance, tx);
             }
         }
     }
