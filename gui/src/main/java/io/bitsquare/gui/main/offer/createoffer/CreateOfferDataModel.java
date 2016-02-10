@@ -22,12 +22,10 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.*;
 import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.btc.pricefeed.MarketPriceFeed;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
@@ -72,6 +70,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final User user;
     private final KeyRing keyRing;
     private final P2PService p2PService;
+    private MarketPriceFeed marketPriceFeed;
     private final WalletPasswordPopup walletPasswordPopup;
     private BlockchainService blockchainService;
     private final BSFormatter formatter;
@@ -112,7 +111,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     @Inject
     CreateOfferDataModel(OpenOfferManager openOfferManager, WalletService walletService, TradeWalletService tradeWalletService,
-                         Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,
+                         Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, MarketPriceFeed marketPriceFeed,
                          WalletPasswordPopup walletPasswordPopup, BlockchainService blockchainService, BSFormatter formatter) {
         this.openOfferManager = openOfferManager;
         this.walletService = walletService;
@@ -121,6 +120,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.user = user;
         this.keyRing = keyRing;
         this.p2PService = p2PService;
+        this.marketPriceFeed = marketPriceFeed;
         this.walletPasswordPopup = walletPasswordPopup;
         this.blockchainService = blockchainService;
         this.formatter = formatter;
@@ -223,8 +223,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
         PaymentAccount account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
         if (account != null)
             paymentAccount = account;
+
+        marketPriceFeed.setCurrencyCode(tradeCurrencyCode.get());
     }
 
+    void onTabSelected() {
+        marketPriceFeed.setCurrencyCode(tradeCurrencyCode.get());
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
@@ -283,9 +288,12 @@ class CreateOfferDataModel extends ActivatableDataModel {
     public void onCurrencySelected(TradeCurrency tradeCurrency) {
         if (tradeCurrency != null) {
             this.tradeCurrency = tradeCurrency;
-            tradeCurrencyCode.set(tradeCurrency.getCode());
+            String code = tradeCurrency.getCode();
+            tradeCurrencyCode.set(code);
 
             paymentAccount.setSelectedTradeCurrency(tradeCurrency);
+
+            marketPriceFeed.setCurrencyCode(code);
         }
     }
 
@@ -330,24 +338,28 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return feeFromFundingTxProperty.get().compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0;
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void requestFeeFromBlockchain(String transactionId) {
-        SettableFuture<Coin> future = blockchainService.requestFeeFromBlockchain(transactionId);
-        Futures.addCallback(future, new FutureCallback<Coin>() {
-            public void onSuccess(Coin fee) {
-                UserThread.execute(() -> feeFromFundingTxProperty.set(fee));
-            }
+        if (preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET) {
+            SettableFuture<Coin> future = blockchainService.requestFee(transactionId);
+            Futures.addCallback(future, new FutureCallback<Coin>() {
+                public void onSuccess(Coin fee) {
+                    UserThread.execute(() -> feeFromFundingTxProperty.set(fee));
+                }
 
-            public void onFailure(@NotNull Throwable throwable) {
-                UserThread.execute(() -> new Popup()
-                        .warning("We did not get a response for the request of the mining fee used in the funding transaction.")
-                        .show());
-            }
-        });
+                public void onFailure(@NotNull Throwable throwable) {
+                    UserThread.execute(() -> new Popup()
+                            .warning("We did not get a response for the request of the mining fee used in the funding transaction.")
+                            .show());
+                }
+            });
+        } else {
+            feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx());
+        }
     }
 
     void calculateVolume() {

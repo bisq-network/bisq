@@ -261,6 +261,22 @@ public class BSFormatter {
         return parseToFiat(input, currencyCode).equals(parseToFiatWith2Decimals(input, currencyCode));
     }
 
+    public String formatMarketPrice(double price) {
+        if (price > 0) {
+            String str = String.valueOf(price);
+            int decPoint = str.indexOf(".");
+            if (decPoint > 0) {
+                while (str.length() < decPoint + 3) {
+                    str += "0";
+                }
+                return str.substring(0, decPoint + 3);
+            } else {
+                return str;
+            }
+        } else {
+            return "N/A";
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Other

@@ -25,6 +25,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.btc.pricefeed.MarketPriceFeed;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.popups.WalletPasswordPopup;
@@ -63,6 +64,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private final User user;
     private final WalletPasswordPopup walletPasswordPopup;
     private final Preferences preferences;
+    private MarketPriceFeed marketPriceFeed;
 
     private final Coin offerFeeAsCoin;
     private final Coin networkFeeAsCoin;
@@ -90,13 +92,14 @@ class TakeOfferDataModel extends ActivatableDataModel {
     @Inject
     TakeOfferDataModel(TradeManager tradeManager, TradeWalletService tradeWalletService,
                        WalletService walletService, User user, WalletPasswordPopup walletPasswordPopup,
-                       Preferences preferences) {
+                       Preferences preferences, MarketPriceFeed marketPriceFeed) {
         this.tradeManager = tradeManager;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
         this.user = user;
         this.walletPasswordPopup = walletPasswordPopup;
         this.preferences = preferences;
+        this.marketPriceFeed = marketPriceFeed;
 
         offerFeeAsCoin = FeePolicy.getCreateOfferFee();
         networkFeeAsCoin = FeePolicy.getFixedTxFeeForTrades();
@@ -152,12 +155,16 @@ class TakeOfferDataModel extends ActivatableDataModel {
         };
 
         offer.resetState();
+        marketPriceFeed.setCurrencyCode(offer.getCurrencyCode());
     }
 
     void checkOfferAvailability(ResultHandler resultHandler) {
         tradeManager.checkOfferAvailability(offer, resultHandler);
     }
 
+    void onTabSelected() {
+        marketPriceFeed.setCurrencyCode(offer.getCurrencyCode());
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions

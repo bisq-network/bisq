@@ -3,15 +3,15 @@ package io.bitsquare.btc.blockchain.providers;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.bitsquare.app.Log;
-import io.bitsquare.btc.blockchain.HttpClient;
-import io.bitsquare.btc.blockchain.HttpException;
+import io.bitsquare.http.HttpClient;
+import io.bitsquare.http.HttpException;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class BlockrIOProvider implements BlockchainApiProvider {
+public class BlockrIOProvider implements FeeProvider {
     private static final Logger log = LoggerFactory.getLogger(BlockrIOProvider.class);
 
     private final HttpClient httpClient;
@@ -20,6 +20,7 @@ public class BlockrIOProvider implements BlockchainApiProvider {
         httpClient = new HttpClient("https://btc.blockr.io/api/v1/tx/info/");
     }
 
+    //https://api.bitcoinaverage.com/ticker/global/EUR/
     @Override
     public Coin getFee(String transactionId) throws IOException, HttpException {
         Log.traceCall("transactionId=" + transactionId);

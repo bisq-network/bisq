@@ -1,9 +1,10 @@
 package io.bitsquare.btc.blockchain;
 
 import com.google.common.util.concurrent.*;
-import io.bitsquare.btc.blockchain.providers.BlockchainApiProvider;
+import io.bitsquare.btc.blockchain.providers.FeeProvider;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.http.HttpException;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -12,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Timer;
 
-public class GetFeeRequest {
+class GetFeeRequest {
     private static final Logger log = LoggerFactory.getLogger(GetFeeRequest.class);
     private final ListeningExecutorService executorService;
     private Timer timer;
@@ -22,12 +23,12 @@ public class GetFeeRequest {
         executorService = Utilities.getListeningExecutorService("GetFeeRequest", 5, 10, 120L);
     }
 
-    public SettableFuture<Coin> requestFee(String transactionId, BlockchainApiProvider provider) {
+    public SettableFuture<Coin> request(String transactionId, FeeProvider provider) {
         final SettableFuture<Coin> resultFuture = SettableFuture.create();
-        return requestFee(transactionId, provider, resultFuture);
+        return request(transactionId, provider, resultFuture);
     }
 
-    private SettableFuture<Coin> requestFee(String transactionId, BlockchainApiProvider provider, SettableFuture<Coin> resultFuture) {
+    private SettableFuture<Coin> request(String transactionId, FeeProvider provider, SettableFuture<Coin> resultFuture) {
         ListenableFuture<Coin> future = executorService.submit(() -> {
             Thread.currentThread().setName("requestFee-" + provider.toString());
             try {
@@ -52,7 +53,7 @@ public class GetFeeRequest {
                         faults++;
                         if (!resultFuture.isDone()) {
                             if (faults < 4) {
-                                requestFee(transactionId, provider, resultFuture);
+                                request(transactionId, provider, resultFuture);
                             } else {
                                 resultFuture.setException(throwable);
                             }

@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.offer;
 
+import io.bitsquare.btc.pricefeed.MarketPriceFeed;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableView;
@@ -50,15 +51,16 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
+    private MarketPriceFeed marketPriceFeed;
     private final Offer.Direction direction;
-    private Tab createOfferTab;
-    private Tab takeOfferTab;
+    private Tab takeOfferTab, createOfferTab, offerBookTab;
     private TradeCurrency tradeCurrency;
     private boolean createOfferViewOpen, takeOfferViewOpen;
 
-    protected OfferView(ViewLoader viewLoader, Navigation navigation) {
+    protected OfferView(ViewLoader viewLoader, Navigation navigation, MarketPriceFeed marketPriceFeed) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
+        this.marketPriceFeed = marketPriceFeed;
         this.direction = (this instanceof BuyOfferView) ? Offer.Direction.BUY : Offer.Direction.SELL;
     }
 
@@ -76,8 +78,19 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         // UserThread.execute needed as focus-out event is called after selectedIndexProperty changed
         // TODO Find a way to do that in the InputTextField directly, but a tab change does not trigger any event...
         TabPane tabPane = root;
-        tabPane.getSelectionModel().selectedIndexProperty()
-                .addListener((observableValue, oldValue, newValue) -> UserThread.execute(InputTextField::hideErrorMessageDisplay));
+        tabPane.getSelectionModel().selectedItemProperty()
+                .addListener((observableValue, oldValue, newValue) -> {
+                    UserThread.execute(InputTextField::hideErrorMessageDisplay);
+                    if (newValue != null) {
+                        if (newValue.equals(createOfferTab) && createOfferView != null) {
+                            createOfferView.onTabSelected();
+                        } else if (newValue.equals(takeOfferTab) && takeOfferView != null) {
+                            takeOfferView.onTabSelected();
+                        } else if (newValue.equals(offerBookTab) && offerBookView != null) {
+                            offerBookView.onTabSelected();
+                        }
+                    }
+                });
 
         // We want to get informed when a tab get closed
         tabPane.getTabs().addListener((ListChangeListener<Tab>) change -> {
@@ -105,14 +118,17 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private void loadView(Class<? extends View> viewClass) {
         TabPane tabPane = root;
         View view;
+        boolean isBuy = direction == Offer.Direction.BUY;
+
+        marketPriceFeed.setType(isBuy ? MarketPriceFeed.Type.ASK : MarketPriceFeed.Type.BID);
 
         if (viewClass == OfferBookView.class && offerBookView == null) {
             view = viewLoader.load(viewClass);
             // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
-            final Tab tab = new Tab(direction == Offer.Direction.BUY ? "Buy bitcoin" : "Sell bitcoin");
-            tab.setClosable(false);
-            tab.setContent(view.getRoot());
-            tabPane.getTabs().add(tab);
+            offerBookTab = new Tab(isBuy ? "Buy bitcoin" : "Sell bitcoin");
+            offerBookTab.setClosable(false);
+            offerBookTab.setContent(view.getRoot());
+            tabPane.getTabs().add(offerBookTab);
             offerBookView = (OfferBookView) view;
 
             OfferActionHandler offerActionHandler = new OfferActionHandler() {

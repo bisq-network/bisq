@@ -154,6 +154,18 @@ public class CurrencyUtil {
         ));
     }
 
+    public static boolean isFiatCurrency(String currencyCode) {
+        return !(isCryptoCurrency(currencyCode)) && Currency.getInstance(currencyCode) != null;
+    }
+
+    public static boolean isCryptoCurrency(String currencyCode) {
+        return getSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findAny().isPresent();
+    }
+
+    public static Optional<TradeCurrency> getCryptoCurrency(String currencyCode) {
+        return getSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findAny();
+    }
+
     public static List<TradeCurrency> getSortedCryptoCurrencies() {
         final List<TradeCurrency> result = new ArrayList<>();
         result.add(new CryptoCurrency("ETH", "Ethereum"));

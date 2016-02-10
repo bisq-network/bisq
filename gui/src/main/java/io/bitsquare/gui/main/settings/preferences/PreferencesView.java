@@ -55,24 +55,24 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 3, "Preferences");
+        addTitledGroupBg(root, gridRow, 4, "Preferences");
         tradeCurrencyComboBox = addLabelComboBox(root, gridRow, "Preferred currency:", Layout.FIRST_ROW_DISTANCE).second;
         languageComboBox = addLabelComboBox(root, ++gridRow, "Language:").second;
         // btcDenominationComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin denomination:").second;
         blockExplorerComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin block explorer:").second;
-
+        autoSelectArbitratorsCheckBox = addLabelCheckBox(root, ++gridRow, "Auto select arbitrators by language:", "").second;
+        
         // TODO need a bit extra work to separate trade and non trade tx fees before it can be used
         /*transactionFeeInputTextField = addLabelInputTextField(root, ++gridRow, "Transaction fee (satoshi/byte):").second;
         transactionFeeFocusedListener = (o, oldValue, newValue) -> {
             model.onFocusOutTransactionFeeTextField(oldValue, newValue);
         };*/
 
-        addTitledGroupBg(root, ++gridRow, 5, "Display options", Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 4, "Display options", Layout.GROUP_DISTANCE);
         useAnimationsCheckBox = addLabelCheckBox(root, gridRow, "Use animations:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         useEffectsCheckBox = addLabelCheckBox(root, ++gridRow, "Use effects:", "").second;
         showPlaceOfferConfirmationCheckBox = addLabelCheckBox(root, ++gridRow, "Show confirmation at place offer:", "").second;
         showTakeOfferConfirmationCheckBox = addLabelCheckBox(root, ++gridRow, "Show confirmation at take offer:", "").second;
-        autoSelectArbitratorsCheckBox = addLabelCheckBox(root, ++gridRow, "Auto select arbitrators by language:", "").second;
     }
 
     @Override

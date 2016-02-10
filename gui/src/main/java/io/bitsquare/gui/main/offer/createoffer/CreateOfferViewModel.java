@@ -105,7 +105,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     @Inject
     public CreateOfferViewModel(CreateOfferDataModel dataModel, FiatValidator fiatValidator, BtcValidator btcValidator,
-                                P2PService p2PService,
+                                P2PService p2PService, 
                                 BSFormatter formatter) {
         super(dataModel);
 

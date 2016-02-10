@@ -3,15 +3,15 @@ package io.bitsquare.btc.blockchain.providers;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.bitsquare.app.Log;
-import io.bitsquare.btc.blockchain.HttpClient;
-import io.bitsquare.btc.blockchain.HttpException;
+import io.bitsquare.http.HttpClient;
+import io.bitsquare.http.HttpException;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class BlockTrailProvider implements BlockchainApiProvider {
+public class BlockTrailProvider implements FeeProvider {
     private static final Logger log = LoggerFactory.getLogger(BlockTrailProvider.class);
 
     private final HttpClient httpClient;

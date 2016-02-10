@@ -76,7 +76,7 @@ import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
 public class BitsquareApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BitsquareApp.class);
 
-    public static final boolean DEV_MODE = false;
+    public static final boolean DEV_MODE = true;
     public static final boolean IS_RELEASE_VERSION = !DEV_MODE && true;
 
     private static Environment env;
@@ -153,7 +153,7 @@ public class BitsquareApp extends Application {
                     mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
             });*/
 
-            scene = new Scene(mainView.getRoot(), 1000, 740);
+            scene = new Scene(mainView.getRoot(), 1100, 740);
             scene.getStylesheets().setAll(
                     "/io/bitsquare/gui/bitsquare.css",
                     "/io/bitsquare/gui/images.css");

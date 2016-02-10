@@ -484,8 +484,15 @@ public class Connection implements MessageListener {
                 closeConnectionReason = CloseConnectionReason.TERMINATED;
             } else {
                 closeConnectionReason = CloseConnectionReason.UNKNOWN_EXCEPTION;
+
+                String message;
+                if (e.getMessage() != null)
+                    message = e.getMessage();
+                else
+                    message = e.toString();
+
                 log.warn("Unknown reason for exception at socket {}\n\tconnection={}\n\tException=",
-                        socket.toString(), this, e.getMessage());
+                        socket.toString(), this, message);
                 e.printStackTrace();
             }
 

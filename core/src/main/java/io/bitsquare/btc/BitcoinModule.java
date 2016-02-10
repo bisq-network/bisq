@@ -20,6 +20,7 @@ package io.bitsquare.btc;
 import com.google.inject.Singleton;
 import io.bitsquare.app.AppModule;
 import io.bitsquare.btc.blockchain.BlockchainService;
+import io.bitsquare.btc.pricefeed.MarketPriceFeed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -51,6 +52,7 @@ public class BitcoinModule extends AppModule {
         bind(TradeWalletService.class).in(Singleton.class);
         bind(WalletService.class).in(Singleton.class);
         bind(BlockchainService.class).in(Singleton.class);
+        bind(MarketPriceFeed.class).in(Singleton.class);
     }
 }
 

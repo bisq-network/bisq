@@ -19,8 +19,10 @@ package io.bitsquare.gui.main;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.btc.pricefeed.MarketPriceFeed;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.account.AccountView;
@@ -47,6 +49,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
 
+import static javafx.beans.binding.Bindings.createStringBinding;
 import static javafx.scene.layout.AnchorPane.*;
 
 @FxmlView
@@ -121,6 +124,22 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             setTopAnchor(this, 0d);
         }};
 
+        Tuple3<TextField, Label, VBox> marketPriceBox = getMarketPriceBox("Market price");
+        marketPriceBox.first.textProperty().bind(createStringBinding(
+                () -> {
+                    return model.marketPrice.get() + " " +
+                            model.marketPriceCurrency.get() + "/BTC";
+                },
+                model.marketPriceCurrency, model.marketPrice));
+        marketPriceBox.second.textProperty().bind(createStringBinding(
+                () -> {
+                    MarketPriceFeed.Type type = model.typeProperty.get();
+                    return type != null ? "Market price (" + type.name + ")" : "";
+                },
+                model.marketPriceCurrency, model.typeProperty));
+        HBox.setMargin(marketPriceBox.third, new Insets(0, 20, 0, 0));
+
+
         Tuple2<TextField, VBox> availableBalanceBox = getBalanceBox("Available balance");
         availableBalanceBox.first.textProperty().bind(model.availableBalance);
 
@@ -130,7 +149,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Tuple2<TextField, VBox> lockedBalanceBox = getBalanceBox("Locked balance");
         lockedBalanceBox.first.textProperty().bind(model.lockedBalance);
 
-        HBox rightNavPane = new HBox(availableBalanceBox.second, reservedBalanceBox.second, lockedBalanceBox.second,
+        HBox rightNavPane = new HBox(marketPriceBox.third, availableBalanceBox.second, reservedBalanceBox.second, lockedBalanceBox.second,
                 settingsButton, accountButton) {{
             setSpacing(10);
             setRightAnchor(this, 10d);
@@ -223,6 +242,25 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         vBox.setPadding(new Insets(11, 0, 0, 0));
         vBox.getChildren().addAll(textField, label);
         return new Tuple2(textField, vBox);
+    }
+
+    private Tuple3<TextField, Label, VBox> getMarketPriceBox(String text) {
+        TextField textField = new TextField();
+        textField.setEditable(false);
+        textField.setPrefWidth(140);
+        textField.setMouseTransparent(true);
+        textField.setFocusTraversable(false);
+        textField.setStyle("-fx-alignment: center; -fx-background-color: -bs-bg-grey;");
+
+        Label label = new Label(text);
+        label.setId("nav-balance-label");
+        label.setPadding(new Insets(0, 5, 0, 5));
+        label.setPrefWidth(textField.getPrefWidth());
+        VBox vBox = new VBox();
+        vBox.setSpacing(3);
+        vBox.setPadding(new Insets(11, 0, 0, 0));
+        vBox.getChildren().addAll(textField, label);
+        return new Tuple3(textField, label, vBox);
     }
 
     public void setPersistedFilesCorrupted(List<String> persistedFilesCorrupted) {

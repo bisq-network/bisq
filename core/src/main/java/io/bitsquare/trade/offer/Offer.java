@@ -150,7 +150,7 @@ public final class Offer implements PubKeyProtectedExpirablePayload {
             // we don't need to fill it as the error message is only relevant locally, so we don't store it in the transmitted object
             errorMessageProperty = new SimpleStringProperty();
         } catch (Throwable t) {
-            log.trace("Cannot be deserialized." + t.getMessage());
+            log.error("Cannot be deserialized." + t.getMessage());
         }
     }
 

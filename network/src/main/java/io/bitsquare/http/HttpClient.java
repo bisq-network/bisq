@@ -1,4 +1,4 @@
-package io.bitsquare.btc.blockchain;
+package io.bitsquare.http;
 
 import java.io.*;
 import java.net.HttpURLConnection;

@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.offer.offerbook;
 
 import com.google.inject.Inject;
 import io.bitsquare.app.Version;
+import io.bitsquare.btc.pricefeed.MarketPriceFeed;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
@@ -52,6 +53,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final OfferBook offerBook;
     private final Preferences preferences;
     private final P2PService p2PService;
+    private MarketPriceFeed marketPriceFeed;
     final BSFormatter formatter;
 
     private final FilteredList<OfferBookListItem> filteredItems;
@@ -72,7 +74,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     @Inject
     public OfferBookViewModel(User user, OpenOfferManager openOfferManager, OfferBook offerBook,
-                              Preferences preferences, P2PService p2PService,
+                              Preferences preferences, P2PService p2PService, MarketPriceFeed marketPriceFeed,
                               BSFormatter formatter) {
         super();
 
@@ -81,6 +83,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.offerBook = offerBook;
         this.preferences = preferences;
         this.p2PService = p2PService;
+        this.marketPriceFeed = marketPriceFeed;
         this.formatter = formatter;
 
         offerBookListItems = offerBook.getOfferBookListItems();
@@ -91,6 +94,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
         tradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
         tradeCurrencyCode.set(tradeCurrency.getCode());
+        marketPriceFeed.setCurrencyCode(tradeCurrencyCode.get());
     }
 
     @Override
@@ -115,6 +119,10 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.direction = direction;
     }
 
+    void onTabSelected() {
+        marketPriceFeed.setCurrencyCode(tradeCurrencyCode.get());
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
@@ -122,7 +130,9 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     public void onSetTradeCurrency(TradeCurrency tradeCurrency) {
         this.tradeCurrency = tradeCurrency;
-        tradeCurrencyCode.set(tradeCurrency.getCode());
+        String code = tradeCurrency.getCode();
+        tradeCurrencyCode.set(code);
+        marketPriceFeed.setCurrencyCode(code);
         filterList();
     }
 

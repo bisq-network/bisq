@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.markets.charts;
 
 import com.google.common.math.LongMath;
 import com.google.inject.Inject;
+import io.bitsquare.btc.pricefeed.MarketPriceFeed;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.main.offer.offerbook.OfferBook;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookListItem;
@@ -41,6 +42,7 @@ class MarketsChartsViewModel extends ActivatableViewModel {
 
     private final OfferBook offerBook;
     private final Preferences preferences;
+    private MarketPriceFeed marketPriceFeed;
 
     final ObjectProperty<TradeCurrency> tradeCurrency = new SimpleObjectProperty<>(CurrencyUtil.getDefaultTradeCurrency());
     private final List<XYChart.Data> buyData = new ArrayList();
@@ -56,9 +58,10 @@ class MarketsChartsViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MarketsChartsViewModel(OfferBook offerBook, Preferences preferences) {
+    public MarketsChartsViewModel(OfferBook offerBook, Preferences preferences, MarketPriceFeed marketPriceFeed) {
         this.offerBook = offerBook;
         this.preferences = preferences;
+        this.marketPriceFeed = marketPriceFeed;
 
         offerBookListItems = offerBook.getOfferBookListItems();
         listChangeListener = c -> updateChartData(offerBookListItems);
@@ -66,9 +69,11 @@ class MarketsChartsViewModel extends ActivatableViewModel {
 
     @Override
     protected void activate() {
+        marketPriceFeed.setType(MarketPriceFeed.Type.LAST);
         offerBookListItems.addListener(listChangeListener);
         offerBook.fillOfferBookListItems();
         updateChartData(offerBookListItems);
+        marketPriceFeed.setCurrencyCode(tradeCurrency.get().getCode());
     }
 
     @Override
@@ -134,6 +139,7 @@ class MarketsChartsViewModel extends ActivatableViewModel {
     public void onSetTradeCurrency(TradeCurrency tradeCurrency) {
         this.tradeCurrency.set(tradeCurrency);
         updateChartData(offerBookListItems);
+        marketPriceFeed.setCurrencyCode(tradeCurrency.getCode());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

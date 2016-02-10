@@ -28,6 +28,7 @@ import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.btc.*;
 import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.btc.pricefeed.MarketPriceFeed;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -99,6 +100,9 @@ public class MainViewModel implements ViewModel {
     final DoubleProperty btcSyncProgress = new SimpleDoubleProperty(-1);
     final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
     final StringProperty btcSplashSyncIconId = new SimpleStringProperty();
+    final StringProperty marketPrice = new SimpleStringProperty("N/A");
+    final StringProperty marketPriceCurrency = new SimpleStringProperty("");
+    final ObjectProperty<MarketPriceFeed.Type> typeProperty = new SimpleObjectProperty<>(MarketPriceFeed.Type.LAST);
     final StringProperty availableBalance = new SimpleStringProperty();
     final StringProperty reservedBalance = new SimpleStringProperty();
     final StringProperty lockedBalance = new SimpleStringProperty();
@@ -123,6 +127,7 @@ public class MainViewModel implements ViewModel {
     final StringProperty p2PNetworkLabelId = new SimpleStringProperty("footer-pane");
 
     private MonadicBinding<Boolean> allServicesDone, tradesAndUIReady;
+    private MarketPriceFeed marketPriceFeed;
     private final User user;
     private int numBTCPeers = 0;
     private Timer checkForBtcSyncStateTimer;
@@ -138,10 +143,12 @@ public class MainViewModel implements ViewModel {
 
     @Inject
     public MainViewModel(WalletService walletService, TradeWalletService tradeWalletService,
+                         MarketPriceFeed marketPriceFeed,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
                          User user, AlertManager alertManager, WalletPasswordPopup walletPasswordPopup,
                          Navigation navigation, BSFormatter formatter) {
+        this.marketPriceFeed = marketPriceFeed;
         this.user = user;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
@@ -497,6 +504,19 @@ public class MainViewModel implements ViewModel {
             okPayAccount.setCountry(CountryUtil.getDefaultCountry());
             user.addPaymentAccount(okPayAccount);
         }
+
+        if (marketPriceFeed.getCurrencyCode() == null)
+            marketPriceFeed.setCurrencyCode(preferences.getPreferredTradeCurrency().getCode());
+        if (marketPriceFeed.getType() == null)
+            marketPriceFeed.setType(MarketPriceFeed.Type.LAST);
+        marketPriceFeed.init(price -> {
+                    marketPrice.set(formatter.formatMarketPrice(price));
+                },
+                (errorMessage, throwable) -> {
+                    marketPrice.set("N/A");
+                });
+        marketPriceCurrency.bind(marketPriceFeed.currencyCodeProperty());
+        typeProperty.bind(marketPriceFeed.typeProperty());
     }
 
     private void checkPeriodicallyForBtcSyncState() {
