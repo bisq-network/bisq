@@ -19,10 +19,13 @@ package io.bitsquare.gui.popups;
 
 import io.bitsquare.alert.Alert;
 import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import org.slf4j.Logger;
@@ -30,12 +33,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-import static io.bitsquare.gui.util.FormBuilder.addLabelCheckBox;
-import static io.bitsquare.gui.util.FormBuilder.addLabelInputTextField;
+import static io.bitsquare.gui.util.FormBuilder.*;
 
 public class SendAlertMessagePopup extends Popup {
     private static final Logger log = LoggerFactory.getLogger(SendAlertMessagePopup.class);
-    private Button openTicketButton;
+    private Button sendButton;
     private SendAlertMessageHandler sendAlertMessageHandler;
     private RemoveAlertMessageHandler removeAlertMessageHandler;
 
@@ -91,20 +93,22 @@ public class SendAlertMessagePopup extends Popup {
 
     private void addContent() {
         InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Alert private key:", 10).second;
-        InputTextField alertMessageInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Alert message:").second;
+
+        Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex, "Alert message:", "Enter message");
+        TextArea alertMessageTextArea = labelTextAreaTuple2.second;
+        Label first = labelTextAreaTuple2.first;
+        first.setMinWidth(150);
         CheckBox isUpdateCheckBox = addLabelCheckBox(gridPane, ++rowIndex, "Is update notification:", "").second;
         isUpdateCheckBox.setSelected(true);
 
-        if (BitsquareApp.DEV_MODE) {
+        if (BitsquareApp.DEV_MODE)
             keyInputTextField.setText("2e41038992f89eef2e4634ff3586e342c68ad9a5a7ffafee866781687f77a9b1");
-            alertMessageInputTextField.setText("m1");
-        }
 
-        openTicketButton = new Button("Send notification");
-        openTicketButton.setOnAction(e -> {
-            if (alertMessageInputTextField.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
+        sendButton = new Button("Send notification");
+        sendButton.setOnAction(e -> {
+            if (alertMessageTextArea.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
                 if (sendAlertMessageHandler.handle(
-                        new Alert(alertMessageInputTextField.getText(), isUpdateCheckBox.isSelected()),
+                        new Alert(alertMessageTextArea.getText(), isUpdateCheckBox.isSelected()),
                         keyInputTextField.getText()))
                     hide();
                 else
@@ -132,7 +136,7 @@ public class SendAlertMessagePopup extends Popup {
         hBox.setSpacing(10);
         GridPane.setRowIndex(hBox, ++rowIndex);
         GridPane.setColumnIndex(hBox, 1);
-        hBox.getChildren().addAll(openTicketButton, removeAlertMessageButton, closeButton);
+        hBox.getChildren().addAll(sendButton, removeAlertMessageButton, closeButton);
         gridPane.getChildren().add(hBox);
         GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
     }

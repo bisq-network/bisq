@@ -191,6 +191,7 @@ public class FormBuilder {
 
     public static Tuple2<Label, TextArea> addLabelTextArea(GridPane gridPane, int rowIndex, String title, String prompt, double top) {
         Label label = addLabel(gridPane, rowIndex, title, 0);
+        label.setAlignment(Pos.TOP_RIGHT);
         GridPane.setMargin(label, new Insets(top + 4, 0, 0, 0));
         GridPane.setValignment(label, VPos.TOP);
 
@@ -295,7 +296,7 @@ public class FormBuilder {
         InputTextField inputTextField = new InputTextField();
         CheckBox checkBox = new CheckBox(checkBoxTitle);
         HBox.setMargin(checkBox, new Insets(4, 0, 0, 0));
-        
+
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         hBox.getChildren().addAll(inputTextField, checkBox);
