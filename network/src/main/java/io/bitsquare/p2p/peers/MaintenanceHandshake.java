@@ -27,8 +27,8 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class PeerExchangeHandshake implements MessageListener {
-    private static final Logger log = LoggerFactory.getLogger(PeerExchangeHandshake.class);
+public class MaintenanceHandshake implements MessageListener {
+    private static final Logger log = LoggerFactory.getLogger(MaintenanceHandshake.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
@@ -56,7 +56,7 @@ public class PeerExchangeHandshake implements MessageListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PeerExchangeHandshake(NetworkNode networkNode, PeerManager peerManager, Listener listener) {
+    public MaintenanceHandshake(NetworkNode networkNode, PeerManager peerManager, Listener listener) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.listener = listener;
@@ -64,7 +64,7 @@ public class PeerExchangeHandshake implements MessageListener {
         networkNode.addMessageListener(this);
     }
 
-    public void closeHandshake() {
+    public void shutDown() {
         networkNode.removeMessageListener(this);
         stopTimeoutTimer();
     }
@@ -74,7 +74,7 @@ public class PeerExchangeHandshake implements MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestConnectedPeers(NodeAddress nodeAddress) {
+    public void requestReportedPeers(NodeAddress nodeAddress) {
         Log.traceCall("nodeAddress=" + nodeAddress + " / this=" + this);
         checkNotNull(networkNode.getNodeAddress(), "PeerExchangeHandshake.requestReportedPeers: My node address must " +
                 "not be null at requestReportedPeers");
@@ -94,7 +94,7 @@ public class PeerExchangeHandshake implements MessageListener {
                 log.info(errorMessage);
 
                 peerManager.shutDownConnection(nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
-                closeHandshake();
+                shutDown();
                 listener.onFault(errorMessage, null);
             }
         });
@@ -103,11 +103,11 @@ public class PeerExchangeHandshake implements MessageListener {
         timeoutTimer = UserThread.runAfter(() -> {
                     String errorMessage = "A timeout occurred at sending getPeersRequest:" + getPeersRequest + " for nodeAddress:" + nodeAddress;
                     log.info(errorMessage + " / PeerExchangeHandshake=" +
-                            PeerExchangeHandshake.this);
+                            MaintenanceHandshake.this);
 
                     log.info("timeoutTimer called on " + this);
                     peerManager.shutDownConnection(nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
-                    closeHandshake();
+                    shutDown();
                     listener.onFault(errorMessage, null);
                 },
                 20, TimeUnit.SECONDS);
@@ -133,7 +133,7 @@ public class PeerExchangeHandshake implements MessageListener {
             @Override
             public void onSuccess(Connection connection) {
                 log.trace("GetPeersResponse sent successfully");
-                closeHandshake();
+                shutDown();
                 listener.onComplete();
             }
 
@@ -145,7 +145,7 @@ public class PeerExchangeHandshake implements MessageListener {
                 log.info(errorMessage);
 
                 peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_FAILURE);
-                closeHandshake();
+                shutDown();
                 listener.onFault(errorMessage, connection);
             }
         });
@@ -154,11 +154,11 @@ public class PeerExchangeHandshake implements MessageListener {
         timeoutTimer = UserThread.runAfter(() -> {
                     String errorMessage = "A timeout occurred at sending getPeersResponse:" + getPeersResponse + " on connection:" + connection;
                     log.info(errorMessage + " / PeerExchangeHandshake=" +
-                            PeerExchangeHandshake.this);
+                            MaintenanceHandshake.this);
 
                     log.info("timeoutTimer called. this=" + this);
                     peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_TIMEOUT);
-                    closeHandshake();
+                    shutDown();
                     listener.onFault(errorMessage, connection);
                 },
                 20, TimeUnit.SECONDS);
@@ -186,7 +186,7 @@ public class PeerExchangeHandshake implements MessageListener {
                 log.trace(result.toString());
                 peerManager.addToReportedPeers(reportedPeers, connection);
 
-                closeHandshake();
+                shutDown();
                 listener.onComplete();
             } else {
                 log.debug("Nonce not matching. That can happen rarely if we get a response after a canceled handshake " +
@@ -205,6 +205,7 @@ public class PeerExchangeHandshake implements MessageListener {
     private HashSet<ReportedPeer> getConnectedPeers(NodeAddress receiverNodeAddress) {
         return new HashSet<>(peerManager.getConnectedPeers().stream()
                 .filter(e -> !peerManager.isSeedNode(e) &&
+                                !peerManager.isSelf(e) &&
                                 !e.nodeAddress.equals(receiverNodeAddress)
                 )
                 .collect(Collectors.toSet()));

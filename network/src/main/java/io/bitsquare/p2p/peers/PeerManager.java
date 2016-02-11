@@ -425,11 +425,11 @@ public class PeerManager implements ConnectionListener, MessageListener {
         }
     }
 
-    public Set<ReportedPeer> getConnectedAndReportedPeers() {
+   /* public Set<ReportedPeer> getConnectedAndReportedPeers() {
         Set<ReportedPeer> result = new HashSet<>(reportedPeers);
         result.addAll(getConnectedPeers());
         return result;
-    }
+    }*/
 
     public boolean isSeedNode(ReportedPeer reportedPeer) {
         return seedNodeAddresses.contains(reportedPeer.nodeAddress);
@@ -501,7 +501,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
         return list.remove(new Random().nextInt(list.size()));
     }
 
-    private Set<ReportedPeer> getConnectedPeers() {
+    public Set<ReportedPeer> getConnectedPeers() {
         // networkNode.getConfirmedConnections includes:
         // filter(connection -> connection.getPeersNodeAddressOptional().isPresent())
         return networkNode.getConfirmedConnections().stream()
