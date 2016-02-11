@@ -14,7 +14,7 @@ public class ProtectedMailboxData extends ProtectedData {
 
     public final PublicKey receiversPubKey;
 
-    public ProtectedMailboxData(ExpirableMailboxPayload data, long ttl, PublicKey ownerStoragePubKey, int sequenceNumber, byte[] signature, PublicKey receiversPubKey) {
+    public ProtectedMailboxData(MailboxMessage data, long ttl, PublicKey ownerStoragePubKey, int sequenceNumber, byte[] signature, PublicKey receiversPubKey) {
         super(data, ttl, ownerStoragePubKey, sequenceNumber, signature);
 
         this.receiversPubKey = receiversPubKey;
@@ -23,7 +23,7 @@ public class ProtectedMailboxData extends ProtectedData {
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            ttl = expirablePayload.getTTL();
+            ttl = expirableMessage.getTTL();
 
             // in case the reported creation date is in the future 
             // we reset the date to the current time

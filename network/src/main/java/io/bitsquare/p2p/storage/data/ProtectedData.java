@@ -14,18 +14,18 @@ import java.util.Date;
 public class ProtectedData implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(P2PDataStorage.class);
 
-    public final ExpirablePayload expirablePayload;
+    public final ExpirableMessage expirableMessage;
     transient public long ttl;
-    public final PublicKey ownerStoragePubKey;
+    public final PublicKey ownerPubKey;
     public final int sequenceNumber;
     public final byte[] signature;
     @VisibleForTesting
     transient public Date date;
 
-    public ProtectedData(ExpirablePayload expirablePayload, long ttl, PublicKey ownerStoragePubKey, int sequenceNumber, byte[] signature) {
-        this.expirablePayload = expirablePayload;
+    public ProtectedData(ExpirableMessage expirableMessage, long ttl, PublicKey ownerPubKey, int sequenceNumber, byte[] signature) {
+        this.expirableMessage = expirableMessage;
         this.ttl = ttl;
-        this.ownerStoragePubKey = ownerStoragePubKey;
+        this.ownerPubKey = ownerPubKey;
         this.sequenceNumber = sequenceNumber;
         this.signature = signature;
         this.date = new Date();
@@ -34,7 +34,7 @@ public class ProtectedData implements Serializable {
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            ttl = expirablePayload.getTTL();
+            ttl = expirableMessage.getTTL();
             date = new Date();
 
         } catch (Throwable t) {
@@ -50,11 +50,11 @@ public class ProtectedData implements Serializable {
     @Override
     public String toString() {
         return "ProtectedData{" +
-                "expirablePayload=" + expirablePayload +
+                "expirablePayload=" + expirableMessage +
                 ", ttl=" + ttl +
                 ", date=" + date +
                 ", sequenceNumber=" + sequenceNumber +
-                ", ownerStoragePubKey.hashCode()=" + ownerStoragePubKey.hashCode() +
+                ", ownerStoragePubKey.hashCode()=" + ownerPubKey.hashCode() +
                 ", signature.hashCode()=" + Arrays.toString(signature).hashCode() +
                 '}';
     }

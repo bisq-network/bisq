@@ -20,7 +20,7 @@ package io.bitsquare.arbitration;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.storage.data.PubKeyProtectedExpirablePayload;
+import io.bitsquare.p2p.storage.data.StorageMessage;
 
 import java.security.PublicKey;
 import java.util.Arrays;
@@ -28,7 +28,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public final class Arbitrator implements PubKeyProtectedExpirablePayload {
+public final class Arbitrator implements StorageMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -73,7 +73,7 @@ public final class Arbitrator implements PubKeyProtectedExpirablePayload {
     }
 
     @Override
-    public PublicKey getPubKey() {
+    public PublicKey getOwnerPubKey() {
         return pubKeyRing.getSignaturePubKey();
     }
 

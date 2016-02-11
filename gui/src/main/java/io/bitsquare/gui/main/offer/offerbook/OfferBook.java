@@ -57,7 +57,7 @@ public class OfferBook {
             @Override
             public void onAdded(ProtectedData entry) {
                 log.debug("onAdded " + entry);
-                Serializable data = entry.expirablePayload;
+                Serializable data = entry.expirableMessage;
                 if (data instanceof Offer) {
                     Offer offer = (Offer) data;
                     OfferBookListItem offerBookListItem = new OfferBookListItem(offer);
@@ -69,8 +69,8 @@ public class OfferBook {
             @Override
             public void onRemoved(ProtectedData entry) {
                 log.debug("onRemoved " + entry);
-                if (entry.expirablePayload instanceof Offer) {
-                    Offer offer = (Offer) entry.expirablePayload;
+                if (entry.expirableMessage instanceof Offer) {
+                    Offer offer = (Offer) entry.expirableMessage;
 
                     // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
                     offer.setState(Offer.State.REMOVED);

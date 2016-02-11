@@ -62,7 +62,7 @@ public class AlertManager {
         alertService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedData entry) {
-                Serializable data = entry.expirablePayload;
+                Serializable data = entry.expirableMessage;
                 if (data instanceof Alert) {
                     Alert alert = (Alert) data;
                     if (verifySignature(alert))
@@ -72,7 +72,7 @@ public class AlertManager {
 
             @Override
             public void onRemoved(ProtectedData entry) {
-                Serializable data = entry.expirablePayload;
+                Serializable data = entry.expirableMessage;
                 if (data instanceof Alert) {
                     Alert alert = (Alert) data;
                     if (verifySignature(alert))

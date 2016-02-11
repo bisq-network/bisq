@@ -18,12 +18,12 @@
 package io.bitsquare.alert;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.storage.data.PubKeyProtectedExpirablePayload;
+import io.bitsquare.p2p.storage.data.StorageMessage;
 
 import java.security.PublicKey;
 import java.util.concurrent.TimeUnit;
 
-public final class Alert implements PubKeyProtectedExpirablePayload {
+public final class Alert implements StorageMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -54,7 +54,7 @@ public final class Alert implements PubKeyProtectedExpirablePayload {
     }
 
     @Override
-    public PublicKey getPubKey() {
+    public PublicKey getOwnerPubKey() {
         return storagePublicKey;
     }
 

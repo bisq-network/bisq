@@ -23,8 +23,8 @@ import io.bitsquare.p2p.peers.RequestDataManager;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.P2PDataStorage;
-import io.bitsquare.p2p.storage.data.ExpirableMailboxPayload;
-import io.bitsquare.p2p.storage.data.ExpirablePayload;
+import io.bitsquare.p2p.storage.data.ExpirableMessage;
+import io.bitsquare.p2p.storage.data.MailboxMessage;
 import io.bitsquare.p2p.storage.data.ProtectedData;
 import io.bitsquare.p2p.storage.data.ProtectedMailboxData;
 import io.bitsquare.p2p.storage.messages.AddDataMessage;
@@ -421,16 +421,16 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         // Seed nodes don't have set the encryptionService
         if (optionalEncryptionService.isPresent()) {
             Log.traceCall();
-            ExpirablePayload expirablePayload = mailboxData.expirablePayload;
-            if (expirablePayload instanceof ExpirableMailboxPayload) {
-                ExpirableMailboxPayload expirableMailboxPayload = (ExpirableMailboxPayload) expirablePayload;
+            ExpirableMessage expirableMessage = mailboxData.expirableMessage;
+            if (expirableMessage instanceof MailboxMessage) {
+                MailboxMessage expirableMailboxPayload = (MailboxMessage) expirableMessage;
                 PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = expirableMailboxPayload.prefixedSealedAndSignedMessage;
                 if (verifyAddressPrefixHash(prefixedSealedAndSignedMessage)) {
                     try {
                         DecryptedMsgWithPubKey decryptedMsgWithPubKey = optionalEncryptionService.get().decryptAndVerify(
                                 prefixedSealedAndSignedMessage.sealedAndSigned);
-                        if (decryptedMsgWithPubKey.message instanceof MailboxMessage) {
-                            MailboxMessage mailboxMessage = (MailboxMessage) decryptedMsgWithPubKey.message;
+                        if (decryptedMsgWithPubKey.message instanceof io.bitsquare.p2p.messaging.MailboxMessage) {
+                            io.bitsquare.p2p.messaging.MailboxMessage mailboxMessage = (io.bitsquare.p2p.messaging.MailboxMessage) decryptedMsgWithPubKey.message;
                             NodeAddress senderNodeAddress = mailboxMessage.getSenderNodeAddress();
                             checkNotNull(senderNodeAddress, "senderAddress must not be null for mailbox messages");
 
@@ -455,7 +455,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     public void sendEncryptedMailboxMessage(NodeAddress peersNodeAddress, PubKeyRing peersPubKeyRing,
-                                            MailboxMessage message,
+                                            io.bitsquare.p2p.messaging.MailboxMessage message,
                                             SendMailboxMessageListener sendMailboxMessageListener) {
         Log.traceCall("message " + message);
         checkNotNull(peersNodeAddress,
@@ -494,7 +494,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                             log.info("We cannot send message to peer. Peer might be offline. We will store message in mailbox.");
                             log.trace("create MailboxEntry with peerAddress " + peersNodeAddress);
                             PublicKey receiverStoragePublicKey = peersPubKeyRing.getSignaturePubKey();
-                            addMailboxData(new ExpirableMailboxPayload(prefixedSealedAndSignedMessage,
+                            addMailboxData(new MailboxMessage(prefixedSealedAndSignedMessage,
                                             optionalKeyRing.get().getSignatureKeyPair().getPublic(),
                                             receiverStoragePublicKey),
                                     receiverStoragePublicKey,
@@ -516,7 +516,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
 
-    private void addMailboxData(ExpirableMailboxPayload expirableMailboxPayload,
+    private void addMailboxData(MailboxMessage expirableMailboxPayload,
                                 PublicKey receiversPublicKey,
                                 SendMailboxMessageListener sendMailboxMessageListener) {
         Log.traceCall();
@@ -587,8 +587,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         if (isBootstrapped()) {
             if (mailboxMap.containsKey(decryptedMsgWithPubKey)) {
                 ProtectedMailboxData mailboxData = mailboxMap.get(decryptedMsgWithPubKey);
-                if (mailboxData != null && mailboxData.expirablePayload instanceof ExpirableMailboxPayload) {
-                    ExpirableMailboxPayload expirableMailboxPayload = (ExpirableMailboxPayload) mailboxData.expirablePayload;
+                if (mailboxData != null && mailboxData.expirableMessage instanceof MailboxMessage) {
+                    MailboxMessage expirableMailboxPayload = (MailboxMessage) mailboxData.expirableMessage;
                     PublicKey receiversPubKey = mailboxData.receiversPubKey;
                     checkArgument(receiversPubKey.equals(optionalKeyRing.get().getSignatureKeyPair().getPublic()),
                             "receiversPubKey is not matching with our key. That must not happen.");
@@ -620,22 +620,22 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     // Data storage
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean addData(ExpirablePayload expirablePayload) {
+    public boolean addData(ExpirableMessage expirableMessage) {
         Log.traceCall();
-        return doAddData(expirablePayload, false);
+        return doAddData(expirableMessage, false);
     }
 
-    public boolean republishData(ExpirablePayload expirablePayload) {
+    public boolean republishData(ExpirableMessage expirableMessage) {
         Log.traceCall();
-        return doAddData(expirablePayload, true);
+        return doAddData(expirableMessage, true);
     }
 
-    private boolean doAddData(ExpirablePayload expirablePayload, boolean rePublish) {
+    private boolean doAddData(ExpirableMessage expirableMessage, boolean rePublish) {
         Log.traceCall();
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         if (isBootstrapped()) {
             try {
-                ProtectedData protectedData = p2PDataStorage.getDataWithSignedSeqNr(expirablePayload, optionalKeyRing.get().getSignatureKeyPair());
+                ProtectedData protectedData = p2PDataStorage.getDataWithSignedSeqNr(expirableMessage, optionalKeyRing.get().getSignatureKeyPair());
                 if (rePublish)
                     return p2PDataStorage.rePublish(protectedData, networkNode.getNodeAddress());
                 else
@@ -649,12 +649,12 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
     }
 
-    public boolean removeData(ExpirablePayload expirablePayload) {
+    public boolean removeData(ExpirableMessage expirableMessage) {
         Log.traceCall();
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         if (isBootstrapped()) {
             try {
-                ProtectedData protectedData = p2PDataStorage.getDataWithSignedSeqNr(expirablePayload, optionalKeyRing.get().getSignatureKeyPair());
+                ProtectedData protectedData = p2PDataStorage.getDataWithSignedSeqNr(expirableMessage, optionalKeyRing.get().getSignatureKeyPair());
                 return p2PDataStorage.remove(protectedData, networkNode.getNodeAddress());
             } catch (CryptoException e) {
                 log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");

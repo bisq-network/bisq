@@ -1,10 +1,10 @@
 package io.bitsquare.p2p.storage.mocks;
 
-import io.bitsquare.p2p.storage.data.PubKeyProtectedExpirablePayload;
+import io.bitsquare.p2p.storage.data.StorageMessage;
 
 import java.security.PublicKey;
 
-public class MockData implements PubKeyProtectedExpirablePayload {
+public class MockData implements StorageMessage {
     public final String msg;
     public final PublicKey publicKey;
     public long ttl;
@@ -43,7 +43,7 @@ public class MockData implements PubKeyProtectedExpirablePayload {
     }
 
     @Override
-    public PublicKey getPubKey() {
+    public PublicKey getOwnerPubKey() {
         return publicKey;
     }
 }

@@ -85,8 +85,8 @@ public class OfferBookService {
 
     public List<Offer> getOffers() {
         final List<Offer> offers = p2PService.getDataMap().values().stream()
-                .filter(e -> e.expirablePayload instanceof Offer)
-                .map(e -> (Offer) e.expirablePayload)
+                .filter(e -> e.expirableMessage instanceof Offer)
+                .map(e -> (Offer) e.expirableMessage)
                 .collect(Collectors.toList());
         return offers;
     }
