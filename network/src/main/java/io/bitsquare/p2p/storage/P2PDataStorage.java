@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.Serializable;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.*;
@@ -239,7 +240,7 @@ public class P2PDataStorage implements MessageListener {
         else
             sequenceNumber = 0;
 
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(payload, sequenceNumber));
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(payload, sequenceNumber));
         byte[] signature = Sig.sign(ownerStoragePubKey.getPrivate(), hashOfDataAndSeqNr);
         return new ProtectedData(payload, payload.getTTL(), ownerStoragePubKey.getPublic(), sequenceNumber, signature);
     }
@@ -255,7 +256,7 @@ public class P2PDataStorage implements MessageListener {
         else
             sequenceNumber = 0;
 
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(expirableMailboxPayload, sequenceNumber));
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(expirableMailboxPayload, sequenceNumber));
         byte[] signature = Sig.sign(storageSignaturePubKey.getPrivate(), hashOfDataAndSeqNr);
         return new ProtectedMailboxData(expirableMailboxPayload, expirableMailboxPayload.getTTL(),
                 storageSignaturePubKey.getPublic(), sequenceNumber, signature, receiversPublicKey);
@@ -300,7 +301,7 @@ public class P2PDataStorage implements MessageListener {
 
     private boolean checkSignature(ProtectedData data) {
         Log.traceCall();
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, data.sequenceNumber));
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(data.expirablePayload, data.sequenceNumber));
         try {
             boolean result = Sig.verify(data.ownerStoragePubKey, hashOfDataAndSeqNr, data.signature);
             if (!result)
@@ -366,6 +367,30 @@ public class P2PDataStorage implements MessageListener {
 
     private ByteArray getHashAsByteArray(ExpirablePayload payload) {
         return new ByteArray(Hash.getHash(payload));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Static class
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static class DataAndSeqNrPair implements Serializable {
+        // data are only used for getting cryptographic hash from both values
+        private final Serializable data;
+        private final int sequenceNumber;
+
+        public DataAndSeqNrPair(Serializable data, int sequenceNumber) {
+            this.data = data;
+            this.sequenceNumber = sequenceNumber;
+        }
+
+        @Override
+        public String toString() {
+            return "DataAndSeqNr{" +
+                    "data=" + data +
+                    ", sequenceNumber=" + sequenceNumber +
+                    '}';
+        }
     }
 
 }

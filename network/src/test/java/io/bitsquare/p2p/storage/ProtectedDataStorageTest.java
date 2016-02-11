@@ -11,7 +11,6 @@ import io.bitsquare.p2p.mocks.MockMessage;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.peers.Broadcaster;
 import io.bitsquare.p2p.peers.PeerManager;
-import io.bitsquare.p2p.storage.data.DataAndSeqNr;
 import io.bitsquare.p2p.storage.data.ExpirableMailboxPayload;
 import io.bitsquare.p2p.storage.data.ProtectedData;
 import io.bitsquare.p2p.storage.data.ProtectedMailboxData;
@@ -103,7 +102,7 @@ public class ProtectedDataStorageTest {
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
         int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
         byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         ProtectedData dataToRemove = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertTrue(dataStorage1.remove(dataToRemove, null));
@@ -135,7 +134,7 @@ public class ProtectedDataStorageTest {
         // add with date in future
         data = dataStorage1.getDataWithSignedSeqNr(mockData, storageSignatureKeyPair1);
         int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
         byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         ProtectedData dataWithFutureDate = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         dataWithFutureDate.date = new Date(new Date().getTime() + 60 * 60 * sleepTime);
@@ -156,63 +155,63 @@ public class ProtectedDataStorageTest {
 
         // remove with not updated seq nr -> failure
         int newSequenceNumber = 0;
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
         byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         ProtectedData dataToRemove = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertFalse(dataStorage1.remove(dataToRemove, null));
 
         // remove with too high updated seq nr -> ok
         newSequenceNumber = 2;
-        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
         signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         dataToRemove = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertTrue(dataStorage1.remove(dataToRemove, null));
 
         // add to empty map, any seq nr. -> ok
         newSequenceNumber = 2;
-        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
         signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         ProtectedData dataToAdd = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertTrue(dataStorage1.add(dataToAdd, null));
 
         // add with updated seq nr below previous -> failure
         newSequenceNumber = 1;
-        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
         signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         dataToAdd = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertFalse(dataStorage1.add(dataToAdd, null));
 
         // add with updated seq nr over previous -> ok
         newSequenceNumber = 3;
-        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
         signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         dataToAdd = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertTrue(dataStorage1.add(dataToAdd, null));
 
         // add with same seq nr  -> failure
         newSequenceNumber = 3;
-        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
         signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         dataToAdd = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertFalse(dataStorage1.add(dataToAdd, null));
 
         // add with same data but higher seq nr.  -> ok, ignore
         newSequenceNumber = 4;
-        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
         signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         dataToAdd = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertTrue(dataStorage1.add(dataToAdd, null));
 
         // remove with with same seq nr as prev. ignored -> failed
         newSequenceNumber = 4;
-        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
         signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         dataToRemove = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertFalse(dataStorage1.remove(dataToRemove, null));
 
         // remove with with higher seq nr -> ok
         newSequenceNumber = 5;
-        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
         signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         dataToRemove = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertTrue(dataStorage1.remove(dataToRemove, null));
@@ -237,7 +236,7 @@ public class ProtectedDataStorageTest {
 
         // receiver (storageSignatureKeyPair2)
         int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
 
         byte[] signature;
         ProtectedMailboxData dataToRemove;
@@ -283,7 +282,7 @@ public class ProtectedDataStorageTest {
         // hackers key pair is storageSignatureKeyPair2
         // change seq nr. and signature: fails on both own and peers dataStorage
         int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = cryptoService2.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        byte[] hashOfDataAndSeqNr = cryptoService2.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
         byte[] signature = cryptoService2.signStorageData(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
         ProtectedData dataToAdd = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertFalse(dataStorage1.add(dataToAdd, null));
@@ -291,7 +290,7 @@ public class ProtectedDataStorageTest {
 
         // change seq nr. and signature and data pub key. fails on peers dataStorage, succeeds on own dataStorage 
         newSequenceNumber = data.sequenceNumber + 2;
-        hashOfDataAndSeqNr = cryptoService2.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        hashOfDataAndSeqNr = cryptoService2.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
         signature = cryptoService2.signStorageData(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
         dataToAdd = new ProtectedData(data.expirablePayload, data.ttl, storageSignatureKeyPair2.getPublic(), newSequenceNumber, signature);
         Assert.assertTrue(dataStorage2.add(dataToAdd, null));
@@ -305,7 +304,7 @@ public class ProtectedDataStorageTest {
         Assert.assertNotEquals(data, dataToAdd);
 
         newSequenceNumber = data.sequenceNumber + 3;
-        hashOfDataAndSeqNr = cryptoService1.getHash(new DataAndSeqNr(data.expirablePayload, newSequenceNumber));
+        hashOfDataAndSeqNr = cryptoService1.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
         signature = cryptoService1.signStorageData(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         ProtectedData dataToRemove = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
         Assert.assertTrue(dataStorage1.remove(dataToRemove, null));
@@ -328,7 +327,7 @@ public class ProtectedDataStorageTest {
 
         // receiver (storageSignatureKeyPair2)
         int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = cryptoService2.getHash(new DataAndSeqNr(expirableMailboxPayload, newSequenceNumber));
+        byte[] hashOfDataAndSeqNr = cryptoService2.getHash(new P2PDataStorage.DataAndSeqNrPair(expirableMailboxPayload, newSequenceNumber));
 
         byte[] signature;
         ProtectedMailboxData dataToRemove;

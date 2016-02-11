@@ -10,7 +10,7 @@ import io.bitsquare.p2p.mocks.MockMailboxMessage;
 import io.bitsquare.p2p.network.LocalhostNetworkNode;
 import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.seed.SeedNode;
-import io.bitsquare.p2p.storage.data.DataAndSeqNr;
+import io.bitsquare.p2p.storage.P2PDataStorage;
 import io.bitsquare.p2p.storage.data.ProtectedData;
 import io.bitsquare.p2p.storage.mocks.MockData;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -175,7 +175,7 @@ public class P2PServiceTest {
 
         // try to manipulate seq nr. + pubKey + sig -> fails
         int sequenceNumberManipulated = origProtectedData.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(origProtectedData.expirablePayload, sequenceNumberManipulated));
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(origProtectedData.expirablePayload, sequenceNumberManipulated));
         byte[] signature = Sig.sign(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
         protectedDataManipulated = new ProtectedData(origProtectedData.expirablePayload, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
         Assert.assertFalse(p2PService3.removeData(protectedDataManipulated.expirablePayload));
@@ -197,7 +197,7 @@ public class P2PServiceTest {
         // first he tries to use the orig. pubKey in the data -> fails as pub keys not matching
         MockData manipulatedData = new MockData("mockData1_manipulated", origData.publicKey);
         sequenceNumberManipulated = 0;
-        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(manipulatedData, sequenceNumberManipulated));
+        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(manipulatedData, sequenceNumberManipulated));
         signature = Sig.sign(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
         protectedDataManipulated = new ProtectedData(origProtectedData.expirablePayload, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
         Assert.assertFalse(p2PService3.addData(protectedDataManipulated.expirablePayload));
@@ -209,7 +209,7 @@ public class P2PServiceTest {
         // then he tries to use his pubKey but orig data payload -> fails as pub keys nto matching
         manipulatedData = new MockData("mockData1_manipulated", msgSignatureKeyPairAdversary.getPublic());
         sequenceNumberManipulated = 0;
-        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(manipulatedData, sequenceNumberManipulated));
+        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(manipulatedData, sequenceNumberManipulated));
         signature = Sig.sign(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
         protectedDataManipulated = new ProtectedData(origProtectedData.expirablePayload, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
         Assert.assertFalse(p2PService3.addData(protectedDataManipulated.expirablePayload));
@@ -222,7 +222,7 @@ public class P2PServiceTest {
         // payload data has adversary's pubKey so he could hijack the owners data
         manipulatedData = new MockData("mockData1_manipulated", msgSignatureKeyPairAdversary.getPublic());
         sequenceNumberManipulated = 0;
-        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(manipulatedData, sequenceNumberManipulated));
+        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(manipulatedData, sequenceNumberManipulated));
         signature = Sig.sign(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
         protectedDataManipulated = new ProtectedData(manipulatedData, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
         Assert.assertTrue(p2PService3.addData(protectedDataManipulated.expirablePayload));
@@ -242,7 +242,7 @@ public class P2PServiceTest {
         // finally he tries both previous attempts with same data - > same as before
         manipulatedData = new MockData("mockData1", origData.publicKey);
         sequenceNumberManipulated = 0;
-        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(manipulatedData, sequenceNumberManipulated));
+        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(manipulatedData, sequenceNumberManipulated));
         signature = Sig.sign(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
         protectedDataManipulated = new ProtectedData(origProtectedData.expirablePayload, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
         Assert.assertFalse(p2PService3.addData(protectedDataManipulated.expirablePayload));
@@ -253,7 +253,7 @@ public class P2PServiceTest {
 
         manipulatedData = new MockData("mockData1", msgSignatureKeyPairAdversary.getPublic());
         sequenceNumberManipulated = 0;
-        hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNr(manipulatedData, sequenceNumberManipulated));
+        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(manipulatedData, sequenceNumberManipulated));
         signature = Sig.sign(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
         protectedDataManipulated = new ProtectedData(manipulatedData, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
         Assert.assertTrue(p2PService3.addData(protectedDataManipulated.expirablePayload));
