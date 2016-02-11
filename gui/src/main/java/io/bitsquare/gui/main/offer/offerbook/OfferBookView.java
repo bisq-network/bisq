@@ -161,7 +161,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         paymentMethodComboBox.setOnAction(e -> model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem()));
         createOfferButton.setOnAction(e -> onCreateOffer());
         volumeColumn.textProperty().bind(createStringBinding(
-                () -> BSResources.get("Amount in {0} (Min.)", model.tradeCurrencyCode.get()), model.tradeCurrencyCode));
+                () -> "Amount in " + model.tradeCurrencyCode.get() + " (Min.)", model.tradeCurrencyCode));
         model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());
 
 
@@ -464,7 +464,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                                             hasSameProtocolVersion));
                                         }
                                     }
-                                    
+
                                     String title;
                                     if (isTradable) {
                                         if (model.isMyOffer(offer)) {

@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps.seller;
 
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
-import io.bitsquare.locale.BSResources;
 
 public class SellerStep2View extends TradeStepView {
 
@@ -43,10 +42,8 @@ public class SellerStep2View extends TradeStepView {
 
     @Override
     protected String getInfoText() {
-        return BSResources.get(
-                "The deposit transaction has at least one blockchain confirmation.\n" +
-                        "You need to wait until that the bitcoin buyer starts the {0} payment.",
-                model.getCurrencyCode());
+        return "The deposit transaction has at least one blockchain confirmation.\n" +
+                "You need to wait until that the bitcoin buyer starts the \" + model.getCurrencyCode() + \" payment.";
     }
 
 

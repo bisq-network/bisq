@@ -21,7 +21,6 @@ import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.popups.Popup;
-import io.bitsquare.locale.BSResources;
 import io.bitsquare.user.PopupId;
 import io.bitsquare.user.Preferences;
 import javafx.geometry.HPos;
@@ -103,15 +102,13 @@ public class SellerStep3View extends TradeStepView {
     @Override
     protected String getInfoText() {
         if (model.isBlockChainMethod()) {
-            return BSResources.get("The bitcoin buyer has started the {0} payment.\n" +
-                            "Check for blockchain confirmations at your Altcoin wallet or block explorer and " +
-                            "confirm the payment when you have sufficient blockchain confirmations.",
-                    model.getCurrencyCode());
+            return "The bitcoin buyer has started the " + model.getCurrencyCode() + " payment.\n" +
+                    "Check for blockchain confirmations at your Altcoin wallet or block explorer and " +
+                    "confirm the payment when you have sufficient blockchain confirmations.";
         } else {
-            return BSResources.get("The bitcoin buyer has started the {0} payment.\n" +
-                            "Check at your payment account (e.g. bank account) and confirm when you have " +
-                            "received the payment.",
-                    model.getCurrencyCode());
+            return "The bitcoin buyer has started the " + model.getCurrencyCode() + " payment.\n" +
+                    "Check at your payment account (e.g. bank account) and confirm when you have " +
+                    "received the payment.";
         }
     }
 

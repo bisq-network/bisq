@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
-import io.bitsquare.locale.BSResources;
 
 public class BuyerStep3View extends TradeStepView {
 
@@ -43,9 +42,8 @@ public class BuyerStep3View extends TradeStepView {
 
     @Override
     protected String getInfoText() {
-        return BSResources.get("Waiting for the bitcoin seller's confirmation " +
-                        "for the receipt of the {0} payment.",
-                model.getCurrencyCode());
+        return "Waiting for the bitcoin seller's confirmation " +
+                "for the receipt of the " + model.getCurrencyCode() + " payment.";
     }
 
 
