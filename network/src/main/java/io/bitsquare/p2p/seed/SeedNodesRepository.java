@@ -15,28 +15,43 @@ public class SeedNodesRepository {
     // testnet use port 8001
     // regtest use port 8002
     private Set<NodeAddress> torSeedNodeAddresses = Sets.newHashSet(
+            // In alpha we change the network with new releases. That will be faded out once we become backwards compatible (Beta)
+
+            // We keep 1 seed node running for the last 2 mainnet versions, just in case a user has not updated and need to 
+            // access still his his app
+
             // mainnet
             // v0.3.3
-          /*  new NodeAddress("oyyii5ogv7y7iadi.onion:8000"),
+            /* new NodeAddress("oyyii5ogv7y7iadi.onion:8000"),
             new NodeAddress("ugcro2f5xnkguash.onion:8000"),
             new NodeAddress("qarhpdsl6mfhbnud.onion:8000"),*/
 
             // v0.3.4
-            new NodeAddress("lih5zsr2bvxi24pk.onion:8000"),
+           /* new NodeAddress("lih5zsr2bvxi24pk.onion:8000"),
             new NodeAddress("s5xpstlooosehtxm.onion:8000"),
-            new NodeAddress("izs5oz7i5ta7c2ir.onion:8000"),
-            
+            new NodeAddress("izs5oz7i5ta7c2ir.onion:8000"),*/
+
+            // v0.3.5
+            new NodeAddress("que4ysbd2qazkb7d.onion:8000"),
+            new NodeAddress("h2crs2j5huhclkc6.onion:8000"),
+            new NodeAddress("7a3sj4j6yw5oukai.onion:8000"),
+
             // testnet
             new NodeAddress("znmy44wcstn2rkva.onion:8001"),
-            new NodeAddress("zvn7umikgxml6x6h.onion:8001"),
-            new NodeAddress("wnfxmrmsyeeos2dy.onion:8001"),
+           /* new NodeAddress("zvn7umikgxml6x6h.onion:8001"),
+            new NodeAddress("wnfxmrmsyeeos2dy.onion:8001"),*/
 
             // regtest
+            // For development you need to change that to your local onion addresses
+            // 1. Run a seed node with prog args: rxdkppp3vicnbgqt.onion:8002 2 50
+            // 2. Find your local onion address in Bitsquare_seed_node_rxdkppp3vicnbgqt.onion_8002/tor/hiddenservice/hostname
+            // 3. Shut down the seed node
+            // 4. Rename the directory with your local onion address
+            // 5. Edit here your found onion address (new NodeAddress("YOUR_ONION.onion:8002")
             new NodeAddress("rxdkppp3vicnbgqt.onion:8002"),
             new NodeAddress("brmbf6mf67d2hlm4.onion:8002"),
             new NodeAddress("mfla72c4igh5ta2t.onion:8002")
     );
-
 
     private Set<NodeAddress> localhostSeedNodeAddresses = Sets.newHashSet(
             // mainnet

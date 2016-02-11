@@ -108,6 +108,7 @@ Once the hidden service is published (check console output) quit the seed node a
 Alternatively you can navigate to the application directory and open Bitsquare_seed_node_xxxxxxx.onion_8002/tor/hiddenservice/hostname.
 use that hidden service address also to rename the xxxxxxx placeholder of your Bitsquare_seed_node_xxxxxxx.onion_8002 directory.
 Start again the SeedNode.jar now with the correct hidden service address.
+Instructions are also at the SeedNodesRepository class.
               
 Here are example program arguments for using regtest and using the Tor network:  
     
