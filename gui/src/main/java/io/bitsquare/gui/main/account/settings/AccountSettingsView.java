@@ -48,7 +48,6 @@ public class AccountSettingsView extends ActivatableViewAndModel {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
 
-    // private MenuItem registration;
     private MenuItem password, seedWords, backup, paymentAccount, arbitratorSelection;
     private Navigation.Listener listener;
 
@@ -80,13 +79,18 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         password = new MenuItem(navigation, toggleGroup, "Wallet password", PasswordView.class, AwesomeIcon.UNLOCK_ALT);
         seedWords = new MenuItem(navigation, toggleGroup, "Wallet seed", SeedWordsView.class, AwesomeIcon.KEY);
         backup = new MenuItem(navigation, toggleGroup, "Backup", BackupView.class, AwesomeIcon.CLOUD_DOWNLOAD);
-        // registration = new MenuItem(navigation, toggleGroup, "Renew your account", RegistrationView.class, AwesomeIcon.BRIEFCASE);
 
         leftVBox.getChildren().addAll(paymentAccount, arbitratorSelection, password, seedWords, backup);
     }
 
     @Override
     protected void activate() {
+        paymentAccount.activate();
+        arbitratorSelection.activate();
+        password.activate();
+        seedWords.activate();
+        backup.activate();
+
         navigation.addListener(listener);
         ViewPath viewPath = navigation.getCurrentPath();
         if (viewPath.size() == 3 && viewPath.indexOf(AccountSettingsView.class) == 2 ||
@@ -96,11 +100,6 @@ public class AccountSettingsView extends ActivatableViewAndModel {
             selecteedViewClass = viewPath.get(3);
             loadView(selecteedViewClass);
         }
-        paymentAccount.activate();
-        arbitratorSelection.activate();
-        password.activate();
-        seedWords.activate();
-        backup.activate();
     }
 
     @Override
@@ -115,12 +114,6 @@ public class AccountSettingsView extends ActivatableViewAndModel {
     }
 
     private void loadView(Class<? extends View> viewClass) {
-       /* if (viewClass.equals(PaymentAccountView.class)) {
-            PaymentAccountView view = new PaymentAccountView();
-            content.getChildren().setAll(view.getRoot());
-            paymentAccount.setSelected(true);
-        }
-        else {*/
         View view = viewLoader.load(viewClass);
         content.getChildren().setAll(view.getRoot());
 
@@ -129,8 +122,6 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         else if (view instanceof BackupView) backup.setSelected(true);
         else if (view instanceof PaymentAccountView) paymentAccount.setSelected(true);
         else if (view instanceof ArbitratorSelectionView) arbitratorSelection.setSelected(true);
-        // else if (view instanceof RegistrationView) registration.setSelected(true);
-        //}
     }
 
     public Class<? extends View> getSelectedViewClass() {

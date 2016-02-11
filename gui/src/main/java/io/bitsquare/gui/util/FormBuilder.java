@@ -452,7 +452,6 @@ public class FormBuilder {
 
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 1);
-        // GridPane.setMargin(hBox, new Insets(15, 0, 0, 0));
         gridPane.getChildren().add(hBox);
 
         return new Tuple3<>(label, comboBox1, comboBox2);
@@ -489,10 +488,46 @@ public class FormBuilder {
 
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 1);
-        GridPane.setMargin(hBox, new Insets(15, 0, 0, 0));
+        GridPane.setMargin(hBox, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(hBox);
 
         return new Tuple3<>(label, comboBox, button);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label  + ComboBox + Label
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple3<Label, ComboBox, TextField> addLabelComboBoxLabel(GridPane gridPane,
+                                                                           int rowIndex,
+                                                                           String title,
+                                                                           String textFieldText) {
+        return addLabelComboBoxLabel(gridPane, rowIndex, title, textFieldText, 0);
+    }
+
+    public static Tuple3<Label, ComboBox, TextField> addLabelComboBoxLabel(GridPane gridPane,
+                                                                           int rowIndex,
+                                                                           String title,
+                                                                           String textFieldText,
+                                                                           double top) {
+        Label label = addLabel(gridPane, rowIndex, title, top);
+
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+
+        ComboBox comboBox = new ComboBox();
+        TextField textField = new TextField(textFieldText);
+        textField.setEditable(false);
+        textField.setMouseTransparent(true);
+        textField.setFocusTraversable(false);
+
+        hBox.getChildren().addAll(comboBox, textField);
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setColumnIndex(hBox, 1);
+        GridPane.setMargin(hBox, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(hBox);
+
+        return new Tuple3<>(label, comboBox, textField);
     }
 
 

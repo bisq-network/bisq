@@ -64,7 +64,6 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
     @Override
     public void initialize() {
-
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(AccountView.class) == 1) {
                 if (arbitratorRegistrationTab == null && viewPath.get(2).equals(ArbitratorRegistrationView.class))

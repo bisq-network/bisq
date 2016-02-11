@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.components.paymentmethods;
 
-import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.BICValidator;
@@ -99,8 +99,10 @@ public class SepaForm extends PaymentMethodForm {
 
         });
 
-        Tuple2<Label, ComboBox> tuple2 = addLabelComboBox(gridPane, ++gridRow, "Country of your Bank:");
-        ComboBox<Country> countryComboBox = tuple2.second;
+        Tuple3<Label, ComboBox, TextField> tuple3 = addLabelComboBoxLabel(gridPane, ++gridRow, "Country of your Bank:", "");
+        ComboBox<Country> countryComboBox = tuple3.second;
+        currencyTextField = tuple3.third;
+        currencyTextField.setMinWidth(300);
         countryComboBox.setPromptText("Select country of your Bank");
         countryComboBox.setConverter(new StringConverter<Country>() {
             @Override
@@ -118,13 +120,11 @@ public class SepaForm extends PaymentMethodForm {
             sepaAccount.setCountry(selectedItem);
             TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(selectedItem.code);
             sepaAccount.setSingleTradeCurrency(currency);
-            currencyTextField.setText(currency.getCodeAndName());
+            currencyTextField.setText("Currency: " + currency.getCodeAndName());
             updateCountriesSelection(true, euroCountryCheckBoxes);
             updateCountriesSelection(true, nonEuroCountryCheckBoxes);
             updateFromInputs();
         });
-
-        currencyTextField = addLabelTextField(gridPane, ++gridRow, "Currency:").second;
 
         addEuroCountriesGrid(true);
         addNonEuroCountriesGrid(true);
@@ -138,7 +138,7 @@ public class SepaForm extends PaymentMethodForm {
             sepaAccount.setCountry(country);
             TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(country.code);
             sepaAccount.setSingleTradeCurrency(currency);
-            currencyTextField.setText(currency.getCodeAndName());
+            currencyTextField.setText("Currency: " + currency.getCodeAndName());
         }
 
         updateFromInputs();
@@ -176,6 +176,7 @@ public class SepaForm extends PaymentMethodForm {
             checkBoxList.add(checkBox);
             checkBox.setMouseTransparent(!isEditable);
             checkBox.setMinWidth(45);
+            checkBox.setMaxWidth(45);
             checkBox.setTooltip(new Tooltip(country.name));
             checkBox.setOnAction(event -> {
                 if (checkBox.isSelected())
@@ -256,8 +257,19 @@ public class SepaForm extends PaymentMethodForm {
         bicField.setMouseTransparent(false);
         addLabelTextField(gridPane, ++gridRow, "Location of Bank:", sepaAccount.getCountry().name);
         addLabelTextField(gridPane, ++gridRow, "Currency:", sepaAccount.getSingleTradeCurrency().getCodeAndName());
+        String countries;
+        Tooltip tooltip = null;
+        if (CountryUtil.containsAllSepaEuroCountries(sepaAccount.getAcceptedCountryCodes())) {
+            countries = "All Euro countries";
+        } else {
+            countries = CountryUtil.getCodesString(sepaAccount.getAcceptedCountryCodes());
+            tooltip = new Tooltip(CountryUtil.getNamesByCodesString(sepaAccount.getAcceptedCountryCodes()));
+        }
+        TextField acceptedCountries = addLabelTextField(gridPane, ++gridRow, "Accepted countries:", countries).second;
+        if (tooltip != null) {
+            acceptedCountries.setMouseTransparent(false);
+            acceptedCountries.setTooltip(tooltip);
+        }
         addAllowedPeriod();
-        addEuroCountriesGrid(false);
-        addNonEuroCountriesGrid(false);
     }
 }

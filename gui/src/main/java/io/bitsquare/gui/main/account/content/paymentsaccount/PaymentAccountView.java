@@ -20,22 +20,23 @@ package io.bitsquare.gui.main.account.content.paymentsaccount;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.common.view.Wizard;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.paymentmethods.*;
 import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.util.FormBuilder;
+import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.*;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.payment.*;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
+import javafx.geometry.VPos;
+import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import javax.inject.Inject;
@@ -43,12 +44,10 @@ import javax.inject.Inject;
 import static io.bitsquare.gui.util.FormBuilder.*;
 
 @FxmlView
-public class PaymentAccountView extends ActivatableViewAndModel<GridPane, PaymentAccountViewModel> implements Wizard.Step {
+public class PaymentAccountView extends ActivatableViewAndModel<GridPane, PaymentAccountViewModel> {
 
-    private ComboBox<PaymentAccount> paymentAccountsComboBox;
+    private ListView<PaymentAccount> paymentAccountsListView;
     private ComboBox<PaymentMethod> paymentMethodsComboBox;
-
-    private Wizard wizard;
 
     private final IBANValidator ibanValidator;
     private final BICValidator bicValidator;
@@ -64,7 +63,7 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
     private Button addAccountButton;
     private Button saveNewAccountButton;
     private int gridRow = 0;
-    private ListChangeListener<PaymentAccount> paymentAccountListChangeListener;
+    private ChangeListener<PaymentAccount> paymentAccountChangeListener;
 
     @Inject
     public PaymentAccountView(PaymentAccountViewModel model,
@@ -91,37 +90,24 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
     @Override
     public void initialize() {
         buildForm();
-        paymentAccountListChangeListener = c -> paymentAccountsComboBox.setDisable(model.getPaymentAccounts().size() == 0);
+        paymentAccountChangeListener = (observable, oldValue, newValue) -> {
+            if (newValue != null)
+                onSelectAccount(newValue);
+        };
+        Label placeholder = new Label("There are no payment accounts set up yet");
+        placeholder.setWrapText(true);
+        paymentAccountsListView.setPlaceholder(placeholder);
     }
 
     @Override
     protected void activate() {
-        paymentAccountsComboBox.setItems(model.getPaymentAccounts());
-        EventHandler<ActionEvent> paymentAccountsComboBoxHandler = e -> {
-            if (paymentAccountsComboBox.getSelectionModel().getSelectedItem() != null)
-                onSelectAccount(paymentAccountsComboBox.getSelectionModel().getSelectedItem());
-        };
-        paymentAccountsComboBox.setOnAction(paymentAccountsComboBoxHandler);
-        paymentAccountsComboBox.setVisibleRowCount(20);
-
-        model.getPaymentAccounts().addListener(paymentAccountListChangeListener);
-        paymentAccountsComboBox.setDisable(model.getPaymentAccounts().size() == 0);
+        paymentAccountsListView.setItems(model.getPaymentAccounts());
+        paymentAccountsListView.getSelectionModel().selectedItemProperty().addListener(paymentAccountChangeListener);
     }
 
     @Override
     protected void deactivate() {
-        model.getPaymentAccounts().removeListener(paymentAccountListChangeListener);
-        paymentAccountsComboBox.setOnAction(null);
-    }
-
-    @Override
-    public void setWizard(Wizard wizard) {
-        this.wizard = wizard;
-    }
-
-    @Override
-    public void hideWizardNavigation() {
-
+        paymentAccountsListView.getSelectionModel().selectedItemProperty().removeListener(paymentAccountChangeListener);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -137,7 +123,6 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
         }).findAny().isPresent()) {
             model.onSaveNewAccount(paymentAccount);
             removeNewAccountForm();
-            paymentAccountsComboBox.getSelectionModel().clearSelection();
         } else {
             new Popup().error("That account name is already used in a saved account. \nPlease use another name.").show();
         }
@@ -145,7 +130,6 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
 
     private void onCancelNewAccount() {
         removeNewAccountForm();
-        paymentAccountsComboBox.getSelectionModel().clearSelection();
     }
 
     private void onDeleteAccount(PaymentAccount paymentAccount) {
@@ -153,7 +137,6 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
                 .onAction(() -> {
                     model.onDeleteAccount(paymentAccount);
                     removeSelectAccountForm();
-                    paymentAccountsComboBox.getSelectionModel().clearSelection();
                 })
                 .show();
     }
@@ -166,17 +149,37 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
     private void buildForm() {
         addTitledGroupBg(root, gridRow, 2, "Manage payment accounts");
 
-        paymentAccountsComboBox = addLabelComboBox(root, gridRow, "Select account:", Layout.FIRST_ROW_DISTANCE).second;
-        paymentAccountsComboBox.setPromptText("Select account");
-        paymentAccountsComboBox.setConverter(new StringConverter<PaymentAccount>() {
+        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your payment accounts:", Layout.FIRST_ROW_DISTANCE);
+        GridPane.setValignment(tuple.first, VPos.TOP);
+        paymentAccountsListView = tuple.second;
+        paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);
+        paymentAccountsListView.setCellFactory(new Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>>() {
             @Override
-            public String toString(PaymentAccount paymentAccount) {
-                return paymentAccount.getAccountName();
-            }
+            public ListCell<PaymentAccount> call(ListView<PaymentAccount> list) {
+                return new ListCell<PaymentAccount>() {
+                    final Label label = new Label();
+                    final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
+                    final Button removeButton = new Button("", icon);
+                    final AnchorPane pane = new AnchorPane(label, removeButton);
 
-            @Override
-            public PaymentAccount fromString(String s) {
-                return null;
+                    {
+                        label.setLayoutY(5);
+                        removeButton.setId("icon-button");
+                        AnchorPane.setRightAnchor(removeButton, 0d);
+                    }
+
+                    @Override
+                    public void updateItem(final PaymentAccount item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty) {
+                            label.setText(item.getAccountName());
+                            removeButton.setOnAction(e -> onDeleteAccount(item));
+                            setGraphic(pane);
+                        } else {
+                            setGraphic(null);
+                        }
+                    }
+                };
             }
         });
 
@@ -186,7 +189,7 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
 
     // Add new account form
     private void addNewAccount() {
-        paymentAccountsComboBox.getSelectionModel().clearSelection();
+        paymentAccountsListView.getSelectionModel().clearSelection();
         removeAccountRows();
         addAccountButton.setDisable(true);
         accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Create new account", Layout.GROUP_DISTANCE);
