@@ -100,10 +100,8 @@ public class Popup {
     }
 
     public void hide() {
-        if (Utilities.isLinux() && owner != null && positionListener != null) {
-            owner.getScene().getWindow().xProperty().removeListener(positionListener);
-            owner.getScene().getWindow().yProperty().removeListener(positionListener);
-        }
+        owner.getScene().getWindow().xProperty().removeListener(positionListener);
+        owner.getScene().getWindow().yProperty().removeListener(positionListener);
 
         if (centerTime != null)
             centerTime.cancel();
@@ -255,22 +253,21 @@ public class Popup {
 
         MainView.blurLight();
 
-        if (Utilities.isLinux()) {
-            // On Linux the owner stage does not move the child stage as it does on Mac
-            // So we need to apply centerPopup. Further with fast movements the handler loses
-            // the latest position, with a delay it fixes that.
-            positionListener = (observable, oldValue, newValue) -> {
-                if (stage != null) {
-                    centerPopup();
-                    if (centerTime != null)
-                        centerTime.cancel();
+        // On Linux the owner stage does not move the child stage as it does on Mac
+        // So we need to apply centerPopup. Further with fast movements the handler loses
+        // the latest position, with a delay it fixes that.
+        // Also on Mac sometimes the popups are positioned outside of the main app, so keep it for all OS
+        positionListener = (observable, oldValue, newValue) -> {
+            if (stage != null) {
+                centerPopup();
+                if (centerTime != null)
+                    centerTime.cancel();
 
-                    centerTime = UserThread.runAfter(this::centerPopup, 3);
-                }
-            };
-            owner.getScene().getWindow().xProperty().addListener(positionListener);
-            owner.getScene().getWindow().yProperty().addListener(positionListener);
-        }
+                centerTime = UserThread.runAfter(this::centerPopup, 3);
+            }
+        };
+        owner.getScene().getWindow().xProperty().addListener(positionListener);
+        owner.getScene().getWindow().yProperty().addListener(positionListener);
     }
 
     protected void centerPopup() {
