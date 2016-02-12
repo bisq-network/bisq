@@ -30,9 +30,9 @@ import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.tasks.buyer.*;
 import io.bitsquare.trade.protocol.trade.tasks.offerer.*;
+import io.bitsquare.trade.protocol.trade.tasks.shared.BroadcastAfterLockTime;
 import io.bitsquare.trade.protocol.trade.tasks.shared.CommitPayoutTx;
 import io.bitsquare.trade.protocol.trade.tasks.shared.InitWaitPeriodForOpenDispute;
-import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +56,7 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
 
         // If we are after the time lock state we need to setup the listener again
         Trade.State tradeState = trade.getState();
-        if (tradeState.getPhase() == Trade.Phase.PAYOUT_PAID) {
+        if (tradeState.getPhase() == Trade.Phase.PAYOUT_PAID && tradeState != Trade.State.PAYOUT_BROAD_CASTED) {
 
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
@@ -65,7 +65,7 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
                     },
                     this::handleTaskRunnerFault);
 
-            taskRunner.addTasks(SetupPayoutTxLockTimeReachedListener.class);
+            taskRunner.addTasks(BroadcastAfterLockTime.class);
             taskRunner.run();
         }
     }
@@ -185,7 +185,7 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
                 SignAndFinalizePayoutTx.class,
                 CommitPayoutTx.class,
                 SendPayoutTxFinalizedMessage.class,
-                SetupPayoutTxLockTimeReachedListener.class
+                BroadcastAfterLockTime.class
         );
         taskRunner.run();
     }

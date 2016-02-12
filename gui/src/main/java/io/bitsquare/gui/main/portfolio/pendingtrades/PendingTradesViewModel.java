@@ -53,7 +53,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         WAIT_FOR_BLOCKCHAIN_CONFIRMATION,
         REQUEST_START_FIAT_PAYMENT,
         WAIT_FOR_FIAT_PAYMENT_RECEIPT,
-        WAIT_FOR_UNLOCK_PAYOUT,
+        WAIT_FOR_BROADCAST_AFTER_UNLOCK,
         REQUEST_WITHDRAWAL
     }
 
@@ -63,7 +63,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         WAIT_FOR_FIAT_PAYMENT_STARTED,
         REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED,
         WAIT_FOR_PAYOUT_TX,
-        WAIT_FOR_UNLOCK_PAYOUT,
+        WAIT_FOR_BROADCAST_AFTER_UNLOCK,
         REQUEST_WITHDRAWAL
     }
 
@@ -412,12 +412,12 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
 
             case PAYOUT_TX_SENT:
-                buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_UNLOCK_PAYOUT);
+                buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_BROADCAST_AFTER_UNLOCK);
                 break;
             case PAYOUT_TX_RECEIVED:
                 break;
             case PAYOUT_TX_COMMITTED:
-                sellerState.set(WAIT_FOR_UNLOCK_PAYOUT);
+                sellerState.set(SellerState.WAIT_FOR_BROADCAST_AFTER_UNLOCK);
                 break;
             case PAYOUT_BROAD_CASTED:
                 sellerState.set(REQUEST_WITHDRAWAL);

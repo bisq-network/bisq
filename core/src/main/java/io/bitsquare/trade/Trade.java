@@ -233,8 +233,6 @@ abstract public class Trade implements Tradable, Model, Serializable {
 
         createProtocol();
 
-        tradeProtocol.checkPayoutTxTimeLock(this);
-
         if (decryptedMsgWithPubKey != null) {
             tradeProtocol.applyMailboxMessage(decryptedMsgWithPubKey, this);
         }

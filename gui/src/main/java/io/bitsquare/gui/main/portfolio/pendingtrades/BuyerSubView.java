@@ -110,13 +110,11 @@ public class BuyerSubView extends TradeSubView {
                 step2.setCompleted();
                 showItem(step3);
                 break;
-            case WAIT_FOR_UNLOCK_PAYOUT:
-                if (model.getLockTime() > 0) {
-                    step1.setCompleted();
-                    step2.setCompleted();
-                    step3.setCompleted();
-                    showItem(step4);
-                }
+            case WAIT_FOR_BROADCAST_AFTER_UNLOCK:
+                step1.setCompleted();
+                step2.setCompleted();
+                step3.setCompleted();
+                showItem(step4);
                 break;
             case REQUEST_WITHDRAWAL:
                 step1.setCompleted();

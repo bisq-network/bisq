@@ -25,16 +25,17 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 import org.bitcoinj.core.StoredBlock;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutionException;
 
-public class SetupPayoutTxLockTimeReachedListener extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SetupPayoutTxLockTimeReachedListener.class);
+public class BroadcastAfterLockTime extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(BroadcastAfterLockTime.class);
 
-    public SetupPayoutTxLockTimeReachedListener(TaskRunner taskHandler, Trade trade) {
+    public BroadcastAfterLockTime(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -66,18 +67,31 @@ public class SetupPayoutTxLockTimeReachedListener extends TradeTask {
     }
 
     private void broadcastTx() {
-        processModel.getTradeWalletService().broadcastTx(trade.getPayoutTx(), new FutureCallback<Transaction>() {
-            @Override
-            public void onSuccess(Transaction transaction) {
-                log.debug("BroadcastTx succeeded. Transaction:" + transaction);
+        boolean needsBroadCast = true;
+        Transaction walletTx = processModel.getTradeWalletService().getWalletTx(trade.getPayoutTx().getHash());
+        if (walletTx != null) {
+            TransactionConfidence.ConfidenceType confidenceType = walletTx.getConfidence().getConfidenceType();
+            if (confidenceType.equals(TransactionConfidence.ConfidenceType.PENDING) ||
+                    confidenceType.equals(TransactionConfidence.ConfidenceType.BUILDING)) {
+                needsBroadCast = false;
                 trade.setState(Trade.State.PAYOUT_BROAD_CASTED);
                 complete();
             }
+        }
+        if (needsBroadCast) {
+            processModel.getTradeWalletService().broadcastTx(trade.getPayoutTx(), new FutureCallback<Transaction>() {
+                @Override
+                public void onSuccess(Transaction transaction) {
+                    log.debug("BroadcastTx succeeded. Transaction:" + transaction);
+                    trade.setState(Trade.State.PAYOUT_BROAD_CASTED);
+                    complete();
+                }
 
-            @Override
-            public void onFailure(@NotNull Throwable t) {
-                failed(t);
-            }
-        });
+                @Override
+                public void onFailure(@NotNull Throwable t) {
+                    failed(t);
+                }
+            });
+        }
     }
 }

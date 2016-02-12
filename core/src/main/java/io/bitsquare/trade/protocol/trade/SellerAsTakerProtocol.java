@@ -28,8 +28,8 @@ import io.bitsquare.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
 import io.bitsquare.trade.protocol.trade.messages.PublishDepositTxRequest;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.*;
+import io.bitsquare.trade.protocol.trade.tasks.shared.BroadcastAfterLockTime;
 import io.bitsquare.trade.protocol.trade.tasks.shared.CommitPayoutTx;
-import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
 import io.bitsquare.trade.protocol.trade.tasks.taker.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +54,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         // If we are after the timeLock state we need to setup the listener again
         //TODO not sure if that is not called already from the checkPayoutTxTimeLock at tradeProtocol
         Trade.State tradeState = trade.getState();
-        if (tradeState.getPhase() == Trade.Phase.PAYOUT_PAID) {
+        if (tradeState.getPhase() == Trade.Phase.PAYOUT_PAID && tradeState != Trade.State.PAYOUT_BROAD_CASTED) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
                         handleTaskRunnerSuccess("SetupPayoutTxLockTimeReachedListener");
@@ -62,7 +62,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                     },
                     this::handleTaskRunnerFault);
 
-            taskRunner.addTasks(SetupPayoutTxLockTimeReachedListener.class);
+            taskRunner.addTasks(BroadcastAfterLockTime.class);
             taskRunner.run();
         }
     }
@@ -188,7 +188,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         taskRunner.addTasks(
                 ProcessPayoutTxFinalizedMessage.class,
                 CommitPayoutTx.class,
-                SetupPayoutTxLockTimeReachedListener.class
+                BroadcastAfterLockTime.class
         );
         taskRunner.run();
     }

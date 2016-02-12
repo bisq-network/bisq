@@ -28,7 +28,6 @@ import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.protocol.trade.tasks.shared.SetupPayoutTxLockTimeReachedListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,22 +102,6 @@ public abstract class TradeProtocol {
     protected abstract void doApplyMailboxMessage(Message message, Trade trade);
 
     protected abstract void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress peerNodeAddress);
-
-    public void checkPayoutTxTimeLock(Trade trade) {
-        this.trade = trade;
-
-        if (trade.getState() == Trade.State.PAYOUT_TX_COMMITTED) {
-            TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                    () -> {
-                        log.debug("taskRunner needPayoutTxBroadcast completed");
-                        processModel.onComplete();
-                    },
-                    this::handleTaskRunnerFault);
-
-            taskRunner.addTasks(SetupPayoutTxLockTimeReachedListener.class);
-            taskRunner.run();
-        }
-    }
 
     protected void startTimeout() {
         stopTimeout();

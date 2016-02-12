@@ -20,13 +20,13 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps.seller;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 
-public class SellerStep4bView extends TradeStepView {
+public class SellerStep3bView extends TradeStepView {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SellerStep4bView(PendingTradesViewModel model) {
+    public SellerStep3bView(PendingTradesViewModel model) {
         super(model);
     }
 
