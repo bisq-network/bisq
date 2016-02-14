@@ -96,8 +96,8 @@ public class Preferences implements Serializable {
     private final ArrayList<TradeCurrency> tradeCurrencies;
     private BlockChainExplorer blockChainExplorerMainNet;
     private BlockChainExplorer blockChainExplorerTestNet;
-    private boolean showPlaceOfferConfirmation;
-    private boolean showTakeOfferConfirmation;
+    private boolean showNotifications = true;
+    private boolean showInstructions = true;
     private String backupDirectory;
     private boolean autoSelectArbitrators = true;
     private final Map<String, Boolean> showAgainMap;
@@ -140,8 +140,8 @@ public class Preferences implements Serializable {
             if (blockChainExplorerMainNet == null)
                 setBlockChainExplorerTestNet(blockChainExplorersMainNet.get(0));
 
-            showPlaceOfferConfirmation = persisted.getShowPlaceOfferConfirmation();
-            showTakeOfferConfirmation = persisted.getShowTakeOfferConfirmation();
+            showNotifications = persisted.getShowNotifications();
+            showInstructions = persisted.getShowInstructions();
             backupDirectory = persisted.getBackupDirectory();
             autoSelectArbitrators = persisted.getAutoSelectArbitrators();
             showAgainMap = persisted.getShowAgainMap();
@@ -163,8 +163,6 @@ public class Preferences implements Serializable {
             tradeCurrencies = new ArrayList<>(tradeCurrenciesAsObservable);
             setBlockChainExplorerTestNet(blockChainExplorersTestNet.get(0));
             setBlockChainExplorerMainNet(blockChainExplorersMainNet.get(0));
-            showPlaceOfferConfirmation = true;
-            showTakeOfferConfirmation = true;
 
             showAgainMap = new HashMap<>();
             showAgainMap.put(PopupId.TRADE_WALLET, true);
@@ -253,13 +251,13 @@ public class Preferences implements Serializable {
             setBlockChainExplorerTestNet(blockChainExplorer);
     }
 
-    public void setShowPlaceOfferConfirmation(boolean showPlaceOfferConfirmation) {
-        this.showPlaceOfferConfirmation = showPlaceOfferConfirmation;
+    public void setShowNotifications(boolean showNotifications) {
+        this.showNotifications = showNotifications;
         storage.queueUpForSave(2000);
     }
 
-    public void setShowTakeOfferConfirmation(boolean showTakeOfferConfirmation) {
-        this.showTakeOfferConfirmation = showTakeOfferConfirmation;
+    public void setShowInstructions(boolean showInstructions) {
+        this.showInstructions = showInstructions;
         storage.queueUpForSave(2000);
     }
 
@@ -356,13 +354,12 @@ public class Preferences implements Serializable {
             return blockChainExplorersTestNet;
     }
 
-    public boolean getShowPlaceOfferConfirmation() {
-        return showPlaceOfferConfirmation;
+    public boolean getShowNotifications() {
+        return showNotifications;
     }
 
-
-    public boolean getShowTakeOfferConfirmation() {
-        return showTakeOfferConfirmation;
+    public boolean getShowInstructions() {
+        return showInstructions;
     }
 
     public String getBackupDirectory() {

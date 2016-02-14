@@ -43,6 +43,7 @@ import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.user.Preferences;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.*;
@@ -71,6 +72,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private final Navigation navigation;
     private final BSFormatter formatter;
     private final OfferDetailsPopup offerDetailsPopup;
+    private Preferences preferences;
     private ScrollPane scrollPane;
     private GridPane gridPane;
     private ImageView imageView;
@@ -108,12 +110,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TakeOfferView(TakeOfferViewModel model, Navigation navigation, BSFormatter formatter, OfferDetailsPopup offerDetailsPopup) {
+    private TakeOfferView(TakeOfferViewModel model, Navigation navigation, BSFormatter formatter,
+                          OfferDetailsPopup offerDetailsPopup, Preferences preferences) {
         super(model);
 
         this.navigation = navigation;
         this.formatter = formatter;
         this.offerDetailsPopup = offerDetailsPopup;
+        this.preferences = preferences;
     }
 
     @Override
@@ -349,8 +353,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void onTakeOffer() {
         Offer offer = model.getOffer();
-        if (model.getShowTakeOfferConfirmation()) {
-            offerDetailsPopup.onTakeOffer(() -> model.onTakeOffer()).show(offer, model.dataModel.amountAsCoin.get());
+        String id = "TakeOfferConfirmation";
+        if (preferences.showAgain(id)) {
+            offerDetailsPopup.onTakeOffer(() -> model.onTakeOffer())
+                    .dontShowAgainId(id)
+                    .show(offer, model.dataModel.amountAsCoin.get());
         } else {
             if (model.hasAcceptedArbitrators()) {
                 model.onTakeOffer();

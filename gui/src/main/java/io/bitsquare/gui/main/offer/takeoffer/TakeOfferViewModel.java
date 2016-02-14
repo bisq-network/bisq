@@ -543,10 +543,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return dataModel.getTradeCurrency();
     }
 
-    public boolean getShowTakeOfferConfirmation() {
-        return dataModel.getShowTakeOfferConfirmation();
-    }
-
     public List<Arbitrator> getArbitrators() {
         return dataModel.getArbitrators();
     }

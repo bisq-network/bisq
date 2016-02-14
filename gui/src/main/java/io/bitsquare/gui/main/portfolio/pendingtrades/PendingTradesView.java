@@ -127,12 +127,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                     selectedSubView.deactivate();
 
                 if (selectedItem.getTrade() != null) {
-                    // If we are the offerer the direction is like expected
-                    // If we are the taker the direction is mirrored
-                    if (model.dataModel.isOfferer())
-                        selectedSubView = model.dataModel.isBuyOffer() ? new BuyerSubView(model) : new SellerSubView(model);
-                    else
-                        selectedSubView = model.dataModel.isBuyOffer() ? new SellerSubView(model) : new BuyerSubView(model);
+                    selectedSubView = model.dataModel.tradeManager.isBuyer(model.dataModel.getOffer()) ?
+                            new BuyerSubView(model) : new SellerSubView(model);
 
                     selectedSubView.setMinHeight(430);
                     VBox.setVgrow(selectedSubView, Priority.ALWAYS);

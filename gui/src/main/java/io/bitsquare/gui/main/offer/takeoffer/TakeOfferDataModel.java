@@ -377,14 +377,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
         return addressEntry;
     }
 
-    public boolean getShowTakeOfferConfirmation() {
-        return preferences.getShowTakeOfferConfirmation();
-    }
-
-    public void setShowTakeOfferConfirmation(boolean selected) {
-        preferences.setShowTakeOfferConfirmation(selected);
-    }
-
     public List<Arbitrator> getArbitrators() {
         return user.getAcceptedArbitrators();
     }

@@ -66,8 +66,7 @@ public class SetupDepositBalanceListener extends TradeTask {
                         || newValue == Trade.State.DEPOSIT_SEEN_IN_NETWORK) {
 
                     walletService.removeBalanceListener(balanceListener);
-                    log.debug(" UserThread.execute(this::unSubscribe);");
-                    // TODO is that allowed?
+                    // hack to remove tradeStateSubscription at callback
                     UserThread.execute(this::unSubscribe);
                 }
             });
@@ -81,8 +80,6 @@ public class SetupDepositBalanceListener extends TradeTask {
     }
 
     private void unSubscribe() {
-        //TODO investigate, seems to not get called sometimes
-        log.debug("unSubscribe tradeStateSubscription");
         tradeStateSubscription.unsubscribe();
     }
 

@@ -391,14 +391,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return user.getAcceptedArbitrators();
     }
 
-    public void setShowPlaceOfferConfirmation(boolean selected) {
-        preferences.setShowPlaceOfferConfirmation(selected);
-    }
-
-    public boolean getShowPlaceOfferConfirmation() {
-        return preferences.getShowPlaceOfferConfirmation();
-    }
-
     public Preferences getPreferences() {
         return preferences;
     }

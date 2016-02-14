@@ -577,13 +577,4 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     public List<Arbitrator> getArbitrators() {
         return dataModel.getArbitrators();
     }
-
-    public void setShowPlaceOfferConfirmation(boolean selected) {
-        dataModel.setShowPlaceOfferConfirmation(selected);
-    }
-
-    public boolean getShowPlaceOfferConfirmation() {
-        return dataModel.getShowPlaceOfferConfirmation();
-    }
-
 }

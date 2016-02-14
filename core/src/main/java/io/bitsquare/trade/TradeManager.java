@@ -381,8 +381,12 @@ public class TradeManager {
         return offer.isMyOffer(keyRing);
     }
 
-    public boolean isMyOfferInBtcBuyerRole(Offer offer) {
-        return !(isMyOffer(offer) ^ offer.getDirection() == Offer.Direction.BUY);
+    public boolean isBuyer(Offer offer) {
+        // If I am the offerer, the offer direction is taken, otherwise the mirrored direction
+        if (isMyOffer(offer))
+            return offer.getDirection() == Offer.Direction.BUY;
+        else
+            return offer.getDirection() == Offer.Direction.SELL;
     }
 
     public Optional<Trade> getTradeById(String tradeId) {

@@ -575,7 +575,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 // TODO There are still some cell rendering issues on updates
                                 setGraphic(messageAnchorPane);
                             } else {
-                                if (sendMsgProgressIndicator != null)
+                                if (sendMsgProgressIndicator != null && sendMsgProgressIndicatorListener != null)
                                     sendMsgProgressIndicator.progressProperty().removeListener(sendMsgProgressIndicatorListener);
 
                                 messageAnchorPane.prefWidthProperty().unbind();
@@ -796,7 +796,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 } else {
                                     if (closedProperty != null)
                                         closedProperty.removeListener(listener);
-                                    
+
                                     setText("");
                                 }
                             }

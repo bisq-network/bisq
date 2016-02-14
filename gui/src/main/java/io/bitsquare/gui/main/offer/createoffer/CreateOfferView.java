@@ -47,6 +47,7 @@ import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -109,6 +110,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private EventHandler<ActionEvent> currencyComboBoxSelectionHandler;
     private int gridRow = 0;
+    private Preferences preferences;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -116,11 +118,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferView(CreateOfferViewModel model, Navigation navigation, OfferDetailsPopup offerDetailsPopup) {
+    private CreateOfferView(CreateOfferViewModel model, Navigation navigation, OfferDetailsPopup offerDetailsPopup, Preferences preferences) {
         super(model);
 
         this.navigation = navigation;
         this.offerDetailsPopup = offerDetailsPopup;
+        this.preferences = preferences;
     }
 
     @Override
@@ -210,8 +213,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private void onPlaceOffer() {
         if (model.isBootstrapped()) {
             Offer offer = model.createAndGetOffer();
-            if (model.getShowPlaceOfferConfirmation()) {
-                offerDetailsPopup.onPlaceOffer(o -> model.onPlaceOffer(o)).show(offer);
+            String id = "CreatOfferConfirmation";
+            if (preferences.showAgain(id)) {
+                offerDetailsPopup.onPlaceOffer(model::onPlaceOffer)
+                        .dontShowAgainId(id)
+                        .show(offer);
             } else {
                 if (model.hasAcceptedArbitrators()) {
                     model.onPlaceOffer(offer);

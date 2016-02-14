@@ -33,7 +33,6 @@ import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import org.bitcoinj.core.Coin;
@@ -51,7 +50,7 @@ public class OfferDetailsPopup extends Popup {
     protected static final Logger log = LoggerFactory.getLogger(OfferDetailsPopup.class);
 
     private final BSFormatter formatter;
-    private final Preferences preferences;
+    protected final Preferences preferences;
     private final User user;
     private KeyRing keyRing;
     private final Navigation navigation;
@@ -97,6 +96,11 @@ public class OfferDetailsPopup extends Popup {
         return this;
     }
 
+    public OfferDetailsPopup dontShowAgainId(String dontShowAgainId) {
+        this.dontShowAgainId = dontShowAgainId;
+        return this;
+    }
+    
     public OfferDetailsPopup onPlaceOffer(Consumer<Offer> placeOfferHandler) {
         this.placeOfferHandlerOptional = Optional.of(placeOfferHandler);
         return this;
@@ -189,13 +193,13 @@ public class OfferDetailsPopup extends Popup {
             addLabelTextField(gridPane, rowIndex, "Please note:", Offer.TAC_OFFERER, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
             Button cancelButton = addConfirmButton(true);
-            addCancelButton(cancelButton, true);
+            addCancelButton(cancelButton);
         } else if (takeOfferHandlerOptional.isPresent()) {
             addTitledGroupBg(gridPane, ++rowIndex, 1, "Contract", Layout.GROUP_DISTANCE);
             addLabelTextField(gridPane, rowIndex, "Terms and conditions:", Offer.TAC_TAKER, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
             Button cancelButton = addConfirmButton(false);
-            addCancelButton(cancelButton, false);
+            addCancelButton(cancelButton);
         } else {
             Button cancelButton = addButtonAfterGroup(gridPane, ++rowIndex, "Close");
             cancelButton.setOnAction(e -> {
@@ -229,19 +233,10 @@ public class OfferDetailsPopup extends Popup {
         return tuple.second;
     }
 
-    private void addCancelButton(Button cancelButton, boolean isPlaceOffer) {
+    private void addCancelButton(Button cancelButton) {
         cancelButton.setOnAction(e -> {
             closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
             hide();
         });
-
-        CheckBox checkBox = addCheckBox(gridPane, ++rowIndex, "Don't show again", 5);
-        if (isPlaceOffer) {
-            checkBox.setSelected(!preferences.getShowPlaceOfferConfirmation());
-            checkBox.setOnAction(e -> preferences.setShowPlaceOfferConfirmation(!checkBox.isSelected()));
-        } else {
-            checkBox.setSelected(!preferences.getShowTakeOfferConfirmation());
-            checkBox.setOnAction(e -> preferences.setShowTakeOfferConfirmation(!checkBox.isSelected()));
-        }
     }
 }

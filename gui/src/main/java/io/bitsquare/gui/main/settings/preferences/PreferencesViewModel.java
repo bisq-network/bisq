@@ -65,41 +65,10 @@ class PreferencesViewModel extends ActivatableViewModel {
     protected void deactivate() {
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void onSelectBtcDenomination(String selectedItem) {
-        preferences.setBtcDenomination(selectedItem);
-    }
-
-    public void onSelectUseEffects(boolean selected) {
-        preferences.setUseEffects(selected);
-    }
-
-    public void onSelectUseAnimations(boolean selected) {
-        preferences.setUseAnimations(selected);
-    }
-
-    public void onSelectShowPlaceOfferConfirmation(boolean selected) {
-        preferences.setShowPlaceOfferConfirmation(selected);
-    }
-
-    public void onSelectShowTakeOfferConfirmation(boolean selected) {
-        preferences.setShowTakeOfferConfirmation(selected);
-    }
-
-    public void onSelectAutoSelectArbitratorsCheckBox(boolean selected) {
-        preferences.setAutoSelectArbitrators(selected);
-    }
-
-    public void onSelectBlockExplorer(BlockChainExplorer selectedItem) {
-        preferences.setBlockChainExplorer(selectedItem);
-    }
-
-    public void onSelectTradeCurrency(TradeCurrency selectedItem) {
-        preferences.setPreferredTradeCurrency(selectedItem);
-    }
 
     public void onSelectLanguageCode(String code) {
         preferences.setPreferredLocale(new Locale(code, preferences.getPreferredLocale().getCountry()));
@@ -124,40 +93,8 @@ class PreferencesViewModel extends ActivatableViewModel {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String getBtcDenomination() {
-        return preferences.getBtcDenomination();
-    }
-
-    public boolean getUseAnimations() {
-        return preferences.getUseAnimations();
-    }
-
-    public boolean getUseEffects() {
-        return preferences.getUseEffects();
-    }
-
-    public boolean getShowPlaceOfferConfirmation() {
-        return preferences.getShowPlaceOfferConfirmation();
-    }
-
-    public boolean getShowTakeOfferConfirmation() {
-        return preferences.getShowTakeOfferConfirmation();
-    }
-
-    public boolean getAutoSelectArbitrators() {
-        return preferences.getAutoSelectArbitrators();
-    }
-
-    public BlockChainExplorer getBlockExplorer() {
-        return preferences.getBlockChainExplorer();
-    }
-
     public String getLanguageCode() {
         return preferences.getPreferredLocale().getLanguage();
-    }
-
-    public TradeCurrency getTradeCurrency() {
-        return preferences.getPreferredTradeCurrency();
     }
 
 }

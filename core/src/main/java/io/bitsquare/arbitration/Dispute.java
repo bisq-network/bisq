@@ -48,6 +48,7 @@ public class Dispute implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final String tradeId;
+    private final String id;
     private final int traderId;
     private final boolean disputeOpenerIsBuyer;
     private final boolean disputeOpenerIsOfferer;
@@ -123,6 +124,8 @@ public class Dispute implements Serializable {
         this.arbitratorPubKeyRing = arbitratorPubKeyRing;
         this.isSupportTicket = isSupportTicket;
         this.openingDate = new Date().getTime();
+
+        id = tradeId + "_" + traderId;
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -176,6 +179,10 @@ public class Dispute implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String getId() {
+        return id;
+    }
 
     public String getTradeId() {
         return tradeId;

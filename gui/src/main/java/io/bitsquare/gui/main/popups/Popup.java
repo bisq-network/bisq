@@ -70,7 +70,7 @@ public class Popup {
     private boolean showProgressIndicator;
     private Button actionButton;
     protected Label headLineLabel;
-    private String dontShowAgainId;
+    protected String dontShowAgainId;
     private Preferences preferences;
     private ChangeListener<Number> positionListener;
     private Timer centerTime;

@@ -26,21 +26,23 @@ import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
-import io.bitsquare.btc.*;
+import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.TradeWalletService;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.pricefeed.MarketPriceFeed;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ViewModel;
-import io.bitsquare.gui.common.view.ViewPath;
 import io.bitsquare.gui.components.BalanceTextField;
 import io.bitsquare.gui.components.BalanceWithConfirmationTextField;
 import io.bitsquare.gui.components.TxIdTextField;
+import io.bitsquare.gui.main.notifications.NotificationCenter;
 import io.bitsquare.gui.main.popups.DisplayAlertMessagePopup;
 import io.bitsquare.gui.main.popups.Popup;
+import io.bitsquare.gui.main.popups.TacPopup;
 import io.bitsquare.gui.main.popups.WalletPasswordPopup;
-import io.bitsquare.gui.main.portfolio.PortfolioView;
-import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
@@ -69,9 +71,9 @@ import org.reactfx.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -89,6 +91,8 @@ public class MainViewModel implements ViewModel {
     private final Preferences preferences;
     private final AlertManager alertManager;
     private final WalletPasswordPopup walletPasswordPopup;
+    private NotificationCenter notificationCenter;
+    private TacPopup tacPopup;
     private Navigation navigation;
     private final BSFormatter formatter;
 
@@ -133,8 +137,7 @@ public class MainViewModel implements ViewModel {
     private java.util.Timer numberofBtcPeersTimer;
     private java.util.Timer numberofP2PNetworkPeersTimer;
     private Timer startupTimeout;
-    private Set<Subscription> tradeStateSubscriptions = new HashSet<>();
-    private Set<Subscription> disputeStateSubscriptions = new HashSet<>();
+    private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -147,6 +150,7 @@ public class MainViewModel implements ViewModel {
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
                          User user, AlertManager alertManager, WalletPasswordPopup walletPasswordPopup,
+                         NotificationCenter notificationCenter, TacPopup tacPopup,
                          Navigation navigation, BSFormatter formatter) {
         this.marketPriceFeed = marketPriceFeed;
         this.user = user;
@@ -160,6 +164,8 @@ public class MainViewModel implements ViewModel {
         this.preferences = preferences;
         this.alertManager = alertManager;
         this.walletPasswordPopup = walletPasswordPopup;
+        this.notificationCenter = notificationCenter;
+        this.tacPopup = tacPopup;
         this.navigation = navigation;
         this.formatter = formatter;
 
@@ -172,8 +178,6 @@ public class MainViewModel implements ViewModel {
         BalanceWithConfirmationTextField.setWalletService(walletService);
 
         if (BitsquareApp.DEV_MODE) {
-            preferences.setShowPlaceOfferConfirmation(false);
-            preferences.setShowTakeOfferConfirmation(false);
             preferences.setUseAnimations(false);
             preferences.setUseEffects(false);
         }
@@ -220,6 +224,16 @@ public class MainViewModel implements ViewModel {
             checkForBtcSyncStateTimer.stop();
 
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI handlers
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    void onSplashScreenRemoved() {
+        isSplashScreenRemoved.set(true);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Initialisation
@@ -360,33 +374,23 @@ public class MainViewModel implements ViewModel {
         startupTimeout.stop();
 
         // disputeManager
+        disputeManager.onAllServicesInitialized();
         disputeManager.getDisputesAsObservableList().addListener((ListChangeListener<Dispute>) change -> {
             change.next();
-            addDisputeClosedChangeListener(change.getAddedSubList());
-            updateDisputeStates();
+            onDisputesChangeListener(change.getAddedSubList(), change.getRemoved());
         });
-        addDisputeClosedChangeListener(disputeManager.getDisputesAsObservableList());
-        updateDisputeStates();
-        disputeManager.onAllServicesInitialized();
-
+        onDisputesChangeListener(disputeManager.getDisputesAsObservableList(), null);
 
         // tradeManager
         tradeManager.getTrades().addListener((ListChangeListener<Trade>) c -> updateBalance());
-
-        tradeManager.getTrades().addListener((ListChangeListener<Trade>) change -> {
-            change.next();
-            setDisputeStateSubscriptions();
-            setTradeStateSubscriptions();
-            pendingTradesChanged();
+        tradeManager.getTrades().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
+        onTradesChanged();
+        // We handle the trade period here as we display a global popup if we reached dispute time
+        tradesAndUIReady = EasyBind.combine(isSplashScreenRemoved, tradeManager.pendingTradesInitializedProperty(), (a, b) -> a && b);
+        tradesAndUIReady.subscribe((observable, oldValue, newValue) -> {
+            if (newValue)
+                applyTradePeriodState();
         });
-        pendingTradesChanged();
-        setDisputeStateSubscriptions();
-        setTradeStateSubscriptions();
-
-
-        // arbitratorManager
-        arbitratorManager.onAllServicesInitialized();
-
 
         // walletService
         // In case we have any offers open or a pending trade we need to unlock our trading wallet so a trade can be executed automatically
@@ -398,77 +402,120 @@ public class MainViewModel implements ViewModel {
                         || disputeManager.getDisputesAsObservableList().size() > 0)) {
             walletPasswordPopup.onAesKey(aesKey -> tradeWalletService.setAesKey(aesKey)).show();
         }
-
-        // We handle the trade period here as we display a global popup if we reached dispute time
-        tradesAndUIReady = EasyBind.combine(isSplashScreenRemoved, tradeManager.pendingTradesInitializedProperty(), (a, b) -> a && b);
-        tradesAndUIReady.subscribe((observable, oldValue, newValue) -> {
-            if (newValue)
-                applyTradePeriodState();
-        });
-
         walletService.addBalanceListener(new BalanceListener() {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
                 updateBalance();
             }
         });
-        updateBalance();
 
         setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get());
         checkPeriodicallyForBtcSyncState();
 
-        // openOfferManager
         openOfferManager.getOpenOffers().addListener((ListChangeListener<OpenOffer>) c -> updateBalance());
         openOfferManager.onAllServicesInitialized();
-
-
-        // alertManager
+        arbitratorManager.onAllServicesInitialized();
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) -> displayAlertIfPresent(newValue));
         displayAlertIfPresent(alertManager.alertMessageProperty().get());
 
+        setupP2PPeersInfo();
+        updateBalance();
+        setupDevDummyPaymentAccount();
+        setupMarketPriceFeed();
 
-        // tac
-        // TODO add link: https://bitsquare.io/arbitration_system.pdf
-        String text = "1. This software is experimental and provided \"as is\", without warranty of any kind, " +
-                "express or implied, including but not limited to the warranties of " +
-                "merchantability, fitness for a particular purpose and non-infringement.\n" +
-                "In no event shall the authors or copyright holders be liable for any claim, damages or other " +
-                "liability, whether in an action of contract, tort or otherwise, " +
-                "arising from, out of or in connection with the software or the use or other dealings in the software.\n\n" +
-                "2. The user is responsible to use the software in compliance with local laws.\n\n" +
-                "3. The user confirms that he has read and agreed to the rules defined in our " +
-                "Wiki regrading the dispute process\n" +
-                "(https://github.com/bitsquare/bitsquare/wiki/Arbitration-system).";
-        if (!preferences.getTacAccepted() && !BitsquareApp.DEV_MODE) {
-            new Popup().headLine("USER AGREEMENT")
-                    .message(text)
-                    .actionButtonText("I agree")
-                    .closeButtonText("I disagree and quit")
-                    .onAction(() -> {
-                        preferences.setTacAccepted(true);
-                        if (preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET)
-                            UserThread.runAfter(() -> new Popup()
-                                    .warning("This software is still in alpha version.\n" +
-                                            "Please be aware that using Mainnet comes with the risk to lose funds " +
-                                            "in case of software bugs.\n" +
-                                            "To limit the possible losses the maximum allowed trading amount and the " +
-                                            "security deposit have been reduced to 0.01 BTC for the alpha version " +
-                                            "when using Mainnet.")
-                                    .headLine("Important information!")
-                                    .actionButtonText("I understand and want to use Mainnet")
-                                    .closeButtonText("Restart and use Testnet")
-                                    .onClose(() -> {
-                                        UserThread.execute(() -> preferences.setBitcoinNetwork(BitcoinNetwork.TESTNET));
-                                        UserThread.runAfter(BitsquareApp.shutDownHandler::run, 300, TimeUnit.MILLISECONDS);
-                                    })
-                                    .width(600)
-                                    .show(), 300, TimeUnit.MILLISECONDS);
-                    })
-                    .onClose(BitsquareApp.shutDownHandler::run)
-                    .show();
-        }
+        tacPopup.showIfNeeded();
+        notificationCenter.onAllServicesInitialized();
 
-        // update nr of peers in footer
+        // now show app
+        showAppScreen.set(true);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // States
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void applyTradePeriodState() {
+        updateTradePeriodState();
+        tradeWalletService.addBlockChainListener(new BlockChainListener() {
+            @Override
+            public void notifyNewBestBlock(StoredBlock block) throws VerificationException {
+                updateTradePeriodState();
+            }
+
+            @Override
+            public void reorganize(StoredBlock splitPoint, List<StoredBlock> oldBlocks, List<StoredBlock> newBlocks)
+                    throws VerificationException {
+            }
+
+            @Override
+            public boolean isTransactionRelevant(Transaction tx) throws ScriptException {
+                return false;
+            }
+
+            @Override
+            public void receiveFromBlock(Transaction tx, StoredBlock block, AbstractBlockChain.NewBlockType blockType, int relativityOffset)
+                    throws VerificationException {
+
+            }
+
+            @Override
+            public boolean notifyTransactionIsInBlock(Sha256Hash txHash, StoredBlock block, AbstractBlockChain.NewBlockType blockType,
+                                                      int relativityOffset) throws VerificationException {
+                return false;
+            }
+        });
+    }
+
+    private void updateTradePeriodState() {
+        tradeManager.getTrades().stream().forEach(trade -> {
+            int bestChainHeight = tradeWalletService.getBestChainHeight();
+
+            if (trade.getOpenDisputeTimeAsBlockHeight() > 0 && bestChainHeight >= trade.getOpenDisputeTimeAsBlockHeight())
+                trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
+            else if (trade.getCheckPaymentTimeAsBlockHeight() > 0 && bestChainHeight >= trade.getCheckPaymentTimeAsBlockHeight())
+                trade.setTradePeriodState(Trade.TradePeriodState.HALF_REACHED);
+
+            String id;
+            String limitDate = formatter.addBlocksToNowDateFormatted(trade.getOpenDisputeTimeAsBlockHeight() - tradeWalletService.getBestChainHeight());
+            switch (trade.getTradePeriodState()) {
+                case NORMAL:
+                    break;
+                case HALF_REACHED:
+                    id = "displayHalfTradePeriodOver" + trade.getId();
+                    if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE) {
+                        preferences.dontShowAgain(id);
+                        new Popup().warning("Your trade with ID " + trade.getShortId() +
+                                " has reached the half of the max. allowed trading period and " +
+                                "is still not completed.\n\n" +
+                                "The trade period ends on " + limitDate + "\n\n" +
+                                "Please check your trade state at \"Portfolio/Open trades\" for further information.")
+                                .show();
+                    }
+                    break;
+                case TRADE_PERIOD_OVER:
+                    id = "displayTradePeriodOver" + trade.getId();
+                    if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE) {
+                        preferences.dontShowAgain(id);
+                        new Popup().warning("Your trade with ID " + trade.getShortId() +
+                                " has reached the max. allowed trading period and is " +
+                                "not completed.\n\n" +
+                                "The trade period ended on " + limitDate + "\n\n" +
+                                "Please check your trade at \"Portfolio/Open trades\" for contacting " +
+                                "the arbitrator.")
+                                .show();
+                    }
+                    break;
+            }
+        });
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void setupP2PPeersInfo() {
         numConnectedPeersListener = (observable, oldValue, newValue) -> {
             if ((int) oldValue > 0 && (int) newValue == 0) {
                 // give a bit of tolerance
@@ -492,19 +539,10 @@ public class MainViewModel implements ViewModel {
             updateP2pNetworkInfoWithPeersChanged((int) newValue);
         };
         p2PService.getNumConnectedPeers().addListener(numConnectedPeersListener);
+    }
 
-        // now show app
-        showAppScreen.set(true);
 
-        if (BitsquareApp.DEV_MODE && user.getPaymentAccounts().isEmpty()) {
-            OKPayAccount okPayAccount = new OKPayAccount();
-            okPayAccount.setAccountNr("dummy");
-            okPayAccount.setAccountName("OKPay dummy");
-            okPayAccount.setSelectedTradeCurrency(CurrencyUtil.getDefaultTradeCurrency());
-            okPayAccount.setCountry(CountryUtil.getDefaultCountry());
-            user.addPaymentAccount(okPayAccount);
-        }
-
+    private void setupMarketPriceFeed() {
         if (marketPriceFeed.getCurrencyCode() == null)
             marketPriceFeed.setCurrencyCode(preferences.getPreferredTradeCurrency().getCode());
         if (marketPriceFeed.getType() == null)
@@ -605,130 +643,39 @@ public class MainViewModel implements ViewModel {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI callbacks
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    void onSplashScreenRemoved() {
-        isSplashScreenRemoved.set(true);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Apply states
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void applyTradePeriodState() {
-        updateTradePeriodState();
-        tradeWalletService.addBlockChainListener(new BlockChainListener() {
-            @Override
-            public void notifyNewBestBlock(StoredBlock block) throws VerificationException {
-                updateTradePeriodState();
-            }
-
-            @Override
-            public void reorganize(StoredBlock splitPoint, List<StoredBlock> oldBlocks, List<StoredBlock> newBlocks)
-                    throws VerificationException {
-            }
-
-            @Override
-            public boolean isTransactionRelevant(Transaction tx) throws ScriptException {
-                return false;
-            }
-
-            @Override
-            public void receiveFromBlock(Transaction tx, StoredBlock block, AbstractBlockChain.NewBlockType blockType, int relativityOffset)
-                    throws VerificationException {
-
-            }
-
-            @Override
-            public boolean notifyTransactionIsInBlock(Sha256Hash txHash, StoredBlock block, AbstractBlockChain.NewBlockType blockType,
-                                                      int relativityOffset) throws VerificationException {
-                return false;
-            }
-        });
-    }
-
-    private void setWalletServiceException(Throwable error) {
-        setBitcoinNetworkSyncProgress(0);
-        btcSplashInfo.set("Nr. of Bitcoin network peers: " + numBTCPeers + " / connecting to " + btcNetworkAsString + " failed");
-        btcFooterInfo.set(btcSplashInfo.get());
-        if (error instanceof TimeoutException) {
-            walletServiceErrorMsg.set("Connecting to the bitcoin network failed because of a timeout.");
-        } else if (error.getCause() instanceof BlockStoreException) {
-            new Popup().warning("Bitsquare is already running. You cannot run 2 instances of Bitsquare.")
-                    .closeButtonText("Shut down")
-                    .onClose(BitsquareApp.shutDownHandler::run)
-                    .show();
-        } else if (error.getMessage() != null) {
-            walletServiceErrorMsg.set("Connection to the bitcoin network failed because of an error:" + error.getMessage());
-        } else {
-            walletServiceErrorMsg.set("Connection to the bitcoin network failed because of an error:" + error.toString());
+    private void onDisputesChangeListener(List<? extends Dispute> addedList, @Nullable List<? extends Dispute> removedList) {
+        if (removedList != null) {
+            removedList.stream().forEach(dispute -> {
+                String id = dispute.getId();
+                if (disputeIsClosedSubscriptionsMap.containsKey(id)) {
+                    disputeIsClosedSubscriptionsMap.get(id).unsubscribe();
+                    disputeIsClosedSubscriptionsMap.remove(id);
+                }
+            });
         }
-    }
+        addedList.stream().forEach(dispute -> {
+            String id = dispute.getId();
+            if (disputeIsClosedSubscriptionsMap.containsKey(id)) {
+                log.warn("We have already an entry in disputeStateSubscriptionsMap. That should never happen.");
+            } else {
+                Subscription disputeStateSubscription = EasyBind.subscribe(dispute.isClosedProperty(),
+                        disputeState -> {
+                            int openDisputes = disputeManager.getDisputesAsObservableList().stream()
+                                    .filter(e -> !e.isClosed())
+                                    .collect(Collectors.toList()).size();
+                            if (openDisputes > 0)
+                                numOpenDisputesAsString.set(String.valueOf(openDisputes));
+                            if (openDisputes > 9)
+                                numOpenDisputesAsString.set("?");
 
-    private void updateTradePeriodState() {
-        tradeManager.getTrades().stream().forEach(trade -> {
-            int bestChainHeight = tradeWalletService.getBestChainHeight();
-
-            if (trade.getOpenDisputeTimeAsBlockHeight() > 0 && bestChainHeight >= trade.getOpenDisputeTimeAsBlockHeight())
-                trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
-            else if (trade.getCheckPaymentTimeAsBlockHeight() > 0 && bestChainHeight >= trade.getCheckPaymentTimeAsBlockHeight())
-                trade.setTradePeriodState(Trade.TradePeriodState.HALF_REACHED);
-
-            String id;
-            String limitDate = formatter.addBlocksToNowDateFormatted(trade.getOpenDisputeTimeAsBlockHeight() - tradeWalletService.getBestChainHeight());
-            switch (trade.getTradePeriodState()) {
-                case NORMAL:
-                    break;
-                case HALF_REACHED:
-                    id = "displayHalfTradePeriodOver" + trade.getId();
-                    if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE) {
-                        preferences.dontShowAgain(id);
-                        new Popup().warning("Your trade with ID " + trade.getShortId() +
-                                " has reached the half of the max. allowed trading period and " +
-                                "is still not completed.\n\n" +
-                                "The trade period ends on " + limitDate + "\n\n" +
-                                "Please check your trade state at \"Portfolio/Open trades\" for further information.")
-                                .show();
-                    }
-                    break;
-                case TRADE_PERIOD_OVER:
-                    id = "displayTradePeriodOver" + trade.getId();
-                    if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE) {
-                        preferences.dontShowAgain(id);
-                        new Popup().warning("Your trade with ID " + trade.getShortId() +
-                                " has reached the max. allowed trading period and is " +
-                                "not completed.\n\n" +
-                                "The trade period ended on " + limitDate + "\n\n" +
-                                "Please check your trade at \"Portfolio/Open trades\" for contacting " +
-                                "the arbitrator.")
-                                .show();
-                    }
-                    break;
+                            showOpenDisputesNotification.set(openDisputes > 0);
+                        });
+                disputeIsClosedSubscriptionsMap.put(id, disputeStateSubscription);
             }
         });
     }
 
-    private void addDisputeClosedChangeListener(List<? extends Dispute> list) {
-        list.stream().forEach(e -> e.isClosedProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue)
-                updateDisputeStates();
-        }));
-    }
-
-    private void updateDisputeStates() {
-        int openDisputes = disputeManager.getDisputesAsObservableList().stream().filter(e -> !e.isClosed()).collect(Collectors.toList()).size();
-        if (openDisputes > 0)
-            numOpenDisputesAsString.set(String.valueOf(openDisputes));
-        if (openDisputes > 9)
-            numOpenDisputesAsString.set("?");
-
-        showOpenDisputesNotification.set(openDisputes > 0);
-    }
-
-    private void pendingTradesChanged() {
+    private void onTradesChanged() {
         long numPendingTrades = tradeManager.getTrades().size();
         if (numPendingTrades > 0)
             numPendingTradesAsString.set(String.valueOf(numPendingTrades));
@@ -736,132 +683,6 @@ public class MainViewModel implements ViewModel {
             numPendingTradesAsString.set("?");
 
         showPendingTradesNotification.set(numPendingTrades > 0);
-    }
-
-    private void setTradeStateSubscriptions() {
-        tradeStateSubscriptions.stream().forEach(Subscription::unsubscribe);
-        tradeStateSubscriptions.clear();
-
-        tradeManager.getTrades().stream().forEach(trade -> {
-            Subscription tradeStateSubscription = EasyBind.subscribe(trade.stateProperty(), newValue -> {
-                if (newValue != null) {
-                    applyTradeState(trade);
-                }
-            });
-            tradeStateSubscriptions.add(tradeStateSubscription);
-        });
-    }
-
-    private void applyTradeState(Trade trade) {
-        Trade.State state = trade.getState();
-        log.debug("addTradeStateListeners " + state);
-        boolean isBtcBuyer = tradeManager.isMyOfferInBtcBuyerRole(trade.getOffer());
-        String headLine = "Notification for trade with ID " + trade.getShortId();
-        String message = null;
-        String id = "notificationPopup_" + state + trade.getId();
-        if (isBtcBuyer) {
-            switch (state) {
-                case DEPOSIT_PUBLISHED_MSG_RECEIVED:
-                    message = "Your offer has been accepted by a seller.\n" +
-                            "You need to wait for one blockchain confirmation before starting the payment.";
-                    break;
-                case DEPOSIT_CONFIRMED:
-                    message = "The deposit transaction of your trade has got the first blockchain confirmation.\n" +
-                            "You have to start the payment to the bitcoin seller now.";
-
-                    break;
-               /* case FIAT_PAYMENT_RECEIPT_MSG_RECEIVED:
-                case PAYOUT_TX_COMMITTED:
-                case PAYOUT_TX_SENT:*/
-                case PAYOUT_BROAD_CASTED:
-                    message = "The bitcoin seller has confirmed the receipt of your payment and the payout transaction has been published.\n" +
-                            "The trade is now completed and you can withdraw your funds.";
-                    break;
-            }
-        } else {
-            switch (state) {
-                case DEPOSIT_PUBLISHED_MSG_RECEIVED:
-                    message = "Your offer has been accepted by a buyer.\n" +
-                            "You need to wait for one blockchain confirmation before starting the payment.";
-                    break;
-                case FIAT_PAYMENT_STARTED_MSG_RECEIVED:
-                    message = "The bitcoin buyer has started the payment.\n" +
-                            "Please check your payment account if you have received his payment.";
-                    break;
-               /* case FIAT_PAYMENT_RECEIPT_MSG_SENT:
-                case PAYOUT_TX_RECEIVED:
-                case PAYOUT_TX_COMMITTED:*/
-                case PAYOUT_BROAD_CASTED:
-                    message = "The payout transaction has been published.\n" +
-                            "The trade is now completed and you can withdraw your funds.";
-            }
-        }
-
-        ViewPath currentPath = navigation.getCurrentPath();
-        boolean isPendingTradesViewCurrentView = currentPath != null &&
-                currentPath.size() == 3 &&
-                currentPath.get(2).equals(PendingTradesView.class);
-        if (message != null) {
-            //TODO we get that called initially before the navigation is inited
-            if (isPendingTradesViewCurrentView || currentPath == null) {
-                if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE)
-                    new Popup().headLine(headLine)
-                            .message(message)
-                            .show();
-                preferences.dontShowAgain(id);
-            } else {
-                if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE)
-                    new Popup().headLine(headLine)
-                            .message(message)
-                            .actionButtonText("Go to \"Portfolio/Open trades\"")
-                            .onAction(() -> {
-                                FxTimer.runLater(Duration.ofMillis(100),
-                                        () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
-                                );
-                            })
-                            .show();
-                preferences.dontShowAgain(id);
-            }
-        }
-    }
-
-    private void setDisputeStateSubscriptions() {
-        disputeStateSubscriptions.stream().forEach(Subscription::unsubscribe);
-        disputeStateSubscriptions.clear();
-
-        tradeManager.getTrades().stream().forEach(trade -> {
-            Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(), disputeState -> {
-                if (disputeState != null) {
-                    applyDisputeState(trade, disputeState);
-                }
-            });
-            disputeStateSubscriptions.add(disputeStateSubscription);
-        });
-    }
-
-    private void applyDisputeState(Trade trade, Trade.DisputeState disputeState) {
-        switch (disputeState) {
-            case NONE:
-                break;
-            case DISPUTE_REQUESTED:
-                break;
-            case DISPUTE_STARTED_BY_PEER:
-                disputeManager.findOwnDispute(trade.getId()).ifPresent(dispute -> {
-                    String msg;
-                    if (dispute.isSupportTicket())
-                        msg = "Your trading peer has encountered technical problems and requested support for trade with ID " + trade.getShortId() + ".\n" +
-                                "Please await further instructions from the arbitrator.\n" +
-                                "Your funds are safe and will be refunded as soon the problem is resolved.";
-                    else
-                        msg = "Your trading peer has requested a dispute for trade with ID " + trade.getShortId() + ".";
-
-                    new Popup().information(msg).show();
-                });
-                break;
-            case DISPUTE_CLOSED:
-                new Popup().information("A support ticket for trade with ID " + trade.getShortId() + " has been closed.").show();
-                break;
-        }
     }
 
     private void setBitcoinNetworkSyncProgress(double value) {
@@ -885,10 +706,39 @@ public class MainViewModel implements ViewModel {
         }
     }
 
+    private void setWalletServiceException(Throwable error) {
+        setBitcoinNetworkSyncProgress(0);
+        btcSplashInfo.set("Nr. of Bitcoin network peers: " + numBTCPeers + " / connecting to " + btcNetworkAsString + " failed");
+        btcFooterInfo.set(btcSplashInfo.get());
+        if (error instanceof TimeoutException) {
+            walletServiceErrorMsg.set("Connecting to the bitcoin network failed because of a timeout.");
+        } else if (error.getCause() instanceof BlockStoreException) {
+            new Popup().warning("Bitsquare is already running. You cannot run 2 instances of Bitsquare.")
+                    .closeButtonText("Shut down")
+                    .onClose(BitsquareApp.shutDownHandler::run)
+                    .show();
+        } else if (error.getMessage() != null) {
+            walletServiceErrorMsg.set("Connection to the bitcoin network failed because of an error:" + error.getMessage());
+        } else {
+            walletServiceErrorMsg.set("Connection to the bitcoin network failed because of an error:" + error.toString());
+        }
+    }
+
     private void stopCheckForBtcSyncStateTimer() {
         if (checkForBtcSyncStateTimer != null) {
             checkForBtcSyncStateTimer.stop();
             checkForBtcSyncStateTimer = null;
+        }
+    }
+
+    private void setupDevDummyPaymentAccount() {
+        if (BitsquareApp.DEV_MODE && user.getPaymentAccounts().isEmpty()) {
+            OKPayAccount okPayAccount = new OKPayAccount();
+            okPayAccount.setAccountNr("dummy");
+            okPayAccount.setAccountName("OKPay dummy");
+            okPayAccount.setSelectedTradeCurrency(CurrencyUtil.getDefaultTradeCurrency());
+            okPayAccount.setCountry(CountryUtil.getDefaultCountry());
+            user.addPaymentAccount(okPayAccount);
         }
     }
 }
