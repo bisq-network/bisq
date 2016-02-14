@@ -20,7 +20,7 @@ package io.bitsquare.gui.main.portfolio.failedtrades;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
-import io.bitsquare.gui.popups.TradeDetailsPopup;
+import io.bitsquare.gui.main.popups.TradeDetailsPopup;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;

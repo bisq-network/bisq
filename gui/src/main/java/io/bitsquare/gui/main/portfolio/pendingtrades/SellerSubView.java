@@ -74,8 +74,8 @@ public class SellerSubView extends TradeSubView {
 
     @Override
     protected void onViewStateChanged(PendingTradesViewModel.State viewState) {
-        Log.traceCall(viewState.toString());
         if (viewState != null) {
+            Log.traceCall(viewState.toString());
             PendingTradesViewModel.SellerState sellerState = (PendingTradesViewModel.SellerState) viewState;
 
             step1.setDisabled();

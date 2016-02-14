@@ -25,7 +25,7 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.funds.reserved.ReservedView;
 import io.bitsquare.gui.main.funds.transactions.TransactionsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
-import io.bitsquare.gui.popups.Popup;
+import io.bitsquare.gui.main.popups.Popup;
 import io.bitsquare.user.PopupId;
 import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;

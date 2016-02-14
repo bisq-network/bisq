@@ -20,7 +20,7 @@ package io.bitsquare.gui.main.account.content.backup;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.popups.Popup;
+import io.bitsquare.gui.main.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.user.Preferences;

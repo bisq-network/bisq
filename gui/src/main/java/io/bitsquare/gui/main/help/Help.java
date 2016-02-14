@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.help;
 
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.gui.popups.Popup;
+import io.bitsquare.gui.main.popups.Popup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

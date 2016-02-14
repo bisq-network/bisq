@@ -20,7 +20,7 @@ package io.bitsquare.gui.main.settings.preferences;
 import com.google.inject.Inject;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
-import io.bitsquare.gui.popups.Popup;
+import io.bitsquare.gui.main.popups.Popup;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.user.BlockChainExplorer;

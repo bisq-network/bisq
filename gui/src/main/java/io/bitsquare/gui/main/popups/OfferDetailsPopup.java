@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.popups;
+package io.bitsquare.gui.main.popups;
 
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.util.Tuple2;

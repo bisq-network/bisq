@@ -1,4 +1,4 @@
-package io.bitsquare.gui.popups;
+package io.bitsquare.gui.main.popups;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

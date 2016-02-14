@@ -23,7 +23,7 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.popups.Popup;
+import io.bitsquare.gui.main.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;

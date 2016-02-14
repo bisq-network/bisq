@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.popups;
+package io.bitsquare.gui.main.popups;
 
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
@@ -43,6 +43,8 @@ import javafx.scene.layout.VBox;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.reactfx.util.FxTimer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.time.Duration;
@@ -52,6 +54,8 @@ import java.util.Optional;
 import static io.bitsquare.gui.util.FormBuilder.*;
 
 public class DisputeSummaryPopup extends Popup {
+    private static final Logger log = LoggerFactory.getLogger(DisputeSummaryPopup.class);
+    
     private final BSFormatter formatter;
     private final DisputeManager disputeManager;
     private final WalletService walletService;
