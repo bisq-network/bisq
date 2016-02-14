@@ -29,6 +29,7 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.network.LocalhostNetworkNode;
+import io.bitsquare.p2p.network.OutboundConnection;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
@@ -46,6 +47,7 @@ import javax.inject.Inject;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @FxmlView
 public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activatable> {
@@ -157,7 +159,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
             }
         });
-        
+
         NodeAddress nodeAddress = p2PService.getAddress();
         if (nodeAddress == null) {
             p2PService.addP2PServiceListener(p2PServiceListener);
@@ -177,7 +179,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     @Override
     public void deactivate() {
         useTorCheckBox.setOnAction(null);
-        
+
         if (p2PServiceListener != null)
             p2PService.removeP2PServiceListener(p2PServiceListener);
 
@@ -190,13 +192,20 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     private void updateP2PPeersTextArea() {
         p2PPeersTextArea.clear();
-        p2PService.getNodeAddressesOfConnectedPeers().stream().forEach(e -> {
-            if (p2PPeersTextArea.getText().length() > 0)
-                p2PPeersTextArea.appendText("\n");
-            p2PPeersTextArea.appendText(e.getFullAddress());
-            if (seedNodeAddresses.contains(e))
-                p2PPeersTextArea.appendText(" (Seed node)");
-        });
+        p2PPeersTextArea.setText(p2PService.getNetworkNode().getConfirmedConnections()
+                .stream()
+                .map(connection -> {
+                    if (connection.getPeersNodeAddressOptional().isPresent()) {
+                        NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
+                        return nodeAddress.getFullAddress() + " (" +
+                                (connection instanceof OutboundConnection ? "outbound" : "inbound") +
+                                (seedNodeAddresses.contains(nodeAddress) ? " / seed node)" : ")");
+                    } else {
+                        // Should never be the case
+                        return "";
+                    }
+                })
+                .collect(Collectors.joining("\n")));
     }
 
     private void updateBitcoinPeersTextArea() {
