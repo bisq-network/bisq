@@ -27,13 +27,18 @@ import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.payment.BlockChainAccountContractData;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.payment.PaymentMethod;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.user.PopupId;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.GridPane;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
@@ -42,6 +47,7 @@ public class BuyerStep2View extends TradeStepView {
     private Button paymentStartedButton;
     private Label statusLabel;
     private ProgressIndicator statusProgressIndicator;
+    private Subscription tradeStatePropertySubscription;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -53,26 +59,54 @@ public class BuyerStep2View extends TradeStepView {
     }
 
     @Override
-    public void doActivate() {
-        super.doActivate();
+    public void activate() {
+        super.activate();
+        //TODO we get called twice, check why
+        if (tradeStatePropertySubscription == null) {
+            tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
+                if (state.equals(Trade.State.DEPOSIT_CONFIRMED)) {
+                    PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
+                    String id = "StartPaymentPopup_" + trade.getId();
+                    if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE) {
+                        String message = "";
+                        if (paymentAccountContractData instanceof BlockChainAccountContractData)
+                            message = "Please transfer from your external " +
+                                    CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) + " wallet\n" +
+                                    model.formatter.formatFiatWithCode(trade.getTradeVolume()) + " to the bitcoin seller.\n\n" +
+                                    "Here are the payment account details of the bitcoin seller:\n" +
+                                    "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n\n" +
+                                    "You can copy & paste the receivers address from the main screen after closing that popup.";
+                        else if (paymentAccountContractData != null)
+                            message = "Please go to your online banking web page and pay\n" +
+                                    model.formatter.formatFiatWithCode(trade.getTradeVolume()) + " to the bitcoin seller.\n\n" +
+                                    "Here are the payment account details of the bitcoin seller:\n" +
+                                    "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n\n" +
+                                    "Please don't forget to add the reference text " + trade.getShortId() +
+                                    " so the receiver can assign your payment to this trade.\n" +
+                                    "DO NOT use any additional notice in the reference text like " +
+                                    "Bitcoin, Btc, Trade or Bitsquare.\n\n" +
+                                    "You can copy & paste the values from the main screen after closing that popup.";
 
-       /* String id = PopupId.SEND_PAYMENT_INFO;
-        if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE) {
-            //TODO use payment method and trade values
-            new Popup().information("You need to transfer now the agreed amount to your trading partner.\n" +
-                    "Please take care that you use the exact data presented here, including the reference text\n" +
-                    "Please do not click the \"Payment started\" button before you have completed the transfer.\n" +
-                    "Make sure that you make the transfer soon to not exceed the trading period.")
-                    .onClose(() -> preferences.dontShowAgain(id))
-                    .show();
-        }*/
+                        new Popup().headLine("Notification for trade with ID " + trade.getShortId())
+                                .message(message)
+                                .closeButtonText("I understand")
+                                .dontShowAgainId(id, preferences)
+                                .show();
+                    }
+                }
+            });
+        }
     }
 
     @Override
-    public void doDeactivate() {
-        super.doDeactivate();
+    public void deactivate() {
+        super.deactivate();
 
         removeStatusProgressIndicator();
+        if (tradeStatePropertySubscription != null) {
+            tradeStatePropertySubscription.unsubscribe();
+            tradeStatePropertySubscription = null;
+        }
     }
 
 
@@ -117,11 +151,12 @@ public class BuyerStep2View extends TradeStepView {
                 log.error("Not supported PaymentMethod: " + paymentMethodName);
         }
 
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Reference text:", model.getReference());
+        if (!(paymentAccountContractData instanceof BlockChainAccountContractData))
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Reference text:", model.dataModel.getReference());
 
         GridPane.setRowSpan(accountTitledGroupBg, gridRow - 3);
 
-        Tuple3<Button, ProgressIndicator, Label> tuple3 = addButtonWithStatus(gridPane, ++gridRow, "Payment started");
+        Tuple3<Button, ProgressIndicator, Label> tuple3 = addButtonWithStatusAfterGroup(gridPane, ++gridRow, "Payment started");
         paymentStartedButton = tuple3.first;
         paymentStartedButton.setOnAction(e -> onPaymentStarted());
         statusProgressIndicator = tuple3.second;
@@ -136,7 +171,7 @@ public class BuyerStep2View extends TradeStepView {
     @Override
     protected String getWarningText() {
         setWarningHeadline();
-        return "You still have not done your " + model.getCurrencyCode() + " payment!\n" +
+        return "You still have not done your " + model.dataModel.getCurrencyCode() + " payment!\n" +
                 "Please note that the trade has to be completed until " +
                 model.getOpenDisputeTimeAsFormattedDate() +
                 " otherwise the trade will be investigated by the arbitrator.";
@@ -165,7 +200,7 @@ public class BuyerStep2View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onPaymentStarted() {
-        if (model.isBootstrapped()) {
+        if (model.p2PService.isBootstrapped()) {
             String key = PopupId.PAYMENT_SENT;
             if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
                 new Popup().headLine("Confirmation")
@@ -197,7 +232,7 @@ public class BuyerStep2View extends TradeStepView {
         statusLabel.setText("Sending message to your trading partner.\n" +
                 "Please wait until you get the confirmation that the message has arrived.");
 
-        model.fiatPaymentStarted(() -> {
+        model.dataModel.onPaymentStarted(() -> {
             // We would not really need an update as the success triggers a screen change
             removeStatusProgressIndicator();
             statusLabel.setText("");

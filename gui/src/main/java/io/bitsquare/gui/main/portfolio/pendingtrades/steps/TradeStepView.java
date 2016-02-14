@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps;
 
+import io.bitsquare.app.Log;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.TxIdTextField;
@@ -27,7 +28,6 @@ import io.bitsquare.gui.popups.Popup;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.user.Preferences;
-import javafx.beans.value.ChangeListener;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
@@ -42,16 +42,16 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.gui.util.FormBuilder.*;
 
 public abstract class TradeStepView extends AnchorPane {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     protected final PendingTradesViewModel model;
-    private final Trade trade;
+    protected final Trade trade;
     protected final Preferences preferences;
     protected final GridPane gridPane;
-    private final ChangeListener<String> txIdChangeListener;
 
     private Subscription errorMessageSubscription;
     private Subscription disputeStateSubscription;
@@ -63,6 +63,7 @@ public abstract class TradeStepView extends AnchorPane {
     private ProgressBar timeLeftProgressBar;
     private TxIdTextField txIdTextField;
     protected TradeSubView.NotificationGroup notificationGroup;
+    private Subscription txIdSubscription;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -71,8 +72,9 @@ public abstract class TradeStepView extends AnchorPane {
 
     protected TradeStepView(PendingTradesViewModel model) {
         this.model = model;
-        preferences = model.dataModel.getPreferences();
-        trade = model.getTrade();
+        preferences = model.dataModel.preferences;
+        trade = model.dataModel.getTrade();
+        checkNotNull(trade, "trade must not be null at TradeStepView");
 
         gridPane = addGridPane(this);
 
@@ -81,16 +83,16 @@ public abstract class TradeStepView extends AnchorPane {
         AnchorPane.setTopAnchor(this, -10d);
         AnchorPane.setBottomAnchor(this, 0d);
 
-        txIdChangeListener = (ov, oldValue, newValue) -> txIdTextField.setup(newValue);
-
         addContent();
     }
 
-    public void doActivate() {
+    public void activate() {
         if (txIdTextField != null) {
-            txIdTextField.setup(model.txIdProperty().get());
+            txIdTextField.setup(model.dataModel.txId.get());
+            if (txIdSubscription != null)
+                txIdSubscription.unsubscribe();
 
-            model.txIdProperty().addListener(txIdChangeListener);
+            txIdSubscription = EasyBind.subscribe(model.dataModel.txId, id -> txIdTextField.setup(id));
         }
 
         errorMessageSubscription = EasyBind.subscribe(trade.errorMessageProperty(), newValue -> {
@@ -111,16 +113,16 @@ public abstract class TradeStepView extends AnchorPane {
             }
         });
 
-        timer = FxTimer.runPeriodically(Duration.ofSeconds(1), this::updateTimeLeft);
-
+        timer = FxTimer.runPeriodically(Duration.ofMinutes(1), this::updateTimeLeft);
     }
 
-    public void doDeactivate() {
-        if (txIdTextField != null) {
-            txIdTextField.cleanup();
+    public void deactivate() {
+        Log.traceCall();
+        if (txIdSubscription != null)
+            txIdSubscription.unsubscribe();
 
-            model.txIdProperty().removeListener(txIdChangeListener);
-        }
+        if (txIdTextField != null)
+            txIdTextField.cleanup();
 
         if (errorMessageSubscription != null)
             errorMessageSubscription.unsubscribe();
@@ -189,7 +191,7 @@ public abstract class TradeStepView extends AnchorPane {
             timeLeftProgressBar.setProgress(model.getRemainingTimeAsPercentage());
             if (remainingTime != null) {
                 timeLeftTextField.setText(remainingTime);
-                if (model.showWarning(model.getTrade()) || model.showDispute(model.getTrade())) {
+                if (model.showWarning(trade) || model.showDispute(trade)) {
                     timeLeftTextField.setStyle("-fx-text-fill: -bs-error-red");
                     timeLeftProgressBar.setStyle("-fx-accent: -bs-error-red;");
                 }
@@ -231,44 +233,36 @@ public abstract class TradeStepView extends AnchorPane {
     protected void setWarningHeadline() {
         if (notificationGroup != null) {
             notificationGroup.titledGroupBg.setText("Warning");
-            //notificationGroup.setId("trade-notification-warning");
         }
     }
 
     protected void setInformationHeadline() {
         if (notificationGroup != null) {
             notificationGroup.titledGroupBg.setText("Notification");
-            //notificationGroup.titledGroupBg.setId("titled-group-bg-warn");
-            //notificationGroup.label.setId("titled-group-bg-label-warn");
-            //notificationLabel.setId("titled-group-bg-label-warn");
         }
     }
 
     protected void setOpenDisputeHeadline() {
         if (notificationGroup != null) {
             notificationGroup.titledGroupBg.setText("Open a dispute");
-            //notificationGroup.setId("trade-notification-dispute");
         }
     }
 
     protected void setDisputeOpenedHeadline() {
         if (notificationGroup != null) {
             notificationGroup.titledGroupBg.setText("Dispute opened");
-            //notificationGroup.setId("trade-notification-dispute");
         }
     }
 
     protected void setRequestSupportHeadline() {
         if (notificationGroup != null) {
             notificationGroup.titledGroupBg.setText("Open support ticket");
-            //notificationGroup.setId("trade-notification-support");
         }
     }
 
     protected void setSupportOpenedHeadline() {
         if (notificationGroup != null) {
             notificationGroup.titledGroupBg.setText("Support ticket opened");
-            //notificationGroup.setId("trade-notification-support");
         }
     }
 
@@ -350,7 +344,7 @@ public abstract class TradeStepView extends AnchorPane {
                 break;
             case DISPUTE_REQUESTED:
                 onDisputeOpened();
-                ownDispute = model.dataModel.getDisputeManager().findOwnDispute(trade.getId());
+                ownDispute = model.dataModel.disputeManager.findOwnDispute(trade.getId());
                 ownDispute.ifPresent(dispute -> {
                     String msg;
                     if (dispute.isSupportTicket()) {
@@ -369,7 +363,7 @@ public abstract class TradeStepView extends AnchorPane {
                 break;
             case DISPUTE_STARTED_BY_PEER:
                 onDisputeOpened();
-                ownDispute = model.dataModel.getDisputeManager().findOwnDispute(trade.getId());
+                ownDispute = model.dataModel.disputeManager.findOwnDispute(trade.getId());
                 ownDispute.ifPresent(dispute -> {
                     String msg;
                     if (dispute.isSupportTicket()) {

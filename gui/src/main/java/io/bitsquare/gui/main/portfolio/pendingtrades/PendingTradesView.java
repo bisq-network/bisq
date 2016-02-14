@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
+import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -24,11 +25,7 @@ import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.popups.OpenEmergencyTicketPopup;
 import io.bitsquare.gui.popups.TradeDetailsPopup;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.trade.Trade;
-import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.ListChangeListener;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
@@ -44,6 +41,8 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import javax.inject.Inject;
 
@@ -61,14 +60,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @FXML
     TableColumn<PendingTradesListItem, Coin> tradeAmountColumn;
 
-    private ChangeListener<PendingTradesListItem> selectedItemChangeListener;
-    private TradeSubView currentSubView;
-    private ChangeListener<Boolean> appFocusChangeListener;
-    private ReadOnlyBooleanProperty appFocusProperty;
-    private ChangeListener<Trade> currentTradeChangeListener;
+    private TradeSubView selectedSubView;
     private EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
-    private ListChangeListener<PendingTradesListItem> listChangeListener;
+    private Subscription selectedTableItemSubscription;
+    private Subscription selectedItemSubscription;
+    private Subscription appFocusSubscription;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -95,30 +92,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPlaceholder(new Label("No pending trades available"));
         table.setMinHeight(100);
-        selectedItemChangeListener = (ov, oldValue, newValue) -> {
-            model.onSelectTrade(newValue);
-            log.debug("selectedItemChangeListener {} ", newValue);
-            if (newValue != null)
-                setNewSubView(newValue.getTrade());
-        };
-        listChangeListener = c -> updateSelectedItem();
-
-        appFocusChangeListener = (observable, oldValue, newValue) -> {
-            if (newValue && model.getSelectedItem() != null) {
-                // Focus selectedItem from model
-                int index = table.getItems().indexOf(model.getSelectedItem());
-                UserThread.execute(() -> {
-                    //TODO app wide focus
-                    //table.requestFocus();
-                    //UserThread.execute(() -> table.getFocusModel().focus(index));
-                });
-            }
-        };
-
-        currentTradeChangeListener = (observable, oldValue, newValue) -> {
-            log.debug("currentTradeChangeListener {} ", newValue);
-            // setNewSubView(newValue);
-        };
 
         // we use a hidden emergency shortcut to open support ticket
         keyEventEventHandler = event -> {
@@ -129,88 +102,101 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     @Override
     protected void activate() {
+        Log.traceCall();
         scene = root.getScene();
         if (scene != null) {
-            appFocusProperty = scene.getWindow().focusedProperty();
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+
+            /*appFocusSubscription = EasyBind.subscribe(scene.getWindow().focusedProperty(), isFocused -> {
+                if (isFocused && model.dataModel.selectedItemProperty.get() != null) {
+                    // Focus selectedItem from model
+                    int index = table.getItems().indexOf(model.dataModel.selectedItemProperty.get());
+                    UserThread.execute(() -> {
+                        //TODO app wide focus
+                        //table.requestFocus();
+                        //UserThread.execute(() -> table.getFocusModel().focus(index));
+                    });
+                }
+            });*/
         }
+        table.setItems(model.dataModel.list);
 
-        appFocusProperty.addListener(appFocusChangeListener);
-        model.currentTrade().addListener(currentTradeChangeListener);
-        //setNewSubView(model.currentTrade().get());
-        table.setItems(model.getList());
-        table.getSelectionModel().selectedItemProperty().addListener(selectedItemChangeListener);
+        selectedItemSubscription = EasyBind.subscribe(model.dataModel.selectedItemProperty, selectedItem -> {
+            if (selectedItem != null) {
+                if (selectedSubView != null)
+                    selectedSubView.deactivate();
 
-        if (model.getSelectedItem() == null)
-            model.getList().addListener(listChangeListener);
+                if (selectedItem.getTrade() != null) {
+                    // If we are the offerer the direction is like expected
+                    // If we are the taker the direction is mirrored
+                    if (model.dataModel.isOfferer())
+                        selectedSubView = model.dataModel.isBuyOffer() ? new BuyerSubView(model) : new SellerSubView(model);
+                    else
+                        selectedSubView = model.dataModel.isBuyOffer() ? new SellerSubView(model) : new BuyerSubView(model);
 
+                    selectedSubView.setMinHeight(430);
+                    VBox.setVgrow(selectedSubView, Priority.ALWAYS);
+                    if (root.getChildren().size() == 1)
+                        root.getChildren().add(selectedSubView);
+                    else if (root.getChildren().size() == 2)
+                        root.getChildren().set(1, selectedSubView);
+                    selectedSubView.activate();
+                }
 
-        updateSelectedItem();
+                updateTableSelection();
+            } else {
+                removeSelectedSubView();
+            }
+
+            model.onSelectedItemChanged(selectedItem);
+        });
+
+        selectedTableItemSubscription = EasyBind.subscribe(table.getSelectionModel().selectedItemProperty(),
+                selectedItem -> {
+                    if (selectedItem != null && !selectedItem.equals(model.dataModel.selectedItemProperty.get()))
+                        model.dataModel.onSelectItem(selectedItem);
+                });
+
+        updateTableSelection();
     }
 
     @Override
     protected void deactivate() {
-        table.getSelectionModel().selectedItemProperty().removeListener(selectedItemChangeListener);
+        selectedItemSubscription.unsubscribe();
+        selectedTableItemSubscription.unsubscribe();
+        if (appFocusSubscription != null)
+            appFocusSubscription.unsubscribe();
 
-        model.getList().removeListener(listChangeListener);
-
-        if (model.currentTrade() != null)
-            model.currentTrade().removeListener(currentTradeChangeListener);
-
-        if (appFocusProperty != null) {
-            appFocusProperty.removeListener(appFocusChangeListener);
-            appFocusProperty = null;
-        }
-
-        if (currentSubView != null)
-            currentSubView.deactivate();
+        removeSelectedSubView();
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
-    private void updateSelectedItem() {
-        PendingTradesListItem selectedItem = model.getSelectedItem();
-        if (selectedItem != null) {
+    private void removeSelectedSubView() {
+        if (selectedSubView != null) {
+            selectedSubView.deactivate();
+            root.getChildren().remove(selectedSubView);
+            selectedSubView = null;
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void updateTableSelection() {
+        PendingTradesListItem selectedItemFromModel = model.dataModel.selectedItemProperty.get();
+        if (selectedItemFromModel != null) {
             // Select and focus selectedItem from model
-            int index = table.getItems().indexOf(selectedItem);
+            int index = table.getItems().indexOf(selectedItemFromModel);
             UserThread.execute(() -> {
                 //TODO app wide focus
                 table.getSelectionModel().select(index);
                 //table.requestFocus();
                 //UserThread.execute(() -> table.getFocusModel().focus(index));
             });
-        }
-    }
-    
-    
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Subviews
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void setNewSubView(Trade trade) {
-        if (currentSubView != null) {
-            currentSubView.deactivate();
-            root.getChildren().remove(currentSubView);
-        }
-
-        if (trade != null) {
-            if (model.isOfferer()) {
-                if (model.isBuyOffer())
-                    currentSubView = new BuyerSubView(model);
-                else
-                    currentSubView = new SellerSubView(model);
-            } else {
-                if (model.isBuyOffer())
-                    currentSubView = new SellerSubView(model);
-                else
-                    currentSubView = new BuyerSubView(model);
-            }
-            currentSubView.setMinHeight(430);
-            VBox.setVgrow(currentSubView, Priority.ALWAYS);
-            root.getChildren().add(1, currentSubView);
-
-            currentSubView.activate();
         }
     }
 

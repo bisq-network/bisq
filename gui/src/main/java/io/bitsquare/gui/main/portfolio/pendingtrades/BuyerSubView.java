@@ -17,9 +17,10 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
+import io.bitsquare.app.Log;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer.*;
-import javafx.beans.value.ChangeListener;
+import org.fxmisc.easybind.EasyBind;
 
 public class BuyerSubView extends TradeSubView {
     private TradeWizardItem step1;
@@ -28,8 +29,6 @@ public class BuyerSubView extends TradeSubView {
     private TradeWizardItem step4;
     private TradeWizardItem step5;
 
-    private final ChangeListener<PendingTradesViewModel.BuyerState> stateChangeListener;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -37,20 +36,13 @@ public class BuyerSubView extends TradeSubView {
 
     public BuyerSubView(PendingTradesViewModel model) {
         super(model);
-        stateChangeListener = (ov, oldValue, newValue) -> applyState(newValue);
+
     }
 
     @Override
     protected void activate() {
+        viewStateSubscription = EasyBind.subscribe(model.getBuyerState(), this::onViewStateChanged);
         super.activate();
-        model.getBuyerState().addListener(stateChangeListener);
-        applyState(model.getBuyerState().get());
-    }
-
-    @Override
-    protected void deactivate() {
-        super.deactivate();
-        model.getBuyerState().removeListener(stateChangeListener);
     }
 
     @Override
@@ -81,64 +73,51 @@ public class BuyerSubView extends TradeSubView {
     // State
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void applyState(PendingTradesViewModel.BuyerState state) {
-        log.debug("applyState " + state);
+    @Override
+    protected void onViewStateChanged(PendingTradesViewModel.State viewState) {
+        Log.traceCall(viewState.toString());
+        if (viewState != null) {
+            PendingTradesViewModel.BuyerState buyerState = (PendingTradesViewModel.BuyerState) viewState;
 
-        step1.setDisabled();
-        step2.setDisabled();
-        step3.setDisabled();
-        step4.setDisabled();
-        step5.setDisabled();
+            step1.setDisabled();
+            step2.setDisabled();
+            step3.setDisabled();
+            step4.setDisabled();
+            step5.setDisabled();
 
-        if (tradeStepView != null)
-            tradeStepView.doDeactivate();
-
-        switch (state) {
-            case UNDEFINED:
-                contentPane.getChildren().clear();
-                leftVBox.getChildren().clear();
-                break;
-            case WAIT_FOR_BLOCKCHAIN_CONFIRMATION:
-                showItem(step1);
-                break;
-            case REQUEST_START_FIAT_PAYMENT:
-                step1.setCompleted();
-                showItem(step2);
-                break;
-            case WAIT_FOR_FIAT_PAYMENT_RECEIPT:
-                step1.setCompleted();
-                step2.setCompleted();
-                showItem(step3);
-                break;
-            case WAIT_FOR_BROADCAST_AFTER_UNLOCK:
-                step1.setCompleted();
-                step2.setCompleted();
-                step3.setCompleted();
-                showItem(step4);
-                break;
-            case REQUEST_WITHDRAWAL:
-                step1.setCompleted();
-                step2.setCompleted();
-                step3.setCompleted();
-                step4.setCompleted();
-                showItem(step5);
-
-                BuyerStep5View buyerStep5View = (BuyerStep5View) tradeStepView;
-                buyerStep5View.setBtcTradeAmountLabelText("You have bought:");
-                buyerStep5View.setFiatTradeAmountLabelText("You have paid:");
-                buyerStep5View.setBtcTradeAmountTextFieldText(model.getTradeVolume());
-                buyerStep5View.setFiatTradeAmountTextFieldText(model.getFiatVolume());
-                buyerStep5View.setFeesTextFieldText(model.getTotalFees());
-                buyerStep5View.setSecurityDepositTextFieldText(model.getSecurityDeposit());
-                buyerStep5View.setWithdrawAmountTextFieldText(model.getPayoutAmount());
-                break;
-            default:
-                log.warn("unhandled buyerState " + state);
-                break;
+            switch (buyerState) {
+                case UNDEFINED:
+                    break;
+                case WAIT_FOR_BLOCKCHAIN_CONFIRMATION:
+                    showItem(step1);
+                    break;
+                case REQUEST_START_FIAT_PAYMENT:
+                    step1.setCompleted();
+                    showItem(step2);
+                    break;
+                case WAIT_FOR_FIAT_PAYMENT_RECEIPT:
+                    step1.setCompleted();
+                    step2.setCompleted();
+                    showItem(step3);
+                    break;
+                case WAIT_FOR_BROADCAST_AFTER_UNLOCK:
+                    step1.setCompleted();
+                    step2.setCompleted();
+                    step3.setCompleted();
+                    showItem(step4);
+                    break;
+                case REQUEST_WITHDRAWAL:
+                    step1.setCompleted();
+                    step2.setCompleted();
+                    step3.setCompleted();
+                    step4.setCompleted();
+                    showItem(step5);
+                    break;
+                default:
+                    log.warn("unhandled buyerState " + buyerState);
+                    break;
+            }
         }
-
-        if (tradeStepView != null)
-            tradeStepView.doActivate();
     }
 }
 

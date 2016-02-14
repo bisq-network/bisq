@@ -70,9 +70,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -135,6 +133,8 @@ public class MainViewModel implements ViewModel {
     private java.util.Timer numberofBtcPeersTimer;
     private java.util.Timer numberofP2PNetworkPeersTimer;
     private Timer startupTimeout;
+    private Set<Subscription> tradeStateSubscriptions = new HashSet<>();
+    private Set<Subscription> disputeStateSubscriptions = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -375,13 +375,13 @@ public class MainViewModel implements ViewModel {
 
         tradeManager.getTrades().addListener((ListChangeListener<Trade>) change -> {
             change.next();
-            addDisputeStateListeners(change.getAddedSubList());
-            addTradeStateListeners(change.getAddedSubList());
+            setDisputeStateSubscriptions();
+            setTradeStateSubscriptions();
             pendingTradesChanged();
         });
         pendingTradesChanged();
-        addDisputeStateListeners(tradeManager.getTrades());
-        addTradeStateListeners(tradeManager.getTrades());
+        setDisputeStateSubscriptions();
+        setTradeStateSubscriptions();
 
 
         // arbitratorManager
@@ -533,7 +533,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void updateP2pNetworkInfoWithPeersChanged(int numPeers) {
-        p2PNetworkInfo.set("Nr. of connections: " + numPeers);
+        p2PNetworkInfo.set("Nr. of P2P network peers: " + numPeers);
     }
 
     private void displayAlertIfPresent(Alert alert) {
@@ -652,8 +652,8 @@ public class MainViewModel implements ViewModel {
 
     private void setWalletServiceException(Throwable error) {
         setBitcoinNetworkSyncProgress(0);
-        btcSplashInfo.set("Nr. of peers: " + numBTCPeers + " / connecting to " + btcNetworkAsString + " failed");
-        btcFooterInfo.set("Nr. of eers: " + numBTCPeers + " / connecting to " + btcNetworkAsString + " failed");
+        btcSplashInfo.set("Nr. of Bitcoin network peers: " + numBTCPeers + " / connecting to " + btcNetworkAsString + " failed");
+        btcFooterInfo.set(btcSplashInfo.get());
         if (error instanceof TimeoutException) {
             walletServiceErrorMsg.set("Connecting to the bitcoin network failed because of a timeout.");
         } else if (error.getCause() instanceof BlockStoreException) {
@@ -684,7 +684,7 @@ public class MainViewModel implements ViewModel {
                     break;
                 case HALF_REACHED:
                     id = "displayHalfTradePeriodOver" + trade.getId();
-                    if (preferences.showAgain(id)) {
+                    if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE) {
                         preferences.dontShowAgain(id);
                         new Popup().warning("Your trade with ID " + trade.getShortId() +
                                 " has reached the half of the max. allowed trading period and " +
@@ -696,7 +696,7 @@ public class MainViewModel implements ViewModel {
                     break;
                 case TRADE_PERIOD_OVER:
                     id = "displayTradePeriodOver" + trade.getId();
-                    if (preferences.showAgain(id)) {
+                    if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE) {
                         preferences.dontShowAgain(id);
                         new Popup().warning("Your trade with ID " + trade.getShortId() +
                                 " has reached the max. allowed trading period and is " +
@@ -738,71 +738,21 @@ public class MainViewModel implements ViewModel {
         showPendingTradesNotification.set(numPendingTrades > 0);
     }
 
-    private void addTradeStateListeners(List<? extends Trade> addedTrades) {
-        addedTrades.stream().forEach(trade -> {
+    private void setTradeStateSubscriptions() {
+        tradeStateSubscriptions.stream().forEach(Subscription::unsubscribe);
+        tradeStateSubscriptions.clear();
+
+        tradeManager.getTrades().stream().forEach(trade -> {
             Subscription tradeStateSubscription = EasyBind.subscribe(trade.stateProperty(), newValue -> {
                 if (newValue != null) {
-                    applyState(trade);
+                    applyTradeState(trade);
                 }
             });
+            tradeStateSubscriptions.add(tradeStateSubscription);
         });
-        
-                
-        
-       /* addedTrades.stream()
-                .forEach(trade -> trade.stateProperty().addListener((observable, oldValue, newValue) -> {
-                    String msg = "";
-                    log.debug("addTradeStateListeners " + newValue);
-                    switch (newValue) {
-                        case PREPARATION:
-                        case TAKER_FEE_PAID:
-                        case DEPOSIT_PUBLISH_REQUESTED:
-                        case DEPOSIT_PUBLISHED:
-                        case DEPOSIT_SEEN_IN_NETWORK:
-                        case DEPOSIT_PUBLISHED_MSG_SENT:
-                        case DEPOSIT_PUBLISHED_MSG_RECEIVED:
-                            break;
-                        case DEPOSIT_CONFIRMED:
-                            msg = newValue.name();
-                            break;
-                        case FIAT_PAYMENT_STARTED:
-                            break;
-                        case FIAT_PAYMENT_STARTED_MSG_SENT:
-                            break;
-                        case FIAT_PAYMENT_STARTED_MSG_RECEIVED:
-                            break;
-
-                        case FIAT_PAYMENT_RECEIPT:
-                            break;
-                        case FIAT_PAYMENT_RECEIPT_MSG_SENT:
-                            break;
-                        case FIAT_PAYMENT_RECEIPT_MSG_RECEIVED:
-                            break;
-
-
-                        case PAYOUT_TX_SENT:
-                            break;
-                        case PAYOUT_TX_RECEIVED:
-                            break;
-                        case PAYOUT_TX_COMMITTED:
-                            break;
-                        case PAYOUT_BROAD_CASTED:
-                            break;
-
-                        case WITHDRAW_COMPLETED:
-                            break;
-
-                        default:
-                            log.warn("unhandled processState " + newValue);
-                            break;
-                    }
-
-                    //new Popup().information(msg).show();
-
-                }));*/
     }
 
-    private void applyState(Trade trade) {
+    private void applyTradeState(Trade trade) {
         Trade.State state = trade.getState();
         log.debug("addTradeStateListeners " + state);
         boolean isBtcBuyer = tradeManager.isMyOfferInBtcBuyerRole(trade.getOffer());
@@ -818,6 +768,7 @@ public class MainViewModel implements ViewModel {
                 case DEPOSIT_CONFIRMED:
                     message = "The deposit transaction of your trade has got the first blockchain confirmation.\n" +
                             "You have to start the payment to the bitcoin seller now.";
+
                     break;
                /* case FIAT_PAYMENT_RECEIPT_MSG_RECEIVED:
                 case PAYOUT_TX_COMMITTED:
@@ -853,13 +804,13 @@ public class MainViewModel implements ViewModel {
         if (message != null) {
             //TODO we get that called initially before the navigation is inited
             if (isPendingTradesViewCurrentView || currentPath == null) {
-                if (preferences.showAgain(id))
+                if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE)
                     new Popup().headLine(headLine)
                             .message(message)
                             .show();
                 preferences.dontShowAgain(id);
             } else {
-                if (preferences.showAgain(id))
+                if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE)
                     new Popup().headLine(headLine)
                             .message(message)
                             .actionButtonText("Go to \"Portfolio/Open trades\"")
@@ -874,39 +825,51 @@ public class MainViewModel implements ViewModel {
         }
     }
 
-    private void addDisputeStateListeners(List<? extends Trade> addedTrades) {
-        addedTrades.stream().forEach(trade -> trade.disputeStateProperty().addListener((observable, oldValue, newValue) -> {
-            switch (newValue) {
-                case NONE:
-                    break;
-                case DISPUTE_REQUESTED:
-                    break;
-                case DISPUTE_STARTED_BY_PEER:
-                    disputeManager.findOwnDispute(trade.getId()).ifPresent(dispute -> {
-                        String msg;
-                        if (dispute.isSupportTicket())
-                            msg = "Your trading peer has encountered technical problems and requested support for trade with ID " + trade.getShortId() + ".\n" +
-                                    "Please await further instructions from the arbitrator.\n" +
-                                    "Your funds are safe and will be refunded as soon the problem is resolved.";
-                        else
-                            msg = "Your trading peer has requested a dispute for trade with ID " + trade.getShortId() + ".";
+    private void setDisputeStateSubscriptions() {
+        disputeStateSubscriptions.stream().forEach(Subscription::unsubscribe);
+        disputeStateSubscriptions.clear();
 
-                        new Popup().information(msg).show();
-                    });
-                    break;
-                case DISPUTE_CLOSED:
-                    new Popup().information("A support ticket for trade with ID " + trade.getShortId() + " has been closed.").show();
-                    break;
-            }
-        }));
+        tradeManager.getTrades().stream().forEach(trade -> {
+            Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(), disputeState -> {
+                if (disputeState != null) {
+                    applyDisputeState(trade, disputeState);
+                }
+            });
+            disputeStateSubscriptions.add(disputeStateSubscription);
+        });
+    }
+
+    private void applyDisputeState(Trade trade, Trade.DisputeState disputeState) {
+        switch (disputeState) {
+            case NONE:
+                break;
+            case DISPUTE_REQUESTED:
+                break;
+            case DISPUTE_STARTED_BY_PEER:
+                disputeManager.findOwnDispute(trade.getId()).ifPresent(dispute -> {
+                    String msg;
+                    if (dispute.isSupportTicket())
+                        msg = "Your trading peer has encountered technical problems and requested support for trade with ID " + trade.getShortId() + ".\n" +
+                                "Please await further instructions from the arbitrator.\n" +
+                                "Your funds are safe and will be refunded as soon the problem is resolved.";
+                    else
+                        msg = "Your trading peer has requested a dispute for trade with ID " + trade.getShortId() + ".";
+
+                    new Popup().information(msg).show();
+                });
+                break;
+            case DISPUTE_CLOSED:
+                new Popup().information("A support ticket for trade with ID " + trade.getShortId() + " has been closed.").show();
+                break;
+        }
     }
 
     private void setBitcoinNetworkSyncProgress(double value) {
         btcSyncProgress.set(value);
-        String numPeers = "Nr. of peers: " + numBTCPeers;
+        String numPeers = "Nr. of Bitcoin network peers: " + numBTCPeers;
         if (value == 1) {
             btcSplashInfo.set(numPeers + " / synchronized with " + btcNetworkAsString);
-            btcFooterInfo.set(numPeers + " / synchronized with " + btcNetworkAsString);
+            btcFooterInfo.set(btcSplashInfo.get());
             btcSplashSyncIconId.set("image-connection-synced");
             stopCheckForBtcSyncStateTimer();
         } else if (value > 0.0) {
@@ -916,7 +879,7 @@ public class MainViewModel implements ViewModel {
             stopCheckForBtcSyncStateTimer();
         } else if (value == -1) {
             btcSplashInfo.set(numPeers + " / connecting to " + btcNetworkAsString);
-            btcFooterInfo.set(numPeers + " / connecting to " + btcNetworkAsString);
+            btcFooterInfo.set(btcSplashInfo.get());
         } else {
             log.error("Not allowed value at setBitcoinNetworkSyncProgress: " + value);
         }

@@ -18,34 +18,31 @@
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
 import com.google.inject.Inject;
+import io.bitsquare.app.Log;
 import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.common.handlers.ErrorMessageHandler;
-import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.validation.*;
+import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.user.User;
 import javafx.beans.property.*;
-import javafx.collections.ObservableList;
+import javafx.beans.value.ChangeListener;
 import org.bitcoinj.core.BlockChainListener;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Date;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel.SellerState.*;
 
 public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataModel> implements ViewModel {
     private Subscription tradeStateSubscription;
 
-    private interface State {
+    interface State {
     }
 
     enum BuyerState implements State {
@@ -67,20 +64,15 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         REQUEST_WITHDRAWAL
     }
 
-    private final BSFormatter formatter;
+    public final BSFormatter formatter;
     private final BtcAddressValidator btcAddressValidator;
 
-    private final IBANValidator ibanValidator;
-    private final BICValidator bicValidator;
-    private final InputValidator inputValidator;
-    private final OKPayValidator okPayValidator;
-    private final AltCoinAddressValidator altCoinAddressValidator;
-    private final P2PService p2PService;
+    public final P2PService p2PService;
+    public User user;
 
-    private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>(PendingTradesViewModel.BuyerState.UNDEFINED);
-    private final ObjectProperty<SellerState> sellerState = new SimpleObjectProperty<>(UNDEFINED);
+    private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>();
+    private final ObjectProperty<SellerState> sellerState = new SimpleObjectProperty<>();
 
-    private final StringProperty txId = new SimpleStringProperty();
     private final BooleanProperty withdrawalButtonDisable = new SimpleBooleanProperty(true);
 
 
@@ -92,65 +84,38 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     public PendingTradesViewModel(PendingTradesDataModel dataModel,
                                   BSFormatter formatter,
                                   BtcAddressValidator btcAddressValidator,
-                                  IBANValidator ibanValidator,
-                                  BICValidator bicValidator,
-                                  InputValidator inputValidator,
-                                  OKPayValidator okPayValidator,
-                                  AltCoinAddressValidator altCoinAddressValidator,
-                                  P2PService p2PService
+                                  P2PService p2PService,
+                                  User user
     ) {
         super(dataModel);
 
         this.formatter = formatter;
         this.btcAddressValidator = btcAddressValidator;
-        this.ibanValidator = ibanValidator;
-        this.bicValidator = bicValidator;
-        this.inputValidator = inputValidator;
-        this.okPayValidator = okPayValidator;
-        this.altCoinAddressValidator = altCoinAddressValidator;
         this.p2PService = p2PService;
+        this.user = user;
     }
+
+    private ChangeListener<Trade.State> tradeStateChangeListener;
 
     @Override
     protected void activate() {
-        setTradeStateSubscription();
-
-        txId.bind(dataModel.getTxId());
     }
 
+    // Dont set own listener as we need to control the order of the calls
+    public void onSelectedItemChanged(PendingTradesListItem selectedItem) {
+        if (tradeStateSubscription != null)
+            tradeStateSubscription.unsubscribe();
+
+        if (selectedItem != null)
+            tradeStateSubscription = EasyBind.subscribe(selectedItem.getTrade().stateProperty(), this::onTradeStateChanged);
+    }
+    
     @Override
     protected void deactivate() {
         if (tradeStateSubscription != null) {
             tradeStateSubscription.unsubscribe();
             tradeStateSubscription = null;
         }
-        txId.unbind();
-    }
-
-    private void setTradeStateSubscription() {
-        if (tradeStateSubscription != null)
-            tradeStateSubscription.unsubscribe();
-
-        if (dataModel.getTrade() != null) {
-            tradeStateSubscription = EasyBind.subscribe(dataModel.getTrade().stateProperty(), newValue -> {
-                log.debug("tradeStateSubscription " + newValue);
-                if (newValue != null) {
-                    applyState(newValue);
-                }
-            });
-        }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI actions
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    void onSelectTrade(PendingTradesListItem item) {
-        dataModel.onSelectTrade(item);
-
-        // call it after  dataModel.onSelectTrade as trade is set
-        setTradeStateSubscription();
     }
 
 
@@ -166,76 +131,34 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return sellerState;
     }
 
-    public ReadOnlyStringProperty txIdProperty() {
-        return txId;
-    }
-
-    public ReadOnlyBooleanProperty getWithdrawalButtonDisable() {
-        return withdrawalButtonDisable;
-    }
-
-    boolean isBuyOffer() {
-        return dataModel.isBuyOffer();
-    }
-
-    ReadOnlyObjectProperty<Trade> currentTrade() {
-        return dataModel.getTradeProperty();
-    }
-
-    public void fiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        dataModel.onFiatPaymentStarted(resultHandler, errorMessageHandler);
-    }
-
-    public void fiatPaymentReceived() {
-        dataModel.onFiatPaymentReceived();
-    }
-
     public void withdrawAddressFocusOut(String text) {
         withdrawalButtonDisable.set(!btcAddressValidator.validate(text).isValid);
     }
 
     public String getPayoutAmount() {
-        return formatter.formatCoinWithCode(dataModel.getPayoutAmount());
-    }
-
-    ObservableList<PendingTradesListItem> getList() {
-        return dataModel.getList();
-    }
-
-    public boolean isOfferer() {
-        return dataModel.isOfferer();
-    }
-
-    PendingTradesListItem getSelectedItem() {
-        return dataModel.getSelectedItem();
-    }
-
-    public String getCurrencyCode() {
-        return dataModel.getCurrencyCode();
-    }
-
-    public BtcAddressValidator getBtcAddressValidator() {
-        return btcAddressValidator;
-    }
-
-    public boolean isBootstrapped() {
-        return p2PService.isBootstrapped();
+        return dataModel.getTrade() != null ? formatter.formatCoinWithCode(dataModel.getTrade().getPayoutAmount()) : "";
     }
 
     // columns
-
     public String getRemainingTime() {
-        return formatter.getPeriodBetweenBlockHeights(getBestChainHeight(),
-                dataModel.getTrade().getOpenDisputeTimeAsBlockHeight());
+        if (dataModel.getTrade() != null)
+            return formatter.getPeriodBetweenBlockHeights(getBestChainHeight(),
+                    dataModel.getTrade().getOpenDisputeTimeAsBlockHeight());
+        else
+            return "";
     }
 
     public double getRemainingTimeAsPercentage() {
-        double remainingBlocks = dataModel.getTrade().getOpenDisputeTimeAsBlockHeight() - getBestChainHeight();
-        double maxPeriod = dataModel.getTrade().getOffer().getPaymentMethod().getMaxTradePeriod();
-        if (maxPeriod != 0)
-            return 1 - remainingBlocks / maxPeriod;
-        else
+        if (dataModel.getTrade() != null && dataModel.getOffer() != null) {
+            double remainingBlocks = dataModel.getTrade().getOpenDisputeTimeAsBlockHeight() - getBestChainHeight();
+            double maxPeriod = dataModel.getOffer().getPaymentMethod().getMaxTradePeriod();
+            if (maxPeriod != 0)
+                return 1 - remainingBlocks / maxPeriod;
+            else
+                return 0;
+        } else {
             return 0;
+        }
     }
 
     public boolean showWarning(Trade trade) {
@@ -270,10 +193,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return result;
     }
 
-    String formatDate(Date value) {
-        return formatter.formatDateTime(value);
-    }
-
     public void addBlockChainListener(BlockChainListener blockChainListener) {
         dataModel.addBlockChainListener(blockChainListener);
     }
@@ -286,64 +205,40 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return dataModel.getLockTime();
     }
 
-    public long getCheckPaymentTimeAsBlockHeight() {
-        return dataModel.getCheckPaymentTimeAsBlockHeight();
-    }
-
     private long getOpenDisputeTimeAsBlockHeight() {
         return dataModel.getOpenDisputeTimeAsBlockHeight();
     }
-
 
     public int getBestChainHeight() {
         return dataModel.getBestChainHeight();
     }
 
     public String getOpenDisputeTimeAsFormattedDate() {
-        return formatter.addBlocksToNowDateFormatted(getOpenDisputeTimeAsBlockHeight() - getBestChainHeight() +
-                (dataModel.getTrade().getOffer().getPaymentMethod().getLockTime()));
-    }
-
-    public String getReference() {
-        return dataModel.getReference();
+        if (dataModel.getOffer() != null)
+            return formatter.addBlocksToNowDateFormatted(getOpenDisputeTimeAsBlockHeight() - getBestChainHeight() +
+                    (dataModel.getOffer().getPaymentMethod().getLockTime()));
+        else
+            return "";
     }
 
     public String getPaymentMethod() {
-        checkNotNull(dataModel.getContract(), "dataModel.getContract() must not be null");
-        return BSResources.get(dataModel.getContract().getPaymentMethodName());
+        if (dataModel.getTrade() != null && dataModel.getTrade().getContract() != null)
+            return BSResources.get(dataModel.getTrade().getContract().getPaymentMethodName());
+        else
+            return "";
     }
 
     public String getFiatAmount() {
-        return formatter.formatFiatWithCode(dataModel.getTrade().getTradeVolume());
-    }
-
-    public IBANValidator getIbanValidator() {
-        return ibanValidator;
-    }
-
-    public AltCoinAddressValidator getAltCoinAddressValidator() {
-        return altCoinAddressValidator;
-    }
-
-    public BICValidator getBicValidator() {
-        return bicValidator;
-    }
-
-    public InputValidator getInputValidator() {
-        return inputValidator;
-    }
-
-    public OKPayValidator getOkPayValidator() {
-        return okPayValidator;
+        return dataModel.getTrade() != null ? formatter.formatFiatWithCode(dataModel.getTrade().getTradeVolume()) : "";
     }
 
     // summary
     public String getTradeVolume() {
-        return formatter.formatCoinWithCode(dataModel.getTrade().getTradeAmount());
+        return dataModel.getTrade() != null ? formatter.formatCoinWithCode(dataModel.getTrade().getTradeAmount()) : "";
     }
 
     public String getFiatVolume() {
-        return formatter.formatFiatWithCode(dataModel.getTrade().getTradeVolume());
+        return dataModel.getTrade() != null ? formatter.formatFiatWithCode(dataModel.getTrade().getTradeVolume()) : "";
     }
 
     public String getTotalFees() {
@@ -355,11 +250,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public boolean isBlockChainMethod() {
-        return dataModel.getTrade().getOffer().getPaymentMethod().equals(PaymentMethod.BLOCK_CHAINS);
-    }
-
-    public Trade getTrade() {
-        return dataModel.getTrade();
+        return dataModel.getOffer() != null && dataModel.getOffer().getPaymentMethod().equals(PaymentMethod.BLOCK_CHAINS);
     }
 
 
@@ -367,8 +258,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     // States
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void applyState(Trade.State tradeState) {
-        log.debug("updateSellerState (SellerTradeState) " + tradeState);
+    private void onTradeStateChanged(Trade.State tradeState) {
+        Log.traceCall(tradeState.toString());
         switch (tradeState) {
             case PREPARATION:
                 sellerState.set(UNDEFINED);
@@ -389,10 +280,10 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 break;
 
             case DEPOSIT_CONFIRMED:
-            case FIAT_PAYMENT_STARTED:
-                sellerState.set(WAIT_FOR_FIAT_PAYMENT_STARTED);
                 buyerState.set(PendingTradesViewModel.BuyerState.REQUEST_START_FIAT_PAYMENT);
+                sellerState.set(WAIT_FOR_FIAT_PAYMENT_STARTED);
                 break;
+            case FIAT_PAYMENT_STARTED:
             case FIAT_PAYMENT_STARTED_MSG_SENT:
                 buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_FIAT_PAYMENT_RECEIPT);
                 break;
@@ -415,7 +306,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_BROADCAST_AFTER_UNLOCK);
                 break;
             case PAYOUT_TX_RECEIVED:
-                break;
             case PAYOUT_TX_COMMITTED:
                 sellerState.set(SellerState.WAIT_FOR_BROADCAST_AFTER_UNLOCK);
                 break;

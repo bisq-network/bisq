@@ -71,16 +71,16 @@ public class BuyerStep4View extends TradeStepView {
     }
 
     @Override
-    public void doActivate() {
-        super.doActivate();
+    public void activate() {
+        super.activate();
 
         model.addBlockChainListener(blockChainListener);
         updateDateFromBlockHeight(model.getBestChainHeight());
     }
 
     @Override
-    public void doDeactivate() {
-        super.doDeactivate();
+    public void deactivate() {
+        super.deactivate();
 
         model.removeBlockChainListener(blockChainListener);
     }

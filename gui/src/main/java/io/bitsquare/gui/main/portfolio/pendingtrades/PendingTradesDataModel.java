@@ -35,11 +35,17 @@ import io.bitsquare.gui.main.disputes.DisputesView;
 import io.bitsquare.gui.popups.SelectDepositTxPopup;
 import io.bitsquare.gui.popups.WalletPasswordPopup;
 import io.bitsquare.payment.PaymentAccountContractData;
-import io.bitsquare.trade.*;
+import io.bitsquare.trade.BuyerTrade;
+import io.bitsquare.trade.SellerTrade;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
-import javafx.beans.property.*;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -48,6 +54,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.spongycastle.crypto.params.KeyParameter;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -56,24 +63,22 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class PendingTradesDataModel extends ActivatableDataModel {
-    private final TradeManager tradeManager;
-    private final WalletService walletService;
+    public final TradeManager tradeManager;
+    public final WalletService walletService;
     private final TradeWalletService tradeWalletService;
     private final User user;
     private final KeyRing keyRing;
-    private final DisputeManager disputeManager;
+    public final DisputeManager disputeManager;
     private final Navigation navigation;
     private final WalletPasswordPopup walletPasswordPopup;
 
-    private final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
-    private PendingTradesListItem selectedItem;
+    final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<Trade> tradesListChangeListener;
     private boolean isOfferer;
 
-    private final ObjectProperty<Trade> tradeProperty = new SimpleObjectProperty<>();
-    private final StringProperty txId = new SimpleStringProperty();
-    private Trade trade;
-    private final Preferences preferences;
+    final ObjectProperty<PendingTradesListItem> selectedItemProperty = new SimpleObjectProperty<>();
+    public final StringProperty txId = new SimpleStringProperty();
+    public final Preferences preferences;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -108,86 +113,35 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         tradeManager.getTrades().removeListener(tradesListChangeListener);
     }
 
-    private void onListChanged() {
-        Log.traceCall();
-        list.clear();
-        list.addAll(tradeManager.getTrades().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
-
-        // we sort by date, earliest first
-        list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
-
-        // TODO improve selectedItem handling
-        // selectedItem does not get set to null if we dont have the view visible
-        // So if the item gets removed form the list, and a new item is added we need to check if the old 
-        // selectedItem is in the new list, if not we know it is an invalid one
-        if (list.size() == 1)
-            onSelectTrade(list.get(0));
-        else if (list.size() > 1 && (selectedItem == null || !list.contains(selectedItem)))
-            onSelectTrade(list.get(0));
-        else if (list.size() == 0)
-            onSelectTrade(null);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void onSelectTrade(PendingTradesListItem item) {
-        // clean up previous selectedItem
-        selectedItem = item;
-
-        if (item == null) {
-            trade = null;
-            tradeProperty.set(null);
-        } else {
-            trade = item.getTrade();
-            tradeProperty.set(trade);
-
-            isOfferer = tradeManager.isMyOffer(trade.getOffer());
-
-            if (trade.getDepositTx() != null)
-                txId.set(trade.getDepositTx().getHashAsString());
-        }
+    void onSelectItem(PendingTradesListItem item) {
+        doSelectItem(item);
     }
 
-    void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        checkNotNull(trade, "trade must not be null");
-        checkArgument(trade instanceof BuyerTrade, "Check failed: trade instanceof BuyerTrade");
-        checkArgument(trade.getDisputeState() == Trade.DisputeState.NONE, "Check failed: trade.getDisputeState() == Trade.DisputeState.NONE");
-        ((BuyerTrade) trade).onFiatPaymentStarted(resultHandler, errorMessageHandler);
+    public void onPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        checkNotNull(getTrade(), "trade must not be null");
+        checkArgument(getTrade() instanceof BuyerTrade, "Check failed: trade instanceof BuyerTrade");
+        checkArgument(getTrade().getDisputeState() == Trade.DisputeState.NONE, "Check failed: trade.getDisputeState() == Trade.DisputeState.NONE");
+        ((BuyerTrade) getTrade()).onFiatPaymentStarted(resultHandler, errorMessageHandler);
     }
 
-    void onFiatPaymentReceived() {
-        checkNotNull(trade, "trade must not be null");
-        if (trade instanceof SellerTrade && trade.getDisputeState() == Trade.DisputeState.NONE)
-            ((SellerTrade) trade).onFiatPaymentReceived();
+    public void onFiatPaymentReceived() {
+        checkNotNull(getTrade(), "trade must not be null");
+        checkArgument(getTrade() instanceof SellerTrade, "Check failed: trade instanceof SellerTrade");
+        if (getTrade().getDisputeState() == Trade.DisputeState.NONE)
+            ((SellerTrade) getTrade()).onFiatPaymentReceived();
     }
 
     public void onWithdrawRequest(String toAddress, ResultHandler resultHandler, FaultHandler faultHandler) {
-        checkNotNull(trade, "trade must not be null");
+        checkNotNull(getTrade(), "trade must not be null");
         if (walletService.getWallet().isEncrypted()) {
             walletPasswordPopup.onAesKey(aesKey -> doWithdrawRequest(toAddress, aesKey, resultHandler, faultHandler)).show();
         } else
             doWithdrawRequest(toAddress, null, resultHandler, faultHandler);
-    }
-
-    private void doWithdrawRequest(String toAddress, KeyParameter aesKey, ResultHandler resultHandler, FaultHandler faultHandler) {
-        if (toAddress != null && toAddress.length() > 0) {
-            tradeManager.onWithdrawRequest(
-                    toAddress,
-                    aesKey,
-                    trade,
-                    () -> {
-                        resultHandler.handleResult();
-                    },
-                    (errorMessage, throwable) -> {
-                        log.error(errorMessage);
-                        faultHandler.handleFault(errorMessage, throwable);
-                    });
-        } else {
-            faultHandler.handleFault("No receiver address defined", null);
-        }
     }
 
     public void onOpenDispute() {
@@ -198,11 +152,142 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         tryOpenDispute(true);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Nullable
+    public PendingTradesListItem getSelectedItem() {
+        return selectedItemProperty.get() != null ? selectedItemProperty.get() : null;
+    }
+
+    @Nullable
+    public Trade getTrade() {
+        return selectedItemProperty.get() != null ? selectedItemProperty.get().getTrade() : null;
+    }
+
+    @Nullable
+    Offer getOffer() {
+        return getTrade() != null ? getTrade().getOffer() : null;
+    }
+
+    boolean isBuyOffer() {
+        return getOffer() != null && getOffer().getDirection() == Offer.Direction.BUY;
+    }
+
+    boolean isOfferer(Offer offer) {
+        return tradeManager.isMyOffer(offer);
+    }
+
+    boolean isOfferer() {
+        return isOfferer;
+    }
+
+    Coin getTotalFees() {
+        return FeePolicy.getFixedTxFeeForTrades().add(isOfferer() ? FeePolicy.getCreateOfferFee() : FeePolicy.getTakeOfferFee());
+    }
+
+    public String getCurrencyCode() {
+        return getOffer() != null ? getOffer().getCurrencyCode() : "";
+    }
+
+    public Offer.Direction getDirection(Offer offer) {
+        isOfferer = tradeManager.isMyOffer(offer);
+        return isOfferer ? offer.getDirection() : offer.getMirroredDirection();
+    }
+
+    void addBlockChainListener(BlockChainListener blockChainListener) {
+        tradeWalletService.addBlockChainListener(blockChainListener);
+    }
+
+    void removeBlockChainListener(BlockChainListener blockChainListener) {
+        tradeWalletService.removeBlockChainListener(blockChainListener);
+    }
+
+    public long getLockTime() {
+        return getTrade() != null ? getTrade().getLockTimeAsBlockHeight() : 0;
+    }
+
+    public long getOpenDisputeTimeAsBlockHeight() {
+        return getTrade() != null ? getTrade().getOpenDisputeTimeAsBlockHeight() : 0;
+    }
+
+    public int getBestChainHeight() {
+        return tradeWalletService.getBestChainHeight();
+    }
+
+    @Nullable
+    public PaymentAccountContractData getSellersPaymentAccountContractData() {
+        if (getTrade() != null && getTrade().getContract() != null)
+            return getTrade().getContract().getSellerPaymentAccountContractData();
+        else
+            return null;
+    }
+
+    public String getReference() {
+        return getOffer() != null ? getOffer().getReferenceText() : "";
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void onListChanged() {
+        Log.traceCall();
+        list.clear();
+        list.addAll(tradeManager.getTrades().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
+
+        // we sort by date, earliest first
+        list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
+
+        selectBestItem();
+    }
+
+    private void selectBestItem() {
+        if (list.size() == 1)
+            doSelectItem(list.get(0));
+        else if (list.size() > 1 && (selectedItemProperty.get() == null || !list.contains(selectedItemProperty.get())))
+            doSelectItem(list.get(0));
+        else if (list.size() == 0)
+            doSelectItem(null);
+    }
+
+    private void doSelectItem(PendingTradesListItem item) {
+        if (item != null) {
+            Trade trade = item.getTrade();
+            isOfferer = tradeManager.isMyOffer(trade.getOffer());
+            if (trade.getDepositTx() != null)
+                txId.set(trade.getDepositTx().getHashAsString());
+        }
+        selectedItemProperty.set(item);
+    }
+
+    private void doWithdrawRequest(String toAddress, KeyParameter aesKey, ResultHandler resultHandler, FaultHandler faultHandler) {
+        if (toAddress != null && toAddress.length() > 0) {
+            tradeManager.onWithdrawRequest(
+                    toAddress,
+                    aesKey,
+                    getTrade(),
+                    () -> {
+                        resultHandler.handleResult();
+                        selectBestItem();
+                    },
+                    (errorMessage, throwable) -> {
+                        log.error(errorMessage);
+                        faultHandler.handleFault(errorMessage, throwable);
+                    });
+        } else {
+            faultHandler.handleFault("No receiver address defined", null);
+        }
+    }
+
     private void tryOpenDispute(boolean isSupportTicket) {
-        if (trade != null) {
-            Transaction depositTx = trade.getDepositTx();
+        if (getTrade() != null) {
+            Transaction depositTx = getTrade().getDepositTx();
             if (depositTx != null) {
-                doOpenDispute(isSupportTicket, trade.getDepositTx());
+                doOpenDispute(isSupportTicket, getTrade().getDepositTx());
             } else {
                 log.warn("Trade.depositTx is null. We try to find the tx in our wallet.");
                 List<Transaction> candidates = new ArrayList<>();
@@ -219,21 +304,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                                 .collect(Collectors.toList()));
                     }
                 });
-
-                /*transactions.stream().forEach(transaction -> {
-                    Coin valueSentFromMe = transaction.getValueSentFromMe(walletService.getWallet());
-                    if (!valueSentFromMe.isZero()) {
-                        // spending tx
-                        for (TransactionOutput transactionOutput : transaction.getOutputs()) {
-                            if (!transactionOutput.isMine(walletService.getWallet())) {
-                                if (transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-                                    // MS tx
-                                    candidates.add(transaction);
-                                }
-                            }
-                        }
-                    }
-                });*/
 
                 if (candidates.size() == 1)
                     doOpenDispute(isSupportTicket, candidates.get(0));
@@ -262,12 +332,13 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         } else {
             log.warn("depositTx is null");
         }
-        Transaction payoutTx = trade.getPayoutTx();
+        Transaction payoutTx = getTrade().getPayoutTx();
         if (payoutTx != null) {
             payoutTxSerialized = payoutTx.bitcoinSerialize();
             payoutTxHashAsString = payoutTx.getHashAsString();
         }
 
+        Trade trade = getTrade();
         Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
                 trade.getId(),
                 keyRing.getPubKeyRing().hashCode(), // traderId
@@ -291,111 +362,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         trade.setDisputeState(Trade.DisputeState.DISPUTE_REQUESTED);
         disputeManager.sendOpenNewDisputeMessage(dispute);
         navigation.navigateTo(MainView.class, DisputesView.class);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    ObservableList<PendingTradesListItem> getList() {
-        return list;
-    }
-
-    boolean isBuyOffer() {
-        return trade.getOffer().getDirection() == Offer.Direction.BUY;
-    }
-
-    boolean isOfferer(Offer offer) {
-        return tradeManager.isMyOffer(offer);
-    }
-
-    boolean isOfferer() {
-        return isOfferer;
-    }
-
-    Coin getTotalFees() {
-        return FeePolicy.getFixedTxFeeForTrades().add(isOfferer() ? FeePolicy.getCreateOfferFee() : FeePolicy.getTakeOfferFee());
-    }
-
-    PendingTradesListItem getSelectedItem() {
-        return selectedItem;
-    }
-
-    String getCurrencyCode() {
-        return trade.getOffer().getCurrencyCode();
-    }
-
-    public Offer.Direction getDirection(Offer offer) {
-        // gets called earlier than onSelectTrade event handler
-        isOfferer = tradeManager.isMyOffer(offer);
-        return isOfferer ? offer.getDirection() : offer.getMirroredDirection();
-    }
-
-    Coin getPayoutAmount() {
-        return trade.getPayoutAmount();
-    }
-
-    Contract getContract() {
-        return trade.getContract();
-    }
-
-    public Trade getTrade() {
-        return trade;
-    }
-
-    ReadOnlyObjectProperty<Trade> getTradeProperty() {
-        return tradeProperty;
-    }
-
-    ReadOnlyStringProperty getTxId() {
-        return txId;
-    }
-
-    void addBlockChainListener(BlockChainListener blockChainListener) {
-        tradeWalletService.addBlockChainListener(blockChainListener);
-    }
-
-    void removeBlockChainListener(BlockChainListener blockChainListener) {
-        tradeWalletService.removeBlockChainListener(blockChainListener);
-    }
-
-    public long getLockTime() {
-        return trade.getLockTimeAsBlockHeight();
-    }
-
-    public long getCheckPaymentTimeAsBlockHeight() {
-        return trade.getCheckPaymentTimeAsBlockHeight();
-    }
-
-    public long getOpenDisputeTimeAsBlockHeight() {
-        return trade.getOpenDisputeTimeAsBlockHeight();
-    }
-
-    public int getBestChainHeight() {
-        return tradeWalletService.getBestChainHeight();
-    }
-
-    public PaymentAccountContractData getSellersPaymentAccountContractData() {
-        if (trade.getContract() != null)
-            return trade.getContract().getSellerPaymentAccountContractData();
-        else
-            return null;
-    }
-
-    public String getReference() {
-        return trade.getOffer().getReferenceText();
-    }
-
-    public WalletService getWalletService() {
-        return walletService;
-    }
-
-    public DisputeManager getDisputeManager() {
-        return disputeManager;
-    }
-
-    public Preferences getPreferences() {
-        return preferences;
     }
 }
 

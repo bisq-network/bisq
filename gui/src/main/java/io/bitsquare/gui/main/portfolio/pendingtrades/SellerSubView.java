@@ -17,9 +17,10 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
+import io.bitsquare.app.Log;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.seller.*;
-import javafx.beans.value.ChangeListener;
+import org.fxmisc.easybind.EasyBind;
 
 public class SellerSubView extends TradeSubView {
     private TradeWizardItem step1;
@@ -28,8 +29,6 @@ public class SellerSubView extends TradeSubView {
     private TradeWizardItem step4;
     private TradeWizardItem step5;
 
-    private final ChangeListener<PendingTradesViewModel.SellerState> stateChangeListener;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -37,20 +36,12 @@ public class SellerSubView extends TradeSubView {
 
     public SellerSubView(PendingTradesViewModel model) {
         super(model);
-        stateChangeListener = (ov, oldValue, newValue) -> applyState(newValue);
     }
 
     @Override
     protected void activate() {
+        viewStateSubscription = EasyBind.subscribe(model.getSellerState(), this::onViewStateChanged);
         super.activate();
-        model.getSellerState().addListener(stateChangeListener);
-        applyState(model.getSellerState().get());
-    }
-
-    @Override
-    protected void deactivate() {
-        super.deactivate();
-        model.getSellerState().removeListener(stateChangeListener);
     }
 
     @Override
@@ -81,74 +72,60 @@ public class SellerSubView extends TradeSubView {
     // State
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void applyState(PendingTradesViewModel.SellerState viewState) {
-        log.debug("applyState " + viewState);
+    @Override
+    protected void onViewStateChanged(PendingTradesViewModel.State viewState) {
+        Log.traceCall(viewState.toString());
+        if (viewState != null) {
+            PendingTradesViewModel.SellerState sellerState = (PendingTradesViewModel.SellerState) viewState;
 
-        step1.setDisabled();
-        step2.setDisabled();
-        step3.setDisabled();
-        step4.setDisabled();
-        step5.setDisabled();
+            step1.setDisabled();
+            step2.setDisabled();
+            step3.setDisabled();
+            step4.setDisabled();
+            step5.setDisabled();
 
-        if (tradeStepView != null)
-            tradeStepView.doDeactivate();
+            switch (sellerState) {
+                case UNDEFINED:
+                    break;
+                case WAIT_FOR_BLOCKCHAIN_CONFIRMATION:
+                    showItem(step1);
+                    break;
+                case WAIT_FOR_FIAT_PAYMENT_STARTED:
+                    step1.setCompleted();
+                    showItem(step2);
+                    break;
+                case REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED:
+                    step1.setCompleted();
+                    step2.setCompleted();
+                    showItem(step3);
+                    break;
+                case WAIT_FOR_PAYOUT_TX:
+                    step1.setCompleted();
+                    step2.setCompleted();
+                    showItem(step3);
 
-        switch (viewState) {
-            case UNDEFINED:
-                contentPane.getChildren().clear();
-                leftVBox.getChildren().clear();
-                break;
-            case WAIT_FOR_BLOCKCHAIN_CONFIRMATION:
-                showItem(step1);
-                break;
-            case WAIT_FOR_FIAT_PAYMENT_STARTED:
-                step1.setCompleted();
-                showItem(step2);
-                break;
-            case REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED:
-                step1.setCompleted();
-                step2.setCompleted();
-                showItem(step3);
-                break;
-            case WAIT_FOR_PAYOUT_TX:
-                step1.setCompleted();
-                step2.setCompleted();
-                showItem(step3);
-
-                // We don't use a wizard for that step as it only gets displayed in case the other peer is offline
-                tradeStepView = new SellerStep3bView(model);
-                contentPane.getChildren().setAll(tradeStepView);
-                break;
-            case WAIT_FOR_BROADCAST_AFTER_UNLOCK:
-                step1.setCompleted();
-                step2.setCompleted();
-                step3.setCompleted();
-                showItem(step4);
-                break;
-            case REQUEST_WITHDRAWAL:
-                step1.setCompleted();
-                step2.setCompleted();
-                step3.setCompleted();
-                step4.setCompleted();
-                showItem(step5);
-
-                SellerStep5View sellerStep5View = (SellerStep5View) tradeStepView;
-                sellerStep5View.setBtcTradeAmountLabelText("You have sold:");
-                sellerStep5View.setFiatTradeAmountLabelText("You have received:");
-                sellerStep5View.setBtcTradeAmountTextFieldText(model.getTradeVolume());
-                sellerStep5View.setFiatTradeAmountTextFieldText(model.getFiatVolume());
-                sellerStep5View.setFeesTextFieldText(model.getTotalFees());
-                sellerStep5View.setSecurityDepositTextFieldText(model.getSecurityDeposit());
-
-                sellerStep5View.setWithdrawAmountTextFieldText(model.getPayoutAmount());
-                break;
-            default:
-                log.warn("unhandled viewState " + viewState);
-                break;
+                    // We don't use a wizard for that step as it only gets displayed in case the other peer is offline
+                    tradeStepView = new SellerStep3bView(model);
+                    contentPane.getChildren().setAll(tradeStepView);
+                    break;
+                case WAIT_FOR_BROADCAST_AFTER_UNLOCK:
+                    step1.setCompleted();
+                    step2.setCompleted();
+                    step3.setCompleted();
+                    showItem(step4);
+                    break;
+                case REQUEST_WITHDRAWAL:
+                    step1.setCompleted();
+                    step2.setCompleted();
+                    step3.setCompleted();
+                    step4.setCompleted();
+                    showItem(step5);
+                    break;
+                default:
+                    log.warn("unhandled viewState " + sellerState);
+                    break;
+            }
         }
-
-        if (tradeStepView != null)
-            tradeStepView.doActivate();
     }
 }
 

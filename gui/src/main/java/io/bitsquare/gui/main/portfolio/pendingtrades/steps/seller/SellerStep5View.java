@@ -29,4 +29,14 @@ public class SellerStep5View extends BuyerStep5View {
     public SellerStep5View(PendingTradesViewModel model) {
         super(model);
     }
+
+    @Override
+    protected String getBtcTradeAmountLabel() {
+        return "You have sold:";
+    }
+
+    @Override
+    protected String getFiatTradeAmountLabel() {
+        return "You have received:";
+    }
 }

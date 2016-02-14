@@ -52,4 +52,5 @@ public class PendingTradesListItem {
     public Fiat getPrice() {
         return trade.getOffer().getPrice();
     }
+
 }

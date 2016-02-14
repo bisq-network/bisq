@@ -18,9 +18,8 @@
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 
 import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.common.UserThread;
+import io.bitsquare.app.Log;
 import io.bitsquare.common.util.Tuple2;
-import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.popups.Popup;
@@ -35,14 +34,9 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 public class BuyerStep5View extends TradeStepView {
     private final ChangeListener<Boolean> focusedPropertyListener;
 
-    private Label btcTradeAmountLabel;
-    private TextField btcTradeAmountTextField;
-    private Label fiatTradeAmountLabel;
-    private TextField fiatTradeAmountTextField;
-    private TextField feesTextField;
-    private TextField securityDepositTextField;
-    private InputTextField withdrawAddressTextField;
-    private TextField withdrawAmountTextField;
+    protected Label btcTradeAmountLabel;
+    protected Label fiatTradeAmountLabel;
+    private TextField withdrawAddressTextField;
     private Button withdrawButton;
 
 
@@ -60,8 +54,8 @@ public class BuyerStep5View extends TradeStepView {
     }
 
     @Override
-    public void doActivate() {
-        super.doActivate();
+    public void activate() {
+        super.activate();
 
         // TODO valid. handler need improvement
         //withdrawAddressTextField.focusedProperty().addListener(focusedPropertyListener);
@@ -70,21 +64,22 @@ public class BuyerStep5View extends TradeStepView {
 
         // We need to handle both cases: Address not set and address already set (when returning from other view)
         // We get address validation after focus out, so first make sure we loose focus and then set it again as hint for user to put address in
-        UserThread.execute(() -> {
-            //TODO app wide focus
-            // withdrawAddressTextField.requestFocus();
-           /* UserThread.execute(() -> {
+        //TODO app wide focus
+       /* UserThread.execute(() -> {
+            withdrawAddressTextField.requestFocus();
+           UserThread.execute(() -> {
                 this.requestFocus();
                 UserThread.execute(() -> withdrawAddressTextField.requestFocus());
-            });*/
-        });
+            });
+        });*/
 
         hideNotificationGroup();
     }
 
     @Override
-    public void doDeactivate() {
-        super.doDeactivate();
+    public void deactivate() {
+        Log.traceCall();
+        super.deactivate();
         //withdrawAddressTextField.focusedProperty().removeListener(focusedPropertyListener);
         // withdrawButton.disableProperty().unbind();
     }
@@ -97,22 +92,18 @@ public class BuyerStep5View extends TradeStepView {
     @Override
     protected void addContent() {
         addTitledGroupBg(gridPane, gridRow, 4, "Summary of completed trade ", 0);
-        Tuple2<Label, TextField> btcTradeAmountPair = addLabelTextField(gridPane, gridRow, "You have bought:", "", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, TextField> btcTradeAmountPair = addLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), Layout.FIRST_ROW_DISTANCE);
         btcTradeAmountLabel = btcTradeAmountPair.first;
-        btcTradeAmountTextField = btcTradeAmountPair.second;
 
-        Tuple2<Label, TextField> fiatTradeAmountPair = addLabelTextField(gridPane, ++gridRow, "You have paid:");
+        Tuple2<Label, TextField> fiatTradeAmountPair = addLabelTextField(gridPane, ++gridRow, getFiatTradeAmountLabel(), model.getFiatVolume());
         fiatTradeAmountLabel = fiatTradeAmountPair.first;
-        fiatTradeAmountTextField = fiatTradeAmountPair.second;
 
-        Tuple2<Label, TextField> feesPair = addLabelTextField(gridPane, ++gridRow, "Total fees paid:");
-        feesTextField = feesPair.second;
+        Tuple2<Label, TextField> feesPair = addLabelTextField(gridPane, ++gridRow, "Total fees paid:", model.getTotalFees());
 
-        Tuple2<Label, TextField> securityDepositPair = addLabelTextField(gridPane, ++gridRow, "Refunded security deposit:");
-        securityDepositTextField = securityDepositPair.second;
+        Tuple2<Label, TextField> securityDepositPair = addLabelTextField(gridPane, ++gridRow, "Refunded security deposit:", model.getSecurityDeposit());
 
         addTitledGroupBg(gridPane, ++gridRow, 2, "Withdraw your bitcoins", Layout.GROUP_DISTANCE);
-        withdrawAmountTextField = addLabelTextField(gridPane, gridRow, "Amount to withdraw:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        addLabelTextField(gridPane, gridRow, "Amount to withdraw:", model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         withdrawAddressTextField = addLabelInputTextField(gridPane, ++gridRow, "Withdraw to address:").second;
         withdrawButton = addButtonAfterGroup(gridPane, ++gridRow, "Withdraw to external wallet");
         withdrawButton.setOnAction(e -> {
@@ -143,36 +134,11 @@ public class BuyerStep5View extends TradeStepView {
             withdrawAddressTextField.setText("mhpVDvMjJT1Gn7da44dkq1HXd3wXdFZpXu");
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setBtcTradeAmountLabelText(String text) {
-        btcTradeAmountLabel.setText(text);
+    protected String getBtcTradeAmountLabel() {
+        return "You have bought:";
     }
 
-    public void setFiatTradeAmountLabelText(String text) {
-        fiatTradeAmountLabel.setText(text);
-    }
-
-    public void setBtcTradeAmountTextFieldText(String text) {
-        btcTradeAmountTextField.setText(text);
-    }
-
-    public void setFiatTradeAmountTextFieldText(String text) {
-        fiatTradeAmountTextField.setText(text);
-    }
-
-    public void setFeesTextFieldText(String text) {
-        feesTextField.setText(text);
-    }
-
-    public void setSecurityDepositTextFieldText(String text) {
-        securityDepositTextField.setText(text);
-    }
-
-    public void setWithdrawAmountTextFieldText(String text) {
-        withdrawAmountTextField.setText(text);
+    protected String getFiatTradeAmountLabel() {
+        return "You have paid:";
     }
 }

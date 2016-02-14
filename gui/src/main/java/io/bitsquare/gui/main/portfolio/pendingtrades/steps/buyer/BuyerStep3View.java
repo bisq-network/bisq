@@ -43,7 +43,7 @@ public class BuyerStep3View extends TradeStepView {
     @Override
     protected String getInfoText() {
         return "Waiting for the bitcoin seller's confirmation " +
-                "for the receipt of the " + model.getCurrencyCode() + " payment.";
+                "for the receipt of the " + model.dataModel.getCurrencyCode() + " payment.";
     }
 
 
@@ -55,7 +55,7 @@ public class BuyerStep3View extends TradeStepView {
     protected String getWarningText() {
         setInformationHeadline();
         String substitute = model.isBlockChainMethod() ?
-                "on the " + model.getCurrencyCode() + "blockchain" :
+                "on the " + model.dataModel.getCurrencyCode() + "blockchain" :
                 "at your payment provider (e.g. bank)";
         return "The seller still has not confirmed your payment!\n" +
                 "Please check " + substitute + " if the payment sending was successful.\n" +

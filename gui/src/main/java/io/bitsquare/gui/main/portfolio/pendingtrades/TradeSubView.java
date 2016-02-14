@@ -25,6 +25,7 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
+import org.fxmisc.easybind.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +43,7 @@ public abstract class TradeSubView extends HBox {
     protected GridPane leftGridPane;
     protected TitledGroupBg tradeProcessTitledGroupBg;
     protected int leftGridPaneRowIndex = 0;
+    protected Subscription viewStateSubscription;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -59,11 +61,15 @@ public abstract class TradeSubView extends HBox {
     }
 
     protected void deactivate() {
+        if (viewStateSubscription != null)
+            viewStateSubscription.unsubscribe();
+
         if (tradeStepView != null)
-            tradeStepView.doDeactivate();
+            tradeStepView.deactivate();
 
         if (openDisputeButton != null)
             leftGridPane.getChildren().remove(openDisputeButton);
+
         if (notificationGroup != null)
             notificationGroup.removeItselfFrom(leftGridPane);
     }
@@ -74,9 +80,9 @@ public abstract class TradeSubView extends HBox {
 
         leftGridPane = new GridPane();
         leftGridPane.setPrefWidth(340);
-        VBox.setMargin(leftGridPane, new Insets(0, 10, 10, 10));
         leftGridPane.setHgap(Layout.GRID_GAP);
         leftGridPane.setVgap(Layout.GRID_GAP);
+        VBox.setMargin(leftGridPane, new Insets(0, 10, 10, 10));
         leftVBox.getChildren().add(leftGridPane);
 
         leftGridPaneRowIndex = 0;
@@ -132,6 +138,8 @@ public abstract class TradeSubView extends HBox {
 
     abstract protected void addWizards();
 
+    abstract protected void onViewStateChanged(PendingTradesViewModel.State viewState);
+
     protected void addWizardsToGridPane(TradeWizardItem tradeWizardItem) {
         if (leftGridPaneRowIndex == 0)
             GridPane.setMargin(tradeWizardItem, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
@@ -143,12 +151,15 @@ public abstract class TradeSubView extends HBox {
     }
 
     private void createAndAddTradeStepView(Class<? extends TradeStepView> viewClass) {
+        if (tradeStepView != null)
+            tradeStepView.deactivate();
         try {
             tradeStepView = viewClass.getDeclaredConstructor(PendingTradesViewModel.class).newInstance(model);
             contentPane.getChildren().setAll(tradeStepView);
-
             tradeStepView.setNotificationGroup(notificationGroup);
+            tradeStepView.activate();
         } catch (Exception e) {
+            log.error("Creating viewClass {} caused an error {}", viewClass, e.getMessage());
             e.printStackTrace();
         }
     }
