@@ -22,6 +22,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class RequestDataManager implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(RequestDataManager.class);
 
+    private static final long RETRY_DELAY_SEC = 10;
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -193,7 +196,7 @@ public class RequestDataManager implements MessageListener {
 
                                     // try again after a pause
                                     stopRequestDataTimer();
-                                    requestDataTimer = UserThread.runAfterRandomDelay(() -> {
+                                    requestDataTimer = UserThread.runAfter(() -> {
                                                 log.trace("requestDataAfterDelayTimer called");
                                                 // We want to keep it sorted but avoid duplicates
                                                 // We don't filter out already established connections for seed nodes as it might be that
@@ -208,7 +211,7 @@ public class RequestDataManager implements MessageListener {
                                                 list.remove(nextCandidate);
                                                 requestData(nextCandidate, list);
                                             },
-                                            10, 15, TimeUnit.SECONDS);
+                                            RETRY_DELAY_SEC, TimeUnit.SECONDS);
                                 }
 
                                 requestDataHandshakeMap.remove(nodeAddress);

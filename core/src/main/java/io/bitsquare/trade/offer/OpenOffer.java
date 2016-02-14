@@ -25,6 +25,7 @@ import io.bitsquare.trade.TradableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -55,6 +56,18 @@ public class OpenOffer implements Tradable, Serializable {
         this.storage = storage;
     }
 
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        try {
+            in.defaultReadObject();
+
+            // If we have a reserved state from the local db we reset it
+            if (state == State.RESERVED)
+                setState(State.AVAILABLE);
+
+        } catch (Throwable t) {
+            log.error("Cannot be deserialized." + t.getMessage());
+        }
+    }
     public Date getDate() {
         return offer.getDate();
     }
@@ -98,7 +111,7 @@ public class OpenOffer implements Tradable, Serializable {
         stopTimeout();
 
         timeoutTimer = UserThread.runAfter(() -> {
-            log.info("Timeout reached");
+            log.info("Timeout for resettin State.RESERVED reached");
             if (state == State.RESERVED)
                 setState(State.AVAILABLE);
         }, TIMEOUT_SEC);

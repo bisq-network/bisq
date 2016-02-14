@@ -7,7 +7,6 @@ import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
-import io.bitsquare.p2p.peers.messages.peers.GetPeersRequest;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,16 +17,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class MaintenanceManager implements MessageListener, ConnectionListener {
     private static final Logger log = LoggerFactory.getLogger(MaintenanceManager.class);
 
+    private static final int MAINTENANCE_DELAY_SEC = 5 * 60;
+
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
     private final Set<NodeAddress> seedNodeAddresses;
-    private final ScheduledThreadPoolExecutor executor;
-    private final Map<NodeAddress, PeerExchangeHandshake> peerExchangeHandshakeMap = new HashMap<>();
+    private ScheduledThreadPoolExecutor executor;
+    private final Map<NodeAddress, PeerExchangeHandler> peerExchangeHandshakeMap = new HashMap<>();
     private Timer connectToMorePeersTimer, maintainConnectionsTimer;
     private boolean shutDownInProgress;
 
@@ -42,7 +42,6 @@ public class MaintenanceManager implements MessageListener, ConnectionListener {
         checkArgument(!seedNodeAddresses.isEmpty(), "seedNodeAddresses must not be empty");
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
 
-        executor = Utilities.getScheduledThreadPoolExecutor("PeerExchangeManager", 1, 10, 5);
         networkNode.addMessageListener(this);
     }
 
@@ -53,8 +52,10 @@ public class MaintenanceManager implements MessageListener, ConnectionListener {
         networkNode.removeMessageListener(this);
         stopConnectToMorePeersTimer();
         stopMaintainConnectionsTimer();
-        peerExchangeHandshakeMap.values().stream().forEach(PeerExchangeHandshake::closeHandshake);
-        MoreExecutors.shutdownAndAwaitTermination(executor, 500, TimeUnit.MILLISECONDS);
+        peerExchangeHandshakeMap.values().stream().forEach(PeerExchangeHandler::cleanup);
+
+        if (executor != null)
+            MoreExecutors.shutdownAndAwaitTermination(executor, 100, TimeUnit.MILLISECONDS);
     }
 
 
@@ -62,18 +63,14 @@ public class MaintenanceManager implements MessageListener, ConnectionListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestReportedPeersFromSeedNodes(NodeAddress nodeAddress) {
-        checkNotNull(networkNode.getNodeAddress(), "My node address must not be null at requestReportedPeers");
-        ArrayList<NodeAddress> remainingNodeAddresses = new ArrayList<>(seedNodeAddresses);
-        remainingNodeAddresses.remove(nodeAddress);
-        Collections.shuffle(remainingNodeAddresses);
-        requestReportedPeers(nodeAddress, remainingNodeAddresses);
-
-        int delay = new Random().nextInt(60) + 60 * 3; // 3-4 min
-        executor.scheduleAtFixedRate(() -> UserThread.execute(this::maintainConnections),
-                delay, delay, TimeUnit.SECONDS);
+    public void start() {
+        if (executor == null) {
+            executor = Utilities.getScheduledThreadPoolExecutor("MaintenanceManager", 1, 2, 5);
+            int delay = new Random().nextInt(120) + MAINTENANCE_DELAY_SEC; // add 1-2 min. randomness
+            executor.scheduleAtFixedRate(() -> UserThread.execute(this::maintainConnections),
+                    delay, delay, TimeUnit.SECONDS);
+        }
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ConnectionListener implementation
@@ -85,13 +82,13 @@ public class MaintenanceManager implements MessageListener, ConnectionListener {
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        // We use a timer to throttle if we get a series of disconnects
+      /*  // We use a timer to throttle if we get a series of disconnects
         // The more connections we have the more relaxed we are with a checkConnections
         stopMaintainConnectionsTimer();
         int size = networkNode.getAllConnections().size();
         int delay = 10 + 2 * size * size; // 12 sec - 210 sec (3.5 min)
         maintainConnectionsTimer = UserThread.runAfter(this::maintainConnections,
-                delay, TimeUnit.SECONDS);
+                delay, TimeUnit.SECONDS);*/
     }
 
     @Override
@@ -105,7 +102,7 @@ public class MaintenanceManager implements MessageListener, ConnectionListener {
 
     @Override
     public void onMessage(Message message, Connection connection) {
-        if (message instanceof GetPeersRequest) {
+       /* if (message instanceof GetPeersRequest) {
             Log.traceCall(message.toString() + "\n\tconnection=" + connection);
             PeerExchangeHandshake peerExchangeHandshake = new PeerExchangeHandshake(networkNode,
                     peerManager,
@@ -123,7 +120,7 @@ public class MaintenanceManager implements MessageListener, ConnectionListener {
                         }
                     });
             peerExchangeHandshake.onGetPeersRequest((GetPeersRequest) message, connection);
-        }
+        }*/
     }
 
 
@@ -134,9 +131,9 @@ public class MaintenanceManager implements MessageListener, ConnectionListener {
     private void requestReportedPeers(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
         Log.traceCall("nodeAddress=" + nodeAddress);
         if (!peerExchangeHandshakeMap.containsKey(nodeAddress)) {
-            PeerExchangeHandshake peerExchangeHandshake = new PeerExchangeHandshake(networkNode,
+            PeerExchangeHandler peerExchangeHandler = new PeerExchangeHandler(networkNode,
                     peerManager,
-                    new PeerExchangeHandshake.Listener() {
+                    new PeerExchangeHandler.Listener() {
                         @Override
                         public void onComplete() {
                             log.trace("PeerExchangeHandshake of outbound connection complete. nodeAddress={}", nodeAddress);
@@ -167,8 +164,8 @@ public class MaintenanceManager implements MessageListener, ConnectionListener {
                             }
                         }
                     });
-            peerExchangeHandshakeMap.put(nodeAddress, peerExchangeHandshake);
-            peerExchangeHandshake.requestConnectedPeers(nodeAddress);
+            peerExchangeHandshakeMap.put(nodeAddress, peerExchangeHandler);
+            peerExchangeHandler.requestConnectedPeers(nodeAddress);
         } else {
             //TODO check when that happens
             log.warn("We have started already a peerExchangeHandshake. " +

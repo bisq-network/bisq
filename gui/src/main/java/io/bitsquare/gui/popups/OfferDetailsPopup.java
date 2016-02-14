@@ -148,7 +148,8 @@ public class OfferDetailsPopup extends Popup {
             addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(offer.getPaymentMethod().getId()));
 
         rows = 3;
-        if (offer.getPaymentMethodCountryCode() != null)
+        String paymentMethodCountryCode = offer.getPaymentMethodCountryCode();
+        if (paymentMethodCountryCode != null)
             rows++;
         if (offer.getOfferFeePaymentTxID() != null)
             rows++;
@@ -161,8 +162,9 @@ public class OfferDetailsPopup extends Popup {
         addLabelTextField(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++rowIndex, "Creation date:", formatter.formatDateTime(offer.getDate()));
 
-        if (offer.getPaymentMethodCountryCode() != null)
-            addLabelTextField(gridPane, ++rowIndex, "Offerers country of bank:", offer.getPaymentMethodCountryCode());
+        if (paymentMethodCountryCode != null)
+            addLabelTextField(gridPane, ++rowIndex, "Offerers country of bank:",
+                    CountryUtil.getNameAndCode(paymentMethodCountryCode));
         if (offer.getAcceptedCountryCodes() != null) {
             String countries;
             Tooltip tooltip = null;

@@ -58,6 +58,10 @@ public class TradeCurrency implements Serializable {
         return symbol;
     }
 
+    public String getNameAndCode() {
+        return name + " (" + code + ")";
+    }
+
     public String getCodeAndName() {
         return code + " (" + name + ")";
     }

@@ -634,49 +634,6 @@ textfield */
     -fx-base: #dd0000;
 }
 
-#trade-notification-warning {
-    -fx-font-size: 14;
-    -fx-base: -bs-red-soft;
-}
-
-#trade-notification-information {
-    -fx-font-size: 14;
-    -fx-outer-border: linear-gradient(to bottom, #ffb34b, #ff9200);
-}
-
-#trade-notification-dispute {
-    -fx-font-size: 14;
-    -fx-base: -bs-error-red;
-}
-
-#trade-notification-support {
-    -fx-font-size: 14;
-    -fx-base: -bs-orange;
-}
-
-#support-info-label {
-    -fx-font-size: 14;
-    -fx-text-fill: -bs-red-soft;
-}
-
-#titled-group-bg-warn {
-    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, #F0F0F0);
-    -fx-outer-border: linear-gradient(to bottom, #ffb34b, #ff9200);
-    -fx-background-color: -fx-shadow-highlight-color,
-    -fx-outer-border,
-    -fx-inner-border,
-    -fx-body-color;
-    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 3px, 3px, 2px, 1px;
-}
-
-#titled-group-bg-label-warn {
-    -fx-font-weight: bold;
-    -fx-font-size: 14;
-    -fx-text-fill: #ff9200;
-    -fx-background-color: -bs-content-bg-grey;
-}
-
 /* TitledGroupBg */
 #titled-group-bg-label {
     -fx-font-weight: bold;

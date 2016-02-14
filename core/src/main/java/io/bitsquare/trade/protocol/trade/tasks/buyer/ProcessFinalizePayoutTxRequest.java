@@ -47,12 +47,12 @@ public class ProcessFinalizePayoutTxRequest extends TradeTask {
             processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(message.sellerPayoutAddress));
             trade.setLockTimeAsBlockHeight(nonNegativeLongOf(message.lockTimeAsBlockHeight));
 
-            trade.setState(Trade.State.FIAT_PAYMENT_RECEIPT_MSG_RECEIVED);
-
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             removeMailboxMessageAfterProcessing();
+
+            trade.setState(Trade.State.FIAT_PAYMENT_RECEIPT_MSG_RECEIVED);
 
             complete();
         } catch (Throwable t) {

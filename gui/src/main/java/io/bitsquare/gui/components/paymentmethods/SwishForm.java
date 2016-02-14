@@ -72,7 +72,7 @@ public class SwishForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        addLabelTextField(gridPane, ++gridRow, "Currency:", swishAccount.getSingleTradeCurrency().getCodeAndName());
+        addLabelTextField(gridPane, ++gridRow, "Currency:", swishAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
@@ -95,7 +95,7 @@ public class SwishForm extends PaymentMethodForm {
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", swishAccount.getHolderName());
         TextField field = addLabelTextField(gridPane, ++gridRow, "Mobile nr.:", swishAccount.getMobileNr()).second;
         field.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, "Currency:", swishAccount.getSingleTradeCurrency().getCodeAndName());
+        addLabelTextField(gridPane, ++gridRow, "Currency:", swishAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
     }
 

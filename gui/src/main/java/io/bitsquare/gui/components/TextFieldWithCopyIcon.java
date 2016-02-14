@@ -93,6 +93,10 @@ public class TextFieldWithCopyIcon extends AnchorPane {
         this.text.set(text);
     }
 
+    public void setTooltip(Tooltip toolTip) {
+        textField.setTooltip(toolTip);
+    }
+
     public void setCopyWithoutCurrencyPostFix(boolean copyWithoutCurrencyPostFix) {
         this.copyWithoutCurrencyPostFix = copyWithoutCurrencyPostFix;
     }

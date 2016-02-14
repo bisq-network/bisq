@@ -27,8 +27,6 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
-
 public class SignAndPublishDepositTxAsSeller extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(SignAndPublishDepositTxAsSeller.class);
 
@@ -62,7 +60,7 @@ public class SignAndPublishDepositTxAsSeller extends TradeTask {
                             log.trace("takerSignAndPublishTx succeeded " + transaction);
 
                             trade.setDepositTx(transaction);
-                            trade.setTakeOfferDate(new Date());
+                            //trade.setTakeOfferDate(new Date());
                             trade.setTakeOfferDateAsBlockHeight(processModel.getTradeWalletService().getBestChainHeight());
                             trade.setState(Trade.State.DEPOSIT_PUBLISHED);
 

@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.internal.LinkedTreeMap;
-import io.bitsquare.app.Log;
 import io.bitsquare.btc.pricefeed.MarketPrice;
 import io.bitsquare.http.HttpClient;
 import io.bitsquare.http.HttpException;
@@ -63,7 +62,7 @@ public class PoloniexPriceProvider implements PriceProvider {
 
     @Override
     public MarketPrice getPrice(String currencyCode) throws IOException, HttpException {
-        Log.traceCall("currencyCode=" + currencyCode);
+        // Log.traceCall("currencyCode=" + currencyCode);
         JsonObject jsonObject = new JsonParser()
                 .parse(httpClient.requestWithGET(currencyCode))
                 .getAsJsonObject();

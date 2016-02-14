@@ -146,7 +146,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
 
     // Mutable
     private DecryptedMsgWithPubKey decryptedMsgWithPubKey;
-    private Date takeOfferDate = new Date(0); // in some error cases the date is not set and cause null pointers, so we set a default
+    private Date takeOfferDate;
     private int takeOfferDateAsBlockHeight;
     private Coin tradeAmount;
     private NodeAddress tradingPeerNodeAddress;
@@ -180,6 +180,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
     protected Trade(Offer offer, Storage<? extends TradableList> storage) {
         this.offer = offer;
         this.storage = storage;
+        this.takeOfferDate = new Date();
 
         processModel = new ProcessModel();
         tradeVolumeProperty = new SimpleObjectProperty<>();
@@ -199,6 +200,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
         this.tradingPeerNodeAddress = tradingPeerNodeAddress;
         tradeAmountProperty.set(tradeAmount);
         tradeVolumeProperty.set(getTradeVolume());
+        this.takeOfferDate = new Date();
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -411,9 +413,9 @@ abstract public class Trade implements Tradable, Model, Serializable {
         return takeOfferDate;
     }
 
-    public void setTakeOfferDate(Date takeOfferDate) {
+    /*public void setTakeOfferDate(Date takeOfferDate) {
         this.takeOfferDate = takeOfferDate;
-    }
+    }*/
 
     public int getTakeOfferDateAsBlockHeight() {
         return takeOfferDateAsBlockHeight;

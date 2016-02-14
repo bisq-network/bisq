@@ -87,7 +87,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         tradeCurrencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
-                return tradeCurrency.getCodeAndName();
+                return tradeCurrency.getNameAndCode();
             }
 
             @Override

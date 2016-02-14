@@ -32,14 +32,12 @@ public class SeedNodesRepository {
             new NodeAddress("izs5oz7i5ta7c2ir.onion:8000"),*/
 
             // v0.3.5
-            new NodeAddress("que4ysbd2qazkb7d.onion:8000"),
-            new NodeAddress("h2crs2j5huhclkc6.onion:8000"),
-            new NodeAddress("7a3sj4j6yw5oukai.onion:8000"),
+            new NodeAddress("hulvbm5xjn7b7ku4.onion:8000"),
+            new NodeAddress("3efgjjbdvhbvck3x.onion:8000"),
+            new NodeAddress("3unfcshgwipxhxfm.onion:8000"),
 
             // testnet
             new NodeAddress("znmy44wcstn2rkva.onion:8001"),
-           /* new NodeAddress("zvn7umikgxml6x6h.onion:8001"),
-            new NodeAddress("wnfxmrmsyeeos2dy.onion:8001"),*/
 
             // regtest
             // For development you need to change that to your local onion addresses

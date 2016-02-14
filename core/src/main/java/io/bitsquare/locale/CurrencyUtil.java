@@ -171,12 +171,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ETH", "Ethereum"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
-        // Unfortunately we cannot support CryptoNote coins yet as there is no way to proof the transaction. Payment ID helps only locate the tx but the 
-        // arbitrator cannot see if the receiving key matches the receivers address. They might add support for exposing the tx key, but that is not 
-        // implemented yet. To use the view key (also not available in GUI wallets) would reveal the complete wallet history for incoming payments, which is
-        // not acceptable from privacy point of view.
-        // result.add(new CryptoCurrency("XMR", "Monero")); 
-        // result.add(new CryptoCurrency("BCN", "Bytecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
         result.add(new CryptoCurrency("NSR", "NuShares"));
@@ -192,6 +186,13 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BTS", "BitShares"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("XRP", "Ripple"));
+
+        // Unfortunately we cannot support CryptoNote coins yet as there is no way to proof the transaction. Payment ID helps only locate the tx but the 
+        // arbitrator cannot see if the receiving key matches the receivers address. They might add support for exposing the tx key, but that is not 
+        // implemented yet. To use the view key (also not available in GUI wallets) would reveal the complete wallet history for incoming payments, which is
+        // not acceptable from privacy point of view.
+        // result.add(new CryptoCurrency("XMR", "Monero")); 
+        // result.add(new CryptoCurrency("BCN", "Bytecoin"));
         return result;
     }
 
@@ -213,8 +214,8 @@ public class CurrencyUtil {
         try {
             return Currency.getInstance(currencyCode).getDisplayName(Preferences.getDefaultLocale());
         } catch (Throwable t) {
-            // Seems that it is a crypto currency
-            return getSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findFirst().get().getCodeAndName();
+            // Seems that it is a cryptocurrency
+            return getSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findFirst().get().getName();
         }
     }
 

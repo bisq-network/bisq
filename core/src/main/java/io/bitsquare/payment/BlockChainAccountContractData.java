@@ -43,8 +43,13 @@ public class BlockChainAccountContractData extends PaymentAccountContractData im
 
     @Override
     public String getPaymentDetails() {
-        return "Address: " + address;
+        return "Receivers cryptocurrency address: " + address;
     }
+
+    @Override
+    public String getPaymentDetailsForTradePopup() {
+        return getPaymentDetails();
+    } 
 
     public void setPaymentId(String paymentId) {
         this.paymentId = paymentId;

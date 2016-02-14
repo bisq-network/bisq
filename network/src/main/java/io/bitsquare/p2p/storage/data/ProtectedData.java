@@ -15,7 +15,10 @@ public class ProtectedData implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(P2PDataStorage.class);
 
     public final ExpirableMessage expirableMessage;
+
+    //TODO check if that field make sense as it is in expirableMessage.getTTL()
     transient public long ttl;
+
     public final PublicKey ownerPubKey;
     public final int sequenceNumber;
     public final byte[] signature;

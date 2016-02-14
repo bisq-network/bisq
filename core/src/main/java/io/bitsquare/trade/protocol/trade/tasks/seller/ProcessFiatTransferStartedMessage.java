@@ -46,13 +46,13 @@ public class ProcessFiatTransferStartedMessage extends TradeTask {
 
             processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(message.buyerPayoutAddress));
 
-            trade.setState(Trade.State.FIAT_PAYMENT_STARTED_MSG_RECEIVED);
-
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             removeMailboxMessageAfterProcessing();
 
+            trade.setState(Trade.State.FIAT_PAYMENT_STARTED_MSG_RECEIVED);
+            
             complete();
         } catch (Throwable t) {
             failed(t);

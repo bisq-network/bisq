@@ -289,7 +289,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
                 model.onPaymentAccountSelected(paymentAccount);
             } else {
-                currencyTextField.setText(paymentAccount.getSingleTradeCurrency().getCodeAndName());
+                currencyTextField.setText(paymentAccount.getSingleTradeCurrency().getNameAndCode());
                 model.onPaymentAccountSelected(paymentAccount);
                 model.onCurrencySelected(paymentAccount.getSingleTradeCurrency());
             }
@@ -588,7 +588,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
-                return tradeCurrency.getCodeAndName();
+                return tradeCurrency.getNameAndCode();
             }
 
             @Override
@@ -673,7 +673,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         balanceTextField = balanceTuple.second;
         balanceTextField.setVisible(false);
 
-        Tuple3<Button, ProgressIndicator, Label> placeOfferTuple = addButtonWithStatus(gridPane, ++gridRow,
+        Tuple3<Button, ProgressIndicator, Label> placeOfferTuple = addButtonWithStatusAfterGroup(gridPane, ++gridRow,
                 BSResources.get("createOffer.fundsBox.placeOffer"));
         placeOfferButton = placeOfferTuple.first;
         placeOfferButton.setVisible(false);

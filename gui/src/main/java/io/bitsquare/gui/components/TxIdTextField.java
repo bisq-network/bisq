@@ -75,12 +75,15 @@ public class TxIdTextField extends AnchorPane {
         copyIcon = new Label();
         copyIcon.setLayoutY(3);
         copyIcon.getStyleClass().add("copy-icon");
-        Tooltip.install(copyIcon, new Tooltip("Copy transaction ID to clipboard"));
+        copyIcon.setTooltip(new Tooltip("Copy transaction ID to clipboard"));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         AnchorPane.setRightAnchor(copyIcon, 30.0);
 
+        Tooltip tooltip = new Tooltip("Open a blockchain explorer with that transactions ID");
+        
         blockExplorerIcon = new Label();
         blockExplorerIcon.getStyleClass().add("external-link-icon");
+        blockExplorerIcon.setTooltip(tooltip);
         AwesomeDude.setIcon(blockExplorerIcon, AwesomeIcon.EXTERNAL_LINK);
         blockExplorerIcon.setMinWidth(20);
         AnchorPane.setRightAnchor(blockExplorerIcon, 52.0);
@@ -89,7 +92,7 @@ public class TxIdTextField extends AnchorPane {
         textField = new TextField();
         textField.setId("address-text-field");
         textField.setEditable(false);
-        Tooltip.install(textField, new Tooltip("Open a blockchain explorer with that transactions ID"));
+        textField.setTooltip(tooltip);
         AnchorPane.setRightAnchor(textField, 80.0);
         AnchorPane.setLeftAnchor(textField, 0.0);
         textField.focusTraversableProperty().set(focusTraversableProperty().get());

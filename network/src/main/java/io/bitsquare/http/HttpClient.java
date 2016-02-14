@@ -20,6 +20,7 @@ public class HttpClient implements Serializable {
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setConnectTimeout(10000);
+            connection.setReadTimeout(10000);
 
             if (connection.getResponseCode() == 200) {
                 return convertInputStreamToString(connection.getInputStream());

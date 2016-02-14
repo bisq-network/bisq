@@ -80,6 +80,10 @@ public class CountryUtil {
         return new Locale(LanguageUtil.getDefaultLanguage(), countryCode).getDisplayCountry();
     }
 
+    public static String getNameAndCode(String countryCode) {
+        return getNameByCode(countryCode) + " (" + countryCode + ")";
+    }
+
     public static String getCodesString(List<String> countryCodes) {
         return countryCodes.stream().collect(Collectors.joining(", "));
     }

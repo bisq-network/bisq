@@ -15,7 +15,6 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -32,6 +31,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
     private static int MAX_CONNECTIONS_EXTENDED_1;
     private static int MAX_CONNECTIONS_EXTENDED_2;
     private static int MAX_CONNECTIONS_EXTENDED_3;
+    private boolean printReportedPeersDetails = true;
 
     public static void setMaxConnections(int maxConnections) {
         MAX_CONNECTIONS = maxConnections;
@@ -271,87 +271,48 @@ public class PeerManager implements ConnectionListener, MessageListener {
     }
 
     public void addToReportedPeers(HashSet<ReportedPeer> reportedPeersToAdd, Connection connection) {
-        // we disconnect misbehaving nodes trying to send too many peers
-        // reported peers include the connected peers which is normally max. 10 but we give some headroom 
-        // for safety
-        if (reportedPeersToAdd.size() > (MAX_REPORTED_PEERS + PeerManager.MIN_CONNECTIONS * 3)) {
-            // Will trigger a shutdown after 2nd time sending too much
-            connection.reportIllegalRequest(RuleViolation.TOO_MANY_REPORTED_PEERS_SENT);
-        } else {
-            // In case we have one of the peers already we adjust the lastActivityDate by adjusting the date to the mid 
-            // of the lastActivityDate of our already stored peer and the reported one
-            Map<ReportedPeer, ReportedPeer> reportedPeersMap = reportedPeers.stream()
-                    .collect(Collectors.toMap(e -> e, Function.identity()));
-            HashSet<ReportedPeer> adjustedReportedPeers = new HashSet<>();
-            reportedPeersToAdd.stream()
-                    .filter(e -> e.nodeAddress != null &&
-                            !e.nodeAddress.equals(networkNode.getNodeAddress()) &&
-                            !getConnectedPeers().contains(e))
-                    .forEach(e -> {
-                        if (reportedPeersMap.containsKey(e)) {
-                            if (e.lastActivityDate != null && reportedPeersMap.get(e).lastActivityDate != null) {
-                                long adjustedTime = (e.lastActivityDate.getTime() +
-                                        reportedPeersMap.get(e).lastActivityDate.getTime()) / 2;
-                                adjustedReportedPeers.add(new ReportedPeer(e.nodeAddress,
-                                        new Date(adjustedTime)));
-                            } else if (e.lastActivityDate == null) {
-                                adjustedReportedPeers.add(reportedPeersMap.get(e));
-                            } else if (reportedPeersMap.get(e).lastActivityDate == null) {
-                                adjustedReportedPeers.add(e);
-                            }
-                        } else {
-                            adjustedReportedPeers.add(e);
-                        }
-                    });
+        printReportedPeers(reportedPeersToAdd);
 
-            reportedPeers.addAll(adjustedReportedPeers);
-
+        // We check if the reported msg is not violating our rules
+        if (reportedPeersToAdd.size() <= (MAX_REPORTED_PEERS + PeerManager.MAX_CONNECTIONS_EXTENDED_3 + 10)) {
+            reportedPeers.addAll(reportedPeersToAdd);
             purgeReportedPeersIfExceeds();
 
             persistedPeers.addAll(reportedPeersToAdd);
-            persistedPeers.addAll(new HashSet<>(getConnectedPeers()));
-
-            // We remove if we exceeds MAX_PERSISTED_PEERS limit
-            int toRemove = persistedPeers.size() - MAX_PERSISTED_PEERS;
-            if (toRemove > 0) {
-                int toRemove1 = toRemove / 2;
-                if (toRemove1 > 0) {
-                    // we remove the first half randomly to avoid attack vectors with lastActivityDate
-                    List<ReportedPeer> list = new ArrayList<>(persistedPeers);
-                    for (int i = 0; i < toRemove1; i++) {
-                        persistedPeers.remove(list.get(i));
-                    }
-                    int toRemove2 = toRemove - toRemove1;
-                    if (toRemove2 > 0) {
-                        // now we remove second half with a list sorted by oldest lastActivityDate
-                        list = new ArrayList<>(persistedPeers);
-                        list = list.stream().filter(e -> e.lastActivityDate != null).collect(Collectors.toList());
-                        list.sort((o1, o2) -> o1.lastActivityDate.compareTo(o2.lastActivityDate));
-                        for (int i = 0; i < toRemove2; i++) {
-                            persistedPeers.remove(list.get(i));
-                        }
-                    }
-                }
-            }
-
+            purgePersistedPeersIfExceeds();
             if (dbStorage != null)
                 dbStorage.queueUpForSave(persistedPeers, 2000);
-        }
 
-        printReportedPeers();
+            printReportedPeers();
+        } else {
+            // If a node is trying to send too many peers we treat it as rule violation.
+            // Reported peers include the connected peers. We use the max value and give some extra headroom.
+            // Will trigger a shutdown after 2nd time sending too much
+            connection.reportIllegalRequest(RuleViolation.TOO_MANY_REPORTED_PEERS_SENT);
+        }
     }
 
     private void printReportedPeers() {
         if (!reportedPeers.isEmpty()) {
-            StringBuilder result = new StringBuilder("\n\n------------------------------------------------------------\n" +
-                    "Reported peers:");
-            reportedPeers.stream().forEach(e -> result.append("\n").append(e));
-            result.append("\n------------------------------------------------------------\n");
-            //log.trace(result.toString());
-            log.info("Number of reported peers: {}", reportedPeers.size());
+            if (printReportedPeersDetails) {
+                StringBuilder result = new StringBuilder("\n\n------------------------------------------------------------\n" +
+                        "Collected reported peers:");
+                reportedPeers.stream().forEach(e -> result.append("\n").append(e));
+                result.append("\n------------------------------------------------------------\n");
+                log.info(result.toString());
+            }
+            log.info("Number of collected reported peers: {}", reportedPeers.size());
         }
     }
 
+    public void printReportedPeers(HashSet<ReportedPeer> reportedPeers) {
+        if (printReportedPeersDetails) {
+            StringBuilder result = new StringBuilder("We received now reportedPeers:");
+            reportedPeers.stream().forEach(e -> result.append("\n\t").append(e));
+            log.info(result.toString());
+        }
+        log.info("Number of new arrived reported peers: {}", reportedPeers.size());
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //  Persisted peers
@@ -455,6 +416,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
         return isConfirmed(reportedPeer.nodeAddress);
     }
 
+    // Checks if that connection has the peers node address
     public boolean isConfirmed(NodeAddress nodeAddress) {
         return networkNode.getNodeAddressesOfConfirmedConnections().contains(nodeAddress);
     }
@@ -480,19 +442,38 @@ public class PeerManager implements ConnectionListener, MessageListener {
     private void purgeReportedPeersIfExceeds() {
         Log.traceCall();
         int size = getReportedPeers().size();
-        if (size > MAX_REPORTED_PEERS) {
-            log.trace("We have more then {} reported peers. size={}. " +
-                    "We remove random peers from the reported peers list.", MAX_REPORTED_PEERS, size);
-            int diff = size - MAX_REPORTED_PEERS;
+        int limit = MAX_REPORTED_PEERS - MAX_CONNECTIONS_EXTENDED_3;
+        if (size > limit) {
+            log.trace("We have already {} reported peers which exceeds our limit of {}." +
+                    "We remove random peers from the reported peers list.", size, limit);
+            int diff = size - limit;
             List<ReportedPeer> list = new ArrayList<>(getReportedPeers());
             // we dont use sorting by lastActivityDate to avoid attack vectors and keep it more random
             for (int i = 0; i < diff; i++) {
                 ReportedPeer toRemove = getAndRemoveRandomReportedPeer(list);
                 removeReportedPeer(toRemove);
-                removePersistedPeer(toRemove);
             }
         } else {
             log.trace("No need to purge reported peers.\n\tWe don't have more then {} reported peers yet.", MAX_REPORTED_PEERS);
+        }
+    }
+
+    private void purgePersistedPeersIfExceeds() {
+        Log.traceCall();
+        int size = getPersistedPeers().size();
+        int limit = MAX_REPORTED_PEERS - MAX_CONNECTIONS_EXTENDED_3;
+        if (size > limit) {
+            log.trace("We have already {} persisted peers which exceeds our limit of {}." +
+                    "We remove random peers from the persisted peers list.", size, limit);
+            int diff = size - limit;
+            List<ReportedPeer> list = new ArrayList<>(getReportedPeers());
+            // we dont use sorting by lastActivityDate to avoid attack vectors and keep it more random
+            for (int i = 0; i < diff; i++) {
+                ReportedPeer toRemove = getAndRemoveRandomReportedPeer(list);
+                removePersistedPeer(toRemove);
+            }
+        } else {
+            log.trace("No need to purge persisted peers.\n\tWe don't have more then {} persisted peers yet.", MAX_REPORTED_PEERS);
         }
     }
 
@@ -507,6 +488,18 @@ public class PeerManager implements ConnectionListener, MessageListener {
         return networkNode.getConfirmedConnections().stream()
                 .map(c -> new ReportedPeer(c.getPeersNodeAddressOptional().get(), c.getLastActivityDate()))
                 .collect(Collectors.toSet());
+    }
+
+    public HashSet<ReportedPeer> getConnectedPeersNonSeedNodes() {
+        return new HashSet<>(getConnectedPeers().stream()
+                .filter(e -> !isSeedNode(e))
+                .collect(Collectors.toSet()));
+    }
+
+    public HashSet<ReportedPeer> getConnectedPeersNonSeedNodes(NodeAddress excludedNodeAddress) {
+        return new HashSet<>(getConnectedPeersNonSeedNodes().stream()
+                .filter(e -> !e.nodeAddress.equals(excludedNodeAddress))
+                .collect(Collectors.toSet()));
     }
 
     private void stopCheckMaxConnectionsTimer() {

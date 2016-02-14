@@ -63,7 +63,7 @@ public class AliPayForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        addLabelTextField(gridPane, ++gridRow, "Currency:", aliPayAccount.getSingleTradeCurrency().getCodeAndName());
+        addLabelTextField(gridPane, ++gridRow, "Currency:", aliPayAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
@@ -85,7 +85,7 @@ public class AliPayForm extends PaymentMethodForm {
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(aliPayAccount.getPaymentMethod().getId()));
         TextField field = addLabelTextField(gridPane, ++gridRow, "Account nr.:", aliPayAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, "Currency:", aliPayAccount.getSingleTradeCurrency().getCodeAndName());
+        addLabelTextField(gridPane, ++gridRow, "Currency:", aliPayAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
     }
 

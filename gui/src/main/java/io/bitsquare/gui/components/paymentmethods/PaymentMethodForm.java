@@ -65,7 +65,7 @@ public abstract class PaymentMethodForm {
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
-                return tradeCurrency.getCodeAndName();
+                return tradeCurrency.getNameAndCode();
             }
 
             @Override
@@ -111,7 +111,7 @@ public abstract class PaymentMethodForm {
             displayText = hours / 24 + " days";
 
 
-        addLabelTextField(gridPane, gridRow, "Trade period/end date:", displayText + " / " + dateFromBlocks);
+        addLabelTextField(gridPane, gridRow, "Max. allowed trade period / date:", displayText + " / " + dateFromBlocks);
     }
 
     protected void addAllowedPeriod() {
@@ -126,7 +126,7 @@ public abstract class PaymentMethodForm {
 
         displayText += " (Max. permitted period until the trade has to be completed)";
 
-        addLabelTextField(gridPane, ++gridRow, "Allowed trade period:", displayText);
+        addLabelTextField(gridPane, ++gridRow, "Max. allowed trade period:", displayText);
     }
 
     abstract protected void autoFillNameTextField();

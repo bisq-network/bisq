@@ -45,6 +45,11 @@ public class AliPayAccountContractData extends PaymentAccountContractData implem
     }
 
     @Override
+    public String getPaymentDetailsForTradePopup() {
+        return getPaymentDetails();
+    }
+
+    @Override
     public String toString() {
         return "AliPayAccountContractData{" +
                 "accountNr='" + accountNr + '\'' +

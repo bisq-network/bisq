@@ -89,7 +89,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
-                return tradeCurrency.getCodeAndName();
+                return tradeCurrency.getNameAndCode();
             }
 
             @Override
@@ -160,6 +160,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         currencyComboBox.setOnAction(e -> model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem()));
         paymentMethodComboBox.setOnAction(e -> model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem()));
         createOfferButton.setOnAction(e -> onCreateOffer());
+        priceColumn.textProperty().bind(createStringBinding(
+                () -> "Price in " + model.tradeCurrencyCode.get() + "/BTC", model.tradeCurrencyCode));
         volumeColumn.textProperty().bind(createStringBinding(
                 () -> "Amount in " + model.tradeCurrencyCode.get() + " (Min.)", model.tradeCurrencyCode));
         model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());

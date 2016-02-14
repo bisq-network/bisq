@@ -64,7 +64,7 @@ public class PerfectMoneyForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        addLabelTextField(gridPane, ++gridRow, "Currency:", perfectMoneyAccount.getSingleTradeCurrency().getCodeAndName());
+        addLabelTextField(gridPane, ++gridRow, "Currency:", perfectMoneyAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
@@ -87,7 +87,7 @@ public class PerfectMoneyForm extends PaymentMethodForm {
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(perfectMoneyAccount.getPaymentMethod().getId()));
         TextField field = addLabelTextField(gridPane, ++gridRow, "Account nr.:", perfectMoneyAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, "Currency:", perfectMoneyAccount.getSingleTradeCurrency().getCodeAndName());
+        addLabelTextField(gridPane, ++gridRow, "Currency:", perfectMoneyAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
     }
 

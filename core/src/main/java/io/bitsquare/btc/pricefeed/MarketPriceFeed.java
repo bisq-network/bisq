@@ -4,7 +4,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
-import io.bitsquare.app.Log;
 import io.bitsquare.btc.pricefeed.providers.BitcoinAveragePriceProvider;
 import io.bitsquare.btc.pricefeed.providers.PoloniexPriceProvider;
 import io.bitsquare.btc.pricefeed.providers.PriceProvider;
@@ -140,7 +139,7 @@ public class MarketPriceFeed {
         if (priceConsumer != null && currencyCode != null && type != null) {
             if (cache.containsKey(currencyCode)) {
                 MarketPrice marketPrice = cache.get(currencyCode);
-                log.debug("applyPrice type=" + type);
+                //log.debug("applyPrice type=" + type);
                 priceConsumer.accept(marketPrice.getPrice(type));
             } else {
                 String errorMessage = "We don't have a price for currencyCode " + currencyCode;
@@ -151,14 +150,14 @@ public class MarketPriceFeed {
     }
 
     private void requestPrice(PriceProvider provider) {
-        Log.traceCall();
+        //Log.traceCall();
         GetPriceRequest getPriceRequest = new GetPriceRequest();
         SettableFuture<MarketPrice> future = getPriceRequest.requestPrice(currencyCode, provider);
         Futures.addCallback(future, new FutureCallback<MarketPrice>() {
             public void onSuccess(MarketPrice marketPrice) {
                 UserThread.execute(() -> {
                     cache.put(marketPrice.currencyCode, marketPrice);
-                    log.debug("marketPrice updated " + marketPrice);
+                    //log.debug("marketPrice updated " + marketPrice);
                     priceConsumer.accept(marketPrice.getPrice(type));
                 });
             }
@@ -170,7 +169,7 @@ public class MarketPriceFeed {
     }
 
     private void requestAllPrices(PriceProvider provider, @Nullable Runnable resultHandler) {
-        Log.traceCall();
+        // Log.traceCall();
         GetPriceRequest getPriceRequest = new GetPriceRequest();
         SettableFuture<Map<String, MarketPrice>> future = getPriceRequest.requestAllPrices(provider);
         Futures.addCallback(future, new FutureCallback<Map<String, MarketPrice>>() {

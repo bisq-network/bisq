@@ -1,7 +1,6 @@
 package io.bitsquare.btc.pricefeed;
 
 import com.google.common.util.concurrent.*;
-import io.bitsquare.app.Log;
 import io.bitsquare.btc.pricefeed.providers.PriceProvider;
 import io.bitsquare.common.util.Utilities;
 import org.jetbrains.annotations.NotNull;
@@ -44,7 +43,7 @@ class GetPriceRequest {
     }
 
     private SettableFuture<MarketPrice> requestPrice(String currencyCode, PriceProvider provider, SettableFuture<MarketPrice> resultFuture) {
-        Log.traceCall(currencyCode);
+        // Log.traceCall(currencyCode);
         ListenableFuture<MarketPrice> future = executorService.submit(() -> {
             Thread.currentThread().setName("requestPrice-" + provider.toString());
             return provider.getPrice(currencyCode);

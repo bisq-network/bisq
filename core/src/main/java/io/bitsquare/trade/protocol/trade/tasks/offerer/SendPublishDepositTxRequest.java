@@ -36,7 +36,6 @@ public class SendPublishDepositTxRequest extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            trade.setState(Trade.State.DEPOSIT_PUBLISH_REQUESTED);
             PublishDepositTxRequest tradeMessage = new PublishDepositTxRequest(
                     processModel.getId(),
                     processModel.getPaymentAccountContractData(trade),
@@ -69,6 +68,9 @@ public class SendPublishDepositTxRequest extends TradeTask {
                         }
                     }
             );
+
+            //TODO should it be in success handler?
+            trade.setState(Trade.State.DEPOSIT_PUBLISH_REQUESTED);
         } catch (Throwable t) {
             failed(t);
         }

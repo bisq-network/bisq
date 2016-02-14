@@ -117,11 +117,8 @@ public class MaintenanceHandshake implements MessageListener {
         Log.traceCall("getPeersRequest=" + getPeersRequest + "\n\tconnection=" + connection + "\n\tthis=" + this);
 
         HashSet<ReportedPeer> reportedPeers = getPeersRequest.reportedPeers;
-        
-       /* StringBuilder result = new StringBuilder("Received peers:");
-        reportedPeers.stream().forEach(e -> result.append("\n\t").append(e));
-        log.trace(result.toString());*/
-        log.trace("reportedPeers.size=" + reportedPeers.size());
+
+        peerManager.printReportedPeers(reportedPeers);
 
         checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
                 "The peers address must have been already set at the moment");

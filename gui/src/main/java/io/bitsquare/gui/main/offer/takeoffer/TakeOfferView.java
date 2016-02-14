@@ -317,7 +317,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         paymentMethodLabel.setManaged(!showComboBox);
         if (!showComboBox)
             paymentMethodTextField.setText(BSResources.get(model.getPaymentMethod().getId()));
-        currencyTextField.setText(model.getTradeCurrency().getCodeAndName());
+        currencyTextField.setText(model.getTradeCurrency().getNameAndCode());
         buyLabel.setText(model.getDirectionLabel());
         amountDescriptionLabel.setText(model.getAmountDescription());
         amountRangeTextField.setText(model.getAmountRange());
@@ -553,7 +553,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         balanceTextField = balanceTuple.second;
         balanceTextField.setVisible(false);
 
-        Tuple3<Button, ProgressIndicator, Label> takeOfferTuple = addButtonWithStatus(gridPane, ++gridRow, BSResources.get("takeOffer.fundsBox.takeOffer"));
+        Tuple3<Button, ProgressIndicator, Label> takeOfferTuple = addButtonWithStatusAfterGroup(gridPane, ++gridRow, BSResources.get("takeOffer.fundsBox.takeOffer"));
         takeOfferButton = takeOfferTuple.first;
         takeOfferButton.setVisible(false);
         takeOfferButton.setOnAction(e -> onTakeOffer());

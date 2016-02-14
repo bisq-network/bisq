@@ -44,4 +44,9 @@ public class PerfectMoneyAccountContractData extends PaymentAccountContractData 
         return "PerfectMoney - Account nr.: " + accountNr;
     }
 
+    @Override
+    public String getPaymentDetailsForTradePopup() {
+        return getPaymentDetails();
+    }
+
 }

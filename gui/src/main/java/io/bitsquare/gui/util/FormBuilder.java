@@ -129,6 +129,7 @@ public class FormBuilder {
         return label;
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + TextField
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -672,9 +673,9 @@ public class FormBuilder {
     // Button + ProgressIndicator + Label
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple3<Button, ProgressIndicator, Label> addButtonWithStatus(GridPane gridPane,
-                                                                               int rowIndex,
-                                                                               String buttonTitle) {
+    public static Tuple3<Button, ProgressIndicator, Label> addButtonWithStatusAfterGroup(GridPane gridPane,
+                                                                                         int rowIndex,
+                                                                                         String buttonTitle) {
         return addButtonWithStatus(gridPane, rowIndex, buttonTitle, 15);
     }
 

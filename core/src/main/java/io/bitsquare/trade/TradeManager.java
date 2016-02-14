@@ -59,7 +59,6 @@ import org.spongycastle.crypto.params.KeyParameter;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
-import java.util.Date;
 import java.util.Optional;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
@@ -98,7 +97,6 @@ public class TradeManager {
                         ArbitratorManager arbitratorManager,
                         P2PService p2PService,
                         @Named("storage.dir") File storageDir) {
-        Log.traceCall();
         this.user = user;
         this.keyRing = keyRing;
         this.walletService = walletService;
@@ -280,7 +278,7 @@ public class TradeManager {
         else
             trade = new BuyerAsTakerTrade(offer, amount, model.getPeerNodeAddress(), tradableListStorage);
 
-        trade.setTakeOfferDate(new Date());
+        //trade.setTakeOfferDate(new Date());
         trade.setTakeOfferDateAsBlockHeight(tradeWalletService.getBestChainHeight());
         trade.setTakerPaymentAccountId(paymentAccountId);
 
@@ -312,8 +310,8 @@ public class TradeManager {
             public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                 if (transaction != null) {
                     log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
-                    trade.setState(Trade.State.WITHDRAW_COMPLETED);
                     addTradeToClosedTrades(trade);
+                    trade.setState(Trade.State.WITHDRAW_COMPLETED);
                     resultHandler.handleResult();
                 }
             }

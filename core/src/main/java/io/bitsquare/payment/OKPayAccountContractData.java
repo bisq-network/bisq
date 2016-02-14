@@ -44,5 +44,8 @@ public class OKPayAccountContractData extends PaymentAccountContractData impleme
         return "OKPay - Account nr.: " + accountNr;
     }
 
-
+    @Override
+    public String getPaymentDetailsForTradePopup() {
+        return getPaymentDetails();
+    }
 }

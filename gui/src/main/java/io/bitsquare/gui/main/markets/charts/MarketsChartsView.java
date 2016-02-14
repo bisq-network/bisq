@@ -86,7 +86,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
-                return tradeCurrency.getCodeAndName();
+                return tradeCurrency.getNameAndCode();
             }
 
             @Override

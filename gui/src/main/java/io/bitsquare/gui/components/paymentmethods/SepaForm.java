@@ -59,7 +59,7 @@ public class SepaForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name:", ((SepaAccountContractData) paymentAccountContractData).getHolderName());
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Country of bank:", CountryUtil.getNameByCode(paymentAccountContractData.getCountryCode()));
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Country of bank:", CountryUtil.getNameAndCode(paymentAccountContractData.getCountryCode()));
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "IBAN:", ((SepaAccountContractData) paymentAccountContractData).getIban());
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "BIC/SWIFT:", ((SepaAccountContractData) paymentAccountContractData).getBic());
         return gridRow;
@@ -107,7 +107,7 @@ public class SepaForm extends PaymentMethodForm {
         countryComboBox.setConverter(new StringConverter<Country>() {
             @Override
             public String toString(Country country) {
-                return country.code + " (" + country.name + ")";
+                return country.name + " (" + country.code + ")";
             }
 
             @Override
@@ -120,7 +120,7 @@ public class SepaForm extends PaymentMethodForm {
             sepaAccount.setCountry(selectedItem);
             TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(selectedItem.code);
             sepaAccount.setSingleTradeCurrency(currency);
-            currencyTextField.setText("Currency: " + currency.getCodeAndName());
+            currencyTextField.setText("Currency: " + currency.getNameAndCode());
             updateCountriesSelection(true, euroCountryCheckBoxes);
             updateCountriesSelection(true, nonEuroCountryCheckBoxes);
             updateFromInputs();
@@ -138,7 +138,7 @@ public class SepaForm extends PaymentMethodForm {
             sepaAccount.setCountry(country);
             TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(country.code);
             sepaAccount.setSingleTradeCurrency(currency);
-            currencyTextField.setText("Currency: " + currency.getCodeAndName());
+            currencyTextField.setText("Currency: " + currency.getNameAndCode());
         }
 
         updateFromInputs();
@@ -256,7 +256,7 @@ public class SepaForm extends PaymentMethodForm {
         TextField bicField = addLabelTextField(gridPane, ++gridRow, "BIC/SWIFT:", sepaAccount.getBic()).second;
         bicField.setMouseTransparent(false);
         addLabelTextField(gridPane, ++gridRow, "Location of Bank:", sepaAccount.getCountry().name);
-        addLabelTextField(gridPane, ++gridRow, "Currency:", sepaAccount.getSingleTradeCurrency().getCodeAndName());
+        addLabelTextField(gridPane, ++gridRow, "Currency:", sepaAccount.getSingleTradeCurrency().getNameAndCode());
         String countries;
         Tooltip tooltip = null;
         if (CountryUtil.containsAllSepaEuroCountries(sepaAccount.getAcceptedCountryCodes())) {

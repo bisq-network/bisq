@@ -49,7 +49,7 @@ public class BlockChainForm extends PaymentMethodForm {
     private ComboBox<TradeCurrency> currencyComboBox;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Address:", ((BlockChainAccountContractData) paymentAccountContractData).getAddress());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Cryptocurrency address:", ((BlockChainAccountContractData) paymentAccountContractData).getAddress());
         if (paymentAccountContractData instanceof BlockChainAccountContractData &&
                 ((BlockChainAccountContractData) paymentAccountContractData).getPaymentId() != null)
             addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Payment ID:", ((BlockChainAccountContractData) paymentAccountContractData).getPaymentId());
@@ -70,7 +70,7 @@ public class BlockChainForm extends PaymentMethodForm {
 
         addTradeCurrencyComboBox();
         currencyComboBox.setPrefWidth(250);
-        addressInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Receiving altcoin address:").second;
+        addressInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Cryptocurrency address:").second;
         addressInputTextField.setValidator(altCoinAddressValidator);
 
         addressInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -98,9 +98,9 @@ public class BlockChainForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", blockChainAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(blockChainAccount.getPaymentMethod().getId()));
-        TextField field = addLabelTextField(gridPane, ++gridRow, "Receiving altcoin address:", blockChainAccount.getAddress()).second;
+        TextField field = addLabelTextField(gridPane, ++gridRow, "Cryptocurrency address:", blockChainAccount.getAddress()).second;
         field.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, "Crypto currency:", blockChainAccount.getSingleTradeCurrency().getCodeAndName());
+        addLabelTextField(gridPane, ++gridRow, "Crypto currency:", blockChainAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
     }
 
@@ -114,13 +114,13 @@ public class BlockChainForm extends PaymentMethodForm {
     @Override
     protected void addTradeCurrencyComboBox() {
         currencyComboBox = addLabelComboBox(gridPane, ++gridRow, "Crypto currency:").second;
-        currencyComboBox.setPromptText("Select crypto currency");
+        currencyComboBox.setPromptText("Select cryptocurrency");
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getSortedCryptoCurrencies()));
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 20));
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
-                return tradeCurrency.getCodeAndName();
+                return tradeCurrency.getNameAndCode();
             }
 
             @Override

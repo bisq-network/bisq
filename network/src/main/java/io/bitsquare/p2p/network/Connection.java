@@ -62,7 +62,7 @@ public class Connection implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final Socket socket;
-    private final MessageListener messageListener;
+    // private final MessageListener messageListener;
     private final ConnectionListener connectionListener;
     private final String portInfo;
     private final String uid = UUID.randomUUID().toString();
@@ -85,6 +85,8 @@ public class Connection implements MessageListener {
     private PeerType peerType;
     private final ObjectProperty<NodeAddress> nodeAddressProperty = new SimpleObjectProperty<>();
     private List<Long> messageTimeStamps = new ArrayList<>();
+    private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -93,8 +95,10 @@ public class Connection implements MessageListener {
     Connection(Socket socket, MessageListener messageListener, ConnectionListener connectionListener,
                @Nullable NodeAddress peersNodeAddress) {
         this.socket = socket;
-        this.messageListener = messageListener;
+        //this.messageListener = messageListener;
         this.connectionListener = connectionListener;
+
+        addMessageListener(messageListener);
 
         sharedModel = new SharedModel(this, socket);
 
@@ -143,7 +147,6 @@ public class Connection implements MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     // Called form various threads
     public void sendMessage(Message message) {
         if (!stopped) {
@@ -190,6 +193,19 @@ public class Connection implements MessageListener {
         }
     }
 
+    public void addMessageListener(MessageListener messageListener) {
+        boolean isNewEntry = messageListeners.add(messageListener);
+        if (!isNewEntry)
+            log.warn("Try to add a messageListener which was already added.");
+    }
+
+    public void removeMessageListener(MessageListener messageListener) {
+        boolean contained = messageListeners.remove(messageListener);
+        if (!contained)
+            log.debug("Try to remove a messageListener which was never added.\n\t" +
+                    "That might happen because of async behaviour of CopyOnWriteArraySet");
+    }
+
     @SuppressWarnings("unused")
     public void reportIllegalRequest(RuleViolation ruleViolation) {
         sharedModel.reportInvalidRequest(ruleViolation);
@@ -224,11 +240,11 @@ public class Connection implements MessageListener {
     // MessageListener implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Only get non - CloseConnectionMessage messages
+    // Only receive non - CloseConnectionMessage messages
     @Override
     public void onMessage(Message message, Connection connection) {
-        // connection is null as we get called from InputHandler, which does not hold a reference to Connection
-        UserThread.execute(() -> messageListener.onMessage(message, this));
+        checkArgument(connection.equals(this));
+        UserThread.execute(() -> messageListeners.stream().forEach(e -> e.onMessage(message, connection)));
     }
 
 

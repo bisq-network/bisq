@@ -89,4 +89,12 @@ public class SepaAccountContractData extends PaymentAccountContractData implemen
     public String getPaymentDetails() {
         return "SEPA - Holder name: " + holderName + ", IBAN: " + iban + ", BIC: " + bic + ", country code: " + getCountryCode();
     }
+
+    @Override
+    public String getPaymentDetailsForTradePopup() {
+        return "Holder name: " + holderName + "\n" +
+                "IBAN: " + iban + "\n" +
+                "BIC: " + bic + "\n" +
+                "Country of bank: " + CountryUtil.getNameAndCode(getCountryCode());
+    }
 }

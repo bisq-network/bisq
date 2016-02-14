@@ -26,8 +26,6 @@ import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.util.Validator.checkTradeId;
@@ -53,11 +51,10 @@ public class ProcessDepositTxPublishedMessage extends TradeTask {
             Transaction transactionFromSerializedTx = processModel.getWalletService().getTransactionFromSerializedTx(message.depositTx);
             // update with full tx
             trade.setDepositTx(processModel.getTradeWalletService().addTransactionToWallet(transactionFromSerializedTx));
-           
-            trade.setState(Trade.State.DEPOSIT_PUBLISHED_MSG_RECEIVED);
-            trade.setTakeOfferDate(new Date());
-            trade.setTakeOfferDateAsBlockHeight(processModel.getTradeWalletService().getBestChainHeight());
 
+            //trade.setTakeOfferDate(new Date());
+            trade.setTakeOfferDateAsBlockHeight(processModel.getTradeWalletService().getBestChainHeight());
+            
             if (trade instanceof OffererTrade)
                 processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer());
 
@@ -65,6 +62,8 @@ public class ProcessDepositTxPublishedMessage extends TradeTask {
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             removeMailboxMessageAfterProcessing();
+
+            trade.setState(Trade.State.DEPOSIT_PUBLISHED_MSG_RECEIVED);
             
             complete();
         } catch (Throwable t) {

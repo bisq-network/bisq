@@ -72,6 +72,8 @@ public abstract class PaymentAccountContractData implements Serializable {
 
     abstract public String getPaymentDetails();
 
+    abstract public String getPaymentDetailsForTradePopup();
+
     public int getMaxTradePeriod() {
         return maxTradePeriod;
     }

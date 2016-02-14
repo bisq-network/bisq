@@ -16,10 +16,7 @@ import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.crypto.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.messaging.*;
 import io.bitsquare.p2p.network.*;
-import io.bitsquare.p2p.peers.Broadcaster;
-import io.bitsquare.p2p.peers.PeerExchangeManager;
-import io.bitsquare.p2p.peers.PeerManager;
-import io.bitsquare.p2p.peers.RequestDataManager;
+import io.bitsquare.p2p.peers.*;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.P2PDataStorage;
@@ -81,6 +78,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private Subscription networkReadySubscription;
     private boolean isBootstrapped;
     private ChangeListener<Number> numOfBroadcastsChangeListener;
+    private MaintenanceManager maintenanceManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -128,6 +126,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         peerExchangeManager = new PeerExchangeManager(networkNode, peerManager, seedNodeAddresses);
 
+        maintenanceManager = new MaintenanceManager(networkNode, peerManager, seedNodeAddresses);
+
+
         // We need to have both the initial data delivered and the hidden service published
         networkReadyBinding = EasyBind.combine(hiddenServicePublished, preliminaryDataReceived,
                 (hiddenServicePublished, preliminaryDataReceived)
@@ -169,6 +170,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
             if (peerExchangeManager != null)
                 peerExchangeManager.shutDown();
+
+            if (maintenanceManager != null)
+                maintenanceManager.shutDown();
 
             if (networkNode != null)
                 networkNode.shutDown(() -> {
@@ -222,6 +226,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         hiddenServicePublished.set(true);
 
         p2pServiceListeners.stream().forEach(SetupListener::onHiddenServicePublished);
+
+        maintenanceManager.start();
     }
 
     @Override
