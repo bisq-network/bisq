@@ -176,11 +176,6 @@ public class MainViewModel implements ViewModel {
         TxIdTextField.setWalletService(walletService);
         BalanceTextField.setWalletService(walletService);
         BalanceWithConfirmationTextField.setWalletService(walletService);
-
-        if (BitsquareApp.DEV_MODE) {
-            preferences.setUseAnimations(false);
-            preferences.setUseEffects(false);
-        }
     }
 
 

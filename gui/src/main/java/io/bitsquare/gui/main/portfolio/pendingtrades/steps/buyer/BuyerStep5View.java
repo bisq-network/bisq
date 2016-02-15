@@ -112,9 +112,8 @@ public class BuyerStep5View extends TradeStepView {
                     () -> {
                         String id = "TradeCompletedInfoPopup";
                         if (preferences.showAgain(id)) {
-                            new Popup()
-                                    .information("You can review your completed trades under \"Portfolio/History\" or " +
-                                            "review your transactions under \"Funds/Transactions\"")
+                            new Popup().information("You can review your completed trades under \"Portfolio/History\" or " +
+                                    "review your transactions under \"Funds/Transactions\"")
                                     .dontShowAgainId(id, preferences)
                                     .show();
                         }

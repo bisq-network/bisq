@@ -32,6 +32,7 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.disputes.DisputesView;
+import io.bitsquare.gui.main.notifications.NotificationCenter;
 import io.bitsquare.gui.main.popups.SelectDepositTxPopup;
 import io.bitsquare.gui.main.popups.WalletPasswordPopup;
 import io.bitsquare.payment.PaymentAccountContractData;
@@ -71,6 +72,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public final DisputeManager disputeManager;
     private final Navigation navigation;
     private final WalletPasswordPopup walletPasswordPopup;
+    private NotificationCenter notificationCenter;
 
     final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<Trade> tradesListChangeListener;
@@ -79,6 +81,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     final ObjectProperty<PendingTradesListItem> selectedItemProperty = new SimpleObjectProperty<>();
     public final StringProperty txId = new SimpleStringProperty();
     public final Preferences preferences;
+    private boolean activated;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -88,7 +91,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     @Inject
     public PendingTradesDataModel(TradeManager tradeManager, WalletService walletService, TradeWalletService tradeWalletService,
                                   User user, KeyRing keyRing, DisputeManager disputeManager, Preferences preferences,
-                                  Navigation navigation, WalletPasswordPopup walletPasswordPopup) {
+                                  Navigation navigation, WalletPasswordPopup walletPasswordPopup, NotificationCenter notificationCenter) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
@@ -98,19 +101,27 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.preferences = preferences;
         this.navigation = navigation;
         this.walletPasswordPopup = walletPasswordPopup;
+        this.notificationCenter = notificationCenter;
 
         tradesListChangeListener = change -> onListChanged();
+        notificationCenter.setSelectItemByTradeIdConsumer(this::selectItemByTradeId);
     }
 
     @Override
     protected void activate() {
         tradeManager.getTrades().addListener(tradesListChangeListener);
         onListChanged();
+        if (selectedItemProperty.get() != null)
+            notificationCenter.setSelectedTradeId(selectedItemProperty.get().getTrade().getId());
+
+        activated = true;
     }
 
     @Override
     protected void deactivate() {
         tradeManager.getTrades().removeListener(tradesListChangeListener);
+        notificationCenter.setSelectedTradeId(null);
+        activated = false;
     }
 
 
@@ -254,12 +265,20 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             doSelectItem(null);
     }
 
+    private void selectItemByTradeId(String tradeId) {
+        if (activated)
+            list.stream().filter(e -> e.getTrade().getId().equals(tradeId)).findAny().ifPresent(this::doSelectItem);
+    }
+
     private void doSelectItem(PendingTradesListItem item) {
         if (item != null) {
             Trade trade = item.getTrade();
             isOfferer = tradeManager.isMyOffer(trade.getOffer());
             if (trade.getDepositTx() != null)
                 txId.set(trade.getDepositTx().getHashAsString());
+            notificationCenter.setSelectedTradeId(trade.getId());
+        } else {
+            notificationCenter.setSelectedTradeId(null);
         }
         selectedItemProperty.set(item);
     }

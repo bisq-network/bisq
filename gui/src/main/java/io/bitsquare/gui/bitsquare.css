@@ -840,10 +840,27 @@ textfield */
     -fx-text-fill: #333;
 }
 
-#popup-message {
+#popup-bg {
     -fx-font-size: 15;
+    -fx-text-fill: #333;
+    -fx-background-color: white;
+    -fx-background-radius: 5 5 5 5;
+    -fx-background-insets: 10;
+    -fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);
 }
 
-#popup-button {
-    -fx-font-size: 15;
+#notification-popup-headline {
+    -fx-font-size: 12;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3c3c3c;
+}
+
+#notification-popup-bg {
+    -fx-font-size: 11;
+    -fx-text-fill: #3c3c3c;
+    -fx-background-color: linear-gradient(to bottom, #fcfcfc, #e5e5e5);
+    -fx-background-radius: 5 5 5 5;
+    -fx-background-insets: 10;
+    -fx-effect: dropshadow(gaussian, #434343, 10, 0, 0, 0);
+
 }

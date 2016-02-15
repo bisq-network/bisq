@@ -45,10 +45,6 @@ public class PendingTradesListItem {
         return trade.tradeVolumeProperty();
     }
 
-    public String getId() {
-        return trade.getShortId();
-    }
-
     public Fiat getPrice() {
         return trade.getOffer().getPrice();
     }

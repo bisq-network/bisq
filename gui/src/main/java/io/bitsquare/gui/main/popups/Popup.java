@@ -27,7 +27,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
-import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -74,6 +73,7 @@ public class Popup {
     private Preferences preferences;
     private ChangeListener<Number> positionListener;
     private Timer centerTime;
+    protected double buttonDistance = 20;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -86,6 +86,7 @@ public class Popup {
     public void show() {
         createGridPane();
         addHeadLine();
+        addSeparator();
 
         if (showProgressIndicator)
             addProgressIndicator();
@@ -96,24 +97,34 @@ public class Popup {
 
         addCloseButton();
         addDontShowAgainCheckBox();
+        applyStyles();
         PopupManager.queueForDisplay(this);
     }
 
     public void hide() {
-        owner.getScene().getWindow().xProperty().removeListener(positionListener);
-        owner.getScene().getWindow().yProperty().removeListener(positionListener);
+        animateHide(() -> {
+            Window window = owner.getScene().getWindow();
+            window.xProperty().removeListener(positionListener);
+            window.yProperty().removeListener(positionListener);
+            window.widthProperty().removeListener(positionListener);
 
-        if (centerTime != null)
-            centerTime.cancel();
+            if (centerTime != null)
+                centerTime.cancel();
 
-        MainView.removeBlur();
-        if (stage != null)
-            stage.hide();
-        else
-            log.warn("Stage is null");
+            removeEffectFromBackground();
 
-        cleanup();
-        PopupManager.isHidden(this);
+            if (stage != null)
+                stage.hide();
+            else
+                log.warn("Stage is null");
+
+            cleanup();
+            PopupManager.isHidden(Popup.this);
+        });
+    }
+
+    protected void animateHide(Runnable onFinishedHandler) {
+        onFinishedHandler.run();
     }
 
     protected void cleanup() {
@@ -217,11 +228,6 @@ public class Popup {
         gridPane.setVgap(5);
         gridPane.setPadding(new Insets(30, 30, 30, 30));
         gridPane.setPrefWidth(width);
-        gridPane.setStyle("-fx-background-color: white;" +
-                        "-fx-background-radius: 5 5 5 5;" +
-                        "-fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);" +
-                        "-fx-background-insets: 10;"
-        );
 
         ColumnConstraints columnConstraints1 = new ColumnConstraints();
         columnConstraints1.setHalignment(HPos.RIGHT);
@@ -232,7 +238,7 @@ public class Popup {
     }
 
     protected void blurAgain() {
-        FxTimer.runLater(Duration.ofMillis(Transitions.DEFAULT_DURATION), () -> MainView.blurLight());
+        FxTimer.runLater(Duration.ofMillis(Transitions.DEFAULT_DURATION), MainView::blurLight);
     }
 
     public void display() {
@@ -244,14 +250,15 @@ public class Popup {
         scene.getStylesheets().setAll(owner.getScene().getStylesheets());
         scene.setFill(Color.TRANSPARENT);
         stage.setScene(scene);
-        stage.initModality(Modality.WINDOW_MODAL);
+        setModality();
         stage.initStyle(StageStyle.TRANSPARENT);
-        stage.initOwner(owner.getScene().getWindow());
+        Window window = owner.getScene().getWindow();
+        stage.initOwner(window);
         stage.show();
 
-        centerPopup();
+        layout();
 
-        MainView.blurLight();
+        addEffectToBackground();
 
         // On Linux the owner stage does not move the child stage as it does on Mac
         // So we need to apply centerPopup. Further with fast movements the handler loses
@@ -259,34 +266,61 @@ public class Popup {
         // Also on Mac sometimes the popups are positioned outside of the main app, so keep it for all OS
         positionListener = (observable, oldValue, newValue) -> {
             if (stage != null) {
-                centerPopup();
+                layout();
                 if (centerTime != null)
                     centerTime.cancel();
 
-                centerTime = UserThread.runAfter(this::centerPopup, 3);
+                centerTime = UserThread.runAfter(this::layout, 3);
             }
         };
-        owner.getScene().getWindow().xProperty().addListener(positionListener);
-        owner.getScene().getWindow().yProperty().addListener(positionListener);
+        window.xProperty().addListener(positionListener);
+        window.yProperty().addListener(positionListener);
+        window.widthProperty().addListener(positionListener);
+
+        animateDisplay();
     }
 
-    protected void centerPopup() {
+    protected void animateDisplay() {
+    }
+
+    protected void setModality() {
+        stage.initModality(Modality.WINDOW_MODAL);
+    }
+
+    protected void applyStyles() {
+        gridPane.setId("popup-bg");
+        if (headLineLabel != null)
+            headLineLabel.setId("popup-headline");
+    }
+
+    protected void addEffectToBackground() {
+        MainView.blurLight();
+    }
+
+    protected void removeEffectFromBackground() {
+        MainView.removeBlur();
+    }
+
+    protected void layout() {
         Window window = owner.getScene().getWindow();
         double titleBarHeight = window.getHeight() - owner.getScene().getHeight();
-        Point2D point = owner.localToScene(0, 0);
-        stage.setX(Math.round(window.getX() + point.getX() + (owner.getWidth() - stage.getWidth()) / 2));
-        stage.setY(Math.round(window.getY() + titleBarHeight + point.getY() + (owner.getHeight() - stage.getHeight()) / 2));
+        stage.setX(Math.round(window.getX() + (owner.getWidth() - stage.getWidth()) / 2));
+        stage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - stage.getHeight()) / 2));
     }
 
     protected void addHeadLine() {
         if (headLine != null) {
             headLineLabel = new Label(BSResources.get(headLine));
             headLineLabel.setMouseTransparent(true);
-            headLineLabel.setId("popup-headline");
             GridPane.setHalignment(headLineLabel, HPos.LEFT);
             GridPane.setRowIndex(headLineLabel, ++rowIndex);
             GridPane.setColumnSpan(headLineLabel, 2);
+            gridPane.getChildren().addAll(headLineLabel);
+        }
+    }
 
+    protected void addSeparator() {
+        if (headLine != null) {
             Separator separator = new Separator();
             separator.setMouseTransparent(true);
             separator.setOrientation(Orientation.HORIZONTAL);
@@ -295,7 +329,7 @@ public class Popup {
             GridPane.setRowIndex(separator, ++rowIndex);
             GridPane.setColumnSpan(separator, 2);
 
-            gridPane.getChildren().addAll(headLineLabel, separator);
+            gridPane.getChildren().add(separator);
         }
     }
 
@@ -322,7 +356,6 @@ public class Popup {
                 "It will make debugging easier if you can attach the bitsquare.log file which you can find in the application directory.");
 
         Button githubButton = new Button("Report to Github issue tracker");
-        githubButton.setId("popup-button");
         GridPane.setMargin(githubButton, new Insets(20, 0, 0, 0));
         GridPane.setHalignment(githubButton, HPos.RIGHT);
         GridPane.setRowIndex(githubButton, ++rowIndex);
@@ -335,7 +368,6 @@ public class Popup {
         });
 
         Button mailButton = new Button("Report by email");
-        mailButton.setId("popup-button");
         GridPane.setHalignment(mailButton, HPos.RIGHT);
         GridPane.setRowIndex(mailButton, ++rowIndex);
         GridPane.setColumnIndex(mailButton, 1);
@@ -373,7 +405,6 @@ public class Popup {
 
     protected void addCloseButton() {
         closeButton = new Button(closeButtonText == null ? "Close" : closeButtonText);
-        closeButton.setId("popup-button");
         closeButton.setOnAction(event -> {
             hide();
             closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
@@ -381,7 +412,6 @@ public class Popup {
 
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
             actionButton = new Button(actionButtonText == null ? "Ok" : actionButtonText);
-            actionButton.setId("popup-button");
             actionButton.setDefaultButton(true);
             //TODO app wide focus
             //actionButton.requestFocus();
@@ -399,13 +429,13 @@ public class Popup {
             GridPane.setHalignment(hBox, HPos.RIGHT);
             GridPane.setRowIndex(hBox, ++rowIndex);
             GridPane.setColumnSpan(hBox, 2);
-            GridPane.setMargin(hBox, new Insets(30, 0, 0, 0));
+            GridPane.setMargin(hBox, new Insets(buttonDistance, 0, 0, 0));
             gridPane.getChildren().add(hBox);
         } else {
             closeButton.setDefaultButton(true);
             GridPane.setHalignment(closeButton, HPos.RIGHT);
             if (!showReportErrorButtons)
-                GridPane.setMargin(closeButton, new Insets(20, 0, 0, 0));
+                GridPane.setMargin(closeButton, new Insets(buttonDistance, 0, 0, 0));
             GridPane.setRowIndex(closeButton, ++rowIndex);
             GridPane.setColumnIndex(closeButton, 1);
             gridPane.getChildren().add(closeButton);

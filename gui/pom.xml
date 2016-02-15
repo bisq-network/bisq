@@ -136,12 +136,6 @@
             <version>8.0.0</version>
         </dependency>
 
-        <dependency>
-            <groupId>eu.hansolo.enzo</groupId>
-            <artifactId>Enzo</artifactId>
-            <version>0.1.5</version>
-        </dependency>
-
         <!-- <dependency>
              <groupId>org.fxmisc.richtext</groupId>
              <artifactId>richtextfx</artifactId>
