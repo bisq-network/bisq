@@ -28,7 +28,6 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
-import io.bitsquare.p2p.network.LocalhostNetworkNode;
 import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -84,9 +83,6 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         this.p2PService = p2PService;
         this.preferences = preferences;
         this.formatter = formatter;
-        BitcoinNetwork bitcoinNetwork = preferences.getBitcoinNetwork();
-
-        boolean useLocalhost = p2PService.getNetworkNode() instanceof LocalhostNetworkNode;
     }
 
     public void initialize() {

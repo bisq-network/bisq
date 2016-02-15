@@ -12,6 +12,7 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.Utils;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
+import io.bitsquare.p2p.peers.keepalive.messages.KeepAliveMessage;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -47,7 +48,7 @@ public class Connection implements MessageListener {
     public enum PeerType {
         SEED_NODE,
         PEER,
-        DIRECT_MSG_PEER;
+        DIRECT_MSG_PEER
     }
 
 
@@ -93,7 +94,7 @@ public class Connection implements MessageListener {
     private final boolean useCompression = false;
     private PeerType peerType;
     private final ObjectProperty<NodeAddress> nodeAddressProperty = new SimpleObjectProperty<>();
-    private List<Long> messageTimeStamps = new ArrayList<>();
+    private final List<Long> messageTimeStamps = new ArrayList<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
 
 
@@ -192,7 +193,11 @@ public class Connection implements MessageListener {
                     objectOutputStream.flush();
 
                     statistic.addSentBytes(ByteArrayUtils.objectToByteArray(objectToWrite).length);
-                    statistic.updateLastActivityTimestamp();
+                    statistic.addSentMessage(message);
+
+                    // We don't want to get the activity ts updated by ping/pong msg
+                    if (!(message instanceof KeepAliveMessage))
+                        statistic.updateLastActivityTimestamp();
                 }
             } catch (IOException e) {
                 // an exception lead to a shutdown
@@ -221,7 +226,7 @@ public class Connection implements MessageListener {
         sharedModel.reportInvalidRequest(ruleViolation);
     }
 
-    public boolean violatesThrottleLimit() {
+    private boolean violatesThrottleLimit() {
         long now = System.currentTimeMillis();
         boolean violated = false;
         if (messageTimeStamps.size() >= MSG_THROTTLE_PER_SEC) {
@@ -602,7 +607,7 @@ public class Connection implements MessageListener {
                             return;
                         }
 
-                        Serializable serializable = null;
+                        Serializable serializable;
                         if (useCompression) {
                             if (rawInputObject instanceof byte[]) {
                                 byte[] compressedObjectAsBytes = (byte[]) rawInputObject;
@@ -647,14 +652,18 @@ public class Connection implements MessageListener {
 
                         Connection connection = sharedModel.connection;
                         if (message instanceof CloseConnectionMessage) {
-                            CloseConnectionReason[] values = CloseConnectionReason.values();
                             log.info("CloseConnectionMessage received. Reason={}\n\t" +
                                     "connection={}", ((CloseConnectionMessage) message).reason, connection);
                             stop();
                             sharedModel.shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
                         } else if (!stopped) {
-                            connection.statistic.updateLastActivityTimestamp();
                             connection.statistic.addReceivedBytes(size);
+                            connection.statistic.addReceivedMessage(message);
+
+                            // We don't want to get the activity ts updated by ping/pong msg
+                            if (!(message instanceof KeepAliveMessage))
+                                connection.statistic.updateLastActivityTimestamp();
+
 
                             // First a seed node gets a message form a peer (PreliminaryDataRequest using 
                             // AnonymousMessage interface) which does not has its hidden service 

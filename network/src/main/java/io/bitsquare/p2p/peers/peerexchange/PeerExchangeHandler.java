@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class PeerExchangeHandler implements MessageListener {
+class PeerExchangeHandler implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(PeerExchangeHandler.class);
 
     private static final long TIME_OUT_SEC = 20;
@@ -52,7 +52,7 @@ public class PeerExchangeHandler implements MessageListener {
     private final Listener listener;
     private final int nonce = new Random().nextInt();
     private Timer timeoutTimer;
-    public Connection connection;
+    private Connection connection;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

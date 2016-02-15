@@ -34,32 +34,32 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 
-public class NetworkStatisticListItem {
+class NetworkStatisticListItem {
     private static final Logger log = LoggerFactory.getLogger(NetworkStatisticListItem.class);
 
-    final Statistic statistic;
+    private final Statistic statistic;
     private final Connection connection;
     private final Subscription sentBytesSubscription, receivedBytesSubscription;
     private final Timer timer;
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
 
-    private StringProperty lastActivity = new SimpleStringProperty();
-    private StringProperty sentBytes = new SimpleStringProperty();
-    private StringProperty receivedBytes = new SimpleStringProperty();
+    private final StringProperty lastActivity = new SimpleStringProperty();
+    private final StringProperty sentBytes = new SimpleStringProperty();
+    private final StringProperty receivedBytes = new SimpleStringProperty();
 
     public NetworkStatisticListItem(Connection connection, BSFormatter formatter) {
         this.connection = connection;
         this.formatter = formatter;
         this.statistic = connection.getStatistic();
 
-        sentBytesSubscription = EasyBind.subscribe(statistic.sentBytesProperty,
+        sentBytesSubscription = EasyBind.subscribe(statistic.sentBytesProperty(),
                 e -> sentBytes.set(formatter.formatBytes((int) e)));
-        receivedBytesSubscription = EasyBind.subscribe(statistic.receivedBytesProperty,
+        receivedBytesSubscription = EasyBind.subscribe(statistic.receivedBytesProperty(),
                 e -> receivedBytes.set(formatter.formatBytes((int) e)));
 
         timer = FxTimer.runPeriodically(Duration.ofMillis(1000),
-                () -> UserThread.execute(() -> onLastActivityChanged(statistic.lastActivityTimestampProperty.get())));
-        onLastActivityChanged(statistic.lastActivityTimestampProperty.get());
+                () -> UserThread.execute(() -> onLastActivityChanged(statistic.getLastActivityTimestamp())));
+        onLastActivityChanged(statistic.getLastActivityTimestamp());
     }
 
     private void onLastActivityChanged(long timeStamp) {

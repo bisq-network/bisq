@@ -11,7 +11,7 @@ public class ReportedPeer implements Serializable {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     public final NodeAddress nodeAddress;
-    public Date date;
+    public final Date date;
 
     public ReportedPeer(NodeAddress nodeAddress) {
         this.nodeAddress = nodeAddress;

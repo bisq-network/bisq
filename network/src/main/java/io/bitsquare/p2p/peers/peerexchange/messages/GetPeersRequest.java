@@ -12,7 +12,7 @@ public final class GetPeersRequest extends PeerExchangeMessage implements Sender
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private final NodeAddress senderNodeAddress;
-    public int nonce;
+    public final int nonce;
     public final HashSet<ReportedPeer> reportedPeers;
 
     public GetPeersRequest(NodeAddress senderNodeAddress, int nonce, HashSet<ReportedPeer> reportedPeers) {

@@ -16,10 +16,9 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.util.Random;
 
-public class KeepAliveHandler implements MessageListener {
+class KeepAliveHandler implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(KeepAliveHandler.class);
     private Connection connection;
 
@@ -31,7 +30,7 @@ public class KeepAliveHandler implements MessageListener {
     public interface Listener {
         void onComplete();
 
-        void onFault(String errorMessage, @Nullable Connection connection);
+        void onFault(String errorMessage, Connection connection);
     }
 
 

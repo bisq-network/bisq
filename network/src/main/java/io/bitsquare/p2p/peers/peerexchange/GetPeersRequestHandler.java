@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class GetPeersRequestHandler {
+class GetPeersRequestHandler {
     private static final Logger log = LoggerFactory.getLogger(GetPeersRequestHandler.class);
 
     private static final long TIME_OUT_SEC = 20;

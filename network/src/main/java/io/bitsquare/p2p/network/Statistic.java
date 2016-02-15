@@ -1,59 +1,142 @@
 package io.bitsquare.p2p.network;
 
+import io.bitsquare.common.UserThread;
+import io.bitsquare.p2p.Message;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleLongProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Statistic {
     private static final Logger log = LoggerFactory.getLogger(Statistic.class);
 
-    private final Date creationDate;
-    private long lastActivityTimestamp;
-    private int sentBytes = 0;
-    private int receivedBytes = 0;
 
-    public LongProperty lastActivityTimestampProperty = new SimpleLongProperty(System.currentTimeMillis());
-    public IntegerProperty sentBytesProperty = new SimpleIntegerProperty(0);
-    public IntegerProperty receivedBytesProperty = new SimpleIntegerProperty(0);
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Static
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private final static IntegerProperty totalSentBytes = new SimpleIntegerProperty(0);
+    private final static IntegerProperty totalReceivedBytes = new SimpleIntegerProperty(0);
+
+    public static int getTotalSentBytes() {
+        return totalSentBytes.get();
+    }
+
+    public static IntegerProperty totalSentBytesProperty() {
+        return totalSentBytes;
+    }
+
+    public static int getTotalReceivedBytes() {
+        return totalReceivedBytes.get();
+    }
+
+    public static IntegerProperty totalReceivedBytesProperty() {
+        return totalReceivedBytes;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Instance fields
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private final Date creationDate;
+    private long lastActivityTimestamp = System.currentTimeMillis();
+    private final IntegerProperty sentBytes = new SimpleIntegerProperty(0);
+    private final IntegerProperty receivedBytes = new SimpleIntegerProperty(0);
+    private final Map<String, Integer> receivedMessages = new ConcurrentHashMap<>();
+    private final Map<String, Integer> sentMessages = new ConcurrentHashMap<>();
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Statistic() {
         creationDate = new Date();
-        updateLastActivityTimestamp();
     }
 
-    public Date getCreationDate() {
-        return creationDate;
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Update, increment
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void updateLastActivityTimestamp() {
-        lastActivityTimestamp = System.currentTimeMillis();
-        lastActivityTimestampProperty.set(lastActivityTimestamp);
+        UserThread.execute(() -> lastActivityTimestamp = System.currentTimeMillis());
     }
+
+    public void addSentBytes(int value) {
+        UserThread.execute(() -> {
+            sentBytes.set(sentBytes.get() + value);
+            totalSentBytes.set(totalSentBytes.get() + value);
+        });
+    }
+
+    public void addReceivedBytes(int value) {
+        UserThread.execute(() -> {
+            receivedBytes.set(receivedBytes.get() + value);
+            totalReceivedBytes.set(totalReceivedBytes.get() + value);
+        });
+    }
+
+    // TODO would need msg inspection to get useful information...
+    public void addReceivedMessage(Message message) {
+        String messageClassName = message.getClass().getSimpleName();
+        int counter = 1;
+        if (receivedMessages.containsKey(messageClassName))
+            counter = receivedMessages.get(messageClassName) + 1;
+
+        receivedMessages.put(messageClassName, counter);
+    }
+
+    public void addSentMessage(Message message) {
+        String messageClassName = message.getClass().getSimpleName();
+        int counter = 1;
+        if (sentMessages.containsKey(messageClassName))
+            counter = sentMessages.get(messageClassName) + 1;
+
+        sentMessages.put(messageClassName, counter);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public long getLastActivityTimestamp() {
         return lastActivityTimestamp;
     }
 
     public int getSentBytes() {
+        return sentBytes.get();
+    }
+
+    public IntegerProperty sentBytesProperty() {
         return sentBytes;
     }
 
-    public void addSentBytes(int sentBytes) {
-        this.sentBytes += sentBytes;
-        sentBytesProperty.set(this.sentBytes);
+    public int getReceivedBytes() {
+        return receivedBytes.get();
     }
 
-    public int getReceivedBytes() {
+    public IntegerProperty receivedBytesProperty() {
         return receivedBytes;
     }
 
-    public void addReceivedBytes(int receivedBytes) {
-        this.receivedBytes += receivedBytes;
-        receivedBytesProperty.set(this.receivedBytes);
+    public Date getCreationDate() {
+        return creationDate;
     }
+
+
+    @Override
+    public String toString() {
+        return "Statistic{" +
+                "creationDate=" + creationDate +
+                ", lastActivityTimestamp=" + lastActivityTimestamp +
+                ", sentBytes=" + sentBytes +
+                ", receivedBytes=" + receivedBytes +
+                '}';
+    }
+
 }
