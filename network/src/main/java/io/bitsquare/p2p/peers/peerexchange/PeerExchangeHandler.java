@@ -1,4 +1,4 @@
-package io.bitsquare.p2p.peers;
+package io.bitsquare.p2p.peers.peerexchange;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -11,8 +11,9 @@ import io.bitsquare.p2p.network.CloseConnectionReason;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
-import io.bitsquare.p2p.peers.messages.peers.GetPeersRequest;
-import io.bitsquare.p2p.peers.messages.peers.GetPeersResponse;
+import io.bitsquare.p2p.peers.PeerManager;
+import io.bitsquare.p2p.peers.peerexchange.messages.GetPeersRequest;
+import io.bitsquare.p2p.peers.peerexchange.messages.GetPeersResponse;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +50,7 @@ public class PeerExchangeHandler implements MessageListener {
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
     private final Listener listener;
-    private final long nonce = new Random().nextLong();
+    private final int nonce = new Random().nextInt();
     private Timer timeoutTimer;
     public Connection connection;
 
@@ -62,8 +63,6 @@ public class PeerExchangeHandler implements MessageListener {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.listener = listener;
-
-        //networkNode.addMessageListener(this);
     }
 
     public void cleanup() {
@@ -81,9 +80,9 @@ public class PeerExchangeHandler implements MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestConnectedPeers(NodeAddress nodeAddress) {
+    public void sendGetPeersRequest(NodeAddress nodeAddress) {
         Log.traceCall("nodeAddress=" + nodeAddress + " / this=" + this);
-        checkNotNull(networkNode.getNodeAddress(), "PeerExchangeHandshake.requestReportedPeers: My node address must " +
+        checkNotNull(networkNode.getNodeAddress(), "PeerExchangeHandler.requestReportedPeers: My node address must " +
                 "not be null at requestReportedPeers");
         GetPeersRequest getPeersRequest = new GetPeersRequest(networkNode.getNodeAddress(), nonce, peerManager.getConnectedPeersNonSeedNodes(nodeAddress));
         SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getPeersRequest);
@@ -108,7 +107,7 @@ public class PeerExchangeHandler implements MessageListener {
         checkArgument(timeoutTimer == null, "requestReportedPeers must not be called twice.");
         timeoutTimer = UserThread.runAfter(() -> {
                     String errorMessage = "A timeout occurred at sending getPeersRequest:" + getPeersRequest + " for nodeAddress:" + nodeAddress;
-                    log.info(errorMessage + " / PeerExchangeHandshake=" +
+                    log.info(errorMessage + " / PeerExchangeHandler=" +
                             PeerExchangeHandler.this);
                     log.info("timeoutTimer called on " + this);
                     handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, nodeAddress);
@@ -133,7 +132,7 @@ public class PeerExchangeHandler implements MessageListener {
                 cleanup();
                 listener.onComplete();
             } else {
-                log.trace("Nonce not matching. That message is not intended for us.\n\t" +
+                log.warn("Nonce not matching. That should never happen.\n\t" +
                                 "We drop that message. nonce={} / requestNonce={}",
                         nonce, getPeersResponse.requestNonce);
             }

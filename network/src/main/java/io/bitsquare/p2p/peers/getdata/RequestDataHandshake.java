@@ -1,4 +1,4 @@
-package io.bitsquare.p2p.peers;
+package io.bitsquare.p2p.peers.getdata;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -11,10 +11,11 @@ import io.bitsquare.p2p.network.CloseConnectionReason;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
-import io.bitsquare.p2p.peers.messages.data.GetDataRequest;
-import io.bitsquare.p2p.peers.messages.data.GetDataResponse;
-import io.bitsquare.p2p.peers.messages.data.GetUpdatedDataRequest;
-import io.bitsquare.p2p.peers.messages.data.PreliminaryGetDataRequest;
+import io.bitsquare.p2p.peers.PeerManager;
+import io.bitsquare.p2p.peers.getdata.messages.GetDataRequest;
+import io.bitsquare.p2p.peers.getdata.messages.GetDataResponse;
+import io.bitsquare.p2p.peers.getdata.messages.GetUpdatedDataRequest;
+import io.bitsquare.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import io.bitsquare.p2p.storage.P2PDataStorage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

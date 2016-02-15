@@ -1,4 +1,4 @@
-package io.bitsquare.p2p.peers;
+package io.bitsquare.p2p.peers.peerexchange;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import io.bitsquare.app.Log;
@@ -7,7 +7,8 @@ import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
-import io.bitsquare.p2p.peers.messages.peers.GetPeersRequest;
+import io.bitsquare.p2p.peers.PeerManager;
+import io.bitsquare.p2p.peers.peerexchange.messages.GetPeersRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +25,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
     private static final Logger log = LoggerFactory.getLogger(PeerExchangeManager.class);
 
     private static final long RETRY_DELAY_SEC = 60;
-    private static final long MAINTENANCE_DELAY_SEC = 5;
+    private static final long REQUEST_PERIODICALLY_INTERVAL_MINUTES = 10;
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
@@ -33,7 +34,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
     private Timer connectToMorePeersTimer;
     private boolean shutDownInProgress;
     private ScheduledThreadPoolExecutor executor;
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -76,7 +77,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
         if (executor == null) {
             executor = Utilities.getScheduledThreadPoolExecutor("PeerExchangeManager", 1, 2, 5);
             executor.scheduleAtFixedRate(() -> UserThread.execute(this::requestAgain),
-                    MAINTENANCE_DELAY_SEC, MAINTENANCE_DELAY_SEC, TimeUnit.SECONDS);
+                    REQUEST_PERIODICALLY_INTERVAL_MINUTES, REQUEST_PERIODICALLY_INTERVAL_MINUTES, TimeUnit.MINUTES);
         }
     }
 
@@ -126,7 +127,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
                             peerManager.handleConnectionFault(connection);
                         }
                     });
-            getPeersRequestHandler.process((GetPeersRequest) message, connection);
+            getPeersRequestHandler.handle((GetPeersRequest) message, connection);
         }
     }
 
@@ -182,7 +183,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
                         }
                     });
             peerExchangeHandlerMap.put(nodeAddress, peerExchangeHandler);
-            peerExchangeHandler.requestConnectedPeers(nodeAddress);
+            peerExchangeHandler.sendGetPeersRequest(nodeAddress);
         } else {
             //TODO check when that happens
             log.warn("We have started already a peerExchangeHandshake. " +
@@ -237,7 +238,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void requestAgain() {
-        checkNotNull(networkNode.getNodeAddress(), "My node address must not be null at sendUpdateRequest");
+        checkNotNull(networkNode.getNodeAddress(), "My node address must not be null at requestAgain");
         Set<NodeAddress> candidates = new HashSet<>(getNodeAddresses(peerManager.getReportedPeers()));
         candidates.addAll(getNodeAddresses(peerManager.getPersistedPeers()));
         candidates.addAll(seedNodeAddresses);

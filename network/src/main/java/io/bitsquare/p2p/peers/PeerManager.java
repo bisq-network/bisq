@@ -5,7 +5,8 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
-import io.bitsquare.p2p.peers.messages.data.GetUpdatedDataRequest;
+import io.bitsquare.p2p.peers.getdata.messages.GetUpdatedDataRequest;
+import io.bitsquare.p2p.peers.peerexchange.ReportedPeer;
 import io.bitsquare.storage.Storage;
 import javafx.beans.value.ChangeListener;
 import org.slf4j.Logger;
@@ -30,6 +31,8 @@ public class PeerManager implements ConnectionListener, MessageListener {
     private static int MIN_CONNECTIONS;
     private static int MAX_CONNECTIONS_EXTENDED_1;
     private static int MAX_CONNECTIONS_EXTENDED_2;
+
+
     private static int MAX_CONNECTIONS_EXTENDED_3;
     private boolean printReportedPeersDetails = true;
 
@@ -94,6 +97,9 @@ public class PeerManager implements ConnectionListener, MessageListener {
         stopCheckMaxConnectionsTimer();
     }
 
+    public int getMaxConnections() {
+        return MAX_CONNECTIONS_EXTENDED_3;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ConnectionListener implementation
@@ -198,7 +204,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
             }
 
             if (candidates.size() > 0) {
-                candidates.sort((o1, o2) -> o1.getLastActivityDate().compareTo(o2.getLastActivityDate()));
+                candidates.sort((o1, o2) -> ((Long) o1.getStatistic().getLastActivityTimestamp()).compareTo(((Long) o2.getStatistic().getLastActivityTimestamp())));
                 log.info("Candidates.size() for shut down=" + candidates.size());
                 Connection connection = candidates.remove(0);
                 log.info("We are going to shut down the oldest connection.\n\tconnection=" + connection.toString());
@@ -225,7 +231,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
                     .collect(Collectors.toList());
 
             if (candidates.size() > 1) {
-                candidates.sort((o1, o2) -> o1.getLastActivityDate().compareTo(o2.getLastActivityDate()));
+                candidates.sort((o1, o2) -> ((Long) o1.getStatistic().getLastActivityTimestamp()).compareTo(((Long) o2.getStatistic().getLastActivityTimestamp())));
                 log.info("Number of connections exceeding MAX_CONNECTIONS_EXTENDED_1. Current size=" + candidates.size());
                 Connection connection = candidates.remove(0);
                 log.info("We are going to shut down the oldest connection.\n\tconnection=" + connection.toString());
@@ -260,8 +266,8 @@ public class PeerManager implements ConnectionListener, MessageListener {
     private void removeTooOldReportedPeers() {
         Log.traceCall();
         Set<ReportedPeer> reportedPeersToRemove = reportedPeers.stream()
-                .filter(reportedPeer -> reportedPeer.lastActivityDate != null &&
-                        new Date().getTime() - reportedPeer.lastActivityDate.getTime() > MAX_AGE)
+                .filter(reportedPeer -> reportedPeer.date != null &&
+                        new Date().getTime() - reportedPeer.date.getTime() > MAX_AGE)
                 .collect(Collectors.toSet());
         reportedPeersToRemove.forEach(this::removeReportedPeer);
     }
@@ -345,8 +351,8 @@ public class PeerManager implements ConnectionListener, MessageListener {
     private void removeTooOldPersistedPeers() {
         Log.traceCall();
         Set<ReportedPeer> persistedPeersToRemove = persistedPeers.stream()
-                .filter(reportedPeer -> reportedPeer.lastActivityDate != null &&
-                        new Date().getTime() - reportedPeer.lastActivityDate.getTime() > MAX_AGE)
+                .filter(reportedPeer -> reportedPeer.date != null &&
+                        new Date().getTime() - reportedPeer.date.getTime() > MAX_AGE)
                 .collect(Collectors.toSet());
         persistedPeersToRemove.forEach(this::removePersistedPeer);
     }
@@ -377,7 +383,6 @@ public class PeerManager implements ConnectionListener, MessageListener {
         } else {
             if (reportedPeer != null) {
                 removePersistedPeer(nodeAddress);
-                reportedPeer.penalizeLastActivityDate();
                 persistedPeers.add(reportedPeer);
                 dbStorage.queueUpForSave(persistedPeers, 5000);
 
@@ -486,7 +491,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
         // networkNode.getConfirmedConnections includes:
         // filter(connection -> connection.getPeersNodeAddressOptional().isPresent())
         return networkNode.getConfirmedConnections().stream()
-                .map(c -> new ReportedPeer(c.getPeersNodeAddressOptional().get(), c.getLastActivityDate()))
+                .map(c -> new ReportedPeer(c.getPeersNodeAddressOptional().get()))
                 .collect(Collectors.toSet());
     }
 

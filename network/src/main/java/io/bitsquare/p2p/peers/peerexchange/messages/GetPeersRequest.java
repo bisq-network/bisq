@@ -1,9 +1,9 @@
-package io.bitsquare.p2p.peers.messages.peers;
+package io.bitsquare.p2p.peers.peerexchange.messages;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
-import io.bitsquare.p2p.peers.ReportedPeer;
+import io.bitsquare.p2p.peers.peerexchange.ReportedPeer;
 
 import java.util.HashSet;
 
@@ -12,10 +12,10 @@ public final class GetPeersRequest extends PeerExchangeMessage implements Sender
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private final NodeAddress senderNodeAddress;
-    public long nonce;
+    public int nonce;
     public final HashSet<ReportedPeer> reportedPeers;
 
-    public GetPeersRequest(NodeAddress senderNodeAddress, long nonce, HashSet<ReportedPeer> reportedPeers) {
+    public GetPeersRequest(NodeAddress senderNodeAddress, int nonce, HashSet<ReportedPeer> reportedPeers) {
         this.senderNodeAddress = senderNodeAddress;
         this.nonce = nonce;
         this.reportedPeers = reportedPeers;

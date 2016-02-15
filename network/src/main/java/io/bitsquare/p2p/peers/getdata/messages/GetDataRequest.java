@@ -1,4 +1,4 @@
-package io.bitsquare.p2p.peers.messages.data;
+package io.bitsquare.p2p.peers.getdata.messages;
 
 import io.bitsquare.p2p.Message;
 

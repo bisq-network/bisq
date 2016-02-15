@@ -1,34 +1,23 @@
-package io.bitsquare.p2p.peers;
+package io.bitsquare.p2p.peers.peerexchange;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.NodeAddress;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 public class ReportedPeer implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     public final NodeAddress nodeAddress;
-    public Date lastActivityDate;
+    public Date date;
 
-    public ReportedPeer(NodeAddress nodeAddress, Date lastActivityDate) {
+    public ReportedPeer(NodeAddress nodeAddress) {
         this.nodeAddress = nodeAddress;
-        this.lastActivityDate = lastActivityDate;
+        this.date = new Date();
     }
 
-    public void penalizeLastActivityDate() {
-        if (lastActivityDate != null) {
-            long now = new Date().getTime();
-            long diff = Math.max(TimeUnit.DAYS.toMillis(1), now - lastActivityDate.getTime());
-            long reduced = now - diff * 2;
-            lastActivityDate = new Date(reduced);
-        }
-    }
-
-    // We don't use the lastActivityDate for identity
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -50,7 +39,7 @@ public class ReportedPeer implements Serializable {
     public String toString() {
         return "ReportedPeer{" +
                 "address=" + nodeAddress +
-                ", lastActivityDate=" + lastActivityDate +
+                ", date=" + date +
                 '}';
     }
 }

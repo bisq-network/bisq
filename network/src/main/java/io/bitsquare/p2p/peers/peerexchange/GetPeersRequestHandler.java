@@ -1,4 +1,4 @@
-package io.bitsquare.p2p.peers;
+package io.bitsquare.p2p.peers.peerexchange;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -8,8 +8,9 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.network.CloseConnectionReason;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.NetworkNode;
-import io.bitsquare.p2p.peers.messages.peers.GetPeersRequest;
-import io.bitsquare.p2p.peers.messages.peers.GetPeersResponse;
+import io.bitsquare.p2p.peers.PeerManager;
+import io.bitsquare.p2p.peers.peerexchange.messages.GetPeersRequest;
+import io.bitsquare.p2p.peers.peerexchange.messages.GetPeersResponse;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +62,7 @@ public class GetPeersRequestHandler {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void process(GetPeersRequest getPeersRequest, final Connection connection) {
+    public void handle(GetPeersRequest getPeersRequest, final Connection connection) {
         Log.traceCall("getPeersRequest=" + getPeersRequest + "\n\tconnection=" + connection + "\n\tthis=" + this);
 
         checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
@@ -80,8 +81,8 @@ public class GetPeersRequestHandler {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                String errorMessage = "Sending getPeersRequest to " + connection +
-                        " failed. That is expected if the peer is offline. getPeersRequest=" + getPeersRequest + "." +
+                String errorMessage = "Sending getPeersResponse to " + connection +
+                        " failed. That is expected if the peer is offline. getPeersResponse=" + getPeersResponse + "." +
                         "Exception: " + throwable.getMessage();
                 log.info(errorMessage);
                 handleFault(errorMessage, CloseConnectionReason.SEND_MSG_FAILURE, connection);

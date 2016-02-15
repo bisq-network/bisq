@@ -196,11 +196,11 @@ public class MainViewModel implements ViewModel {
                 onAllServicesInitialized();
         });
 
-        startupTimeout = FxTimer.runLater(Duration.ofMillis(60000), () -> {
+        startupTimeout = FxTimer.runLater(Duration.ofMinutes(3), () -> {
             log.warn("startupTimeout called");
             MainView.blur();
-            new Popup().warning("The application could not startup after 60 seconds.\n" +
-                    "There might be some network connection problems.\n\n" +
+            new Popup().warning("The application could not startup after 3 minutes.\n" +
+                    "There might be some network connection problems or a unstable Tor path.\n\n" +
                     "Please restart and try again.")
                     .closeButtonText("Shut down")
                     .onClose(BitsquareApp.shutDownHandler::run)

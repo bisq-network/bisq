@@ -24,7 +24,10 @@ import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -36,15 +39,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class Connection implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
-    private static final int MAX_MSG_SIZE = 100 * 1024;         // 100 kb of compressed data
-    private static final int MSG_THROTTLE_PER_SEC = 10;              // With MAX_MSG_SIZE of 100kb results in bandwidth of 10 mbit/sec 
-    private static final int MSG_THROTTLE_PER_10SEC = 50;           // With MAX_MSG_SIZE of 100kb results in bandwidth of 5 mbit/sec for 10 sec 
-    //timeout on blocking Socket operations like ServerSocket.accept() or SocketInputStream.read()
-    private static final int SOCKET_TIMEOUT = (int) TimeUnit.MINUTES.toMillis(30);
-
-    public static int getMaxMsgSize() {
-        return MAX_MSG_SIZE;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
@@ -53,7 +47,21 @@ public class Connection implements MessageListener {
     public enum PeerType {
         SEED_NODE,
         PEER,
-        DIRECT_MSG_PEER
+        DIRECT_MSG_PEER;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Static
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private static final int MAX_MSG_SIZE = 100 * 1024;         // 100 kb of compressed data
+    private static final int MSG_THROTTLE_PER_SEC = 10;              // With MAX_MSG_SIZE of 100kb results in bandwidth of 10 mbit/sec 
+    private static final int MSG_THROTTLE_PER_10SEC = 50;           // With MAX_MSG_SIZE of 100kb results in bandwidth of 5 mbit/sec for 10 sec 
+    private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(60);
+
+    public static int getMaxMsgSize() {
+        return MAX_MSG_SIZE;
     }
 
 
@@ -69,6 +77,7 @@ public class Connection implements MessageListener {
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
     // holder of state shared between InputHandler and Connection
     private final SharedModel sharedModel;
+    private final Statistic statistic;
 
     // set in init
     private InputHandler inputHandler;
@@ -97,6 +106,7 @@ public class Connection implements MessageListener {
         this.socket = socket;
         //this.messageListener = messageListener;
         this.connectionListener = connectionListener;
+        statistic = new Statistic();
 
         addMessageListener(messageListener);
 
@@ -128,8 +138,6 @@ public class Connection implements MessageListener {
         } catch (IOException e) {
             sharedModel.handleConnectionException(e);
         }
-
-        sharedModel.updateLastActivityDate();
 
         // Use Peer as default, in case of other types they will set it as soon as possible.
         peerType = PeerType.PEER;
@@ -182,7 +190,9 @@ public class Connection implements MessageListener {
                 if (!stopped) {
                     objectOutputStream.writeObject(objectToWrite);
                     objectOutputStream.flush();
-                    sharedModel.updateLastActivityDate();
+
+                    statistic.addSentBytes(ByteArrayUtils.objectToByteArray(objectToWrite).length);
+                    statistic.updateLastActivityTimestamp();
                 }
             } catch (IOException e) {
                 // an exception lead to a shutdown
@@ -282,10 +292,6 @@ public class Connection implements MessageListener {
         return peersNodeAddressOptional;
     }
 
-    public Date getLastActivityDate() {
-        return sharedModel.getLastActivityDate();
-    }
-
     public String getUid() {
         return uid;
     }
@@ -310,6 +316,9 @@ public class Connection implements MessageListener {
         return sharedModel.getRuleViolation();
     }
 
+    public Statistic getStatistic() {
+        return statistic;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ShutDown
@@ -410,7 +419,6 @@ public class Connection implements MessageListener {
                 "peerAddress=" + peersNodeAddressOptional +
                 ", peerType=" + peerType +
                 ", uid='" + uid + '\'' +
-                ", lastActivityDate=" + getLastActivityDate() +
                 '}';
     }
 
@@ -444,7 +452,6 @@ public class Connection implements MessageListener {
         private final ConcurrentHashMap<RuleViolation, Integer> ruleViolations = new ConcurrentHashMap<>();
 
         // mutable
-        private Date lastActivityDate;
         private volatile boolean stopped;
         private CloseConnectionReason closeConnectionReason;
         private RuleViolation ruleViolation;
@@ -452,14 +459,6 @@ public class Connection implements MessageListener {
         public SharedModel(Connection connection, Socket socket) {
             this.connection = connection;
             this.socket = socket;
-        }
-
-        public void updateLastActivityDate() {
-            lastActivityDate = new Date();
-        }
-
-        public Date getLastActivityDate() {
-            return lastActivityDate;
         }
 
         public void reportInvalidRequest(RuleViolation ruleViolation) {
@@ -539,7 +538,6 @@ public class Connection implements MessageListener {
             return "SharedSpace{" +
                     ", socket=" + socket +
                     ", ruleViolations=" + ruleViolations +
-                    ", lastActivityDate=" + lastActivityDate +
                     '}';
         }
     }
@@ -648,7 +646,6 @@ public class Connection implements MessageListener {
                         }
 
                         Connection connection = sharedModel.connection;
-                        sharedModel.updateLastActivityDate();
                         if (message instanceof CloseConnectionMessage) {
                             CloseConnectionReason[] values = CloseConnectionReason.values();
                             log.info("CloseConnectionMessage received. Reason={}\n\t" +
@@ -656,6 +653,9 @@ public class Connection implements MessageListener {
                             stop();
                             sharedModel.shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
                         } else if (!stopped) {
+                            connection.statistic.updateLastActivityTimestamp();
+                            connection.statistic.addReceivedBytes(size);
+
                             // First a seed node gets a message form a peer (PreliminaryDataRequest using 
                             // AnonymousMessage interface) which does not has its hidden service 
                             // published, so does not know its address. As the IncomingConnection does not has the 

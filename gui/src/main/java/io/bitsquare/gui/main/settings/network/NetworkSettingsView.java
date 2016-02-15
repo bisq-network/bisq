@@ -29,8 +29,6 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.network.LocalhostNetworkNode;
-import io.bitsquare.p2p.network.OutboundConnection;
-import io.bitsquare.p2p.seed.SeedNodesRepository;
 import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -46,7 +44,6 @@ import org.reactfx.util.FxTimer;
 import javax.inject.Inject;
 import java.time.Duration;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -63,20 +60,26 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     @FXML
     ComboBox<BitcoinNetwork> netWorkComboBox;
     @FXML
-    TextArea bitcoinPeersTextArea, p2PPeersTextArea;
+    TextArea bitcoinPeersTextArea;
     @FXML
     Label bitcoinPeersLabel, p2PPeersLabel;
     @FXML
     CheckBox useTorCheckBox;
-
+    @FXML
+    TableView<NetworkStatisticListItem> p2PPeerTable;
+    @FXML
+    TableColumn<NetworkStatisticListItem, String> onionAddressColumn, connectionTypeColumn, creationDateColumn,
+            lastActivityColumn, sentBytesColumn, receivedBytesColumn, peerTypeColumn;
+    /* TableColumn<NetworkStatisticListItem, NetworkStatisticListItem> onionAddressColumn, connectionTypeColumn, creationDateColumn,
+             lastActivityColumn, sentBytesColumn, receivedBytesColumn, peerTypeColumn;
+ */
     private P2PServiceListener p2PServiceListener;
     private ChangeListener<Number> numP2PPeersChangeListener;
     private ChangeListener<List<Peer>> bitcoinPeersChangeListener;
-    private final Set<NodeAddress> seedNodeAddresses;
 
     @Inject
     public NetworkSettingsView(WalletService walletService, P2PService p2PService, Preferences preferences,
-                               SeedNodesRepository seedNodesRepository, BSFormatter formatter) {
+                               BSFormatter formatter) {
         this.walletService = walletService;
         this.p2PService = p2PService;
         this.preferences = preferences;
@@ -84,7 +87,6 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         BitcoinNetwork bitcoinNetwork = preferences.getBitcoinNetwork();
 
         boolean useLocalhost = p2PService.getNetworkNode() instanceof LocalhostNetworkNode;
-        this.seedNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhost, bitcoinNetwork.ordinal());
     }
 
     public void initialize() {
@@ -138,6 +140,19 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             public void onSetupFailed(Throwable throwable) {
             }
         };
+
+        p2PPeerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        p2PPeerTable.setPlaceholder(new Label("No connections are available"));
+        p2PPeerTable.getSortOrder().add(creationDateColumn);
+        creationDateColumn.setSortType(TableColumn.SortType.ASCENDING);
+
+        //TODO sorting needs other NetworkStatisticListItem as columns type
+       /* creationDateColumn.setComparator((o1, o2) ->
+                o1.statistic.getCreationDate().compareTo(o2.statistic.getCreationDate()));
+        sentBytesColumn.setComparator((o1, o2) ->
+                ((Integer) o1.statistic.getSentBytes()).compareTo(((Integer) o2.statistic.getSentBytes())));
+        receivedBytesColumn.setComparator((o1, o2) ->
+                ((Integer) o1.statistic.getReceivedBytes()).compareTo(((Integer) o2.statistic.getReceivedBytes())));*/
     }
 
     @Override
@@ -171,9 +186,9 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         walletService.connectedPeersProperty().addListener(bitcoinPeersChangeListener);
         updateBitcoinPeersTextArea();
 
-        numP2PPeersChangeListener = (observable, oldValue, newValue) -> updateP2PPeersTextArea();
+        numP2PPeersChangeListener = (observable, oldValue, newValue) -> updateP2PStatistics();
         p2PService.getNumConnectedPeers().addListener(numP2PPeersChangeListener);
-        updateP2PPeersTextArea();
+        updateP2PStatistics();
     }
 
     @Override
@@ -188,24 +203,18 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
         if (numP2PPeersChangeListener != null)
             p2PService.getNumConnectedPeers().removeListener(numP2PPeersChangeListener);
+
+        p2PPeerTable.getItems().forEach(NetworkStatisticListItem::cleanup);
     }
 
-    private void updateP2PPeersTextArea() {
-        p2PPeersTextArea.clear();
-        p2PPeersTextArea.setText(p2PService.getNetworkNode().getConfirmedConnections()
-                .stream()
-                .map(connection -> {
-                    if (connection.getPeersNodeAddressOptional().isPresent()) {
-                        NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
-                        return nodeAddress.getFullAddress() + " (" +
-                                (connection instanceof OutboundConnection ? "outbound" : "inbound") +
-                                (seedNodeAddresses.contains(nodeAddress) ? " / seed node)" : ")");
-                    } else {
-                        // Should never be the case
-                        return "";
-                    }
-                })
-                .collect(Collectors.joining("\n")));
+    private void updateP2PStatistics() {
+        p2PPeerTable.getItems().forEach(NetworkStatisticListItem::cleanup);
+
+        List<NetworkStatisticListItem> list = p2PService.getNetworkNode().getConfirmedConnections().stream()
+                .map(connection -> new NetworkStatisticListItem(connection, formatter))
+                .collect(Collectors.toList());
+        p2PPeerTable.setItems(FXCollections.observableArrayList(list));
+        p2PPeerTable.sort();
     }
 
     private void updateBitcoinPeersTextArea() {

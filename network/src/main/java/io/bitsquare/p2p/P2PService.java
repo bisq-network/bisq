@@ -16,7 +16,11 @@ import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.crypto.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.messaging.*;
 import io.bitsquare.p2p.network.*;
-import io.bitsquare.p2p.peers.*;
+import io.bitsquare.p2p.peers.Broadcaster;
+import io.bitsquare.p2p.peers.PeerManager;
+import io.bitsquare.p2p.peers.getdata.RequestDataManager;
+import io.bitsquare.p2p.peers.keepalive.KeepAliveManager;
+import io.bitsquare.p2p.peers.peerexchange.PeerExchangeManager;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.P2PDataStorage;
@@ -78,7 +82,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private Subscription networkReadySubscription;
     private boolean isBootstrapped;
     private ChangeListener<Number> numOfBroadcastsChangeListener;
-    private MaintenanceManager maintenanceManager;
+    private KeepAliveManager keepAliveManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -126,7 +130,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         peerExchangeManager = new PeerExchangeManager(networkNode, peerManager, seedNodeAddresses);
 
-        maintenanceManager = new MaintenanceManager(networkNode, peerManager, seedNodeAddresses);
+        keepAliveManager = new KeepAliveManager(networkNode, peerManager);
 
 
         // We need to have both the initial data delivered and the hidden service published
@@ -171,8 +175,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             if (peerExchangeManager != null)
                 peerExchangeManager.shutDown();
 
-            if (maintenanceManager != null)
-                maintenanceManager.shutDown();
+            if (keepAliveManager != null)
+                keepAliveManager.shutDown();
 
             if (networkNode != null)
                 networkNode.shutDown(() -> {
@@ -214,6 +218,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         Log.traceCall();
 
         requestDataManager.requestPreliminaryData();
+        keepAliveManager.start();
         p2pServiceListeners.stream().forEach(SetupListener::onTorNodeReady);
     }
 
@@ -226,8 +231,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         hiddenServicePublished.set(true);
 
         p2pServiceListeners.stream().forEach(SetupListener::onHiddenServicePublished);
-
-        maintenanceManager.start();
     }
 
     @Override

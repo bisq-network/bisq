@@ -1,4 +1,4 @@
-package io.bitsquare.p2p.peers;
+package io.bitsquare.p2p.peers.getdata;
 
 import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
@@ -7,7 +7,9 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
-import io.bitsquare.p2p.peers.messages.data.GetDataRequest;
+import io.bitsquare.p2p.peers.PeerManager;
+import io.bitsquare.p2p.peers.getdata.messages.GetDataRequest;
+import io.bitsquare.p2p.peers.peerexchange.ReportedPeer;
 import io.bitsquare.p2p.storage.P2PDataStorage;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -241,8 +243,8 @@ public class RequestDataManager implements MessageListener {
                         !peerManager.isSelf(e))
                 .collect(Collectors.toList())
                 .stream()
-                .filter(e -> e.lastActivityDate != null)
-                .sorted((o1, o2) -> o2.lastActivityDate.compareTo(o1.lastActivityDate))
+                .filter(e -> e.date != null)
+                .sorted((o1, o2) -> o2.date.compareTo(o1.date))
                 .map(e -> e.nodeAddress)
                 .collect(Collectors.toList());
     }

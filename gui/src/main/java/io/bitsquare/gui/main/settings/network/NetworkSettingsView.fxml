@@ -19,6 +19,7 @@
 
 <?import io.bitsquare.gui.components.TitledGroupBg?>
 <?import javafx.geometry.*?>
+<?import javafx.scene.control.cell.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.settings.network.NetworkSettingsView"
@@ -65,12 +66,50 @@
     </TextField>
 
     <Label fx:id="p2PPeersLabel" text="Connected peers:" GridPane.rowIndex="4"/>
-    <TextArea fx:id="p2PPeersTextArea" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
-              GridPane.vgrow="ALWAYS" editable="false" focusTraversable="false"/>
+    <TableView fx:id="p2PPeerTable" GridPane.rowIndex="4" GridPane.columnIndex="1" VBox.vgrow="ALWAYS"
+               GridPane.hgrow="ALWAYS">
+        <columns>
+            <TableColumn text="Onion address" fx:id="onionAddressColumn" minWidth="220">
+                <cellValueFactory>
+                    <PropertyValueFactory property="onionAddress"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn text="Type" fx:id="connectionTypeColumn" minWidth="70" maxWidth="80">
+                <cellValueFactory>
+                    <PropertyValueFactory property="connectionType"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn text="Established" fx:id="creationDateColumn" minWidth="180" maxWidth="180">
+                <cellValueFactory>
+                    <PropertyValueFactory property="creationDate"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn text="Last activity" fx:id="lastActivityColumn" minWidth="100" maxWidth="120">
+                <cellValueFactory>
+                    <PropertyValueFactory property="lastActivity"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn text="Sent" fx:id="sentBytesColumn" minWidth="100" maxWidth="120">
+                <cellValueFactory>
+                    <PropertyValueFactory property="sentBytes"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn text="Received" fx:id="receivedBytesColumn" minWidth="100" maxWidth="120">
+                <cellValueFactory>
+                    <PropertyValueFactory property="receivedBytes"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn text="Identity" fx:id="peerTypeColumn" minWidth="100" maxWidth="100">
+                <cellValueFactory>
+                    <PropertyValueFactory property="peerType"/>
+                </cellValueFactory>
+            </TableColumn>
+        </columns>
+    </TableView>
 
     <columnConstraints>
-        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="200.0"/>
-        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
+        <ColumnConstraints hgrow="NEVER" halignment="RIGHT"/>
+        <ColumnConstraints hgrow="ALWAYS"/>
     </columnConstraints>
 </GridPane>
 

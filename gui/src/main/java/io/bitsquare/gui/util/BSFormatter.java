@@ -23,6 +23,7 @@ import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.utils.MonetaryFormat;
@@ -374,8 +375,8 @@ public class BSFormatter {
     }
 
     public String getDaysHoursMinutes(Date startDate, Date endDate) {
-        long different = endDate.getTime() - startDate.getTime();
-        long secondsInMilli = 1000;
+        return DurationFormatUtils.formatDurationWords(endDate.getTime() - startDate.getTime(), true, true);
+       /* long secondsInMilli = 1000;
         long minutesInMilli = secondsInMilli * 60;
         long hoursInMilli = minutesInMilli * 60;
         long daysInMilli = hoursInMilli * 24;
@@ -394,8 +395,63 @@ public class BSFormatter {
         else if (elapsedMinutes > 0)
             return elapsedMinutes + " " + minuteString;
         else
-            return null;
+            return null;*/
     }
+
+   /* public List<String> tokenizePeriod(long time, boolean showSeconds, boolean showMillis) {
+       
+                
+        log.error("formatPastTimestamp " + time + "");
+        long secondsInMilli = 1000;
+        long minutesInMilli = secondsInMilli * 60;
+        long hoursInMilli = minutesInMilli * 60;
+        long daysInMilli = hoursInMilli * 24;
+        long elapsedDays = time / daysInMilli;
+        time = time % daysInMilli;
+        long elapsedHours = time / hoursInMilli;
+        time = time % hoursInMilli;
+        long elapsedMinutes = time / minutesInMilli;
+        time = time % minutesInMilli;
+        long elapsedSeconds = time / secondsInMilli;
+        time = time % secondsInMilli;
+        long elapsedMillis = time;
+
+        String dayString = elapsedDays == 1 ? elapsedDays + " day" : elapsedDays + " days";
+        String hourString = elapsedHours == 1 ? elapsedHours + " hour" : elapsedHours + " hours";
+        String minuteString = elapsedMinutes == 1 ? elapsedMinutes + " minute" : elapsedMinutes + " minutes";
+        String secondsString = elapsedSeconds == 1 ? elapsedSeconds + " second" : elapsedSeconds + " seconds";
+        String millisString = elapsedMillis + " ms";
+        List<String> tokens = new ArrayList<>();
+
+        if (elapsedDays > 0)
+            tokens.add(dayString);
+
+        if (elapsedHours > 0)
+            tokens.add(hourString);
+
+        if (elapsedMinutes > 0)
+            tokens.add(minuteString);
+
+        if (showSeconds && elapsedSeconds > 0)
+            tokens.add(secondsString);
+
+        if (showMillis && elapsedMillis > 0)
+            tokens.add(millisString);
+
+        return tokens;
+    }
+
+    private String formatTimeTokens(List<String> tokens) {
+        if (tokens.size() > 1) {
+            String last = tokens.remove(tokens.size() - 1);
+            String result = tokens.stream().collect(Collectors.joining(", "));
+            return result + " and " + last;
+        } else if (tokens.size() == 1) {
+            return tokens.get(0);
+        } else {
+            return "";
+        }
+    }*/
 
 
     public String booleanToYesNo(boolean value) {
@@ -429,4 +485,17 @@ public class BSFormatter {
         else
             return isOfferer ? "Seller (offerer)" : "Buyer (taker)";
     }
+
+    public String formatBytes(int bytes) {
+        double kb = 1024;
+        double mb = kb * kb;
+        DecimalFormat decimalFormat = new DecimalFormat("#.##");
+        if (bytes < kb)
+            return bytes + " bytes";
+        else if (bytes < mb)
+            return decimalFormat.format(bytes / kb) + " KB";
+        else
+            return decimalFormat.format(bytes / mb) + " MB";
+    }
+
 }
