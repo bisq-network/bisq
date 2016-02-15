@@ -58,8 +58,10 @@ public class SelectDepositTxPopup extends Popup {
         width = 700;
         createGridPane();
         addHeadLine();
+        addSeparator();
         addContent();
         addCloseButton();
+        applyStyles();
         PopupManager.queueForDisplay(this);
     }
 

@@ -6,6 +6,8 @@ import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.disputes.DisputesView;
+import io.bitsquare.gui.main.disputes.trader.TraderDisputeView;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
 import io.bitsquare.trade.Trade;
@@ -71,7 +73,7 @@ public class NotificationCenter {
         EasyBind.subscribe(preferences.useAnimationsProperty(), useAnimations -> NotificationCenter.useAnimations = useAnimations);
     }
 
-    public void onAllServicesInitialized() {
+    public void onAllServicesAndViewsInitialized() {
         tradeManager.getTrades().addListener((ListChangeListener<Trade>) change -> {
             change.next();
             if (change.wasRemoved()) {
@@ -200,27 +202,31 @@ public class NotificationCenter {
     private void onDisputeStateChanged(Trade trade, Trade.DisputeState disputeState) {
         Log.traceCall(disputeState.toString());
         String message = null;
-        switch (disputeState) {
-            case NONE:
-                break;
-            case DISPUTE_REQUESTED:
-                break;
-            case DISPUTE_STARTED_BY_PEER:
-                if (disputeManager.findOwnDispute(trade.getId()).isPresent()) {
-                    if (disputeManager.findOwnDispute(trade.getId()).get().isSupportTicket())
-                        message = "Your trading peer has encountered technical problems and requested support for trade with ID " + trade.getShortId() + ".\n" +
-                                "Please await further instructions from the arbitrator.\n" +
-                                "Your funds are safe and will be refunded as soon the problem is resolved.";
-                    else
-                        message = "Your trading peer has requested a dispute for trade with ID " + trade.getShortId() + ".";
+        if (disputeManager.findOwnDispute(trade.getId()).isPresent()) {
+            boolean supportTicket = disputeManager.findOwnDispute(trade.getId()).get().isSupportTicket();
+            switch (disputeState) {
+                case NONE:
+                    break;
+                case DISPUTE_REQUESTED:
+                    break;
+                case DISPUTE_STARTED_BY_PEER:
+                    message = supportTicket ? "Your trading peer has opened a support ticket." : "Your trading peer has requested a dispute.";
+                    break;
+                case DISPUTE_CLOSED:
+                    message = supportTicket ? "The support ticket hase been closed." : "The dispute has been closed.";
+                    break;
+            }
+            if (message != null) {
+                Notification notification = new Notification().disputeHeadLine(trade.getShortId()).message(message);
+                if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(TraderDisputeView.class)) {
+                    notification.actionButtonText("Go to \"Support\"")
+                            .onAction(() -> navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class))
+                            .show();
+                } else {
+                    notification.show();
                 }
-                break;
-            case DISPUTE_CLOSED:
-                message = "A support ticket for trade with ID " + trade.getShortId() + " has been closed.";
-                break;
+            }
         }
-        if (message != null)
-            new Notification().tradeHeadLine(trade.getShortId()).message(message).show();
     }
 
 }

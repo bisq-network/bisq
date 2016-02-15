@@ -166,6 +166,8 @@ public class DisputeManager {
             onDisputeResultMessage((DisputeResultMessage) message);
         else if (message instanceof PeerPublishedPayoutTxMessage)
             onDisputedPayoutTxMessage((PeerPublishedPayoutTxMessage) message);
+        else
+            log.warn("Unsupported message at dispatchMessage.\nmessage=" + message);
     }
 
     public void sendOpenNewDisputeMessage(Dispute dispute) {

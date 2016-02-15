@@ -64,8 +64,10 @@ public class EnterPrivKeyPopup extends Popup {
 
         createGridPane();
         addHeadLine();
+        addSeparator();
         addInputFields();
         addButtons();
+        applyStyles();
         PopupManager.queueForDisplay(this);
     }
 

@@ -49,7 +49,9 @@ public class OpenEmergencyTicketPopup extends Popup {
         width = 700;
         createGridPane();
         addHeadLine();
+        addSeparator();
         addContent();
+        applyStyles();
         PopupManager.queueForDisplay(this);
     }
 

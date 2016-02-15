@@ -68,7 +68,9 @@ public class SendAlertMessagePopup extends Popup {
         width = 600;
         createGridPane();
         addHeadLine();
+        addSeparator();
         addContent();
+        applyStyles();
         PopupManager.queueForDisplay(this);
     }
 

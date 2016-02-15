@@ -83,8 +83,10 @@ public class WalletPasswordPopup extends Popup {
 
         createGridPane();
         addHeadLine();
+        addSeparator();
         addInputFields();
         addButtons();
+        applyStyles();
         PopupManager.queueForDisplay(this);
     }
 

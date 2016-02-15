@@ -71,7 +71,9 @@ public class EmptyWalletPopup extends Popup {
         width = 700;
         createGridPane();
         addHeadLine();
+        addSeparator();
         addContent();
+        applyStyles();
         PopupManager.queueForDisplay(this);
     }
 

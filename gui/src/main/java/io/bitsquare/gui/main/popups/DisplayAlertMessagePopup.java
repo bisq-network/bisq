@@ -52,7 +52,9 @@ public class DisplayAlertMessagePopup extends Popup {
         headLine = "Important information!";
         createGridPane();
         addHeadLine();
+        addSeparator();
         addContent();
+        applyStyles();
         PopupManager.queueForDisplay(this);
     }
 

@@ -860,7 +860,7 @@ textfield */
     -fx-text-fill: #3c3c3c;
     -fx-background-color: linear-gradient(to bottom, #fcfcfc, #e5e5e5);
     -fx-background-radius: 5 5 5 5;
-    -fx-background-insets: 10;
-    -fx-effect: dropshadow(gaussian, #434343, 10, 0, 0, 0);
+    -fx-background-insets: 5 5 20 20;
+    -fx-effect: dropshadow(gaussian, #000000, 15, 0, 2, 2);
 
 }

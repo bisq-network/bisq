@@ -21,7 +21,7 @@ public class Notification extends Popup {
     private boolean hasBeenDisplayed;
 
     public Notification() {
-        width = 320;
+        width = 345; // 320 visible bg because of insets
         NotificationCenter.add(this);
     }
 
@@ -123,7 +123,7 @@ public class Notification extends Popup {
     @Override
     protected void createGridPane() {
         super.createGridPane();
-        gridPane.setPadding(new Insets(20, 20, 20, 20));
+        gridPane.setPadding(new Insets(15, 15, 30, 30));
     }
 
     @Override

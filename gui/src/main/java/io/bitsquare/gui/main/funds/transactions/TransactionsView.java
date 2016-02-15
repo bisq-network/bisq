@@ -168,11 +168,11 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         Stream<Tradable> concat1 = Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getTrades().stream());
         Stream<Tradable> concat2 = Stream.concat(concat1, closedTradableManager.getClosedTrades().stream());
         Stream<Tradable> concat3 = Stream.concat(concat2, failedTradesManager.getFailedTrades().stream());
-        Set<Tradable> concated = concat3.collect(Collectors.toSet());
+        Set<Tradable> all = concat3.collect(Collectors.toSet());
 
         List<TransactionsListItem> listItems = walletService.getWallet().getRecentTransactions(1000, true).stream()
                 .map(transaction -> {
-                    Optional<Tradable> tradableOptional = concated.stream()
+                    Optional<Tradable> tradableOptional = all.stream()
                             .filter(e -> {
                                 String txId = transaction.getHashAsString();
                                 if (e instanceof OpenOffer)

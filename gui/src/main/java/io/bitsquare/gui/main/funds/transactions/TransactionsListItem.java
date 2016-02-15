@@ -56,9 +56,11 @@ public class TransactionsListItem {
 
         Coin valueSentToMe = transaction.getValueSentToMe(walletService.getWallet());
         Coin valueSentFromMe = transaction.getValueSentFromMe(walletService.getWallet());
+        Coin amountAsCoin;
         Address address = null;
         if (valueSentToMe.isZero()) {
-            amount.set("-" + formatter.formatCoin(valueSentFromMe));
+            amountAsCoin = valueSentFromMe;
+            amount.set("-" + formatter.formatCoin(amountAsCoin));
 
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
                 if (!transactionOutput.isMine(walletService.getWallet())) {
@@ -72,7 +74,8 @@ public class TransactionsListItem {
                 }
             }
         } else if (valueSentFromMe.isZero()) {
-            amount.set(formatter.formatCoin(valueSentToMe));
+            amountAsCoin = valueSentToMe;
+            amount.set(formatter.formatCoin(amountAsCoin));
             direction = "Received with:";
             received = true;
 
@@ -86,7 +89,8 @@ public class TransactionsListItem {
                 }
             }
         } else {
-            amount.set(formatter.formatCoin(valueSentToMe.subtract(valueSentFromMe)));
+            amountAsCoin = valueSentToMe.subtract(valueSentFromMe);
+            amount.set(formatter.formatCoin(amountAsCoin));
             boolean outgoing = false;
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
                 if (!transactionOutput.isMine(walletService.getWallet())) {
@@ -126,7 +130,10 @@ public class TransactionsListItem {
                         trade.getPayoutTx().getHashAsString().equals(txId)) {
                     details = "MultiSig payout: " + tradable.getShortId();
                 } else if (trade.getDisputeState() == Trade.DisputeState.DISPUTE_CLOSED) {
-                    details = "Payout after dispute: " + tradable.getShortId();
+                    if (valueSentToMe.isPositive())
+                        details = "Refund from dispute: " + tradable.getShortId();
+                    else
+                        details = "Nothing refunded from dispute: " + tradable.getShortId();
                 } else {
                     details = "Unknown reason: " + tradable.getShortId();
                 }
@@ -139,7 +146,15 @@ public class TransactionsListItem {
                     addressEntryOptional.get().getContext() == AddressEntry.Context.ARBITRATOR)
                 details = received ? "Received funds" : "Withdrawn from wallet";
             else*/
-            details = received ? "Received funds" : "Withdrawn from wallet";
+            if (amountAsCoin.isZero()) {
+                details = "No refund from dispute";
+            } else {
+                details = received ? "Received funds" : "Withdrawn from wallet";
+            }
+            if (received)
+                details = amountAsCoin.isPositive() ? "Received funds" : "No refund from dispute";
+            else
+                details = amountAsCoin.isNegative() ? "Withdrawn from wallet" : "No refund from dispute";
         }
 
         date.set(formatter.formatDateTime(transaction.getUpdateTime()));
