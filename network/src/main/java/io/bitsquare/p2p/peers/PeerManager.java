@@ -38,14 +38,14 @@ public class PeerManager implements ConnectionListener, MessageListener {
 
     public static void setMaxConnections(int maxConnections) {
         MAX_CONNECTIONS = maxConnections;
-        MIN_CONNECTIONS = maxConnections - 4;
+        MIN_CONNECTIONS = Math.max(1, maxConnections - 4);
         MAX_CONNECTIONS_EXTENDED_1 = MAX_CONNECTIONS + 5;
         MAX_CONNECTIONS_EXTENDED_2 = MAX_CONNECTIONS + 10;
         MAX_CONNECTIONS_EXTENDED_3 = MAX_CONNECTIONS + 20;
     }
 
     static {
-        setMaxConnections(12);
+        setMaxConnections(3);
     }
 
     private static final int MAX_REPORTED_PEERS = 1000;

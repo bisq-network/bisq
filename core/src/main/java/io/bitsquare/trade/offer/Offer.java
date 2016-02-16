@@ -25,6 +25,7 @@ import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.JsonExclude;
 import io.bitsquare.locale.Country;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.storage.data.RequiresLiveOwner;
 import io.bitsquare.p2p.storage.data.StorageMessage;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
@@ -46,17 +47,21 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class Offer implements StorageMessage {
+public final class Offer implements StorageMessage, RequiresLiveOwner {
     // That object is sent over the wire, so we need to take care of version compatibility.
     @JsonExclude
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     @JsonExclude
     private static final Logger log = LoggerFactory.getLogger(Offer.class);
 
-    public static final long TTL = TimeUnit.MINUTES.toMillis(10);
+    //public static final long TTL = TimeUnit.MINUTES.toMillis(10);
+    //TODO
+    public static final long TTL = TimeUnit.SECONDS.toMillis(10);
+    
     public final static String TAC_OFFERER = "When placing that offer I accept that anyone who fulfills my conditions can " +
             "take that offer.";
     public static final String TAC_TAKER = "With taking the offer I commit to the trade conditions as defined.";
+
 
     public enum Direction {BUY, SELL}
 
@@ -154,6 +159,11 @@ public final class Offer implements StorageMessage {
         }
     }
 
+    @Override
+    public NodeAddress getOwnerNodeAddress() {
+        return offererNodeAddress;
+    }
+    
     public void validate() {
         checkNotNull(getAmount(), "Amount is null");
         checkNotNull(getArbitratorNodeAddresses(), "Arbitrator is null");

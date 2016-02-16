@@ -60,7 +60,7 @@ public class ProtectedDataStorageTest {
         dir2.mkdir();
 
         UserThread.setExecutor(Executors.newSingleThreadExecutor());
-        P2PDataStorage.CHECK_TTL_INTERVAL = (int) TimeUnit.MINUTES.toMillis(10);
+        P2PDataStorage.CHECK_TTL_INTERVAL_SEC = (int) TimeUnit.MINUTES.toMillis(10);
 
         keyRing1 = new KeyRing(new KeyStorage(dir1));
 
@@ -111,7 +111,7 @@ public class ProtectedDataStorageTest {
 
     @Test
     public void testExpirableData() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
-        P2PDataStorage.CHECK_TTL_INTERVAL = 10;
+        P2PDataStorage.CHECK_TTL_INTERVAL_SEC = 10;
         // CHECK_TTL_INTERVAL is used in constructor of ProtectedExpirableDataStorage so we recreate it here
 
         //TODO

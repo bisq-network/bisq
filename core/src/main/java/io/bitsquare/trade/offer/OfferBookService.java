@@ -21,10 +21,13 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
+import io.bitsquare.p2p.storage.data.ProtectedData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,8 +38,14 @@ import java.util.stream.Collectors;
 public class OfferBookService {
     private static final Logger log = LoggerFactory.getLogger(OfferBookService.class);
 
-    private final P2PService p2PService;
+    public interface OfferBookChangedListener {
+        void onAdded(Offer offer);
 
+        void onRemoved(Offer offer);
+    }
+
+    private final P2PService p2PService;
+    private final List<OfferBookChangedListener> offerBookChangedListeners = new LinkedList<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -45,11 +54,36 @@ public class OfferBookService {
     @Inject
     public OfferBookService(P2PService p2PService) {
         this.p2PService = p2PService;
+
+        p2PService.addHashSetChangedListener(new HashMapChangedListener() {
+            @Override
+            public void onAdded(ProtectedData entry) {
+                log.debug("OfferBookService.onAdded " + entry);
+                offerBookChangedListeners.stream().forEach(listener -> {
+                    if (entry.expirableMessage instanceof Offer)
+                        listener.onAdded((Offer) entry.expirableMessage);
+                });
+            }
+
+            @Override
+            public void onRemoved(ProtectedData entry) {
+                offerBookChangedListeners.stream().forEach(listener -> {
+                    log.debug("OfferBookService.onRemoved " + entry);
+                    if (entry.expirableMessage instanceof Offer)
+                        listener.onRemoved((Offer) entry.expirableMessage);
+                });
+            }
+        });
     }
 
-    public void addHashSetChangedListener(HashMapChangedListener hashMapChangedListener) {
-        p2PService.addHashSetChangedListener(hashMapChangedListener);
+    public void addOfferBookChangedListener(OfferBookChangedListener offerBookChangedListener) {
+        offerBookChangedListeners.add(offerBookChangedListener);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         doAddOffer(offer, resultHandler, errorMessageHandler, false);
@@ -74,25 +108,27 @@ public class OfferBookService {
         }
     }
 
-    public void removeOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void removeOffer(Offer offer, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
         if (p2PService.removeData(offer)) {
             log.trace("Remove offer from network was successful. Offer = " + offer);
-            if (resultHandler != null) resultHandler.handleResult();
+            if (resultHandler != null)
+                resultHandler.handleResult();
         } else {
-            if (errorMessageHandler != null) errorMessageHandler.handleErrorMessage("Remove offer failed");
+            if (errorMessageHandler != null)
+                errorMessageHandler.handleErrorMessage("Remove offer failed");
         }
     }
 
     public List<Offer> getOffers() {
-        final List<Offer> offers = p2PService.getDataMap().values().stream()
+        return p2PService.getDataMap().values().stream()
                 .filter(e -> e.expirableMessage instanceof Offer)
                 .map(e -> (Offer) e.expirableMessage)
                 .collect(Collectors.toList());
-        return offers;
     }
 
     public void removeOfferAtShutDown(Offer offer) {
         log.debug("removeOfferAtShutDown " + offer);
         removeOffer(offer, null, null);
     }
+
 }

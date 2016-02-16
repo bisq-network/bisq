@@ -190,7 +190,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         updateP2PStatistics();
 
         totalTraffic.textProperty().bind(EasyBind.combine(Statistic.totalSentBytesProperty(), Statistic.totalReceivedBytesProperty(),
-                (sent, received) -> "Sent:" + formatter.formatBytes((int) sent) + " / Received: " + formatter.formatBytes((int) received)));
+                (sent, received) -> "Sent: " + formatter.formatBytes((int) sent) + ", received: " + formatter.formatBytes((int) received)));
     }
 
     @Override

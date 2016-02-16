@@ -11,9 +11,7 @@ import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.network.Connection;
-import io.bitsquare.p2p.network.MessageListener;
-import io.bitsquare.p2p.network.NetworkNode;
+import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.Broadcaster;
 import io.bitsquare.p2p.storage.data.*;
 import io.bitsquare.p2p.storage.messages.AddDataMessage;
@@ -31,19 +29,22 @@ import java.io.Serializable;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 // Run in UserThread
-public class P2PDataStorage implements MessageListener {
+public class P2PDataStorage implements MessageListener, ConnectionListener {
     private static final Logger log = LoggerFactory.getLogger(P2PDataStorage.class);
 
     @VisibleForTesting
-    public static int CHECK_TTL_INTERVAL = new Random().nextInt(1000) + (int) TimeUnit.MINUTES.toMillis(10); // 10-11 min.
+    public static int CHECK_TTL_INTERVAL_SEC = new Random().nextInt(60) + (int) TimeUnit.MINUTES.toSeconds(10); // 10-11 min.
+    //TODO
+    // public static int CHECK_TTL_INTERVAL_SEC = 10; 
 
     private final Broadcaster broadcaster;
-    private final Map<ByteArray, ProtectedData> map = new HashMap<>();
+    private final Map<ByteArray, ProtectedData> map = new ConcurrentHashMap<>();
     private final CopyOnWriteArraySet<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArraySet<>();
     private HashMap<ByteArray, Integer> sequenceNumberMap = new HashMap<>();
     private final Storage<HashMap> storage;
@@ -57,10 +58,12 @@ public class P2PDataStorage implements MessageListener {
         this.broadcaster = broadcaster;
 
         networkNode.addMessageListener(this);
+        networkNode.addConnectionListener(this);
 
         storage = new Storage<>(storageDir);
         removeExpiredEntriesExecutor = Utilities.getScheduledThreadPoolExecutor("removeExpiredEntries", 1, 10, 5);
 
+        log.debug("CHECK_TTL_INTERVAL_SEC " + CHECK_TTL_INTERVAL_SEC);
         init();
     }
 
@@ -69,7 +72,7 @@ public class P2PDataStorage implements MessageListener {
         if (persisted != null)
             sequenceNumberMap = persisted;
 
-        removeExpiredEntriesExecutor.scheduleAtFixedRate(() -> UserThread.execute(this::removeExpiredEntries), CHECK_TTL_INTERVAL, CHECK_TTL_INTERVAL, TimeUnit.SECONDS);
+        removeExpiredEntriesExecutor.scheduleAtFixedRate(() -> UserThread.execute(this::removeExpiredEntries), CHECK_TTL_INTERVAL_SEC, CHECK_TTL_INTERVAL_SEC, TimeUnit.SECONDS);
     }
 
     private void removeExpiredEntries() {
@@ -114,6 +117,72 @@ public class P2PDataStorage implements MessageListener {
                 }
             });
         }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // ConnectionListener implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onConnection(Connection connection) {
+
+    }
+
+    @Override
+    public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
+        Log.traceCall();
+        map.values().stream()
+                .filter(protectedData -> protectedData.expirableMessage instanceof RequiresLiveOwner)
+                .forEach(protectedData -> removeRequiresLiveOwnerDataOnDisconnect(protectedData, ((RequiresLiveOwner) protectedData.expirableMessage).getOwnerNodeAddress()));
+    }
+
+    public boolean removeRequiresLiveOwnerDataOnDisconnect(ProtectedData protectedData, NodeAddress owner) {
+        Log.traceCall();
+        ByteArray hashOfPayload = getHashAsByteArray(protectedData.expirableMessage);
+        boolean containsKey = map.containsKey(hashOfPayload);
+        if (containsKey) {
+            doRemoveProtectedExpirableData(protectedData, hashOfPayload);
+
+            //broadcast(new RemoveDataMessage(protectedData), owner);
+
+            // sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
+            sequenceNumberMap.remove(hashOfPayload);
+            storage.queueUpForSave(sequenceNumberMap, 5000);
+        } else {
+            log.debug("Remove data ignored as we don't have an entry for that data.");
+        }
+        return containsKey;
+    }
+
+    // If the data owner gets disconnected we remove his data. Used for offers to get clean up when the peer is in 
+    // sleep/hibernate mode or closes the app without proper shutdown (crash).
+    // We don't want to wait the until the TTL period is over so we add that method to improve usability
+    public boolean removeLocalDataOnDisconnectedDataOwner(ExpirableMessage expirableMessage) {
+        Log.traceCall();
+        ByteArray hashOfPayload = getHashAsByteArray(expirableMessage);
+        boolean containsKey = map.containsKey(hashOfPayload);
+        if (containsKey) {
+            map.remove(hashOfPayload);
+            log.trace("Data removed from our map.");
+
+            StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n" +
+                    "Data set after removeProtectedExpirableData: (truncated)");
+            map.values().stream().forEach(e -> sb.append("\n").append(StringUtils.abbreviate(e.toString(), 100)));
+            sb.append("\n------------------------------------------------------------\n");
+            log.trace(sb.toString());
+            log.info("Data set after addProtectedExpirableData: size=" + map.values().size());
+
+            // sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
+            // storage.queueUpForSave(sequenceNumberMap, 5000);
+        } else {
+            log.debug("Remove data ignored as we don't have an entry for that data.");
+        }
+        return containsKey;
+    }
+
+    @Override
+    public void onError(Throwable throwable) {
+
     }
 
 
@@ -226,6 +295,7 @@ public class P2PDataStorage implements MessageListener {
         return result;
     }
 
+
     public Map<ByteArray, ProtectedData> getMap() {
         return map;
     }
@@ -283,7 +353,6 @@ public class P2PDataStorage implements MessageListener {
         sb.append("\n------------------------------------------------------------\n");
         log.trace(sb.toString());
         log.info("Data set after addProtectedExpirableData: size=" + map.values().size());
-
     }
 
     private boolean isSequenceNrValid(ProtectedData data, ByteArray hashOfData) {

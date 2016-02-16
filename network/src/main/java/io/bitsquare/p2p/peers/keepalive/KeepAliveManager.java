@@ -18,14 +18,15 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class KeepAliveManager implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(KeepAliveManager.class);
 
-    private static final int INTERVAL_SEC = new Random().nextInt(10) + 10;
+    //private static final int INTERVAL_SEC = new Random().nextInt(10) + 10;
+    //TODO
+    private static final int INTERVAL_SEC = 3;
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;

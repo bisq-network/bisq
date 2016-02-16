@@ -17,8 +17,6 @@
 
 package io.bitsquare.gui.main.offer.offerbook;
 
-import io.bitsquare.p2p.storage.HashMapChangedListener;
-import io.bitsquare.p2p.storage.data.ProtectedData;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OfferBookService;
@@ -28,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -53,33 +50,26 @@ public class OfferBook {
     @Inject
     OfferBook(OfferBookService offerBookService, TradeManager tradeManager) {
         this.offerBookService = offerBookService;
-        offerBookService.addHashSetChangedListener(new HashMapChangedListener() {
+
+        offerBookService.addOfferBookChangedListener(new OfferBookService.OfferBookChangedListener() {
             @Override
-            public void onAdded(ProtectedData entry) {
-                log.debug("onAdded " + entry);
-                Serializable data = entry.expirableMessage;
-                if (data instanceof Offer) {
-                    Offer offer = (Offer) data;
-                    OfferBookListItem offerBookListItem = new OfferBookListItem(offer);
-                    if (!offerBookListItems.contains(offerBookListItem))
-                        offerBookListItems.add(offerBookListItem);
-                }
+            public void onAdded(Offer offer) {
+                log.debug("onAdded " + offer);
+                OfferBookListItem offerBookListItem = new OfferBookListItem(offer);
+                if (!offerBookListItems.contains(offerBookListItem))
+                    offerBookListItems.add(offerBookListItem);
             }
 
             @Override
-            public void onRemoved(ProtectedData entry) {
-                log.debug("onRemoved " + entry);
-                if (entry.expirableMessage instanceof Offer) {
-                    Offer offer = (Offer) entry.expirableMessage;
+            public void onRemoved(Offer offer) {
+                log.debug("onRemoved " + offer);
+                // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
+                offer.setState(Offer.State.REMOVED);
 
-                    // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
-                    offer.setState(Offer.State.REMOVED);
+                // clean up possible references in openOfferManager 
+                tradeManager.onOfferRemovedFromRemoteOfferBook(offer);
 
-                    // clean up possible references in openOfferManager 
-                    tradeManager.onOfferRemovedFromRemoteOfferBook(offer);
-
-                    offerBookListItems.removeIf(item -> item.getOffer().getId().equals(offer.getId()));
-                }
+                offerBookListItems.removeIf(item -> item.getOffer().getId().equals(offer.getId()));
             }
         });
     }

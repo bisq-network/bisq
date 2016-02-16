@@ -3,6 +3,7 @@ package io.bitsquare.p2p.seed;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.trade.offer.OfferBookService;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ public class SeedNodeMain {
     private static final Logger log = LoggerFactory.getLogger(SeedNodeMain.class);
 
     public static final boolean USE_DETAILED_LOGGING = true;
+    private OfferBookService offerBookService;
 
     private SeedNode seedNode;
 
@@ -48,6 +50,10 @@ public class SeedNodeMain {
                 seedNode = new SeedNode(BitsquareEnvironment.defaultUserDataDir());
                 seedNode.processArgs(args);
                 seedNode.createAndStartP2PService(USE_DETAILED_LOGGING);
+
+                // We need the offerbook service to handle the case when the offerer is in sleep/hibernate mode and 
+                // we want to remove his offers and not wait until TTL is over.
+                offerBookService = new OfferBookService(seedNode.getSeedNodeP2PService());
             } catch (Throwable t) {
                 log.error("Executing task failed. " + t.getMessage());
                 t.printStackTrace();

@@ -71,6 +71,7 @@ public class OpenOfferManager {
     private BootstrapListener bootstrapListener;
     private final Timer timer = new Timer();
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -153,6 +154,18 @@ public class OpenOfferManager {
             }
         };
         timer.scheduleAtFixedRate(timerTask, 500, period);
+
+        p2PService.getNumConnectedPeers().addListener((observable, oldValue, newValue) -> {
+            if ((int) oldValue == 0 && (int) newValue > 0) {
+                rePublishOffers();
+
+                // We repeat a rePublishOffers call after 10 seconds if we have more than 3 peers
+                UserThread.runAfter(() -> {
+                    if (p2PService.getNumConnectedPeers().get() > 3)
+                        rePublishOffers();
+                }, 10);
+            }
+        });
     }
 
     private void rePublishOffers() {
@@ -161,7 +174,6 @@ public class OpenOfferManager {
             offerBookService.republishOffer(openOffer.getOffer(),
                     () -> log.debug("Successful added offer to P2P network"),
                     errorMessage -> log.error("Add offer to P2P network failed. " + errorMessage));
-            //setupDepositPublishedListener(openOffer);
             openOffer.setStorage(openOffersStorage);
         }
     }
@@ -175,14 +187,14 @@ public class OpenOfferManager {
             timer.cancel();
 
         if (!shutDownRequested) {
-            log.debug("shutDown");
+            log.info("remove all open offers at shutDown");
             shutDownRequested = true;
-            int numOffers = openOffers.size();
             // we remove own offers from offerbook when we go offline
-            openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer()));
+            //TODO
+            //  openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer()));
 
             if (completeHandler != null)
-                UserThread.runAfter(completeHandler::run, numOffers * 200 + 300, TimeUnit.MILLISECONDS);
+                UserThread.runAfter(completeHandler::run, openOffers.size() * 200 + 300, TimeUnit.MILLISECONDS);
         }
     }
 
