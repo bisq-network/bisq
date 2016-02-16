@@ -28,6 +28,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
+import io.bitsquare.p2p.network.Statistic;
 import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -38,6 +39,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 import org.bitcoinj.core.Peer;
+import org.fxmisc.easybind.EasyBind;
 import org.reactfx.util.FxTimer;
 
 import javax.inject.Inject;
@@ -55,7 +57,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
 
     @FXML
-    TextField onionAddress;
+    TextField onionAddress, totalTraffic;
     @FXML
     ComboBox<BitcoinNetwork> netWorkComboBox;
     @FXML
@@ -149,6 +151,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 ((Integer) o1.statistic.getSentBytes()).compareTo(((Integer) o2.statistic.getSentBytes())));
         receivedBytesColumn.setComparator((o1, o2) ->
                 ((Integer) o1.statistic.getReceivedBytes()).compareTo(((Integer) o2.statistic.getReceivedBytes())));*/
+
     }
 
     @Override
@@ -185,6 +188,9 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         numP2PPeersChangeListener = (observable, oldValue, newValue) -> updateP2PStatistics();
         p2PService.getNumConnectedPeers().addListener(numP2PPeersChangeListener);
         updateP2PStatistics();
+
+        totalTraffic.textProperty().bind(EasyBind.combine(Statistic.totalSentBytesProperty(), Statistic.totalReceivedBytesProperty(),
+                (sent, received) -> "Sent:" + formatter.formatBytes((int) sent) + " / Received: " + formatter.formatBytes((int) received)));
     }
 
     @Override
@@ -201,6 +207,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             p2PService.getNumConnectedPeers().removeListener(numP2PPeersChangeListener);
 
         p2PPeerTable.getItems().forEach(NetworkStatisticListItem::cleanup);
+        totalTraffic.textProperty().unbind();
     }
 
     private void updateP2PStatistics() {

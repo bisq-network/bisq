@@ -305,8 +305,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case PAYOUT_TX_SENT:
                 buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_BROADCAST_AFTER_UNLOCK);
                 break;
-            case PAYOUT_TX_RECEIVED:
-            case PAYOUT_TX_COMMITTED:
+            case PAYOUT_TX_RECEIVED_AND_COMMITTED:
                 sellerState.set(SellerState.WAIT_FOR_BROADCAST_AFTER_UNLOCK);
                 break;
             case PAYOUT_BROAD_CASTED:

@@ -66,15 +66,14 @@
     </TextField>
 
     <Label fx:id="p2PPeersLabel" text="Connected peers:" GridPane.rowIndex="4"/>
-    <TableView fx:id="p2PPeerTable" GridPane.rowIndex="4" GridPane.columnIndex="1" VBox.vgrow="ALWAYS"
-               GridPane.hgrow="ALWAYS">
+    <TableView fx:id="p2PPeerTable" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
         <columns>
             <TableColumn text="Onion address" fx:id="onionAddressColumn" minWidth="220">
                 <cellValueFactory>
                     <PropertyValueFactory property="onionAddress"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Type" fx:id="connectionTypeColumn" minWidth="70" maxWidth="80">
+            <TableColumn text="In/Out" fx:id="connectionTypeColumn" minWidth="70" maxWidth="80">
                 <cellValueFactory>
                     <PropertyValueFactory property="connectionType"/>
                 </cellValueFactory>
@@ -99,13 +98,17 @@
                     <PropertyValueFactory property="receivedBytes"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Identity" fx:id="peerTypeColumn" minWidth="100" maxWidth="100">
+            <TableColumn text="Peer type" fx:id="peerTypeColumn" minWidth="100" maxWidth="100">
                 <cellValueFactory>
                     <PropertyValueFactory property="peerType"/>
                 </cellValueFactory>
             </TableColumn>
         </columns>
     </TableView>
+
+    <Label text="Total traffic:" GridPane.rowIndex="5"/>
+    <TextField fx:id="totalTraffic" GridPane.rowIndex="5" GridPane.columnIndex="1" editable="false"
+               focusTraversable="false"/>
 
     <columnConstraints>
         <ColumnConstraints hgrow="NEVER" halignment="RIGHT"/>

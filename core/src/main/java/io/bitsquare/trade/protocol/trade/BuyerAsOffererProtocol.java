@@ -31,7 +31,6 @@ import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.tasks.buyer.*;
 import io.bitsquare.trade.protocol.trade.tasks.offerer.*;
 import io.bitsquare.trade.protocol.trade.tasks.shared.BroadcastAfterLockTime;
-import io.bitsquare.trade.protocol.trade.tasks.shared.CommitPayoutTx;
 import io.bitsquare.trade.protocol.trade.tasks.shared.InitWaitPeriodForOpenDispute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -183,7 +182,6 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
         taskRunner.addTasks(
                 ProcessFinalizePayoutTxRequest.class,
                 SignAndFinalizePayoutTx.class,
-                CommitPayoutTx.class,
                 SendPayoutTxFinalizedMessage.class,
                 BroadcastAfterLockTime.class
         );

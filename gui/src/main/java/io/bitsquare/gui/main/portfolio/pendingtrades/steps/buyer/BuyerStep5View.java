@@ -130,7 +130,7 @@ public class BuyerStep5View extends TradeStepView {
         });
 
         if (BitsquareApp.DEV_MODE)
-            withdrawAddressTextField.setText("mhpVDvMjJT1Gn7da44dkq1HXd3wXdFZpXu");
+            withdrawAddressTextField.setText("mi8k5f9L972VgDaT4LgjAhriC9hHEPL7EW");
     }
 
     protected String getBtcTradeAmountLabel() {

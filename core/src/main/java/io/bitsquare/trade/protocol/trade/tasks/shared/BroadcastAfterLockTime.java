@@ -32,6 +32,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutionException;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class BroadcastAfterLockTime extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(BroadcastAfterLockTime.class);
 
@@ -67,19 +69,14 @@ public class BroadcastAfterLockTime extends TradeTask {
     }
 
     private void broadcastTx() {
-        boolean needsBroadCast = true;
-        Transaction walletTx = processModel.getTradeWalletService().getWalletTx(trade.getPayoutTx().getHash());
-        if (walletTx != null) {
-            TransactionConfidence.ConfidenceType confidenceType = walletTx.getConfidence().getConfidenceType();
-            if (confidenceType.equals(TransactionConfidence.ConfidenceType.PENDING) ||
-                    confidenceType.equals(TransactionConfidence.ConfidenceType.BUILDING)) {
-                needsBroadCast = false;
-                trade.setState(Trade.State.PAYOUT_BROAD_CASTED);
-                complete();
-            }
-        }
-        if (needsBroadCast) {
-            processModel.getTradeWalletService().broadcastTx(trade.getPayoutTx(), new FutureCallback<Transaction>() {
+        Transaction payoutTx = trade.getPayoutTx();
+        checkNotNull(payoutTx, "payoutTx must not be null at BroadcastAfterLockTime.broadcastTx");
+        TransactionConfidence.ConfidenceType confidenceType = payoutTx.getConfidence().getConfidenceType();
+        if (confidenceType.equals(TransactionConfidence.ConfidenceType.BUILDING)) {
+            trade.setState(Trade.State.PAYOUT_BROAD_CASTED);
+            complete();
+        } else {
+            processModel.getTradeWalletService().broadcastTx(payoutTx, new FutureCallback<Transaction>() {
                 @Override
                 public void onSuccess(Transaction transaction) {
                     log.debug("BroadcastTx succeeded. Transaction:" + transaction);

@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 
-class NetworkStatisticListItem {
+public class NetworkStatisticListItem {
     private static final Logger log = LoggerFactory.getLogger(NetworkStatisticListItem.class);
 
     private final Statistic statistic;

@@ -134,15 +134,15 @@ public class PeerManager implements ConnectionListener, MessageListener {
     // MessageListener implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    //TODO move to RequestDataManager
     @Override
     public void onMessage(Message message, Connection connection) {
         // In case a seed node connects to another seed node we get his address at the DataRequest triggered from
         // RequestDataManager.updateDataFromConnectedSeedNode 
         if (message instanceof GetUpdatedDataRequest) {
             Log.traceCall(message.toString() + "\n\tconnection=" + connection);
-            Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
-            if (peersNodeAddressOptional.isPresent() &&
-                    seedNodeAddresses.contains(peersNodeAddressOptional.get()))
+
+            if (isSeedNode(connection))
                 connection.setPeerType(Connection.PeerType.SEED_NODE);
         }
     }

@@ -683,7 +683,7 @@ public class Connection implements MessageListener {
                                 Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
                                 if (peersNodeAddressOptional.isPresent())
                                     checkArgument(peersNodeAddressOptional.get().equals(senderNodeAddress),
-                                            "senderNodeAddress not matching connections peer address");
+                                            "senderNodeAddress not matching connections peer address.\nmessage=" + message);
                                 else
                                     connection.setPeersNodeAddress(senderNodeAddress);
                             }

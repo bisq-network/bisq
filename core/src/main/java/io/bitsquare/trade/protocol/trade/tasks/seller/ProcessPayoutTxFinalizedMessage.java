@@ -44,14 +44,15 @@ public class ProcessPayoutTxFinalizedMessage extends TradeTask {
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);
             checkArgument(message.payoutTx != null);
-            trade.setPayoutTx(processModel.getWalletService().getTransactionFromSerializedTx(message.payoutTx));
+            trade.setPayoutTx(processModel.getTradeWalletService().addTransactionToWallet(message.payoutTx));
+            
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             removeMailboxMessageAfterProcessing();
 
-            trade.setState(Trade.State.PAYOUT_TX_RECEIVED);
+            trade.setState(Trade.State.PAYOUT_TX_RECEIVED_AND_COMMITTED);
 
             complete();
         } catch (Throwable t) {

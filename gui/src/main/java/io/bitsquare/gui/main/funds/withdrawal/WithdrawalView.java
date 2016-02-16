@@ -346,7 +346,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         withdrawToTextField.setPromptText("Fill in your destination address");
 
         if (BitsquareApp.DEV_MODE)
-            withdrawToTextField.setText("mhpVDvMjJT1Gn7da44dkq1HXd3wXdFZpXu");
+            withdrawToTextField.setText("mi8k5f9L972VgDaT4LgjAhriC9hHEPL7EW");
     }
 
     private Optional<Tradable> getTradable(WithdrawalListItem item) {

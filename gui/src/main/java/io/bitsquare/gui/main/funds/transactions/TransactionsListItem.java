@@ -139,22 +139,10 @@ public class TransactionsListItem {
                 }
             }
         } else {
-           /* Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntryList().stream()
-                    .filter(e -> e.getAddressString() != null && e.getAddressString().equals(addressString))
-                    .findAny();
-            if (addressEntryOptional.isPresent() &&
-                    addressEntryOptional.get().getContext() == AddressEntry.Context.ARBITRATOR)
-                details = received ? "Received funds" : "Withdrawn from wallet";
-            else*/
-            if (amountAsCoin.isZero()) {
+            if (amountAsCoin.isZero())
                 details = "No refund from dispute";
-            } else {
-                details = received ? "Received funds" : "Withdrawn from wallet";
-            }
-            if (received)
-                details = amountAsCoin.isPositive() ? "Received funds" : "No refund from dispute";
             else
-                details = amountAsCoin.isNegative() ? "Withdrawn from wallet" : "No refund from dispute";
+                details = received ? "Received funds" : "Withdrawn from wallet";
         }
 
         date.set(formatter.formatDateTime(transaction.getUpdateTime()));

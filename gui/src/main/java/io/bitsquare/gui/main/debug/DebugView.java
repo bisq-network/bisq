@@ -36,7 +36,6 @@ import io.bitsquare.trade.protocol.trade.tasks.buyer.*;
 import io.bitsquare.trade.protocol.trade.tasks.offerer.*;
 import io.bitsquare.trade.protocol.trade.tasks.seller.*;
 import io.bitsquare.trade.protocol.trade.tasks.shared.BroadcastAfterLockTime;
-import io.bitsquare.trade.protocol.trade.tasks.shared.CommitPayoutTx;
 import io.bitsquare.trade.protocol.trade.tasks.shared.InitWaitPeriodForOpenDispute;
 import io.bitsquare.trade.protocol.trade.tasks.taker.*;
 import javafx.collections.FXCollections;
@@ -97,7 +96,6 @@ public class DebugView extends InitializableView {
 
                         ProcessFinalizePayoutTxRequest.class,
                         SignAndFinalizePayoutTx.class,
-                        CommitPayoutTx.class,
                         SendPayoutTxFinalizedMessage.class,
                         BroadcastAfterLockTime.class,
                         Boolean.class, /* used as seperator*/
@@ -124,7 +122,6 @@ public class DebugView extends InitializableView {
                         SendFinalizePayoutTxRequest.class,
 
                         ProcessPayoutTxFinalizedMessage.class,
-                        CommitPayoutTx.class,
                         BroadcastAfterLockTime.class,
                         Boolean.class /* used as seperator*/
                 )
@@ -150,7 +147,6 @@ public class DebugView extends InitializableView {
 
                         ProcessFinalizePayoutTxRequest.class,
                         SignAndFinalizePayoutTx.class,
-                        CommitPayoutTx.class,
                         SendPayoutTxFinalizedMessage.class,
                         BroadcastAfterLockTime.class,
                         Boolean.class, /* used as seperator*/
@@ -176,7 +172,6 @@ public class DebugView extends InitializableView {
                         SendFinalizePayoutTxRequest.class,
 
                         ProcessPayoutTxFinalizedMessage.class,
-                        CommitPayoutTx.class,
                         BroadcastAfterLockTime.class,
                         Boolean.class /* used as seperator*/
                 )

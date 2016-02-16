@@ -112,6 +112,10 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
     public void onMessage(Message message, Connection connection) {
         if (message instanceof GetPeersRequest) {
             Log.traceCall(message.toString() + "\n\tconnection=" + connection);
+
+            if (peerManager.isSeedNode(connection))
+                connection.setPeerType(Connection.PeerType.SEED_NODE);
+            
             GetPeersRequestHandler getPeersRequestHandler = new GetPeersRequestHandler(networkNode,
                     peerManager,
                     new GetPeersRequestHandler.Listener() {

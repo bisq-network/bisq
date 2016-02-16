@@ -123,6 +123,10 @@ class PeerExchangeHandler implements MessageListener {
     public void onMessage(Message message, Connection connection) {
         if (message instanceof GetPeersResponse) {
             GetPeersResponse getPeersResponse = (GetPeersResponse) message;
+
+            if (peerManager.isSeedNode(connection))
+                connection.setPeerType(Connection.PeerType.SEED_NODE);
+
             // Check if the response is for our request
             if (getPeersResponse.requestNonce == nonce) {
                 Log.traceCall(message.toString() + "\n\tconnection=" + connection);
