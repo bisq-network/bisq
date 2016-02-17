@@ -191,7 +191,7 @@ public class User implements Serializable {
         storage.queueUpForSave();
     }
 
-    public void setRegisteredArbitrator(Arbitrator arbitrator) {
+    public void setRegisteredArbitrator(@org.jetbrains.annotations.Nullable Arbitrator arbitrator) {
         this.registeredArbitrator = arbitrator;
         storage.queueUpForSave();
     }

@@ -21,7 +21,7 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
-import io.bitsquare.p2p.storage.data.ProtectedData;
+import io.bitsquare.p2p.storage.ProtectedData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +47,7 @@ public class OfferBookService {
     private final P2PService p2PService;
     private final List<OfferBookChangedListener> offerBookChangedListeners = new LinkedList<>();
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -57,20 +58,18 @@ public class OfferBookService {
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
-            public void onAdded(ProtectedData entry) {
-                log.debug("OfferBookService.onAdded " + entry);
+            public void onAdded(ProtectedData data) {
                 offerBookChangedListeners.stream().forEach(listener -> {
-                    if (entry.expirableMessage instanceof Offer)
-                        listener.onAdded((Offer) entry.expirableMessage);
+                    if (data.expirableMessage instanceof Offer)
+                        listener.onAdded((Offer) data.expirableMessage);
                 });
             }
 
             @Override
-            public void onRemoved(ProtectedData entry) {
+            public void onRemoved(ProtectedData data) {
                 offerBookChangedListeners.stream().forEach(listener -> {
-                    log.debug("OfferBookService.onRemoved " + entry);
-                    if (entry.expirableMessage instanceof Offer)
-                        listener.onRemoved((Offer) entry.expirableMessage);
+                    if (data.expirableMessage instanceof Offer)
+                        listener.onRemoved((Offer) data.expirableMessage);
                 });
             }
         });
@@ -101,7 +100,7 @@ public class OfferBookService {
             result = p2PService.addData(offer);
 
         if (result) {
-            log.trace("Add offer to network was successful. Offer = " + offer);
+            log.trace("Add offer to network was successful. Offer ID = " + offer.getId());
             resultHandler.handleResult();
         } else {
             errorMessageHandler.handleErrorMessage("Add offer failed");
@@ -110,7 +109,7 @@ public class OfferBookService {
 
     public void removeOffer(Offer offer, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
         if (p2PService.removeData(offer)) {
-            log.trace("Remove offer from network was successful. Offer = " + offer);
+            log.trace("Remove offer from network was successful. Offer ID = " + offer.getId());
             if (resultHandler != null)
                 resultHandler.handleResult();
         } else {
@@ -121,8 +120,8 @@ public class OfferBookService {
 
     public List<Offer> getOffers() {
         return p2PService.getDataMap().values().stream()
-                .filter(e -> e.expirableMessage instanceof Offer)
-                .map(e -> (Offer) e.expirableMessage)
+                .filter(data -> data.expirableMessage instanceof Offer)
+                .map(data -> (Offer) data.expirableMessage)
                 .collect(Collectors.toList());
     }
 

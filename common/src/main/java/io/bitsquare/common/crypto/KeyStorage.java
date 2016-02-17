@@ -136,7 +136,7 @@ public class KeyStorage {
         savePrivateKey(keyRing.getEncryptionKeyPair().getPrivate(), KeyEntry.MSG_ENCRYPTION.getFileName());
     }
 
-    public void savePrivateKey(PrivateKey privateKey, String name) {
+    private void savePrivateKey(PrivateKey privateKey, String name) {
         if (!storageDir.exists())
             storageDir.mkdir();
 

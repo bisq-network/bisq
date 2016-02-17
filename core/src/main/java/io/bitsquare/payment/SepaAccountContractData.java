@@ -44,7 +44,7 @@ public class SepaAccountContractData extends PaymentAccountContractData implemen
         super(paymentMethod, id, maxTradePeriod);
         Set<String> acceptedCountryCodesAsSet = CountryUtil.getAllSepaCountries().stream().map(e -> e.code).collect(Collectors.toSet());
         acceptedCountryCodes = new ArrayList<>(acceptedCountryCodesAsSet);
-        acceptedCountryCodes.sort((a, b) -> a.compareTo(b));
+        acceptedCountryCodes.sort(String::compareTo);
     }
 
     public void setHolderName(String holderName) {

@@ -25,6 +25,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
     private static final Logger log = LoggerFactory.getLogger(PeerExchangeManager.class);
 
     private static final long RETRY_DELAY_SEC = 60;
+    private static final long RETRY_DELAY_AFTER_ALL_CON_LOST_SEC = 3;
     private static final long REQUEST_PERIODICALLY_INTERVAL_MINUTES = 10;
 
     private final NetworkNode networkNode;
@@ -91,12 +92,18 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        if (connectToMorePeersTimer == null)
+        boolean lostAllConnections = networkNode.getAllConnections().isEmpty();
+        if (lostAllConnections || connectToMorePeersTimer == null) {
+            long delaySec = lostAllConnections ? RETRY_DELAY_AFTER_ALL_CON_LOST_SEC : RETRY_DELAY_SEC;
+            if (lostAllConnections && connectToMorePeersTimer != null)
+                connectToMorePeersTimer.cancel();
+            
             connectToMorePeersTimer = UserThread.runAfter(() -> {
                 log.trace("ConnectToMorePeersTimer called from onDisconnect code path");
                 stopConnectToMorePeersTimer();
                 requestWithAvailablePeers();
-            }, RETRY_DELAY_SEC);
+            }, delaySec);
+        }
     }
 
     @Override
@@ -115,7 +122,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
 
             if (peerManager.isSeedNode(connection))
                 connection.setPeerType(Connection.PeerType.SEED_NODE);
-            
+
             GetPeersRequestHandler getPeersRequestHandler = new GetPeersRequestHandler(networkNode,
                     peerManager,
                     new GetPeersRequestHandler.Listener() {

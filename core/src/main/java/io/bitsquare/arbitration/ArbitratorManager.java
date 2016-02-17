@@ -30,7 +30,7 @@ import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
-import io.bitsquare.p2p.storage.data.ProtectedData;
+import io.bitsquare.p2p.storage.ProtectedData;
 import io.bitsquare.user.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
@@ -101,12 +101,12 @@ public class ArbitratorManager {
 
         arbitratorService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
-            public void onAdded(ProtectedData entry) {
+            public void onAdded(ProtectedData data) {
                 applyArbitrators();
             }
 
             @Override
-            public void onRemoved(ProtectedData entry) {
+            public void onRemoved(ProtectedData data) {
                 applyArbitrators();
             }
         });
@@ -137,7 +137,7 @@ public class ArbitratorManager {
             // re-publish periodically
             republishArbitratorExecutor = Utilities.getScheduledThreadPoolExecutor("republishArbitrator", 1, 5, 5);
             long delay = Arbitrator.TTL / 2;
-            republishArbitratorExecutor.scheduleAtFixedRate(() -> republishArbitrator(), delay, delay, TimeUnit.MILLISECONDS);
+            republishArbitratorExecutor.scheduleAtFixedRate(this::republishArbitrator, delay, delay, TimeUnit.MILLISECONDS);
         }
 
         applyArbitrators();
@@ -150,7 +150,7 @@ public class ArbitratorManager {
         Arbitrator registeredArbitrator = user.getRegisteredArbitrator();
         if (registeredArbitrator != null) {
             addArbitrator(registeredArbitrator,
-                    () -> applyArbitrators(),
+                    this::applyArbitrators,
                     log::error
             );
         }
@@ -158,7 +158,7 @@ public class ArbitratorManager {
 
     public void applyArbitrators() {
         Map<NodeAddress, Arbitrator> map = arbitratorService.getArbitrators();
-        log.trace("Arbitrators . size=" + (map.values() != null ? map.values().size() : "0"));
+        log.trace("Arbitrators . size=" + map.values().size());
         arbitratorsObservableMap.clear();
         Map<NodeAddress, Arbitrator> filtered = map.values().stream()
                 .filter(e -> isPublicKeyInList(Utils.HEX.encode(e.getRegistrationPubKey()))
@@ -176,8 +176,8 @@ public class ArbitratorManager {
             // if we don't have any arbitrator anymore we set all matching
             if (user.getAcceptedArbitrators().isEmpty()) {
                 arbitratorsObservableMap.values().stream()
-                        .filter(arbitrator -> user.hasMatchingLanguage(arbitrator))
-                        .forEach(arbitrator -> user.addAcceptedArbitrator(arbitrator));
+                        .filter(user::hasMatchingLanguage)
+                        .forEach(user::addAcceptedArbitrator);
             }
         }
     }
@@ -191,7 +191,7 @@ public class ArbitratorManager {
                     resultHandler.handleResult();
 
                     if (arbitratorsObservableMap.size() > 0)
-                        UserThread.runAfter(() -> applyArbitrators(), 100, TimeUnit.MILLISECONDS);
+                        UserThread.runAfter(this::applyArbitrators, 100, TimeUnit.MILLISECONDS);
                 },
                 errorMessageHandler::handleErrorMessage);
     }

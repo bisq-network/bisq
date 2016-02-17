@@ -40,11 +40,11 @@ public class PaymentAccount implements Serializable {
     protected final Date creationDate;
     protected final PaymentMethod paymentMethod;
     protected String accountName;
-    protected final List<TradeCurrency> tradeCurrencies = new ArrayList<>();
+    final List<TradeCurrency> tradeCurrencies = new ArrayList<>();
     protected TradeCurrency selectedTradeCurrency;
     @Nullable
     protected Country country = null;
-    protected PaymentAccountContractData contractData;
+    PaymentAccountContractData contractData;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -52,7 +52,7 @@ public class PaymentAccount implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public PaymentAccount(PaymentMethod paymentMethod) {
+    protected PaymentAccount(PaymentMethod paymentMethod) {
         this.paymentMethod = paymentMethod;
         id = UUID.randomUUID().toString();
         creationDate = new Date();
@@ -108,7 +108,7 @@ public class PaymentAccount implements Serializable {
         return country;
     }
 
-    public void setCountry(@Nullable Country country) {
+    public void setCountry(Country country) {
         this.country = country;
         contractData.setCountryCode(country.code);
     }

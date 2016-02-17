@@ -29,23 +29,23 @@ public class PeerManager implements ConnectionListener, MessageListener {
 
     private static int MAX_CONNECTIONS;
     private static int MIN_CONNECTIONS;
-    private static int MAX_CONNECTIONS_EXTENDED_1;
-    private static int MAX_CONNECTIONS_EXTENDED_2;
+    private static int MAX_CONNECTIONS_PEER;
+    private static int MAX_CONNECTIONS_NON_DIRECT;
 
 
-    private static int MAX_CONNECTIONS_EXTENDED_3;
-    private boolean printReportedPeersDetails = true;
+    private static int MAX_CONNECTIONS_ABSOLUTE;
+    private final boolean printReportedPeersDetails = true;
 
     public static void setMaxConnections(int maxConnections) {
         MAX_CONNECTIONS = maxConnections;
         MIN_CONNECTIONS = Math.max(1, maxConnections - 4);
-        MAX_CONNECTIONS_EXTENDED_1 = MAX_CONNECTIONS + 5;
-        MAX_CONNECTIONS_EXTENDED_2 = MAX_CONNECTIONS + 10;
-        MAX_CONNECTIONS_EXTENDED_3 = MAX_CONNECTIONS + 20;
+        MAX_CONNECTIONS_PEER = MAX_CONNECTIONS + 5;
+        MAX_CONNECTIONS_NON_DIRECT = MAX_CONNECTIONS + 10;
+        MAX_CONNECTIONS_ABSOLUTE = MAX_CONNECTIONS + 30;
     }
 
     static {
-        setMaxConnections(3);
+        setMaxConnections(12);
     }
 
     private static final int MAX_REPORTED_PEERS = 1000;
@@ -98,7 +98,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
     }
 
     public int getMaxConnections() {
-        return MAX_CONNECTIONS_EXTENDED_3;
+        return MAX_CONNECTIONS_ABSOLUTE;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +161,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
         log.info("We have {} connections open. Our limit is {}", size, limit);
         if (size > limit) {
             // Only InboundConnection, and PEER type connections
-            log.info("We have too many connections open. We try to close some.\n\t" +
+            log.info("We have too many connections open.\n\t" +
                     "Lets try first to remove the inbound connections of type PEER.");
             List<Connection> candidates = allConnections.stream()
                     .filter(e -> e instanceof InboundConnection)
@@ -169,19 +169,19 @@ public class PeerManager implements ConnectionListener, MessageListener {
                     .collect(Collectors.toList());
 
             if (candidates.size() == 0) {
-                log.info("No candidates found. We go to the next level and check if we exceed our " +
-                        "MAX_CONNECTIONS_EXTENDED_1 limit of {}", MAX_CONNECTIONS_EXTENDED_1);
-                if (size > MAX_CONNECTIONS_EXTENDED_1) {
-                    log.info("Lets try to remove any connection of type PEER.");
+                log.info("No candidates found. We check if we exceed our " +
+                        "MAX_CONNECTIONS_PEER limit of {}", MAX_CONNECTIONS_PEER);
+                if (size > MAX_CONNECTIONS_PEER) {
+                    log.info("Lets try to remove ANY connection of type PEER.");
                     // Only PEER type connections
                     candidates = allConnections.stream()
                             .filter(e -> e.getPeerType() == Connection.PeerType.PEER)
                             .collect(Collectors.toList());
 
                     if (candidates.size() == 0) {
-                        log.info("No candidates found. We go to the next level and check if we exceed our " +
-                                "MAX_CONNECTIONS_EXTENDED_2 limit of {}", MAX_CONNECTIONS_EXTENDED_2);
-                        if (size > MAX_CONNECTIONS_EXTENDED_2) {
+                        log.info("No candidates found. We check if we exceed our " +
+                                "MAX_CONNECTIONS_NON_DIRECT limit of {}", MAX_CONNECTIONS_NON_DIRECT);
+                        if (size > MAX_CONNECTIONS_NON_DIRECT) {
                             log.info("Lets try to remove any connection which is not of type DIRECT_MSG_PEER.");
                             // All connections except DIRECT_MSG_PEER
                             candidates = allConnections.stream()
@@ -189,9 +189,9 @@ public class PeerManager implements ConnectionListener, MessageListener {
                                     .collect(Collectors.toList());
 
                             if (candidates.size() == 0) {
-                                log.info("No candidates found. We go to the next level and check if we exceed our " +
-                                        "MAX_CONNECTIONS_EXTENDED_3 limit of {}", MAX_CONNECTIONS_EXTENDED_3);
-                                if (size > MAX_CONNECTIONS_EXTENDED_3) {
+                                log.info("No candidates found. We check if we exceed our " +
+                                        "MAX_CONNECTIONS_ABSOLUTE limit of {}", MAX_CONNECTIONS_ABSOLUTE);
+                                if (size > MAX_CONNECTIONS_ABSOLUTE) {
                                     log.info("Lets try to remove any connection.");
                                     // All connections
                                     candidates = allConnections.stream()
@@ -225,7 +225,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
     private void removeSuperfluousSeedNodes() {
         Log.traceCall();
         Set<Connection> allConnections = networkNode.getAllConnections();
-        if (allConnections.size() > MAX_CONNECTIONS_EXTENDED_1) {
+        if (allConnections.size() > MAX_CONNECTIONS_PEER) {
             List<Connection> candidates = allConnections.stream()
                     .filter(this::isSeedNode)
                     .collect(Collectors.toList());
@@ -266,8 +266,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
     private void removeTooOldReportedPeers() {
         Log.traceCall();
         Set<ReportedPeer> reportedPeersToRemove = reportedPeers.stream()
-                .filter(reportedPeer -> reportedPeer.date != null &&
-                        new Date().getTime() - reportedPeer.date.getTime() > MAX_AGE)
+                .filter(reportedPeer -> new Date().getTime() - reportedPeer.date.getTime() > MAX_AGE)
                 .collect(Collectors.toSet());
         reportedPeersToRemove.forEach(this::removeReportedPeer);
     }
@@ -280,7 +279,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
         printReportedPeers(reportedPeersToAdd);
 
         // We check if the reported msg is not violating our rules
-        if (reportedPeersToAdd.size() <= (MAX_REPORTED_PEERS + PeerManager.MAX_CONNECTIONS_EXTENDED_3 + 10)) {
+        if (reportedPeersToAdd.size() <= (MAX_REPORTED_PEERS + PeerManager.MAX_CONNECTIONS_ABSOLUTE + 10)) {
             reportedPeers.addAll(reportedPeersToAdd);
             purgeReportedPeersIfExceeds();
 
@@ -311,7 +310,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
         }
     }
 
-    public void printReportedPeers(HashSet<ReportedPeer> reportedPeers) {
+    private void printReportedPeers(HashSet<ReportedPeer> reportedPeers) {
         if (printReportedPeersDetails) {
             StringBuilder result = new StringBuilder("We received now reportedPeers:");
             reportedPeers.stream().forEach(e -> result.append("\n\t").append(e));
@@ -351,8 +350,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
     private void removeTooOldPersistedPeers() {
         Log.traceCall();
         Set<ReportedPeer> persistedPeersToRemove = persistedPeers.stream()
-                .filter(reportedPeer -> reportedPeer.date != null &&
-                        new Date().getTime() - reportedPeer.date.getTime() > MAX_AGE)
+                .filter(reportedPeer -> new Date().getTime() - reportedPeer.date.getTime() > MAX_AGE)
                 .collect(Collectors.toSet());
         persistedPeersToRemove.forEach(this::removePersistedPeer);
     }
@@ -447,7 +445,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
     private void purgeReportedPeersIfExceeds() {
         Log.traceCall();
         int size = getReportedPeers().size();
-        int limit = MAX_REPORTED_PEERS - MAX_CONNECTIONS_EXTENDED_3;
+        int limit = MAX_REPORTED_PEERS - MAX_CONNECTIONS_ABSOLUTE;
         if (size > limit) {
             log.trace("We have already {} reported peers which exceeds our limit of {}." +
                     "We remove random peers from the reported peers list.", size, limit);
@@ -466,7 +464,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
     private void purgePersistedPeersIfExceeds() {
         Log.traceCall();
         int size = getPersistedPeers().size();
-        int limit = MAX_REPORTED_PEERS - MAX_CONNECTIONS_EXTENDED_3;
+        int limit = MAX_PERSISTED_PEERS - MAX_CONNECTIONS_ABSOLUTE;
         if (size > limit) {
             log.trace("We have already {} persisted peers which exceeds our limit of {}." +
                     "We remove random peers from the persisted peers list.", size, limit);
@@ -478,7 +476,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
                 removePersistedPeer(toRemove);
             }
         } else {
-            log.trace("No need to purge persisted peers.\n\tWe don't have more then {} persisted peers yet.", MAX_REPORTED_PEERS);
+            log.trace("No need to purge persisted peers.\n\tWe don't have more then {} persisted peers yet.", MAX_PERSISTED_PEERS);
         }
     }
 
@@ -487,7 +485,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
         return list.remove(new Random().nextInt(list.size()));
     }
 
-    public Set<ReportedPeer> getConnectedPeers() {
+    private Set<ReportedPeer> getConnectedPeers() {
         // networkNode.getConfirmedConnections includes:
         // filter(connection -> connection.getPeersNodeAddressOptional().isPresent())
         return networkNode.getConfirmedConnections().stream()
@@ -495,7 +493,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
                 .collect(Collectors.toSet());
     }
 
-    public HashSet<ReportedPeer> getConnectedPeersNonSeedNodes() {
+    private HashSet<ReportedPeer> getConnectedPeersNonSeedNodes() {
         return new HashSet<>(getConnectedPeers().stream()
                 .filter(e -> !isSeedNode(e))
                 .collect(Collectors.toSet()));

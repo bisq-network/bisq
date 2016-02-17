@@ -199,7 +199,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                             .show();
 
                 }
-            } catch (AddressFormatException | InsufficientMoneyException e) {
+            } catch (AddressFormatException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
             }

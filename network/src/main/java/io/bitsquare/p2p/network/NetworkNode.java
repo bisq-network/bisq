@@ -6,6 +6,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -56,7 +57,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     abstract public void start(@Nullable SetupListener setupListener);
 
     public SettableFuture<Connection> sendMessage(@NotNull NodeAddress peersNodeAddress, Message message) {
-        Log.traceCall("peersNodeAddress=" + peersNodeAddress + "\n\tmessage=" + message);
+        Log.traceCall("peersNodeAddress=" + peersNodeAddress + "\n\tmessage=" + StringUtils.abbreviate(message.toString(), 100));
         checkNotNull(peersNodeAddress, "peerAddress must not be null");
 
         Optional<Connection> outboundConnectionOptional = lookupOutboundConnection(peersNodeAddress);
@@ -127,7 +128,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     }
 
     public SettableFuture<Connection> sendMessage(Connection connection, Message message) {
-        Log.traceCall("\n\tmessage=" + message + "\n\tconnection=" + connection);
+        Log.traceCall("\n\tmessage=" + StringUtils.abbreviate(message.toString(), 100) + "\n\tconnection=" + connection);
         // connection.sendMessage might take a bit (compression, write to stream), so we use a thread to not block
         ListenableFuture<Connection> future = executorService.submit(() -> {
             Thread.currentThread().setName("NetworkNode:SendMessage-to-" + connection.getUid());

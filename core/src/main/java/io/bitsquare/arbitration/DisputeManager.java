@@ -575,7 +575,7 @@ public class DisputeManager {
     }
 
     private boolean isArbitrator(DisputeResult disputeResult) {
-        return walletService.getArbitratorAddressEntry().getAddressString().equals(disputeResult.getArbitratorAddressAsString());
+        return disputeResult.getArbitratorAddressAsString().equals(walletService.getArbitratorAddressEntry().getAddressString());
     }
 
 

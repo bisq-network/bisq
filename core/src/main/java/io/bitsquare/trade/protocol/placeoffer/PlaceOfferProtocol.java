@@ -64,7 +64,7 @@ public class PlaceOfferProtocol {
                                     model.offerAddedToOfferBook = false;
                                     log.debug("Offer removed from offer book.");
                                 },
-                                errorMessage2 -> log.error(errorMessage2));
+                                log::error);
                     }
                     log.error(errorMessage);
                 }

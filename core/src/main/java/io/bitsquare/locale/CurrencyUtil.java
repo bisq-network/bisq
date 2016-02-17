@@ -158,6 +158,7 @@ public class CurrencyUtil {
         return !(isCryptoCurrency(currencyCode)) && Currency.getInstance(currencyCode) != null;
     }
 
+    @SuppressWarnings("WeakerAccess")
     public static boolean isCryptoCurrency(String currencyCode) {
         return getSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findAny().isPresent();
     }

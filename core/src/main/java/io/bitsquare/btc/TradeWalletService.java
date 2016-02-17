@@ -31,6 +31,7 @@ import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.*;
+import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.script.Script;
@@ -161,6 +162,7 @@ public class TradeWalletService {
         // To be discussed if that introduce any privacy issues.
         sendRequest.changeAddress = addressEntry.getAddress();
 
+        checkNotNull(wallet, "Wallet must not be null");
         wallet.completeTx(sendRequest);
         printTxWithInputs("tradingFeeTx", tradingFeeTx);
 
@@ -248,8 +250,9 @@ public class TradeWalletService {
         String changeOutputAddress = null;
         if (changeOutput != null) {
             changeOutputValue = changeOutput.getValue().getValue();
-            checkNotNull(changeOutput.getAddressFromP2PKHScript(params), "changeOutput.getAddressFromP2PKHScript(params) must not be null");
-            changeOutputAddress = changeOutput.getAddressFromP2PKHScript(params).toString();
+            Address addressFromP2PKHScript = changeOutput.getAddressFromP2PKHScript(params);
+            checkNotNull(addressFromP2PKHScript, "changeOutput.getAddressFromP2PKHScript(params) must not be null");
+            changeOutputAddress = addressFromP2PKHScript.toString();
         }
 
         return new InputsAndChangeOutput(rawInputList, changeOutputValue, changeOutputAddress);
@@ -292,7 +295,7 @@ public class TradeWalletService {
         log.trace("msOutputAmount " + msOutputAmount.toFriendlyString());
         log.trace("takerRawInputs " + takerRawInputs.toString());
         log.trace("takerChangeOutputValue " + takerChangeOutputValue);
-        log.trace("takerChangeAddressString " + takerChangeAddressString != null ? takerChangeAddressString : "");
+        log.trace("takerChangeAddressString " + takerChangeAddressString);
         log.trace("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
         log.trace("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
         log.trace("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
@@ -499,6 +502,7 @@ public class TradeWalletService {
         printTxWithInputs("depositTx", depositTx);
 
         // Broadcast depositTx
+        checkNotNull(walletAppKit);
         ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(depositTx).future();
         Futures.addCallback(broadcastComplete, callback);
     }
@@ -552,7 +556,9 @@ public class TradeWalletService {
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
         // MS output from prev. tx is index 0
         Sha256Hash sigHash = preparedPayoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
-        ECKey.ECDSASignature sellerSignature = sellerAddressEntry.getKeyPair().sign(sigHash, aesKey).toCanonicalised();
+        DeterministicKey keyPair = sellerAddressEntry.getKeyPair();
+        checkNotNull(keyPair);
+        ECKey.ECDSASignature sellerSignature = keyPair.sign(sigHash, aesKey).toCanonicalised();
 
         verifyTransaction(preparedPayoutTx);
 
@@ -772,7 +778,9 @@ public class TradeWalletService {
         // take care of sorting!
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
         Sha256Hash sigHash = payoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
-        ECKey.ECDSASignature tradersSignature = tradersAddressEntry.getKeyPair().sign(sigHash, aesKey).toCanonicalised();
+        DeterministicKey keyPair = tradersAddressEntry.getKeyPair();
+        checkNotNull(keyPair);
+        ECKey.ECDSASignature tradersSignature = keyPair.sign(sigHash, aesKey).toCanonicalised();
 
         TransactionSignature tradersTxSig = new TransactionSignature(tradersSignature, Transaction.SigHash.ALL, false);
         TransactionSignature arbitratorTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(arbitratorSignature),
@@ -805,6 +813,7 @@ public class TradeWalletService {
      * @param callback
      */
     public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback) {
+        checkNotNull(walletAppKit);
         ListenableFuture<Transaction> future = walletAppKit.peerGroup().broadcastTransaction(tx).future();
         Futures.addCallback(future, callback);
     }
@@ -850,6 +859,7 @@ public class TradeWalletService {
      * @throws VerificationException
      */
     public Transaction getWalletTx(Sha256Hash txId) throws VerificationException {
+        checkNotNull(wallet);
         return wallet.getTransaction(txId);
     }
 
@@ -858,22 +868,27 @@ public class TradeWalletService {
      * is old and doesn't have that data.
      */
     public int getLastBlockSeenHeight() {
+        checkNotNull(wallet);
         return wallet.getLastBlockSeenHeight();
     }
 
     public ListenableFuture<StoredBlock> getBlockHeightFuture(Transaction transaction) {
+        checkNotNull(walletAppKit);
         return walletAppKit.chain().getHeightFuture((int) transaction.getLockTime());
     }
 
     public int getBestChainHeight() {
+        checkNotNull(walletAppKit);
         return walletAppKit.chain().getBestChainHeight();
     }
 
     public void addBlockChainListener(BlockChainListener blockChainListener) {
+        checkNotNull(walletAppKit);
         walletAppKit.chain().addListener(blockChainListener);
     }
 
     public void removeBlockChainListener(BlockChainListener blockChainListener) {
+        checkNotNull(walletAppKit);
         walletAppKit.chain().removeListener(blockChainListener);
     }
 
@@ -943,7 +958,7 @@ public class TradeWalletService {
         transaction.addOutput(buyerPayoutAmount, new Address(params, buyerAddressString));
         transaction.addOutput(sellerPayoutAmount, new Address(params, sellerAddressString));
         if (lockTime != 0) {
-            log.info("We use a locktime of " + lockTime);
+            log.info("We use a lockTime of " + lockTime);
             // When using lockTime we need to set sequenceNumber to 0 
             transaction.getInputs().stream().forEach(i -> i.setSequenceNumber(0));
             transaction.setLockTime(lockTime);
@@ -964,6 +979,7 @@ public class TradeWalletService {
     private void signInput(Transaction transaction, TransactionInput input, int inputIndex) throws SigningException {
         checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
         Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
+        checkNotNull(wallet);
         ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
         checkNotNull(sigKey, "signInput: sigKey must not be null. input.getOutpoint()=" + input.getOutpoint().toString());
         Sha256Hash hash = transaction.hashForSignature(inputIndex, scriptPubKey, Transaction.SigHash.ALL, false);
@@ -981,6 +997,7 @@ public class TradeWalletService {
     private void checkWalletConsistency() throws WalletException {
         try {
             log.trace("Check if wallet is consistent before commit.");
+            checkNotNull(wallet);
             checkState(wallet.isConsistent());
         } catch (Throwable t) {
             t.printStackTrace();

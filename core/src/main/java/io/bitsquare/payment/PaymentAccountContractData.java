@@ -38,7 +38,7 @@ public abstract class PaymentAccountContractData implements Serializable {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PaymentAccountContractData(String paymentMethodName, String id, int maxTradePeriod) {
+    PaymentAccountContractData(String paymentMethodName, String id, int maxTradePeriod) {
         this.paymentMethodName = paymentMethodName;
         this.id = id;
         this.maxTradePeriod = maxTradePeriod;

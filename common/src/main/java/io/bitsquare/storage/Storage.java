@@ -109,7 +109,7 @@ public class Storage<T extends Serializable> {
     }
 
     // Save delayed and on a background thread
-    public void queueUpForSave(T serializable) {
+    private void queueUpForSave(T serializable) {
         if (serializable != null) {
             log.trace("save " + fileName);
             checkNotNull(storageFile, "storageFile = null. Call setupFileStorage before using read/write.");

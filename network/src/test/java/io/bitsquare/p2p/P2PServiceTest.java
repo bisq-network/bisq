@@ -11,7 +11,7 @@ import io.bitsquare.p2p.network.LocalhostNetworkNode;
 import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.seed.SeedNode;
 import io.bitsquare.p2p.storage.P2PDataStorage;
-import io.bitsquare.p2p.storage.data.ProtectedData;
+import io.bitsquare.p2p.storage.ProtectedData;
 import io.bitsquare.p2p.storage.mocks.MockData;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.*;
@@ -25,6 +25,7 @@ import java.security.cert.CertificateException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 // TorNode created. Took 6 sec.
 // Hidden service created. Took 40-50 sec.
@@ -157,7 +158,11 @@ public class P2PServiceTest {
         Assert.assertEquals(1, p2PService3.getDataMap().size());
 
         // try to manipulate seq nr. -> fails
-        ProtectedData origProtectedData = p2PService3.getDataMap().values().stream().findFirst().get();
+        Set<ProtectedData> dataSet = p2PService3.getDataMap().values().stream()
+                .filter(data -> data instanceof ProtectedData)
+                .map(data -> (ProtectedData) data)
+                .collect(Collectors.toSet());
+        ProtectedData origProtectedData = dataSet.stream().findFirst().get();
         ProtectedData protectedDataManipulated = new ProtectedData(origProtectedData.expirableMessage, origProtectedData.ttl, origProtectedData.ownerPubKey, origProtectedData.sequenceNumber + 1, origProtectedData.signature);
         Assert.assertFalse(p2PService3.removeData(protectedDataManipulated.expirableMessage));
         Thread.sleep(sleepTime);

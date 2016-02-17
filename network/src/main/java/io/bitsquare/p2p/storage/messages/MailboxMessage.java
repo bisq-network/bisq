@@ -1,8 +1,9 @@
-package io.bitsquare.p2p.storage.data;
+package io.bitsquare.p2p.storage.messages;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.crypto.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.storage.ProtectedData;
 
 import java.security.PublicKey;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +31,7 @@ public final class MailboxMessage implements ExpirableMessage {
      * Used for check if the add operation is permitted.
      * senderStoragePublicKey has to be equal to the ownerPubKey of the ProtectedData
      *
-     * @see io.bitsquare.p2p.storage.data.ProtectedData#ownerPubKey
+     * @see ProtectedData#ownerPubKey
      * @see io.bitsquare.p2p.storage.P2PDataStorage#add(ProtectedData, NodeAddress)
      */
     public final PublicKey senderPubKeyForAddOperation;
@@ -39,7 +40,7 @@ public final class MailboxMessage implements ExpirableMessage {
      * Used for check if the remove operation is permitted.
      * senderStoragePublicKey has to be equal to the ownerPubKey of the ProtectedData
      *
-     * @see io.bitsquare.p2p.storage.data.ProtectedData#ownerPubKey
+     * @see ProtectedData#ownerPubKey
      * @see io.bitsquare.p2p.storage.P2PDataStorage#remove(ProtectedData, NodeAddress)
      */
     public final PublicKey receiverPubKeyForRemoveOperation;

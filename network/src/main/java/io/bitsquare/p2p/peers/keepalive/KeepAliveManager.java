@@ -8,6 +8,7 @@ import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
@@ -18,15 +19,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class KeepAliveManager implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(KeepAliveManager.class);
 
-    //private static final int INTERVAL_SEC = new Random().nextInt(10) + 10;
-    //TODO
-    private static final int INTERVAL_SEC = 3;
+    private static final int INTERVAL_SEC = new Random().nextInt(10) + 10;
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
@@ -115,23 +115,28 @@ public class KeepAliveManager implements MessageListener {
             networkNode.getConfirmedConnections().stream()
                     .filter(connection -> connection instanceof OutboundConnection)
                     .forEach(connection -> {
-                        if (!maintenanceHandlerMap.containsKey(connection.getUid())) {
+                        if (!maintenanceHandlerMap.containsKey(getKey(connection))) {
                             KeepAliveHandler keepAliveHandler = new KeepAliveHandler(networkNode, peerManager, new KeepAliveHandler.Listener() {
                                 @Override
                                 public void onComplete() {
-                                    maintenanceHandlerMap.remove(connection.getUid());
+                                    maintenanceHandlerMap.remove(getKey(connection));
                                 }
 
                                 @Override
                                 public void onFault(String errorMessage, Connection connection) {
-                                    maintenanceHandlerMap.remove(connection.getUid());
+                                    maintenanceHandlerMap.remove(getKey(connection));
+                                }
+
+                                @Override
+                                public void onFault(String errorMessage, NodeAddress nodeAddress) {
+                                    maintenanceHandlerMap.remove(nodeAddress.getFullAddress());
                                 }
                             });
-                            maintenanceHandlerMap.put(connection.getUid(), keepAliveHandler);
+                            maintenanceHandlerMap.put(getKey(connection), keepAliveHandler);
                             keepAliveHandler.sendPing(connection);
                         } else {
                             log.warn("Connection with id {} has not completed and is still in our map. " +
-                                    "We will try to ping that peer at the next schedule.", connection.getUid());
+                                    "We will try to ping that peer at the next schedule.", getKey(connection));
                         }
                     });
 
@@ -140,6 +145,16 @@ public class KeepAliveManager implements MessageListener {
             if (size > peerManager.getMaxConnections())
                 log.warn("Seems we don't clean up out map correctly.\n" +
                         "maintenanceHandlerMap size={}, peerManager.getMaxConnections()={}", size, peerManager.getMaxConnections());
+        }
+    }
+
+    private String getKey(Connection connection) {
+        if (connection.getPeersNodeAddressOptional().isPresent()) {
+            return connection.getPeersNodeAddressOptional().get().getFullAddress();
+        } else {
+            // TODO not sure if that can be the case, but handle it otherwise we get an exception
+            log.warn("!connection.getPeersNodeAddressOptional().isPresent(). That should not happen.");
+            return "null";
         }
     }
 }

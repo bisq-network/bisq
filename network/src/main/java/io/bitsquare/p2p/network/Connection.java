@@ -59,9 +59,7 @@ public class Connection implements MessageListener {
     private static final int MAX_MSG_SIZE = 100 * 1024;         // 100 kb of compressed data
     private static final int MSG_THROTTLE_PER_SEC = 10;              // With MAX_MSG_SIZE of 100kb results in bandwidth of 10 mbit/sec 
     private static final int MSG_THROTTLE_PER_10SEC = 50;           // With MAX_MSG_SIZE of 100kb results in bandwidth of 5 mbit/sec for 10 sec 
-    //private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(60);
-    //TODO
-    private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(6);
+    private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(60);
 
     public static int getMaxMsgSize() {
         return MAX_MSG_SIZE;
@@ -695,6 +693,8 @@ public class Connection implements MessageListener {
                             messageListener.onMessage(message, connection);
                         }
                     } catch (ClassNotFoundException | NoClassDefFoundError e) {
+                        log.warn(e.getMessage());
+                        e.printStackTrace();
                         reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                         return;
                     } catch (IOException e) {

@@ -33,6 +33,7 @@ public class FiatCurrency extends TradeCurrency implements Serializable {
         this(Currency.getInstance(currencyCode));
     }
 
+    @SuppressWarnings("WeakerAccess")
     public FiatCurrency(Currency currency) {
         super(currency.getCurrencyCode(), currency.getDisplayName(Preferences.getDefaultLocale()), currency.getSymbol());
         this.currency = currency;

@@ -1,6 +1,7 @@
-package io.bitsquare.p2p.storage.data;
+package io.bitsquare.p2p.storage.messages;
 
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.storage.ProtectedData;
 
 import java.security.PublicKey;
 
@@ -19,7 +20,7 @@ public interface StorageMessage extends ExpirableMessage {
      * OwnerPubKey has to be equal to the ownerPubKey of the ProtectedData
      *
      * @return The public key of the data owner.
-     * @see io.bitsquare.p2p.storage.data.ProtectedData#ownerPubKey
+     * @see ProtectedData#ownerPubKey
      * @see io.bitsquare.p2p.storage.P2PDataStorage#add(ProtectedData, NodeAddress)
      * @see io.bitsquare.p2p.storage.P2PDataStorage#remove(ProtectedData, NodeAddress)
      */

@@ -5,6 +5,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.app.Log;
 import io.bitsquare.p2p.Message;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.CloseConnectionReason;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.MessageListener;
@@ -16,10 +17,13 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.Random;
 
 class KeepAliveHandler implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(KeepAliveHandler.class);
+
+    @Nullable
     private Connection connection;
 
 
@@ -31,6 +35,8 @@ class KeepAliveHandler implements MessageListener {
         void onComplete();
 
         void onFault(String errorMessage, Connection connection);
+
+        void onFault(String errorMessage, NodeAddress nodeAddress);
     }
 
 
@@ -86,6 +92,34 @@ class KeepAliveHandler implements MessageListener {
                 cleanup();
                 peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_FAILURE);
                 listener.onFault(errorMessage, connection);
+            }
+        });
+    }
+
+    public void sendPing(NodeAddress nodeAddress) {
+        Log.traceCall("nodeAddress=" + nodeAddress + " / this=" + this);
+        Ping ping = new Ping(nonce);
+        SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, ping);
+        Futures.addCallback(future, new FutureCallback<Connection>() {
+            @Override
+            public void onSuccess(Connection connection) {
+                if (connection != null) {
+                    KeepAliveHandler.this.connection = connection;
+                    connection.addMessageListener(KeepAliveHandler.this);
+                }
+
+                log.trace("Send " + ping + " to " + nodeAddress + " succeeded.");
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable throwable) {
+                String errorMessage = "Sending ping to " + nodeAddress +
+                        " failed. That is expected if the peer is offline.\n\tping=" + ping +
+                        ".\n\tException=" + throwable.getMessage();
+                log.info(errorMessage);
+                cleanup();
+                peerManager.shutDownConnection(nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
+                listener.onFault(errorMessage, nodeAddress);
             }
         });
     }

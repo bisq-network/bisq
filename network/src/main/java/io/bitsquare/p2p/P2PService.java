@@ -24,11 +24,11 @@ import io.bitsquare.p2p.peers.peerexchange.PeerExchangeManager;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.P2PDataStorage;
-import io.bitsquare.p2p.storage.data.ExpirableMessage;
-import io.bitsquare.p2p.storage.data.MailboxMessage;
-import io.bitsquare.p2p.storage.data.ProtectedData;
-import io.bitsquare.p2p.storage.data.ProtectedMailboxData;
+import io.bitsquare.p2p.storage.ProtectedData;
+import io.bitsquare.p2p.storage.ProtectedMailboxData;
 import io.bitsquare.p2p.storage.messages.AddDataMessage;
+import io.bitsquare.p2p.storage.messages.ExpirableMessage;
+import io.bitsquare.p2p.storage.messages.MailboxMessage;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import org.fxmisc.easybind.EasyBind;
@@ -110,9 +110,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     private void init(boolean useLocalhost, int networkId, File storageDir) {
-        connectionNodeAddressListener = (observable, oldValue, newValue) -> {
-            UserThread.execute(() -> numConnectedPeers.set(networkNode.getNodeAddressesOfConfirmedConnections().size()));
-        };
+        connectionNodeAddressListener = (observable, oldValue, newValue) ->
+                UserThread.execute(() ->
+                        numConnectedPeers.set(networkNode.getNodeAddressesOfConfirmedConnections().size()));
 
         networkNode = useLocalhost ? new LocalhostNetworkNode(port) : new TorNetworkNode(port, torDir);
         networkNode.addConnectionListener(this);
@@ -364,13 +364,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onAdded(ProtectedData entry) {
-        if (entry instanceof ProtectedMailboxData)
-            processProtectedMailboxData((ProtectedMailboxData) entry);
+    public void onAdded(ProtectedData data) {
+        if (data instanceof ProtectedMailboxData)
+            processProtectedMailboxData((ProtectedMailboxData) data);
     }
 
     @Override
-    public void onRemoved(ProtectedData entry) {
+    public void onRemoved(ProtectedData data) {
     }
 
 

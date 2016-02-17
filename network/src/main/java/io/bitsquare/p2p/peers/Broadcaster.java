@@ -31,20 +31,19 @@ public class Broadcaster {
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
 
-    private IntegerProperty numOfBroadcasts = new SimpleIntegerProperty(0);
+    private final IntegerProperty numOfBroadcasts = new SimpleIntegerProperty(0);
 
     public Broadcaster(NetworkNode networkNode) {
         this.networkNode = networkNode;
     }
 
     public void broadcast(DataBroadcastMessage message, @Nullable NodeAddress sender) {
-
         Log.traceCall("Sender=" + sender + "\n\t" +
                 "Message=" + StringUtils.abbreviate(message.toString(), 100));
         numOfBroadcasts.set(0);
         Set<Connection> receivers = networkNode.getConfirmedConnections();
         if (!receivers.isEmpty()) {
-            log.info("Broadcast message to {} peers. Message: {}", receivers.size(), message);
+            log.info("Broadcast message to {} peers.", receivers.size());
             receivers.stream()
                     .filter(connection -> !connection.getPeersNodeAddressOptional().get().equals(sender))
                     .forEach(connection -> {
@@ -70,7 +69,7 @@ public class Broadcaster {
         } else {
             log.warn("Message not broadcasted because we have no available peers yet.\n\t" +
                     "That should never happen as broadcast should not be called in such cases.\n" +
-                    "message = {}", message);
+                    "message = {}", StringUtils.abbreviate(message.toString(), 100));
         }
     }
 

@@ -554,6 +554,7 @@ abstract public class Trade implements Tradable, Model, Serializable {
         this.takeOfferFeeTxId = takeOfferFeeTxId;
     }
 
+    @org.jetbrains.annotations.Nullable
     public String getTakeOfferFeeTxId() {
         return takeOfferFeeTxId;
     }

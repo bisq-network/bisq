@@ -386,7 +386,7 @@ public class Preferences implements Serializable {
 
     public boolean showAgain(String key) {
         // if we add new and those are not in our stored map we display by default the new popup
-        if (!getShowAgainMap().containsKey(key)) {
+        if (!showAgainMap.containsKey(key)) {
             showAgainMap.put(key, true);
             storage.queueUpForSave(2000);
         }

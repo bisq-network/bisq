@@ -67,8 +67,4 @@ public class OfferAvailabilityModel implements Model {
     @Override
     public void onComplete() {
     }
-
-    public PubKeyRing getPubKeyRing() {
-        return pubKeyRing;
-    }
 }

@@ -55,6 +55,7 @@ public class UserThread {
         return UserThread.runAfterRandomDelay(runnable, minDelayInSec, maxDelayInSec, TimeUnit.SECONDS);
     }
 
+    @SuppressWarnings("WeakerAccess")
     public static Timer runAfterRandomDelay(Runnable runnable, long minDelay, long maxDelay, TimeUnit timeUnit) {
         return UserThread.runAfter(runnable, new Random().nextInt((int) (maxDelay - minDelay)) + minDelay, timeUnit);
     }
@@ -70,7 +71,7 @@ public class UserThread {
             public void run() {
                 Thread.currentThread().setName("TimerTask-" + new Random().nextInt(10000));
                 try {
-                    UserThread.execute(() -> runnable.run());
+                    UserThread.execute(runnable::run);
                 } catch (Throwable t) {
                     t.printStackTrace();
                     log.error("Executing timerTask failed. " + t.getMessage());

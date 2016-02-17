@@ -57,7 +57,7 @@ class AddressBasedCoinSelector implements CoinSelector {
     }
 
     @VisibleForTesting
-    static void sortOutputs(ArrayList<TransactionOutput> outputs) {
+    private static void sortOutputs(ArrayList<TransactionOutput> outputs) {
         Collections.sort(outputs, (a, b) -> {
             int depth1 = a.getParentTransactionDepthInBlocks();
             int depth2 = b.getParentTransactionDepthInBlocks();
@@ -92,7 +92,7 @@ class AddressBasedCoinSelector implements CoinSelector {
     /**
      * Sub-classes can override this to just customize whether transactions are usable, but keep age sorting.
      */
-    protected boolean shouldSelect(Transaction tx) {
+    private boolean shouldSelect(Transaction tx) {
         return isInBlockChainOrPending(tx);
     }
 

@@ -120,9 +120,9 @@ public class WalletService {
 
         Threading.USER_THREAD = UserThread.getExecutor();
 
-        Timer timeoutTimer = UserThread.runAfter(() -> {
-            exceptionHandler.handleException(new TimeoutException("Wallet did not initialize in " + STARTUP_TIMEOUT_SEC + " seconds."));
-        }, STARTUP_TIMEOUT_SEC);
+        Timer timeoutTimer = UserThread.runAfter(() ->
+                exceptionHandler.handleException(new TimeoutException("Wallet did not initialize in " +
+                        STARTUP_TIMEOUT_SEC + " seconds.")), STARTUP_TIMEOUT_SEC);
 
         // If seed is non-null it means we are restoring from backup.
         walletAppKit = new WalletAppKit(params, walletDir, "Bitsquare") {
@@ -190,7 +190,7 @@ public class WalletService {
                 timeoutTimer.cancel();
 
                 // onSetupCompleted in walletAppKit is not the called on the last invocations, so we add a bit of delay
-                UserThread.runAfter(() -> resultHandler.handleResult(), 100, TimeUnit.MILLISECONDS);
+                UserThread.runAfter(resultHandler::handleResult, 100, TimeUnit.MILLISECONDS);
             }
         };
 
@@ -451,8 +451,7 @@ public class WalletService {
     public Coin getRequiredFee(String fromAddress,
                                String toAddress,
                                Coin amount,
-                               @Nullable KeyParameter aesKey) throws AddressFormatException, IllegalArgumentException,
-            InsufficientMoneyException {
+                               @Nullable KeyParameter aesKey) throws AddressFormatException, IllegalArgumentException {
         Coin fee;
         try {
             wallet.completeTx(getSendRequest(fromAddress, toAddress, amount, aesKey));
@@ -469,7 +468,7 @@ public class WalletService {
                                                    String toAddress,
                                                    Coin amount,
                                                    @Nullable KeyParameter aesKey) throws AddressFormatException,
-            IllegalArgumentException, InsufficientMoneyException {
+            IllegalArgumentException {
         Coin fee;
         try {
             wallet.completeTx(getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, null, aesKey));
@@ -482,10 +481,10 @@ public class WalletService {
         return fee;
     }
 
-    public Wallet.SendRequest getSendRequest(String fromAddress,
-                                             String toAddress,
-                                             Coin amount,
-                                             @Nullable KeyParameter aesKey) throws AddressFormatException,
+    private Wallet.SendRequest getSendRequest(String fromAddress,
+                                              String toAddress,
+                                              Coin amount,
+                                              @Nullable KeyParameter aesKey) throws AddressFormatException,
             IllegalArgumentException, InsufficientMoneyException {
         Transaction tx = new Transaction(params);
         Preconditions.checkArgument(Restrictions.isAboveDust(amount),
@@ -505,11 +504,11 @@ public class WalletService {
         return sendRequest;
     }
 
-    public Wallet.SendRequest getSendRequestForMultipleAddresses(Set<String> fromAddresses,
-                                                                 String toAddress,
-                                                                 Coin amount,
-                                                                 @Nullable String changeAddress,
-                                                                 @Nullable KeyParameter aesKey) throws
+    private Wallet.SendRequest getSendRequestForMultipleAddresses(Set<String> fromAddresses,
+                                                                  String toAddress,
+                                                                  Coin amount,
+                                                                  @Nullable String changeAddress,
+                                                                  @Nullable KeyParameter aesKey) throws
             AddressFormatException, IllegalArgumentException, InsufficientMoneyException {
         Transaction tx = new Transaction(params);
         Preconditions.checkArgument(Restrictions.isAboveDust(amount),
@@ -520,9 +519,9 @@ public class WalletService {
         sendRequest.aesKey = aesKey;
         sendRequest.shuffleOutputs = false;
         Set<AddressEntry> addressEntries = fromAddresses.stream()
-                .map(e -> getAddressEntryByAddress(e))
-                .filter(e -> e.isPresent())
-                .map(e -> e.get()).collect(Collectors.toSet());
+                .map(this::getAddressEntryByAddress)
+                .filter(Optional::isPresent)
+                .map(Optional::get).collect(Collectors.toSet());
         if (addressEntries.isEmpty())
             throw new IllegalArgumentException("No withdrawFromAddresses  not found in our wallets.\n\t" +
                     "fromAddresses=" + fromAddresses);

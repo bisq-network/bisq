@@ -36,7 +36,7 @@ public class Sig {
     private static final Logger log = LoggerFactory.getLogger(Sig.class);
 
     public static final String KEY_ALGO = "DSA";
-    public static final String ALGO = "SHA256withDSA";
+    private static final String ALGO = "SHA256withDSA";
 
 
     /**
@@ -99,7 +99,6 @@ public class Sig {
      * @throws SignatureException
      */
     public static boolean verify(PublicKey publicKey, byte[] data, byte[] signature) throws CryptoException {
-        byte[] sigAsBytes = new byte[0];
         try {
             Signature sig = Signature.getInstance(ALGO, "BC");
             sig.initVerify(publicKey);

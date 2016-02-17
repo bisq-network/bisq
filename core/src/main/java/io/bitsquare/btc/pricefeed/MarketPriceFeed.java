@@ -44,8 +44,8 @@ public class MarketPriceFeed {
         }
     }
 
-    private static long PERIOD_FIAT = 1;    // We load only the selected currency on interval. Only the first request we load all
-    private static long PERIOD_CRYPTO = 10; // We load the full list with 33kb so we don't want to load too often
+    private static final long PERIOD_FIAT = 1;    // We load only the selected currency on interval. Only the first request we load all
+    private static final long PERIOD_CRYPTO = 10; // We load the full list with 33kb so we don't want to load too often
 
     private final ScheduledThreadPoolExecutor executorService = Utilities.getScheduledThreadPoolExecutor("MarketPriceFeed", 5, 10, 700L);
     private final Map<String, MarketPrice> cache = new HashMap<>();

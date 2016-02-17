@@ -75,9 +75,7 @@ public class Utilities {
         ThreadPoolExecutor executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
                 TimeUnit.SECONDS, new ArrayBlockingQueue<>(maximumPoolSize), threadFactory);
         executor.allowCoreThreadTimeOut(true);
-        executor.setRejectedExecutionHandler((r, e) -> {
-            log.warn("RejectedExecutionHandler called");
-        });
+        executor.setRejectedExecutionHandler((r, e) -> log.warn("RejectedExecutionHandler called"));
         return executor;
     }
 
@@ -96,9 +94,7 @@ public class Utilities {
         executor.allowCoreThreadTimeOut(true);
         executor.setMaximumPoolSize(maximumPoolSize);
         executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-        executor.setRejectedExecutionHandler((r, e) -> {
-            log.warn("RejectedExecutionHandler called");
-        });
+        executor.setRejectedExecutionHandler((r, e) -> log.warn("RejectedExecutionHandler called"));
         return executor;
     }
 
@@ -292,8 +288,10 @@ public class Utilities {
 
     public static void deleteDirectory(File file) throws IOException {
         if (file.isDirectory()) {
-            for (File c : file.listFiles())
-                deleteDirectory(c);
+            File[] files = file.listFiles();
+            if (files != null)
+                for (File c : files)
+                    deleteDirectory(c);
         }
         if (!file.delete())
             throw new FileNotFoundException("Failed to delete file: " + file);

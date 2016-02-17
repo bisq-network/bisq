@@ -84,8 +84,8 @@ public class ArbitratorService {
 
     public Map<NodeAddress, Arbitrator> getArbitrators() {
         Set<Arbitrator> arbitratorSet = p2PService.getDataMap().values().stream()
-                .filter(e -> e.expirableMessage instanceof Arbitrator)
-                .map(e -> (Arbitrator) e.expirableMessage)
+                .filter(data -> data.expirableMessage instanceof Arbitrator)
+                .map(data -> (Arbitrator) data.expirableMessage)
                 .collect(Collectors.toSet());
 
         Map<NodeAddress, Arbitrator> map = new HashMap<>();

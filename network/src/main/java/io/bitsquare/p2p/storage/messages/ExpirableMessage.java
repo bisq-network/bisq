@@ -1,4 +1,4 @@
-package io.bitsquare.p2p.storage.data;
+package io.bitsquare.p2p.storage.messages;
 
 import java.io.Serializable;
 

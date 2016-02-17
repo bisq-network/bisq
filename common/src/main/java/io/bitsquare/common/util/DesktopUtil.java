@@ -74,7 +74,7 @@ class DesktopUtil {
             }
 
             if (!Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-                logErr("BORWSE is not supported.");
+                logErr("BROWSE is not supported.");
                 return false;
             }
 

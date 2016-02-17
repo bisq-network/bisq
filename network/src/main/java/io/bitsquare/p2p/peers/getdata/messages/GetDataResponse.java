@@ -2,7 +2,7 @@ package io.bitsquare.p2p.peers.getdata.messages;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.storage.data.ProtectedData;
+import io.bitsquare.p2p.storage.ProtectedData;
 
 import java.util.HashSet;
 

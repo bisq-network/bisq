@@ -27,7 +27,7 @@ import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import org.slf4j.LoggerFactory;
 
 public class Log {
-    public static boolean PRINT_TRACE_METHOD = true;
+    private static boolean PRINT_TRACE_METHOD = true;
     private static SizeBasedTriggeringPolicy triggeringPolicy;
     private static Logger logbackLogger;
 

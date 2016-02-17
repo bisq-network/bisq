@@ -146,7 +146,8 @@ public class OpenOfferManager {
         if (bootstrapListener != null)
             p2PService.removeP2PServiceListener(bootstrapListener);
 
-        long period = (long) (Offer.TTL * 0.8); // republish sufficiently before offer would expire
+        // republish sufficiently before offer would expire
+        long period = (long) (Offer.TTL * 0.7);
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
@@ -178,6 +179,7 @@ public class OpenOfferManager {
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     public void shutDown() {
         shutDown(null);
     }
@@ -190,8 +192,7 @@ public class OpenOfferManager {
             log.info("remove all open offers at shutDown");
             shutDownRequested = true;
             // we remove own offers from offerbook when we go offline
-            //TODO
-            //  openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer()));
+            openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer()));
 
             if (completeHandler != null)
                 UserThread.runAfter(completeHandler::run, openOffers.size() * 200 + 300, TimeUnit.MILLISECONDS);
@@ -230,7 +231,9 @@ public class OpenOfferManager {
             log.warn("Offer was not found in our list of open offers. We still try to remove it from the offerbook.");
             errorMessageHandler.handleErrorMessage("Offer was not found in our list of open offers. " +
                     "We still try to remove it from the offerbook.");
-            onRemoveOffer(offer);
+            offerBookService.removeOffer(offer,
+                    () -> offer.setState(Offer.State.REMOVED),
+                    null);
         }
     }
 
@@ -245,14 +248,6 @@ public class OpenOfferManager {
                     resultHandler.handleResult();
                 },
                 errorMessageHandler);
-    }
-
-    // That should not be needed, but there are cases where the openOffer is removed but the offer still in the 
-    // offerbook
-    public void onRemoveOffer(Offer offer) {
-        offerBookService.removeOffer(offer,
-                () -> offer.setState(Offer.State.REMOVED),
-                null);
     }
 
     public void reserveOpenOffer(OpenOffer openOffer) {
@@ -283,7 +278,7 @@ public class OpenOfferManager {
             openOffer.setState(OpenOffer.State.CLOSED);
             offerBookService.removeOffer(openOffer.getOffer(),
                     () -> log.trace("Successful removed offer"),
-                    errorMessage -> log.error(errorMessage));
+                    log::error);
         });
 
     }

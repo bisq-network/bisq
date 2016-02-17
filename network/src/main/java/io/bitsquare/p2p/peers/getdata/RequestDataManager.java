@@ -243,7 +243,6 @@ public class RequestDataManager implements MessageListener {
                         !peerManager.isSelf(e))
                 .collect(Collectors.toList())
                 .stream()
-                .filter(e -> e.date != null)
                 .sorted((o1, o2) -> o2.date.compareTo(o1.date))
                 .map(e -> e.nodeAddress)
                 .collect(Collectors.toList());

@@ -30,7 +30,7 @@ public abstract class OfferMessage implements DirectMessage {
     private final int messageVersion = Version.getP2PMessageVersion();
     public final String offerId;
 
-    protected OfferMessage(String offerId) {
+    OfferMessage(String offerId) {
         this.offerId = offerId;
     }
 

@@ -1,7 +1,7 @@
-package io.bitsquare.p2p.storage.data;
+package io.bitsquare.p2p.storage;
 
 import com.google.common.annotations.VisibleForTesting;
-import io.bitsquare.p2p.storage.P2PDataStorage;
+import io.bitsquare.p2p.storage.messages.ExpirableMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

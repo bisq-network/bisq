@@ -20,7 +20,7 @@ package io.bitsquare.common.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Profiler {
+class Profiler {
     private static final Logger log = LoggerFactory.getLogger(Profiler.class);
 
     public static void printSystemLoad(Logger log) {

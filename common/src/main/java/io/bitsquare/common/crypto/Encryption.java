@@ -40,12 +40,12 @@ public class Encryption {
     private static final Logger log = LoggerFactory.getLogger(Encryption.class);
 
     public static final String ASYM_KEY_ALGO = "RSA"; // RSA/NONE/OAEPWithSHA256AndMGF1Padding
-    public static final String ASYM_CIPHER = "RSA";
+    private static final String ASYM_CIPHER = "RSA";
 
-    public static final String SYM_KEY_ALGO = "AES"; // AES/CTR/NoPadding
-    public static final String SYM_CIPHER = "AES";
+    private static final String SYM_KEY_ALGO = "AES"; // AES/CTR/NoPadding
+    private static final String SYM_CIPHER = "AES";
 
-    public static final String HMAC = "HmacSHA256";
+    private static final String HMAC = "HmacSHA256";
 
     public static KeyPair generateKeyPair() {
         long ts = System.currentTimeMillis();
@@ -66,7 +66,7 @@ public class Encryption {
     // Symmetric
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static byte[] encrypt(byte[] payload, SecretKey secretKey) throws CryptoException {
+    private static byte[] encrypt(byte[] payload, SecretKey secretKey) throws CryptoException {
         try {
             Cipher cipher = Cipher.getInstance(SYM_CIPHER, "BC");
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
@@ -77,7 +77,7 @@ public class Encryption {
         }
     }
 
-    public static byte[] decrypt(byte[] encryptedPayload, SecretKey secretKey) throws CryptoException {
+    private static byte[] decrypt(byte[] encryptedPayload, SecretKey secretKey) throws CryptoException {
         try {
             Cipher cipher = Cipher.getInstance(SYM_CIPHER, "BC");
             cipher.init(Cipher.DECRYPT_MODE, secretKey);
@@ -123,7 +123,7 @@ public class Encryption {
     }
 
 
-    private static boolean verifyHmac(byte[] message, byte[] hmac, SecretKey secretKey) throws CryptoException {
+    private static boolean verifyHmac(byte[] message, byte[] hmac, SecretKey secretKey) {
         try {
             byte[] hmacTest = getHmac(message, secretKey);
             return Arrays.equals(hmacTest, hmac);
@@ -144,15 +144,15 @@ public class Encryption {
     // Symmetric with Hmac
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static byte[] encryptPayloadWithHmac(Serializable object, SecretKey secretKey) throws CryptoException {
+    private static byte[] encryptPayloadWithHmac(Serializable object, SecretKey secretKey) throws CryptoException {
         return encryptPayloadWithHmac(Utilities.serialize(object), secretKey);
     }
 
-    public static byte[] encryptPayloadWithHmac(byte[] payload, SecretKey secretKey) throws CryptoException {
+    private static byte[] encryptPayloadWithHmac(byte[] payload, SecretKey secretKey) throws CryptoException {
         return encrypt(getPayloadWithHmac(payload, secretKey), secretKey);
     }
 
-    public static byte[] decryptPayloadWithHmac(byte[] encryptedPayloadWithHmac, SecretKey secretKey) throws CryptoException {
+    private static byte[] decryptPayloadWithHmac(byte[] encryptedPayloadWithHmac, SecretKey secretKey) throws CryptoException {
         byte[] payloadWithHmac = decrypt(encryptedPayloadWithHmac, secretKey);
         String payloadWithHmacAsHex = Hex.toHexString(payloadWithHmac);
         // first part is raw message
@@ -173,7 +173,7 @@ public class Encryption {
     // Asymmetric
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static byte[] encrypt(byte[] payload, PublicKey publicKey) throws CryptoException {
+    private static byte[] encrypt(byte[] payload, PublicKey publicKey) throws CryptoException {
         try {
             Cipher cipher = Cipher.getInstance(ASYM_CIPHER, "BC");
             cipher.init(Cipher.ENCRYPT_MODE, publicKey);
@@ -184,7 +184,7 @@ public class Encryption {
         }
     }
 
-    public static byte[] decrypt(byte[] encryptedPayload, PrivateKey privateKey) throws CryptoException {
+    private static byte[] decrypt(byte[] encryptedPayload, PrivateKey privateKey) throws CryptoException {
         try {
             Cipher cipher = Cipher.getInstance(ASYM_CIPHER, "BC");
             cipher.init(Cipher.DECRYPT_MODE, privateKey);

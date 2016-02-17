@@ -8,16 +8,13 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.CryptoException;
 import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.crypto.Sig;
+import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.Broadcaster;
-import io.bitsquare.p2p.storage.data.*;
-import io.bitsquare.p2p.storage.messages.AddDataMessage;
-import io.bitsquare.p2p.storage.messages.DataBroadcastMessage;
-import io.bitsquare.p2p.storage.messages.RemoveDataMessage;
-import io.bitsquare.p2p.storage.messages.RemoveMailboxDataMessage;
+import io.bitsquare.p2p.storage.messages.*;
 import io.bitsquare.storage.Storage;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -28,7 +25,10 @@ import java.io.File;
 import java.io.Serializable;
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -39,14 +39,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     private static final Logger log = LoggerFactory.getLogger(P2PDataStorage.class);
 
     @VisibleForTesting
-    public static int CHECK_TTL_INTERVAL_SEC = new Random().nextInt(60) + (int) TimeUnit.MINUTES.toSeconds(10); // 10-11 min.
-    //TODO
-    // public static int CHECK_TTL_INTERVAL_SEC = 10; 
+    public static int CHECK_TTL_INTERVAL_SEC = 30;
 
     private final Broadcaster broadcaster;
     private final Map<ByteArray, ProtectedData> map = new ConcurrentHashMap<>();
     private final CopyOnWriteArraySet<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArraySet<>();
-    private HashMap<ByteArray, Integer> sequenceNumberMap = new HashMap<>();
+    private HashMap<ByteArray, Tuple2<Integer, Long>> sequenceNumberMap = new HashMap<>();
     private final Storage<HashMap> storage;
     private final ScheduledThreadPoolExecutor removeExpiredEntriesExecutor;
 
@@ -63,40 +61,41 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         storage = new Storage<>(storageDir);
         removeExpiredEntriesExecutor = Utilities.getScheduledThreadPoolExecutor("removeExpiredEntries", 1, 10, 5);
 
-        log.debug("CHECK_TTL_INTERVAL_SEC " + CHECK_TTL_INTERVAL_SEC);
         init();
     }
 
     private void init() {
-        HashMap<ByteArray, Integer> persisted = storage.initAndGetPersisted("SequenceNumberMap");
+        HashMap<ByteArray, Tuple2<Integer, Long>> persisted = storage.initAndGetPersisted("SequenceNumberMap");
         if (persisted != null)
-            sequenceNumberMap = persisted;
+            sequenceNumberMap = getPurgedSequenceNumberMap(persisted);
 
-        removeExpiredEntriesExecutor.scheduleAtFixedRate(() -> UserThread.execute(this::removeExpiredEntries), CHECK_TTL_INTERVAL_SEC, CHECK_TTL_INTERVAL_SEC, TimeUnit.SECONDS);
+        removeExpiredEntriesExecutor.scheduleAtFixedRate(() -> UserThread.execute(() -> {
+            log.trace("removeExpiredEntries");
+            // The moment when an object becomes expired will not be synchronous in the network and we could 
+            // get add messages after the object has expired. To avoid repeated additions of already expired 
+            // object when we get it sent from new peers, we don’t remove the sequence number from the map. 
+            // That way an ADD message for an already expired data will fail because the sequence number 
+            // is equal and not larger. 
+            Map<ByteArray, ProtectedData> temp = new HashMap<>(map);
+            Set<ProtectedData> toRemoveSet = new HashSet<>();
+            temp.entrySet().stream()
+                    .filter(entry -> entry.getValue().isExpired())
+                    .forEach(entry -> {
+                        ByteArray hashOfPayload = entry.getKey();
+                        toRemoveSet.add(map.get(hashOfPayload));
+                        map.remove(hashOfPayload);
+                    });
+
+            toRemoveSet.stream().forEach(
+                    protectedDataToRemove -> hashMapChangedListeners.stream().forEach(
+                            listener -> listener.onRemoved(protectedDataToRemove)));
+
+            if (sequenceNumberMap.size() > 1000)
+                sequenceNumberMap = getPurgedSequenceNumberMap(sequenceNumberMap);
+
+        }), CHECK_TTL_INTERVAL_SEC, CHECK_TTL_INTERVAL_SEC, TimeUnit.SECONDS);
     }
 
-    private void removeExpiredEntries() {
-        Log.traceCall();
-        // The moment when an object becomes expired will not be synchronous in the network and we could 
-        // get add messages after the object has expired. To avoid repeated additions of already expired 
-        // object when we get it sent from new peers, we don’t remove the sequence number from the map. 
-        // That way an ADD message for an already expired data will fail because the sequence number 
-        // is equal and not larger. 
-        Map<ByteArray, ProtectedData> temp = new HashMap<>(map);
-        Set<ProtectedData> protectedDataToRemoveSet = new HashSet<>();
-        temp.entrySet().stream()
-                .filter(entry -> entry.getValue().isExpired())
-                .forEach(entry -> {
-                    ByteArray hashOfPayload = entry.getKey();
-                    ProtectedData protectedDataToRemove = map.get(hashOfPayload);
-                    protectedDataToRemoveSet.add(protectedDataToRemove);
-                    map.remove(hashOfPayload);
-                });
-
-        protectedDataToRemoveSet.stream().forEach(
-                protectedDataToRemove -> hashMapChangedListeners.stream().forEach(
-                        listener -> listener.onRemoved(protectedDataToRemove)));
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener implementation
@@ -119,65 +118,40 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         }
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ConnectionListener implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onConnection(Connection connection) {
-
     }
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        Log.traceCall();
-        map.values().stream()
-                .filter(protectedData -> protectedData.expirableMessage instanceof RequiresLiveOwner)
-                .forEach(protectedData -> removeRequiresLiveOwnerDataOnDisconnect(protectedData, ((RequiresLiveOwner) protectedData.expirableMessage).getOwnerNodeAddress()));
-    }
+        if (connection.getPeersNodeAddressOptional().isPresent()) {
+            map.values().stream()
+                    .forEach(protectedData -> {
+                        ExpirableMessage expirableMessage = protectedData.expirableMessage;
+                        if (expirableMessage instanceof RequiresLiveOwnerData) {
+                            RequiresLiveOwnerData requiresLiveOwnerData = (RequiresLiveOwnerData) expirableMessage;
+                            NodeAddress ownerNodeAddress = requiresLiveOwnerData.getOwnerNodeAddress();
+                            if (ownerNodeAddress.equals(connection.getPeersNodeAddressOptional().get())) {
+                                // We have a RequiresLiveOwnerData data object with the node address of the 
+                                // disconnected peer. We remove that data from our map.
 
-    public boolean removeRequiresLiveOwnerDataOnDisconnect(ProtectedData protectedData, NodeAddress owner) {
-        Log.traceCall();
-        ByteArray hashOfPayload = getHashAsByteArray(protectedData.expirableMessage);
-        boolean containsKey = map.containsKey(hashOfPayload);
-        if (containsKey) {
-            doRemoveProtectedExpirableData(protectedData, hashOfPayload);
-
-            //broadcast(new RemoveDataMessage(protectedData), owner);
-
-            // sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
-            sequenceNumberMap.remove(hashOfPayload);
-            storage.queueUpForSave(sequenceNumberMap, 5000);
-        } else {
-            log.debug("Remove data ignored as we don't have an entry for that data.");
+                                // Check if we have the data (e.g. Offer)
+                                ByteArray hashOfPayload = getHashAsByteArray(expirableMessage);
+                                boolean containsKey = map.containsKey(hashOfPayload);
+                                if (containsKey) {
+                                    doRemoveProtectedExpirableData(protectedData, hashOfPayload);
+                                } else {
+                                    log.debug("Remove data ignored as we don't have an entry for that data.");
+                                }
+                            }
+                        }
+                    });
         }
-        return containsKey;
-    }
-
-    // If the data owner gets disconnected we remove his data. Used for offers to get clean up when the peer is in 
-    // sleep/hibernate mode or closes the app without proper shutdown (crash).
-    // We don't want to wait the until the TTL period is over so we add that method to improve usability
-    public boolean removeLocalDataOnDisconnectedDataOwner(ExpirableMessage expirableMessage) {
-        Log.traceCall();
-        ByteArray hashOfPayload = getHashAsByteArray(expirableMessage);
-        boolean containsKey = map.containsKey(hashOfPayload);
-        if (containsKey) {
-            map.remove(hashOfPayload);
-            log.trace("Data removed from our map.");
-
-            StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n" +
-                    "Data set after removeProtectedExpirableData: (truncated)");
-            map.values().stream().forEach(e -> sb.append("\n").append(StringUtils.abbreviate(e.toString(), 100)));
-            sb.append("\n------------------------------------------------------------\n");
-            log.trace(sb.toString());
-            log.info("Data set after addProtectedExpirableData: size=" + map.values().size());
-
-            // sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
-            // storage.queueUpForSave(sequenceNumberMap, 5000);
-        } else {
-            log.debug("Remove data ignored as we don't have an entry for that data.");
-        }
-        return containsKey;
     }
 
     @Override
@@ -207,6 +181,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
     private boolean doAdd(ProtectedData protectedData, @Nullable NodeAddress sender, boolean rePublish) {
         Log.traceCall();
+
         ByteArray hashOfPayload = getHashAsByteArray(protectedData.expirableMessage);
         boolean result = checkPublicKeys(protectedData, true)
                 && checkSignature(protectedData)
@@ -222,10 +197,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             // Republished data have a larger sequence number. We set the rePublish flag to enable broadcasting 
             // even we had the data with the old seq nr. already
             if (sequenceNumberMap.containsKey(hashOfPayload) &&
-                    protectedData.sequenceNumber > sequenceNumberMap.get(hashOfPayload))
+                    protectedData.sequenceNumber > sequenceNumberMap.get(hashOfPayload).first)
                 rePublish = true;
 
-            sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
+            sequenceNumberMap.put(hashOfPayload, new Tuple2<>(protectedData.sequenceNumber, System.currentTimeMillis()));
             storage.queueUpForSave(sequenceNumberMap, 5000);
 
             StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n");
@@ -262,7 +237,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
             broadcast(new RemoveDataMessage(protectedData), sender);
 
-            sequenceNumberMap.put(hashOfPayload, protectedData.sequenceNumber);
+            sequenceNumberMap.put(hashOfPayload, new Tuple2<>(protectedData.sequenceNumber, System.currentTimeMillis()));
             storage.queueUpForSave(sequenceNumberMap, 5000);
         } else {
             log.debug("remove failed");
@@ -287,7 +262,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
             broadcast(new RemoveMailboxDataMessage(protectedMailboxData), sender);
 
-            sequenceNumberMap.put(hashOfData, protectedMailboxData.sequenceNumber);
+            sequenceNumberMap.put(hashOfData, new Tuple2<>(protectedMailboxData.sequenceNumber, System.currentTimeMillis()));
             storage.queueUpForSave(sequenceNumberMap, 5000);
         } else {
             log.debug("removeMailboxData failed");
@@ -302,11 +277,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
     public ProtectedData getDataWithSignedSeqNr(ExpirableMessage payload, KeyPair ownerStoragePubKey)
             throws CryptoException {
-        Log.traceCall();
         ByteArray hashOfData = getHashAsByteArray(payload);
         int sequenceNumber;
         if (sequenceNumberMap.containsKey(hashOfData))
-            sequenceNumber = sequenceNumberMap.get(hashOfData) + 1;
+            sequenceNumber = sequenceNumberMap.get(hashOfData).first + 1;
         else
             sequenceNumber = 0;
 
@@ -318,11 +292,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     public ProtectedMailboxData getMailboxDataWithSignedSeqNr(MailboxMessage expirableMailboxPayload,
                                                               KeyPair storageSignaturePubKey, PublicKey receiversPublicKey)
             throws CryptoException {
-        Log.traceCall();
         ByteArray hashOfData = getHashAsByteArray(expirableMailboxPayload);
         int sequenceNumber;
         if (sequenceNumberMap.containsKey(hashOfData))
-            sequenceNumber = sequenceNumberMap.get(hashOfData) + 1;
+            sequenceNumber = sequenceNumberMap.get(hashOfData).first + 1;
         else
             sequenceNumber = 0;
 
@@ -342,7 +315,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void doRemoveProtectedExpirableData(ProtectedData protectedData, ByteArray hashOfPayload) {
-        Log.traceCall();
         map.remove(hashOfPayload);
         log.trace("Data removed from our map. We broadcast the message to our peers.");
         hashMapChangedListeners.stream().forEach(e -> e.onRemoved(protectedData));
@@ -356,20 +328,22 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
     private boolean isSequenceNrValid(ProtectedData data, ByteArray hashOfData) {
-        Log.traceCall();
         int newSequenceNumber = data.sequenceNumber;
-        Integer storedSequenceNumber = sequenceNumberMap.get(hashOfData);
-        if (sequenceNumberMap.containsKey(hashOfData) && newSequenceNumber < storedSequenceNumber) {
-            log.trace("Sequence number is invalid. newSequenceNumber="
-                    + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber);
-            return false;
+        if (sequenceNumberMap.containsKey(hashOfData)) {
+            Integer storedSequenceNumber = sequenceNumberMap.get(hashOfData).first;
+            if (newSequenceNumber < storedSequenceNumber) {
+                log.warn("Sequence number is invalid. newSequenceNumber="
+                        + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber);
+                return false;
+            } else {
+                return true;
+            }
         } else {
             return true;
         }
     }
 
     private boolean checkSignature(ProtectedData data) {
-        Log.traceCall();
         byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(data.expirableMessage, data.sequenceNumber));
         try {
             boolean result = Sig.verify(data.ownerPubKey, hashOfDataAndSeqNr, data.signature);
@@ -385,7 +359,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
     private boolean checkPublicKeys(ProtectedData data, boolean isAddOperation) {
-        Log.traceCall();
         boolean result = false;
         if (data.expirableMessage instanceof MailboxMessage) {
             MailboxMessage expirableMailboxPayload = (MailboxMessage) data.expirableMessage;
@@ -403,7 +376,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
     private boolean checkIfStoredDataPubKeyMatchesNewDataPubKey(ProtectedData data, ByteArray hashOfData) {
-        Log.traceCall();
         ProtectedData storedData = map.get(hashOfData);
         boolean result = storedData.ownerPubKey.equals(data.ownerPubKey);
         if (!result)
@@ -413,7 +385,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
     private boolean checkIfStoredMailboxDataMatchesNewMailboxData(ProtectedMailboxData data, ByteArray hashOfData) {
-        Log.traceCall();
         ProtectedData storedData = map.get(hashOfData);
         if (storedData instanceof ProtectedMailboxData) {
             ProtectedMailboxData storedMailboxData = (ProtectedMailboxData) storedData;
@@ -434,8 +405,18 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         broadcaster.broadcast(message, sender);
     }
 
-    private ByteArray getHashAsByteArray(ExpirableMessage payload) {
-        return new ByteArray(Hash.getHash(payload));
+    private ByteArray getHashAsByteArray(ExpirableMessage data) {
+        return new ByteArray(Hash.getHash(data));
+    }
+
+    private HashMap<ByteArray, Tuple2<Integer, Long>> getPurgedSequenceNumberMap(HashMap<ByteArray, Tuple2<Integer, Long>> persisted) {
+        HashMap<ByteArray, Tuple2<Integer, Long>> purged = new HashMap<>();
+        long maxAgeTs = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(10);
+        persisted.entrySet().stream().forEach(entry -> {
+            if (entry.getValue().second > maxAgeTs)
+                purged.put(entry.getKey(), entry.getValue());
+        });
+        return purged;
     }
 
 

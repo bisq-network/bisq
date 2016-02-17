@@ -20,7 +20,7 @@ package io.bitsquare.alert;
 import com.google.inject.Inject;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
-import io.bitsquare.p2p.storage.data.ProtectedData;
+import io.bitsquare.p2p.storage.ProtectedData;
 import io.bitsquare.user.User;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -30,7 +30,6 @@ import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.SignatureException;
 
@@ -61,20 +60,18 @@ public class AlertManager {
 
         alertService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
-            public void onAdded(ProtectedData entry) {
-                Serializable data = entry.expirableMessage;
-                if (data instanceof Alert) {
-                    Alert alert = (Alert) data;
+            public void onAdded(ProtectedData data) {
+                if (data.expirableMessage instanceof Alert) {
+                    Alert alert = (Alert) data.expirableMessage;
                     if (verifySignature(alert))
                         alertMessageProperty.set(alert);
                 }
             }
 
             @Override
-            public void onRemoved(ProtectedData entry) {
-                Serializable data = entry.expirableMessage;
-                if (data instanceof Alert) {
-                    Alert alert = (Alert) data;
+            public void onRemoved(ProtectedData data) {
+                if (data.expirableMessage instanceof Alert) {
+                    Alert alert = (Alert) data.expirableMessage;
                     if (verifySignature(alert))
                         alertMessageProperty.set(null);
                 }

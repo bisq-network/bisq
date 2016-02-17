@@ -40,7 +40,7 @@ public class SendOfferAvailabilityRequest extends Task<OfferAvailabilityModel> {
 
             model.p2PService.sendEncryptedDirectMessage(model.getPeerNodeAddress(),
                     model.offer.getPubKeyRing(),
-                    new OfferAvailabilityRequest(model.offer.getId(), model.getPubKeyRing()),
+                    new OfferAvailabilityRequest(model.offer.getId(), model.pubKeyRing),
                     new SendDirectMessageListener() {
                         @Override
                         public void onArrived() {

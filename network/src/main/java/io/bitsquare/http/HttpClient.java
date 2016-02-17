@@ -7,7 +7,7 @@ import java.net.URL;
 // TODO route over tor
 public class HttpClient implements Serializable {
 
-    private String baseUrl;
+    private final String baseUrl;
 
     public HttpClient(String baseUrl) {
         this.baseUrl = baseUrl;
