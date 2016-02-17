@@ -17,7 +17,7 @@
 
 package io.bitsquare.common.fxml;
 
-import io.bitsquare.gui.common.ViewFxException;
+import io.bitsquare.gui.common.ViewfxException;
 import io.bitsquare.gui.common.fxml.FxmlViewLoader;
 import io.bitsquare.gui.common.view.*;
 import javafx.fxml.LoadException;
@@ -70,7 +70,7 @@ public class FxmlViewLoaderTests {
 
     @Test
     public void fxmlFileMissingFxControllerAttributeShouldThrow() {
-        thrown.expect(ViewFxException.class);
+        thrown.expect(ViewfxException.class);
         thrown.expectMessage("Does it declare an fx:controller attribute?");
         viewLoader.load(MissingFxController.class);
     }
@@ -93,7 +93,7 @@ public class FxmlViewLoaderTests {
 
     @Test
     public void malformedFxmlFileShouldThrow() {
-        thrown.expect(ViewFxException.class);
+        thrown.expect(ViewfxException.class);
         thrown.expectMessage("Failed to load view from FXML file");
         thrown.expectCause(instanceOf(LoadException.class));
         viewLoader.load(Malformed.class);
@@ -106,7 +106,7 @@ public class FxmlViewLoaderTests {
 
     @Test
     public void missingFxmlFileShouldThrow() {
-        thrown.expect(ViewFxException.class);
+        thrown.expect(ViewfxException.class);
         thrown.expectMessage("Does it exist?");
         viewLoader.load(MissingFxmlFile.class);
     }
@@ -118,7 +118,7 @@ public class FxmlViewLoaderTests {
 
     @Test
     public void customFxmlFileLocationShouldOverrideDefaultConvention() {
-        thrown.expect(ViewFxException.class);
+        thrown.expect(ViewfxException.class);
         thrown.expectMessage("Failed to load view class");
         thrown.expectMessage("CustomLocation");
         thrown.expectMessage("[unconventionally/located.fxml] could not be loaded");
