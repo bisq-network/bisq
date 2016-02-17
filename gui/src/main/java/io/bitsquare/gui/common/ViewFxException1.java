@@ -15,23 +15,19 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.common.model;
+package io.bitsquare.gui.common;
 
-public interface Activatable {
+import static java.lang.String.format;
 
-    void _activate();
+public class ViewFxException1 extends RuntimeException {
 
-    void _deactivate();
+    private static final long serialVersionUID = -6266047448442595372L;
 
+    public ViewFxException1(Throwable cause, String format, Object... args) {
+        super(format(format, args), cause);
+    }
 
-    Activatable NO_OP_INSTANCE = new Activatable() {
-        @Override
-        public void _activate() {
-        }
-
-        @Override
-        public void _deactivate() {
-        }
-    };
-
+    public ViewFxException1(String format, Object... args) {
+        super(format(format, args));
+    }
 }

@@ -48,10 +48,10 @@ public class NotificationCenter {
     // Instance fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private TradeManager tradeManager;
-    private DisputeManager disputeManager;
-    private Preferences preferences;
-    private Navigation navigation;
+    private final TradeManager tradeManager;
+    private final DisputeManager disputeManager;
+    private final Preferences preferences;
+    private final Navigation navigation;
 
     private final Map<String, Subscription> disputeStateSubscriptionsMap = new HashMap<>();
     private final Map<String, Subscription> tradeStateSubscriptionsMap = new HashMap<>();
@@ -126,6 +126,7 @@ public class NotificationCenter {
     // Setter/Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @org.jetbrains.annotations.Nullable
     public String getSelectedTradeId() {
         return selectedTradeId;
     }

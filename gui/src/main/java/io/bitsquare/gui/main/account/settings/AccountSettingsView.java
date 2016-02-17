@@ -56,7 +56,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
     @FXML
     private AnchorPane content;
 
-    private Class<? extends View> selecteedViewClass;
+    private Class<? extends View> selectedViewClass;
 
     @Inject
     private AccountSettingsView(CachingViewLoader viewLoader, Navigation navigation) {
@@ -97,8 +97,8 @@ public class AccountSettingsView extends ActivatableViewAndModel {
                 viewPath.size() == 2 && viewPath.indexOf(AccountView.class) == 1) {
             navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, PaymentAccountView.class);
         } else if (viewPath.size() == 4 && viewPath.indexOf(AccountSettingsView.class) == 2) {
-            selecteedViewClass = viewPath.get(3);
-            loadView(selecteedViewClass);
+            selectedViewClass = viewPath.get(3);
+            loadView(selectedViewClass);
         }
     }
 
@@ -125,7 +125,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
     }
 
     public Class<? extends View> getSelectedViewClass() {
-        return selecteedViewClass;
+        return selectedViewClass;
     }
 
 }
@@ -135,8 +135,8 @@ class MenuItem extends ToggleButton {
 
     private final ChangeListener<Boolean> selectedPropertyChangeListener;
     private final ChangeListener<Boolean> disablePropertyChangeListener;
-    private Navigation navigation;
-    private Class<? extends View> viewClass;
+    private final Navigation navigation;
+    private final Class<? extends View> viewClass;
 
     MenuItem(Navigation navigation, ToggleGroup toggleGroup, String title, Class<? extends View> viewClass, AwesomeIcon awesomeIcon) {
         this.navigation = navigation;

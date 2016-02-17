@@ -110,7 +110,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private EventHandler<ActionEvent> currencyComboBoxSelectionHandler;
     private int gridRow = 0;
-    private Preferences preferences;
+    private final Preferences preferences;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -213,7 +213,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private void onPlaceOffer() {
         if (model.isBootstrapped()) {
             Offer offer = model.createAndGetOffer();
-            String id = "CreatOfferConfirmation";
+            String id = "CreateOfferConfirmation";
             if (preferences.showAgain(id)) {
                 offerDetailsPopup.onPlaceOffer(model::onPlaceOffer)
                         .dontShowAgainId(id)

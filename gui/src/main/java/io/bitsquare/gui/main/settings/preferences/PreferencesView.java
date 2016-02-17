@@ -48,7 +48,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private int gridRow = 0;
     //private InputTextField transactionFeeInputTextField;
     private ChangeListener<Boolean> transactionFeeFocusedListener;
-    private Preferences preferences;
+    private final Preferences preferences;
 
     @Inject
     public PreferencesView(PreferencesViewModel model, Preferences preferences) {

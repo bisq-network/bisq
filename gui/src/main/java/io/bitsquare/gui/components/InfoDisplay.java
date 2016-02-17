@@ -126,7 +126,7 @@ public class InfoDisplay extends Parent {
         sceneProperty().addListener((ov, oldValue, newValue) -> {
             if (oldValue == null && newValue != null && newValue.getWindow() != null) {
                 newValue.getWindow().widthProperty().addListener(listener);
-                // localToScene does deliver 0 instead of the correct x position when scene propery gets set,
+                // localToScene does deliver 0 instead of the correct x position when scene property gets set,
                 // so we delay for 1 render cycle
                 UserThread.execute(() -> {
                     label.setVisible(true);

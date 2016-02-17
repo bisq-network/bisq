@@ -8,7 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 class PopupManager {
     private static final Logger log = LoggerFactory.getLogger(PopupManager.class);
-    private static Queue<Popup> popups = new LinkedBlockingQueue<>(3);
+    private static final Queue<Popup> popups = new LinkedBlockingQueue<>(3);
     private static Popup displayedPopup;
 
     static void queueForDisplay(Popup popup) {

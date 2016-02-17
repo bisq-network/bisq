@@ -42,7 +42,7 @@ class MarketsChartsViewModel extends ActivatableViewModel {
 
     private final OfferBook offerBook;
     private final Preferences preferences;
-    private MarketPriceFeed marketPriceFeed;
+    private final MarketPriceFeed marketPriceFeed;
 
     final ObjectProperty<TradeCurrency> tradeCurrency = new SimpleObjectProperty<>(CurrencyUtil.getDefaultTradeCurrency());
     private final List<XYChart.Data> buyData = new ArrayList();

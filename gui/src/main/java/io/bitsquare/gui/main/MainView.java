@@ -464,13 +464,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             p2PNetworkIcon.setOpacity(1);
         });
 
-        AnchorPane footerContainer = new AnchorPane(separator, blockchainSyncBox, versionLabel, p2PNetworkLabel, p2PNetworkIcon) {{
+        return new AnchorPane(separator, blockchainSyncBox, versionLabel, p2PNetworkLabel, p2PNetworkIcon) {{
             setId("footer-pane");
             setMinHeight(30);
             setMaxHeight(30);
         }};
-
-        return footerContainer;
     }
 
     private void setupNotificationIcon(Pane buttonHolder) {

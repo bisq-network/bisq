@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 public class TacPopup extends Popup {
     private static final Logger log = LoggerFactory.getLogger(TacPopup.class);
-    private Preferences preferences;
+    private final Preferences preferences;
 
     @Inject
     public TacPopup(Preferences preferences) {

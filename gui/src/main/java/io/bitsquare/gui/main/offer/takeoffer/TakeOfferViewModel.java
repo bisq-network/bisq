@@ -48,7 +48,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 
 class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> implements ViewModel {
     private final BtcValidator btcValidator;
-    private P2PService p2PService;
+    private final P2PService p2PService;
     final BSFormatter formatter;
 
     private String amountRange;
@@ -161,7 +161,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         checkNotNull(dataModel.getAddressEntry(), "dataModel.getAddressEntry() must not be null");
 
-        addressAsString = dataModel.getAddressEntry().getAddress().toString();
+        addressAsString = dataModel.getAddressEntry().getAddressString();
         address.set(dataModel.getAddressEntry().getAddress());
 
         offerErrorListener = (observable, oldValue, newValue) -> {

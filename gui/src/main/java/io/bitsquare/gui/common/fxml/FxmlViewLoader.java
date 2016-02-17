@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.common.fxml;
 
-import io.bitsquare.gui.common.ViewfxException;
+import io.bitsquare.gui.common.ViewFxException;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.common.view.View;
 import io.bitsquare.gui.common.view.ViewFactory;
@@ -76,13 +76,13 @@ public class FxmlViewLoader implements ViewLoader {
 
             URL fxmlUrl = viewClass.getClassLoader().getResource(resolvedLocation);
             if (fxmlUrl == null)
-                throw new ViewfxException(
+                throw new ViewFxException(
                         "Failed to load view class [%s] because FXML file at [%s] could not be loaded " +
                                 "as a classpath resource. Does it exist?", viewClass, specifiedLocation);
 
             return loadFromFxml(fxmlUrl);
         } catch (InstantiationException | IllegalAccessException ex) {
-            throw new ViewfxException(ex, "Failed to load view from class %s", viewClass);
+            throw new ViewFxException(ex, "Failed to load view from class %s", viewClass);
         }
     }
 
@@ -94,14 +94,14 @@ public class FxmlViewLoader implements ViewLoader {
             loader.load();
             Object controller = loader.getController();
             if (controller == null)
-                throw new ViewfxException("Failed to load view from FXML file at [%s]. " +
+                throw new ViewFxException("Failed to load view from FXML file at [%s]. " +
                         "Does it declare an fx:controller attribute?", fxmlUrl);
             if (!(controller instanceof View))
-                throw new ViewfxException("Controller of type [%s] loaded from FXML file at [%s] " +
+                throw new ViewFxException("Controller of type [%s] loaded from FXML file at [%s] " +
                         "does not implement [%s] as expected.", controller.getClass(), fxmlUrl, View.class);
             return (View) controller;
         } catch (IOException ex) {
-            throw new ViewfxException(ex, "Failed to load view from FXML file at [%s]", fxmlUrl);
+            throw new ViewFxException(ex, "Failed to load view from FXML file at [%s]", fxmlUrl);
         }
     }
 

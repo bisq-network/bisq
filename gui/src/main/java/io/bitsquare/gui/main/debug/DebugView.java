@@ -65,7 +65,7 @@ public class DebugView extends InitializableView {
                         OfferAvailabilityProtocol.class,
                         SendOfferAvailabilityRequest.class,
                         ProcessOfferAvailabilityResponse.class,
-                        Boolean.class, /* used as seperator*/
+                        Boolean.class, /* used as separator*/
 
                         
                         /*---- Protocol ----*/
@@ -74,7 +74,7 @@ public class DebugView extends InitializableView {
                         CreateOfferFeeTx.class,
                         AddOfferToRemoteOfferBook.class,
                         BroadcastCreateOfferFeeTx.class,
-                        Boolean.class, /* used as seperator*/
+                        Boolean.class, /* used as separator*/
 
                         
                         /*---- Protocol ----*/
@@ -98,7 +98,7 @@ public class DebugView extends InitializableView {
                         SignAndFinalizePayoutTx.class,
                         SendPayoutTxFinalizedMessage.class,
                         BroadcastAfterLockTime.class,
-                        Boolean.class, /* used as seperator*/
+                        Boolean.class, /* used as separator*/
                         
 
                         /*---- Protocol ----*/
@@ -123,7 +123,7 @@ public class DebugView extends InitializableView {
 
                         ProcessPayoutTxFinalizedMessage.class,
                         BroadcastAfterLockTime.class,
-                        Boolean.class /* used as seperator*/
+                        Boolean.class /* used as separator*/
                 )
         );
         final ObservableList<Class> items2 = FXCollections.observableArrayList(Arrays.asList(
@@ -149,7 +149,7 @@ public class DebugView extends InitializableView {
                         SignAndFinalizePayoutTx.class,
                         SendPayoutTxFinalizedMessage.class,
                         BroadcastAfterLockTime.class,
-                        Boolean.class, /* used as seperator*/
+                        Boolean.class, /* used as separator*/
                         
                         
                          /*---- Protocol ----*/
@@ -173,7 +173,7 @@ public class DebugView extends InitializableView {
 
                         ProcessPayoutTxFinalizedMessage.class,
                         BroadcastAfterLockTime.class,
-                        Boolean.class /* used as seperator*/
+                        Boolean.class /* used as separator*/
                 )
         );
 

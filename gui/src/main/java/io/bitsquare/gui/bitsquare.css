@@ -7,7 +7,7 @@ new blue: 0f87c3
 new grey: 666666
 
 00abff
-orange webpage quotes : ff7f00
+orange web page quotes : ff7f00
 
 
 main bg grey: dddddd
@@ -679,7 +679,7 @@ textfield */
 }
 
 /* copied form modena.css text-input */
-#flowpane-checkboxes-bg {
+#flow-pane-checkboxes-bg {
     -fx-text-fill: -fx-text-inner-color;
     -fx-highlight-fill: derive(-fx-control-inner-background, -20%);
     -fx-highlight-text-fill: -fx-text-inner-color;
@@ -691,7 +691,7 @@ textfield */
     -fx-padding: 0.333333em 0.583em 0.333333em 0.583em; /* 4 7 4 7 */
 }
 
-#flowpane-checkboxes-non-editable-bg {
+#flow-pane-checkboxes-non-editable-bg {
     -fx-text-fill: -fx-text-inner-color;
     -fx-highlight-fill: derive(-fx-control-inner-background, -20%);
     -fx-highlight-text-fill: -fx-text-inner-color;

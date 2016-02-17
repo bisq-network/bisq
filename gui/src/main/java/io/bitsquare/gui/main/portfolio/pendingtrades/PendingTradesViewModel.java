@@ -68,7 +68,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     private final BtcAddressValidator btcAddressValidator;
 
     public final P2PService p2PService;
-    public User user;
+    public final User user;
 
     private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>();
     private final ObjectProperty<SellerState> sellerState = new SimpleObjectProperty<>();

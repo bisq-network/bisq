@@ -166,7 +166,7 @@ public abstract class TradeSubView extends HBox {
 
     private void addLeftBox() {
         leftVBox = new VBox();
-        leftVBox.setSpacing(Layout.SPACING_VBOX);
+        leftVBox.setSpacing(Layout.SPACING_V_BOX);
         leftVBox.setMinWidth(290);
         getChildren().add(leftVBox);
     }

@@ -50,7 +50,7 @@ import javax.inject.Inject;
 public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTradesViewModel> {
 
     private final TradeDetailsPopup tradeDetailsPopup;
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
     @FXML
     TableView<PendingTradesListItem> table;
     @FXML

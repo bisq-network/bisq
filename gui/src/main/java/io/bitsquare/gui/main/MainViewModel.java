@@ -91,9 +91,9 @@ public class MainViewModel implements ViewModel {
     private final Preferences preferences;
     private final AlertManager alertManager;
     private final WalletPasswordPopup walletPasswordPopup;
-    private NotificationCenter notificationCenter;
-    private TacPopup tacPopup;
-    private Navigation navigation;
+    private final NotificationCenter notificationCenter;
+    private final TacPopup tacPopup;
+    private final Navigation navigation;
     private final BSFormatter formatter;
 
     // BTC network
@@ -129,13 +129,13 @@ public class MainViewModel implements ViewModel {
     final StringProperty p2PNetworkLabelId = new SimpleStringProperty("footer-pane");
 
     private MonadicBinding<Boolean> allServicesDone, tradesAndUIReady;
-    private MarketPriceFeed marketPriceFeed;
+    private final MarketPriceFeed marketPriceFeed;
     private final User user;
     private int numBTCPeers = 0;
     private Timer checkForBtcSyncStateTimer;
     private ChangeListener<Number> numConnectedPeersListener, btcNumPeersListener;
-    private java.util.Timer numberofBtcPeersTimer;
-    private java.util.Timer numberofP2PNetworkPeersTimer;
+    private java.util.Timer numberOfBtcPeersTimer;
+    private java.util.Timer numberOfP2PNetworkPeersTimer;
     private Timer startupTimeout;
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
 
@@ -325,9 +325,9 @@ public class MainViewModel implements ViewModel {
         btcNumPeersListener = (observable, oldValue, newValue) -> {
             if ((int) oldValue > 0 && (int) newValue == 0) {
                 // give a bit of tolerance
-                if (numberofBtcPeersTimer != null)
-                    numberofBtcPeersTimer.cancel();
-                numberofBtcPeersTimer = UserThread.runAfter(() -> {
+                if (numberOfBtcPeersTimer != null)
+                    numberOfBtcPeersTimer.cancel();
+                numberOfBtcPeersTimer = UserThread.runAfter(() -> {
                     if (walletService.numPeersProperty().get() == 0) {
                         walletServiceErrorMsg.set("You lost the connection to all bitcoin network peers.\n" +
                                 "Maybe you lost your internet connection or your computer was in hibernate/sleep mode.");
@@ -517,9 +517,9 @@ public class MainViewModel implements ViewModel {
         numConnectedPeersListener = (observable, oldValue, newValue) -> {
             if ((int) oldValue > 0 && (int) newValue == 0) {
                 // give a bit of tolerance
-                if (numberofP2PNetworkPeersTimer != null)
-                    numberofP2PNetworkPeersTimer.cancel();
-                numberofP2PNetworkPeersTimer = UserThread.runAfter(() -> {
+                if (numberOfP2PNetworkPeersTimer != null)
+                    numberOfP2PNetworkPeersTimer.cancel();
+                numberOfP2PNetworkPeersTimer = UserThread.runAfter(() -> {
                     if (p2PService.getNumConnectedPeers().get() == 0) {
                         p2PNetworkWarnMsg.set("You lost the connection to all P2P network peers.\n" +
                                 "Maybe you lost your internet connection or your computer was in hibernate/sleep mode.");

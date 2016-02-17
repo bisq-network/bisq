@@ -50,8 +50,7 @@ public class BlockChainForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Cryptocurrency address:", ((BlockChainAccountContractData) paymentAccountContractData).getAddress());
-        if (paymentAccountContractData instanceof BlockChainAccountContractData &&
-                ((BlockChainAccountContractData) paymentAccountContractData).getPaymentId() != null)
+        if (((BlockChainAccountContractData) paymentAccountContractData).getPaymentId() != null)
             addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Payment ID:", ((BlockChainAccountContractData) paymentAccountContractData).getPaymentId());
 
         return gridRow;

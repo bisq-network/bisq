@@ -228,7 +228,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 hideSendMsgInfo(timer);
             }
         };
-        disputeDirectMessage.arrivedProperty().addListener(arrivedPropertyListener);
+        if (disputeDirectMessage.arrivedProperty() != null)
+            disputeDirectMessage.arrivedProperty().addListener(arrivedPropertyListener);
         storedInMailboxPropertyListener = (observable, oldValue, newValue) -> {
             if (newValue) {
                 sendMsgInfoLabel.setVisible(true);

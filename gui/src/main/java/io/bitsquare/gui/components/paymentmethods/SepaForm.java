@@ -164,9 +164,9 @@ public class SepaForm extends PaymentMethodForm {
         flowPane.setHgap(10);
 
         if (isEditable)
-            flowPane.setId("flowpane-checkboxes-bg");
+            flowPane.setId("flow-pane-checkboxes-bg");
         else
-            flowPane.setId("flowpane-checkboxes-non-editable-bg");
+            flowPane.setId("flow-pane-checkboxes-non-editable-bg");
 
         dataProvider.stream().forEach(country ->
         {
@@ -255,7 +255,8 @@ public class SepaForm extends PaymentMethodForm {
         ibanField.setMouseTransparent(false);
         TextField bicField = addLabelTextField(gridPane, ++gridRow, "BIC/SWIFT:", sepaAccount.getBic()).second;
         bicField.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, "Location of Bank:", sepaAccount.getCountry().name);
+        addLabelTextField(gridPane, ++gridRow, "Location of Bank:",
+                sepaAccount.getCountry() != null ? sepaAccount.getCountry().name : "");
         addLabelTextField(gridPane, ++gridRow, "Currency:", sepaAccount.getSingleTradeCurrency().getNameAndCode());
         String countries;
         Tooltip tooltip = null;

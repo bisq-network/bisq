@@ -29,7 +29,7 @@ public abstract class ActivatableViewAndModel<R extends Node, M extends Activata
     }
 
     public ActivatableViewAndModel() {
-        this((M) Activatable.NOOP_INSTANCE);
+        this((M) Activatable.NO_OP_INSTANCE);
     }
 
     @Override

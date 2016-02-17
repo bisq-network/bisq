@@ -70,9 +70,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final User user;
     private final KeyRing keyRing;
     private final P2PService p2PService;
-    private MarketPriceFeed marketPriceFeed;
+    private final MarketPriceFeed marketPriceFeed;
     private final WalletPasswordPopup walletPasswordPopup;
-    private BlockchainService blockchainService;
+    private final BlockchainService blockchainService;
     private final BSFormatter formatter;
     private final String offerId;
     private final AddressEntry addressEntry;

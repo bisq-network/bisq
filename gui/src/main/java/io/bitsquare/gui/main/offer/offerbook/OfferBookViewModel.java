@@ -53,7 +53,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final OfferBook offerBook;
     private final Preferences preferences;
     private final P2PService p2PService;
-    private MarketPriceFeed marketPriceFeed;
+    private final MarketPriceFeed marketPriceFeed;
     final BSFormatter formatter;
 
     private final FilteredList<OfferBookListItem> filteredItems;
@@ -168,8 +168,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     public ObservableList<TradeCurrency> getTradeCurrencies() {
-        ObservableList<TradeCurrency> list = preferences.getTradeCurrenciesAsObservable();
-        return list;
+        return preferences.getTradeCurrenciesAsObservable();
     }
 
     boolean isBootstrapped() {

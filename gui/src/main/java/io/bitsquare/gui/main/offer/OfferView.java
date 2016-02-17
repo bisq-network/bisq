@@ -52,7 +52,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private MarketPriceFeed marketPriceFeed;
+    private final MarketPriceFeed marketPriceFeed;
     private final Offer.Direction direction;
     private Tab takeOfferTab, createOfferTab, offerBookTab;
     private TradeCurrency tradeCurrency;
@@ -94,7 +94,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 }
             }
         };
-        tabListChangeListener = (ListChangeListener<Tab>) change -> {
+        tabListChangeListener = change -> {
             change.next();
             List<? extends Tab> removedTabs = change.getRemoved();
             if (removedTabs.size() == 1) {

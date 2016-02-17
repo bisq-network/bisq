@@ -68,9 +68,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private final User user;
     private final WalletPasswordPopup walletPasswordPopup;
     private final Preferences preferences;
-    private MarketPriceFeed marketPriceFeed;
-    private BlockchainService blockchainService;
-    private BSFormatter formatter;
+    private final MarketPriceFeed marketPriceFeed;
+    private final BlockchainService blockchainService;
+    private final BSFormatter formatter;
 
     private final Coin offerFeeAsCoin;
     private final Coin networkFeeAsCoin;
@@ -305,7 +305,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     void calculateVolume() {
         if (offer != null &&
-                offer.getPrice() != null &&
                 amountAsCoin.get() != null &&
                 !amountAsCoin.get().isZero()) {
             volumeAsFiat.set(new ExchangeRate(offer.getPrice()).coinToFiat(amountAsCoin.get()));
@@ -330,7 +329,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     boolean isMinAmountLessOrEqualAmount() {
         //noinspection SimplifiableIfStatement
-        if (offer != null && offer.getMinAmount() != null && amountAsCoin.get() != null)
+        if (offer != null && amountAsCoin.get() != null)
             return !offer.getMinAmount().isGreaterThan(amountAsCoin.get());
         return true;
     }

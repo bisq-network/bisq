@@ -55,7 +55,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
     private NumberAxis xAxis, yAxis;
     XYChart.Series seriesBuy, seriesSell;
     private final ListChangeListener<OfferBookListItem> changeListener;
-    private Navigation navigation;
+    private final Navigation navigation;
     private final BSFormatter formatter;
     private TableView<Offer> buyOfferTableView;
     private TableView<Offer> sellOfferTableView;

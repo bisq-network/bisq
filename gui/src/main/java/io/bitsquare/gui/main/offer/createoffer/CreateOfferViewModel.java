@@ -118,7 +118,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         paymentLabel = BSResources.get("createOffer.fundsBox.paymentLabel", dataModel.getOfferId());
 
         if (dataModel.getAddressEntry() != null) {
-            addressAsString = dataModel.getAddressEntry().getAddress().toString();
+            addressAsString = dataModel.getAddressEntry().getAddressString();
             address.set(dataModel.getAddressEntry().getAddress());
         }
         createListeners();

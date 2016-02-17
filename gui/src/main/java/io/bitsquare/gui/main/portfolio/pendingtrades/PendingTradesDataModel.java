@@ -72,7 +72,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public final DisputeManager disputeManager;
     private final Navigation navigation;
     private final WalletPasswordPopup walletPasswordPopup;
-    private NotificationCenter notificationCenter;
+    private final NotificationCenter notificationCenter;
 
     final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<Trade> tradesListChangeListener;
@@ -351,36 +351,42 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         } else {
             log.warn("depositTx is null");
         }
-        Transaction payoutTx = getTrade().getPayoutTx();
-        if (payoutTx != null) {
-            payoutTxSerialized = payoutTx.bitcoinSerialize();
-            payoutTxHashAsString = payoutTx.getHashAsString();
-        }
-
         Trade trade = getTrade();
-        Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
-                trade.getId(),
-                keyRing.getPubKeyRing().hashCode(), // traderId
-                trade.getOffer().getDirection() == Offer.Direction.BUY ? isOfferer : !isOfferer,
-                isOfferer,
-                keyRing.getPubKeyRing(),
-                trade.getDate(),
-                trade.getContract(),
-                trade.getContractHash(),
-                depositTxSerialized,
-                payoutTxSerialized,
-                depositTxHashAsString,
-                payoutTxHashAsString,
-                trade.getContractAsJson(),
-                trade.getOffererContractSignature(),
-                trade.getTakerContractSignature(),
-                user.getAcceptedArbitratorByAddress(trade.getArbitratorNodeAddress()).getPubKeyRing(),
-                isSupportTicket
-        );
+        if (trade != null) {
+            Transaction payoutTx = trade.getPayoutTx();
+            if (payoutTx != null) {
+                payoutTxSerialized = payoutTx.bitcoinSerialize();
+                payoutTxHashAsString = payoutTx.getHashAsString();
+            } else {
+                log.warn("payoutTx is null at doOpenDispute");
+            }
 
-        trade.setDisputeState(Trade.DisputeState.DISPUTE_REQUESTED);
-        disputeManager.sendOpenNewDisputeMessage(dispute);
-        navigation.navigateTo(MainView.class, DisputesView.class);
+            Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
+                    trade.getId(),
+                    keyRing.getPubKeyRing().hashCode(), // traderId
+                    trade.getOffer().getDirection() == Offer.Direction.BUY ? isOfferer : !isOfferer,
+                    isOfferer,
+                    keyRing.getPubKeyRing(),
+                    trade.getDate(),
+                    trade.getContract(),
+                    trade.getContractHash(),
+                    depositTxSerialized,
+                    payoutTxSerialized,
+                    depositTxHashAsString,
+                    payoutTxHashAsString,
+                    trade.getContractAsJson(),
+                    trade.getOffererContractSignature(),
+                    trade.getTakerContractSignature(),
+                    user.getAcceptedArbitratorByAddress(trade.getArbitratorNodeAddress()).getPubKeyRing(),
+                    isSupportTicket
+            );
+
+            trade.setDisputeState(Trade.DisputeState.DISPUTE_REQUESTED);
+            disputeManager.sendOpenNewDisputeMessage(dispute);
+            navigation.navigateTo(MainView.class, DisputesView.class);
+        } else {
+            log.warn("trade is null at doOpenDispute");
+        }
     }
 }
 

@@ -119,7 +119,7 @@ public class BuyerStep2View extends TradeStepView {
         addTradeInfoBlock();
 
         PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
-        String paymentMethodName = paymentAccountContractData.getPaymentMethodName();
+        String paymentMethodName = paymentAccountContractData != null ? paymentAccountContractData.getPaymentMethodName() : "";
         TitledGroupBg accountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1,
                 "Start payment using " + BSResources.get(paymentAccountContractData.getPaymentMethodName()),
                 Layout.GROUP_DISTANCE);

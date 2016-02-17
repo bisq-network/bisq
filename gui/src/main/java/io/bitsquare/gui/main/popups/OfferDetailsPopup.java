@@ -52,7 +52,7 @@ public class OfferDetailsPopup extends Popup {
     private final BSFormatter formatter;
     protected final Preferences preferences;
     private final User user;
-    private KeyRing keyRing;
+    private final KeyRing keyRing;
     private final Navigation navigation;
     private Offer offer;
     private Coin tradeAmount;

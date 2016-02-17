@@ -84,9 +84,9 @@ public class OKPayForm extends PaymentMethodForm {
         flowPane.setHgap(10);
 
         if (isEditable)
-            flowPane.setId("flowpane-checkboxes-bg");
+            flowPane.setId("flow-pane-checkboxes-bg");
         else
-            flowPane.setId("flowpane-checkboxes-non-editable-bg");
+            flowPane.setId("flow-pane-checkboxes-non-editable-bg");
 
         CurrencyUtil.getAllOKPayCurrencies().stream().forEach(e ->
         {

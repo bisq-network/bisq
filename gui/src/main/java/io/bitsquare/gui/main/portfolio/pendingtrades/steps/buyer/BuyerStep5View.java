@@ -98,9 +98,9 @@ public class BuyerStep5View extends TradeStepView {
         Tuple2<Label, TextField> fiatTradeAmountPair = addLabelTextField(gridPane, ++gridRow, getFiatTradeAmountLabel(), model.getFiatVolume());
         fiatTradeAmountLabel = fiatTradeAmountPair.first;
 
-        Tuple2<Label, TextField> feesPair = addLabelTextField(gridPane, ++gridRow, "Total fees paid:", model.getTotalFees());
+        addLabelTextField(gridPane, ++gridRow, "Total fees paid:", model.getTotalFees());
 
-        Tuple2<Label, TextField> securityDepositPair = addLabelTextField(gridPane, ++gridRow, "Refunded security deposit:", model.getSecurityDeposit());
+        addLabelTextField(gridPane, ++gridRow, "Refunded security deposit:", model.getSecurityDeposit());
 
         addTitledGroupBg(gridPane, ++gridRow, 2, "Withdraw your bitcoins", Layout.GROUP_DISTANCE);
         addLabelTextField(gridPane, gridRow, "Amount to withdraw:", model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);

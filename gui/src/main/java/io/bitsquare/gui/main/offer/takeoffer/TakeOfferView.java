@@ -72,7 +72,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private final Navigation navigation;
     private final BSFormatter formatter;
     private final OfferDetailsPopup offerDetailsPopup;
-    private Preferences preferences;
+    private final Preferences preferences;
     private ScrollPane scrollPane;
     private GridPane gridPane;
     private ImageView imageView;

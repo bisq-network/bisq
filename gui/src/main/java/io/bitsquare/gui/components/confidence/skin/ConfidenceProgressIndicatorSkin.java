@@ -64,7 +64,7 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
     /**
      * ************************************************************************
      * *
-     * UI Subcomponents                                                        *
+     * UI SubComponents                                                        *
      * *
      * ************************************************************************
      */
@@ -173,7 +173,7 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
             return StyleableProperties.PROGRESS_COLOR;
         }
     };
-    private boolean timelineNulled = false;
+    private boolean timeLineNulled = false;
 
     /**
      * ************************************************************************
@@ -192,8 +192,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
         InvalidationListener visibilityListener = new InvalidationListener() {
             @Override
             public void invalidated(Observable valueModel) {
-                if (getSkinnable().isIndeterminate() && timelineNulled && spinner == null) {
-                    timelineNulled = false;
+                if (getSkinnable().isIndeterminate() && timeLineNulled && spinner == null) {
+                    timeLineNulled = false;
                     spinner = new IndeterminateSpinner(
                             getSkinnable(), ConfidenceProgressIndicatorSkin.this,
                             spinEnabled.get(), progressColor.get());
@@ -204,7 +204,7 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
                     if (!(getSkinnable().impl_isTreeVisible() && getSkinnable().getScene() != null)) {
                         getChildren().remove(spinner);
                         spinner = null;
-                        timelineNulled = true;
+                        timeLineNulled = true;
                     }
                 }
             }
@@ -219,11 +219,11 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
                     if (getSkinnable().getScene() == null) {
                         getChildren().remove(spinner);
                         spinner = null;
-                        timelineNulled = true;
+                        timeLineNulled = true;
                     }
                 } else {
                     if (getSkinnable().getScene() != null && getSkinnable().isIndeterminate()) {
-                        timelineNulled = false;
+                        timeLineNulled = false;
                         spinner = new IndeterminateSpinner(
                                 getSkinnable(), ConfidenceProgressIndicatorSkin.this,
                                 spinEnabled.get(), progressColor.get());

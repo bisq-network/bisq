@@ -23,8 +23,8 @@ public class Layout {
     public static final double FIRST_ROW_AND_GROUP_DISTANCE = GROUP_DISTANCE + FIRST_ROW_DISTANCE;
     public static final double PADDING_WINDOW = 20d;
     public static double PADDING = 10d;
-    public static double SPACING_HBOX = 10d;
-    public static final double SPACING_VBOX = 5d;
+    public static double SPACING_H_BOX = 10d;
+    public static final double SPACING_V_BOX = 5d;
     public static final double GRID_GAP = 5d;
     public static final double LIST_ROW_HEIGHT = 34;
 

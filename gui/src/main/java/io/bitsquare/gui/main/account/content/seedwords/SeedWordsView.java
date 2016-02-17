@@ -130,8 +130,12 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
             Wallet wallet = walletService.getWallet();
             KeyCrypter keyCrypter = wallet.getKeyCrypter();
             keyChainSeed = wallet.getKeyChainSeed();
-            DeterministicSeed decryptedSeed = keyChainSeed.decrypt(keyCrypter, "", aesKey);
-            showSeedScreen(decryptedSeed);
+            if (keyCrypter != null) {
+                DeterministicSeed decryptedSeed = keyChainSeed.decrypt(keyCrypter, "", aesKey);
+                showSeedScreen(decryptedSeed);
+            } else {
+                log.warn("keyCrypter is null");
+            }
         }).show();
     }
 

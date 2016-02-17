@@ -45,7 +45,7 @@ public class TradeDetailsPopup extends Popup {
     protected static final Logger log = LoggerFactory.getLogger(TradeDetailsPopup.class);
 
     private final BSFormatter formatter;
-    private DisputeManager disputeManager;
+    private final DisputeManager disputeManager;
     private Trade trade;
     private ChangeListener<Number> changeListener;
     private TextArea textArea;
