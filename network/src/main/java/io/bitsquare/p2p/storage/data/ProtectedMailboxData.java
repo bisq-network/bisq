@@ -1,5 +1,6 @@
-package io.bitsquare.p2p.storage;
+package io.bitsquare.p2p.storage.data;
 
+import io.bitsquare.p2p.storage.P2PDataStorage;
 import io.bitsquare.p2p.storage.messages.MailboxMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

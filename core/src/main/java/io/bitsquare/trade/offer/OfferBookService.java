@@ -21,7 +21,7 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
-import io.bitsquare.p2p.storage.ProtectedData;
+import io.bitsquare.p2p.storage.data.ProtectedData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,21 +84,27 @@ public class OfferBookService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+
+    public void republishOffers(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        doAddOffer(offer, resultHandler, errorMessageHandler, true);
+    }
+
     public void addOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         doAddOffer(offer, resultHandler, errorMessageHandler, false);
     }
 
-    public void republishOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        doAddOffer(offer, resultHandler, errorMessageHandler, true);
+    public void doAddOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler, boolean forceBroadcast) {
+        boolean result = p2PService.addData(offer, forceBroadcast);
+        if (result) {
+            log.trace("Add offer to network was successful. Offer ID = " + offer.getId());
+            resultHandler.handleResult();
+        } else {
+            errorMessageHandler.handleErrorMessage("Add offer failed");
+        }
     }
 
-    private void doAddOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler, boolean rePublish) {
-        boolean result;
-        if (rePublish)
-            result = p2PService.republishData(offer);
-        else
-            result = p2PService.addData(offer);
-
+    public void refreshOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        boolean result = p2PService.refreshTTL(offer);
         if (result) {
             log.trace("Add offer to network was successful. Offer ID = " + offer.getId());
             resultHandler.handleResult();

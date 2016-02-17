@@ -14,7 +14,7 @@ public final class Ping extends KeepAliveMessage {
 
     @Override
     public String toString() {
-        return "PingRequest{" +
+        return "Ping{" +
                 ", nonce=" + nonce +
                 "} " + super.toString();
     }

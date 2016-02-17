@@ -1,5 +1,6 @@
 package io.bitsquare.p2p;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
@@ -24,8 +25,9 @@ import io.bitsquare.p2p.peers.peerexchange.PeerExchangeManager;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.P2PDataStorage;
-import io.bitsquare.p2p.storage.ProtectedData;
-import io.bitsquare.p2p.storage.ProtectedMailboxData;
+import io.bitsquare.p2p.storage.data.ProtectedData;
+import io.bitsquare.p2p.storage.data.ProtectedMailboxData;
+import io.bitsquare.p2p.storage.data.RefreshTTLBundle;
 import io.bitsquare.p2p.storage.messages.AddDataMessage;
 import io.bitsquare.p2p.storage.messages.ExpirableMessage;
 import io.bitsquare.p2p.storage.messages.MailboxMessage;
@@ -630,25 +632,32 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean addData(ExpirableMessage expirableMessage) {
-        Log.traceCall();
-        return doAddData(expirableMessage, false);
+        return addData(expirableMessage, false);
     }
 
-    public boolean republishData(ExpirableMessage expirableMessage) {
-        Log.traceCall();
-        return doAddData(expirableMessage, true);
-    }
-
-    private boolean doAddData(ExpirableMessage expirableMessage, boolean rePublish) {
+    public boolean addData(ExpirableMessage expirableMessage, boolean forceBroadcast) {
         Log.traceCall();
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         if (isBootstrapped()) {
             try {
-                ProtectedData protectedData = p2PDataStorage.getDataWithSignedSeqNr(expirableMessage, optionalKeyRing.get().getSignatureKeyPair());
-                if (rePublish)
-                    return p2PDataStorage.rePublish(protectedData, networkNode.getNodeAddress());
-                else
-                    return p2PDataStorage.add(protectedData, networkNode.getNodeAddress());
+                ProtectedData protectedData = p2PDataStorage.getProtectedData(expirableMessage, optionalKeyRing.get().getSignatureKeyPair());
+                return p2PDataStorage.add(protectedData, networkNode.getNodeAddress(), forceBroadcast);
+            } catch (CryptoException e) {
+                log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
+                return false;
+            }
+        } else {
+            throw new NetworkNotReadyException();
+        }
+    }
+
+    public boolean refreshTTL(ExpirableMessage expirableMessage) {
+        Log.traceCall();
+        checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
+        if (isBootstrapped()) {
+            try {
+                RefreshTTLBundle refreshTTLBundle = p2PDataStorage.getRefreshTTLPackage(expirableMessage, optionalKeyRing.get().getSignatureKeyPair());
+                return p2PDataStorage.refreshTTL(refreshTTLBundle, networkNode.getNodeAddress());
             } catch (CryptoException e) {
                 log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
                 return false;
@@ -663,7 +672,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         if (isBootstrapped()) {
             try {
-                ProtectedData protectedData = p2PDataStorage.getDataWithSignedSeqNr(expirableMessage, optionalKeyRing.get().getSignatureKeyPair());
+                ProtectedData protectedData = p2PDataStorage.getProtectedData(expirableMessage, optionalKeyRing.get().getSignatureKeyPair());
                 return p2PDataStorage.remove(protectedData, networkNode.getNodeAddress());
             } catch (CryptoException e) {
                 log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
@@ -730,6 +739,16 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     public Map<ByteArray, ProtectedData> getDataMap() {
         return p2PDataStorage.getMap();
+    }
+
+    @VisibleForTesting
+    public P2PDataStorage getP2PDataStorage() {
+        return p2PDataStorage;
+    }
+
+    @VisibleForTesting
+    public PeerManager getPeerManager() {
+        return peerManager;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

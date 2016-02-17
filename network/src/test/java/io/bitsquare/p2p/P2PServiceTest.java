@@ -11,7 +11,7 @@ import io.bitsquare.p2p.network.LocalhostNetworkNode;
 import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.seed.SeedNode;
 import io.bitsquare.p2p.storage.P2PDataStorage;
-import io.bitsquare.p2p.storage.ProtectedData;
+import io.bitsquare.p2p.storage.data.ProtectedData;
 import io.bitsquare.p2p.storage.mocks.MockData;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.*;

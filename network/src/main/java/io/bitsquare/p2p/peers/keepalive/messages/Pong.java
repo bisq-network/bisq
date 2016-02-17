@@ -14,7 +14,7 @@ public final class Pong extends KeepAliveMessage {
 
     @Override
     public String toString() {
-        return "PongResponse{" +
+        return "Pong{" +
                 "requestNonce=" + requestNonce +
                 "} " + super.toString();
     }

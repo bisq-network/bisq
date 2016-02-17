@@ -30,6 +30,10 @@ import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.SendDirectMessageListener;
+import io.bitsquare.p2p.network.CloseConnectionReason;
+import io.bitsquare.p2p.network.Connection;
+import io.bitsquare.p2p.network.ConnectionListener;
+import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradableList;
 import io.bitsquare.trade.closed.ClosedTradableManager;
@@ -70,6 +74,10 @@ public class OpenOfferManager {
     private boolean shutDownRequested;
     private BootstrapListener bootstrapListener;
     private final Timer timer = new Timer();
+    private Timer republishOffersTime;
+    private boolean firstTimeConnection;
+    private boolean allowRefreshOffers;
+    private boolean lostAllConnections;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -112,6 +120,44 @@ public class OpenOfferManager {
             if (message instanceof OfferAvailabilityRequest)
                 handleOfferAvailabilityRequest((OfferAvailabilityRequest) message, peersNodeAddress);
         });
+
+        NetworkNode networkNode = p2PService.getNetworkNode();
+        networkNode.addConnectionListener(new ConnectionListener() {
+            @Override
+            public void onConnection(Connection connection) {
+                log.error("ConnectionListener onConnection size " + networkNode.getAllConnections().size());
+                log.error("ConnectionListener onConnection lostAllConnections " + lostAllConnections);
+                log.error("ConnectionListener onConnection allowRefreshOffers " + allowRefreshOffers);
+                log.error("ConnectionListener onConnection republishOffersTime " + republishOffersTime);
+                if (lostAllConnections) {
+                    lostAllConnections = false;
+                    allowRefreshOffers = false;
+
+                    // We repeat a rePublishOffers call after 10 seconds if we have more than 3 peers
+                    if (republishOffersTime == null) {
+                        republishOffersTime = UserThread.runAfter(() -> {
+                            if (networkNode.getAllConnections().size() > 3)
+                                republishOffers();
+
+                            allowRefreshOffers = true;
+                            republishOffersTime = null;
+                        }, 5);
+                    }
+                }
+            }
+
+            @Override
+            public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
+                log.error("ConnectionListener onDisconnect size " + networkNode.getAllConnections().size());
+                lostAllConnections = networkNode.getAllConnections().isEmpty();
+                if (lostAllConnections)
+                    allowRefreshOffers = false;
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+            }
+        });
     }
 
 
@@ -132,50 +178,72 @@ public class OpenOfferManager {
             bootstrapListener = new BootstrapListener() {
                 @Override
                 public void onBootstrapComplete() {
-                    startRePublishThread();
+                    onBootstrapped();
                 }
             };
             p2PService.addP2PServiceListener(bootstrapListener);
 
         } else {
-            startRePublishThread();
+            onBootstrapped();
         }
     }
 
-    private void startRePublishThread() {
+    private void onBootstrapped() {
         if (bootstrapListener != null)
             p2PService.removeP2PServiceListener(bootstrapListener);
 
-        // republish sufficiently before offer would expire
+        republishOffers();
+        startRefreshOffersThread();
+
+        //TODO should not be needed
+        // startRepublishOffersThread();
+    }
+
+    private void startRefreshOffersThread() {
+        allowRefreshOffers = true;
+        // refresh sufficiently before offer would expire
         long period = (long) (Offer.TTL * 0.7);
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                UserThread.execute(OpenOfferManager.this::rePublishOffers);
+                UserThread.execute(OpenOfferManager.this::refreshOffers);
             }
         };
-        timer.scheduleAtFixedRate(timerTask, 500, period);
-
-        p2PService.getNumConnectedPeers().addListener((observable, oldValue, newValue) -> {
-            if ((int) oldValue == 0 && (int) newValue > 0) {
-                rePublishOffers();
-
-                // We repeat a rePublishOffers call after 10 seconds if we have more than 3 peers
-                UserThread.runAfter(() -> {
-                    if (p2PService.getNumConnectedPeers().get() > 3)
-                        rePublishOffers();
-                }, 10);
-            }
-        });
+        timer.scheduleAtFixedRate(timerTask, period, period);
     }
 
-    private void rePublishOffers() {
+
+    private void startRepublishOffersThread() {
+        long period = Offer.TTL * 10;
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                UserThread.execute(OpenOfferManager.this::republishOffers);
+            }
+        };
+        timer.scheduleAtFixedRate(timerTask, period, period);
+    }
+
+    private void republishOffers() {
+        log.error("republishOffers ");
         Log.traceCall("Number of offer for republish: " + openOffers.size());
         for (OpenOffer openOffer : openOffers) {
-            offerBookService.republishOffer(openOffer.getOffer(),
+            offerBookService.republishOffers(openOffer.getOffer(),
                     () -> log.debug("Successful added offer to P2P network"),
                     errorMessage -> log.error("Add offer to P2P network failed. " + errorMessage));
             openOffer.setStorage(openOffersStorage);
+        }
+    }
+
+    private void refreshOffers() {
+        if (allowRefreshOffers) {
+            Log.traceCall("Number of offer for refresh: " + openOffers.size());
+            for (OpenOffer openOffer : openOffers) {
+                offerBookService.refreshOffer(openOffer.getOffer(),
+                        () -> log.debug("Successful refreshed TTL for offer"),
+                        errorMessage -> log.error("Refresh TTL for offer failed. " + errorMessage));
+                openOffer.setStorage(openOffersStorage);
+            }
         }
     }
 

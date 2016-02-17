@@ -1,7 +1,7 @@
 package io.bitsquare.p2p.storage.messages;
 
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.storage.ProtectedData;
+import io.bitsquare.p2p.storage.data.ProtectedData;
 
 import java.security.PublicKey;
 

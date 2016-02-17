@@ -4,33 +4,33 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.*;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.crypto.EncryptionService;
-import io.bitsquare.crypto.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.TestUtils;
-import io.bitsquare.p2p.mocks.MockMessage;
 import io.bitsquare.p2p.network.NetworkNode;
-import io.bitsquare.p2p.peers.Broadcaster;
 import io.bitsquare.p2p.peers.PeerManager;
-import io.bitsquare.p2p.storage.messages.MailboxMessage;
+import io.bitsquare.p2p.storage.data.ProtectedData;
+import io.bitsquare.p2p.storage.data.RefreshTTLBundle;
 import io.bitsquare.p2p.storage.mocks.MockData;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.*;
 import java.security.cert.CertificateException;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
-//TODO P2P network tests are outdated
-@Ignore
 public class ProtectedDataStorageTest {
     private static final Logger log = LoggerFactory.getLogger(ProtectedDataStorageTest.class);
 
@@ -58,18 +58,16 @@ public class ProtectedDataStorageTest {
         dir2.mkdir();
 
         UserThread.setExecutor(Executors.newSingleThreadExecutor());
-        P2PDataStorage.CHECK_TTL_INTERVAL_SEC = (int) TimeUnit.MINUTES.toMillis(10);
+        P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS = 300;
 
         keyRing1 = new KeyRing(new KeyStorage(dir1));
 
         storageSignatureKeyPair1 = keyRing1.getSignatureKeyPair();
         encryptionService1 = new EncryptionService(keyRing1);
-        networkNode1 = TestUtils.getAndStartSeedNode(8001, useClearNet, seedNodes).getSeedNodeP2PService().getNetworkNode();
-        peerManager1 = new PeerManager(networkNode1, null, new File("dummy"));
-
-        //TODO
-        Broadcaster broadcaster = new Broadcaster(networkNode1);
-        dataStorage1 = new P2PDataStorage(broadcaster, networkNode1, new File("dummy"));
+        P2PService p2PService = TestUtils.getAndStartSeedNode(8001, useClearNet, seedNodes).getSeedNodeP2PService();
+        networkNode1 = p2PService.getNetworkNode();
+        peerManager1 = p2PService.getPeerManager();
+        dataStorage1 = p2PService.getP2PDataStorage();
 
         // for mailbox
         keyRing2 = new KeyRing(new KeyStorage(dir2));
@@ -91,11 +89,18 @@ public class ProtectedDataStorageTest {
             networkNode1.shutDown(() -> shutDownLatch.countDown());
             shutDownLatch.await();
         }
+
+        Path path = Paths.get(TestUtils.test_dummy_dir);
+        File dir = path.toFile();
+        Utilities.deleteDirectory(dir);
+
+        Utilities.deleteDirectory(dir1);
+        Utilities.deleteDirectory(dir2);
     }
 
-    @Test
+    //@Test
     public void testAddAndRemove() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
-        ProtectedData data = dataStorage1.getDataWithSignedSeqNr(mockData, storageSignatureKeyPair1);
+        ProtectedData data = dataStorage1.getProtectedData(mockData, storageSignatureKeyPair1);
         Assert.assertTrue(dataStorage1.add(data, null));
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
@@ -107,256 +112,84 @@ public class ProtectedDataStorageTest {
         Assert.assertEquals(0, dataStorage1.getMap().size());
     }
 
+    // @Test
+    public void testTTL() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
+        mockData.ttl = (int) (P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS * 1.5);
+        ProtectedData data = dataStorage1.getProtectedData(mockData, storageSignatureKeyPair1);
+        log.debug("data.date " + data.date);
+        log.debug("data.date " + data.date.getTime());
+        Assert.assertTrue(dataStorage1.add(data, null));
+        log.debug("test 1");
+        Assert.assertEquals(1, dataStorage1.getMap().size());
+
+        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS);
+        log.debug("test 2");
+        Assert.assertEquals(1, dataStorage1.getMap().size());
+
+        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS * 2);
+        log.debug("test 3 removed");
+        Assert.assertEquals(0, dataStorage1.getMap().size());
+    }
+
+    /* //@Test
+     public void testRePublish() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
+         mockData.ttl = (int) (P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS * 1.5);
+         ProtectedData data = dataStorage1.getDataWithSignedSeqNr(mockData, storageSignatureKeyPair1);
+         Assert.assertTrue(dataStorage1.add(data, null));
+         Assert.assertEquals(1, dataStorage1.getMap().size());
+         Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS);
+         log.debug("test 1");
+         Assert.assertEquals(1, dataStorage1.getMap().size());
+ 
+         data = dataStorage1.getDataWithSignedSeqNr(mockData, storageSignatureKeyPair1);
+         Assert.assertTrue(dataStorage1.rePublish(data, null));
+         Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS);
+         log.debug("test 2");
+         Assert.assertEquals(1, dataStorage1.getMap().size());
+ 
+         data = dataStorage1.getDataWithSignedSeqNr(mockData, storageSignatureKeyPair1);
+         Assert.assertTrue(dataStorage1.rePublish(data, null));
+         Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS);
+         log.debug("test 3");
+         Assert.assertEquals(1, dataStorage1.getMap().size());
+ 
+         Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS);
+         log.debug("test 4");
+         Assert.assertEquals(1, dataStorage1.getMap().size());
+ 
+         Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS * 2);
+         log.debug("test 5 removed");
+         Assert.assertEquals(0, dataStorage1.getMap().size());
+     }
+ */
     @Test
-    public void testExpirableData() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
-        P2PDataStorage.CHECK_TTL_INTERVAL_SEC = 10;
-        // CHECK_TTL_INTERVAL is used in constructor of ProtectedExpirableDataStorage so we recreate it here
-
-        //TODO
-        Broadcaster broadcaster = new Broadcaster(networkNode1);
-        dataStorage1 = new P2PDataStorage(broadcaster, networkNode1, new File("dummy"));
-        mockData.ttl = 50;
-
-        ProtectedData data = dataStorage1.getDataWithSignedSeqNr(mockData, storageSignatureKeyPair1);
+    public void testRePublish() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
+        mockData.ttl = (int) (P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS * 1.5);
+        ProtectedData data = dataStorage1.getProtectedData(mockData, storageSignatureKeyPair1);
         Assert.assertTrue(dataStorage1.add(data, null));
-        Thread.sleep(5);
         Assert.assertEquals(1, dataStorage1.getMap().size());
-        // still there 
-        Thread.sleep(20);
+        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS);
+        log.debug("test 1");
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
-        Thread.sleep(40);
-        // now should be removed
-        Assert.assertEquals(0, dataStorage1.getMap().size());
-
-        // add with date in future
-        data = dataStorage1.getDataWithSignedSeqNr(mockData, storageSignatureKeyPair1);
-        int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirableMessage, newSequenceNumber));
-        byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
-        ProtectedData dataWithFutureDate = new ProtectedData(data.expirableMessage, data.ttl, data.ownerPubKey, newSequenceNumber, signature);
-        dataWithFutureDate.date = new Date(new Date().getTime() + 60 * 60 * sleepTime);
-        // force serialisation (date check is done in readObject)
-        ProtectedData newData = Utilities.deserialize(Utilities.serialize(dataWithFutureDate));
-        Assert.assertTrue(dataStorage1.add(newData, null));
-        Thread.sleep(5);
+        RefreshTTLBundle refreshTTLBundle = dataStorage1.getRefreshTTLPackage(mockData, storageSignatureKeyPair1);
+        Assert.assertTrue(dataStorage1.refreshTTL(refreshTTLBundle, null));
+        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS);
+        log.debug("test 2");
         Assert.assertEquals(1, dataStorage1.getMap().size());
-        Thread.sleep(50);
+
+        refreshTTLBundle = dataStorage1.getRefreshTTLPackage(mockData, storageSignatureKeyPair1);
+        Assert.assertTrue(dataStorage1.refreshTTL(refreshTTLBundle, null));
+        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS);
+        log.debug("test 3");
+        Assert.assertEquals(1, dataStorage1.getMap().size());
+
+        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS);
+        log.debug("test 4");
+        Assert.assertEquals(1, dataStorage1.getMap().size());
+
+        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS * 2);
+        log.debug("test 5 removed");
         Assert.assertEquals(0, dataStorage1.getMap().size());
     }
-
-    @Test
-    public void testMultiAddRemoveProtectedData() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
-        MockData mockData = new MockData("msg1", keyRing1.getSignatureKeyPair().getPublic());
-        ProtectedData data = dataStorage1.getDataWithSignedSeqNr(mockData, storageSignatureKeyPair1);
-        Assert.assertTrue(dataStorage1.add(data, null));
-
-        // remove with not updated seq nr -> failure
-        int newSequenceNumber = 0;
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirableMessage, newSequenceNumber));
-        byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
-        ProtectedData dataToRemove = new ProtectedData(data.expirableMessage, data.ttl, data.ownerPubKey, newSequenceNumber, signature);
-        Assert.assertFalse(dataStorage1.remove(dataToRemove, null));
-
-        // remove with too high updated seq nr -> ok
-        newSequenceNumber = 2;
-        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirableMessage, newSequenceNumber));
-        signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
-        dataToRemove = new ProtectedData(data.expirableMessage, data.ttl, data.ownerPubKey, newSequenceNumber, signature);
-        Assert.assertTrue(dataStorage1.remove(dataToRemove, null));
-
-        // add to empty map, any seq nr. -> ok
-        newSequenceNumber = 2;
-        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirableMessage, newSequenceNumber));
-        signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
-        ProtectedData dataToAdd = new ProtectedData(data.expirableMessage, data.ttl, data.ownerPubKey, newSequenceNumber, signature);
-        Assert.assertTrue(dataStorage1.add(dataToAdd, null));
-
-        // add with updated seq nr below previous -> failure
-        newSequenceNumber = 1;
-        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirableMessage, newSequenceNumber));
-        signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
-        dataToAdd = new ProtectedData(data.expirableMessage, data.ttl, data.ownerPubKey, newSequenceNumber, signature);
-        Assert.assertFalse(dataStorage1.add(dataToAdd, null));
-
-        // add with updated seq nr over previous -> ok
-        newSequenceNumber = 3;
-        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirableMessage, newSequenceNumber));
-        signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
-        dataToAdd = new ProtectedData(data.expirableMessage, data.ttl, data.ownerPubKey, newSequenceNumber, signature);
-        Assert.assertTrue(dataStorage1.add(dataToAdd, null));
-
-        // add with same seq nr  -> failure
-        newSequenceNumber = 3;
-        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirableMessage, newSequenceNumber));
-        signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
-        dataToAdd = new ProtectedData(data.expirableMessage, data.ttl, data.ownerPubKey, newSequenceNumber, signature);
-        Assert.assertFalse(dataStorage1.add(dataToAdd, null));
-
-        // add with same data but higher seq nr.  -> ok, ignore
-        newSequenceNumber = 4;
-        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirableMessage, newSequenceNumber));
-        signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
-        dataToAdd = new ProtectedData(data.expirableMessage, data.ttl, data.ownerPubKey, newSequenceNumber, signature);
-        Assert.assertTrue(dataStorage1.add(dataToAdd, null));
-
-        // remove with with same seq nr as prev. ignored -> failed
-        newSequenceNumber = 4;
-        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirableMessage, newSequenceNumber));
-        signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
-        dataToRemove = new ProtectedData(data.expirableMessage, data.ttl, data.ownerPubKey, newSequenceNumber, signature);
-        Assert.assertFalse(dataStorage1.remove(dataToRemove, null));
-
-        // remove with with higher seq nr -> ok
-        newSequenceNumber = 5;
-        hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirableMessage, newSequenceNumber));
-        signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
-        dataToRemove = new ProtectedData(data.expirableMessage, data.ttl, data.ownerPubKey, newSequenceNumber, signature);
-        Assert.assertTrue(dataStorage1.remove(dataToRemove, null));
-    }
-
-    @Test
-    public void testAddAndRemoveMailboxData() throws InterruptedException, NoSuchAlgorithmException, CertificateException,
-            KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
-        // sender 
-        MockMessage mockMessage = new MockMessage("MockMessage");
-        PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(networkNode1.getNodeAddress(),
-                encryptionService1.encryptAndSign(keyRing1.getPubKeyRing(), mockMessage),
-                Hash.getHash("aa"));
-        MailboxMessage expirableMailboxPayload = new MailboxMessage(prefixedSealedAndSignedMessage,
-                keyRing1.getSignatureKeyPair().getPublic(),
-                keyRing2.getSignatureKeyPair().getPublic());
-
-        ProtectedMailboxData data = dataStorage1.getMailboxDataWithSignedSeqNr(expirableMailboxPayload, storageSignatureKeyPair1, storageSignatureKeyPair2.getPublic());
-        Assert.assertTrue(dataStorage1.add(data, null));
-        Thread.sleep(sleepTime);
-        Assert.assertEquals(1, dataStorage1.getMap().size());
-
-        // receiver (storageSignatureKeyPair2)
-        int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirableMessage, newSequenceNumber));
-
-        byte[] signature;
-        ProtectedMailboxData dataToRemove;
-
-        // wrong sig -> fail
-        signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
-        dataToRemove = new ProtectedMailboxData(expirableMailboxPayload, data.ttl, storageSignatureKeyPair2.getPublic(), newSequenceNumber, signature, storageSignatureKeyPair2.getPublic());
-        Assert.assertFalse(dataStorage1.removeMailboxData(dataToRemove, null));
-
-        // wrong seq nr
-        signature = Sig.sign(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
-        dataToRemove = new ProtectedMailboxData(expirableMailboxPayload, data.ttl, storageSignatureKeyPair2.getPublic(), data.sequenceNumber, signature, storageSignatureKeyPair2.getPublic());
-        Assert.assertFalse(dataStorage1.removeMailboxData(dataToRemove, null));
-
-        // wrong signingKey
-        signature = Sig.sign(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
-        dataToRemove = new ProtectedMailboxData(expirableMailboxPayload, data.ttl, data.ownerPubKey, newSequenceNumber, signature, storageSignatureKeyPair2.getPublic());
-        Assert.assertFalse(dataStorage1.removeMailboxData(dataToRemove, null));
-
-        // wrong peerPubKey
-        signature = Sig.sign(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
-        dataToRemove = new ProtectedMailboxData(expirableMailboxPayload, data.ttl, storageSignatureKeyPair2.getPublic(), newSequenceNumber, signature, storageSignatureKeyPair1.getPublic());
-        Assert.assertFalse(dataStorage1.removeMailboxData(dataToRemove, null));
-
-        // receiver can remove it (storageSignatureKeyPair2) -> all ok
-        Assert.assertEquals(1, dataStorage1.getMap().size());
-        signature = Sig.sign(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
-        dataToRemove = new ProtectedMailboxData(expirableMailboxPayload, data.ttl, storageSignatureKeyPair2.getPublic(), newSequenceNumber, signature, storageSignatureKeyPair2.getPublic());
-        Assert.assertTrue(dataStorage1.removeMailboxData(dataToRemove, null));
-
-        Assert.assertEquals(0, dataStorage1.getMap().size());
-    }
-
-
-    /*@Test
-    public void testTryToHack() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
-        ProtectedData data = dataStorage1.getDataWithSignedSeqNr(mockData, storageSignatureKeyPair1);
-        Assert.assertTrue(dataStorage1.add(data, null));
-        Thread.sleep(sleepTime);
-        Assert.assertEquals(1, dataStorage1.getMap().size());
-        Assert.assertEquals(1, dataStorage2.getMap().size());
-
-        // hackers key pair is storageSignatureKeyPair2
-        // change seq nr. and signature: fails on both own and peers dataStorage
-        int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = cryptoService2.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
-        byte[] signature = cryptoService2.signStorageData(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
-        ProtectedData dataToAdd = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
-        Assert.assertFalse(dataStorage1.add(dataToAdd, null));
-        Assert.assertFalse(dataStorage2.add(dataToAdd, null));
-
-        // change seq nr. and signature and data pub key. fails on peers dataStorage, succeeds on own dataStorage 
-        newSequenceNumber = data.sequenceNumber + 2;
-        hashOfDataAndSeqNr = cryptoService2.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
-        signature = cryptoService2.signStorageData(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
-        dataToAdd = new ProtectedData(data.expirablePayload, data.ttl, storageSignatureKeyPair2.getPublic(), newSequenceNumber, signature);
-        Assert.assertTrue(dataStorage2.add(dataToAdd, null));
-        Assert.assertFalse(dataStorage1.add(dataToAdd, null));
-        Thread.sleep(sleepTime);
-        Assert.assertEquals(1, dataStorage2.getMap().size());
-        Thread.sleep(sleepTime);
-        Assert.assertEquals(1, dataStorage1.getMap().size());
-        Assert.assertEquals(data, dataStorage1.getMap().values().stream().findFirst().get());
-        Assert.assertEquals(dataToAdd, dataStorage2.getMap().values().stream().findFirst().get());
-        Assert.assertNotEquals(data, dataToAdd);
-
-        newSequenceNumber = data.sequenceNumber + 3;
-        hashOfDataAndSeqNr = cryptoService1.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
-        signature = cryptoService1.signStorageData(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
-        ProtectedData dataToRemove = new ProtectedData(data.expirablePayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature);
-        Assert.assertTrue(dataStorage1.remove(dataToRemove, null));
-        Assert.assertEquals(0, dataStorage1.getMap().size());
-    }*/
-
-   /* //@Test
-    public void testTryToHackMailboxData() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
-        MockMessage mockMessage = new MockMessage("MockMessage");
-        SealedAndSignedMessage sealedAndSignedMessage = cryptoService1.encryptAndSignMessage(keyRing1.getPubKeyRing(), mockMessage);
-        ExpirableMailboxPayload expirableMailboxPayload = new ExpirableMailboxPayload(sealedAndSignedMessage,
-                keyRing1.getStorageSignatureKeyPair().getPublic(),
-                keyRing2.getStorageSignatureKeyPair().getPublic());
-
-        // sender 
-        ProtectedMailboxData data = dataStorage1.getMailboxDataWithSignedSeqNr(expirableMailboxPayload, storageSignatureKeyPair1, storageSignatureKeyPair2.getPublic());
-        Assert.assertTrue(dataStorage1.add(data, null));
-        Thread.sleep(sleepTime);
-        Assert.assertEquals(1, dataStorage1.getMap().size());
-
-        // receiver (storageSignatureKeyPair2)
-        int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = cryptoService2.getHash(new P2PDataStorage.DataAndSeqNrPair(expirableMailboxPayload, newSequenceNumber));
-
-        byte[] signature;
-        ProtectedMailboxData dataToRemove;
-
-        // wrong sig -> fail
-        signature = cryptoService2.signStorageData(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
-        dataToRemove = new ProtectedMailboxData(expirableMailboxPayload, data.ttl, storageSignatureKeyPair2.getPublic(), newSequenceNumber, signature, storageSignatureKeyPair2.getPublic());
-        Assert.assertFalse(dataStorage1.removeMailboxData(dataToRemove, null));
-
-        // wrong seq nr
-        signature = cryptoService2.signStorageData(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
-        dataToRemove = new ProtectedMailboxData(expirableMailboxPayload, data.ttl, storageSignatureKeyPair2.getPublic(), data.sequenceNumber, signature, storageSignatureKeyPair2.getPublic());
-        Assert.assertFalse(dataStorage1.removeMailboxData(dataToRemove, null));
-
-        // wrong signingKey
-        signature = cryptoService2.signStorageData(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
-        dataToRemove = new ProtectedMailboxData(expirableMailboxPayload, data.ttl, data.ownerStoragePubKey, newSequenceNumber, signature, storageSignatureKeyPair2.getPublic());
-        Assert.assertFalse(dataStorage1.removeMailboxData(dataToRemove, null));
-
-        // wrong peerPubKey
-        signature = cryptoService2.signStorageData(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
-        dataToRemove = new ProtectedMailboxData(expirableMailboxPayload, data.ttl, storageSignatureKeyPair2.getPublic(), newSequenceNumber, signature, storageSignatureKeyPair1.getPublic());
-        Assert.assertFalse(dataStorage1.removeMailboxData(dataToRemove, null));
-
-        // all ok
-        Assert.assertEquals(1, dataStorage1.getMap().size());
-        signature = cryptoService2.signStorageData(storageSignatureKeyPair2.getPrivate(), hashOfDataAndSeqNr);
-        dataToRemove = new ProtectedMailboxData(expirableMailboxPayload, data.ttl, storageSignatureKeyPair2.getPublic(), newSequenceNumber, signature, storageSignatureKeyPair2.getPublic());
-        Assert.assertTrue(dataStorage1.removeMailboxData(dataToRemove, null));
-
-        Assert.assertEquals(0, dataStorage1.getMap().size());
-    }
-*/
 }

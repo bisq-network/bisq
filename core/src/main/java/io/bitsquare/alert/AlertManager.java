@@ -20,7 +20,7 @@ package io.bitsquare.alert;
 import com.google.inject.Inject;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
-import io.bitsquare.p2p.storage.ProtectedData;
+import io.bitsquare.p2p.storage.data.ProtectedData;
 import io.bitsquare.user.User;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;

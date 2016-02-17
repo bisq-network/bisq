@@ -16,7 +16,8 @@ public class TestUtils {
     private static final Logger log = LoggerFactory.getLogger(TestUtils.class);
 
     public static int sleepTime;
-
+    public static String test_dummy_dir = "test_dummy_dir";
+    
     public static KeyPair generateKeyPair() throws NoSuchAlgorithmException {
         long ts = System.currentTimeMillis();
         final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("DSA");
@@ -70,13 +71,13 @@ public class TestUtils {
             seedNodes.add(new NodeAddress("localhost:8002"));
             seedNodes.add(new NodeAddress("localhost:8003"));
             sleepTime = 100;
-            seedNode = new SeedNode("test_dummy_dir");
+            seedNode = new SeedNode(test_dummy_dir);
         } else {
             seedNodes.add(new NodeAddress("3omjuxn7z73pxoee.onion:8001"));
             seedNodes.add(new NodeAddress("j24fxqyghjetgpdx.onion:8002"));
             seedNodes.add(new NodeAddress("45367tl6unwec6kw.onion:8003"));
             sleepTime = 10000;
-            seedNode = new SeedNode("test_dummy_dir");
+            seedNode = new SeedNode(test_dummy_dir);
         }
 
         CountDownLatch latch = new CountDownLatch(1);

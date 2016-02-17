@@ -23,7 +23,7 @@ import java.util.Random;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class KeepAliveManager implements MessageListener {
+public class KeepAliveManager implements MessageListener, ConnectionListener {
     private static final Logger log = LoggerFactory.getLogger(KeepAliveManager.class);
 
     private static final int INTERVAL_SEC = new Random().nextInt(10) + 10;
@@ -44,6 +44,7 @@ public class KeepAliveManager implements MessageListener {
         this.peerManager = peerManager;
 
         networkNode.addMessageListener(this);
+        networkNode.addConnectionListener(this);
     }
 
     public void shutDown() {
@@ -51,6 +52,7 @@ public class KeepAliveManager implements MessageListener {
         shutDownInProgress = true;
 
         networkNode.removeMessageListener(this);
+        networkNode.removeConnectionListener(this);
         maintenanceHandlerMap.values().stream().forEach(KeepAliveHandler::cleanup);
 
         if (executor != null)
@@ -100,6 +102,28 @@ public class KeepAliveManager implements MessageListener {
                 }
             });
         }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // ConnectionListener implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onConnection(Connection connection) {
+        // clean up in case we could not clean up at disconnect
+        if (connection.getPeersNodeAddressOptional().isPresent())
+            maintenanceHandlerMap.remove(connection.getPeersNodeAddressOptional().get().getFullAddress());
+    }
+
+    @Override
+    public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
+        if (connection.getPeersNodeAddressOptional().isPresent())
+            maintenanceHandlerMap.remove(connection.getPeersNodeAddressOptional().get().getFullAddress());
+    }
+
+    @Override
+    public void onError(Throwable throwable) {
     }
 
 

@@ -89,6 +89,11 @@ class PeerExchangeHandler implements MessageListener {
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
             public void onSuccess(Connection connection) {
+                if (!connection.getPeersNodeAddressOptional().isPresent()) {
+                    connection.setPeersNodeAddress(nodeAddress);
+                    //TODO remove setPeersNodeAddress if never needed
+                    log.warn("sendGetPeersRequest: !connection.getPeersNodeAddressOptional().isPresent()");
+                }
                 PeerExchangeHandler.this.connection = connection;
                 connection.addMessageListener(PeerExchangeHandler.this);
                 log.trace("Send " + getPeersRequest + " to " + nodeAddress + " succeeded.");

@@ -161,19 +161,21 @@ public class Connection implements MessageListener {
         if (!stopped) {
             try {
                 String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
+                int size = ByteArrayUtils.objectToByteArray(message).length;
+
                 if (message instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
                     setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
                     log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                                     "Sending direct message to peer" +
-                                    "Write object to outputStream to peer: {} (uid={})\ntruncated message={}" +
+                                    "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                     "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, StringUtils.abbreviate(message.toString(), 100));
+                            peersNodeAddress, uid, StringUtils.abbreviate(message.toString(), 100), size);
                 } else {
                     log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                                    "Write object to outputStream to peer: {} (uid={})\ntruncated message={}" +
+                                    "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                     "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, StringUtils.abbreviate(message.toString(), 100));
+                            peersNodeAddress, uid, StringUtils.abbreviate(message.toString(), 100), size);
                 }
 
                 Object objectToWrite;
@@ -192,7 +194,8 @@ public class Connection implements MessageListener {
                     objectOutputStream.writeObject(objectToWrite);
                     objectOutputStream.flush();
 
-                    statistic.addSentBytes(ByteArrayUtils.objectToByteArray(objectToWrite).length);
+
+                    statistic.addSentBytes(size);
                     statistic.addSentMessage(message);
 
                     // We don't want to get the activity ts updated by ping/pong msg
@@ -272,7 +275,7 @@ public class Connection implements MessageListener {
         this.peerType = peerType;
     }
 
-    private void setPeersNodeAddress(NodeAddress peerNodeAddress) {
+    public void setPeersNodeAddress(NodeAddress peerNodeAddress) {
         checkNotNull(peerNodeAddress, "peerAddress must not be null");
         peersNodeAddressOptional = Optional.of(peerNodeAddress);
 
@@ -594,14 +597,16 @@ public class Connection implements MessageListener {
                         log.trace("InputHandler waiting for incoming messages.\n\tConnection=" + sharedModel.connection);
                         Object rawInputObject = objectInputStream.readObject();
 
+                        int size = ByteArrayUtils.objectToByteArray(rawInputObject).length;
                         log.info("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
                                         "New data arrived at inputHandler of connection {}.\n" +
-                                        "Received object (truncated)={}"
+                                        "Received object (truncated)={} / size={}"
                                         + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
                                 sharedModel.connection,
-                                StringUtils.abbreviate(rawInputObject.toString(), 100));
+                                StringUtils.abbreviate(rawInputObject.toString(), 100),
+                                size);
 
-                        int size = ByteArrayUtils.objectToByteArray(rawInputObject).length;
+
                         if (size > getMaxMsgSize()) {
                             reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED);
                             return;

@@ -25,7 +25,7 @@ import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.JsonExclude;
 import io.bitsquare.locale.Country;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.storage.messages.RequiresLiveOwnerData;
+import io.bitsquare.p2p.storage.messages.RequiresOwnerIsOnlineMessage;
 import io.bitsquare.p2p.storage.messages.StorageMessage;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class Offer implements StorageMessage, RequiresLiveOwnerData {
+public final class Offer implements StorageMessage, RequiresOwnerIsOnlineMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     @JsonExclude
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
@@ -55,7 +55,7 @@ public final class Offer implements StorageMessage, RequiresLiveOwnerData {
     private static final Logger log = LoggerFactory.getLogger(Offer.class);
 
     public static final long TTL = TimeUnit.SECONDS.toMillis(60);
-    
+
     public final static String TAC_OFFERER = "When placing that offer I accept that anyone who fulfills my conditions can " +
             "take that offer.";
     public static final String TAC_TAKER = "With taking the offer I commit to the trade conditions as defined.";

@@ -30,7 +30,7 @@ import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
-import io.bitsquare.p2p.storage.ProtectedData;
+import io.bitsquare.p2p.storage.data.ProtectedData;
 import io.bitsquare.user.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
