@@ -88,10 +88,15 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
 
     @Override
     public void onConnection(Connection connection) {
+        if (connection.getPeersNodeAddressOptional().isPresent())
+            peerExchangeHandlerMap.remove(connection.getPeersNodeAddressOptional().get().getFullAddress());
     }
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
+        if (connection.getPeersNodeAddressOptional().isPresent())
+            peerExchangeHandlerMap.remove(connection.getPeersNodeAddressOptional().get().getFullAddress());
+        
         boolean lostAllConnections = networkNode.getAllConnections().isEmpty();
         if (lostAllConnections || connectToMorePeersTimer == null) {
             long delaySec = lostAllConnections ? RETRY_DELAY_AFTER_ALL_CON_LOST_SEC : RETRY_DELAY_SEC;
