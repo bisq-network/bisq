@@ -23,6 +23,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.arbitration.messages.DisputeCommunicationMessage;
+import io.bitsquare.arbitration.payload.Attachment;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.common.view.ActivatableView;
@@ -83,7 +84,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private final ContractPopup contractPopup;
     private final TradeDetailsPopup tradeDetailsPopup;
 
-    private final List<DisputeCommunicationMessage.Attachment> tempAttachments = new ArrayList<>();
+    private final List<Attachment> tempAttachments = new ArrayList<>();
 
     private TableView<Dispute> disputesTable;
     private Dispute selectedDispute;
@@ -273,7 +274,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     try (InputStream inputStream = url.openStream()) {
                         byte[] filesAsBytes = ByteStreams.toByteArray(inputStream);
                         if (filesAsBytes.length <= Connection.getMaxMsgSize()) {
-                            tempAttachments.add(new DisputeCommunicationMessage.Attachment(result.getName(), filesAsBytes));
+                            tempAttachments.add(new Attachment(result.getName(), filesAsBytes));
                             inputTextArea.setText(inputTextArea.getText() + "\n[Attachment " + result.getName() + "]");
                         } else {
                             new Popup().warning("The max. allowed file size is " + maxSizeInKB + " kB.").show();
@@ -292,7 +293,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         }
     }
 
-    private void onOpenAttachment(DisputeCommunicationMessage.Attachment attachment) {
+    private void onOpenAttachment(Attachment attachment) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save file to disk");
         fileChooser.setInitialFileName(attachment.getFileName());

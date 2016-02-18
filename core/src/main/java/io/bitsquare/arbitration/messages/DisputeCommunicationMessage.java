@@ -18,6 +18,7 @@
 package io.bitsquare.arbitration.messages;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.arbitration.payload.Attachment;
 import io.bitsquare.p2p.NodeAddress;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -26,9 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -179,59 +178,5 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 ", message='" + message + '\'' +
                 ", attachments=" + attachments +
                 '}';
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Static classes
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public static class Attachment implements Serializable {
-        // That object is sent over the wire, so we need to take care of version compatibility.
-        private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-        private static final Logger log = LoggerFactory.getLogger(Attachment.class);
-
-        private final byte[] bytes;
-        private final String fileName;
-
-        public Attachment(String fileName, byte[] bytes) {
-            this.fileName = fileName;
-            this.bytes = bytes;
-        }
-
-        public byte[] getBytes() {
-            return bytes;
-        }
-
-        public String getFileName() {
-            return fileName;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof Attachment)) return false;
-
-            Attachment that = (Attachment) o;
-
-            if (!Arrays.equals(bytes, that.bytes)) return false;
-            return !(fileName != null ? !fileName.equals(that.fileName) : that.fileName != null);
-
-        }
-
-        @Override
-        public int hashCode() {
-            int result = bytes != null ? Arrays.hashCode(bytes) : 0;
-            result = 31 * result + (fileName != null ? fileName.hashCode() : 0);
-            return result;
-        }
-
-        @Override
-        public String toString() {
-            return "Attachment{" +
-                    "description=" + fileName +
-                    ", data=" + Arrays.toString(bytes) +
-                    '}';
-        }
     }
 }

@@ -6,7 +6,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 // Util for comparing byte arrays
-public class ByteArray implements Serializable {
+public final class ByteArray implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 

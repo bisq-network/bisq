@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bitsquare.app.Log;
 import io.bitsquare.arbitration.messages.*;
+import io.bitsquare.arbitration.payload.Attachment;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
@@ -274,7 +275,7 @@ public class DisputeManager {
     }
 
     // traders send msg to the arbitrator or arbitrator to 1 trader (trader to trader is not allowed)
-    public DisputeCommunicationMessage sendDisputeDirectMessage(Dispute dispute, String text, ArrayList<DisputeCommunicationMessage.Attachment> attachments) {
+    public DisputeCommunicationMessage sendDisputeDirectMessage(Dispute dispute, String text, ArrayList<Attachment> attachments) {
         DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(dispute.getTradeId(),
                 dispute.getTraderPubKeyRing().hashCode(),
                 isTrader(dispute),

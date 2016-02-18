@@ -35,7 +35,7 @@ import java.security.spec.X509EncodedKeySpec;
  * Same as KeyRing but with public keys only.
  * Used to send public keys over the wire to other peer.
  */
-public class PubKeyRing implements Serializable {
+public final class PubKeyRing implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
