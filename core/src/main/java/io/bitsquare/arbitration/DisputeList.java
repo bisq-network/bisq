@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 
-public class DisputeList<DisputeCase> extends ArrayList<DisputeCase> implements Persistable {
+public final class DisputeList<DisputeCase> extends ArrayList<DisputeCase> implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

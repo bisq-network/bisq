@@ -37,7 +37,7 @@ import java.io.ObjectInputStream;
  * That way we have a kind of separated trade wallet, isolated from other transactions and avoiding coin merge.
  * If we would not avoid coin merge the user would lose privacy between trades.
  */
-public class AddressEntry implements Persistable {
+public final class AddressEntry implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

@@ -18,12 +18,11 @@
 package io.bitsquare.locale;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.user.Preferences;
 
 import java.util.Currency;
 
-public class FiatCurrency extends TradeCurrency implements Persistable {
+public final class FiatCurrency extends TradeCurrency {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

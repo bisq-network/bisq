@@ -22,7 +22,7 @@ import io.bitsquare.payment.PaymentAccount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class USPostalMoneyOrderAccount extends PaymentAccount {
+public final class USPostalMoneyOrderAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
@@ -32,7 +32,56 @@ public class USPostalMoneyOrderAccount extends PaymentAccount {
     private String iban;
     private String bic;
 
-
+    /*
+ - Message (interface):
+     - GetDataRequest (Interface)
+         - PreliminaryGetDataRequest (final class) impl. AnonymousMessage
+         - GetUpdatedDataRequest (final class) impl. SendersNodeAddressMessage
+     - SendersNodeAddressMessage (Interface)
+         - PrefixedSealedAndSignedMessage (final class) impl. MailboxMessage
+         - GetUpdatedDataRequest (final class) impl. GetDataRequest
+         - GetPeersRequest (final class) extends PeerExchangeMessage	
+     - AnonymousMessage (Interface)
+         - PreliminaryGetDataRequest (final class) impl. GetDataRequest
+     - DirectMessage (Interface)
+         - OfferMessage (abstract class)
+             - OfferAvailabilityRequest (final class) 
+             - OfferAvailabilityResponse (final class) 
+         - TradeMessage (abstract class)
+             - DepositTxPublishedMessage (final class) implements MailboxMessage
+             - FiatTransferStartedMessage (final class) implements MailboxMessage
+             - FinalizePayoutTxRequest (final class) implements MailboxMessage
+             - PayDepositRequest (final class) implements MailboxMessage
+             - PayoutTxFinalizedMessage (final class) implements MailboxMessage
+             - PublishDepositTxRequest (final class) 
+         - DecryptedMsgWithPubKey (final class)
+         - MailboxMessage (Interface)
+             - PrefixedSealedAndSignedMessage (final class) implements SendersNodeAddressMessage
+             - DisputeMessage (abstract class)
+                 - DisputeCommunicationMessage (final class) 
+                 - DisputeResultMessage (final class) 
+                 - OpenNewDisputeMessage (final class) 
+                 - PeerOpenedDisputeMessage (final class) 
+                 - PeerPublishedPayoutTxMessage (final class) 
+             - DepositTxPublishedMessage (final class) extends TradeMessage
+             - FiatTransferStartedMessage (final class) extends TradeMessage
+             - FinalizePayoutTxRequest (final class) extends TradeMessage
+             - PayDepositRequest (final class) extends TradeMessage
+             - PayoutTxFinalizedMessage (final class) extends TradeMessage
+     - DataBroadcastMessage (abstract class)
+         - AddDataMessage (final class)
+         - RefreshTTLMessage (final class)
+         - RemoveDataMessage (final class)
+         - RemoveMailboxDataMessage (final class)
+     - PeerExchangeMessage (abstract class)
+         - GetPeersRequest (final class) implements SendersNodeAddressMessage 
+         - GetPeersResponse (final class) 
+     - KeepAliveMessage (abstract class)
+         - Ping (final class)   
+         - Pong (final class) 
+     - GetDataResponse (final class)
+     - CloseConnectionMessage (final class)
+     */
     private USPostalMoneyOrderAccount() {
         super(null /*PaymentMethod.US_POSTAL_MONEY_ORDER*/);
     }

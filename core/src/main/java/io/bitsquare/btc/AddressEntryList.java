@@ -31,7 +31,7 @@ import java.util.ArrayList;
 /**
  * The List supporting our persistence solution.
  */
-public class AddressEntryList extends ArrayList<AddressEntry> implements Persistable {
+public final class AddressEntryList extends ArrayList<AddressEntry> implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
     private static final Logger log = LoggerFactory.getLogger(AddressEntryList.class);

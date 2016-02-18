@@ -56,7 +56,7 @@ import java.util.Date;
  * Holds all data which are relevant to the trade, but not those which are only needed in the trade process as shared data between tasks. Those data are
  * stored in the task model.
  */
-abstract public class Trade implements Tradable, Model {
+public abstract class Trade implements Tradable, Model {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

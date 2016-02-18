@@ -31,11 +31,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class BuyerAsOffererTrade extends BuyerTrade implements OffererTrade, Serializable {
+public final class BuyerAsOffererTrade extends BuyerTrade implements OffererTrade {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
  * The User is persisted locally.
  * It must never be transmitted over the wire (messageKeyPair contains private key!).
  */
-public class User implements Persistable {
+public final class User implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

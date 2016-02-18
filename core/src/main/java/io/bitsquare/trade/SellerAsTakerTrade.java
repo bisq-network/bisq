@@ -28,11 +28,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.Serializable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class SellerAsTakerTrade extends SellerTrade implements TakerTrade, Serializable {
+public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

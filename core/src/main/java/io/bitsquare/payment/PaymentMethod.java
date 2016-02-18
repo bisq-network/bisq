@@ -28,7 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 
 // Don't use Enum as it breaks serialisation when changing entries and we want to stay flexible here
-public class PaymentMethod implements Persistable, Comparable {
+public final class PaymentMethod implements Persistable, Comparable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

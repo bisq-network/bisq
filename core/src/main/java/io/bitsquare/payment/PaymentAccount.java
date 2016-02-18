@@ -30,7 +30,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-public class PaymentAccount implements Persistable {
+public abstract class PaymentAccount implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

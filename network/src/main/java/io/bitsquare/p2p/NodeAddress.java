@@ -7,7 +7,7 @@ import io.bitsquare.common.wire.Payload;
 
 import java.util.regex.Pattern;
 
-public class NodeAddress implements Persistable, Payload {
+public final class NodeAddress implements Persistable, Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 

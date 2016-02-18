@@ -20,7 +20,7 @@ package io.bitsquare.payment;
 import io.bitsquare.app.Version;
 import io.bitsquare.locale.FiatCurrency;
 
-public class PerfectMoneyAccount extends PaymentAccount {
+public final class PerfectMoneyAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

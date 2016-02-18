@@ -23,7 +23,7 @@ import io.bitsquare.common.persistance.Persistable;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-public class Region implements Persistable {
+public final class Region implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
