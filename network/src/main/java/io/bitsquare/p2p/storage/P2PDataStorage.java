@@ -3,7 +3,7 @@ package io.bitsquare.p2p.storage;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.MoreExecutors;
 import io.bitsquare.app.Log;
-import io.bitsquare.common.ByteArray;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.CryptoException;
 import io.bitsquare.common.crypto.Hash;
@@ -28,10 +28,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -490,8 +487,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     // Static class
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static class DataAndSeqNrPair implements Serializable {
-        // data are only used for getting cryptographic hash from both values
+    // Used as container for calculating cryptographic hash of data and sequenceNumber
+    public static final class DataAndSeqNrPair implements Serializable {
+        // data are only used for calculating cryptographic hash from both values so they are kept private
         private final Serializable data;
         private final int sequenceNumber;
 
@@ -508,5 +506,34 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     '}';
         }
     }
+
+    // Used as key object in map for cryptographic hash of stored data as byte[] as primitive data type cannot be 
+    // used as key
+    public static final class ByteArray implements Serializable {
+        // That object is saved to disc. We need to take care of changes to not break deserialization.
+        private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
+
+        public final byte[] bytes;
+
+        public ByteArray(byte[] bytes) {
+            this.bytes = bytes;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof ByteArray)) return false;
+
+            ByteArray byteArray = (ByteArray) o;
+
+            return Arrays.equals(bytes, byteArray.bytes);
+        }
+
+        @Override
+        public int hashCode() {
+            return bytes != null ? Arrays.hashCode(bytes) : 0;
+        }
+    }
+
 
 }
