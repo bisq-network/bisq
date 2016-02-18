@@ -1,11 +1,14 @@
 package io.bitsquare.http;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
 // TODO route over tor
-public class HttpClient implements Serializable {
+public class HttpClient {
 
     private final String baseUrl;
 

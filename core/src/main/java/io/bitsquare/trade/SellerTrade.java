@@ -26,11 +26,9 @@ import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
-
 import static com.google.common.base.Preconditions.checkArgument;
 
-public abstract class SellerTrade extends Trade implements Serializable {
+public abstract class SellerTrade extends Trade {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

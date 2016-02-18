@@ -18,14 +18,14 @@
 package io.bitsquare.gui.common.view;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.persistance.Persistable;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-public class ViewPath extends ArrayList<Class<? extends View>> implements Serializable {
+public class ViewPath extends ArrayList<Class<? extends View>> implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

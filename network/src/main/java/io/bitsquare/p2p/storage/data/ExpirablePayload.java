@@ -1,6 +1,6 @@
-package io.bitsquare.p2p.storage.messages;
+package io.bitsquare.p2p.storage.data;
 
-import java.io.Serializable;
+import io.bitsquare.common.wire.Payload;
 
 /**
  * Messages which support a time to live
@@ -10,7 +10,7 @@ import java.io.Serializable;
  * @see StoragePayload
  * @see MailboxPayload
  */
-public interface ExpirablePayload extends Serializable {
+public interface ExpirablePayload extends Payload {
     /**
      * @return Time to live in milli seconds
      */

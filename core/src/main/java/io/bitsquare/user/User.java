@@ -21,6 +21,7 @@ import io.bitsquare.alert.Alert;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.p2p.NodeAddress;
@@ -38,7 +39,6 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
  * The User is persisted locally.
  * It must never be transmitted over the wire (messageKeyPair contains private key!).
  */
-public class User implements Serializable {
+public class User implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

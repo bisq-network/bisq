@@ -20,6 +20,7 @@ package io.bitsquare.arbitration;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.messages.DisputeCommunicationMessage;
 import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.common.wire.Payload;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Contract;
 import javafx.beans.property.*;
@@ -32,13 +33,12 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-public final class Dispute implements Serializable {
+public final class Dispute implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final Logger log = LoggerFactory.getLogger(Dispute.class);

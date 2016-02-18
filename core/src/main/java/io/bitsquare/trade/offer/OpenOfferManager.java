@@ -122,13 +122,12 @@ public class OpenOfferManager {
         });
 
         NetworkNode networkNode = p2PService.getNetworkNode();
+
+        // TODO: Use check for detecting inactivity instead. run timer and check if elapsed time is in expected range, 
+        // if not we have been in standby and need a republish
         networkNode.addConnectionListener(new ConnectionListener() {
             @Override
             public void onConnection(Connection connection) {
-                log.error("ConnectionListener onConnection size " + networkNode.getAllConnections().size());
-                log.error("ConnectionListener onConnection lostAllConnections " + lostAllConnections);
-                log.error("ConnectionListener onConnection allowRefreshOffers " + allowRefreshOffers);
-                log.error("ConnectionListener onConnection republishOffersTime " + republishOffersTime);
                 if (lostAllConnections) {
                     lostAllConnections = false;
                     allowRefreshOffers = false;
@@ -148,7 +147,6 @@ public class OpenOfferManager {
 
             @Override
             public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-                log.error("ConnectionListener onDisconnect size " + networkNode.getAllConnections().size());
                 lostAllConnections = networkNode.getAllConnections().isEmpty();
                 if (lostAllConnections)
                     allowRefreshOffers = false;
@@ -225,7 +223,6 @@ public class OpenOfferManager {
     }
 
     private void republishOffers() {
-        log.error("republishOffers ");
         Log.traceCall("Number of offer for republish: " + openOffers.size());
         for (OpenOffer openOffer : openOffers) {
             offerBookService.republishOffers(openOffer.getOffer(),

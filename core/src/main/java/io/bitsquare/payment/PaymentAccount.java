@@ -18,19 +18,19 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.TradeCurrency;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-public class PaymentAccount implements Serializable {
+public class PaymentAccount implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

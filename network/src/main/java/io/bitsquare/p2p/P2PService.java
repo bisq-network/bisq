@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.ProgramArguments;
-import io.bitsquare.common.ByteArray;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.CryptoException;
 import io.bitsquare.common.crypto.KeyRing;
@@ -25,12 +24,8 @@ import io.bitsquare.p2p.peers.peerexchange.PeerExchangeManager;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.P2PDataStorage;
-import io.bitsquare.p2p.storage.data.ProtectedData;
-import io.bitsquare.p2p.storage.data.ProtectedMailboxData;
-import io.bitsquare.p2p.storage.data.RefreshTTLBundle;
+import io.bitsquare.p2p.storage.data.*;
 import io.bitsquare.p2p.storage.messages.AddDataMessage;
-import io.bitsquare.p2p.storage.messages.ExpirablePayload;
-import io.bitsquare.p2p.storage.messages.MailboxPayload;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import org.fxmisc.easybind.EasyBind;
@@ -737,7 +732,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         return numConnectedPeers;
     }
 
-    public Map<ByteArray, ProtectedData> getDataMap() {
+    public Map<P2PDataStorage.ByteArray, ProtectedData> getDataMap() {
         return p2PDataStorage.getMap();
     }
 

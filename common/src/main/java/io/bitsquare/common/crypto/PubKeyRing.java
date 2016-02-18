@@ -18,12 +18,12 @@
 package io.bitsquare.common.crypto;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.Payload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -35,7 +35,7 @@ import java.security.spec.X509EncodedKeySpec;
  * Same as KeyRing but with public keys only.
  * Used to send public keys over the wire to other peer.
  */
-public final class PubKeyRing implements Serializable {
+public final class PubKeyRing implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 

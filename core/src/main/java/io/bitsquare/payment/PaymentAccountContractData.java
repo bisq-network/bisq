@@ -18,11 +18,11 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.Payload;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 
-public abstract class PaymentAccountContractData implements Serializable {
+public abstract class PaymentAccountContractData implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 

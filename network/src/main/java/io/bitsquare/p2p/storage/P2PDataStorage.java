@@ -8,15 +8,14 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.CryptoException;
 import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.crypto.Sig;
-import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.common.wire.Payload;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.Broadcaster;
-import io.bitsquare.p2p.storage.data.ProtectedData;
-import io.bitsquare.p2p.storage.data.ProtectedMailboxData;
-import io.bitsquare.p2p.storage.data.RefreshTTLBundle;
+import io.bitsquare.p2p.storage.data.*;
 import io.bitsquare.p2p.storage.messages.*;
 import io.bitsquare.storage.Storage;
 import org.apache.commons.lang3.StringUtils;
@@ -44,7 +43,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     private final Broadcaster broadcaster;
     private final Map<ByteArray, ProtectedData> map = new ConcurrentHashMap<>();
     private final CopyOnWriteArraySet<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArraySet<>();
-    private HashMap<ByteArray, Tuple2<Integer, Long>> sequenceNumberMap = new HashMap<>();
+    private HashMap<ByteArray, MapValue> sequenceNumberMap = new HashMap<>();
     private final Storage<HashMap> storage;
     private final ScheduledThreadPoolExecutor removeExpiredEntriesExecutor;
 
@@ -65,7 +64,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
     private void init() {
-        HashMap<ByteArray, Tuple2<Integer, Long>> persisted = storage.initAndGetPersisted("SequenceNumberMap");
+        HashMap<ByteArray, MapValue> persisted = storage.initAndGetPersisted("SequenceNumberMap");
         if (persisted != null)
             sequenceNumberMap = getPurgedSequenceNumberMap(persisted);
 
@@ -192,9 +191,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             // Republished data have a larger sequence number. We set the rePublish flag to enable broadcasting 
             // even we had the data with the old seq nr. already
             if (sequenceNumberMap.containsKey(hashOfPayload) &&
-                    protectedData.sequenceNumber > sequenceNumberMap.get(hashOfPayload).first)
+                    protectedData.sequenceNumber > sequenceNumberMap.get(hashOfPayload).sequenceNr)
 
-                sequenceNumberMap.put(hashOfPayload, new Tuple2<>(protectedData.sequenceNumber, System.currentTimeMillis()));
+                sequenceNumberMap.put(hashOfPayload, new MapValue(protectedData.sequenceNumber, System.currentTimeMillis()));
             storage.queueUpForSave(sequenceNumberMap, 5000);
 
             StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n");
@@ -226,7 +225,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         ByteArray hashOfPayload = new ByteArray(refreshTTLBundle.hashOfPayload);
 
         if (map.containsKey(hashOfPayload)) {
-            if (sequenceNumberMap.containsKey(hashOfPayload) && sequenceNumberMap.get(hashOfPayload).first == sequenceNumber) {
+            if (sequenceNumberMap.containsKey(hashOfPayload) && sequenceNumberMap.get(hashOfPayload).sequenceNr == sequenceNumber) {
                 log.warn("We got that message with that seq nr already from another peer. We ignore that message.");
                 return true;
             } else {
@@ -239,7 +238,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     ProtectedData storedData = map.get(hashOfPayload);
                     storedData.refreshDate();
 
-                    sequenceNumberMap.put(hashOfPayload, new Tuple2<>(sequenceNumber, System.currentTimeMillis()));
+                    sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, System.currentTimeMillis()));
                     storage.queueUpForSave(sequenceNumberMap, 5000);
 
                     StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n");
@@ -278,7 +277,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
             broadcast(new RemoveDataMessage(protectedData), sender);
 
-            sequenceNumberMap.put(hashOfPayload, new Tuple2<>(protectedData.sequenceNumber, System.currentTimeMillis()));
+            sequenceNumberMap.put(hashOfPayload, new MapValue(protectedData.sequenceNumber, System.currentTimeMillis()));
             storage.queueUpForSave(sequenceNumberMap, 5000);
         } else {
             log.debug("remove failed");
@@ -303,7 +302,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
             broadcast(new RemoveMailboxDataMessage(protectedMailboxData), sender);
 
-            sequenceNumberMap.put(hashOfData, new Tuple2<>(protectedMailboxData.sequenceNumber, System.currentTimeMillis()));
+            sequenceNumberMap.put(hashOfData, new MapValue(protectedMailboxData.sequenceNumber, System.currentTimeMillis()));
             storage.queueUpForSave(sequenceNumberMap, 5000);
         } else {
             log.debug("removeMailboxData failed");
@@ -321,7 +320,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         ByteArray hashOfData = getHashAsByteArray(payload);
         int sequenceNumber;
         if (sequenceNumberMap.containsKey(hashOfData))
-            sequenceNumber = sequenceNumberMap.get(hashOfData).first + 1;
+            sequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr + 1;
         else
             sequenceNumber = 0;
 
@@ -335,7 +334,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         ByteArray hashOfPayload = getHashAsByteArray(payload);
         int sequenceNumber;
         if (sequenceNumberMap.containsKey(hashOfPayload))
-            sequenceNumber = sequenceNumberMap.get(hashOfPayload).first + 1;
+            sequenceNumber = sequenceNumberMap.get(hashOfPayload).sequenceNr + 1;
         else
             sequenceNumber = 0;
 
@@ -351,7 +350,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         ByteArray hashOfData = getHashAsByteArray(expirableMailboxPayload);
         int sequenceNumber;
         if (sequenceNumberMap.containsKey(hashOfData))
-            sequenceNumber = sequenceNumberMap.get(hashOfData).first + 1;
+            sequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr + 1;
         else
             sequenceNumber = 0;
 
@@ -385,7 +384,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
     private boolean isSequenceNrValid(int newSequenceNumber, ByteArray hashOfData) {
         if (sequenceNumberMap.containsKey(hashOfData)) {
-            Integer storedSequenceNumber = sequenceNumberMap.get(hashOfData).first;
+            Integer storedSequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr;
             if (newSequenceNumber < storedSequenceNumber) {
                 log.warn("Sequence number is invalid. newSequenceNumber="
                         + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber);
@@ -472,11 +471,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         return new ByteArray(Hash.getHash(data));
     }
 
-    private HashMap<ByteArray, Tuple2<Integer, Long>> getPurgedSequenceNumberMap(HashMap<ByteArray, Tuple2<Integer, Long>> persisted) {
-        HashMap<ByteArray, Tuple2<Integer, Long>> purged = new HashMap<>();
+    private HashMap<ByteArray, MapValue> getPurgedSequenceNumberMap(HashMap<ByteArray, MapValue> persisted) {
+        HashMap<ByteArray, MapValue> purged = new HashMap<>();
         long maxAgeTs = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(10);
         persisted.entrySet().stream().forEach(entry -> {
-            if (entry.getValue().second > maxAgeTs)
+            if (entry.getValue().timeStamp > maxAgeTs)
                 purged.put(entry.getKey(), entry.getValue());
         });
         return purged;
@@ -487,13 +486,18 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     // Static class
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Used as container for calculating cryptographic hash of data and sequenceNumber
+
+    /**
+     * Used as container for calculating cryptographic hash of data and sequenceNumber.
+     * Needs to be Serializable because we convert the object to a byte array via java serialization
+     * before calculating the hash.
+     */
     public static final class DataAndSeqNrPair implements Serializable {
         // data are only used for calculating cryptographic hash from both values so they are kept private
-        private final Serializable data;
+        private final Payload data;
         private final int sequenceNumber;
 
-        public DataAndSeqNrPair(Serializable data, int sequenceNumber) {
+        public DataAndSeqNrPair(Payload data, int sequenceNumber) {
             this.data = data;
             this.sequenceNumber = sequenceNumber;
         }
@@ -507,9 +511,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         }
     }
 
-    // Used as key object in map for cryptographic hash of stored data as byte[] as primitive data type cannot be 
-    // used as key
-    public static final class ByteArray implements Serializable {
+
+    /**
+     * Used as key object in map for cryptographic hash of stored data as byte[] as primitive data type cannot be
+     * used as key
+     */
+    public static final class ByteArray implements Persistable {
         // That object is saved to disc. We need to take care of changes to not break deserialization.
         private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
@@ -536,4 +543,46 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
 
+    /**
+     * Used as value in map
+     */
+    private static final class MapValue implements Persistable {
+        // That object is saved to disc. We need to take care of changes to not break deserialization.
+        private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
+
+        final public int sequenceNr;
+        final public long timeStamp;
+
+        public MapValue(int sequenceNr, long timeStamp) {
+            this.sequenceNr = sequenceNr;
+            this.timeStamp = timeStamp;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof MapValue)) return false;
+
+            MapValue mapValue = (MapValue) o;
+
+            if (sequenceNr != mapValue.sequenceNr) return false;
+            return timeStamp == mapValue.timeStamp;
+
+        }
+
+        @Override
+        public int hashCode() {
+            int result = sequenceNr;
+            result = 31 * result + (int) (timeStamp ^ (timeStamp >>> 32));
+            return result;
+        }
+
+        @Override
+        public String toString() {
+            return "MapValue{" +
+                    "sequenceNr=" + sequenceNr +
+                    ", timeStamp=" + timeStamp +
+                    '}';
+        }
+    }
 }

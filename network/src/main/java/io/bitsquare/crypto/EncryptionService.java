@@ -38,11 +38,11 @@ public class EncryptionService {
     }
 
     public DecryptedMsgWithPubKey decryptAndVerify(SealedAndSigned sealedAndSigned) throws CryptoException {
-        DecryptedPayloadWithPubKey decryptedPayloadWithPubKey = Encryption.decryptHybridWithSignature(sealedAndSigned,
+        DecryptedDataTuple decryptedDataTuple = Encryption.decryptHybridWithSignature(sealedAndSigned,
                 keyRing.getEncryptionKeyPair().getPrivate());
-        if (decryptedPayloadWithPubKey.payload instanceof Message) {
-            return new DecryptedMsgWithPubKey((Message) decryptedPayloadWithPubKey.payload,
-                    decryptedPayloadWithPubKey.sigPublicKey);
+        if (decryptedDataTuple.payload instanceof Message) {
+            return new DecryptedMsgWithPubKey((Message) decryptedDataTuple.payload,
+                    decryptedDataTuple.sigPublicKey);
         } else {
             throw new CryptoException("decryptedPayloadWithPubKey.payload is not instance of Message");
         }

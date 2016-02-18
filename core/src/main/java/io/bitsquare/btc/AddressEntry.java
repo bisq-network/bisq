@@ -18,6 +18,7 @@
 package io.bitsquare.btc;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.persistance.Persistable;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.crypto.DeterministicKey;
@@ -30,14 +31,13 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 
 /**
  * Every trade use a addressEntry with a dedicated address for all transactions related to the trade.
  * That way we have a kind of separated trade wallet, isolated from other transactions and avoiding coin merge.
  * If we would not avoid coin merge the user would lose privacy between trades.
  */
-public class AddressEntry implements Serializable {
+public class AddressEntry implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

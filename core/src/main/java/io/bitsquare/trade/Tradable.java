@@ -17,12 +17,12 @@
 
 package io.bitsquare.trade;
 
+import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.trade.offer.Offer;
 
-import java.io.Serializable;
 import java.util.Date;
 
-public interface Tradable extends Serializable {
+public interface Tradable extends Persistable {
     Offer getOffer();
 
     Date getDate();

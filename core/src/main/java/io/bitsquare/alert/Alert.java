@@ -18,7 +18,7 @@
 package io.bitsquare.alert;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.storage.messages.StoragePayload;
+import io.bitsquare.p2p.storage.data.StoragePayload;
 
 import java.security.PublicKey;
 import java.util.concurrent.TimeUnit;

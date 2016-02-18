@@ -22,9 +22,7 @@ import io.bitsquare.locale.CurrencyUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
-
-public class OKPayAccount extends PaymentAccount implements Serializable {
+public class OKPayAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

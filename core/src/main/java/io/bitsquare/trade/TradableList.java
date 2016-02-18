@@ -18,6 +18,7 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.storage.Storage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -26,10 +27,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 
-public class TradableList<T extends Tradable> extends ArrayList<T> implements Serializable {
+public class TradableList<T extends Tradable> extends ArrayList<T> implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

@@ -18,11 +18,11 @@
 package io.bitsquare.btc.data;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.Payload;
 
-import java.io.Serializable;
 import java.util.Arrays;
 
-public final class RawInput implements Serializable {
+public final class RawInput implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 

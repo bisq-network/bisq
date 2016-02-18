@@ -20,20 +20,20 @@ package io.bitsquare.trade;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.JsonExclude;
+import io.bitsquare.common.wire.Payload;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.offer.Offer;
 import org.bitcoinj.core.Coin;
 
 import javax.annotation.concurrent.Immutable;
-import java.io.Serializable;
 import java.util.Arrays;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @SuppressWarnings("WeakerAccess")
 @Immutable
-public final class Contract implements Serializable {
+public final class Contract implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     @JsonExclude
     public static final long serialVersionUID = Version.P2P_NETWORK_VERSION;

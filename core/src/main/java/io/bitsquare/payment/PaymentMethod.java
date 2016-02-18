@@ -18,17 +18,17 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.persistance.Persistable;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 // Don't use Enum as it breaks serialisation when changing entries and we want to stay flexible here
-public class PaymentMethod implements Serializable, Comparable {
+public class PaymentMethod implements Persistable, Comparable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

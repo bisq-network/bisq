@@ -21,6 +21,7 @@ import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
@@ -39,10 +40,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.io.Serializable;
 import java.util.*;
 
-public class Preferences implements Serializable {
+public class Preferences implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

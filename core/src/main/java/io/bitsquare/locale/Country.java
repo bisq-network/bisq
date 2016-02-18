@@ -18,12 +18,12 @@
 package io.bitsquare.locale;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.persistance.Persistable;
 
 import javax.annotation.concurrent.Immutable;
-import java.io.Serializable;
 
 @Immutable
-public class Country implements Serializable {
+public class Country implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

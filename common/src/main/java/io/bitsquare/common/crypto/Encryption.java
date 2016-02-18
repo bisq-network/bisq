@@ -233,7 +233,7 @@ public class Encryption {
      * @return A DecryptedPayloadWithPubKey object.
      * @throws CryptoException
      */
-    public static DecryptedPayloadWithPubKey decryptHybridWithSignature(SealedAndSigned sealedAndSigned, PrivateKey privateKey) throws CryptoException {
+    public static DecryptedDataTuple decryptHybridWithSignature(SealedAndSigned sealedAndSigned, PrivateKey privateKey) throws CryptoException {
         SecretKey secretKey = getSecretKeyFromBytes(decrypt(sealedAndSigned.encryptedSecretKey, privateKey));
         boolean isValid = Sig.verify(sealedAndSigned.sigPublicKey,
                 Hash.getHash(sealedAndSigned.encryptedPayloadWithHmac),
@@ -242,7 +242,7 @@ public class Encryption {
             throw new CryptoException("Signature verification failed.");
 
         Serializable decryptedPayload = Utilities.deserialize(decryptPayloadWithHmac(sealedAndSigned.encryptedPayloadWithHmac, secretKey));
-        return new DecryptedPayloadWithPubKey(decryptedPayload, sealedAndSigned.sigPublicKey);
+        return new DecryptedDataTuple(decryptedPayload, sealedAndSigned.sigPublicKey);
     }
 
 

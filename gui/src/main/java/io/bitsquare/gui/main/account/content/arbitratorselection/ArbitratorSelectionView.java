@@ -90,7 +90,8 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
     @Override
     protected void deactivate() {
         languagesListView.getItems().removeListener(listChangeListener);
-        model.languageCodes.removeListener(languageCodesListChangeListener);
+        if (languageCodesListChangeListener != null)
+            model.languageCodes.removeListener(languageCodesListChangeListener);
     }
 
 

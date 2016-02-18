@@ -19,19 +19,19 @@ package io.bitsquare.btc;
 
 import com.google.inject.Inject;
 import io.bitsquare.app.Version;
+import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.storage.Storage;
 import org.bitcoinj.core.Wallet;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  * The List supporting our persistence solution.
  */
-public class AddressEntryList extends ArrayList<AddressEntry> implements Serializable {
+public class AddressEntryList extends ArrayList<AddressEntry> implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
     private static final Logger log = LoggerFactory.getLogger(AddressEntryList.class);

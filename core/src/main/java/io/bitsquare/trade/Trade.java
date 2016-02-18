@@ -50,14 +50,13 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.util.Date;
 
 /**
  * Holds all data which are relevant to the trade, but not those which are only needed in the trade process as shared data between tasks. Those data are
  * stored in the task model.
  */
-abstract public class Trade implements Tradable, Model, Serializable {
+abstract public class Trade implements Tradable, Model {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

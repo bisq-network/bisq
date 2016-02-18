@@ -19,9 +19,7 @@ package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
 
-import java.io.Serializable;
-
-public final class BlockChainAccountContractData extends PaymentAccountContractData implements Serializable {
+public final class BlockChainAccountContractData extends PaymentAccountContractData {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -49,7 +47,7 @@ public final class BlockChainAccountContractData extends PaymentAccountContractD
     @Override
     public String getPaymentDetailsForTradePopup() {
         return getPaymentDetails();
-    } 
+    }
 
     public void setPaymentId(String paymentId) {
         this.paymentId = paymentId;

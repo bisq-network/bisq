@@ -20,11 +20,11 @@ package io.bitsquare.common.crypto;
 import java.io.Serializable;
 import java.security.PublicKey;
 
-public final class DecryptedPayloadWithPubKey implements Serializable {
+public final class DecryptedDataTuple {
     public final Serializable payload;
     public final PublicKey sigPublicKey;
 
-    public DecryptedPayloadWithPubKey(Serializable payload, PublicKey sigPublicKey) {
+    public DecryptedDataTuple(Serializable payload, PublicKey sigPublicKey) {
         this.payload = payload;
         this.sigPublicKey = sigPublicKey;
     }
@@ -32,9 +32,9 @@ public final class DecryptedPayloadWithPubKey implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DecryptedPayloadWithPubKey)) return false;
+        if (!(o instanceof DecryptedDataTuple)) return false;
 
-        DecryptedPayloadWithPubKey that = (DecryptedPayloadWithPubKey) o;
+        DecryptedDataTuple that = (DecryptedDataTuple) o;
 
         if (payload != null ? !payload.equals(that.payload) : that.payload != null) return false;
         return !(sigPublicKey != null ? !sigPublicKey.equals(that.sigPublicKey) : that.sigPublicKey != null);

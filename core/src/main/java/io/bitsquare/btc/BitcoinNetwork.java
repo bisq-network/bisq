@@ -17,15 +17,13 @@
 
 package io.bitsquare.btc;
 
+import io.bitsquare.common.persistance.Persistable;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
 
-import java.io.Serializable;
-
-public enum BitcoinNetwork implements Serializable {
-
+public enum BitcoinNetwork implements Persistable {
     MAINNET(MainNetParams.get()),
     TESTNET(TestNet3Params.get()),
     REGTEST(RegTestParams.get());

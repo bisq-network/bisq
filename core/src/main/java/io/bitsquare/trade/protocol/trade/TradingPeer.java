@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.trade;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.data.RawInput;
 import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.payment.PaymentAccountContractData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,10 +28,9 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.util.List;
 
-public class TradingPeer implements Serializable {
+public class TradingPeer implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

@@ -19,10 +19,9 @@ package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
 
-import java.io.Serializable;
 import java.util.List;
 
-public class SepaAccount extends PaymentAccount implements Serializable {
+public class SepaAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

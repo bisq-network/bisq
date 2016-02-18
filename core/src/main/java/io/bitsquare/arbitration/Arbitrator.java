@@ -20,7 +20,7 @@ package io.bitsquare.arbitration;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.storage.messages.StoragePayload;
+import io.bitsquare.p2p.storage.data.StoragePayload;
 
 import java.security.PublicKey;
 import java.util.Arrays;

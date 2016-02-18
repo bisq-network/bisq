@@ -1,13 +1,13 @@
 package io.bitsquare.arbitration.payload;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.Payload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.util.Arrays;
 
-public final class Attachment implements Serializable {
+public final class Attachment implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final Logger log = LoggerFactory.getLogger(Attachment.class);
