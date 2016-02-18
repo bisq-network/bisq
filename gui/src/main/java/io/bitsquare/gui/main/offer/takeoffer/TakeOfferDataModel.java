@@ -33,6 +33,7 @@ import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.popups.Popup;
 import io.bitsquare.gui.main.popups.WalletPasswordPopup;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentMethod;
@@ -356,8 +357,12 @@ class TakeOfferDataModel extends ActivatableDataModel {
         return offer.getPaymentMethod();
     }
 
-    public TradeCurrency getTradeCurrency() {
-        return new TradeCurrency(offer.getCurrencyCode());
+    public String getCurrencyCode() {
+        return offer.getCurrencyCode();
+    }
+
+    public String getCurrencyNameAndCode() {
+        return CurrencyUtil.getNameByCode(offer.getCurrencyCode());
     }
 
     public Coin getSecurityDepositAsCoin() {

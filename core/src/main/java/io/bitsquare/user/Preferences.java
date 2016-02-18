@@ -24,6 +24,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.FiatCurrency;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.storage.Storage;
 import javafx.beans.Observable;
@@ -78,7 +79,7 @@ public final class Preferences implements Persistable {
         return defaultLocale;
     }
 
-    private static TradeCurrency defaultTradeCurrency = new TradeCurrency(CurrencyUtil.getCurrencyByCountryCode(CountryUtil.getDefaultCountryCode()).getCurrency().getCurrencyCode());
+    private static TradeCurrency defaultTradeCurrency = new FiatCurrency(CurrencyUtil.getCurrencyByCountryCode(CountryUtil.getDefaultCountryCode()).getCurrency().getCurrencyCode());
 
     public static TradeCurrency getDefaultTradeCurrency() {
         return defaultTradeCurrency;

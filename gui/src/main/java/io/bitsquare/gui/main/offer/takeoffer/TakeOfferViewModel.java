@@ -25,7 +25,6 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.CloseConnectionReason;
 import io.bitsquare.p2p.network.Connection;
@@ -360,9 +359,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
 
         if (dataModel.getDirection() == Offer.Direction.BUY) {
-            volumeDescriptionLabel.set(BSResources.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getTradeCurrency().getCode()));
+            volumeDescriptionLabel.set(BSResources.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getCurrencyCode()));
         } else {
-            volumeDescriptionLabel.set(BSResources.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.getTradeCurrency().getCode()));
+            volumeDescriptionLabel.set(BSResources.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.getCurrencyCode()));
         }
         totalToPay.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()), dataModel.totalToPayAsCoin));
         totalToPayAsCoin.bind(dataModel.totalToPayAsCoin);
@@ -537,10 +536,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     ObservableList<PaymentAccount> getPossiblePaymentAccounts() {
         return dataModel.getPossiblePaymentAccounts();
-    }
-
-    public TradeCurrency getTradeCurrency() {
-        return dataModel.getTradeCurrency();
     }
 
     public List<Arbitrator> getArbitrators() {

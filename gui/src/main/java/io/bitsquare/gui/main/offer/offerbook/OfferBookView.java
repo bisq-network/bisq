@@ -89,7 +89,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
-                return tradeCurrency.getNameAndCode();
+                if (!tradeCurrency.getCode().equals(OfferBookViewModel.SHOW_ALL_FLAG))
+                    return tradeCurrency.getNameAndCode();
+                else
+                    return "Show all";
             }
 
             @Override
@@ -103,7 +106,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         paymentMethodComboBox.setConverter(new StringConverter<PaymentMethod>() {
             @Override
             public String toString(PaymentMethod paymentMethod) {
-                return BSResources.get(paymentMethod.getId());
+                String id = paymentMethod.getId();
+                return BSResources.get(!id.equals(OfferBookViewModel.SHOW_ALL_FLAG) ? id : "Show all");
             }
 
             @Override
@@ -152,7 +156,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     @Override
     protected void activate() {
         currencyComboBox.setItems(model.getTradeCurrencies());
-        currencyComboBox.getSelectionModel().select(model.getTradeCurrency());
+        currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrency());
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
         paymentMethodComboBox.setItems(model.getPaymentMethods());
         paymentMethodComboBox.getSelectionModel().select(0);
@@ -160,8 +164,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         currencyComboBox.setOnAction(e -> model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem()));
         paymentMethodComboBox.setOnAction(e -> model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem()));
         createOfferButton.setOnAction(e -> onCreateOffer());
+
         priceColumn.textProperty().bind(createStringBinding(
-                () -> "Price in " + model.tradeCurrencyCode.get() + "/BTC", model.tradeCurrencyCode));
+                () -> !model.showAllTradeCurrenciesProperty.get() ?
+                        "Price in " + model.tradeCurrencyCode.get() + "/BTC" :
+                        "Price (mixed currencies)",
+                model.tradeCurrencyCode,
+                model.showAllTradeCurrenciesProperty));
+
         volumeColumn.textProperty().bind(createStringBinding(
                 () -> "Amount in " + model.tradeCurrencyCode.get() + " (Min.)", model.tradeCurrencyCode));
         model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());
@@ -213,7 +223,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             showWarning("You don't have setup a payment account yet.",
                     "You need to setup your payment account before you can trade.\nDo you want to do this now?", PaymentAccountView.class);
         } else if (!model.hasPaymentAccountForCurrency()) {
-            showWarning("You don't have a payment account with that selected currency.",
+            showWarning("You don't have a payment account for the currency:\n" +
+                            model.getSelectedTradeCurrency().getCodeAndName(),
                     "You need to setup a payment account for the selected currency to be able to trade in that currency.\n" +
                             "Do you want to do this now?", PaymentAccountView.class);
         } else if (!model.hasAcceptedArbitrators()) {
@@ -222,7 +233,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             "Do you want to do this now?", ArbitratorSelectionView.class);
         } else {
             createOfferButton.setDisable(true);
-            offerActionHandler.onCreateOffer(model.getTradeCurrency());
+            offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
         }
     }
 

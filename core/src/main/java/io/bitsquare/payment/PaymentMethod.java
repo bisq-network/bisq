@@ -109,7 +109,10 @@ public final class PaymentMethod implements Persistable, Comparable {
 
     @Override
     public int compareTo(@NotNull Object other) {
-        return this.id.compareTo(((PaymentMethod) other).id);
+        if (id != null)
+            return this.id.compareTo(((PaymentMethod) other).id);
+        else
+            return 0;
     }
 
     @Override
@@ -119,24 +122,24 @@ public final class PaymentMethod implements Persistable, Comparable {
 
         PaymentMethod that = (PaymentMethod) o;
 
-        if (getLockTime() != that.getLockTime()) return false;
-        if (getMaxTradePeriod() != that.getMaxTradePeriod()) return false;
-        return !(getId() != null ? !getId().equals(that.getId()) : that.getId() != null);
+        if (lockTime != that.lockTime) return false;
+        if (maxTradePeriod != that.maxTradePeriod) return false;
+        return !(id != null ? !id.equals(that.id) : that.id != null);
 
     }
 
     @Override
     public int hashCode() {
-        int result = getId() != null ? getId().hashCode() : 0;
-        result = 31 * result + (int) (getLockTime() ^ (getLockTime() >>> 32));
-        result = 31 * result + getMaxTradePeriod();
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (int) (lockTime ^ (lockTime >>> 32));
+        result = 31 * result + maxTradePeriod;
         return result;
     }
 
     @Override
     public String toString() {
         return "PaymentMethod{" +
-                "name='" + id + '\'' +
+                "id='" + id + '\'' +
                 ", lockTime=" + lockTime +
                 ", waitPeriodForOpenDispute=" + maxTradePeriod +
                 '}';

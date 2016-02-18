@@ -41,10 +41,10 @@ public class CurrencyUtil {
         set.addAll(getSortedSEPACurrencyCodes());
 
         // PerfectMoney: 
-        set.add(new TradeCurrency("USD"));
+        set.add(new FiatCurrency("USD"));
 
         // Alipay: 
-        set.add(new TradeCurrency("CNY"));
+        set.add(new FiatCurrency("CNY"));
 
         // OKPay: We want to maintain the order so we don't use a Set but add items if nto already in list
         getAllOKPayCurrencies().stream().forEach(set::add);

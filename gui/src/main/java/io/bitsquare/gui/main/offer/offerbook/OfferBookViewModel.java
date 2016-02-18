@@ -24,10 +24,7 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.locale.BSResources;
-import io.bitsquare.locale.CountryUtil;
-import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.locale.*;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.PaymentMethod;
@@ -36,6 +33,8 @@ import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -48,6 +47,8 @@ import java.util.List;
 import java.util.Optional;
 
 class OfferBookViewModel extends ActivatableViewModel {
+    final static String SHOW_ALL_FLAG = "XXX";
+
     private final OpenOfferManager openOfferManager;
     private final User user;
     private final OfferBook offerBook;
@@ -58,16 +59,24 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     private final FilteredList<OfferBookListItem> filteredItems;
     private final SortedList<OfferBookListItem> sortedItems;
-    private TradeCurrency tradeCurrency;
+    private TradeCurrency selectedTradeCurrency;
+    private final ObservableList<TradeCurrency> allTradeCurrencies = FXCollections.observableArrayList();
 
     private Offer.Direction direction;
 
     private final StringProperty btcCode = new SimpleStringProperty();
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
-    private PaymentMethod paymentMethod = new AllPaymentMethodsEntry();
+
+    // If id is empty string we ignore filter (display all methods)
+
+    private PaymentMethod selectedPaymentMethod = new PaymentMethod(SHOW_ALL_FLAG, 0, 0);
+
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> listChangeListener;
     private boolean isTabSelected;
+    final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty();
+    private boolean showAllPaymentMethods = true;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -93,12 +102,21 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.filteredItems = new FilteredList<>(offerBookListItems);
         this.sortedItems = new SortedList<>(filteredItems);
 
-        tradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
-        tradeCurrencyCode.set(tradeCurrency.getCode());
+        selectedTradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
+        tradeCurrencyCode.set(selectedTradeCurrency.getCode());
+
+        preferences.getTradeCurrenciesAsObservable().addListener(new ListChangeListener<TradeCurrency>() {
+            @Override
+            public void onChanged(Change<? extends TradeCurrency> c) {
+                fillAllTradeCurrencies();
+            }
+        });
+
     }
 
     @Override
     protected void activate() {
+        fillAllTradeCurrencies();
         btcCode.bind(preferences.btcDenominationProperty());
         offerBookListItems.addListener(listChangeListener);
         offerBook.fillOfferBookListItems();
@@ -113,6 +131,13 @@ class OfferBookViewModel extends ActivatableViewModel {
         offerBookListItems.removeListener(listChangeListener);
     }
 
+    private void fillAllTradeCurrencies() {
+        allTradeCurrencies.clear();
+        // Used for ignoring filter (show all)
+        TradeCurrency dummy = new FiatCurrency(SHOW_ALL_FLAG);
+        allTradeCurrencies.add(dummy);
+        allTradeCurrencies.addAll(preferences.getTradeCurrenciesAsObservable());
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -134,15 +159,22 @@ class OfferBookViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onSetTradeCurrency(TradeCurrency tradeCurrency) {
-        this.tradeCurrency = tradeCurrency;
         String code = tradeCurrency.getCode();
-        tradeCurrencyCode.set(code);
-        marketPriceFeed.setCurrencyCode(code);
+        showAllTradeCurrenciesProperty.set(isShowAllEntry(code));
+        if (!showAllTradeCurrenciesProperty.get()) {
+            this.selectedTradeCurrency = tradeCurrency;
+            tradeCurrencyCode.set(code);
+            marketPriceFeed.setCurrencyCode(code);
+        }
+
         filterList();
     }
 
     public void onSetPaymentMethod(PaymentMethod paymentMethod) {
-        this.paymentMethod = paymentMethod;
+        showAllPaymentMethods = isShowAllEntry(paymentMethod.getId());
+        if (!showAllPaymentMethods)
+            this.selectedPaymentMethod = paymentMethod;
+
         filterList();
     }
 
@@ -168,20 +200,20 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     public ObservableList<TradeCurrency> getTradeCurrencies() {
-        return preferences.getTradeCurrenciesAsObservable();
+        return allTradeCurrencies;
     }
 
     boolean isBootstrapped() {
         return p2PService.isBootstrapped();
     }
 
-    public TradeCurrency getTradeCurrency() {
-        return tradeCurrency;
+    public TradeCurrency getSelectedTradeCurrency() {
+        return selectedTradeCurrency;
     }
 
     public ObservableList<PaymentMethod> getPaymentMethods() {
         ObservableList<PaymentMethod> list = FXCollections.observableArrayList(PaymentMethod.ALL_VALUES);
-        list.add(0, paymentMethod);
+        list.add(0, selectedPaymentMethod);
         return list;
     }
 
@@ -192,7 +224,10 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     String getPrice(OfferBookListItem item) {
-        return (item != null) ? formatter.formatFiat(item.getOffer().getPrice()) : "";
+        if (showAllTradeCurrenciesProperty.get())
+            return (item != null) ? formatter.formatFiatWithCode(item.getOffer().getPrice()) : "";
+        else
+            return (item != null) ? formatter.formatFiat(item.getOffer().getPrice()) : "";
     }
 
     String getVolume(OfferBookListItem item) {
@@ -271,7 +306,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     public boolean hasPaymentAccountForCurrency() {
-        return user.hasPaymentAccountForCurrency(tradeCurrency);
+        return user.hasPaymentAccountForCurrency(selectedTradeCurrency);
     }
 
     boolean hasAcceptedArbitrators() {
@@ -286,11 +321,10 @@ class OfferBookViewModel extends ActivatableViewModel {
         filteredItems.setPredicate(offerBookListItem -> {
             Offer offer = offerBookListItem.getOffer();
             boolean directionResult = offer.getDirection() != direction;
-            boolean currencyResult = offer.getCurrencyCode().equals(tradeCurrency.getCode());
-            boolean paymentMethodResult = true;
-            if (!(paymentMethod instanceof AllPaymentMethodsEntry))
-                paymentMethodResult = offer.getPaymentMethod().equals(paymentMethod);
-
+            boolean currencyResult = showAllTradeCurrenciesProperty.get() ||
+                    offer.getCurrencyCode().equals(selectedTradeCurrency.getCode());
+            boolean paymentMethodResult = showAllPaymentMethods ||
+                    offer.getPaymentMethod().equals(selectedPaymentMethod);
             return directionResult && currencyResult && paymentMethodResult;
         });
     }
@@ -307,5 +341,9 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     public boolean hasSameProtocolVersion(Offer offer) {
         return offer.getProtocolVersion() == Version.TRADE_PROTOCOL_VERSION;
+    }
+
+    private boolean isShowAllEntry(String id) {
+        return id.equals(SHOW_ALL_FLAG);
     }
 }

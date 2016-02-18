@@ -150,12 +150,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         takeOfferSpinnerInfoLabel.visibleProperty().bind(model.isTakeOfferSpinnerVisible);
 
         priceCurrencyLabel.textProperty().bind(createStringBinding(() ->
-                model.getTradeCurrency().getCode() + "/" + model.btcCode.get(), model.btcCode));
+                model.dataModel.getCurrencyCode() + "/" + model.btcCode.get(), model.btcCode));
 
-        volumeCurrencyLabel.setText(model.getTradeCurrency().getCode());
+        volumeCurrencyLabel.setText(model.dataModel.getCurrencyCode());
         amountRangeBtcLabel.textProperty().bind(model.btcCode);
 
-        priceDescriptionLabel.setText(BSResources.get("createOffer.amountPriceBox.priceDescription", model.getTradeCurrency().getCode()));
+        priceDescriptionLabel.setText(BSResources.get("createOffer.amountPriceBox.priceDescription", model.dataModel.getCurrencyCode()));
         volumeDescriptionLabel.setText(model.volumeDescriptionLabel.get());
 
         errorPopupDisplayed = new SimpleBooleanProperty();
@@ -321,7 +321,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         paymentMethodLabel.setManaged(!showComboBox);
         if (!showComboBox)
             paymentMethodTextField.setText(BSResources.get(model.getPaymentMethod().getId()));
-        currencyTextField.setText(model.getTradeCurrency().getNameAndCode());
+        currencyTextField.setText(model.dataModel.getCurrencyNameAndCode());
         buyLabel.setText(model.getDirectionLabel());
         amountDescriptionLabel.setText(model.getAmountDescription());
         amountRangeTextField.setText(model.getAmountRange());
